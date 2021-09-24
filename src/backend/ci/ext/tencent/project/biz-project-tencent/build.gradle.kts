@@ -35,6 +35,6 @@ dependencies {
     api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:gitci:api-gitci-tencent"))
+    api(project(":ext:tencent:auth:api-auth-tencent"))
+    api(project(":ext:tencent:stream:api-stream-tencent"))
 }

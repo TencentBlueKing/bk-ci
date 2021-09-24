@@ -27,7 +27,7 @@
 
 package com.tencent.devops.gitci.v2.dao
 
-import com.tencent.devops.model.gitci.tables.TGitPipelineBranch
+import com.tencent.devops.model.stream.tables.TGitPipelineBranch
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 

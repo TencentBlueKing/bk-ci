@@ -30,8 +30,8 @@ package com.tencent.devops.gitci.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ExternalScmResource
-import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
-import com.tencent.devops.gitci.listener.GitCIRequestEvent
+import com.tencent.devops.stream.mq.streamRequest.GitCIRequestDispatcher
+import com.tencent.devops.stream.mq.streamRequest.GitCIRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,6 +47,8 @@ class ExternalScmResourceImpl @Autowired constructor(
 
     override fun webHookCodeGitCommit(token: String, event: String): Result<Boolean> {
         logger.info("webHook event: $event")
+        // 请求直接转发到stream微服务
+        logger.info("gitci -> stream fun:webHookCodeGitCommit")
         GitCIRequestDispatcher.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(

@@ -78,7 +78,7 @@ import java.time.LocalDateTime
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -103,19 +103,11 @@ class BuildStartControl @Autowired constructor(
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
-            val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
-                watcher.start("tryLock")
-                if (pipelineBuildLock.tryLock()) {
-                    watcher.start("execute")
-                    execute(watcher)
-                } else {
-                    retry() // 进行重试
-                }
+                execute(watcher)
             } catch (ignored: Throwable) {
                 LOG.error("ENGINE|$buildId|$source| start fail $ignored", ignored)
             } finally {
-                pipelineBuildLock.unlock()
                 watcher.stop()
                 LogUtils.printCostTimeWE(watcher = watcher)
             }
@@ -157,7 +149,7 @@ class BuildStartControl @Autowired constructor(
         return try {
             buildIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-            if (buildInfo == null || buildInfo.status.isFinish()) {
+            if (buildInfo == null || buildInfo.status.isFinish() || buildInfo.status.isNeverRun()) {
                 buildLogPrinter.addLine(message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
@@ -173,6 +165,7 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
+    @Suppress("LongMethod", "NestedBlockDepth")
     private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo, executeCount: Int): Boolean {
         LOG.info("ENGINE|$buildId|$source|BUILD_START|${buildInfo.status}")
         var canStart = true
@@ -183,53 +176,61 @@ class BuildStartControl @Autowired constructor(
             )
             return canStart
         }
-
-        val runLockType = pipelineRepositoryService.getSetting(pipelineId)?.runLockType
-        // #4074 LOCK 不会进入到这里，在启动API已经拦截
-        if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            // #4074 锁定当前构建是队列中第一个排队待执行的
-            if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
-                canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+        val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
+        try {
+            if (!pipelineBuildLock.tryLock()) {
+                retry()
+                return false
             }
-            if (canStart) {
-                val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
-                if (buildSummaryRecord!!.runningCount > 0) {
-                    // 需要重新入队等待
-                    pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, BuildStatus.QUEUE_CACHE)
+            val runLockType = pipelineRepositoryService.getSetting(pipelineId)?.runLockType
+            // #4074 LOCK 不会进入到这里，在启动API已经拦截
+            if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+                // #4074 锁定当前构建是队列中第一个排队待执行的
+                if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                    canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
+                }
+                if (canStart) {
+                    val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+                    if (buildSummaryRecord!!.runningCount > 0) {
+                        // 需要重新入队等待
+                        pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
 
-                    buildLogPrinter.addLine(message = "Mode: $runLockType, queue: ${buildSummaryRecord.runningCount}",
+                        buildLogPrinter.addLine(
+                            message = "Mode: $runLockType, queue: ${buildSummaryRecord.runningCount}",
+                            buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+                        )
+                        canStart = false
+                    }
+                } else {
+                    buildLogPrinter.addLine(message = "Waiting build #${buildInfo.buildNum - 1}",
                         buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                     )
-                    canStart = false
                 }
-            } else {
-                buildLogPrinter.addLine(message = "Waiting build #${buildInfo.buildNum - 1}",
+            }
+
+            if (canStart) {
+                buildLogPrinter.addLine(
+                    message = "Build #${buildInfo.buildNum} preparing",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
+                handleBuildNo()
+                pipelineRuntimeService.startLatestRunningBuild(
+                    latestRunningBuild = LatestRunningBuild(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        userId = buildInfo.startUser,
+                        status = BuildStatus.RUNNING,
+                        taskCount = buildInfo.taskCount,
+                        buildNum = buildInfo.buildNum
+                    ),
+                    retry = (actionType == ActionType.RETRY)
+                )
+                broadcastStartEvent(buildInfo)
             }
+        } finally {
+            pipelineBuildLock.unlock()
         }
-
-        if (canStart) {
-            buildLogPrinter.addLine(
-                message = "Build #${buildInfo.buildNum} preparing",
-                buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
-            )
-            handleBuildNo()
-            pipelineRuntimeService.startLatestRunningBuild(
-                latestRunningBuild = LatestRunningBuild(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = buildInfo.startUser,
-                    status = BuildStatus.RUNNING,
-                    taskCount = buildInfo.taskCount,
-                    buildNum = buildInfo.buildNum
-                ),
-                retry = (actionType == ActionType.RETRY)
-            )
-            broadcastStartEvent(buildInfo)
-        }
-
         return canStart
     }
 

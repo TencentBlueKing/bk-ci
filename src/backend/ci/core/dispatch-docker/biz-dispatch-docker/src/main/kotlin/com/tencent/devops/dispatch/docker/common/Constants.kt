@@ -28,7 +28,11 @@
 package com.tencent.devops.dispatch.docker.common
 
 object Constants {
+    /**
+     * Redis Key
+     */
     const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
+    const val DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX = "docker_resource_white_list_"
 
     const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
     const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"

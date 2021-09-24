@@ -55,7 +55,7 @@ open class BaseBuildDetailService constructor(
     val redisOperation: RedisOperation
 
 ) {
-    val logger = LoggerFactory.getLogger(this::class.java)!!
+    val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
     companion object {
         private const val ExpiredTimeInSeconds: Long = 10

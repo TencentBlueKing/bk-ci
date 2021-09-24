@@ -46,8 +46,13 @@ object GitCommonUtils {
 
     private const val projectPrefix = "git_"
 
+    // 获取 name/projectName格式的项目名称
     fun getRepoName(httpUrl: String, name: String): String {
-        return getRepoOwner(httpUrl) + "/" + name
+        return try {
+            getRepoOwner(httpUrl) + "/" + name
+        } catch (e: Throwable) {
+            name
+        }
     }
 
     fun getRepoOwner(httpUrl: String): String {
@@ -146,7 +151,8 @@ object GitCommonUtils {
                 realEvent = gitRequestEvent.copy(
                     // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                     branch = if (sourceRepositoryConf != null) {
-                        "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
+                        val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                        "${path.split("/")[0]}:${gitRequestEvent.branch}"
                     } else {
                         gitRequestEvent.branch
                     }
@@ -169,7 +175,8 @@ object GitCommonUtils {
                     .accessToken, sourceGitProjectId).data
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
                 return if (sourceRepositoryConf != null) {
-                    "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
+                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                    "${path.split("/")[0]}:$branch"
                 } else {
                     branch
                 }
@@ -191,6 +198,9 @@ object GitCommonUtils {
             throw RuntimeException("蓝盾项目ID不正确")
         }
     }
+
+    // 获取蓝盾项目名称
+    fun getCiProjectId(gitProjectId: Long) = "${projectPrefix}$gitProjectId"
 
     @Throws(ParamBlankException::class)
     fun getCredential(

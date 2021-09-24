@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS
@@ -67,6 +68,7 @@ class GitWebHookStartParam(
             matchResult.extra[MATCH_BRANCH] ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
         startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
+        startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
         startParams.putAll(
             matcher.retrieveParams(
                 projectId = projectId,

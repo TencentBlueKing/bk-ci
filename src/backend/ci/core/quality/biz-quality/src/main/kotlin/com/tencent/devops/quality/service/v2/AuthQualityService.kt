@@ -31,6 +31,7 @@ package com.tencent.devops.quality.service.v2
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -64,8 +65,9 @@ class AuthQualityService @Autowired constructor(
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityRuleInfos?.map {
+            // iam内存的iam类型为加密后的，故在页面上选择到的也需加密
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -74,24 +76,27 @@ class AuthQualityService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getQualityRuleInfoByIds(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    // 用于iam无权限跳转回调，id类型取决于页面能拿到的id，此处页面拿到的为加密id
+    fun getQualityRuleInfoByIds(encodeIds: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        val ids = encodeIds?.map { HashUtil.decodeIdToLong(it.toString()) }
         authTokenApi.checkToken(token)
-        val certInfos = qualityRuleDao.listByIds(
+        val qualityRuleInfos = qualityRuleDao.listByIds(
             dslContext = dslContext,
             ruleIds = ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
-        if (certInfos == null || certInfos.isEmpty()) {
+        if (qualityRuleInfos == null || qualityRuleInfos.isEmpty()) {
             logger.info("$ids 无红线规则")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.map {
+        qualityRuleInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
-        logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
+        logger.info("entityInfo $entityInfo, count ${qualityRuleInfos.size.toLong()}")
         return result.buildFetchInstanceResult(entityInfo)
     }
 
@@ -117,7 +122,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityRuleInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -145,7 +150,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -154,7 +159,9 @@ class AuthQualityService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getQualityGroupInfoByIds(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    // 用于iam无权限跳转回调，id类型取决于页面能拿到的id，此处页面拿到的为加密id
+    fun getQualityGroupInfoByIds(encodeIds: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        val ids = encodeIds?.map { HashUtil.decodeIdToLong(it.toString()) }
         authTokenApi.checkToken(token)
         val qualityGroupInfos = qualityGroupDao.list(
             dslContext = dslContext,
@@ -168,8 +175,9 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.creator)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${qualityGroupInfos.size.toLong()}")
@@ -198,7 +206,7 @@ class AuthQualityService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         qualityGroupInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }

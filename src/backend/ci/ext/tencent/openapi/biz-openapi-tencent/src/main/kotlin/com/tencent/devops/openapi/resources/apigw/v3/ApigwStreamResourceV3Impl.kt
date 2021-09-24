@@ -4,15 +4,19 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.GitCIDetailResource
-import com.tencent.devops.gitci.api.GitCIHistoryResource
-import com.tencent.devops.gitci.api.GitCIPipelineResource
-import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.GitCIModelDetail
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.api.GitCIDetailResource
+import com.tencent.devops.stream.api.GitCIHistoryResource
+import com.tencent.devops.stream.api.GitCIPipelineResource
+import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
+import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.pojo.GitCIBuildHistory
+import com.tencent.devops.stream.pojo.GitCIModelDetail
+import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -21,6 +25,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
 ) : ApigwStreamResourceV3 {
 
     override fun triggerStartup(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: String,
         pipelineId: String,
@@ -34,7 +40,12 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun getStreamProject(userId: String, gitProjectId: String): Result<String> {
+    override fun getStreamProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: String
+    ): Result<String> {
         val r1 = Regex("[0-9]+")
         return if (r1.matches(gitProjectId)) {
             Result("git_$gitProjectId")
@@ -44,6 +55,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getPipelineList(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         keyword: String?,
@@ -59,15 +72,25 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun getPipeline(userId: String, gitProjectId: Long, pipelineId: String): Result<GitProjectPipeline?> {
+    override fun getPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        withHistory: Boolean?
+    ): Result<GitProjectPipeline?> {
         return client.get(GitCIPipelineResource::class).getPipeline(
             userId = userId,
             gitProjectId = gitProjectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            withHistory = withHistory
         )
     }
 
     override fun enablePipeline(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         pipelineId: String,
@@ -81,7 +104,12 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
+    override fun listPipelineNames(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: Long
+    ): Result<List<GitProjectPipeline>> {
         return client.get(GitCIPipelineResource::class).listPipelineNames(
             userId = userId,
             gitProjectId = gitProjectId
@@ -89,6 +117,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getLatestBuildDetail(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         pipelineId: String?,
@@ -103,6 +133,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     }
 
     override fun getHistoryBuildList(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         gitProjectId: Long,
         page: Int?,
@@ -121,6 +153,46 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             sourceGitProjectId = sourceGitProjectId,
             page = page,
             pageSize = pageSize
+        )
+    }
+
+    override fun enableGitCI(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enabled: Boolean,
+        projectInfo: GitCIProjectInfo
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).enableGitCI(
+            userId = userId,
+            enabled = enabled,
+            projectInfo = projectInfo
+        )
+    }
+
+    override fun getGitCIConf(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: String
+    ): Result<GitCIBasicSetting?> {
+        return client.get(ServiceGitBasicSettingResource::class).getGitCIConf(
+            userId = userId,
+            projectId = gitProjectId
+        )
+    }
+
+    override fun saveGitCIConf(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        gitProjectId: String,
+        gitCIUpdateSetting: GitCIUpdateSetting
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).saveGitCIConf(
+            userId = userId,
+            projectId = gitProjectId,
+            gitCIUpdateSetting = gitCIUpdateSetting
         )
     }
 }

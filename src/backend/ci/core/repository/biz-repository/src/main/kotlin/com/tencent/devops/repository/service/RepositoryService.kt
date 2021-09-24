@@ -1244,6 +1244,29 @@ class RepositoryService @Autowired constructor(
                     aliasName = it.aliasName,
                     url = it.url,
                     type = ScmType.valueOf(it.type),
+                    updatedTime = it.updatedTime.timestampmilli(),
+                    createUser = it.userId
+                )
+            )
+        }
+        return result
+    }
+
+    fun getInfoByIds(ids: List<Long>): List<RepositoryInfo> {
+        val repositoryInfos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = ids,
+            checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                RepositoryInfo(
+                    repositoryId = it.repositoryId,
+                    repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                    aliasName = it.aliasName,
+                    url = it.url,
+                    type = ScmType.valueOf(it.type),
                     updatedTime = it.updatedTime.timestampmilli()
                 )
             )

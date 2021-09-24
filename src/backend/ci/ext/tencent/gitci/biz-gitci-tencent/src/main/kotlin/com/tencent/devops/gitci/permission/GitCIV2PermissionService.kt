@@ -120,7 +120,7 @@ class GitCIV2PermissionService @Autowired constructor(
         if (result == null || !result) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "用户不具备当前工蜂项目下开发者或更高权限"
+                "Permission denied."
             )
         }
     }

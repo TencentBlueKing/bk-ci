@@ -30,13 +30,17 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.OR
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
+import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -51,7 +55,6 @@ import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.quality.api.v2.ServiceQualityControlPointResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -73,6 +76,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -221,33 +225,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
             // 获取插件
-            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
-
-            val atoms = marketAtomDao.list(
-                dslContext = dslContext,
-                keyword = keyword,
-                classifyCode = classifyCode,
-                labelCodeList = labelCodeList,
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                sortType = sortType,
-                desc = desc,
-                page = page,
-                pageSize = pageSize
-            ) ?: return@Callable MarketAtomResp(0, page, pageSize, results)
-
-            var atomCodeList = atoms.map {
-                it["ATOM_CODE"] as String
-            }.toList()
-
-            if (true == qualityFlag) {
-                val controlPoints = client.get(ServiceQualityControlPointResource::class)
-                    .listByTypes(atomCodeList).data?.map { it.type } ?: listOf()
-                atomCodeList = atomCodeList.intersect(controlPoints).toList()
-            }
-
+            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
             val count = marketAtomDao.count(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -257,9 +235,28 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
-                atomCodes = atomCodeList
+                qualityFlag = qualityFlag
             )
+            val atoms = marketAtomDao.list(
+                dslContext = dslContext,
+                keyword = keyword,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
+                sortType = sortType,
+                desc = desc,
+                page = page,
+                pageSize = pageSize
+            )
+                ?: return@Callable MarketAtomResp(0, page, pageSize, results)
 
+            val atomCodeList = atoms.map {
+                it["ATOM_CODE"] as String
+            }.toList()
             // 获取可见范围
             val storeType = StoreTypeEnum.ATOM
             val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
@@ -279,11 +276,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
             atoms.forEach {
                 val atomCode = it["ATOM_CODE"] as String
-
-                if (!atomCodeList.contains(atomCode)) {
-                    return@forEach
-                }
-
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
@@ -939,6 +931,40 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
+        val atomList = marketAtomDao.getLatestAtomListByCodes(
+            dslContext = dslContext,
+            atomCodes = getRelyAtom.thirdPartyElementList.map { it.atomCode }
+        )
+        val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
+        val result = mutableMapOf<String, Map<String, Any>>()
+        logger.info("getAtomsRely atomList : $atomList")
+        atomList.forEach lit@{
+            if (it == null) return@lit
+            var value = it
+            val atom = getMap[it.atomCode]
+            if (atom?.contains("*") == true &&
+                !it.version.startsWith(atom.replace("*", ""))) {
+                value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
+            }
+            val itemMap = mutableMapOf<String, Any>()
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+            if (null != props["input"]) {
+                val input = props["input"] as Map<String, Any>
+                input.forEach { inputIt ->
+                    val paramKey = inputIt.key
+                    val paramValueMap = inputIt.value as Map<String, Any>
+                    val rely = paramValueMap["rely"]
+                    if (rely != null) {
+                        itemMap[paramKey] = rely
+                    }
+                }
+            }
+            result[it.atomCode] = itemMap
+        }
+        return result
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
@@ -1182,18 +1208,71 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-        val options = paramValueMap["options"] ?: return
-        try {
-            options as List<Map<String, String>>
+        val rely = paramValueMap["rely"]
+        if (null != rely) {
+            parseRely(builder, rely as Map<String, Any>)
+        }
+        val options = paramValueMap["options"]
+        if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
+            parseOptions(builder, options as List<Map<String, Any>>)
+        }
+        val list = paramValueMap["list"]
+        if (null != list) {
+            builder.append(", $optionsName:")
+            parseList(builder, list as List<Map<String, Any>>)
+        }
+    }
+
+    private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
+        val dang = MessageCodeUtil.getCodeLanMessage(DANG)
+        val and = MessageCodeUtil.getCodeLanMessage(AND)
+        val or = MessageCodeUtil.getCodeLanMessage(OR)
+        val timeToSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+        try {
+            if (null != rely["expression"]) {
+                val expression = rely["expression"] as List<Map<String, Any>>
+                builder.append(", $dang")
+                val link = if (rely["operation"] == "AND") and else or
+                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                    builder.append(value)
+                    if (index < expression.size - 1) {
+                        builder.append(link)
+                    }
+                }
+                builder.append(timeToSelect)
+            }
+        } catch (e: Exception) {
+            println("load atom input[rely] with error: ${e.message}")
+        }
+    }
+
+    private fun parseOptions(builder: StringBuilder, options: List<Map<String, Any>>) {
+        try {
             options.forEachIndexed { index, map ->
                 if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
         } catch (e: Exception) {
-            logger.error("load atom input[$paramKey] with error: ${e.message}")
+            println("load atom input[options] with error: ${e.message}")
+        }
+    }
+
+    private fun parseList(builder: StringBuilder, list: List<Map<String, Any>>) {
+        try {
+            list.forEachIndexed { index, map ->
+                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                    null ?: return
+                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                    null ?: return
+                if (index == list.size - 1) builder.append(" $key[$value]")
+                else builder.append(" $key[$value] |")
+            }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[list] with error: ${e.message} ")
         }
     }
 }

@@ -32,7 +32,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
+import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -40,8 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceIptResourceImpl @Autowired constructor(
-    private val bkRepoSearchService: BkRepoSearchService,
-    private val bkRepoDownloadService: BkRepoDownloadService
+    private val repoSearchService: BkRepoSearchService,
+    private val repoDownloadService: RepoDownloadService
 ) : ServiceIptResource {
     override fun searchFileAndProperty(
         userId: String,
@@ -50,7 +50,7 @@ class ServiceIptResourceImpl @Autowired constructor(
     ): Result<FileInfoPage<FileInfo>> {
         val pipelineId = searchProps.props["pipelineId"]!!
         val buildId = searchProps.props["buildId"]!!
-        val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
+        val result = repoSearchService.searchFileAndProperty(userId, projectId, searchProps)
 
         // 获取第三方下载链接
         result.second.forEach {
@@ -59,7 +59,7 @@ class ServiceIptResourceImpl @Autowired constructor(
             } else {
                 it.path
             }
-            it.downloadUrl = bkRepoDownloadService.getThirdPartyDownloadUrl(
+            it.downloadUrl = repoDownloadService.getThirdPartyDownloadUrl(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -70,7 +70,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                 crossPipineId = null,
                 crossBuildNo = null,
                 region = null
-                ).firstOrNull()
+            ).firstOrNull()
         }
 
         return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))

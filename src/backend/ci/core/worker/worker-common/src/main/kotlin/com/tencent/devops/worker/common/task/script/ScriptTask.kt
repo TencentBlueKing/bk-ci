@@ -27,18 +27,18 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
@@ -46,10 +46,9 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
-import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -65,15 +64,19 @@ open class ScriptTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
+
+        // #4601 如果task.json没有指定字符集选项则保持为空
+        val charSetType = taskParams["charSetType"]
+
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
         val script = URLDecoder.decode(taskParams["script"]
-                ?: throw TaskExecuteException(
-                    errorMsg = "Empty build script content",
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8").replace("\r", "")
+            ?: throw TaskExecuteException(
+                errorMsg = "Empty build script content",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
@@ -83,13 +86,11 @@ open class ScriptTask : ITask() {
         ScriptEnvUtils.cleanEnv(buildId, workspace)
         ScriptEnvUtils.cleanContext(buildId, workspace)
 
-        var variables = if (buildTask.buildVariable == null) {
+        val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
         } else {
             runtimeVariables.plus(buildTask.buildVariable!!)
         }
-        // #4812 提供给git插件使用
-        variables = variables.plus(XDG_CONFIG_HOME to getXdgConfigHomePath(buildVariables.pipelineId))
 
         try {
             command.execute(
@@ -102,7 +103,8 @@ open class ScriptTask : ITask() {
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
-                errorMessage = "Fail to run the plugin"
+                errorMessage = "Fail to run the plugin",
+                charSetType = charSetType
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
@@ -179,20 +181,7 @@ open class ScriptTask : ITask() {
         }
     }
 
-    private fun getXdgConfigHomePath(pipelineId: String): String {
-        try {
-            return System.getenv(XDG_CONFIG_HOME) ?: Paths.get(
-                System.getProperty("user.home"),
-                ".checkout", pipelineId
-            ).normalize().toString()
-        } catch (ignore: Exception) {
-            logger.error("get xdg_config_home error", ignore)
-        }
-        return ""
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
-        private const val XDG_CONFIG_HOME = "XDG_CONFIG_HOME"
     }
 }

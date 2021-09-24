@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import io.swagger.annotations.Api
@@ -141,4 +142,12 @@ interface ServiceMarketAtomResource {
         @ApiParam("查询插件信息", required = true)
         atomItems: Set<AtomPostReqItem>
     ): Result<AtomPostResp>
+
+    @ApiOperation("查看插件参数的依赖关系")
+    @POST
+    @Path("/atoms/rely")
+    fun getAtomRely(
+        @ApiParam("getRelyAtom", required = false)
+        getRelyAtom: GetRelyAtom
+    ): Result<Map<String, Map<String, Any>>?>
 }
