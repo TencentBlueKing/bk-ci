@@ -25,62 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api
+package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
+import com.tencent.devops.artifactory.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_ARTIFACTORY_STORE"], description = "仓库-STORE")
-@Path("/build/artifactories/store/file")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildArchiveStoreFileResource {
+@RestResource
+class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
+    private val archiveStoreFileService: ArchiveStoreFileService
+) : ServiceArchiveStoreFileResource {
 
-    @ApiOperation("归档研发商店文件")
-    @POST
-    @Path("/repos/{repoName}/projects/{projectId}/types/{storeType}/codes/{storeCode}/versions/{version}/archive")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun archiveFile(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    override fun archiveFile(
         userId: String,
-        @ApiParam("仓库名称", required = true)
-        @PathParam("repoName")
         repoName: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
         projectId: String,
-        @ApiParam("组件类型", required = true)
-        @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件代码", required = true)
-        @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("扩展服务版本号", required = true)
-        @PathParam("version")
         version: String,
-        @ApiParam("目标路径", required = true)
-        @QueryParam("destPath")
         destPath: String,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
         inputStream: InputStream,
-        @FormDataParam("file")
         disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    ): Result<Boolean> {
+        return archiveStoreFileService.archiveFile(
+            userId = userId,
+            repoName = repoName,
+            projectId = projectId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

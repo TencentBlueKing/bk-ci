@@ -45,11 +45,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_ARTIFACTORY_STORE"], description = "仓库-STORE")
-@Path("/build/artifactories/store/file")
+@Api(tags = ["SERVICE_ARTIFACTORY_STORE"], description = "仓库-STORE")
+@Path("/service/artifactories/store/file")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildArchiveStoreFileResource {
+interface ServiceArchiveStoreFileResource {
 
     @ApiOperation("归档研发商店文件")
     @POST
