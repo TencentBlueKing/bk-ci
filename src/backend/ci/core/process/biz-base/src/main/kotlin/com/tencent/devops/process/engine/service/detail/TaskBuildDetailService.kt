@@ -295,7 +295,7 @@ class TaskBuildDetailService(
         tmpElement: Element,
         tmpElementIndex: Int,
         elements: List<Element>,
-        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?,
     ): Boolean {
         if (cancelTaskPostFlag) {
             return handleCancelTaskPost(
@@ -308,11 +308,31 @@ class TaskBuildDetailService(
                 updateTaskStatusInfos = updateTaskStatusInfos
             )
         } else {
-            if (tmpElement == endElement) {
-                if (buildStatus != BuildStatus.CANCELED &&
-                    endElement.additionalOptions?.runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
-                    return true
-                }
+            return handleCancelTaskNormal(
+                tmpElement = tmpElement,
+                endElement = endElement,
+                buildStatus = buildStatus,
+                endElementIndex = endElementIndex,
+                elements = elements,
+                containerId = containerId,
+                updateTaskStatusInfos = updateTaskStatusInfos
+            )
+        }
+    }
+
+    private fun handleCancelTaskNormal(
+        tmpElement: Element,
+        endElement: Element,
+        buildStatus: BuildStatus,
+        endElementIndex: Int,
+        elements: List<Element>,
+        containerId: String,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?,
+    ): Boolean {
+        if (tmpElement == endElement) {
+            if (buildStatus == BuildStatus.CANCELED &&
+                endElement.additionalOptions?.runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            ) {
                 val startIndex = endElementIndex + 1
                 val endIndex = elements.size - 1
                 if (endIndex >= startIndex) {
@@ -324,8 +344,8 @@ class TaskBuildDetailService(
                         updateTaskStatusInfos = updateTaskStatusInfos
                     )
                 }
-                return true
             }
+            return true
         }
         return false
     }
