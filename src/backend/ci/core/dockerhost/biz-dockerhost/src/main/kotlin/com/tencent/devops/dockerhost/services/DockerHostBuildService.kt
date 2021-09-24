@@ -31,11 +31,15 @@ import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.Capability
+import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Mount
+import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.Statistics
+import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
@@ -195,21 +199,39 @@ class DockerHostBuildService(
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val hostConfig = HostConfig()
+                .withCapAdd(Capability.SYS_PTRACE)
+                .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+                .withBinds(binds)
+                .withNetworkMode("bridge")
+            
+            if (dockerBuildInfo.projectId == "test-sawyer2") {
+                val upperDir = "${getWorkspace(dockerBuildInfo)}/upper"
+                val workDir = "${getWorkspace(dockerBuildInfo)}/work"
+                val mount = Mount().withType(MountType.VOLUME)
+                    .withTarget("/data/landun/workspace")
+                    .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local")).withLabels(
+                        mapOf(
+                            "type" to "overlay",
+                            "device" to "overlay",
+                            "o" to "lowerdir=/data/overlayfsTest/demo,upperdir=$upperDir,workdir=$workDir"
+                        )
+                    ))
+
+                hostConfig.withMounts(listOf(mount))
+            }
+            
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig()
-                    .withCapAdd(Capability.SYS_PTRACE)
-                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
-                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
-/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
-                    .withBinds(binds)
-                    .withNetworkMode("bridge"))
+                .withHostConfig(hostConfig)
                 .exec()
 
             logger.info("Created container $container")
