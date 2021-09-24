@@ -60,6 +60,19 @@ Return the influxdb fullname
 {{- end -}}
 {{- end -}}
 
+
+{{/*
+Return the mongodb fullname
+*/}}
+{{- define "bkci.mongodb.fullname" -}}
+{{- if .Values.mongodb.fullnameOverride -}}
+{{- .Values.mongodb.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "mongodb" .Values.mongodb.nameOverride -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
 MySQL host
 */}}
@@ -253,5 +266,28 @@ influxdb password
 {{ .Values.influxdb.auth.admin.password }}
 {{- else -}}
 {{- .Values.external.influxdb.password -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the db_turbo mongodb connection uri
+*/}}
+{{- define "bkci.mongodb.turbo.turboUri" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+{{- printf "mongodb://%s:%s@%s:27017/db_turbo" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "bkci.mongodb.fullname" .) -}}
+{{- else -}}
+{{- .Values.external.mongodb.turbo.turboUrl -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Return the db_quartz mongodb connection uri
+*/}}
+{{- define "bkci.mongodb.turbo.quartzUri" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+{{- printf "mongodb://%s:%s@%s:27017/db_quartz" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "bkci.mongodb.fullname" .) -}}
+{{- else -}}
+{{- .Values.external.mongodb.turbo.quartzUrl -}}
 {{- end -}}
 {{- end -}}
