@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.template.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.engine.dao.template.TemplateDao
@@ -38,13 +38,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
+@Suppress("LongParameterList", "TooManyFunctions")
 @Service
 class TemplateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templateDao: TemplateDao,
-    private val templatePipelineDao: TemplatePipelineDao,
-    private val objectMapper: ObjectMapper
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
 
     fun getTemplateIdByPipeline(pipelineId: String): String? {
@@ -103,12 +102,12 @@ class TemplateService @Autowired constructor(
             buildNo = if (buildNo == null) {
                 null
             } else {
-                objectMapper.writeValueAsString(buildNo)
+                JsonUtil.toJson(buildNo, formatted = false)
             },
             param = if (param == null) {
                 null
             } else {
-                objectMapper.writeValueAsString(param)
+                JsonUtil.toJson(param, formatted = false)
             }
         )
         return true
