@@ -35,6 +35,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
 
+@Suppress("NestedBlockDepth")
 abstract class ITask {
 
     private val environment = HashMap<String, String>()
