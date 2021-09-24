@@ -110,13 +110,24 @@ class GitCIV2PipelineService @Autowired constructor(
 
     fun getPipelineListWithoutHistory(
         userId: String,
-        gitProjectId: Long
+        gitProjectId: Long,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
     ): List<GitProjectPipeline> {
-        logger.info("get pipeline info list, gitProjectId: $gitProjectId")
-        val pipelines = pipelineResourceDao.getAllByGitProjectId(
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 10
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelines = pipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
-            gitProjectId = gitProjectId
+            gitProjectId = gitProjectId,
+            keyword = keyword,
+            offset = limit.offset,
+            limit = limit.limit
         )
+        if (pipelines.isEmpty()) {
+            return emptyList()
+        }
         return pipelines.map {
             GitProjectPipeline(
                 gitProjectId = gitProjectId,
