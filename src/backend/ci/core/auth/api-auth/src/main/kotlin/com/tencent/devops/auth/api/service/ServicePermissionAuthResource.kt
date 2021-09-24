@@ -113,7 +113,7 @@ interface ServicePermissionAuthResource {
         relationResourceType: String? = null
     ): Result<Boolean>
 
-    @GET
+    @POST
     @Path("/projects/{projectCode}/relation/validate/batch")
     @ApiOperation("校验用户是否有action的权限")
     fun batchValidateUserResourcePermissionByRelation(
@@ -123,9 +123,6 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
-        @QueryParam("action")
-        @ApiParam("action类型", required = true)
-        action: List<String>,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
@@ -137,7 +134,9 @@ interface ServicePermissionAuthResource {
         resourceType: String,
         @QueryParam("relationResourceType")
         @ApiParam("关联资源,一般为Project", required = false)
-        relationResourceType: String? = null
+        relationResourceType: String? = null,
+        @ApiParam("action类型列表", required = true)
+        action: List<String>
     ): Result<Boolean>
 
     @GET

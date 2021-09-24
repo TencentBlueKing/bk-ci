@@ -83,11 +83,11 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun batchValidateUserResourcePermissionByRelation(
         userId: String,
         token: String,
-        action: List<String>,
         projectCode: String,
         resourceCode: String,
         resourceType: String,
-        relationResourceType: String?
+        relationResourceType: String?,
+        action: List<String>
     ): Result<Boolean> {
         var actionCheckPermission = true
         action.forEach {
