@@ -178,7 +178,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 storeFlag = false
             )
 
@@ -421,7 +421,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = versionName,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 type = latestTemplate.type,
                 category = latestTemplate.category,
                 logoUrl = latestTemplate.logoUrl,
