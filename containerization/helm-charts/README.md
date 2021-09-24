@@ -32,6 +32,7 @@ $ helm uninstall bkci
 - [bitnami/elasticsearch](https://github.com/bitnami/charts/blob/master/bitnami/elasticsearch)
 - [bitnami/rabbitmq](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq)
 - [bitnami/influxdb](https://github.com/bitnami/charts/blob/master/bitnami/influxdb)
+- [bitnami/mongodb](https://github.com/bitnami/charts/blob/master/bitnami/mongodb)
 
 ## 配置说明
 下面展示了可配置的参数列表以及默认值
@@ -169,6 +170,14 @@ $ helm uninstall bkci
 | `influxdb.auth.admin.username` | 用户名 | `user` |
 | `influxdb.auth.admin.password` | 密码 | `password` |
 
+### mongodb 配置
+默认将部署 mongodb , 如果不需要可以关闭。
+相关配置请参考[bitnami/mongodb](https://github.com/bitnami/charts/blob/master/bitnami/mongodb)
+
+|参数|描述|默认值 |
+|---|---|---|
+| `mongodb.enabled` | 是否部署mongodb。如果需要使用外部数据库，设置为`false`并配置`external.mongodb` | `true` |
+
 ### 数据持久化配置
 
 数据持久化配置, 当使用filesystem方式存储时需要配置。
@@ -284,6 +293,16 @@ $ helm uninstall bkci
 | `bkRepoHost`  | 制品库地址 | `""` |
 | `bkSsmHost`  | 用户认证地址 | `""` |
 | `bkSsmPort`  | 用户认证端口 | `80` |
+
+### 编译加速配置
+|参数|描述|默认值 |
+|---|---|---|
+| `turbo.enabled`  | 是否开启编译加速 | `"false"` |
+| `turbo.config.tbs.rootpath`  | 编译加速的地址 | `""` |
+| `turbo.config.tbs.urltemplate`  | 编译加速的调用url | `"api/v1/{engine}/resource/{resource_type}"` |
+| `turbo.config.devops.rootpath`  | 蓝盾url | `""` |
+
+### 代码检查配置
 
 **以下为除Kubernetes组件通用配置之外的配置列表**
 

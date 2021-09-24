@@ -950,7 +950,7 @@ turbo:
   image:
     registry: mirrors.tencent.com
     repository: ruitaoyuan/turbo-backend
-    tag: 0.0.12
+    tag: 0.0.14
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -980,7 +980,7 @@ turbo:
   config:
     tbs:
       rootpath: 
-      urltemplate: 
+      urltemplate: api/v1/{engine}/resource/{resource_type}
     devops:
       rootpath: 
 

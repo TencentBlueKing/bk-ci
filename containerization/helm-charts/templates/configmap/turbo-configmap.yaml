@@ -2,7 +2,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ include "common.names.fullname" . }}-turbo-new
+  name: {{ include "common.names.fullname" . }}-turbo
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: turbo
     {{- if .Values.commonLabels }}
@@ -13,9 +13,15 @@ metadata:
   {{- end }}
 data:
   application.yml: |-
+    server:
+      undertow:
+        threads:
+          worker: 200
+      servlet:
+        context-path: /api
     spring:
       application:
-        name: turbo-new
+        name: turbo
         desc: Turbo Service
         version: 4.0.0
       redis:
@@ -35,9 +41,6 @@ data:
             concurrency: 2
             acknowledge-mode: auto
       cloud:
-        consul:
-          discovery:
-            tags: {{ include "turbo.consul.discovery.tags" . }}
         kubernetes:
           discovery:
             enabled: true

@@ -32,7 +32,6 @@ default_value_dict = {
     'bkCiPublicHostIp': '127.0.0.1',
     'bkCiIamCallbackUser': 'bk_iam',
     'bkCiAppCode': 'bk_ci'
-
 }
 
 if os.path.isfile('./values.json'):

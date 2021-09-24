@@ -2,7 +2,7 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-turbo-new
+  name: {{ include "common.names.fullname" . }}-turbo
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: turbo
     {{- if .Values.commonLabels }}
@@ -24,8 +24,7 @@ spec:
         {{- include "common.tplvalues.render" (dict "value" .Values.turbo.podLabels "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ template "turbo.serviceAccountName" . }}
-      {{- include "turbo.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.turbo.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.turbo.hostAliases "context" $) | nindent 8 }}
       {{- end }}
@@ -66,38 +65,43 @@ spec:
               value: {{ include "common.names.fullname" . }}-
             - name: TURBO_PROFILE
               value: {{ .Values.common.springProfile }}
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              sleep 10000s;
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: http
-            initialDelaySeconds: 120
-            periodSeconds: 15
-            timeoutSeconds: 10
-            failureThreshold: 5
-            successThreshold: 1
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: http
-            initialDelaySeconds: 60
-            periodSeconds: 15
-            timeoutSeconds: 10
-            failureThreshold: 5
-            successThreshold: 1
+          # livenessProbe:
+          #   httpGet:
+          #     path: /actuator/health/liveness
+          #     port: http
+          #   initialDelaySeconds: 120
+          #   periodSeconds: 15
+          #   timeoutSeconds: 10
+          #   failureThreshold: 5
+          #   successThreshold: 1
+          # readinessProbe:
+          #   httpGet:
+          #     path: /actuator/health/readiness
+          #     port: http
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 15
+          #   timeoutSeconds: 10
+          #   failureThreshold: 5
+          #   successThreshold: 1
           volumeMounts:
             - name: quartz-config
               mountPath: /data/workspace/quartz.properties
               subPath: quartz.properties
             - name: storage
-              mountPath: {{ .Values.common.mountPath }}
+              mountPath: {{ .Values.persistence.mountPath }}
       volumes:
         - name: quartz-config
           configMap:
-            name: {{ include "common.names.fullname" . }}-turbo-new
+            name: {{ include "common.names.fullname" . }}-turbo
             items:
               - key: quartz.properties
                 path: quartz.properties
