@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
 
+@Suppress("ComplexMethod")
 @TaskClassType(classTypes = [BuildArchiveGetElement.classType])
 class BuildArchiveGetTask : ITask() {
 
