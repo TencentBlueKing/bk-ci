@@ -75,7 +75,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         .build<String, String>()
 
     override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
-        val groupInfo = groupService.getGroupByName(projectCode, group.value) ?: return emptyList()
+        val groupInfo = groupService.getGroupByCode(projectCode, group.value) ?: return emptyList()
         val extProjectId = getExtProjectId(projectCode)
         val groupMemberInfos = permissionRoleMemberService.getRoleMember(
             projectId = extProjectId,
