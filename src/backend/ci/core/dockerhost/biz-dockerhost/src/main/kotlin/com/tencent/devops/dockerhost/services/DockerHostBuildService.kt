@@ -224,13 +224,13 @@ class DockerHostBuildService(
 
                 val mount = Mount().withType(MountType.VOLUME)
                     .withTarget("/data/landun/workspace")
-                    .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local")).withLabels(
+                    .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withLabels(
                         mapOf(
                             "type" to "overlay",
                             "device" to "overlay",
                             "o" to "lowerdir=/data/overlayfsTest/demo,upperdir=$upperDir,workdir=$workDir"
                         )
-                    ))
+                    )))
 
                 hostConfig.withMounts(listOf(mount))
             }
