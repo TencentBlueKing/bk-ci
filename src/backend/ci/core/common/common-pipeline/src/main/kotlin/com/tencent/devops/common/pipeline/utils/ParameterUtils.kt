@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
