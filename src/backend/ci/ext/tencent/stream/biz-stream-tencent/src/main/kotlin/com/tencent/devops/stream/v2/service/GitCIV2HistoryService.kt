@@ -78,7 +78,8 @@ class GitCIV2HistoryService @Autowired constructor(
             pipelineId = search?.pipelineId,
             event = search?.event?.map { it.value }?.toSet(),
             commitMsg = search?.commitMsg,
-            buildStatus = search?.status?.map { it.name }?.toSet()
+            buildStatus = search?.status?.map { it.name }?.toSet(),
+            pipelineIds = search?.pipelineIds
         )
         if (totalPage == 0) {
             return Page(
@@ -100,7 +101,8 @@ class GitCIV2HistoryService @Autowired constructor(
             commitMsg = search?.commitMsg,
             buildStatus = search?.status?.map { it.name }?.toSet(),
             limit = sqlLimit.limit,
-            offset = sqlLimit.offset
+            offset = sqlLimit.offset,
+            pipelineIds = search?.pipelineIds
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")

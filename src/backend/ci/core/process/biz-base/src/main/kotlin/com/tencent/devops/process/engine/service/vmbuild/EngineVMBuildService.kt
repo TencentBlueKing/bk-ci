@@ -337,13 +337,23 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+                pipelineEventDispatcher.dispatch(PipelineBuildStatusBroadCastEvent(
+                    source = "TaskPause-${task.containerId}-${task.buildId}",
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    userId = task.starter,
+                    buildId = task.buildId,
+                    taskId = task.taskId,
+                    stageId = task.stageId,
+                    actionType = ActionType.REFRESH
+                ))
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {
@@ -360,7 +370,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
-                    pipelineRuntimeService.claimBuildTask(buildId, task, userId)
+                    pipelineRuntimeService.claimBuildTask(task, userId)
                     taskBuildDetailService.taskStart(buildId, task.taskId)
                     jmxElements.execute(task.taskType)
                 }

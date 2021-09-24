@@ -102,7 +102,8 @@ class MergeConflictCheck @Autowired constructor(
                     eventId = gitRequestEvent.id!!,
                     reason = TriggerReason.CI_MERGE_CHECKING.name,
                     reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail,
-                    gitProjectId = gitRequestEvent.gitProjectId
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    branch = gitRequestEvent.branch
                 )
 
                 dispatchMrConflictCheck(

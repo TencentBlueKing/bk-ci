@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
@@ -54,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
+interface ServicePTemplateResource {
 
     @ApiOperation("添加模板市场模板")
     @POST
@@ -95,6 +96,18 @@ interface ServiceTemplateResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<String>>
+
+    @ApiOperation("查询源模板ID绑定的模板")
+    @GET
+    @Path("/store/srcTemplates/{srcTemplateId}")
+    fun getTemplateIdBySrcCode(
+        @ApiParam("源模板Id", required = true)
+        @PathParam("srcTemplateId")
+        srcTemplateId: String,
+        @ApiParam("项目列表", required = true)
+        @QueryParam("projectIds")
+        projectIds: List<String>
+    ): Result<List<PipelineTemplateInfo>>
 
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT

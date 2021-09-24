@@ -156,6 +156,25 @@ class StreamScmService @Autowired constructor(
         )
     }
 
+    fun getProjectInfoRetry(
+        token: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): GitCIProjectInfo {
+        logger.info("getProjectInfoRetry: [$gitProjectId|$token]")
+        return retryFun(
+            log = "$gitProjectId get project $gitProjectId fail",
+            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).getProjectInfo(
+                    accessToken = token,
+                    gitProjectId = gitProjectId,
+                    useAccessToken = useAccessToken
+                ).data!!
+            }
+        )
+    }
+
     fun getProjectInfo(
         token: String,
         gitProjectId: String,
@@ -244,21 +263,21 @@ class StreamScmService @Autowired constructor(
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
                 e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
                 error(
-                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
                         .format(userId, gitCICreateFile.branch)
                 )
             } else {
                 error(
-                    logMessage = "getProjectInfo error ${e.errorMessage}",
+                    logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
                 )
             }
         } catch (e: Exception) {
-            logger.error("getProjectInfo Exception: $e")
-            error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
+            logger.error("createNewFile Exception: $e")
+            error(" createNewFile error ${e.message}", ErrorCodeEnum.CREATE_NEW_FILE_ERROR)
         }
         return false
     }
@@ -278,6 +297,29 @@ class StreamScmService @Autowired constructor(
             pageSize = pageSize ?: 20,
             search = search
         ).data
+    }
+
+    fun getProjectBranchesRetry(
+        token: String,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<String>? {
+        return retryFun(
+            log = "getProjectBranchesRetry: [$gitProjectId] error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).getBranches(
+                    token = token,
+                    gitProjectId = gitProjectId,
+                    page = page ?: 1,
+                    pageSize = pageSize ?: 20,
+                    search = null,
+                    orderBy = null,
+                    sort = null
+                ).data
+            }
+        )
     }
 
     fun getProjectBranches(

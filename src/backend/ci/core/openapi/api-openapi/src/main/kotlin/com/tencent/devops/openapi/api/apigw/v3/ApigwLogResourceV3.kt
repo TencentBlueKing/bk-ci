@@ -212,7 +212,7 @@ interface ApigwLogResourceV3 {
 
     @ApiOperation("获取插件的的日志状态")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/mode")
+    @Path("/mode")
     fun getLogMode(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

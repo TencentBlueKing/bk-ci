@@ -72,7 +72,8 @@ class GitCIEventService @Autowired constructor(
         userId: String,
         eventId: Long,
         reason: String,
-        reasonDetail: String?
+        reasonDetail: String?,
+        branch: String?
     ): Long {
         return saveNotBuildEvent(
             gitProjectId = gitProjectId,
@@ -85,7 +86,8 @@ class GitCIEventService @Autowired constructor(
             normalizedYaml = null,
             pipelineId = null,
             filePath = null,
-            version = null
+            version = null,
+            branch = branch
         )
     }
 
@@ -104,7 +106,8 @@ class GitCIEventService @Autowired constructor(
         gitProjectId: Long,
         sendCommitCheck: Boolean,
         commitCheckBlock: Boolean,
-        version: String?
+        version: String?,
+        branch: String?
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
@@ -137,7 +140,8 @@ class GitCIEventService @Autowired constructor(
             filePath = filePath,
             gitProjectId = gitProjectId,
             gitEvent = event,
-            version = version
+            version = version,
+            branch = branch
         )
     }
 
@@ -156,7 +160,8 @@ class GitCIEventService @Autowired constructor(
         gitProjectId: Long,
         sendCommitCheck: Boolean,
         commitCheckBlock: Boolean,
-        version: String?
+        version: String?,
+        branch: String?
     ): Long {
         return saveBuildNotBuildEvent(
             userId = userId,
@@ -172,7 +177,8 @@ class GitCIEventService @Autowired constructor(
             gitProjectId = gitProjectId,
             sendCommitCheck = sendCommitCheck,
             commitCheckBlock = commitCheckBlock,
-            version = version
+            version = version,
+            branch = branch
         )
     }
 
@@ -188,7 +194,8 @@ class GitCIEventService @Autowired constructor(
         filePath: String?,
         gitProjectId: Long,
         gitEvent: GitRequestEvent? = null,
-        version: String?
+        version: String?,
+        branch: String?
     ): Long {
         var messageId = -1L
         val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
@@ -207,7 +214,8 @@ class GitCIEventService @Autowired constructor(
                 pipelineId = pipelineId,
                 filePath = filePath,
                 gitProjectId = gitProjectId,
-                version = version
+                version = version,
+                branch = branch
             )
             // eventId只用保存一次
             if (!userMessageDao.getMessageExist(context, "git_$gitProjectId", userId, event.id.toString())) {

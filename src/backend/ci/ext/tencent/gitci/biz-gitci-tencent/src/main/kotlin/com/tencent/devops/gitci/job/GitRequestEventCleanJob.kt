@@ -54,7 +54,7 @@ class GitRequestEventCleanJob @Autowired constructor(
         var endId = Long.MAX_VALUE
         val endTime = LocalDateTime.now().minusMonths(1)
 
-        logger.info("GitRequestEventCleanJob start...")
+        logger.info("StreamEventHistoryClearJob start...")
 
         while (true) {
             val allIds =
@@ -77,6 +77,6 @@ class GitRequestEventCleanJob @Autowired constructor(
             logger.info("clean git request event , endId : $endId , allIds size:${allIds.size} , usedIds size : ${usedIds.size} , cleanIds size:${cleanIds.size} , del size:$result")
         }
 
-        logger.info("GitRequestEventCleanJob finish...")
+        logger.info("StreamEventHistoryClearJob finish...")
     }
 }

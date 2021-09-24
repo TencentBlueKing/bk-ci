@@ -56,6 +56,7 @@ import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -91,6 +92,7 @@ class YamlTriggerV2 @Autowired constructor(
         event: GitEvent,
         originYaml: String?,
         filePath: String,
+        changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): Boolean {
         if (originYaml.isNullOrBlank()) {
@@ -105,8 +107,10 @@ class YamlTriggerV2 @Autowired constructor(
         )
 
         if (!isTrigger && !isTiming) {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
+            logger.warn(
+                "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}"
+            )
             triggerError(
                 request = gitRequestEvent,
                 event = event,
@@ -124,6 +128,8 @@ class YamlTriggerV2 @Autowired constructor(
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
             pipelineName = gitProjectPipeline.displayName,
+            event = event,
+            changeSet = changeSet,
             forkGitProjectId = forkGitProjectId
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
@@ -146,7 +152,7 @@ class YamlTriggerV2 @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
@@ -177,8 +183,10 @@ class YamlTriggerV2 @Autowired constructor(
 
         if (isTiming) {
             // 只有定时任务的保存任务
-            logger.warn("Only schedules matched, only save the pipeline, " +
-                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            logger.warn(
+                "Only schedules matched, only save the pipeline, " +
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+            )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
@@ -200,6 +208,8 @@ class YamlTriggerV2 @Autowired constructor(
         filePath: String,
         pipelineId: String?,
         pipelineName: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
@@ -207,7 +217,7 @@ class YamlTriggerV2 @Autowired constructor(
         }
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
-            gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+                gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         val preTemplateYamlObject = yamlCheck.formatAndCheckYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
@@ -221,7 +231,9 @@ class YamlTriggerV2 @Autowired constructor(
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
             gitRequestEvent = gitRequestEvent,
-            originYaml = originYaml
+            originYaml = originYaml,
+            event = event,
+            changeSet = changeSet
         )
     }
 
@@ -244,6 +256,8 @@ class YamlTriggerV2 @Autowired constructor(
         filePath: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): YamlObjects {
         // 替换yaml文件中的模板引用
@@ -255,14 +269,15 @@ class YamlTriggerV2 @Autowired constructor(
                 triggerUserId = gitRequestEvent.userId,
                 sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
-                triggerToken = if (isFork) {
-                    tokenService.getToken(forkGitProjectId!!)
-                } else {
-                    tokenService.getToken(gitRequestEvent.gitProjectId)
-                },
+                triggerToken = tokenService.getToken(gitRequestEvent.gitProjectId),
                 repo = null,
                 repoTemplateGraph = TemplateGraph(),
-                getTemplateMethod = yamlTemplateService::getTemplate
+                getTemplateMethod = yamlTemplateService::getTemplate,
+                forkGitToken = if (forkGitProjectId != null) {
+                    tokenService.getToken(forkGitProjectId)
+                } else null,
+                changeSet = changeSet,
+                event = event
             ).replace()
             return YamlObjects(
                 preYaml = preYamlObject,
@@ -273,6 +288,9 @@ class YamlTriggerV2 @Autowired constructor(
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
+                }
+                is YamlBehindException -> {
+                    Triple(isMr, e.filePath, TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE)
                 }
                 is YamlFormatException, is JsonProcessingException, is CustomException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)

@@ -46,5 +46,6 @@ data class StreamTriggerEvent(
     val originYaml: String?,
     val filePath: String,
     val gitCIBasicSetting: GitCIBasicSetting,
-    val forkGitProjectId: Long?
+    val changeSet: Set<String>? = null,
+    val forkGitProjectId: Long? = null
 )

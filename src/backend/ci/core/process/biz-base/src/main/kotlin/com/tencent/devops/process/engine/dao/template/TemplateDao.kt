@@ -583,6 +583,20 @@ class TemplateDao {
         }
     }
 
+    fun listTemplateReferenceByProjects(
+        dslContext: DSLContext,
+        templateId: String,
+        projectIds: List<String>
+    ): Result<TTemplateRecord> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(TYPE.eq(TemplateType.CONSTRAINT.name))
+                .and(SRC_TEMPLATE_ID.eq(templateId))
+                .and(PROJECT_ID.`in`(projectIds))
+                .fetch()
+        }
+    }
+
     /**
      * 统计用户自定义模板总数
      * 统计规则：template字段不为NULL

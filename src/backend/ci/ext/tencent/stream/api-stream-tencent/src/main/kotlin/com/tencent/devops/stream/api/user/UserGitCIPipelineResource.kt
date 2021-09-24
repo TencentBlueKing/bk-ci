@@ -115,6 +115,15 @@ interface UserGitCIPipelineResource {
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<List<GitProjectPipeline>>
 }

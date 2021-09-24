@@ -51,5 +51,7 @@ data class GitCIBuildHistorySearch(
     @ApiModelProperty("Event", required = false)
     val event: Set<TGitObjectKind>?,
     @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?
+    val status: Set<BuildStatus>?,
+    @ApiModelProperty("流水线列表", required = false)
+    val pipelineIds: Set<String>?
 )

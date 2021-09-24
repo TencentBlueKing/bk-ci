@@ -71,6 +71,7 @@ class YamlTrigger @Autowired constructor(
         event: GitEvent,
         originYaml: String?,
         filePath: String,
+        changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): Boolean {
         val yamlObject = prepareCIBuildYaml(
@@ -80,6 +81,8 @@ class YamlTrigger @Autowired constructor(
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
             pipelineName = gitProjectPipeline.displayName,
+            event = null,
+            changeSet = null,
             forkGitProjectId = forkGitProjectId
         ) ?: return false
 
@@ -135,7 +138,8 @@ class YamlTrigger @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
         }
 
@@ -158,6 +162,8 @@ class YamlTrigger @Autowired constructor(
         filePath: String,
         pipelineId: String?,
         pipelineName: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): CIBuildYaml? {
 
@@ -183,7 +189,8 @@ class YamlTrigger @Autowired constructor(
                 // V1不发送通知
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             return null
         }
