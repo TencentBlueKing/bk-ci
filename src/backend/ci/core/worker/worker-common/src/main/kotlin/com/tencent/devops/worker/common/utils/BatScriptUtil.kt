@@ -27,7 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.pipeline.enums.CharSetType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -150,9 +150,9 @@ object BatScriptUtil {
             ))
 
         // #4601 没有指定编码字符集时采用获取系统的默认字符集
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> Charsets.UTF_8
-            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
+        val charset = when (charSetType?.let { CharsetType.valueOf(it) }) {
+            CharsetType.UTF_8 -> Charsets.UTF_8
+            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
             else -> Charset.defaultCharset()
         }
 
