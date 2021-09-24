@@ -22,7 +22,7 @@ class BkAuthPermissionProjectService : PermissionProjectService {
         return true
     }
 
-    override fun createProjectUser(userId: String, projectCode: String, roleName: String): Boolean {
+    override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
         return true
     }
 
