@@ -36,7 +36,7 @@
                 <empty v-else size="small" type="no-atoms" />
             </template>
         </div>
-        <div v-if="category !== 'TRIGGER'" :class="{ 'fixed-tool': true, 'active': isToolActive }" @click="isToolActive = !isToolActive">
+        <div v-if="category !== 'TRIGGER'" :class="{ 'fixed-tool': true, 'active': isToolActive }" @click="handleToggleShowUnRecommend">
             {{ $t('editPage.fixedTips') }} ({{ unRecommendAtomLength }})
             <span class="devops-icon icon-angle-right"></span>
         </div>
@@ -429,6 +429,9 @@
                                 }
                             }
                         }, 1000)
+                        const unRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[0]
+                        const atomMain = document.getElementsByClassName('atom-item-main')[0]
+                        unRecommendDom.style.height = atomMain.getBoundingClientRect().height + 'px'
                     }
                 } else {
                     if (!this.isUnRecommendStorePageOver && !this.isUnRecommendThrottled && !this.isUnRecommendMoreLoading) {
@@ -454,10 +457,38 @@
                             }
                         }, 1000)
                     }
+                    const unRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[1]
+                    const atomMain = document.getElementsByClassName('atom-item-main')[1]
+                    unRecommendDom.style.height = atomMain.getBoundingClientRect().height + 'px'
                 }
             },
             close () {
                 this.toggleAtomSelectorPopup(false)
+            },
+            handleToggleShowUnRecommend () {
+                this.isToolActive = !this.isToolActive
+                const unProjectRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[0]
+                const unStoreRecommendDom = document.querySelectorAll('.unRecommend-atom-list')[1]
+                if (this.RecommendAtomLength < 3) {
+                    if (this.isToolActive) {
+                        const projectAtomMain = document.querySelectorAll('.atom-item-main')[0]
+                        console.log(unProjectRecommendDom.style.height)
+                        unProjectRecommendDom.style.height = projectAtomMain.getBoundingClientRect().height + 'px'
+
+                        const storeAtomMain = document.querySelectorAll('.atom-item-main')[1]
+                        unStoreRecommendDom.style.height = storeAtomMain.getBoundingClientRect().height + 'px'
+                    } else {
+                        unProjectRecommendDom.style.height = ''
+                        unStoreRecommendDom.style.height = ''
+                    }
+                } else {
+                    if (unProjectRecommendDom.style.height) {
+                        unProjectRecommendDom.style.height = ''
+                    }
+                    if (unStoreRecommendDom.style.height) {
+                        unStoreRecommendDom.style.height = ''
+                    }
+                }
             }
         }
     }

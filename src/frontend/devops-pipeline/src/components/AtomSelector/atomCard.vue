@@ -232,7 +232,7 @@
                 }
                 this.installAtom(param).then(() => {
                     const atoms = this.getStoreRecommendAtomMap
-                    atoms[atomCode].installed = true
+                    this.$set(atoms[atomCode], 'installed', true)
                     this.updateStoreAtoms({
                         atoms: atoms,
                         recommend: true
