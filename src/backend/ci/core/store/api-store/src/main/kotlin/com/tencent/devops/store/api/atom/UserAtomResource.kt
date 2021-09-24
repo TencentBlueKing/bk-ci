@@ -99,6 +99,9 @@ interface UserAtomResource {
         @ApiParam("查询项目插件标识", required = true)
         @QueryParam("queryProjectAtomFlag")
         queryProjectAtomFlag: Boolean = true,
+        @ApiParam("是否适配操作系统标识", required = false)
+        @QueryParam("fitOsFlag")
+        fitOsFlag: Boolean? = true,
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,

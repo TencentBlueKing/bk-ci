@@ -62,6 +62,7 @@ interface AtomService {
         recommendFlag: Boolean?,
         keyword: String?,
         queryProjectAtomFlag: Boolean = true,
+        fitOsFlag: Boolean? = true,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
@@ -80,6 +81,7 @@ interface AtomService {
         recommendFlag: Boolean?,
         keyword: String?,
         queryProjectAtomFlag: Boolean = true,
+        fitOsFlag: Boolean? = true,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>

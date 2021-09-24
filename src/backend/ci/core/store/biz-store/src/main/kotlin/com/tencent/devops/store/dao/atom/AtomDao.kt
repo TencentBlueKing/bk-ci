@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.KEY_ALL
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -51,6 +52,7 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -502,6 +504,7 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
+        fitOsFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
@@ -520,7 +523,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions =
             queryNormalAtomCondition(
@@ -535,7 +539,8 @@ class AtomDao : AtomBaseDao() {
                 category = category,
                 classifyId = classifyId,
                 recommendFlag = recommendFlag,
-                keyword = keyword
+                keyword = keyword,
+                fitOsFlag = fitOsFlag
             ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
         var queryInitTestAtomStep:SelectOnConditionStep<Record>? = null
@@ -555,7 +560,8 @@ class AtomDao : AtomBaseDao() {
                     category = category,
                     classifyId = classifyId,
                     recommendFlag = recommendFlag,
-                    keyword = keyword
+                    keyword = keyword,
+                    fitOsFlag = fitOsFlag
                 ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(
@@ -657,7 +663,8 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
-        keyword: String?
+        keyword: String?,
+        fitOsFlag: Boolean?
     ): Long {
         val ta = TAtom.T_ATOM.`as`("ta")
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
@@ -673,7 +680,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions = queryNormalAtomCondition(
             ta = ta,
@@ -687,7 +695,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
@@ -706,7 +715,8 @@ class AtomDao : AtomBaseDao() {
                 category = category,
                 classifyId = classifyId,
                 recommendFlag = recommendFlag,
-                keyword = keyword
+                keyword = keyword,
+                fitOsFlag = fitOsFlag
             ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
@@ -739,7 +749,7 @@ class AtomDao : AtomBaseDao() {
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record1<Int>> {
-        return dslContext.selectCount().from(ta)
+        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE)).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
             .leftJoin(tsst)
@@ -756,7 +766,8 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
-        keyword: String?
+        keyword: String?,
+        fitOsFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -768,7 +779,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
@@ -786,21 +798,34 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
-        keyword: String?
+        keyword: String?,
+        fitOsFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(serviceScope, true)) {
+        if (!serviceScope.isNullOrBlank() && !KEY_ALL.equals(serviceScope, true)) {
             conditions.add(ta.SERVICE_SCOPE.contains(serviceScope))
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
         if (!jobType.isNullOrBlank()) {
-            conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
+            if (jobType == JobTypeEnum.AGENT.name) {
+                conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
+            } else {
+                conditions.add(ta.JOB_TYPE.eq(jobType))
+            }
         }
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) {
-            conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
+        if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
+            if (fitOsFlag == false) {
+                conditions.add(ta.OS.notContains(os))
+            } else {
+                conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
+            }
+        } else if (KEY_ALL.equals(os, true)) {
+            if (fitOsFlag == false) {
+                conditions.add(ta.JOB_TYPE.eq(JobTypeEnum.AGENT_LESS.name))
+            }
         }
         if (null != category) conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(ta.CLASSIFY_ID.eq(classifyId))
+        if (!classifyId.isNullOrBlank()) conditions.add(ta.CLASSIFY_ID.eq(classifyId))
         if (null != recommendFlag) {
             conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
         }
@@ -824,7 +849,8 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
-        keyword: String?
+        keyword: String?,
+        fitOsFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -836,7 +862,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(false)) // 查普通插件
@@ -860,7 +887,8 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         recommendFlag: Boolean?,
-        keyword: String?
+        keyword: String?,
+        fitOsFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -872,7 +900,8 @@ class AtomDao : AtomBaseDao() {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         )
         conditions.add(ta.ATOM_STATUS.`in`(listOf(
             AtomStatusEnum.TESTING.status.toByte(),

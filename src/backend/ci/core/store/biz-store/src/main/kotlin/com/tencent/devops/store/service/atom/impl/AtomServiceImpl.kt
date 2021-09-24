@@ -225,6 +225,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         recommendFlag: Boolean?,
         keyword: String?,
         queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -260,6 +261,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             recommendFlag = recommendFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
             keyword = keyword,
+            fitOsFlag = fitOsFlag,
             page = page,
             pageSize = pageSize
         )
@@ -277,6 +279,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         recommendFlag: Boolean?,
         keyword: String?,
         queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -291,6 +294,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
+            fitOsFlag = fitOsFlag,
             page = page,
             pageSize = pageSize
         )
@@ -405,7 +409,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             category = category,
             classifyId = classifyId,
             recommendFlag = recommendFlag,
-            keyword = keyword
+            keyword = keyword,
+            fitOsFlag = fitOsFlag
         )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
         return Result(AtomResp(totalSize, page, pageSize, totalPage, dataList))
