@@ -121,9 +121,9 @@ interface ServiceProjectAuthResource {
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        @QueryParam("roleId")
-        @ApiParam("用户组Id", required = true)
-        role: String
+        @QueryParam("roleName")
+        @ApiParam("用户组名称", required = true)
+        roleName: String
     ): Result<Boolean>
 
     @GET

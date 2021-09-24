@@ -41,7 +41,7 @@ interface PermissionProjectService {
 
     fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
 
-    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
+    fun createProjectUser(userId: String, projectCode: String, roleName: String): Boolean
 
     fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }
