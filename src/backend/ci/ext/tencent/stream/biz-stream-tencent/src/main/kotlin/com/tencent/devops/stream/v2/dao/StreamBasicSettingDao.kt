@@ -38,7 +38,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class GitCIBasicSettingDao {
+class StreamBasicSettingDao {
 
     fun saveSetting(
         dslContext: DSLContext,

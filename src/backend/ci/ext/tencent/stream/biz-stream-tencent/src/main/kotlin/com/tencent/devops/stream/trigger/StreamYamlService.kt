@@ -36,7 +36,7 @@ import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.EnvironmentVariables
 import com.tencent.devops.stream.pojo.v2.V2BuildYaml
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +50,7 @@ class StreamYamlService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitCIV1SettingDao: GitCISettingDao,
-    private val gitCISettingDao: GitCIBasicSettingDao,
+    private val gitCISettingDao: StreamBasicSettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
 

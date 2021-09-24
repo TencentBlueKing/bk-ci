@@ -35,7 +35,7 @@ import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
-class GitUserMessageDao {
+class StreamUserMessageDao {
 
     fun save(
         dslContext: DSLContext,

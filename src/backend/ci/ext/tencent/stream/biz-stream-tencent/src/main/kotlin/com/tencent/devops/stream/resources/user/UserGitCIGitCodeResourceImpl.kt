@@ -35,7 +35,7 @@ import com.tencent.devops.stream.constant.GitCIConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.GitCIConstant.STREAM_FILE_SUFFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.repository.pojo.git.GitMember
@@ -51,7 +51,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService
 ) : UserGitCIGitCodeResource {
 
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
@@ -171,7 +171,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
-            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+            val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
             oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken

@@ -44,8 +44,8 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.v1.YamlBuild
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,10 +61,10 @@ class ManualTriggerService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitCIEventService: GitCIEventService,
     private val yamlBuild: YamlBuild,
-    private val yamlBuildV2: YamlBuildV2,
+    private val yamlBuildV2: StreamYamlBuild,
     private val streamYamlService: StreamYamlService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
@@ -220,7 +220,7 @@ class ManualTriggerService @Autowired constructor(
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+        streamBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
         yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,

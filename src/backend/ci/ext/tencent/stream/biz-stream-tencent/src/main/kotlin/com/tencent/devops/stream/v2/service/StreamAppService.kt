@@ -3,7 +3,7 @@ package com.tencent.devops.stream.v2.service
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList")
-class GitCIAppService @Autowired constructor(
+class StreamAppService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamScmService: StreamScmService,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val oauthService: StreamOauthService
 ) {
@@ -41,7 +41,7 @@ class GitCIAppService @Autowired constructor(
         if (projectIdMap.isNullOrEmpty()) {
             return Pagination(false, emptyList())
         }
-        val projects = gitCIBasicSettingDao.searchProjectByIds(dslContext, projectIdMap.keys)
+        val projects = streamBasicSettingDao.searchProjectByIds(dslContext, projectIdMap.keys)
         val result = projects.map {
             AppProjectVO(
                 projectCode = it.projectCode,

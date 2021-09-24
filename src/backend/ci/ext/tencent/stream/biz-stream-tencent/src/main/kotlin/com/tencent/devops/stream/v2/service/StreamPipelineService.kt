@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIV2PipelineService @Autowired constructor(
+class StreamPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
@@ -55,10 +55,10 @@ class GitCIV2PipelineService @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val tokenService: StreamGitTokenService,
     private val redisOperation: RedisOperation,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: StreamWebsocketService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
         private val channelCode = ChannelCode.GIT
     }
 

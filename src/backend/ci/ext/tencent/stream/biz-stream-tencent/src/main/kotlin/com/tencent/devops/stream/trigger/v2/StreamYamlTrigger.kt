@@ -55,7 +55,7 @@ import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
@@ -66,20 +66,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class YamlTriggerV2 @Autowired constructor(
+class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamScmService: StreamScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitBasicSettingService: GitCIBasicSettingService,
+    private val gitBasicSettingService: StreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
     private val yamlCheck: YamlCheck,
-    private val yamlBuildV2: YamlBuildV2,
+    private val yamlBuildV2: StreamYamlBuild,
     private val tokenService: StreamGitTokenService
 ) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(YamlTriggerV2::class.java)
+        private val logger = LoggerFactory.getLogger(StreamYamlTrigger::class.java)
         const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
