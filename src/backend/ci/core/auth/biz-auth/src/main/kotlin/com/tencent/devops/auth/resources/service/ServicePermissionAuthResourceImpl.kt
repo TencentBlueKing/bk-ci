@@ -80,6 +80,33 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun batchValidateUserResourcePermissionByRelation(
+        userId: String,
+        token: String,
+        action: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Result<Boolean> {
+        var actionCheckPermission = true
+        action.forEach {
+            val checkActionPermission = permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = it,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = relationResourceType
+            )
+            if (!checkActionPermission) {
+                actionCheckPermission = false
+                return@forEach
+            }
+        }
+        return Result(actionCheckPermission)
+    }
+
     override fun getUserResourceByPermission(
         userId: String,
         token: String,
