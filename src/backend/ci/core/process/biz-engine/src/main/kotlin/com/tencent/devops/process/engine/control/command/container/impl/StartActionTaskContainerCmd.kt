@@ -134,7 +134,7 @@ class StartActionTaskContainerCmd(
         val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         if (actionType == ActionType.END && failedEvenCancelFlag) {
             val container = commandContext.container
-            val timeOutMinutes = container.controlOption?.jobControlOption?.timeout ?: Timeout.MAX_MINUTES
+            val timeOutMinutes = (container.controlOption?.jobControlOption?.timeout ?: Timeout.MAX_MINUTES) + 0L
             redisOperation.set(
                 key = ContainerUtils.getContainerRunEvenCancelTaskKey(
                     pipelineId = waitToDoTask.pipelineId,
@@ -142,7 +142,7 @@ class StartActionTaskContainerCmd(
                     containerId = waitToDoTask.containerId
                 ),
                 value = waitToDoTask.taskId,
-                expiredInSecond = TimeUnit.MINUTES.toSeconds(timeOutMinutes.toLong())
+                expiredInSecond = TimeUnit.MINUTES.toSeconds(timeOutMinutes)
             )
         }
     }
@@ -367,10 +367,9 @@ class StartActionTaskContainerCmd(
                 jobId = currentTask.containerHashId,
                 executeCount = currentTask.executeCount ?: 1
             )
-            return null
+        } else {
+            containerContext.buildStatus = BuildStatus.PAUSE
         }
-
-        containerContext.buildStatus = BuildStatus.PAUSE
 
         return null
     }
