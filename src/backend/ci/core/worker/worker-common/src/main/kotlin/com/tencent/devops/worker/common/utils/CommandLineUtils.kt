@@ -58,7 +58,7 @@ object CommandLineUtils {
         executeErrorMessage: String? = null,
         buildId: String? = null,
         elementId: String? = null,
-        charSetType: String? = null
+        charsetType: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -74,7 +74,7 @@ object CommandLineUtils {
             null
         }
 
-        val charset = when (charSetType?.let { CharsetType.valueOf(it) }) {
+        val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
             CharsetType.UTF_8 -> "UTF-8"
             CharsetType.GBK -> "GBK"
             else -> Charset.defaultCharset().name()
