@@ -1076,10 +1076,10 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.endTime = null
                                 it.executeCount += 1
                                 it.checkIn = if (stage.checkIn != null) {
-                                    JsonUtil.toJson(stage.checkIn!!)
+                                    JsonUtil.toJson(stage.checkIn!!, formatted = false)
                                 } else null
                                 it.checkOut = if (stage.checkOut != null) {
-                                    JsonUtil.toJson(stage.checkOut!!)
+                                    JsonUtil.toJson(stage.checkOut!!, formatted = false)
                                 } else null
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
@@ -1130,7 +1130,13 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
-                    buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
+                    buildDetailDao.update(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        model = JsonUtil.toJson(fullModel, formatted = false),
+                        buildStatus = startBuildStatus,
+                        cancelUser = ""
+                    )
                 } else { // 创建构建记录
                     // 构建号递增
                     val buildNum = pipelineBuildSummaryDao.updateBuildNum(
@@ -1196,7 +1202,7 @@ class PipelineRuntimeService @Autowired constructor(
                         startUser = context.userId,
                         startType = context.startType,
                         buildNum = buildNum,
-                        model = JsonUtil.toJson(fullModel),
+                        model = JsonUtil.toJson(fullModel, formatted = false),
                         buildStatus = BuildStatus.QUEUE
                     )
                     // 写入BuildNo
@@ -1516,7 +1522,7 @@ class PipelineRuntimeService @Autowired constructor(
             atomElement.elapsed = null
             atomElement.startEpoch = null
             atomElement.canRetry = false
-            target.taskParams = JsonUtil.toJson(atomElement.genTaskParams()) // 更新参数
+            target.taskParams = JsonUtil.toJson(atomElement.genTaskParams(), formatted = false) // 更新参数
         }
     }
 
@@ -1552,20 +1558,27 @@ class PipelineRuntimeService @Autowired constructor(
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         val result = pipelineBuildTaskDao.updateTaskParam(
-                            dslContext,
-                            buildId,
-                            taskId,
-                            JsonUtil.toJson(taskParam)
+                            dslContext = dslContext,
+                            buildId = buildId,
+                            taskId = taskId,
+                            taskParam = JsonUtil.toJson(taskParam, formatted = false)
                         )
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
                         }
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
-                                javaClass.simpleName,
-                                projectId, pipelineId, starter, buildId, stageId,
-                                containerId, containerType, taskId,
-                                taskParam, ActionType.REFRESH
+                                source = javaClass.simpleName,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = starter,
+                                buildId = buildId,
+                                stageId = stageId,
+                                containerId = containerId,
+                                containerType = containerType,
+                                taskId = taskId,
+                                taskParam = taskParam,
+                                actionType = ActionType.REFRESH
                             )
                         )
                     }
@@ -1585,13 +1598,13 @@ class PipelineRuntimeService @Autowired constructor(
                         taskParam[BS_MANUAL_ACTION] = params.status.toString()
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
-                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params)
+                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params, formatted = false)
                         taskParam[BS_MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
                         val result = pipelineBuildTaskDao.updateTaskParam(
                             dslContext = dslContext,
                             buildId = buildId,
                             taskId = taskId,
-                            taskParam = JsonUtil.toJson(taskParam)
+                            taskParam = JsonUtil.toJson(taskParam, formatted = false)
                         )
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
@@ -1743,7 +1756,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 buildStatus = status,
                 executeTime = executeTime,
-                buildParameters = JsonUtil.toJson(buildParameters),
+                buildParameters = JsonUtil.toJson(buildParameters, formatted = false),
                 recommendVersion = recommendVersion,
                 remark = remark,
                 errorInfoList = errorInfoList
@@ -1795,7 +1808,7 @@ class PipelineRuntimeService @Autowired constructor(
             logger.error("getBuildParameters-$buildId exception:", e)
             mutableListOf()
         }
-        pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters))
+        pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters, false))
     }
 
     fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {

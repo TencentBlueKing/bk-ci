@@ -82,7 +82,7 @@ class PipelineBuildContainerDao {
                         buildContainer.cost,
                         buildContainer.executeCount,
                         if (buildContainer.controlOption != null) {
-                            JsonUtil.toJson(buildContainer.controlOption!!)
+                            JsonUtil.toJson(buildContainer.controlOption!!, formatted = false)
                         } else null
                     )
                     .execute()
@@ -109,7 +109,11 @@ class PipelineBuildContainerDao {
                         .set(END_TIME, it.endTime)
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .set(CONDITIONS, if (it.controlOption != null) {
+                            JsonUtil.toJson(it.controlOption!!, formatted = false)
+                        } else {
+                            null
+                        })
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)

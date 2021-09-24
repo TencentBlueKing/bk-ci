@@ -95,7 +95,7 @@ class ApiAccessTokenService @Autowired constructor(
         tokenInfo.accessToken = try {
             URLEncoder.encode(AESUtil.encrypt(
                 secret,
-                JsonUtil.toUnformattedJson(tokenInfo)
+                JsonUtil.toJson(tokenInfo, formatted = false)
             ), "UTF-8")
         } catch (ignore: Throwable) {
             logger.error("AUTH| generateUserToken failed because $ignore ")

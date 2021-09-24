@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -43,14 +42,14 @@ import org.jooq.InsertSetMoreStep
 import org.jooq.Query
 import org.jooq.Result
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
-@Suppress("ALL")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
-class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineBuildTaskDao {
 
     fun create(
         dslContext: DSLContext,
@@ -95,11 +94,13 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         buildTask.subBuildId,
                         buildTask.status.ordinal,
                         buildTask.starter,
-                        objectMapper.writeValueAsString(buildTask.taskParams),
+                        JsonUtil.toJson(buildTask.taskParams, formatted = false),
                         buildTask.startTime,
                         buildTask.endTime,
                         buildTask.approver,
-                        objectMapper.writeValueAsString(buildTask.additionalOptions),
+                        if (buildTask.additionalOptions != null) {
+                            JsonUtil.toJson(buildTask.additionalOptions!!, formatted = false)
+                        } else null,
                         buildTask.atomCode
                     )
                     .execute()
@@ -121,7 +122,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(CONTAINER_ID, it.containerId)
                         .set(TASK_NAME, it.taskName)
                         .set(TASK_ID, it.taskId)
-                        .set(TASK_PARAMS, objectMapper.writeValueAsString(it.taskParams))
+                        .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
                         .set(TASK_TYPE, it.taskType)
                         .set(TASK_ATOM, it.taskAtom)
                         .set(START_TIME, it.startTime)
@@ -133,10 +134,19 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(TASK_SEQ, it.taskSeq)
                         .set(SUB_BUILD_ID, it.subBuildId)
                         .set(CONTAINER_TYPE, it.containerType)
-                        .set(ADDITIONAL_OPTIONS, objectMapper.writeValueAsString(it.additionalOptions))
-                        .set(TOTAL_TIME, if (it.endTime != null && it.startTime != null) {
-                            Duration.between(it.startTime, it.endTime).toMillis() / 1000
-                        } else null)
+                        .set(ADDITIONAL_OPTIONS,
+                            if (it.additionalOptions != null) {
+                                JsonUtil.toJson(it.additionalOptions!!, formatted = false)
+                            } else {
+                                null
+                            })
+                        .set(TOTAL_TIME,
+                            if (it.endTime != null && it.startTime != null) {
+                                TimeUnit.MILLISECONDS.toSeconds(Duration.between(it.startTime, it.endTime).toMillis())
+                            } else {
+                                null
+                            }
+                        )
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
                         .set(ERROR_MSG,

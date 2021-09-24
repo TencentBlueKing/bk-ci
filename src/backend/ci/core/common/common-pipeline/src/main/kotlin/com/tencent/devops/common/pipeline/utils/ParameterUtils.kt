@@ -42,8 +42,8 @@ object ParameterUtils {
         }
     }
 
-    fun element2Str(element: Element, objectMapper: ObjectMapper): String? {
-        val elementStr = objectMapper.writeValueAsString(element)
+    fun element2Str(element: Element): String? {
+        val elementStr = JsonUtil.toJson(element)
         if (elementStr.length > 65534) {
             return null
         }
