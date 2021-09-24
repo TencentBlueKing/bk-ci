@@ -50,10 +50,12 @@ class GitRequestEventNotBuildDao {
         pipelineId: String?,
         filePath: String?,
         gitProjectId: Long,
-        version: String?
+        version: String?,
+        branch: String?
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
-            val record = dslContext.insertInto(this,
+            val record = dslContext.insertInto(
+                this,
                 EVENT_ID,
                 ORIGIN_YAML,
                 PIPELINE_ID,
@@ -64,7 +66,8 @@ class GitRequestEventNotBuildDao {
                 REASON_DETAIL,
                 GIT_PROJECT_ID,
                 CREATE_TIME,
-                VERSION
+                VERSION,
+                BRANCH
             ).values(
                 eventId,
                 originYaml,
@@ -76,7 +79,8 @@ class GitRequestEventNotBuildDao {
                 reasonDetail,
                 gitProjectId,
                 LocalDateTime.now(),
-                version
+                version,
+                branch
             ).returning(ID)
                 .fetchOne()!!
             return record.id
@@ -201,6 +205,21 @@ class GitRequestEventNotBuildDao {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             return dslContext.delete(this)
                 .where(ID.`in`(ids)).execute()
+        }
+    }
+
+    fun getLatestBuild(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String?
+    ): TGitRequestEventNotBuildRecord? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            val query = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
+            return query.orderBy(EVENT_ID.desc())
+                .fetchAny()
         }
     }
 }

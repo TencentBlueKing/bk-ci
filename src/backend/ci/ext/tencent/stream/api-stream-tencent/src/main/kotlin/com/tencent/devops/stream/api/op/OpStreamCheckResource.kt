@@ -25,33 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.api.op
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("V2版本多选搜索过滤历史参数")
-data class GitCIBuildHistorySearch(
-    @ApiModelProperty("第几页", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页多少条", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("分支", required = false)
-    val branch: Set<String>?,
-    @ApiModelProperty("fork库分支", required = false)
-    val sourceGitProjectId: Set<String>?,
-    @ApiModelProperty("触发人", required = false)
-    val triggerUser: Set<String>?,
-    @ApiModelProperty("流水线ID", required = false)
-    val pipelineId: String?,
-    @ApiModelProperty("Commit Msg", required = false)
-    val commitMsg: String?,
-    @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
-    @ApiModelProperty("构建状态", required = false)
-    val status: Set<BuildStatus>?,
-    @ApiModelProperty("流水线列表", required = false)
-    val pipelineIds: Set<String>?
-)
+@Api(tags = ["OP_STREAM_CHECK"], description = "Stream校验op系统")
+@Path("/op/stream/check")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStreamCheckResource {
+
+    @ApiOperation("校验并删除在工蜂中不存在的分支")
+    @POST
+    @Path("/branches")
+    fun checkBranches(
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long?,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
+}
