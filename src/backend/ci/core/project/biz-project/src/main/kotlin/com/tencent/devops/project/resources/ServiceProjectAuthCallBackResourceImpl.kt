@@ -48,7 +48,7 @@ class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 val attribute = callBackInfo.filter.attribute
-                return authProjectService.getProjectInfo(ids, token)
+                return authProjectService.getProjectInfo(ids, token, attribute)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
