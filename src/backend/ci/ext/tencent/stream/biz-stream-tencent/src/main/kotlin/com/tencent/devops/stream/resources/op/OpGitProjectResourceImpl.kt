@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.OpGitProjectResource
+import com.tencent.devops.stream.api.op.OpGitProjectResource
 import com.tencent.devops.stream.pojo.GitProjectConfWithPage
 import com.tencent.devops.stream.service.GitProjectConfService
 import org.springframework.beans.factory.annotation.Autowired

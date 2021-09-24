@@ -141,7 +141,8 @@ class YamlTrigger @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
         }
 
@@ -192,7 +193,8 @@ class YamlTrigger @Autowired constructor(
                 // V1不发送通知
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             return null
         }

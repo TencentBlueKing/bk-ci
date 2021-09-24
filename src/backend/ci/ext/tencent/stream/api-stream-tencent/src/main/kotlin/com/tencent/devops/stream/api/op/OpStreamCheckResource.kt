@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,19 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:process:model-process"))
-    api(project(":core:process:api-process"))
-    api(project(":core:process:plugin-sdk"))
-    api(project(":core:project:api-project"))
-    implementation("org.quartz-scheduler:quartz") {
-        exclude(group = "com.zaxxer", module = "HikariCP-java7")
-    }
-}
+package com.tencent.devops.stream.api.op
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_STREAM_CHECK"], description = "Stream校验op系统")
+@Path("/op/stream/check")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStreamCheckResource {
+
+    @ApiOperation("校验并删除在工蜂中不存在的分支")
+    @POST
+    @Path("/branches")
+    fun checkBranches(
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long?,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }
