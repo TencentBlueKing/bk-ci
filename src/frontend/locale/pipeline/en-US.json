@@ -645,6 +645,7 @@
         "notWorkAtCur": "Not available under current Job type",
         "knowMore": "Read more",
         "noInstallRight": "No permission to install this image",
+        "noInstallPerm": "Install without permission. If necessary, contact the plug-in publisher to adjust the visibility",
         "install": "Install",
         "all": "All",
         "store": "RD store",

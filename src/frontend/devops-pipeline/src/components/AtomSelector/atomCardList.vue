@@ -472,7 +472,6 @@
                 if (this.RecommendAtomLength < 3) {
                     if (this.isToolActive) {
                         const projectAtomMain = document.querySelectorAll('.atom-item-main')[0]
-                        console.log(unProjectRecommendDom.style.height)
                         unProjectRecommendDom.style.height = projectAtomMain.getBoundingClientRect().height + 'px'
 
                         const storeAtomMain = document.querySelectorAll('.atom-item-main')[1]

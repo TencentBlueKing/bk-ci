@@ -57,7 +57,7 @@
             </p>
             <template>
                 <p v-if="atom.summary" :class="{ 'desc': true, 'desc-height': !atom.labelList }">{{ atom.summary }}</p>
-                <div v-else style="padding-bottom: 30px;"></div>
+                <div v-else style="padding-bottom: 20px;"></div>
             </template>
             <template>
                 <span v-if="atom.labelList" class="atom-label">
@@ -174,7 +174,9 @@
              * @param atomCode 插件名 Code
              */
             handleUpdateAtomType (atom) {
-                const { atomCode, installed } = atom
+                const { atomCode, defaultFlag } = atom
+                let { installed } = atom
+                if (defaultFlag) installed = true
                 if (!this.isRecommend || !installed) return
                 const { elementIndex, container, updateAtomType, getAtomModal, fetchAtomModal, getDefaultVersion } = this
                 const version = getDefaultVersion(atomCode)
