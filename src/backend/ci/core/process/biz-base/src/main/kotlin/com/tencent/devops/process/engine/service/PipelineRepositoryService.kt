@@ -98,7 +98,8 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val versionConfigure: VersionConfigure
+    private val versionConfigure: VersionConfigure,
+    private val pipelineInfoExtService: PipelineInfoExtService
 ) {
 
     fun deployPipeline(
@@ -438,7 +439,7 @@ class PipelineRepositoryService constructor(
                         // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
                         // 而其他渠道的默认没设置则什么通知都设置为不发
                         val notifyTypes = if (channelCode == ChannelCode.BS) {
-                            "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+                            pipelineInfoExtService.failNotifyChannel()
                         } else {
                             ""
                         }
