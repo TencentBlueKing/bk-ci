@@ -1718,7 +1718,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val tasks = getRunningTask(projectId, buildId)
+            val tasks = pipelineRuntimeService.getRunningTask(buildId)
 
             tasks.forEach { task ->
                 val taskId = task["taskId"] ?: ""
@@ -1761,10 +1761,6 @@ class PipelineBuildFacadeService(
         } finally {
             redisLock.unlock()
         }
-    }
-
-    private fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
-        return pipelineRuntimeService.getRunningTask(projectId, buildId)
     }
 
     fun getPipelineLatestBuildByIds(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {

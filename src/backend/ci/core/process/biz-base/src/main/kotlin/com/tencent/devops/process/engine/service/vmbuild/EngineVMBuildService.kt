@@ -337,7 +337,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
@@ -370,7 +370,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
-                    pipelineRuntimeService.claimBuildTask(buildId, task, userId)
+                    pipelineRuntimeService.claimBuildTask(task, userId)
                     taskBuildDetailService.taskStart(buildId, task.taskId)
                     jmxElements.execute(task.taskType)
                 }
