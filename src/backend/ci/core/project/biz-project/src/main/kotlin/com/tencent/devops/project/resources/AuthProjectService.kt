@@ -99,7 +99,7 @@ class AuthProjectService @Autowired constructor(
         val entityList = mutableListOf<InstanceInfoDTO>()
 
         projectInfo?.map {
-            val approve = if (attribute.contains("_bk_iam_approver_")) {
+            val approve = if (attribute.contains(APPROVE_KEY)) {
                 getProjectManager(it.projectCode)
             } else {
                 emptyList()
@@ -155,5 +155,6 @@ class AuthProjectService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(AuthProjectService::class.java)
+        const val APPROVE_KEY = "_bk_iam_approver_"
     }
 }

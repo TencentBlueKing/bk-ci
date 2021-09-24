@@ -112,7 +112,7 @@ class TxV3AuthProjectApi @Autowired constructor(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectCode,
-            roleName = role
+            roleCode = role
         ).data ?: false
     }
 
