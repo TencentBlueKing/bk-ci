@@ -1086,12 +1086,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = null
                                 it.endTime = null
                                 it.executeCount = context.executeCount
-                                it.checkIn = if (stage.checkIn != null) {
-                                    JsonUtil.toJson(stage.checkIn!!, formatted = false)
-                                } else null
-                                it.checkOut = if (stage.checkOut != null) {
-                                    JsonUtil.toJson(stage.checkOut!!, formatted = false)
-                                } else null
+                                it.checkIn = stage.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) }
+                                it.checkOut = stage.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) }
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
                             }
@@ -1335,7 +1331,7 @@ class PipelineRuntimeService @Autowired constructor(
             return null
         }
         return JsonUtil.toJson(
-            WebhookInfo(
+            bean = WebhookInfo(
                 webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?,
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
                 webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
@@ -1348,7 +1344,8 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
                 webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
-            )
+            ),
+            formatted = false
         )
     }
 
