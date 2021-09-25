@@ -25,7 +25,7 @@ class GitCIPipelineWebsocketPush(
     pushType = pushType,
     redisOperation = redisOperation,
     page = page,
-    notifyPost = notifyPost,
+    notifyPost = notifyPost
 ) {
 
     override fun findSession(page: String): List<String>? {
