@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,19 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:process:model-process"))
-    api(project(":core:process:api-process"))
-    api(project(":core:process:plugin-sdk"))
-    api(project(":core:project:api-project"))
-    implementation("org.quartz-scheduler:quartz") {
-        exclude(group = "com.zaxxer", module = "HikariCP-java7")
-    }
-}
+package com.tencent.devops.process.api.builds
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.classify.PipelineLabelDetail
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["BUILD_LABEL"], description = "构建-标签")
+@Path("/build/labels")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildLabelResource {
+
+    @ApiOperation("获取标签信息")
+    @Path("/list")
+    @GET
+    fun getLabelInfo(
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String
+    ): Result<PipelineLabelDetail>
 }
