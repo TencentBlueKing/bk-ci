@@ -25,44 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.service
+package com.tencent.devops.stream.config
 
-import com.tencent.devops.stream.v2.dao.GitPipelineBranchDao
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.TaskExecutor
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
-@Service
-class GitPipelineBranchService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val gitPipelineBranchDao: GitPipelineBranchDao
-) {
-    fun save(
-        gitProjectId: Long,
-        pipelineId: String,
-        branch: String
-    ) {
-        gitPipelineBranchDao.save(
-            dslContext = dslContext, gitProjectId = gitProjectId, pipelineId = pipelineId, branch = branch
-        )
-    }
+@Configuration
+@EnableAsync
+class StreamAsyncConfig {
 
-    fun deleteBranch(
-        pipelineId: String,
-        branch: String?
-    ): Boolean {
-        if (branch.isNullOrBlank()) {
-            return gitPipelineBranchDao.deletePipeline(dslContext = dslContext, pipelineId = pipelineId) > 0
-        } else {
-            return gitPipelineBranchDao.deleteBranch(
-                dslContext = dslContext, pipelineId = pipelineId, branch = branch
-            ) > 0
-        }
-    }
-
-    fun hasBranchExist(
-        pipelineId: String
-    ): Boolean {
-        return gitPipelineBranchDao.pipelineBranchCount(dslContext, pipelineId) > 0
+    @Bean
+    fun pipelineBranchCheckExecutor(): TaskExecutor? {
+        val executor = ThreadPoolTaskExecutor()
+        executor.corePoolSize = 1 // 核心线程数
+        executor.maxPoolSize = 1 // 最大线程数
+        executor.setQueueCapacity(1) // 任务队列容量
+        return executor
     }
 }

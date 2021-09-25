@@ -25,14 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.parsers.triggerParameter
+package com.tencent.devops.stream.resources.op
 
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.op.OpStreamCheckResource
+import com.tencent.devops.stream.v2.service.StreamAsyncService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class StreamContext(
-    val gitEvent: GitEvent,
-    val requestEvent: GitRequestEvent,
-    val streamSetting: GitCIBasicSetting
-)
+@RestResource
+class OpStreamCheckResourceImpl @Autowired constructor(
+    private val streamAsyncService: StreamAsyncService
+) : OpStreamCheckResource {
+    override fun checkBranches(gitProjectId: Long?, pipelineId: String?): Result<Boolean> {
+        streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
+        return Result(true)
+    }
+}

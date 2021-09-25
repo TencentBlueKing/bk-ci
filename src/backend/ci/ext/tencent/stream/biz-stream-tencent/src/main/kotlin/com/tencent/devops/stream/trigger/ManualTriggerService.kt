@@ -90,7 +90,8 @@ class ManualTriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
 
         // 流水线未启用在手动触发处直接报错
@@ -118,7 +119,8 @@ class ManualTriggerService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
@@ -262,7 +264,8 @@ class ManualTriggerService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             return null
         }

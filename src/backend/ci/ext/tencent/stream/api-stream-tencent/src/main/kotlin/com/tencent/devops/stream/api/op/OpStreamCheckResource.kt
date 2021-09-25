@@ -25,15 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.api.op
 
-object GitCIConstant {
-    // 蓝盾的工蜂项目前缀
-    const val DEVOPS_PROJECT_PREFIX = "git_"
-    // Stream的文件目录
-    const val STREAM_CI_FILE_DIR = ".ci"
-    // StreamYaml文件后缀
-    const val STREAM_FILE_SUFFIX = ".yml"
-    // Stream t_project表中保存的项目名称字段长度
-    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_STREAM_CHECK"], description = "Stream校验op系统")
+@Path("/op/stream/check")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStreamCheckResource {
+
+    @ApiOperation("校验并删除在工蜂中不存在的分支")
+    @POST
+    @Path("/branches")
+    fun checkBranches(
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long?,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }

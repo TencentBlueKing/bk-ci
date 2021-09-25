@@ -77,6 +77,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitPushEvent(
     val operation_kind: String,
+    val action_kind: String,
     val ref: String,
     val before: String,
     val after: String,

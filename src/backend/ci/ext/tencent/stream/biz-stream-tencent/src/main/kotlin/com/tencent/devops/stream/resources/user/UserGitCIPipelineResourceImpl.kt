@@ -99,13 +99,22 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listPipelineNames(userId: String, projectId: String): Result<List<GitProjectPipeline>> {
+    override fun listPipelineNames(
+        userId: String,
+        projectId: String,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
             pipelineV2Service.getPipelineListWithoutHistory(
                 userId = userId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                keyword = keyword,
+                page = page,
+                pageSize = pageSize
             )
         )
     }
