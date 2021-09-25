@@ -99,16 +99,8 @@ class TemplateService @Autowired constructor(
             versionName = versionName,
             templateId = templateId,
             userId = userId,
-            buildNo = if (buildNo == null) {
-                null
-            } else {
-                JsonUtil.toJson(buildNo, formatted = false)
-            },
-            param = if (param == null) {
-                null
-            } else {
-                JsonUtil.toJson(param, formatted = false)
-            }
+            buildNo = buildNo?.let { JsonUtil.toJson(buildNo, formatted = false) },
+            param = param?.let { JsonUtil.toJson(param, formatted = false) }
         )
         return true
     }

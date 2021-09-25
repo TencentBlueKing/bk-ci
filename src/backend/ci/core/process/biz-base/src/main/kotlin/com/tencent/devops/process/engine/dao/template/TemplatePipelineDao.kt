@@ -315,21 +315,8 @@ class TemplatePipelineDao {
                 .set(VERSION, templateVersion)
                 .set(VERSION_NAME, versionName)
                 .set(UPDATOR, userId)
-                .set(
-                    BUILD_NO,
-                    if (instance.buildNo != null) {
-                        JsonUtil.toJson(instance.buildNo!!, formatted = false)
-                    } else {
-                        null
-                    }
-                )
-                .set(PARAM,
-                    if (instance.param != null) {
-                        JsonUtil.toJson(instance.param!!, formatted = false)
-                    } else {
-                        null
-                    }
-                )
+                .set(BUILD_NO, instance.buildNo?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                .set(PARAM, instance.param?.let { a -> JsonUtil.toJson(a, formatted = false) })
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(instance.pipelineId))
                 .execute()
