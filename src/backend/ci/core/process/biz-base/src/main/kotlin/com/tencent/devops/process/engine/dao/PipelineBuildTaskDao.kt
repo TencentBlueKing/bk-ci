@@ -98,9 +98,7 @@ class PipelineBuildTaskDao {
                         buildTask.startTime,
                         buildTask.endTime,
                         buildTask.approver,
-                        if (buildTask.additionalOptions != null) {
-                            JsonUtil.toJson(buildTask.additionalOptions!!, formatted = false)
-                        } else null,
+                        buildTask.additionalOptions?.let { a -> JsonUtil.toJson(a, formatted = false) },
                         buildTask.atomCode
                     )
                     .execute()
@@ -113,47 +111,45 @@ class PipelineBuildTaskDao {
             mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
-                records.add(
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(BUILD_ID, it.buildId)
-                        .set(STAGE_ID, it.stageId)
-                        .set(CONTAINER_ID, it.containerId)
-                        .set(TASK_NAME, it.taskName)
-                        .set(TASK_ID, it.taskId)
-                        .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
-                        .set(TASK_TYPE, it.taskType)
-                        .set(TASK_ATOM, it.taskAtom)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(STARTER, it.starter)
-                        .set(APPROVER, it.approver)
-                        .set(STATUS, it.status.ordinal)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(TASK_SEQ, it.taskSeq)
-                        .set(SUB_BUILD_ID, it.subBuildId)
-                        .set(CONTAINER_TYPE, it.containerType)
-                        .set(ADDITIONAL_OPTIONS,
-                            if (it.additionalOptions != null) {
-                                JsonUtil.toJson(it.additionalOptions!!, formatted = false)
-                            } else {
-                                null
-                            })
-                        .set(TOTAL_TIME,
-                            if (it.endTime != null && it.startTime != null) {
-                                TimeUnit.MILLISECONDS.toSeconds(Duration.between(it.startTime, it.endTime).toMillis())
-                            } else {
-                                null
-                            }
-                        )
-                        .set(ERROR_TYPE, it.errorType?.ordinal)
-                        .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG,
-                            CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
-                        .set(CONTAINER_HASH_ID, it.containerHashId)
-                        .set(ATOM_CODE, it.atomCode)
-                )
+                val sql = dslContext.insertInto(this)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(BUILD_ID, it.buildId)
+                    .set(STAGE_ID, it.stageId)
+                    .set(CONTAINER_ID, it.containerId)
+                    .set(TASK_NAME, it.taskName)
+                    .set(TASK_ID, it.taskId)
+                    .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
+                    .set(TASK_TYPE, it.taskType)
+                    .set(TASK_ATOM, it.taskAtom)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(STARTER, it.starter)
+                    .set(APPROVER, it.approver)
+                    .set(STATUS, it.status.ordinal)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(TASK_SEQ, it.taskSeq)
+                    .set(SUB_BUILD_ID, it.subBuildId)
+                    .set(CONTAINER_TYPE, it.containerType)
+                    .set(ADDITIONAL_OPTIONS, it.additionalOptions?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                    .set(
+                        TOTAL_TIME,
+                        if (it.endTime != null && it.startTime != null) {
+                            TimeUnit.MILLISECONDS.toSeconds(Duration.between(it.startTime, it.endTime).toMillis())
+                        } else {
+                            null
+                        }
+                    )
+                    .set(ERROR_TYPE, it.errorType?.ordinal)
+                    .set(ERROR_CODE, it.errorCode)
+                    .set(
+                        ERROR_MSG,
+                        CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
+                    )
+                    .set(CONTAINER_HASH_ID, it.containerHashId)
+                    .set(ATOM_CODE, it.atomCode)
+
+                records.add(sql)
             }
             dslContext.batch(records).execute()
         }

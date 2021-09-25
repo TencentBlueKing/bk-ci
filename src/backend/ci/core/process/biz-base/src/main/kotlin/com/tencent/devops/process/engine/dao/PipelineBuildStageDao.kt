@@ -82,15 +82,9 @@ class PipelineBuildStageDao {
                     buildStage.endTime,
                     buildStage.cost,
                     buildStage.executeCount,
-                    if (buildStage.controlOption != null) {
-                        JsonUtil.toJson(buildStage.controlOption!!, formatted = false)
-                    } else null,
-                    if (buildStage.checkIn != null) {
-                        JsonUtil.toJson(buildStage.checkIn!!, formatted = false)
-                    } else null,
-                    if (buildStage.checkOut != null) {
-                        JsonUtil.toJson(buildStage.checkOut!!, formatted = false)
-                    } else null
+                    buildStage.controlOption?.let { a -> JsonUtil.toJson(a, formatted = false) },
+                    buildStage.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) },
+                    buildStage.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) }
                 )
                 .execute()
         }
@@ -113,21 +107,9 @@ class PipelineBuildStageDao {
                         .set(END_TIME, it.endTime)
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, if (it.controlOption != null) {
-                            JsonUtil.toJson(it.controlOption!!, formatted = false)
-                        } else {
-                            null
-                        })
-                        .set(CHECK_IN, if (it.checkIn != null) {
-                            JsonUtil.toJson(it.checkIn!!, formatted = false)
-                        } else {
-                            null
-                        })
-                        .set(CHECK_OUT, if (it.checkOut != null) {
-                            JsonUtil.toJson(it.checkOut!!, formatted = false)
-                        } else {
-                            null
-                        })
+                        .set(CONDITIONS, it.controlOption?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                        .set(CHECK_IN, it.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                        .set(CHECK_OUT, it.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) })
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)

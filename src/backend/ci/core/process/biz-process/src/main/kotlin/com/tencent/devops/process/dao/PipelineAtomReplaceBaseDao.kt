@@ -62,11 +62,7 @@ class PipelineAtomReplaceBaseDao {
                 .values(
                     baseId,
                     projectId,
-                    if (pipelineIdList != null) {
-                        JsonUtil.toJson(pipelineIdList, formatted = false)
-                    } else {
-                        null
-                    },
+                    pipelineIdList?.let { a -> JsonUtil.toJson(a, formatted = false) },
                     fromAtomCode,
                     toAtomCode,
                     userId,
