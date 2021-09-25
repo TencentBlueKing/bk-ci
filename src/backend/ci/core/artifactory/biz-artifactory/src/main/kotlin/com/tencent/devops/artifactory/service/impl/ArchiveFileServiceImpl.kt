@@ -111,12 +111,6 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val path = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        val destPath = if (!path.endsWith(disposition.fileName)) {
-            path + fileSeparator + disposition.fileName
-        } else {
-            path
-        }
         val servicePipelineResource = client.get(ServicePipelineResource::class)
         val pipelineName = servicePipelineResource.getPipelineNameByIds(
             projectId = projectId,
@@ -134,7 +128,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             projectId = projectId,
             inputStream = inputStream,
             disposition = disposition,
-            filePath = destPath,
+            filePath = "",
             fileType = fileType,
             props = props,
             fileChannelType = fileChannelType
