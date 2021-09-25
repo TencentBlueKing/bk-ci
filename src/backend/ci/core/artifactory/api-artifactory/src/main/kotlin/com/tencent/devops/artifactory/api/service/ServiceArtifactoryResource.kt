@@ -62,6 +62,24 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ServiceArtifactoryResource {
 
+    @ApiOperation("OpenAPI调用创建用户下载链接（持久）")
+    @Path("/projects/{projectId}/{artifactoryType}/downloadUrl")
+    @POST
+    fun downloadUrlForOpenApi(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
     @ApiOperation("检测文件是否存在")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/check")
     @Path("/{projectId}/{artifactoryType}/check")

@@ -29,17 +29,19 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -68,7 +70,15 @@ import java.util.Collections
 import java.util.concurrent.Executors
 
 @Service
-@Suppress("ALL")
+@Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "NestedBlockDepth",
+    "ReturnCount",
+    "MagicNumber",
+    "ComplexMethod",
+    "LongMethod"
+)
 class QualityRuleCheckService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityHisMetadataService: QualityHisMetadataService,
@@ -80,7 +90,6 @@ class QualityRuleCheckService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val qualityCacheService: QualityCacheService
 ) {
-    private val DEFAULT_TIMEOUT_MINUTES = 15
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun userGetMatchRuleList(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
@@ -114,7 +123,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     fun getMatchTemplateListByCache(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
         if (templateId.isNullOrBlank()) return listOf()
-        val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
+        val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId)
         if (cacheData != null) {
             return cacheData
         }
@@ -188,7 +197,7 @@ class QualityRuleCheckService @Autowired constructor(
             filterRuleList.forEach { rule ->
                 logger.info("start to check rule(${rule.name})")
 
-                val result = checkIndicator(rule, buildCheckParams, metadataList)
+                val result = checkIndicator(rule, metadataList)
                 val interceptRecordList = result.second
                 val interceptResult = result.first
                 val params = mapOf("projectId" to buildCheckParams.projectId,
@@ -250,8 +259,11 @@ class QualityRuleCheckService @Autowired constructor(
                                 interceptRecordList = interceptRecordList,
                                 endNotifyTypeList = rule.notifyTypeList ?: listOf(),
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
-                                endNotifyUserList = rule.notifyUserList ?: listOf())
+                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map { user ->
+                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
+                                })
                         } else {
+                            val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
                             sendAuditNotification(
                                 projectId = projectId,
                                 pipelineId = pipelineId,
@@ -259,10 +271,13 @@ class QualityRuleCheckService @Autowired constructor(
                                 buildNo = buildNo,
                                 createTime = createTime,
                                 resultList = resultList,
-                                auditNotifyUserList = rule.auditUserList ?: listOf())
+                                auditNotifyUserList = (rule.auditUserList
+                                    ?: listOf()).toSet().plus(startUser).map { user ->
+                                    EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
+                                })
                         }
-                    } catch (t: Throwable) {
-                        logger.error("send notification fail", t)
+                    } catch (ignored: Throwable) {
+                        logger.error("send notification fail", ignored)
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
@@ -272,13 +287,12 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun checkIndicator(
         rule: QualityRule,
-        buildCheckParams: BuildCheckParams,
         metadataList: List<QualityHisMetadata>
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
         val indicators = rule.indicators
-        val metadataMap = metadataList.map { it.enName to it }.toMap()
+        val metadataMap = metadataList.associateBy { it.enName }
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -306,7 +320,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -324,7 +338,7 @@ class QualityRuleCheckService @Autowired constructor(
                     var result: BigDecimal? = null
                     for (it in filterMetadataList) {
 
-                        if (it?.value != null && NumberUtils.isNumber(it.value)) {
+                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = BigDecimal(it.value)
 
                             // -1表示直接失败
@@ -436,13 +450,11 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
-            if (record.detail.isNullOrBlank()) {
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}" +
-                    "/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
+            if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
+                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}" +
-                    "/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
+                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
                     "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
             }
         } else {
@@ -641,6 +653,7 @@ class QualityRuleCheckService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(QualityRuleCheckService::class.java)
         private const val DETAIL_NOT_RUN_VALUE = "-1"
+        private const val DEFAULT_TIMEOUT_MINUTES = 15
         val DETAIL_NOT_RUN_FLOAT_VALUE = BigDecimal(-1)
     }
 }

@@ -39,13 +39,15 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL", "UNUSED")
 class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
@@ -79,6 +81,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         TODO("not implemented")
+    }
+
+    override fun downloadUrlForOpenApi(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        val urls = archiveFileService.getFileDownloadUrls(
+            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
+        )
+        return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
     override fun downloadUrl(
