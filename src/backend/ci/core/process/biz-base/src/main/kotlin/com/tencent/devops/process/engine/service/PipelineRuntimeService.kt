@@ -108,6 +108,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -131,6 +132,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -1906,15 +1908,18 @@ class PipelineRuntimeService @Autowired constructor(
         errorMsg: String? = null
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
+        val buildId = task.buildId
+        val taskId = task.taskId
+        val taskName = task.taskName
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            logger.info("${task.buildId}|UPDATE_TASK_STATUS|${task.taskName}|$taskStatus|$userId|$errorCode")
-            pipelineBuildTaskDao.updateStatus(
-                dslContext = transactionContext,
-                buildId = task.buildId,
-                taskId = task.taskId,
+            logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
+            updateTaskStatusInfo(
+                taskStatus = taskStatus,
                 userId = userId,
-                buildStatus = taskStatus
+                buildId = buildId,
+                taskId = taskId,
+                transactionContext = transactionContext
             )
             if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
                 dslContext = transactionContext,
@@ -1929,7 +1934,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
                 currentTaskId = task.taskId,
-                currentTaskName = task.taskName
+                currentTaskName = taskName
             )
         }
 
@@ -1942,6 +1947,61 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = task.buildId,
                 refreshTypes = RefreshType.STATUS.binary
             )
+        )
+    }
+
+    fun updateTaskStatusInfo(
+        userId: String? = null,
+        buildId: String,
+        taskId: String,
+        taskStatus: BuildStatus,
+        transactionContext: DSLContext
+    ) {
+        var starter: String? = null
+        var approver: String? = null
+        var startTime: LocalDateTime? = null
+        var endTime: LocalDateTime? = null
+        var totalTime: Long? = null
+        val taskRecord = pipelineBuildTaskDao.get(transactionContext, buildId, taskId)
+        val dbStartTime = taskRecord?.startTime
+        val additionalOptions = JsonUtil.toOrNull(taskRecord?.additionalOptions, ElementAdditionalOptions::class.java)
+        val executeCount = taskRecord?.executeCount
+        if (taskStatus.isFinish()) {
+            endTime = LocalDateTime.now()
+            totalTime = if (dbStartTime == null || endTime == null) {
+                0
+            } else {
+                Duration.between(dbStartTime, endTime).toMillis()
+            }
+            if (taskStatus.isReview() && !userId.isNullOrBlank()) {
+                approver = userId
+            }
+        }
+        if (taskStatus.isRunning() && TaskUtils.isRefreshTaskTime(
+                buildId = buildId,
+                taskId = taskId,
+                additionalOptions = additionalOptions,
+                executeCount = executeCount)
+        ) {
+            // 如果是自动重试则不重置task的时间
+            startTime = LocalDateTime.now()
+            if (!userId.isNullOrBlank()) {
+                starter = userId
+            }
+        }
+        val updateTaskInfo = UpdateTaskInfo(
+            taskStatus = taskStatus,
+            starter = starter,
+            approver = approver,
+            startTime = startTime,
+            endTime = endTime,
+            totalTime = totalTime
+        )
+        pipelineBuildTaskDao.updateTaskInfo(
+            dslContext = transactionContext,
+            buildId = buildId,
+            taskId = taskId,
+            updateTaskInfo = updateTaskInfo
         )
     }
 
