@@ -167,7 +167,7 @@
                 <div class="bk-form-item publish-form-item is-required" ref="releaseTypeError" v-if="atomForm.releaseType !== 'CANCEL_RE_RELEASE'">
                     <label class="bk-label publish-type-label"> {{ $t('store.发布类型') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips radio-flex">
-                        <section v-if="atomForm.version" style="min-width: 100%;">
+                        <section v-if="atomForm.releaseType !== 'NEW'" style="min-width: 100%;">
                             <bk-radio-group v-model="atomForm.releaseType" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in publishTypeList" :key="key" @click.native="formErrors.releaseTypeError = false">
                                     <bk-popover placement="top" :delay="800" style="margin-top:0;margin-left:0;">
@@ -271,6 +271,7 @@
     import { toolbars } from '@/utils/editor-options'
     import bkFileUpload from '@/components/common/file-upload'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import api from '@/api'
 
     export default {
         components: {
@@ -482,33 +483,38 @@
                         })
                         this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))
 
-                        if (res.version) {
-                            let status = ''
-                            switch (res.atomStatus) {
-                                case 'GROUNDING_SUSPENSION':
-                                    status = 'CANCEL_RE_RELEASE'
-                                    break
-                                default:
-                                    const types = {
-                                        NEW: 'INCOMPATIBILITY_UPGRADE',
-                                        INCOMPATIBILITY_UPGRADE: 'INCOMPATIBILITY_UPGRADE',
-                                        COMPATIBILITY_UPGRADE: 'COMPATIBILITY_UPGRADE',
-                                        COMPATIBILITY_FIX: 'COMPATIBILITY_FIX',
-                                        HIS_VERSION_UPGRADE: 'HIS_VERSION_UPGRADE'
-                                    }
-                                    status = types[res.releaseType] || 'COMPATIBILITY_FIX'
-                                    break
-                            }
-                            this.$set(this.atomForm, 'releaseType', status)
+                        const { showVersionInfo } = await api.requestAtomVersionDetail(this.atomForm.atomCode)
+                        this.$set(this.atomForm, 'releaseType', showVersionInfo.releaseType)
+                        this.curVersion = showVersionInfo.version
+                        this.initReleaseType = showVersionInfo.releaseType
 
-                            const temp = this.atomForm.version.split('.')
-                            temp[0] = (parseInt(temp[0]) + 1).toString()
-                            this.curVersion = temp.join('.')
-                        } else {
-                            this.curVersion = '1.0.0'
-                        }
+                        // if (res.version) {
+                        //     let status = ''
+                        //     switch (res.atomStatus) {
+                        //         case 'GROUNDING_SUSPENSION':
+                        //             status = 'CANCEL_RE_RELEASE'
+                        //             break
+                        //         default:
+                        //             const types = {
+                        //                 NEW: 'INCOMPATIBILITY_UPGRADE',
+                        //                 INCOMPATIBILITY_UPGRADE: 'INCOMPATIBILITY_UPGRADE',
+                        //                 COMPATIBILITY_UPGRADE: 'COMPATIBILITY_UPGRADE',
+                        //                 COMPATIBILITY_FIX: 'COMPATIBILITY_FIX',
+                        //                 HIS_VERSION_UPGRADE: 'HIS_VERSION_UPGRADE'
+                        //             }
+                        //             status = types[res.releaseType] || 'COMPATIBILITY_FIX'
+                        //             break
+                        //     }
+                        //     this.$set(this.atomForm, 'releaseType', status)
 
-                        this.initReleaseType = this.atomForm.releaseType
+                        //     const temp = this.atomForm.version.split('.')
+                        //     temp[0] = (parseInt(temp[0]) + 1).toString()
+                        //     this.curVersion = temp.join('.')
+                        // } else {
+                        //     this.curVersion = '1.0.0'
+                        // }
+
+                        // this.initReleaseType = this.atomForm.releaseType
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
