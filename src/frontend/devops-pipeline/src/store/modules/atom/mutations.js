@@ -69,6 +69,7 @@ import {
     SET_IMPORTED_JSON,
     SET_EDIT_FROM,
     SET_CUR_JOBTYPE,
+    SET_ATOM_CODE,
     SET_PROJECT_ATOMS,
     SET_STORE_ATOMS,
     SET_PROJECT_UNRECOMMEN_ATOMS,
@@ -196,6 +197,12 @@ export default {
         Object.assign(state, {
             atomClassifyCodeList,
             atomClassifyMap
+        })
+        return state
+    },
+    [SET_ATOM_CODE]: (state, atomCode) => {
+        Object.assign(state, {
+            atomCode
         })
         return state
     },

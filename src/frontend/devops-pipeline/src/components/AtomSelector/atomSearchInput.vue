@@ -6,13 +6,15 @@
             :placeholder="$t('editPage.searchTips')"
             right-icon="icon-search"
             v-model="searchKey"
-            @input="handleClear"
+            @input="handleInput"
             @enter="handleSearch" />
+        <i v-if="!fetchingAtomList" class="devops-icon icon-refresh atom-fresh" @click="handleFreshAtoms"></i>
+        <i v-else class="devops-icon icon-refresh atom-fresh spin-icon" @click="handleFreshAtoms"></i>
     </div>
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         props: {
             activeTab: {
@@ -38,6 +40,9 @@
                 'isTriggerContainer',
                 'getAtomClassifyMap',
                 'innerActiveName'
+            ]),
+            ...mapState('atom', [
+                'fetchingAtomList'
             ]),
             category () {
                 return this.isTriggerContainer(this.container) ? 'TRIGGER' : 'TASK'
@@ -74,9 +79,41 @@
                 'setStoreData',
                 'setUnRecommendStoreData',
                 'fetchProjectAtoms',
-                'fetchStoreAtoms'
+                'fetchStoreAtoms',
+                'updateProjectAtoms',
+                'updateStoreAtoms'
             ]),
-            handleClear (str) {
+            
+            /**
+             * 刷新插件列表
+             */
+            handleFreshAtoms () {
+                if (this.tabName === 'projectAtom') {
+                    this.updateProjectAtoms({
+                        atoms: {},
+                        recommend: true
+                    })
+                    this.updateProjectAtoms({
+                        atoms: {},
+                        recommend: false
+                    })
+                    this.searchProjectAtom()
+                    document.querySelectorAll('.recommend-atom-list')[0].scrollTo(0, 0)
+                } else {
+                    this.updateStoreAtoms({
+                        atoms: {},
+                        recommend: true
+                    })
+                    this.updateStoreAtoms({
+                        atoms: {},
+                        recommend: false
+                    })
+                    this.searchStoreAtom()
+                    document.querySelectorAll('.recommend-atom-list')[1].scrollTo(0, 0)
+                }
+            },
+
+            handleInput (str) {
                 if (str === '' && this.activeTab === 'projectAtom') {
                     this.searchProjectAtom()
                 } else if (str === '' && this.activeTab === 'storeAtom') {
@@ -146,9 +183,14 @@
 
 <style lang="scss">
     .atom-search-input {
-        padding: 20px 20px 0;
-        .bk-form-input {
-            background-color: #F0F1F5;
+        display: flex;
+        padding: 20px 10px 0 20px;
+        .atom-fresh {
+            display: inline-block;
+            font-size: 14px;
+            padding: 11px;
+            color: #3c96ff;
+            cursor: pointer;
         }
     }
 </style>

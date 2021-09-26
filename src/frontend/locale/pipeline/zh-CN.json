@@ -657,6 +657,7 @@
         "loadedAllAtom": "已加载全部插件",
         "removeAtom": "移出项目",
         "unRemoveAtom": "使用中的插件无法被移出",
+        "viewPipeline": "查看流水线",
         "installAtom": "添加到项目",
         "unInstalled": "未安装",
         "installed": "已安装",

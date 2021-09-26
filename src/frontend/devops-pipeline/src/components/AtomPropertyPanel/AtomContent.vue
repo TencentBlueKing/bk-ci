@@ -195,7 +195,8 @@
                 'getStage',
                 'isTriggerContainer',
                 'isNewAtomTemplate',
-                'atomVersionChangedKeys'
+                'atomVersionChangedKeys',
+                'getAtomCode'
             ]),
             ...mapState('atom', [
                 'globalEnvs',
@@ -278,12 +279,12 @@
                 return ''
             },
             atomVersion () {
-                return this.element.version || this.getDefaultVersion(this.atomCode)
+                return this.element.version || this.getDefaultVersion(this.atomCode || this.selectAtomCode, 'ccc')
             },
             atom () {
                 const { projectRecommendAtomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
                 const atom = projectRecommendAtomMap[atomCode]
-                const version = element.version || getDefaultVersion(atomCode)
+                const version = element.version || getDefaultVersion(atomCode || this.selectAtomCode, 'bbb')
                 const atomModal = getAtomModal({
                     atomCode,
                     version
@@ -354,6 +355,9 @@
                     manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
+            },
+            selectAtomCode () {
+                return this.getAtomCode
             }
         },
         watch: {
@@ -383,7 +387,7 @@
         },
         mounted () {
             const { projectId, element, globalEnvs, atomCode, requestGlobalEnvs, getDefaultVersion } = this
-            const version = element.version ? element.version : getDefaultVersion(atomCode)
+            const version = element.version ? element.version : getDefaultVersion(atomCode || this.selectAtomCode, 'ddd')
             this.handleFetchAtomModal(atomCode, version)
             this.fetchAtomVersionList({
                 projectCode: projectId,

@@ -81,7 +81,8 @@ export default {
         storeRecommendAtomMap: {},
         storeUnRecommendAtomMap: {},
         projectRecommendAtomMap: {},
-        projectUnRecommendAtomMap: {}
+        projectUnRecommendAtomMap: {},
+        atomCode: undefined
     },
     mutations,
     actions,

@@ -1,5 +1,5 @@
 <template>
-    <section @click="handleUpdateAtomType(atom)">
+    <section @click="handleSelectAtom(atom)">
         <div class="atom-logo">
             <img v-if="atom.logoUrl" :src="atom.logoUrl" alt="">
             <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
@@ -14,11 +14,11 @@
                     @click.stop="handleUnInstallAtom(atom)">
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
-                <!-- 正在适用插件,无法移除 -->
+                <!-- 正在使用插件,无法移除 -->
                 <span
                     v-if="('uninstallFlag' in atom && !atom.defaultFlag) || atomCode === atom.atomCode"
                     :class="{ 'un-remove': !atom.uninstallFlag }"
-                    v-bk-tooltips="{ content: `${$t('editPage.unRemoveAtom')}`, zIndex: 99999, delay: 200 }"
+                    v-bk-tooltips="unRemoveAtomTipsConfig"
                     @click.stop>
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
@@ -80,6 +80,12 @@
             <p class="atom-update-time" v-if="atom.publisher">{{ atom.publisher }} 更新于 {{ formatDiff(atom.updateTime) }}</p>
             <span class="atom-active" v-if="atomCode === atom.atomCode">
                 <i class="devops-icon icon-check-1" />
+            </span>
+        </div>
+        <div id="unRemoveAtomTips" class="un-remove-atom-tips">
+            <span class="row">{{ $t('editPage.unRemoveAtom') }}，</span>
+            <span class="row" style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage">
+                {{ $t('editPage.viewPipeline') }}
             </span>
         </div>
     </section>
@@ -144,13 +150,24 @@
                 ]
             }
         },
+        created () {
+            this.unRemoveAtomTipsConfig = {
+                allowHtml: true,
+                trigger: 'mouseenter',
+                content: '#unRemoveAtomTips',
+                zIndex: 99999,
+                delay: 200
+            }
+        },
         methods: {
             ...mapActions('atom', [
                 'updateAtomType',
                 'fetchAtomModal',
                 'installAtom',
                 'unInstallAtom',
-                'updateStoreAtoms'
+                'updateStoreAtoms',
+                'updateProjectAtoms',
+                'setAtomCode'
             ]),
             formatDiff,
             /**
@@ -158,6 +175,21 @@
              */
             osTips (os) {
                 return `${this.$t('适用于')}${os.join(' / ')}`
+            },
+
+            /**
+             * 使用中插件无法移除tips
+             */
+            // unRemoveAtomTips () {
+            //     return `<span>${this.$t('editPage.unRemoveAtom')}，
+            //         <span style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage">
+            //             ${this.$t('editPage.viewPipeline')}
+            //         </span>
+            //     </span>`
+            // },
+            
+            handleGoPipelineAtomManage () {
+                console.log(123)
             },
 
             /**
@@ -173,31 +205,73 @@
              *
              * @param atomCode 插件名 Code
              */
-            handleUpdateAtomType (atom) {
-                const { atomCode, defaultFlag } = atom
+            handleSelectAtom (atom) {
+                const { atomCode, installFlag } = atom
                 let { installed } = atom
-                if (defaultFlag) installed = true
+                // 未安装且有权限的，点击行自动安装并选中
+                if (installFlag) {
+                    installed = true
+
+                    const atoms = {}
+                    atoms[atomCode] = atom
+                    this.updateProjectAtoms({
+                        atoms: atoms,
+                        recommend: true
+                    })
+                    const param = {
+                        projectCode: [this.$route.params.projectId],
+                        atomCode
+                    }
+                    this.installAtom(param).then(() => {
+                        const atoms = this.getStoreRecommendAtomMap
+                        this.$set(atoms[atomCode], 'installed', true)
+                        this.updateStoreAtoms({
+                            atoms: atoms,
+                            recommend: true
+                        })
+                    }).catch((err) => {
+                        this.$bkMessage({
+                            message: err.message || err,
+                            theme: 'error',
+                            extCls: 'install-tips'
+                        })
+                    })
+                }
+                // 不适用插件，未安装插件，不走下面逻辑
                 if (!this.isRecommend || !installed) return
                 const { elementIndex, container, updateAtomType, getAtomModal, fetchAtomModal, getDefaultVersion } = this
-                const version = getDefaultVersion(atomCode)
+                this.setAtomCode(atomCode)
+                const version = getDefaultVersion(atomCode, 'aaa')
                 const atomModal = getAtomModal({
                     atomCode,
                     version
                 })
 
                 const fn = atomModal ? updateAtomType : fetchAtomModal
-                fn({
-                    projectCode: this.projectCode,
-                    container,
-                    version,
-                    atomCode,
-                    atomIndex: elementIndex
-                })
+
+                // 这里延迟调用接口，是因为安装完立马去获取插件详细信息，接口返回的是空的数据，导致页面选择插件后不显示数据，报undefined错误
+                setTimeout(() => {
+                    fn({
+                        projectCode: this.projectCode,
+                        container,
+                        version,
+                        atomCode,
+                        atomIndex: elementIndex
+                    })
+                }, 200)
                 this.$emit('close')
             },
+
+            /**
+             * 跳转至插件文档
+             */
             handleGoDocs (link) {
                 window.open(link)
             },
+
+            /**
+             * 移除插件
+             */
             handleUnInstallAtom (atom) {
                 if ('uninstallFlag' in atom) return
                 const { atomCode, name } = atom
@@ -206,8 +280,7 @@
                     atomCode,
                     reasonList: this.defaultReasons
                 }).then(() => {
-                    const atoms = this.getStoreRecommendAtomMap
-                    atoms[atomCode].installed = false
+                    atom.installed = false
                     this.$emit('update-atoms', {
                         isRecommend: this.isRecommend,
                         atomCode
@@ -225,6 +298,10 @@
                     })
                 })
             },
+
+            /**
+             * 安装插件
+             */
             handleInstallAtom (atom) {
                 const { installFlag, atomCode } = atom
                 if (!installFlag) return
@@ -234,7 +311,7 @@
                 }
                 this.installAtom(param).then(() => {
                     const atoms = this.getStoreRecommendAtomMap
-                    this.$set(atoms[atomCode], 'installed', true)
+                    atom.installed = true
                     this.updateStoreAtoms({
                         atoms: atoms,
                         recommend: true
@@ -252,6 +329,10 @@
                     })
                 })
             },
+
+            /**
+             * 插件热度数据转换为以（k）为单位
+             */
             getHeatNum (num) {
                 // 超1000转为以（k）为单位
                 return num >= 1000 ? (num / 1000).toFixed(1) + 'k' : num
@@ -259,3 +340,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .un-remove-atom-tips {
+        font-size: 12px;
+    }
+</style>

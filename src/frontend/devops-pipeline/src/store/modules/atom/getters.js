@@ -44,7 +44,7 @@ export default {
         const atomModal = state.atomModalMap[key]
         return atomModal || null
     },
-    getDefaultVersion: state => atomCode => {
+    getDefaultVersion: state => (atomCode, aaa) => {
         try {
             const atom = state.projectRecommendAtomMap[atomCode]
             return atom.defaultVersion || '1.*'
@@ -264,5 +264,6 @@ export default {
     getAtomClassifyMap: state => state.atomClassifyMap,
     innerActiveName: state => state.innerActiveName,
     projectAtomKeyWord: state => state.projectData.keyword,
-    storeAtomKeyWord: state => state.storeData.keyword
+    storeAtomKeyWord: state => state.storeData.keyword,
+    getAtomCode: state => state.atomCode
 }

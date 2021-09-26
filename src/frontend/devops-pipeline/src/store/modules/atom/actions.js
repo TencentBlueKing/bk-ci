@@ -86,7 +86,8 @@ import {
     SET_PROJECT_UNRECOMMEN_ATOMS,
     SET_STORE_UNRECOMMEN_ATOMS,
     SET_CLASSIFY,
-    SET_INNER_ACTIVE_NAME
+    SET_INNER_ACTIVE_NAME,
+    SET_ATOM_CODE
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -293,8 +294,8 @@ export default {
                 projectRecommendAtomMap: atoms
             })
             let page = 1
-            const { projectUnRecommendAtomMap, projectData } = state
-            if ((Object.keys(projectUnRecommendAtomMap).length / projectData.pageSize) !== (projectData.page - 1)) {
+            const { projectRecommendAtomMap, projectData } = state
+            if ((Object.keys(projectRecommendAtomMap).length / projectData.pageSize) !== (projectData.page - 1)) {
                 page = projectData.page - 1 || 1
             }
             commit(SET_PROJECT_DATA, {
@@ -309,12 +310,16 @@ export default {
             })
         }
     },
-    updateStoreAtoms: async ({ commit }, payload) => {
+    updateStoreAtoms: async ({ commit, state }, payload) => {
         const { atoms, recommend } = payload
         const mutation = recommend ? SET_STORE_ATOMS : SET_STORE_UNRECOMMEN_ATOMS
         commit(mutation, {
             storeRecommendAtomMap: atoms
         })
+    },
+
+    setAtomCode: async ({ commit }, atomCode) => {
+        commit(SET_ATOM_CODE, atomCode)
     },
     /**
      * 获取项目下插件
@@ -389,10 +394,7 @@ export default {
             
             if (recommendFlag && category === 'TASK') {
                 // 保存请求页码、搜索关键字
-                console.log(Object.keys(state.projectRecommendAtomMap).length, 'Object.keys(state.projectRecommendAtomMap).length')
-                console.log(atomList.count, 'atomList.count')
                 const isProjectPageOver = Object.keys(state.projectRecommendAtomMap).length === atomList.count
-                console.log(isProjectPageOver)
                 const projectData = {
                     page: ++page,
                     pageSize,
@@ -402,7 +404,6 @@ export default {
                 commit(IS_PROJECT_PAGE_OVER, isProjectPageOver)
                 commit(SET_PROJECT_DATA, projectData)
             }
-
             // 不适用插件请求页码数据保存
             if (!recommendFlag && category === 'TASK') {
                 const isUnRecommendProjectPageOver = Object.keys(state.projectUnRecommendAtomMap).length === atomList.count

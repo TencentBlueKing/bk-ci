@@ -167,6 +167,18 @@
             },
             isProjectAtom () {
                 return this.activeTab === 'projectAtom'
+            },
+            projectRecommendAtomMap () {
+                return this.getProjectRecommendAtomMap
+            },
+            projectUnRecommendAtomMap () {
+                return this.getProjectUnRecommendAtomMap
+            },
+            storeRecommendAtomMap () {
+                return this.getStoreRecommendAtomMap
+            },
+            storeUnRecommendAtomMap () {
+                return this.getStoreUnRecommendAtomMap
             }
         },
         watch: {
@@ -175,7 +187,7 @@
                     this.initData()
                 }
             },
-            getProjectRecommendAtomMap: {
+            projectRecommendAtomMap: {
                 handler (atoms) {
                     if (this.tabName === 'projectAtom') {
                         this.curRecommendAtomMap = atoms
@@ -184,7 +196,7 @@
                 immediate: true,
                 deep: true
             },
-            getProjectUnRecommendAtomMap: {
+            projectUnRecommendAtomMap: {
                 handler (atoms) {
                     if (this.tabName === 'projectAtom') {
                         this.curUnRecommendAtomMap = atoms
@@ -193,7 +205,7 @@
                 immediate: true,
                 deep: true
             },
-            getStoreRecommendAtomMap: {
+            storeRecommendAtomMap: {
                 handler (atoms) {
                     if (this.tabName === 'storeAtom') {
                         this.curRecommendAtomMap = atoms
@@ -202,7 +214,7 @@
                 immediate: true,
                 deep: true
             },
-            getStoreUnRecommendAtomMap: {
+            storeUnRecommendAtomMap: {
                 handler (atoms) {
                     if (this.tabName === 'storeAtom') {
                         this.curUnRecommendAtomMap = atoms
@@ -337,20 +349,28 @@
             handelUpdateAtom (payload) {
                 const { isRecommend, atomCode } = payload
                 const atoms = isRecommend ? this.curRecommendAtomMap : this.curUnRecommendAtomMap
+
+                // 项目插件下移除插件，更新列表数据
                 for (const key in atoms) {
                     if (key === atomCode && this.isProjectAtom) this.$delete(atoms, atomCode)
                 }
 
-                this.updateProjectAtoms({
-                    atoms: atoms,
-                    recommend: isRecommend
-                })
+                if (this.isProjectAtom) {
+                    this.updateProjectAtoms({
+                        atoms: atoms,
+                        recommend: isRecommend
+                    })
+                } else {
+                    this.updateStoreAtoms({
+                        atoms: atoms,
+                        recommend: isRecommend
+                    })
+                }
             },
             
             // 适用插件滚动加载
             recommendScrollLoading () {
                 if (this.activeTab === 'projectAtom') {
-                    console.log(this.isProjectPageOver)
                     if (!this.isProjectPageOver && !this.isRecommendThrottled && !this.isRecommendMoreLoading) {
                         this.isRecommendThrottled = true
                         this.recommendTimer = setTimeout(() => {

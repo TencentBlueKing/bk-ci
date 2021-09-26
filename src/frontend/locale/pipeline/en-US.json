@@ -653,6 +653,7 @@
         "fixedTips": "Plugins that do not apply to the current Job",
         "removeAtom": "Removed from the project",
         "unRemoveAtom": "Plugin in use cannot be removed",
+        "viewPipeline": "View Pipeline",
         "installAtom": "Add to project",
         "loadedAllAtom": "Loaded all Atoms",
         "unInstalled": "Not Installed",
