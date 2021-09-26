@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":core:log:biz-log-sample"))
     implementation(project(":core:misc:biz-misc-sample"))
     implementation(project(":core:notify:biz-notify-blueking"))
+    implementation(project(":core:notify:biz-notify-wework"))
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
     implementation(project(":core:process:plugin-load"))

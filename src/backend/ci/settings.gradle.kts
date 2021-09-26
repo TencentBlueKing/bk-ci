@@ -145,7 +145,6 @@ include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
-
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
