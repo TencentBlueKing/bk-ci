@@ -353,6 +353,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum
     ): String {
+        logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
         val fileTypeStr = fileType?.fileType ?: "file"
         val destPath = if (null == filePath) {
@@ -364,14 +365,14 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                     fileType = fileType,
                     projectId = projectId,
                     customFilePath = filePath,
-                    pipelineId = null,
-                    buildId = null
+                    pipelineId = props?.get("pipelineId"),
+                    buildId = props?.get("buildId")
                 )
             } else {
                 "${getBasePath()}$fileSeparator$filePath"
             }
         }
-        logger.info("$uploadFileName destPath is:$destPath")
+        logger.info("uploadFile|$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
         val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
