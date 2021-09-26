@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.CharSetType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -58,7 +58,7 @@ object CommandLineUtils {
         executeErrorMessage: String? = null,
         buildId: String? = null,
         elementId: String? = null,
-        charSetType: String? = null
+        charsetType: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -74,9 +74,9 @@ object CommandLineUtils {
             null
         }
 
-        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-            CharSetType.UTF_8 -> "UTF-8"
-            CharSetType.GBK -> "GBK"
+        val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
+            CharsetType.UTF_8 -> "UTF-8"
+            CharsetType.GBK -> "GBK"
             else -> Charset.defaultCharset().name()
         }
 
