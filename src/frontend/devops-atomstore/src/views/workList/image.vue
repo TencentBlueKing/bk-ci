@@ -118,7 +118,7 @@
                         :required="true"
                         property="imageCode"
                         :desc="$t('store.镜像英文名，为当前镜像在研发商店中的唯一标识')"
-                        :rules="[requireRule, alpRule, alpNumMax]"
+                        :rules="[requireRule, alpRule]"
                         error-display-type="normal"
                     >
                         <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过30个字符')" style="width: 96%;"></bk-input>
@@ -265,13 +265,8 @@
                     trigger: 'blur'
                 },
                 alpRule: {
-                    validator: (val) => (/^[a-zA-Z][a-zA-Z0-9-_]*$/.test(val)),
+                    validator: (val) => (/^[a-zA-Z][a-zA-Z0-9-_]{1,30}$/.test(val)),
                     message: this.$t('store.由英文字母、数字、连字符(-)或下划线(_)组成，以英文字母开头，不超过30个字符'),
-                    trigger: 'blur'
-                },
-                alpNumMax: {
-                    validator: (val = '') => (val.length <= 30),
-                    message: this.$t('store.字段不超过30个字符'),
                     trigger: 'blur'
                 },
                 nameRule: {
