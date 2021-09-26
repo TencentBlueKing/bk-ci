@@ -47,6 +47,7 @@ dependencies {
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
     api("com.tencent.devops.ci-plugins:sigar")
+    api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
 
 
     api(project(":core:common:common-service"))
