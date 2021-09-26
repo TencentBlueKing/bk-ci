@@ -25,31 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_ATOM"], description = "OP-流水线-插件")
-@Path("/op/pipeline/atom")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateAtomResource {
+interface TxOpMigrateAtomService {
 
-    @ApiOperation("迁移插件")
-    @PUT
-    @Path("/migrate")
-    fun migrateAtom(
-        @ApiParam(value = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
+    /**
+     * 把项目迁移到指定项目组下
+     */
+    fun moveGitProjectToGroup(
+        userId: String,
+        groupCode: String?,
+        atomCode: String
     ): Result<Boolean>
 }

@@ -25,31 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.TxOpMigrateAtomResource
+import com.tencent.devops.store.service.atom.TxOpAtomService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OP_PIPELINE_ATOM"], description = "OP-流水线-插件")
-@Path("/op/pipeline/atom")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateAtomResource {
+@RestResource
+class TxOpMigrateAtomResourceImpl @Autowired constructor(
+    private val storeVisibleDeptService: StoreVisibleDeptService,
+    private val opAtomService: TxOpAtomService
+) : TxOpMigrateAtomResource {
 
-    @ApiOperation("迁移插件")
-    @PUT
-    @Path("/migrate")
-    fun migrateAtom(
-        @ApiParam(value = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
-    ): Result<Boolean>
+    override fun migrateAtom(endTime: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
 }
