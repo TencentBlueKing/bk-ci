@@ -25,11 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("org.apache.commons:commons-lang3")
-    implementation("commons-codec:commons-codec")
-    implementation("com.google.guava:guava")
-    implementation("org.jolokia:jolokia-core")
-    implementation("com.github.taptap:pinyin-plus")
-}
+package com.tencent.devops.process.engine.pojo
+
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import java.time.LocalDateTime
+
+data class UpdateTaskInfo(
+    val taskStatus: BuildStatus? = null, // 构建状态
+    val starter: String? = null, // 启动人
+    val approver: String? = null, // 审批人
+    val startTime: LocalDateTime? = null, // 开始时间
+    val endTime: LocalDateTime? = null, // 结束时间
+    val totalTime: Long? = null // 耗费时间
+)

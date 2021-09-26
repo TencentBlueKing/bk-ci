@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.hankcs.hanlp.HanLP
-import com.hankcs.hanlp.dictionary.py.Pinyin
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -605,11 +604,7 @@ class PipelineInfoDao {
     }
 
     private fun nameToPinyin(pipelineName: String): String {
-        return HanLP.convertToPinyinList(pipelineName).asSequence().mapIndexed { index, it ->
-            // 不属于中文没有拼音
-            if (Pinyin.none5 == it) {
-                pipelineName[index].toString()
-            } else it.pinyinWithoutTone
-        }.joinToString("")
+        // 数据库字段长度1300
+        return PinyinUtil.toPinyin(pipelineName).take(1300)
     }
 }

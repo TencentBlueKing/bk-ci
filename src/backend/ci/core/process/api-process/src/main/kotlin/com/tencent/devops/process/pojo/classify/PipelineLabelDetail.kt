@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("org.apache.commons:commons-lang3")
-    implementation("commons-codec:commons-codec")
-    implementation("com.google.guava:guava")
-    implementation("org.jolokia:jolokia-core")
-    implementation("com.github.taptap:pinyin-plus")
-}
+package com.tencent.devops.process.pojo.classify
+
+import io.swagger.annotations.ApiModelProperty
+
+data class PipelineLabelDetail(
+    @ApiModelProperty("流水线标签信息", required = false)
+    val pipelineLabelInfo: List<PipelineGroupLabels>?
+)

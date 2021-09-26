@@ -25,11 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("org.apache.commons:commons-lang3")
-    implementation("commons-codec:commons-codec")
-    implementation("com.google.guava:guava")
-    implementation("org.jolokia:jolokia-core")
-    implementation("com.github.taptap:pinyin-plus")
+package com.tencent.devops.process.service.label
+
+import com.tencent.devops.process.pojo.classify.PipelineLabelDetail
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class PipelineLabelService @Autowired constructor(
+    private val pipelineGroupService: PipelineGroupService
+) {
+
+    /**
+     * 获取标签信息
+     */
+    fun getLabelInfo(pipelineId: String): PipelineLabelDetail {
+        val pipelineGroupLabelMap = pipelineGroupService.getPipelinesGroupLabel(listOf(pipelineId))
+        return PipelineLabelDetail(pipelineLabelInfo = pipelineGroupLabelMap[pipelineId])
+    }
 }
