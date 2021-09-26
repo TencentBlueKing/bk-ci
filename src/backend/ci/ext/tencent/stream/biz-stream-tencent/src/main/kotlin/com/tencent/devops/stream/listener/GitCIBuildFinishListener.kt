@@ -232,13 +232,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                                 v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
-                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                gitProjectId = v2GitSetting.gitProjectId,
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             ),
                             targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                                 homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                gitProjectId = v2GitSetting.gitProjectId,
                                 pipelineId = pipelineId,
                                 buildId = buildFinishEvent.buildId
                             )
@@ -699,6 +699,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val request = getEmailSendRequestV2(
                     state = state,
                     receivers = realReceivers,
+                    gitProjectId = gitProjectId,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
@@ -717,6 +718,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val newContent = if (content.isNullOrBlank()) {
                     getRtxCustomContentV2(
                         isSuccess = state == "success",
+                        gitProjectId = gitProjectId,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName,
@@ -730,7 +732,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 } else {
                     getRtxCustomContentV2(
                         isSuccess = state == "success",
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipeline.pipelineId,
                         build = build,
                         content = content
@@ -765,6 +767,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         state: String,
         receivers: Set<String>,
         ccs: MutableSet<String>?,
+        gitProjectId: Long,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -801,7 +804,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     commitId = commitId,
                     webUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipelineId,
                         buildId = build.id
                     )
@@ -823,7 +826,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     // 为用户的内容增加链接
     private fun getRtxCustomContentV2(
         isSuccess: Boolean,
-        projectName: String,
+        gitProjectId: Long,
         pipelineId: String,
         build: BuildHistory,
         content: String
@@ -835,7 +838,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
             homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-            projectName = projectName,
+            gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = build.id
         )
@@ -844,6 +847,7 @@ class GitCIBuildFinishListener @Autowired constructor(
 
     private fun getRtxCustomContentV2(
         isSuccess: Boolean,
+        gitProjectId: Long,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -879,7 +883,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             "(${
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = projectName,
+                    gitProjectId = gitProjectId,
                     pipelineId = pipelineId,
                     buildId = build.id
                 )
