@@ -29,7 +29,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -37,7 +36,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
-import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -50,8 +48,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val projectNameService: ProjectNameService,
     private val client: Client,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val detailPageBuild: DetailPageBuild
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : PipelinePauseExtService {
 
     override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
@@ -92,14 +89,8 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
         val host = ServiceHomeUrlUtils.server()
-        val url = host + detailPageBuild.buildPage(
-            buildPageInfo = BuildPageInfo(
-                buildId = buildId,
-                pipelineId = pipelineId,
-                projectId = pipelineRecord.projectId,
-                atomId = null
-            )
-        )
+        val url = host + buildNotifyUrl(pipelineRecord.projectId, pipelineId, buildId)
+
         // 指定通过rtx发送
         val notifyType = mutableSetOf<String>()
         notifyType.add(NotifyType.RTX.name)
@@ -136,7 +127,15 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
             .sendNotifyMessageByTemplate(msg)
     }
 
+    private fun buildNotifyUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): String{
+        return "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineFailureBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(TxPipelinePauseExtServiceImpl::class.java)
     }
 }
