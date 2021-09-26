@@ -225,25 +225,38 @@ class GitCIV2PipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineIds: Set<String>
     ): Map<String, String> {
+        var branch: String? = null
         val result = mutableMapOf<String, String>()
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
             ?.associate { it.pipelineId to it.branch }
+        // 获取没有构建记录的流水线的未构建成功的分支
+        val noBuildPipelines = (pipelineIds - pipelineBuild?.keys).map { it.toString() }.toSet()
+        val pipelineNoBuild: Map<String, String>? = if (noBuildPipelines.isEmpty()) {
+            emptyMap()
+        } else {
+            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, noBuildPipelines)
+                ?.associate { it.pipelineId to it.branch }
+        }
         pipelineIds.forEach { pipelineId ->
             if (!pipelineBuild?.get(pipelineId).isNullOrBlank()) {
                 result[pipelineId] = pipelineBuild?.get(pipelineId).toString()
                 return@forEach
             }
-            val notBuild = gitRequestEventNotBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId)
-            if (!notBuild?.branch.isNullOrBlank()) {
-                result[pipelineId] = notBuild?.branch.toString()
+            if (!pipelineNoBuild?.get(pipelineId).isNullOrBlank()) {
+                result[pipelineId] = pipelineNoBuild?.get(pipelineId).toString()
                 return@forEach
             }
-            val branch = scmService.getProjectInfo(
-                token = scmService.getToken(gitProjectId.toString()).accessToken,
-                gitProjectId = gitProjectId.toString(),
-                useAccessToken = true
-            )?.defaultBranch ?: "master"
-            result[pipelineId] = branch
+            // 构建记录和未构建记录都没得，就去拿默认分支
+            if (branch.isNullOrBlank()) {
+                branch = scmService.getProjectInfo(
+                    token = scmService.getToken(gitProjectId.toString()).accessToken,
+                    gitProjectId = gitProjectId.toString(),
+                    useAccessToken = true
+                )?.defaultBranch ?: "master"
+                result[pipelineId] = branch!!
+            } else {
+                result[pipelineId] = branch!!
+            }
         }
         return result
     }

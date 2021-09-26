@@ -35,6 +35,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.impl.DSL
 
 @Repository
 class GitRequestEventNotBuildDao {
@@ -220,6 +221,24 @@ class GitRequestEventNotBuildDao {
             if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
             return query.orderBy(EVENT_ID.desc())
                 .fetchAny()
+        }
+    }
+
+    fun getPipelinesLastBuild(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): List<TGitRequestEventNotBuildRecord>? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(
+                    ID.`in`(
+                        dslContext.select(DSL.max(ID))
+                            .from(this)
+                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                    )
+                ).fetch()
         }
     }
 }
