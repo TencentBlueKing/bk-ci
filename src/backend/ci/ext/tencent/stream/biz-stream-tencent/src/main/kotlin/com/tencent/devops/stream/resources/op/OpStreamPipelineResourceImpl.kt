@@ -30,6 +30,7 @@ package com.tencent.devops.stream.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.api.op.OpStreamPipelineResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -38,6 +39,7 @@ import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
+@RestResource
 class OpStreamPipelineResourceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
