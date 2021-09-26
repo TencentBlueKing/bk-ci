@@ -27,7 +27,8 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-enum class CharSetType {
+enum class CharsetType {
+    DEFAULT,
     UTF_8,
     GBK
 }
