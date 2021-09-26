@@ -164,8 +164,7 @@ class WeworkServiceImpl(
                     throw RemoteServiceException(
                         httpStatus = it.code(),
                         responseContent = responseBody,
-                        errorMessage = "send wework message failed",
-                        errorCode = sendMessageResp.errCode
+                        errorMessage = "send wework message failed"
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
@@ -323,8 +322,7 @@ class WeworkServiceImpl(
                         throw RemoteServiceException(
                             httpStatus = it.code(),
                             responseContent = responseBody,
-                            errorMessage = "upload media($mediaName) to wework failed",
-                            errorCode = uploadMediaResp.errCode
+                            errorMessage = "upload media($mediaName) to wework failed"
                         )
                     }
                     mediaId
@@ -361,8 +359,7 @@ class WeworkServiceImpl(
                     throw RemoteServiceException(
                         httpStatus = it.code(),
                         responseContent = responseBody,
-                        errorMessage = "failed to get wework access token: $responseBody",
-                        errorCode = accessTokenResp.errCode
+                        errorMessage = "failed to get wework access token: $responseBody"
                     )
                 }
                 val accessToken = accessTokenResp.accessToken!!
