@@ -295,7 +295,7 @@ class TaskBuildDetailService(
         tmpElement: Element,
         tmpElementIndex: Int,
         elements: List<Element>,
-        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ): Boolean {
         if (cancelTaskPostFlag) {
             return handleCancelTaskPost(
