@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -34,6 +35,7 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +48,8 @@ import javax.ws.rs.core.Response
 class GitCILogService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitPipelineResourceDao: GitPipelineResourceDao
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCILogService::class.java)
@@ -66,7 +69,9 @@ class GitCILogService @Autowired constructor(
     ): QueryLogs {
         logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        val gitProject = getProjectInfo(gitProjectId)
         return client.get(ServiceLogResource::class).getInitLogs(
+            userId = gitProject.enableUserId,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
@@ -89,7 +94,9 @@ class GitCILogService @Autowired constructor(
     ): QueryLogs {
         logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        val gitProject = getProjectInfo(gitProjectId)
         return client.get(ServiceLogResource::class).getAfterLogs(
+            userId = gitProject.enableUserId,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
@@ -111,6 +118,7 @@ class GitCILogService @Autowired constructor(
     ): Response {
         logger.info("download logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        val gitProject = getProjectInfo(gitProjectId)
         val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
         path.append(GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId))
         path.append("/${pipeline.pipelineId}/$buildId/download?executeCount=${executeCount ?: 1}")
@@ -118,7 +126,7 @@ class GitCILogService @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
-        val response = OkhttpUtils.doLongGet(path.toString())
+        val response = OkhttpUtils.doLongGet(path.toString(), mapOf(AUTH_HEADER_USER_ID to gitProject.enableUserId))
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
@@ -130,4 +138,8 @@ class GitCILogService @Autowired constructor(
     private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
             ?: throw CustomException(Response.Status.FORBIDDEN, "该流水线不存在或已删除，如有疑问请联系蓝盾助手")
+
+    private fun getProjectInfo(gitProjectId: Long) =
+        gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+            ?: throw CustomException(Response.Status.FORBIDDEN, "该CI项目不存在或已删除，如有疑问请联系蓝盾助手")
 }

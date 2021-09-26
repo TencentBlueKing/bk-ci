@@ -303,7 +303,7 @@ class TaskControl @Autowired constructor(
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
-                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
+                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
                     val containerId = task["containerId"] ?: ""

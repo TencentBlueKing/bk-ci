@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectUserResource
@@ -35,6 +36,7 @@ import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectLocalService
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserProjectUserResourceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val projectLocalService: ProjectLocalService,
-    private val serviceCode: BSPipelineAuthServiceCode
+    private val serviceCode: BSPipelineAuthServiceCode,
+    private val projectService: ProjectService
 ) : UserProjectUserResource {
 
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
@@ -66,5 +69,14 @@ class UserProjectUserResourceImpl @Autowired constructor(
 
     override fun getProjectUserRoles(accessToken: String, userId: String, projectCode: String): Result<List<UserRole>> {
         return Result(projectLocalService.getProjectUserRoles(accessToken, userId, projectCode, serviceCode))
+    }
+
+    override fun mangerRoleCheck(userId: String, projectCode: String): Result<Boolean> {
+        return Result(projectService.verifyUserProjectPermission(
+            userId = userId,
+            projectId = projectCode,
+            accessToken = null,
+            permission = AuthPermission.MANAGE
+        ))
     }
 }

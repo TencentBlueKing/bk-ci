@@ -25,44 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.service
+package com.tencent.devops.stream.resources.op
 
-import com.tencent.devops.stream.v2.dao.GitPipelineBranchDao
-import org.jooq.DSLContext
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.op.OpStreamCheckResource
+import com.tencent.devops.stream.v2.service.StreamAsyncService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class GitPipelineBranchService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val gitPipelineBranchDao: GitPipelineBranchDao
-) {
-    fun save(
-        gitProjectId: Long,
-        pipelineId: String,
-        branch: String
-    ) {
-        gitPipelineBranchDao.save(
-            dslContext = dslContext, gitProjectId = gitProjectId, pipelineId = pipelineId, branch = branch
-        )
-    }
-
-    fun deleteBranch(
-        pipelineId: String,
-        branch: String?
-    ): Boolean {
-        if (branch.isNullOrBlank()) {
-            return gitPipelineBranchDao.deletePipeline(dslContext = dslContext, pipelineId = pipelineId) > 0
-        } else {
-            return gitPipelineBranchDao.deleteBranch(
-                dslContext = dslContext, pipelineId = pipelineId, branch = branch
-            ) > 0
-        }
-    }
-
-    fun hasBranchExist(
-        pipelineId: String
-    ): Boolean {
-        return gitPipelineBranchDao.pipelineBranchCount(dslContext, pipelineId) > 0
+@RestResource
+class OpStreamCheckResourceImpl @Autowired constructor(
+    private val streamAsyncService: StreamAsyncService
+) : OpStreamCheckResource {
+    override fun checkBranches(gitProjectId: Long?, pipelineId: String?): Result<Boolean> {
+        streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
+        return Result(true)
     }
 }

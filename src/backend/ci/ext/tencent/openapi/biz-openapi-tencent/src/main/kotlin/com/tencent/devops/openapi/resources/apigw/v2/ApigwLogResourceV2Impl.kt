@@ -43,6 +43,7 @@ class ApigwLogResourceV2Impl @Autowired constructor(
     override fun getInitLogs(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -56,6 +57,7 @@ class ApigwLogResourceV2Impl @Autowired constructor(
                 "elementId[$elementId] jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

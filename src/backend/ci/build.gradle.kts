@@ -23,7 +23,7 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.6.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
     dependencyManagement {
@@ -82,6 +82,9 @@ allprojects {
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")
                 entry("poi-ooxml")
+            }
+            dependencySet("com.hankcs:${Versions.HanLP}") {
+                entry("hanlp")
             }
         }
     }
