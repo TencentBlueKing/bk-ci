@@ -2036,8 +2036,8 @@ class PipelineRuntimeService @Autowired constructor(
     fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus) {
         pipelineBuildDao.updateStatus(
             dslContext = dslContext,
-            projectId = buildId,
-            buildId = projectId,
+            projectId = projectId,
+            buildId = buildId,
             oldBuildStatus = oldStatus,
             newBuildStatus = BuildStatus.QUEUE
         )
