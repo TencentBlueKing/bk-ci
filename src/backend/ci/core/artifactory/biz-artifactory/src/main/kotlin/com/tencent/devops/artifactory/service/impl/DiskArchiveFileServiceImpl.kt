@@ -404,7 +404,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         buildId: String,
         artifactoryType: ArtifactoryType,
         customFilePath: String?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         val filePath = generateDestPath(
             fileType = artifactoryType.toFileType(),
@@ -413,13 +414,14 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             pipelineId = pipelineId,
             buildId = buildId
         )
-        return getFileDownloadUrls(filePath, artifactoryType, fileChannelType)
+        return getFileDownloadUrls(filePath, artifactoryType, fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
         filePath: String,
         artifactoryType: ArtifactoryType,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
@@ -442,7 +444,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             fileType = artifactoryType.toFileType(),
             pathPattern = pathPattern,
             wildFlag = true,
-            fileChannelType = fileChannelType
+            fileChannelType = fileChannelType,
+            fullUrl = fullUrl
         )
         if (response.fileUrlList.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
@@ -456,7 +459,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileType: FileTypeEnum,
         pathPattern: String,
         wildFlag: Boolean,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         val fileUrlList = mutableListOf<String>()
         if (file.isDirectory) {
@@ -468,7 +472,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                         wildFlag = wildFlag,
                         pathPattern = pathPattern,
                         fileChannelType = fileChannelType,
-                        filePath = subFile.absolutePath
+                        filePath = subFile.absolutePath,
+                        fullUrl = fullUrl
                     )
                     if (!url.isNullOrBlank()) {
                         fileUrlList.add(url)
@@ -481,7 +486,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 wildFlag = wildFlag,
                 pathPattern = pathPattern,
                 fileChannelType = fileChannelType,
-                filePath = file.absolutePath
+                filePath = file.absolutePath,
+                fullUrl = fullUrl
             )
             if (!url.isNullOrBlank()) {
                 fileUrlList.add(url)
@@ -495,7 +501,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         wildFlag: Boolean,
         pathPattern: String,
         fileChannelType: FileChannelTypeEnum,
-        filePath: String
+        filePath: String,
+        fullUrl: Boolean = true
     ): String? {
         var flag = false
         if (wildFlag) {
@@ -507,7 +514,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         }
         if (flag) {
             val destPath = filePath.substring(getBasePath().length)
-            return generateFileDownloadUrl(fileChannelType, destPath)
+            return generateFileDownloadUrl(fileChannelType, destPath, fullUrl = fullUrl)
         }
         return null
     }
