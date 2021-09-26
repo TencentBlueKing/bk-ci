@@ -66,7 +66,8 @@ class StreamTriggerListener @Autowired constructor(
                         gitProjectPipeline = event.gitProjectPipeline,
                         event = event.event,
                         originYaml = event.originYaml,
-                        filePath = event.filePath
+                        filePath = event.filePath,
+                        changeSet = event.changeSet
                     )
                 },
                 commitCheck = CommitCheck(
