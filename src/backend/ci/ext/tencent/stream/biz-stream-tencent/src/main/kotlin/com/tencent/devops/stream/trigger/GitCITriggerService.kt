@@ -446,7 +446,8 @@ class GitCITriggerService @Autowired constructor(
                 gitProjectPipeline = buildPipeline,
                 event = event,
                 originYaml = originYaml,
-                filePath = filePath
+                filePath = filePath,
+                changeSet = null
             )
         }
     }
