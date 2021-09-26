@@ -96,8 +96,7 @@
                                         v-model="createAtomForm.name"
                                         v-validate="{
                                             required: true,
-                                            max: 20,
-                                            regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_.]+$'
+                                            regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_.]{1,20}$'
                                         }"
                                         :class="{ 'is-danger': errors.has('atomName') }">
                                     <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">
