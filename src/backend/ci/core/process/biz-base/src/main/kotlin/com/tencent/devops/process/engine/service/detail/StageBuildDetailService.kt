@@ -132,7 +132,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.PAUSE.name
-                    stage.reviewStatus = BuildStatus.REVIEWING.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
@@ -165,7 +164,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = ""
-                    stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
@@ -180,14 +178,16 @@ class StageBuildDetailService(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageCheckQualityFail(
+    fun stageCheckQuality(
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
+        buildStatus: BuildStatus,
         checkIn: StagePauseCheck?,
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
-        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        logger.info("[$buildId]|stage_check_quality|buildStatus=$buildStatus|stageId=$stageId" +
+            "|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
             var update = false
@@ -195,8 +195,6 @@ class StageBuildDetailService(
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (stage.id == stageId) {
                     update = true
-                    stage.status = null
-                    stage.reviewStatus = BuildStatus.QUALITY_CHECK_FAIL.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
@@ -209,7 +207,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.FAILED)
+        }, buildStatus)
         return allStageStatus ?: emptyList()
     }
 
@@ -257,7 +255,6 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.QUEUE.name
-                    stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut

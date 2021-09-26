@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -2060,6 +2061,21 @@ class TemplateFacadeService @Autowired constructor(
             logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
             pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
         }
+    }
+
+    fun getTemplateIdByTemplateCode(templateCode: String, projectIds: List<String>): List<PipelineTemplateInfo> {
+        val templateInfos = templateDao.listTemplateReferenceByProjects(dslContext, templateCode, projectIds)
+        val templateList = mutableListOf<PipelineTemplateInfo>()
+        templateInfos.forEach {
+            templateList.add(PipelineTemplateInfo(
+                projectId = it.projectId,
+                templateId = it.id,
+                templateName = it.templateName,
+                versionName = it.versionName,
+                srcTemplateId = it.srcTemplateId
+            ))
+        }
+        return templateList
     }
 
     companion object {

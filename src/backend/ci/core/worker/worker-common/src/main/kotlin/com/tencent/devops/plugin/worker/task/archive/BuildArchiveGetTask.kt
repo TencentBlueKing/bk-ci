@@ -61,6 +61,7 @@ class BuildArchiveGetTask : ITask() {
     private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
+    @Suppress("ComplexMethod", "MagicNumber")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")

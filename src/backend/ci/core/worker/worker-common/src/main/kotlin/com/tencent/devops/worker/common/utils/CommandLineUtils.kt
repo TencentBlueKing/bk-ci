@@ -35,12 +35,13 @@ import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
+import java.io.ByteArrayOutputStream
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.charset.Charset
 import java.util.regex.Pattern
 
 object CommandLineUtils {
@@ -57,7 +58,7 @@ object CommandLineUtils {
         executeErrorMessage: String? = null,
         buildId: String? = null,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charSetType: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -76,10 +77,11 @@ object CommandLineUtils {
         val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
             CharSetType.UTF_8 -> "UTF-8"
             CharSetType.GBK -> "GBK"
-            else -> "UTF-8"
+            else -> Charset.defaultCharset().name()
         }
 
         val outputStream = object : LogOutputStream() {
+
             override fun processBuffer() {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true
@@ -107,6 +109,7 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+
             override fun processBuffer() {
                 val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
                 privateStringField.isAccessible = true

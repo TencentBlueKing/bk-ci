@@ -47,7 +47,7 @@ data class WindowsScriptElement(
     @ApiModelProperty("脚本类型", required = true)
     val scriptType: BuildScriptType,
     @ApiModelProperty("字符集类型", required = false)
-    val charSetType: CharSetType? = CharSetType.UTF_8
+    val charSetType: CharSetType? = null
 
 ) : Element(name, id, status) {
 
