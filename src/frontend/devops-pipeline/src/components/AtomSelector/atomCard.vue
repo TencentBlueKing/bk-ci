@@ -14,9 +14,9 @@
                     @click.stop="handleUnInstallAtom(atom)">
                     <logo class="remove-icon" name="minus" size="14" />
                 </span>
-                <!-- 正在使用插件,无法移除 -->
+                <!-- 正在使用插件,无法移除  uninstallFlag--是否能卸载标识 -->
                 <span
-                    v-if="('uninstallFlag' in atom && !atom.defaultFlag) || atomCode === atom.atomCode"
+                    v-if="('uninstallFlag' in atom && !atom.defaultFlag) || (atomCode === atom.atomCode && !atom.defaultFlag)"
                     :class="{ 'un-remove': !atom.uninstallFlag }"
                     v-bk-tooltips="unRemoveAtomTipsConfig"
                     @click.stop>
@@ -82,9 +82,9 @@
                 <i class="devops-icon icon-check-1" />
             </span>
         </div>
-        <div id="unRemoveAtomTips" class="un-remove-atom-tips">
+        <div v-if="('uninstallFlag' in atom && !atom.defaultFlag) || (atomCode === atom.atomCode && !atom.defaultFlag)" id="unRemoveAtomTips" class="un-remove-atom-tips">
             <span class="row">{{ $t('editPage.unRemoveAtom') }}，</span>
-            <span class="row" style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage">
+            <span class="row" style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage(atom.atomCode)">
                 {{ $t('editPage.viewPipeline') }}
             </span>
         </div>
@@ -131,6 +131,7 @@
                 default: () => []
             }
         },
+        
         computed: {
             ...mapGetters('atom', [
                 'getDefaultVersion',
@@ -150,6 +151,7 @@
                 ]
             }
         },
+        
         created () {
             this.unRemoveAtomTipsConfig = {
                 allowHtml: true,
@@ -177,19 +179,11 @@
                 return `${this.$t('适用于')}${os.join(' / ')}`
             },
 
-            /**
-             * 使用中插件无法移除tips
-             */
-            // unRemoveAtomTips () {
-            //     return `<span>${this.$t('editPage.unRemoveAtom')}，
-            //         <span style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage">
-            //             ${this.$t('editPage.viewPipeline')}
-            //         </span>
-            //     </span>`
-            // },
-            
-            handleGoPipelineAtomManage () {
-                console.log(123)
+            handleGoPipelineAtomManage (atomCode) {
+                const routeData = this.$router.resolve({
+                    path: `/pipeline/${this.projectCode}/list/atomManage/${atomCode}`
+                })
+                window.open(routeData.href, '_blank')
             },
 
             /**

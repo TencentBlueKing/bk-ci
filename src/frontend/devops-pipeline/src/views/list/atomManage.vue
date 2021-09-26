@@ -156,11 +156,18 @@
                 const otherId = lastReason.id
                 const selectIds = this.deleteObj.reasonList || []
                 return selectIds.includes(otherId)
+            },
+            atomCode () {
+                return this.$route.params.atomCode || ''
             }
         },
 
         created () {
             this.initData()
+            if (this.atomCode) {
+                console.log(this.installAtomList)
+                // this.showDetail()
+            }
         },
 
         methods: {
@@ -186,6 +193,7 @@
             },
 
             showDetail (row) {
+                console.log(row)
                 this.isLoading = true
                 this.detailObj.detail = row
                 this.getInstallAtomDetail({ projectCode: this.projectId, atomCode: row.atomCode }).then(({ data }) => {

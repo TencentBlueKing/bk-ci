@@ -346,7 +346,14 @@ export default {
                 page: 1
             })
         }
-        const jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+
+        // 前提：查询不适用当前job插件
+        // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
+        let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+        const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+        if (!recommendFlag && jobType === 'AGENT_LESS') {
+            jobType = 'AGENT'
+        }
         
         try {
             if (page === 1) {
@@ -361,6 +368,7 @@ export default {
                     os,
                     queryProjectAtomFlag,
                     jobType,
+                    fitOsFlag,
                     recommendFlag,
                     page,
                     pageSize,
@@ -452,7 +460,14 @@ export default {
                 recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
             }
 
-            const jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+            let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+
+            // 前提：查询不适用当前job插件
+            // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
+            const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+            if (!recommendFlag && jobType === 'AGENT_LESS') {
+                jobType = 'AGENT'
+            }
 
             const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                 params: {
@@ -463,6 +478,7 @@ export default {
                     os,
                     queryProjectAtomFlag,
                     jobType,
+                    fitOsFlag,
                     page,
                     pageSize,
                     keyword
@@ -694,7 +710,7 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=15`)
     },
 
     // 获取已安装的插件详情
