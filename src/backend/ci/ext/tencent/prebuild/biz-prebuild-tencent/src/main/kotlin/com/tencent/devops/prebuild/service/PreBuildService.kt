@@ -27,6 +27,7 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
@@ -57,7 +58,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -85,13 +85,9 @@ import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,15 +103,9 @@ class PreBuildService @Autowired constructor(
     private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
     private val preBuildVersionDao: PreBuildPluginVersionDao,
     private val preBuildConfig: PreBuildConfig
-) {
-    private val channelCode = ChannelCode.BS
-
+) : CommonPreBuildService(client, dslContext, prebuildProjectDao) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreBuildService::class.java)
-    }
-
-    private fun getUserProjectId(userId: String): String {
-        return "_$userId"
     }
 
     fun projectNameExist(userId: String, prebuildProjId: String) =
@@ -128,50 +118,15 @@ class PreBuildService @Autowired constructor(
         yaml: CIBuildYaml,
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
-        val userProject = getUserProjectId(userId)
-        val pipeline = getPipelineByName(userId, preProjectId)
         val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
-        val pipelineId = if (null == pipeline) {
-            client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
-        } else {
-            client.get(ServicePipelineResource::class)
-                .edit(userId, userProject, pipeline.pipelineId, model, channelCode)
-            pipeline.pipelineId
-        }
-        prebuildProjectDao.createOrUpdate(
-            dslContext = dslContext,
-            prebuildProjectId = preProjectId,
-            projectId = userProject,
-            owner = userId,
-            yaml = startUpReq.yaml.trim(),
-            pipelineId = pipelineId,
-            workspace = startUpReq.workspace,
-            ideVersion = startUpReq.extraParam?.ideVersion,
-            pluginVersion = startUpReq.extraParam?.pluginVersion
-        )
-
-        logger.info("pipelineId: $pipelineId")
+        logger.warn("model info v1: ${ObjectMapper().writeValueAsString(model)}")
+        val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
+        val projectId = getUserProjectId(userId)
 
         // 启动构建
         val buildId = client.get(ServiceBuildResource::class)
-            .manualStartup(userId, userProject, pipelineId, mapOf(), channelCode).data!!.id
+            .manualStartup(userId, projectId, pipelineId, mapOf(), channelCode).data!!.id
         return BuildId(buildId)
-    }
-
-    private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
-        try {
-            val pipelineList = client.get(ServicePipelineResource::class)
-                .list(userId, getUserProjectId(userId), 1, 1000).data!!.records
-            pipelineList.forEach {
-                if (it.pipelineName == preProjectId) {
-                    return it
-                }
-            }
-        } catch (e: Throwable) {
-            logger.error("List pipeline failed, exception:", e)
-        }
-
-        return null
     }
 
     fun shutDown(
@@ -186,7 +141,13 @@ class PreBuildService @Autowired constructor(
             ?: throw OperationException("prebuild project not exist")
         logger.info("Manual shutdown the build, buildId: $buildId")
         return client.get(ServiceBuildResource::class)
-            .manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
+            .manualShutdown(
+                userId,
+                projectId,
+                preProjectRecord.pipelineId,
+                buildId,
+                channelCode
+            ).data!!
     }
 
     private fun createPipelineModel(
@@ -235,7 +196,8 @@ class PreBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 if (job.job.type == null || job.job.type == VM_JOB) {
-                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex, userId)
+                    val vmContainer =
+                        createVMBuildContainer(job, startUpReq, agentInfo, jobIndex, userId)
                     containerList.add(vmContainer)
                 } else if (job.job.type == NORMAL_JOB) {
                     val normalContainer = createNormalContainer(job, userId)
@@ -275,21 +237,6 @@ class PreBuildService @Autowired constructor(
             jobControlOption = null,
             mutexGroup = null
         )
-    }
-
-    private fun installMarketAtom(userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(getUserProjectId(userId))
-        try {
-            client.get(ServiceMarketAtomResource::class).installAtom(
-                userId,
-                channelCode,
-                InstallAtomReq(projectCodes, atomCode)
-            )
-        } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
-            // 可能之前安装过，继续执行不退出
-        }
     }
 
     private fun createVMBuildContainer(
@@ -367,10 +314,17 @@ class PreBuildService @Autowired constructor(
         )
     }
 
-    private fun codeCCAtomCheck(oldStep: AbstractTask, startUpReq: StartUpReq, job: Job): AbstractTask {
+    private fun codeCCAtomCheck(
+        oldStep: AbstractTask,
+        startUpReq: StartUpReq,
+        job: Job
+    ): AbstractTask {
         var step = oldStep
+        val isRunOnDocker = job.job.resourceType == ResourceType.REMOTE &&
+                (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                        job.job.pool?.type == PoolType.DockerOnVm)
         if (step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) {
-            val whitePath = getWhitePath(startUpReq, job)
+            val whitePath = getWhitePath(startUpReq, isRunOnDocker)
             val data = step.inputs.data.toMutableMap()
             val input = (data["input"] as Map<*, *>).toMutableMap()
             if (whitePath.isNotEmpty()) {
@@ -383,7 +337,7 @@ class PreBuildService @Autowired constructor(
                 }
             )
         } else if (step is CodeCCScanInContainerTask) {
-            val whitePath = getWhitePath(startUpReq, job)
+            val whitePath = getWhitePath(startUpReq, isRunOnDocker)
             if (whitePath.isNotEmpty()) {
                 step.inputs.path = whitePath
             }
@@ -391,40 +345,11 @@ class PreBuildService @Autowired constructor(
         return step
     }
 
-    private fun getWhitePath(startUpReq: StartUpReq, job: Job): List<String> {
-        val vmType = job.job.resourceType
-        val whitePath = mutableListOf<String>()
-        // idea右键codecc扫描
-        if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
-            whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
-        }
-        // push/commit前扫描的文件路径
-        if (startUpReq.extraParam!!.incrementFileList != null &&
-            startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
-        ) {
-            whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
-        }
-        // 使用容器路径替换本地路径
-        if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud ||
-                    job.job.pool?.type == PoolType.DockerOnVm)
-        ) {
-            whitePath.forEachIndexed { index, path ->
-                val filePath = path.removePrefix(startUpReq.workspace)
-                // 路径开头不匹配则不替换
-                if (filePath != path) {
-                    // 兼容workspace可能带'/'的情况
-                    if (startUpReq.workspace.last() == '/') {
-                        whitePath[index] = "/data/landun/workspace/$filePath"
-                    } else {
-                        whitePath[index] = "/data/landun/workspace$filePath"
-                    }
-                }
-            }
-        }
-        return whitePath
-    }
-
-    fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
+    fun getDispatchType(
+        job: Job,
+        startUpReq: StartUpReq,
+        agentInfo: ThirdPartyAgentStaticInfo
+    ): DispatchType {
         return when (job.job.resourceType) {
             ResourceType.LOCAL, null -> {
                 ThirdPartyAgentIDDispatchType(
@@ -450,10 +375,21 @@ class PreBuildService @Autowired constructor(
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
         return client.get(ServiceBuildResource::class)
-            .getBuildDetail(userId, preProjectRecord.projectId, preProjectRecord.pipelineId, buildId, channelCode)
+            .getBuildDetail(
+                userId,
+                preProjectRecord.projectId,
+                preProjectRecord.pipelineId,
+                buildId,
+                channelCode
+            )
     }
 
-    fun getInitLogs(userId: String, pipelineId: String, buildId: String, debugLog: Boolean?): QueryLogs {
+    fun getInitLogs(
+        userId: String,
+        pipelineId: String,
+        buildId: String,
+        debugLog: Boolean?
+    ): QueryLogs {
         val projectId = getUserProjectId(userId)
         val originLog = client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -529,7 +465,8 @@ class PreBuildService @Autowired constructor(
         client.get(UserCodeccResource::class).getCodeccReport(buildId)
 
     fun getOrCreateUserProject(userId: String, accessToken: String): UserProject {
-        val projectResult = client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
+        val projectResult =
+            client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
         if (projectResult.isNotOk()) {
             throw RuntimeException("get user project err")
         }
@@ -559,8 +496,14 @@ class PreBuildService @Autowired constructor(
         }
     }
 
-    fun getHistory(userId: String, preProjectId: String, page: Int?, pageSize: Int?): List<HistoryResponse> {
-        val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId) ?: return emptyList()
+    fun getHistory(
+        userId: String,
+        preProjectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<HistoryResponse> {
+        val preProjectRecord =
+            prebuildProjectDao.get(dslContext, preProjectId, userId) ?: return emptyList()
         val historyList = client.get(ServiceBuildResource::class).getHistoryBuild(
             userId,
             preProjectRecord.projectId,
@@ -583,7 +526,12 @@ class PreBuildService @Autowired constructor(
                 "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
     }
 
-    fun getOrCreatePreAgent(userId: String, os: OS, ip: String, hostName: String): ThirdPartyAgentStaticInfo {
+    fun getOrCreatePreAgent(
+        userId: String,
+        os: OS,
+        ip: String,
+        hostName: String
+    ): ThirdPartyAgentStaticInfo {
         val machine = prebuildPersonalMachineDao.get(dslContext, userId, hostName)
         if (null == machine) {
             prebuildPersonalMachineDao.create(dslContext, userId, hostName, ip, "")
@@ -610,7 +558,8 @@ class PreBuildService @Autowired constructor(
 
     fun getAgent(userId: String, os: OS, ip: String, hostName: String): ThirdPartyAgentStaticInfo? {
         val listPreAgentResult =
-            client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
+            client.get(ServicePreBuildAgentResource::class)
+                .listPreBuildAgent(userId, getUserProjectId(userId), os)
         if (listPreAgentResult.isNotOk()) {
             logger.error("list prebuild agent failed")
             throw OperationException("list prebuild agent failed")
@@ -674,10 +623,14 @@ class PreBuildService @Autowired constructor(
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
 
     fun checkYml(yamlStr: String) =
-        CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+        CiYamlUtils.checkYaml(
+            YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java)
+        )
 
     fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
-        val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
+        val record =
+            preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext)
+                ?: return null
         return PrePluginVersion(
             version = record.version,
             desc = record.desc,
@@ -689,7 +642,10 @@ class PreBuildService @Autowired constructor(
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
         val record =
-            preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+            preBuildVersionDao.getVersion(
+                pluginType = prePluginVersion.pluginType.name,
+                dslContext = dslContext
+            )
         if (record != null) {
             throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
         }
