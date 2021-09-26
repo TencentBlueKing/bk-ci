@@ -29,7 +29,7 @@ package com.tencent.devops.common.util
 
 object RegexUtils {
 
-    private val httpContextPathRegex = Regex("(http[s]?://[-.a-z0-9A-Z]+)(/.*)")
+    private val httpContextPathRegex = Regex("(http[s]?://[-.a-z0-9A-Z]+(:\\d+)?)(/.*)")
 
     /**
      * 解析 [url], 并且返回 协议和域名(http//xx.xx.xx or https//xx.xx.xx) 以及 ContextPath绝对路径(/ or /xx/yy...)
@@ -39,8 +39,8 @@ object RegexUtils {
     @Suppress("MagicNumber")
     fun splitDomainContextPath(url: String): Pair<String/*http domain*/, String/*context path*/>? {
         val groups = httpContextPathRegex.find(url)?.groups
-        if (groups != null && groups.size == 3) {
-            return groups[1]!!.value to groups[2]!!.value
+        if (groups != null && groups.size >= 3) {
+            return groups[1]!!.value to groups[groups.size - 1]!!.value
         }
         return null
     }

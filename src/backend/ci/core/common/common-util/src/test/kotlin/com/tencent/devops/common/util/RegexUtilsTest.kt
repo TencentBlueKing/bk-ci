@@ -45,5 +45,10 @@ class RegexUtilsTest {
         contextPath = "/"
         Assert.assertEquals(httpsDomain, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.first)
         Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(httpsDomain + contextPath)!!.second)
+
+        val domainWithPort = "https://www.tencent.com:12345"
+        contextPath = "/report.html"
+        Assert.assertEquals(domainWithPort, RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.first)
+        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.second)
     }
 }
