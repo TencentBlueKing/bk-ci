@@ -327,7 +327,7 @@ class TaskBuildDetailService(
         endElementIndex: Int,
         elements: List<Element>,
         containerId: String,
-        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
     ): Boolean {
         if (tmpElement == endElement) {
             if (buildStatus == BuildStatus.CANCELED &&
