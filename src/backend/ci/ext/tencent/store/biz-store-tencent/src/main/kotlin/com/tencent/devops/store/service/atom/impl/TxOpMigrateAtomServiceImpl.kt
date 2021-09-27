@@ -118,6 +118,8 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                             destPath = pkgPath,
                             file = file
                         )
+                    } catch (t: Throwable) {
+                        logger.warn("migrateAtomPkg file:$pkgPath failed", t)
                     } finally {
                         // 删除临时文件
                         file.delete()
@@ -191,6 +193,8 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                         destPath = destPath,
                         file = file
                     )
+                } catch (t: Throwable) {
+                    logger.warn("migrateAtomStaticFile file:$fileUrl failed", t)
                 } finally {
                     // 删除临时文件
                     file.delete()
