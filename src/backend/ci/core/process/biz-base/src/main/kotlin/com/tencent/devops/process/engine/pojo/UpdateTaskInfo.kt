@@ -25,42 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.agent
+package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.enums.CharsetType
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.net.URLEncoder
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import java.time.LocalDateTime
 
-@ApiModel("脚本任务（windows环境）", description = WindowsScriptElement.classType)
-data class WindowsScriptElement(
-    @ApiModelProperty("任务名称", required = true)
-    override val name: String = "执行Windows的bat脚本",
-    @ApiModelProperty("id", required = false)
-    override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
-    override var status: String? = null,
-    @ApiModelProperty("脚本内容", required = true)
-    val script: String,
-    @ApiModelProperty("脚本类型", required = true)
-    val scriptType: BuildScriptType,
-    @ApiModelProperty("字符集类型", required = false)
-    val charsetType: CharsetType? = null
-
-) : Element(name, id, status) {
-
-    companion object {
-        const val classType = "windowsScript"
-    }
-
-    override fun genTaskParams(): MutableMap<String, Any> {
-        val mutableMap = super.genTaskParams()
-        // 帮助转化
-        mutableMap["script"] = URLEncoder.encode(script, "UTF-8")
-        return mutableMap
-    }
-
-    override fun getClassType() = classType
-}
+data class UpdateTaskInfo(
+    val taskStatus: BuildStatus? = null, // 构建状态
+    val starter: String? = null, // 启动人
+    val approver: String? = null, // 审批人
+    val startTime: LocalDateTime? = null, // 开始时间
+    val endTime: LocalDateTime? = null, // 结束时间
+    val totalTime: Long? = null // 耗费时间
+)

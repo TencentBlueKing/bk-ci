@@ -25,42 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.agent
+package com.tencent.devops.process.api.builds
 
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.enums.CharsetType
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.net.URLEncoder
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.classify.PipelineLabelDetail
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("脚本任务（windows环境）", description = WindowsScriptElement.classType)
-data class WindowsScriptElement(
-    @ApiModelProperty("任务名称", required = true)
-    override val name: String = "执行Windows的bat脚本",
-    @ApiModelProperty("id", required = false)
-    override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
-    override var status: String? = null,
-    @ApiModelProperty("脚本内容", required = true)
-    val script: String,
-    @ApiModelProperty("脚本类型", required = true)
-    val scriptType: BuildScriptType,
-    @ApiModelProperty("字符集类型", required = false)
-    val charsetType: CharsetType? = null
+@Api(tags = ["BUILD_LABEL"], description = "构建-标签")
+@Path("/build/labels")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildLabelResource {
 
-) : Element(name, id, status) {
-
-    companion object {
-        const val classType = "windowsScript"
-    }
-
-    override fun genTaskParams(): MutableMap<String, Any> {
-        val mutableMap = super.genTaskParams()
-        // 帮助转化
-        mutableMap["script"] = URLEncoder.encode(script, "UTF-8")
-        return mutableMap
-    }
-
-    override fun getClassType() = classType
+    @ApiOperation("获取标签信息")
+    @Path("/list")
+    @GET
+    fun getLabelInfo(
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String
+    ): Result<PipelineLabelDetail>
 }
