@@ -155,8 +155,9 @@ interface AtomService {
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        name: String?,
+        page: Int,
+        pageSize: Int
     ): Page<InstalledAtom>
 
     /**
