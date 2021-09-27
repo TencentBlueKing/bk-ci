@@ -35,6 +35,8 @@ import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -47,12 +49,15 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.stream.pojo.git.GitProject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Service
-class GitCIProjectService @Autowired constructor(
+class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val scmService: ScmService,
@@ -63,7 +68,9 @@ class GitCIProjectService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIProjectService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamProjectService::class.java)
+        private const val STREAM_USER_PROJECT_HISTORY_SET = "stream:user:project:history:set"
+        private const val MAX_STREAM_USER_HISTORY_LENGTH = 10
     }
 
     fun getProjectList(
@@ -160,6 +167,19 @@ class GitCIProjectService @Autowired constructor(
             hasNext = gitProjects.size == realPageSize,
             records = result
         )
+    }
+
+    fun addUserProjectHistory(
+        userId: String,
+        project: GitProject,
+    ): Boolean {
+        val key = "${STREAM_USER_PROJECT_HISTORY_SET}:$userId"
+        redisOperation.zadd(key, JsonUtil.toJson(project), (System.currentTimeMillis() / 1000).toDouble())
+        val size = redisOperation.zssize(key)
+    }
+
+    private fun RedisOperation.zssize(key: String): Long{
+        return this.().opsForZSet().count(getFinalKey(key, isDistinguishCluster), min, max)
     }
 
     private fun getEventMessage(event: GitRequestEvent?, gitProjectId: Long): String? {
