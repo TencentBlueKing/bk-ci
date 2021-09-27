@@ -87,7 +87,7 @@ const routes = [
                         component: pipelinesTemplate
                     },
                     {
-                        path: 'atomManage/:atomCode',
+                        path: 'atomManage/:atomCode/:name',
                         name: 'atomManage',
                         component: atomManage
                     },

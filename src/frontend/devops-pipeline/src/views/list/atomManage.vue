@@ -2,6 +2,7 @@
     <article class="atom-manage-home" v-bkloading="{ isLoading }">
         <h3 class="atom-manage-title">
             {{ $t('atomManage.installedAtom') }}
+            <bk-input></bk-input>
             <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
         </h3>
         <bk-tab :active.sync="active" class="atom-manage-main" @tab-change="tabChange">
@@ -159,14 +160,17 @@
             },
             atomCode () {
                 return this.$route.params.atomCode || ''
+            },
+            atomName () {
+                return this.$route.params.name || ''
             }
         },
 
         created () {
             this.initData()
+            console.log(this.$route)
             if (this.atomCode) {
-                console.log(this.installAtomList)
-                // this.showDetail()
+                // console.log(this.installAtomList, this.atomName, this.atomCode)
             }
         },
 
