@@ -91,10 +91,20 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         userId: String,
         projectCode: String,
         classifyCode: String?,
+        name: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<InstalledAtom>> {
-        return Result(atomService.getInstalledAtoms(userId, projectCode, classifyCode, page, pageSize))
+        return Result(
+            atomService.getInstalledAtoms(
+                userId = userId,
+                projectCode = projectCode,
+                classifyCode = classifyCode,
+                name = name,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun updateAtomBaseInfo(
