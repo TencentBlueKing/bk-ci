@@ -29,15 +29,20 @@ package com.tencent.devops.experience.resources.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
+import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceExperienceResourceImpl @Autowired constructor(private val experienceService: ExperienceService) : ServiceExperienceResource {
+class ServiceExperienceResourceImpl @Autowired constructor(
+    private val experienceService: ExperienceService,
+    private val experienceBaseService: ExperienceBaseService
+) : ServiceExperienceResource {
 
     override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
         checkParam(userId, projectId)
@@ -52,6 +57,10 @@ class ServiceExperienceResourceImpl @Autowired constructor(private val experienc
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId)
         return Result(experienceService.get(userId, experienceHashId, false))
+    }
+
+    override fun check(userId: String, experienceHashId: String): Result<Boolean> {
+        return Result(experienceBaseService.userCanExperience(userId, HashUtil.decodeIdToLong(experienceHashId)))
     }
 
     private fun checkParam(userId: String, projectId: String) {
