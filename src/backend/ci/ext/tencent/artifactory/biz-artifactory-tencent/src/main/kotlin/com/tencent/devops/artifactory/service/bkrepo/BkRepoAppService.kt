@@ -175,18 +175,22 @@ class BkRepoAppService @Autowired constructor(
                     "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
         )
 
-        val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId!!)
-        if (!check.isOk() || !check.data!!) {
-            throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+            }
         }
 
-        val userName = run {
+        val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {
                 experience.data!!.creator
             } else {
                 userId
             }
+        } else {
+            userId
         }
 
         val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
