@@ -145,7 +145,6 @@ include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
-
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
@@ -193,6 +192,7 @@ include(":core:notify")
 include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
+include(":core:notify:biz-notify-wework")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 
