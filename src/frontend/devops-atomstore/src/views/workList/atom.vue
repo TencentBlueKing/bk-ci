@@ -121,8 +121,7 @@
                                         v-model="createAtomForm.atomCode"
                                         v-validate="{
                                             required: true,
-                                            max: 30,
-                                            regex: '^[a-zA-Z][a-zA-Z0-9_-]*$'
+                                            regex: '^[a-zA-Z][a-zA-Z0-9_-]{1,30}$'
                                         }"
                                         :class="{ 'is-danger': errors.has('atomId') }">
                                     <p :class="errors.has('atomId') ? 'error-tips' : 'normal-tips'">
