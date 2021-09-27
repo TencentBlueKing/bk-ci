@@ -27,19 +27,19 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("Unused", "LongParameterList")
 @Repository
-class PipelineResVersionDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResVersionDao {
 
     fun create(
         dslContext: DSLContext,
@@ -49,7 +49,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         versionName: String = "init",
         model: Model
     ) {
-        val modelString = objectMapper.writeValueAsString(model)
+        val modelString = JsonUtil.toJson(model, formatted = false)
         create(
             dslContext = dslContext,
             pipelineId = pipelineId,
@@ -144,7 +144,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
                 .limit(limit).offset(offset)
                 .fetch()
 
-            result?.forEach {
+            result.forEach {
                 list.add(PipelineVersionSimple(
                     pipelineId = pipelineId,
                     creator = it[CREATOR] ?: "unknown",
