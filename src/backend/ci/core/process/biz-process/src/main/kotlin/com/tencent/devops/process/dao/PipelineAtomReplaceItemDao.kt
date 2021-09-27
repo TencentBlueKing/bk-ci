@@ -71,7 +71,7 @@ class PipelineAtomReplaceItemDao {
                         it.fromAtomVersion,
                         toAtomCode,
                         it.toAtomVersion,
-                        paramReplaceInfoList?.let { a -> JsonUtil.toJson(a, formatted = false) },
+                        paramReplaceInfoList?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         baseId,
                         userId,
                         userId
