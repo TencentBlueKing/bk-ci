@@ -131,7 +131,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): String{
+    ): String {
         return "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
