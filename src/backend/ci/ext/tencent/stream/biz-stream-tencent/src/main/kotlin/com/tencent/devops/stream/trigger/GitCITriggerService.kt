@@ -447,6 +447,7 @@ class GitCITriggerService @Autowired constructor(
                 event = event,
                 originYaml = originYaml,
                 filePath = filePath,
+                changeSet = null,
                 forkGitProjectId = forkGitProjectId
             )
         }

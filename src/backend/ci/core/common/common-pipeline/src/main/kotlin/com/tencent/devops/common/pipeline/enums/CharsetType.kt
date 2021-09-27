@@ -25,36 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-
-interface YamlTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): Boolean
-
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
+enum class CharsetType {
+    DEFAULT,
+    UTF_8,
+    GBK
 }

@@ -65,6 +65,7 @@ class StreamTriggerListener @Autowired constructor(
                         event = event.event,
                         originYaml = event.originYaml,
                         filePath = event.filePath,
+                        changeSet = event.changeSet,
                         forkGitProjectId = event.forkGitProjectId
                     )
                 },

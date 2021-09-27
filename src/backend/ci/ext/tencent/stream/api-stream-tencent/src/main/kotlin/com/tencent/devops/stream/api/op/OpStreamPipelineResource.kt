@@ -25,9 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.stream.api.op
 
-enum class CharSetType {
-    UTF_8,
-    GBK
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_STREAM_PIPELINE"], description = "Stream流水线op系统")
+@Path("/op/stream/pipeline")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStreamPipelineResource {
+
+    @ApiOperation("删除在Stream中已经删除但未被删除的流水线")
+    @POST
+    @Path("/delete")
+    fun checkBranches(
+        @ApiParam(value = "删除指定的用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

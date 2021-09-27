@@ -99,7 +99,10 @@ class YamlTemplateService @Autowired constructor(
                     ref = ref!!,
                     fileName = templateDirectory + fileName,
                     useAccessToken = true
-                ).ifBlank { throw YamlBlankException(templateDirectory + fileName) }
+                )
+            }
+            if (content.isBlank()) {
+                throw YamlBlankException(templateDirectory + fileName)
             }
             return ScriptYmlUtils.formatYaml(content)
         }
