@@ -1086,8 +1086,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.startTime = null
                                 it.endTime = null
                                 it.executeCount = context.executeCount
-                                it.checkIn = stage.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) }
-                                it.checkOut = stage.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) }
+                                it.checkIn = stage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                                it.checkOut = stage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
                             }

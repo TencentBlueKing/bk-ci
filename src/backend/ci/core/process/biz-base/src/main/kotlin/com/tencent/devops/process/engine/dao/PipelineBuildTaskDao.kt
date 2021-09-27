@@ -98,7 +98,7 @@ class PipelineBuildTaskDao {
                         buildTask.startTime,
                         buildTask.endTime,
                         buildTask.approver,
-                        buildTask.additionalOptions?.let { a -> JsonUtil.toJson(a, formatted = false) },
+                        buildTask.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         buildTask.atomCode
                     )
                     .execute()
@@ -131,7 +131,10 @@ class PipelineBuildTaskDao {
                     .set(TASK_SEQ, it.taskSeq)
                     .set(SUB_BUILD_ID, it.subBuildId)
                     .set(CONTAINER_TYPE, it.containerType)
-                    .set(ADDITIONAL_OPTIONS, it.additionalOptions?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                    .set(
+                        ADDITIONAL_OPTIONS,
+                        it.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                    )
                     .set(
                         TOTAL_TIME,
                         if (it.endTime != null && it.startTime != null) {

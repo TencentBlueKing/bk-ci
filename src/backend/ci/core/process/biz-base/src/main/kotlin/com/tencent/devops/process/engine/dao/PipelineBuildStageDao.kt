@@ -82,9 +82,9 @@ class PipelineBuildStageDao {
                     buildStage.endTime,
                     buildStage.cost,
                     buildStage.executeCount,
-                    buildStage.controlOption?.let { a -> JsonUtil.toJson(a, formatted = false) },
-                    buildStage.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) },
-                    buildStage.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) }
+                    buildStage.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
                 )
                 .execute()
         }
@@ -107,9 +107,9 @@ class PipelineBuildStageDao {
                         .set(END_TIME, it.endTime)
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.controlOption?.let { a -> JsonUtil.toJson(a, formatted = false) })
-                        .set(CHECK_IN, it.checkIn?.let { a -> JsonUtil.toJson(a, formatted = false) })
-                        .set(CHECK_OUT, it.checkOut?.let { a -> JsonUtil.toJson(a, formatted = false) })
+                        .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)
