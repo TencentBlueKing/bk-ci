@@ -93,7 +93,7 @@ interface ServiceExperienceResource {
     ): Result<Experience>
 
     @ApiOperation("是否有体验权限")
-    @Path("/projects/{projectId}/experienceIds/{experienceHashId}/check")
+    @Path("/experienceIds/{experienceHashId}/check")
     @GET
     fun check(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
