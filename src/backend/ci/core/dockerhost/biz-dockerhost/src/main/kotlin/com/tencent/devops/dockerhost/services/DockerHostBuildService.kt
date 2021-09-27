@@ -80,7 +80,6 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Suppress("ALL")
 @Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
@@ -210,30 +209,8 @@ class DockerHostBuildService(
                     .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                 .withBinds(binds)
                 .withNetworkMode("bridge")
-            
-            if (dockerBuildInfo.projectId == "test-sawyer2") {
-                val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
-                val workDir = "${getWorkspace(dockerBuildInfo)}work"
-                if (!File(upperDir).exists()) {
-                    File(upperDir).mkdirs()
-                }
 
-                if (!File(workDir).exists()) {
-                    File(workDir).mkdirs()
-                }
-
-                val mount = Mount().withType(MountType.VOLUME)
-                    .withTarget("/data/landun/workspace")
-                    .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withOptions(
-                        mapOf(
-                            "type" to "overlay",
-                            "device" to "overlay",
-                            "o" to "lowerdir=/data/overlayfsTest/demo,upperdir=$upperDir,workdir=$workDir"
-                        )
-                    )))
-
-                hostConfig.withMounts(listOf(mount))
-            }
+            mountOverlayfs(dockerBuildInfo, hostConfig)
             
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
@@ -272,6 +249,37 @@ class DockerHostBuildService(
                     message = "[${dockerBuildInfo.buildId}]|Create container failed"
                 )
             }
+        }
+    }
+
+    private fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
+        if (dockerBuildInfo.projectId == "test-sawyer2" || dockerBuildInfo.qpcUniquePath != null) {
+            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
+            val workDir = "${getWorkspace(dockerBuildInfo)}work"
+            if (!File(upperDir).exists()) {
+                File(upperDir).mkdirs()
+            }
+            if (!File(workDir).exists()) {
+                File(workDir).mkdirs()
+            }
+
+            val lowerDir = if (dockerBuildInfo.projectId == "test-sawyer2") {
+                "/data/overlayfsTest/demo"
+            } else {
+                "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
+            }
+
+            val mount = Mount().withType(MountType.VOLUME)
+                .withTarget(dockerHostConfig.volumeWorkspace)
+                .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withOptions(
+                    mapOf(
+                        "type" to "overlay",
+                        "device" to "overlay",
+                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                    )
+                )))
+
+            hostConfig.withMounts(listOf(mount))
         }
     }
 

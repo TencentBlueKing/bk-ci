@@ -41,11 +41,8 @@ import java.util.concurrent.locks.ReentrantLock
 
 @BindGenerator(description = "默认Docker Bind生成器")
 @Component
-@Suppress("ALL")
 class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
-
-//    private val etcHosts = "/etc/hosts"
 
     private val whiteList = mutableSetOf<String>()
 
@@ -70,7 +67,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache))
             )
 
-            if (projectId != "test-sawyer2") {
+            if (projectId != "test-sawyer2" && qpcUniquePath == null) {
                 binds.add(Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace)))
             }
 

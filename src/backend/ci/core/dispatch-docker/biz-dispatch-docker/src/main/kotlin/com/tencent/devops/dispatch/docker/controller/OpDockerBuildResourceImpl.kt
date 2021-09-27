@@ -34,11 +34,25 @@ import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService)
+class OpDockerBuildResourceImpl @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService
+)
     : OpDockerBuildResource {
 
     override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
         dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
         return Result(true)
+    }
+
+    override fun getQpcWhitelist(userId: String): Result<List<String>> {
+        return Result(dockerHostBuildService.getQpcWhitelist(userId))
+    }
+
+    override fun addQpcWhitelist(userId: String, gitProjectId: String): Result<Boolean> {
+        return Result(dockerHostBuildService.addQpcWhitelist(userId, gitProjectId))
+    }
+
+    override fun deleteQpcWhitelist(userId: String, gitProjectId: String): Result<Boolean> {
+        return Result(dockerHostBuildService.deleteQpcWhitelist(userId, gitProjectId))
     }
 }
