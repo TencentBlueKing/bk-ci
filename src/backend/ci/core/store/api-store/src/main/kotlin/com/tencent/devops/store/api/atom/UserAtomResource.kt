@@ -140,7 +140,7 @@ interface UserAtomResource {
 
     @ApiOperation("获取项目下已安装的插件列表")
     @GET
-    @Path("/projectCodes/{projectCode}/list")
+    @Path("/projectCodes/{projectCode}/installedAtoms/list")
     fun getInstalledAtoms(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -151,6 +151,9 @@ interface UserAtomResource {
         @ApiParam("插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
+        @ApiParam("名称", required = false)
+        @QueryParam("name")
+        name: String?,
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,

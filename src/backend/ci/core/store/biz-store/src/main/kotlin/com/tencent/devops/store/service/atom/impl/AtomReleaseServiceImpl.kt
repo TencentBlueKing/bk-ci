@@ -893,24 +893,30 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
         logger.info("cancelRelease, userId=$userId, atomId=$atomId")
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
+        val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
         marketAtomDao.setAtomStatusById(
-            dslContext,
-            atomId,
-            status,
-            userId,
-            MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+            dslContext = dslContext,
+            atomId = atomId,
+            atomStatus = status,
+            userId = userId,
+            msg = MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+        )
+        // 更新插件当前大版本内是否有测试版本标识
+        redisOperation.hset(
+            key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+            hashKey = VersionUtils.convertLatestVersion(record.version),
+            values = "false"
         )
         doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
-        val atomCode = record.atomCode
         client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
         client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
         client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)

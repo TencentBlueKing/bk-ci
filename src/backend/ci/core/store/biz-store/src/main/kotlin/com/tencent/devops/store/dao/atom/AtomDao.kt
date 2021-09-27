@@ -1011,9 +1011,10 @@ class AtomDao : AtomBaseDao() {
     fun countInstalledAtoms(
         dslContext: DSLContext,
         projectCode: String,
-        classifyCode: String?
+        classifyCode: String? = null,
+        name: String? = null
     ): Int {
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
 
         return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
             .from(ta)
@@ -1029,12 +1030,13 @@ class AtomDao : AtomBaseDao() {
     fun getInstalledAtoms(
         dslContext: DSLContext,
         projectCode: String,
-        classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        classifyCode: String? = null,
+        name: String? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record>? {
 
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
         val tc = TClassify.T_CLASSIFY.`as`("tc")
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
@@ -1073,6 +1075,7 @@ class AtomDao : AtomBaseDao() {
     private fun getInstalledConditions(
         projectCode: String,
         classifyCode: String?,
+        name: String?,
         dslContext: DSLContext
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM.`as`("ta")
@@ -1087,6 +1090,9 @@ class AtomDao : AtomBaseDao() {
                 .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
                 .fetchOne(0, String::class.java)
             conditions.add(ta.CLASSIFY_ID.eq(classifyId))
+        }
+        if (!name.isNullOrBlank()) {
+            conditions.add(ta.NAME.contains(name))
         }
         return Triple(ta, tspr, conditions)
     }

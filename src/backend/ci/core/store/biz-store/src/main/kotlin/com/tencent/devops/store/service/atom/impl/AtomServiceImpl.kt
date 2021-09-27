@@ -125,7 +125,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.util.StringUtils
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -833,21 +832,24 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         userId: String,
         projectCode: String,
         classifyCode: String?,
-        page: Int?,
-        pageSize: Int?
+        name: String?,
+        page: Int,
+        pageSize: Int
     ): Page<InstalledAtom> {
-
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 10
-
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()
-        val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode)
+        val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
         if (count == 0) {
-            return Page(pageNotNull, pageSizeNotNull, count.toLong(), result)
+            return Page(page, pageSize, count.toLong(), result)
         }
-
-        val records = atomDao.getInstalledAtoms(dslContext, projectCode, classifyCode, pageNotNull, pageSizeNotNull)
+        val records = atomDao.getInstalledAtoms(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            page = page,
+            pageSize = pageSize
+        )
         val atomCodeList = mutableListOf<String>()
         records?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
@@ -891,8 +893,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
             )
         }
-
-        return Page(pageNotNull, pageSizeNotNull, count.toLong(), result)
+        return Page(page, pageSize, count.toLong(), result)
     }
 
     /**
@@ -903,7 +904,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): List<InstalledAtom> {
 
         // 获取已安装插件
-        val records = atomDao.getInstalledAtoms(dslContext, projectCode, null, null, null)
+        val records = atomDao.getInstalledAtoms(dslContext, projectCode)
         val atomCodeList = mutableListOf<String>()
         records?.forEach {
             atomCodeList.add(it[KEY_ATOM_CODE] as String)
