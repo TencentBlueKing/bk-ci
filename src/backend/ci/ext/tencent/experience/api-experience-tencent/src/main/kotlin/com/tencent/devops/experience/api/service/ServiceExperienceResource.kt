@@ -91,4 +91,16 @@ interface ServiceExperienceResource {
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Experience>
+
+    @ApiOperation("是否有体验权限")
+    @Path("/experienceIds/{experienceHashId}/check")
+    @GET
+    fun check(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("体验HashId", required = false)
+        @PathParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Boolean>
 }
