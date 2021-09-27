@@ -188,7 +188,7 @@ class BkRepoAppService @Autowired constructor(
         val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
         val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url.replace(" ", ""))
         val fileProperties = bkRepoClient.listMetadata(
-            userId,
+            userName,
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
             argPath
