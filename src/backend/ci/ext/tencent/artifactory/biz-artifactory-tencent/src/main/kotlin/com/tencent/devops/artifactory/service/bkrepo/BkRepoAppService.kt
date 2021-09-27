@@ -69,7 +69,7 @@ class BkRepoAppService @Autowired constructor(
     ): Url {
         logger.info(
             "getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
         )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
@@ -126,7 +126,7 @@ class BkRepoAppService @Autowired constructor(
     ): Url {
         logger.info(
             "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
-                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
         )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
@@ -156,7 +156,7 @@ class BkRepoAppService @Autowired constructor(
         val url =
             StringUtil.chineseUrlEncode(
                 "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
-                    "$artifactoryType/filePlist?path=$normalizedPath"
+                        "$artifactoryType/filePlist?path=$normalizedPath"
             )
         return Url(url)
     }
@@ -172,23 +172,27 @@ class BkRepoAppService @Autowired constructor(
     ): String {
         logger.info(
             "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-                "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
+                    "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
         )
-        val userName = if (experienceHashId != null) {
+
+        val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId!!)
+        if (!check.isOk() || !check.data!!) {
+            throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+        }
+
+        val userName = run {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {
                 experience.data!!.creator
             } else {
                 userId
             }
-        } else {
-            userId
         }
 
         val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
         val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url.replace(" ", ""))
         val fileProperties = bkRepoClient.listMetadata(
-            userId,
+            userName,
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
             argPath
