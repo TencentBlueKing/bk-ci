@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -53,6 +54,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.pojo.git.GitProject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class StreamProjectService @Autowired constructor(
@@ -71,6 +74,7 @@ class StreamProjectService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamProjectService::class.java)
         private const val STREAM_USER_PROJECT_HISTORY_SET = "stream:user:project:history:set"
         private const val MAX_STREAM_USER_HISTORY_LENGTH = 10
+        private const val MAX_STREAM_USER_HISTORY_DAYS = 90L
     }
 
     fun getProjectList(
@@ -171,15 +175,39 @@ class StreamProjectService @Autowired constructor(
 
     fun addUserProjectHistory(
         userId: String,
-        project: GitProject,
-    ): Boolean {
+        project: ProjectCIInfo
+    ) {
         val key = "${STREAM_USER_PROJECT_HISTORY_SET}:$userId"
-        redisOperation.zadd(key, JsonUtil.toJson(project), (System.currentTimeMillis() / 1000).toDouble())
-        val size = redisOperation.zssize(key)
+        redisOperation.zadd(key, JsonUtil.toJson(project), LocalDateTime.now().timestamp().toDouble())
+        val size = redisOperation.zsize(key) ?: 0
+        if (size > MAX_STREAM_USER_HISTORY_LENGTH) {
+            // redis zset 是从小到达排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
+            redisOperation.zremoveRange(key, 0, size - MAX_STREAM_USER_HISTORY_LENGTH - 1)
+        }
     }
 
-    private fun RedisOperation.zssize(key: String): Long{
-        return this.().opsForZSet().count(getFinalKey(key, isDistinguishCluster), min, max)
+    fun getUserProjectHistory(
+        userId: String,
+        size: Int
+    ): List<ProjectCIInfo>? {
+        val key = "${STREAM_USER_PROJECT_HISTORY_SET}:$userId"
+        // 先清理3个月前过期数据
+        val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
+        redisOperation.zremoveRangeByScore(key, 0.0, expiredTime.toDouble())
+        val list = redisOperation.zrange(key, 0, -1)
+        if (list.isNullOrEmpty()) {
+            return null
+        }
+        val result = mutableSetOf<ProjectCIInfo>()
+        list.map { JsonUtil.to<ProjectCIInfo>(it) }.associateBy { it.id to it }.forEach { (_, value) ->
+            result.add(value)
+        }
+        val realsize = if (size > MAX_STREAM_USER_HISTORY_LENGTH || size <= 0) {
+            MAX_STREAM_USER_HISTORY_LENGTH
+        } else {
+            size
+        }
+        return result.reversed().take(realsize)
     }
 
     private fun getEventMessage(event: GitRequestEvent?, gitProjectId: Long): String? {

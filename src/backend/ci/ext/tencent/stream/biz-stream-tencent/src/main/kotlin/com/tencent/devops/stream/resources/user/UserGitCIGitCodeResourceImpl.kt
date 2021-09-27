@@ -44,6 +44,8 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.v2.service.StreamProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,18 +53,36 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val scmService: ScmService,
     private val oauthService: OauthService,
     private val permissionService: GitCIV2PermissionService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamProjectService: StreamProjectService
 ) : UserGitCIGitCodeResource {
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
+        val projectInfo = scmService.getProjectInfo(
+            token = scmService.getTokenForProject(gitProjectId)!!.accessToken,
+            gitProjectId = gitProjectId,
+            useAccessToken = true
+        ) ?: return Result(null)
+        // 增加用户访问记录
+        with(projectInfo) {
+            streamProjectService.addUserProjectHistory(userId, ProjectCIInfo(
+                id = projectInfo.gitProjectId.toLong(),
+                projectCode = "git_${projectInfo.gitProjectId}",
+                public = null,
+                name = name,
+                nameWithNamespace = pathWithNamespace,
+                httpsUrlToRepo = gitHttpsUrl,
+                webUrl = homepage,
+                // TODO:问问要不要头像，描述，ci信息，要的话该改为异步调用
+                avatarUrl = null,
+                description = null,
+                ciInfo = null
+            ))
+        }
         return Result(
-            scmService.getProjectInfo(
-                token = scmService.getTokenForProject(gitProjectId)!!.accessToken,
-                gitProjectId = gitProjectId,
-                useAccessToken = true
-            )
+            projectInfo
         )
     }
 
