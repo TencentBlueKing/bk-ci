@@ -27,44 +27,58 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import java.util.concurrent.TimeUnit
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
 @Service
 class StreamGitTokenService @Autowired constructor(
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val redisOperation: RedisOperation
 ) {
 
-    private val tokenCache = Caffeine.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<Long/*gitProjectId*/, String/*api token*/>()
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
+        private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
+        fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
+        fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
+    }
 
     fun getToken(gitProjectId: Long): String {
-        val token = tokenCache.getIfPresent(gitProjectId)
+        val token = redisOperation.get(getGitTokenKey(gitProjectId))
         return if (token.isNullOrBlank()) {
-            val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
-            logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
-            tokenCache.put(gitProjectId, newToken)
-            newToken
+            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+            updateLock.lock()
+            try {
+                val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
+                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
+                redisOperation.set(getGitTokenKey(gitProjectId), newToken, TimeUnit.MINUTES.toSeconds(30))
+                newToken
+            } finally {
+                updateLock.unlock()
+            }
         } else token
     }
 
     fun clearToken(gitProjectId: Long): Boolean {
-        val token = tokenCache.getIfPresent(gitProjectId)
+        val token = redisOperation.get(getGitTokenKey(gitProjectId))
         if (token.isNullOrBlank()) return true
         val cleared = streamScmService.clearToken(gitProjectId, token)
         logger.info("STREAM|clearToken|gitProjectId=$gitProjectId|token=$token cleared=$cleared")
         if (cleared) {
-            tokenCache.invalidate(gitProjectId)
+            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+            updateLock.lock()
+            try {
+                logger.info("STREAM|deleteTokenInRedis|gitProjectId=$gitProjectId|token=$token")
+                redisOperation.delete(getGitTokenKey(gitProjectId))
+            } finally {
+                updateLock.unlock()
+            }
         }
         return cleared
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
     }
 }
