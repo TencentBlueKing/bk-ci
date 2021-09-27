@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.config.BkRepoStoreConfig
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.service.ArchiveStoreFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -95,7 +96,11 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        var projectName = bkRepoStoreConfig.bkrepoStoreProjectName
+        var projectName = if (repoName != BkRepoEnum.STATIC.repoName) {
+            bkRepoStoreConfig.bkrepoStoreProjectName
+        } else {
+            "bkcdn"
+        }
         var userName = bkRepoStoreConfig.bkrepoStoreUserName
         var password = bkRepoStoreConfig.bkrepoStorePassword
         if (storeType == StoreTypeEnum.SERVICE) {

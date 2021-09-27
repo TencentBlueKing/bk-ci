@@ -27,16 +27,15 @@
 
 package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Result
-
 interface TxOpMigrateAtomService {
 
     /**
-     * 把项目迁移到指定项目组下
+     * 迁移插件包
      */
-    fun moveGitProjectToGroup(
-        userId: String,
-        groupCode: String?,
-        atomCode: String
-    ): Result<Boolean>
+    fun migrateAtomPkg(endTime: String): Boolean
+
+    /**
+     * 迁移插件静态文件
+     */
+    fun migrateAtomStaticFile(): Boolean
 }

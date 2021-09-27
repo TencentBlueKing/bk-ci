@@ -30,17 +30,19 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.TxOpMigrateAtomResource
-import com.tencent.devops.store.service.atom.TxOpAtomService
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.atom.TxOpMigrateAtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TxOpMigrateAtomResourceImpl @Autowired constructor(
-    private val storeVisibleDeptService: StoreVisibleDeptService,
-    private val opAtomService: TxOpAtomService
+    private val txOpMigrateAtomService: TxOpMigrateAtomService
 ) : TxOpMigrateAtomResource {
 
-    override fun migrateAtom(endTime: String): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun migrateAtomPkg(endTime: String): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomPkg(endTime))
+    }
+
+    override fun migrateAtomStaticFile(): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomStaticFile())
     }
 }
