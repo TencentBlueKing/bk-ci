@@ -175,6 +175,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
     fun zremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), values)
     }
+    
+    fun zsize(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().size(getFinalKey(key, isDistinguishCluster))
+    }
 
     fun zsize(key: String, min: Double, max: Double, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForZSet().count(getFinalKey(key, isDistinguishCluster), min, max)
