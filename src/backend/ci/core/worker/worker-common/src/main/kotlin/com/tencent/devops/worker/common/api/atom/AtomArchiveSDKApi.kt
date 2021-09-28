@@ -75,7 +75,7 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         atomVersion: String,
         file: File,
         destPath: String,
-        buildVariables: BuildVariables
+        buildVariables: BuildVariables,
     )
 
     fun uploadAtomStaticFile(
@@ -83,10 +83,15 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         atomVersion: String,
         file: File,
         destPath: String,
-        buildVariables: BuildVariables
+        buildVariables: BuildVariables,
     )
 
-    fun downloadAtom(atomFilePath: String, file: File)
+    fun downloadAtom(
+        atomFilePath: String,
+        publicFlag: Boolean,
+        atomCreateTime: Long,
+        file: File,
+    )
 
     fun getAtomDevLanguageEnvVars(
         language: String,

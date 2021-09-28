@@ -39,6 +39,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record21
+import org.jooq.Record22
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -121,8 +122,8 @@ class MarketAtomEnvInfoDao {
     private fun getAtomEnvInfoBaseStep(
         dslContext: DSLContext,
         a: TAtom,
-        b: TAtomEnvInfo
-    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+        b: TAtomEnvInfo,
+    ): SelectOnConditionStep<Record22<String, String, Byte, String, String, String, Boolean, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
             a.ID.`as`("atomId"),
             a.ATOM_CODE.`as`("atomCode"),
@@ -130,6 +131,7 @@ class MarketAtomEnvInfoDao {
             a.NAME.`as`("atomName"),
             a.CREATOR.`as`("creator"),
             a.VERSION.`as`("version"),
+            a.DEFAULT_FLAG.`as`("defaultFlag"),
             a.SUMMARY.`as`("summary"),
             a.DOCS_LINK.`as`("docsLink"),
             a.PROPS.`as`("props"),
