@@ -281,7 +281,12 @@ open class MarketAtomTask : ITask() {
         try {
             // 下载atom执行文件
             LoggerService.addFoldStartLine("[Install plugin]")
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
+            atomExecuteFile = downloadAtomExecuteFile(
+                atomFilePath = atomData.pkgPath!!,
+                publicFlag = atomData.publicFlag,
+                atomCreateTime = atomData.createTime,
+                workspace = atomTmpSpace
+            )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -861,7 +866,12 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun downloadAtomExecuteFile(atomFilePath: String, workspace: File): File {
+    private fun downloadAtomExecuteFile(
+        atomFilePath: String,
+        publicFlag: Boolean,
+        atomCreateTime: Long,
+        workspace: File,
+    ): File {
         try {
             // 取插件文件名
             val lastFx = atomFilePath.lastIndexOf("/")
@@ -870,7 +880,12 @@ open class MarketAtomTask : ITask() {
             } else {
                 File(workspace, atomFilePath)
             }
-            atomApi.downloadAtom(atomFilePath, file)
+            atomApi.downloadAtom(
+                atomFilePath = atomFilePath,
+                publicFlag = publicFlag,
+                atomCreateTime = atomCreateTime,
+                file = file
+            )
             return file
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
