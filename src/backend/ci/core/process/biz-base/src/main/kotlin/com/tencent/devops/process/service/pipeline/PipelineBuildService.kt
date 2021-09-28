@@ -292,7 +292,7 @@ class PipelineBuildService(
                     buildId = buildId,
                     param = JsonUtil.toJson(startParams.filter {
                         realStartParamKeys.contains(it.key) || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG
-                    })
+                    }, formatted = false)
                 )
             }
             // 构建过程中可获取构建启动参数 #2800

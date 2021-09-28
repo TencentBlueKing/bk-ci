@@ -67,7 +67,6 @@ class MeasureServiceImpl constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val templateService: TemplateService,
-    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
@@ -117,7 +116,7 @@ class MeasureServiceImpl constructor(
                 errorInfoList = errorInfoList
             )
 
-            val requestBody = objectMapper.writeValueAsString(data)
+            val requestBody = JsonUtil.toJson(data, formatted = false)
             measureEventDispatcher.dispatch(
                 MeasureRequest(
                     projectId = projectId,
