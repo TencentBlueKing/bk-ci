@@ -31,13 +31,18 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -58,6 +63,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
@@ -68,6 +74,11 @@ import java.io.File
 @ApiPriority(priority = 9)
 class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     AtomArchiveSDKApi {
+
+    companion object {
+        private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+        private const val RELEASE_STAGE_KEY = "release.stage"
+    }
 
     /**
      * 获取原子信息
@@ -156,7 +167,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
         // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
-        if (buildVariables.variables["releaseStage"] == "gray") {
+        if (PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME) != "prod") {
             val url = StringBuilder("/atom/result/$uploadFilePath")
             with(buildVariables) {
                 url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
@@ -217,7 +228,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val uploadFilePath = if (purePath.endsWith(fileName)) purePath else "$purePath/$fileName"
         LoggerService.addNormalLine("upload file >>> $uploadFilePath")
         // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
-        if (buildVariables.variables["releaseStage"] == "gray") {
+        if (PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME) != "prod") {
             val fileType = FileTypeEnum.BK_PLUGIN_FE
             val url =
                 "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
@@ -264,9 +275,35 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         }
     }
 
-    override fun downloadAtom(atomFilePath: String, file: File) {
+    override fun downloadAtom(
+        projectId: String,
+        atomFilePath: String,
+        publicFlag: Boolean,
+        atomCreateTime: Long,
+        file: File,
+        isVmBuildEnv: Boolean
+    ) {
         val path = "/jfrog/storage/build/atom/$atomFilePath"
-        val request = buildGet(path)
+        var request = buildGet(path)
+        val releaseStage = PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME)
+        if (releaseStage == "prod") {
+            // 判断当前插件版本的创建时间是否在迁移逻辑正式上线后(如果晚于则从新仓库下包，否则还是从jfrog下包
+            val atomMigrateTimeStr = PropertyUtil.getPropertyValue("atom.migrate.time", AGENT_PROPERTIES_FILE_NAME)
+            val atomMigrateTime = DateTimeUtil.stringToLocalDateTime(atomMigrateTimeStr).timestampmilli()
+            if (atomCreateTime > atomMigrateTime) {
+                val bkrepoHost = if (isVmBuildEnv) {
+                    PropertyUtil.getPropertyValue("bkrepo.file.devnet.gateway", AGENT_PROPERTIES_FILE_NAME)
+                } else {
+                    PropertyUtil.getPropertyValue("bkrepo.file.idc.gateway", AGENT_PROPERTIES_FILE_NAME)
+                }
+                val envType = AgentEnv.getEnv().name.toLowerCase()
+                val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
+                val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
+                val bkrepoUrl = "${HomeHostUtil.getHost(bkrepoHost)}/generic/ext/bkstore/atom/$bkrepoProjectName/" +
+                    "bk-plugin/$atomFilePath?publicFlag=$publicFlag"
+                request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
+            }
+        }
         download(request, file)
     }
 }
