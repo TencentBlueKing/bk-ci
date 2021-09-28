@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
@@ -162,22 +163,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
             poolNo = 1
         }
 
-        with(debugStartParam) {
-            dockerHostDebugService.startDebug(
-                dockerIp = dockerIp,
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo,
-                imageCode = imageCode,
-                imageVersion = imageVersion,
-                imageName = imageName,
-                buildEnv = buildEnv,
-                imageType = ImageType.getType(imageType),
-                credentialId = credentialId
-            )
-        }
+        dockerHostDebugService.startDebug(
+            dockerIp = dockerIp,
+            userId = userId,
+            poolNo = poolNo,
+            debugStartParam = debugStartParam
+        )
 
         return Result(true)
     }
@@ -230,6 +221,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun cleanIp(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean>? {
         checkParam(userId, projectId, pipelineId, vmSeqId)
         return dockerHostDebugService.cleanIp(projectId, pipelineId, vmSeqId)
+    }
+
+    override fun getDockerHostLoad(userId: String): Result<DockerHostLoad> {
+        return Result(dockerHostBuildService.getDockerHostLoad(userId))
     }
 
     fun checkParam(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
