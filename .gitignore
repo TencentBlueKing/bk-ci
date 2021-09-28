@@ -43,3 +43,4 @@ containerization/helm-charts/bk-ci*.tgz
 src/backend/turbo/**/build/
 src/backend/turbo/release/
 src/backend/turbo/containerization/
+containerization/bk-ci*.tgz

@@ -81,6 +81,10 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
+              if [ ! -d "{{ .Values.persistence.mountPath }}/artifactory/file" ]; then
+                mkdir -p {{ .Values.persistence.mountPath }}/artifactory;
+                cp -r -n /data/workspace/support-files/file {{ .Values.persistence.mountPath }}/artifactory/file;
+              fi;
               cp /data/workspace/backend.bkci.sh .;
               mkdir -p {{ .Values.config.bkCiDataDir }};
               ln -s {{ .Values.persistence.mountPath }}/artifactory {{ .Values.config.bkCiDataDir }}/artifactory;

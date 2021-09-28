@@ -83,7 +83,7 @@ spec:
             - |
               cp /data/workspace/backend.bkci.sh .;
               mkdir -p {{ .Values.config.bkCiHome }};
-              ln -s {{ .Values.persistence.mountPath }}/agent-package {{ .Values.config.bkCiHome }}/agent-package;
+              ln -s /data/workspace/agent-package {{ .Values.config.bkCiHome }}/agent-package;
               /bin/bash backend.bkci.sh;
           livenessProbe:
             httpGet:
@@ -103,14 +103,3 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
-          volumeMounts:
-            - name: storage
-              mountPath: {{ .Values.persistence.mountPath }}
-      volumes:
-        - name: storage
-          {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
-          {{- else }}
-          emptyDir: {}
-          {{- end }}

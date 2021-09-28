@@ -3,6 +3,7 @@ import os
 import re
 import humps
 import json
+import sys
 
 files = os.listdir('.')
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
@@ -71,9 +72,14 @@ for line in env_file:
 env_file.close()
 
 # 生成value.yaml
+image_gateway_tag = sys.argv[1]
+image_backend_tag = sys.argv[2]
 value_file = open('./helm-charts/values.yaml', 'w')
 for line in open('./values.yaml', 'r'):
+    line = line.replace("__image_gateway_tag__", image_gateway_tag)
+    line = line.replace("__image_backend_tag__", image_backend_tag)
     value_file.write(line)
+
 value_file.write('\nconfig:\n')
 for key in sorted(replace_dict):
     default_value = '""'
@@ -126,6 +132,13 @@ for env in gateway_envs:
 gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
 gateway_config_file.write('SERVICE_PREFIX: {{ include "common.names.fullname" . }}\n')
 gateway_config_file.write('{{- end -}}')
-
 gateway_config_file.flush()
 gateway_config_file.close()
+
+# 上传chart
+charts_version = sys.argv[3]
+app_version = sys.argv[4]
+os.system("helm package helm-charts --version " + charts_version + " --app-version "+app_version)
+os.system(
+    'curl -F "chart=@bk-ci-' + charts_version +
+    '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} http://bkrepo.woa.com/helm/api/bkee/helm-local/charts -H X-BKREPO-OVERWRITE:true')

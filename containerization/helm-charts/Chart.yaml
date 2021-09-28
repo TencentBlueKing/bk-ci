@@ -2,7 +2,7 @@ apiVersion: v2
 name: bk-ci
 description: A Helm chart for BlueKing CI
 type: application
-version: 1.16.0
+version: 1.16.1-beta2
 appVersion: "1.16.0"
 home: "https://github.com/Tencent/bk-ci"
 
