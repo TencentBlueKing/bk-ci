@@ -201,7 +201,6 @@
             },
 
             showDetail (row) {
-                console.log(row)
                 this.isLoading = true
                 this.detailObj.detail = row
                 this.getInstallAtomDetail({ projectCode: this.projectId, atomCode: row.atomCode }).then(({ data }) => {

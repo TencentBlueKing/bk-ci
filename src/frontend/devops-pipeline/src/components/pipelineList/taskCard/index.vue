@@ -35,7 +35,8 @@
                 :class="config.status"
                 v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success' || config.status === 'known_cancel' || config.status === 'stage_success')"
             >
-                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
+                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error' || config.status === 'known_cancel'"></i>
+                <logo v-else-if="config.status === 'stage_success'" name="flag" class="devops-icon stage-success-flag" size="14" fill="#fff" />
                 <i class="devops-icon icon-check-1" v-else></i>
             </div>
             <!-- </bk-popover> -->
@@ -123,8 +124,12 @@
 
 <script>
     import mixins from '../pipeline-list-mixins'
+    import Logo from '@/components/Logo'
 
     export default {
+        components: {
+            Logo
+        },
         mixins: [mixins],
         props: {
             canManualStartup: {
@@ -371,13 +376,18 @@
             margin: 0;
             color: #fff;
         }
+        & > .stage-success-flag {
+            top: -13px;
+            left: -13px;
+        }
         &.known_error {
             border-color: $dangerColor transparent transparent $dangerColor;
         }
         &.known_cancel {
             border-color: $cancelColor transparent transparent $cancelColor;
         }
-        &.success {
+        &.success,
+        &.stage_success {
             border-color: $successColor transparent transparent $successColor;
         }
     }
@@ -428,7 +438,8 @@
         &.known_error {
             color: $dangerColor;
         }
-        &.success {
+        &.success,
+        &.stage_success {
             color: $successColor;
         }
         &.known_cancel {

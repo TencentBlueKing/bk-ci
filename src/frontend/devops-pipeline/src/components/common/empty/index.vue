@@ -38,6 +38,7 @@
             const {
                 type
             } = this
+            
             switch (type) {
                 case 'no-result':
                     this.calcSrc = noResult

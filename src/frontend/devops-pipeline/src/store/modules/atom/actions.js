@@ -710,7 +710,6 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, { projectCode, name }) {
-        console.log(projectCode, name, 222222222)
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/installedAtoms/list?page=1&pageSize=15`, {
             params: {
                 name
@@ -762,6 +761,10 @@ export default {
                 debug
             }
         })
+    },
+
+    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+        return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
