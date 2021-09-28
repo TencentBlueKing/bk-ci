@@ -89,6 +89,6 @@ interface UserGitCIProjectResource {
         userId: String,
         @ApiParam("多少条记录", required = false, defaultValue = "4")
         @QueryParam("pageSize")
-        size: Int?,
+        size: Long?
     ): Result<List<ProjectCIInfo>>
 }

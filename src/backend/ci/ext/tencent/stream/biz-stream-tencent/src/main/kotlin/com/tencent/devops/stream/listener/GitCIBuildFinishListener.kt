@@ -83,6 +83,7 @@ import org.springframework.stereotype.Service
 import java.util.Date
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.stream.pojo.v2.project.CIInfo
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
@@ -136,8 +137,10 @@ class GitCIBuildFinishListener @Autowired constructor(
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
                 val pipelineId = record["PIPELINE_ID"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , " +
-                    "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
+                logger.info(
+                    "listenPipelineBuildFinishBroadCastEvent , " +
+                            "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent"
+                )
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
@@ -194,17 +197,21 @@ class GitCIBuildFinishListener @Autowired constructor(
                     }
                 }
 
+                // gitRequestEvent中存的为mriid不是mrid
+                val gitEvent = if (isV2) {
+                    try {
+                        objectMapper.readValue<GitEvent>(record["EVENT"] as String)
+                    } catch (e: Throwable) {
+                        logger.error("push commit check get mergeId error ${e.message}")
+                        null
+                    }
+                } else {
+                    null
+                }
+
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != TGitObjectKind.MANUAL.value) {
                     if (isV2) {
-                        // gitRequestEvent中存的为mriid不是mrid
-                        val gitEvent = try {
-                            objectMapper.readValue<GitEvent>(record["EVENT"] as String)
-                        } catch (e: Throwable) {
-                            logger.error("push commit check get mergeId error ${e.message}")
-                            null
-                        }
-
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
                             description = triggerMessageUtil.getCommitCheckDesc(
@@ -229,7 +236,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
                             block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
-                                v2GitSetting.enableMrBlock),
+                                    v2GitSetting.enableMrBlock),
                             reportData = qualityService.getQualityGitMrResult(
                                 client = client,
                                 projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
@@ -255,6 +262,38 @@ class GitCIBuildFinishListener @Autowired constructor(
                             gitProjectConf = gitProjectConf!!
                         )
                     }
+                }
+
+                // 更新最后一次执行状态
+                // TODO: 更新定时触发时这里也要更新
+                if (isV2 && v2GitSetting != null) {
+                    gitCIBasicSettingDao.updateSettingLastCiInfo(
+                        dslContext,
+                        v2GitSetting.gitProjectId,
+                        CIInfo(
+                            enableCI = v2GitSetting.enableCi,
+                            lastBuildMessage = if (objectKind == TGitObjectKind.MANUAL.value) {
+                                triggerMessageUtil.getEventMessageTitle(
+                                    null,
+                                    gitProjectId,
+                                    objectKind,
+                                    event.branch,
+                                    event.triggerUser
+                                )
+                            } else {
+                                triggerMessageUtil.getEventMessageTitle(
+                                    gitEvent,
+                                    gitProjectId,
+                                    objectKind,
+                                    null,
+                                    null
+                                )
+                            },
+                            lastBuildStatus = buildStatus,
+                            lastBuildPipelineId = buildFinishEvent.pipelineId,
+                            lastBuildId = buildFinishEvent.buildId
+                        )
+                    )
                 }
 
                 // 发送通知兼容v1的老数据
@@ -621,22 +660,22 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                    "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                    "pushed by $openUser \n"
+                        "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
-            "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
-            request +
-            costTime +
-            "[View it on  工蜂内网版]" +
-            "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
+                "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
+                request +
+                costTime +
+                "[View it on  工蜂内网版]" +
+                "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
     }
 
     private fun sendRtxCustomNotify(
@@ -861,29 +900,29 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                    "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                    "pushed by $openUser \n"
+                        "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
-            "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
-            request +
-            costTime +
-            "[查看详情]" +
-            "(${
-                GitCIPipelineUtils.genGitCIV2BuildUrl(
-                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = projectName,
-                    pipelineId = pipelineId,
-                    buildId = build.id
-                )
-            })"
+                "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
+                request +
+                costTime +
+                "[查看详情]" +
+                "(${
+                    GitCIPipelineUtils.genGitCIV2BuildUrl(
+                        homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                        projectName = projectName,
+                        pipelineId = pipelineId,
+                        buildId = build.id
+                    )
+                })"
     }
 
     // 替换variables变量

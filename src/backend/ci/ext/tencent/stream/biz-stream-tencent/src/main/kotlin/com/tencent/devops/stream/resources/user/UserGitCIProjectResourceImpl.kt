@@ -62,7 +62,7 @@ class UserGitCIProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectsHistory(userId: String, size: Int?): Result<List<ProjectCIInfo>> {
-        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4) ?: emptyList())
+    override fun getProjectsHistory(userId: String, size: Long?): Result<List<ProjectCIInfo>> {
+        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
     }
 }

@@ -44,7 +44,6 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import com.tencent.devops.stream.v2.service.StreamProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -66,21 +65,12 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
             useAccessToken = true
         ) ?: return Result(null)
         // 增加用户访问记录
-        with(projectInfo) {
-            streamProjectService.addUserProjectHistory(userId, ProjectCIInfo(
-                id = projectInfo.gitProjectId.toLong(),
-                projectCode = "git_${projectInfo.gitProjectId}",
-                public = null,
-                name = name,
-                nameWithNamespace = pathWithNamespace,
-                httpsUrlToRepo = gitHttpsUrl,
-                webUrl = homepage,
-                // TODO:问问要不要头像，描述，ci信息，要的话该改为异步调用
-                avatarUrl = null,
-                description = null,
-                ciInfo = null
-            ))
-        }
+        streamProjectService.addUserProjectHistory(
+            userId = userId,
+            projectId = GitCommonUtils.getCiProjectId(
+                projectInfo.gitProjectId.toLong()
+            )
+        )
         return Result(
             projectInfo
         )

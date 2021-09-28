@@ -27,31 +27,20 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.stream.pojo.git.GitProject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -61,13 +50,9 @@ import java.util.concurrent.TimeUnit
 class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val client: Client,
-    private val objectMapper: ObjectMapper,
     private val scmService: ScmService,
     private val oauthService: OauthService,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
-    private val gitRequestEventDao: GitRequestEventDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao
 ) {
 
     companion object {
@@ -119,18 +104,10 @@ class StreamProjectService @Autowired constructor(
             dslContext = dslContext,
             projectIds = gitProjects.map { it.id!! }.toSet()
         ).associateBy { it.id }
-        val lastBuildMap =
-            gitRequestEventBuildDao.lastBuildByProject(dslContext, projectIdMap.keys).associateBy { it.gitProjectId }
-        val eventMap = gitRequestEventDao.getRequestsById(
-            dslContext = dslContext,
-            requestIds = lastBuildMap.values.map { it.eventId.toInt() }.toSet(),
-            hasEvent = false
-        ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
             // 针对创建流水线异常时，现有代码会创建event记录
-            val ciInfo = if (lastBuildMap[it.id!!]?.pipelineId.isNullOrBlank() ||
-                lastBuildMap[it.id!!]?.buildId.isNullOrBlank()) {
+            val ciInfo = if (project?.lastCiInfo == null) {
                 CIInfo(
                     enableCI = project?.enableCi ?: false,
                     lastBuildId = null,
@@ -139,20 +116,7 @@ class StreamProjectService @Autowired constructor(
                     lastBuildMessage = null
                 )
             } else {
-                CIInfo(
-                    enableCI = project?.enableCi ?: false,
-                    lastBuildMessage = getEventMessage(
-                        event = eventMap[lastBuildMap[it.id!!]?.eventId],
-                        gitProjectId = it.id!!
-                    ),
-                    lastBuildStatus = if (lastBuildMap[it.id!!]?.buildStatus.isNullOrBlank()) {
-                        null
-                    } else {
-                        BuildStatus.valueOf(lastBuildMap[it.id!!]?.buildStatus!!)
-                    },
-                    lastBuildPipelineId = lastBuildMap[it.id!!]?.pipelineId,
-                    lastBuildId = lastBuildMap[it.id!!]?.buildId
-                )
+                JsonUtil.to(project.lastCiInfo)
             }
             ProjectCIInfo(
                 id = it.id!!,
@@ -175,10 +139,10 @@ class StreamProjectService @Autowired constructor(
 
     fun addUserProjectHistory(
         userId: String,
-        project: ProjectCIInfo
+        projectId: String
     ) {
-        val key = "${STREAM_USER_PROJECT_HISTORY_SET}:$userId"
-        redisOperation.zadd(key, JsonUtil.toJson(project), LocalDateTime.now().timestamp().toDouble())
+        val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
+        redisOperation.zadd(key, projectId, LocalDateTime.now().timestamp().toDouble())
         val size = redisOperation.zsize(key) ?: 0
         if (size > MAX_STREAM_USER_HISTORY_LENGTH) {
             // redis zset 是从小到达排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
@@ -188,58 +152,39 @@ class StreamProjectService @Autowired constructor(
 
     fun getUserProjectHistory(
         userId: String,
-        size: Int
+        size: Long
     ): List<ProjectCIInfo>? {
-        val key = "${STREAM_USER_PROJECT_HISTORY_SET}:$userId"
+        val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
         // 先清理3个月前过期数据
         val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
         redisOperation.zremoveRangeByScore(key, 0.0, expiredTime.toDouble())
-        val list = redisOperation.zrange(key, 0, -1)
+        val list = redisOperation.zrange(
+            key = key,
+            start = 0,
+            end = if (size - 1 < 0) {
+                0
+            } else {
+                size - 1
+            }
+        )
         if (list.isNullOrEmpty()) {
             return null
         }
-        val result = mutableSetOf<ProjectCIInfo>()
-        list.map { JsonUtil.to<ProjectCIInfo>(it) }.associateBy { it.id to it }.forEach { (_, value) ->
-            result.add(value)
+        val gitProjectIds = list.map { it.removePrefix("git_").toLong() }
+        val settings = gitCIBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
+        return settings.map {
+            ProjectCIInfo(
+                id = it.id,
+                projectCode = it.projectCode,
+                public = null,
+                name = it.name,
+                nameWithNamespace = GitCommonUtils.getPathWithNameSpace(it.gitHttpUrl),
+                httpsUrlToRepo = it.gitHttpUrl,
+                webUrl = it.homePage,
+                avatarUrl = it.gitProjectAvatar,
+                description = it.gitProjectDesc,
+                ciInfo = JsonUtil.to(it.lastCiInfo)
+            )
         }
-        val realsize = if (size > MAX_STREAM_USER_HISTORY_LENGTH || size <= 0) {
-            MAX_STREAM_USER_HISTORY_LENGTH
-        } else {
-            size
-        }
-        return result.reversed().take(realsize)
-    }
-
-    private fun getEventMessage(event: GitRequestEvent?, gitProjectId: Long): String? {
-        if (event == null) {
-            return null
-        }
-        val messageTitle = when (event.objectKind) {
-            TGitObjectKind.MERGE_REQUEST.value -> {
-                val branch = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = gitProjectId,
-                    sourceGitProjectId = event.sourceGitProjectId,
-                    branch = event.branch,
-                    client = client
-                )
-                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
-            }
-            TGitObjectKind.MANUAL.value -> {
-                "[${event.branch}] Manual Triggered by ${event.userId}"
-            }
-            TGitObjectKind.TAG_PUSH.value -> {
-                val eventMap = try {
-                    objectMapper.readValue<GitTagPushEvent>(event.event)
-                } catch (e: Exception) {
-                    logger.error("event as GitTagPushEvent error ${e.message}")
-                    null
-                }
-                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
-            }
-            else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
-            }
-        }
-        return messageTitle
     }
 }
