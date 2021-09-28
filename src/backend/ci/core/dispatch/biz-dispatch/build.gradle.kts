@@ -34,7 +34,6 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:monitoring:api-monitoring"))
     api(project(":core:log:api-log"))
-//    api(project(":core:store:api-store-image"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))

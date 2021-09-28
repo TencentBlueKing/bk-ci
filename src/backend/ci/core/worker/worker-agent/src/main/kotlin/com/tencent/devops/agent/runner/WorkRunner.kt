@@ -58,7 +58,7 @@ object WorkRunner {
 
             val startFile = getStartFile()
             if (!startFile.isNullOrBlank()) {
-                val file = File(startFile!!)
+                val file = File(startFile)
                 if (file.exists()) {
                     logger.info("The file ${file.absolutePath} will be deleted when exit")
                     file.deleteOnExit()
@@ -75,7 +75,10 @@ object WorkRunner {
 
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
                             override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {

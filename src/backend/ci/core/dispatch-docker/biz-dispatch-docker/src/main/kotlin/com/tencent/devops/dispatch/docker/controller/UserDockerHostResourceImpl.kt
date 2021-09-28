@@ -46,8 +46,8 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
@@ -75,6 +75,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
+        logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
@@ -153,7 +154,9 @@ class UserDockerHostResourceImpl @Autowired constructor(
                     dslContext = dslContext,
                     pipelineId = debugStartParam.pipelineId,
                     vmSeq = debugStartParam.vmSeqId,
-                    dockerIp = dockerIp)
+                    dockerIp = dockerIp,
+                    dockerResourceOptionsId = 0
+                )
             }
             // 首次构建poolNo=1
             poolNo = 1

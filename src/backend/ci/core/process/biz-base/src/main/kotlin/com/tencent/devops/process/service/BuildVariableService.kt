@@ -43,7 +43,6 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
@@ -167,9 +166,9 @@ class BuildVariableService @Autowired constructor(
     ) {
         val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
         watch.start("replaceOldByNewVar")
-        val varMaps = variables.map {
+        val varMaps = variables.associate {
             it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
-        }.toMap().toMutableMap()
+        }.toMutableMap()
         PipelineVarUtil.replaceOldByNewVar(varMaps)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
@@ -177,7 +176,8 @@ class BuildVariableService @Autowired constructor(
             pipelineBuildParameters.add(BuildParameters(
                 key = key,
                 value = valueAndType.first,
-                valueType = valueAndType.second
+                valueType = valueAndType.second,
+                readOnly = getReadOnly(key, variables)
             ))
         }
 
@@ -218,5 +218,14 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
+        variables.forEach {
+            if (key == it.key) {
+                return it.readOnly
+            }
+        }
+        return false
     }
 }

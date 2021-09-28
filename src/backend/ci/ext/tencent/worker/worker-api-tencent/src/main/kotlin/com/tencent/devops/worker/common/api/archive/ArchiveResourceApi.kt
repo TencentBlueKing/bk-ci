@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
@@ -116,16 +115,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        if (bkrepoResourceApi.tokenAccess()) {
+    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String?) {
+        if (!token.isNullOrBlank()) {
             val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
             val destFullPath = "/$relativePath/${file.name}"
-            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
-                projectId = buildVariables.projectId,
-                repoName = "custom",
-                path = "/",
-                type = TokenType.UPLOAD
-            )
             bkrepoResourceApi.uploadFileByToken(
                 file = file,
                 projectId = buildVariables.projectId,
@@ -140,22 +133,16 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
-        if (bkrepoResourceApi.tokenAccess()) {
+    override fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String?) {
+        if (!token.isNullOrBlank()) {
             val destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
-            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+            bkrepoResourceApi.uploadFileByToken(
+                file = file,
                 projectId = buildVariables.projectId,
                 repoName = "pipeline",
-                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-                type = TokenType.UPLOAD
-            )
-            bkrepoResourceApi.uploadFileByToken(
-                file,
-                buildVariables.projectId,
-                "pipeline",
-                destFullPath,
-                token,
-                buildVariables,
+                destFullPath = destFullPath,
+                token = token,
+                buildVariables = buildVariables,
                 parseAppMetadata = true
             )
         } else {
@@ -183,14 +170,14 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables, token: String?) {
         bkrepoResourceApi.uploadBkRepoFile(
             file = file,
             repoName = "log",
             destFullPath = destFullPath,
-            tokenAuthPath = "/",
             buildVariables = buildVariables,
-            parseAppMetadata = false
+            parseAppMetadata = false,
+            token = token
         )
     }
 
@@ -213,15 +200,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         projectId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String?
     ) {
-        if (bkrepoResourceApi.tokenAccess()) {
-            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
-                projectId = projectId,
-                repoName = "custom",
-                path = uri,
-                type = TokenType.DOWNLOAD
-            )
+        if (!token.isNullOrBlank()) {
             bkrepoResourceApi.downloadFileByToken(
                 userId = userId,
                 projectId = projectId,
@@ -250,15 +232,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         buildId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String?
     ) {
-        if (bkrepoResourceApi.tokenAccess()) {
-            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
-                projectId = projectId,
-                repoName = "pipeline",
-                path = uri,
-                type = TokenType.DOWNLOAD
-            )
+        if (!token.isNullOrBlank()) {
             bkrepoResourceApi.downloadFileByToken(
                 userId = userId,
                 projectId = projectId,

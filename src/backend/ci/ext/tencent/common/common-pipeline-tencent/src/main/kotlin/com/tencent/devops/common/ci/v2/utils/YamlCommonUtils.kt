@@ -30,10 +30,11 @@ package com.tencent.devops.common.ci.v2.utils
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 
 object YamlCommonUtils {
-    private val objectMapper = ObjectMapper(YAMLFactory()).apply {
+    private val objectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)).apply {
         registerModule(KotlinModule())
     }
 

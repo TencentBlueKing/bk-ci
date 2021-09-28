@@ -29,6 +29,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-util"))
+    api(project(":core:common:common-quality"))
     api(project(":core:quality:api-quality"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:common:common-auth:common-auth-api"))
@@ -42,5 +43,6 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":core:artifactory:api-artifactory-push"))
     api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
+    api(project(":ext:tencent:stream:api-stream-tencent"))
     api(project(":core:auth:api-auth"))
 }

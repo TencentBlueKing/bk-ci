@@ -59,7 +59,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         }
         return Result(
             scmService.getProjectInfo(
-                token = getToken(gitProjectId),
+                token = scmService.getTokenForProject(gitProjectId)!!.accessToken,
                 gitProjectId = gitProjectId,
                 useAccessToken = true
             )
@@ -76,7 +76,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.getProjectMembers(
-                token = getToken(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
+                token = getOauthToken(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
@@ -99,7 +99,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         permissionService.checkGitCIPermission(userId, projectId)
         return Result(
             scmService.getCommits(
-                token = getToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
+                token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
                 gitProjectId = gitProjectId,
                 filePath = filePath,
                 branch = branch,
@@ -124,7 +124,8 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         )
         return Result(
             scmService.createNewFile(
-                token = getToken(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
+                userId = userId,
+                token = getOauthToken(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 gitCICreateFile = newFile
             )
@@ -155,7 +156,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.getProjectBranches(
-                token = getToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
+                token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
@@ -166,13 +167,8 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         )
     }
 
-    // 针对获取项目信息使用超级token
-    private fun getToken(gitProjectId: String): String {
-        return scmService.getToken(gitProjectId).accessToken
-    }
-
     // 看是否使用工蜂开启人的OAuth
-    private fun getToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
+    private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
             val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
             oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken

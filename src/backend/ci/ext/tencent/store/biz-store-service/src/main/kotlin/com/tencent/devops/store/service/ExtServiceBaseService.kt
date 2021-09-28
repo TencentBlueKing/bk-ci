@@ -56,8 +56,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -175,7 +175,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
     @Autowired
-    lateinit var permissionApi: BSAuthPermissionApi
+    lateinit var permissionApi: AuthPermissionApi
     @Autowired
     lateinit var storeMediaInfoDao: StoreMediaInfoDao
     @Autowired

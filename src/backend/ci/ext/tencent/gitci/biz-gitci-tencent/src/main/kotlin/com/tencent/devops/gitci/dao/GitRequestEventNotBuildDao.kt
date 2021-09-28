@@ -27,8 +27,8 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.tencent.devops.model.gitci.tables.TGitRequestEventNotBuild
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
+import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -47,7 +47,7 @@ class GitRequestEventNotBuildDao {
         pipelineId: String?,
         filePath: String?,
         gitProjectId: Long,
-        version: String? = null
+        version: String?
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             val record = dslContext.insertInto(this,
@@ -125,6 +125,17 @@ class GitRequestEventNotBuildDao {
                 .set(REASON_DETAIL, reasonDetail)
                 .where(ID.eq(recordId))
                 .execute() == 1
+        }
+    }
+
+    fun deleteNotBuildByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
         }
     }
 

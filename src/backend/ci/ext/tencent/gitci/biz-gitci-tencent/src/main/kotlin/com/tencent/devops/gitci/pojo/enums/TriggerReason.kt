@@ -27,24 +27,51 @@
 
 package com.tencent.devops.gitci.pojo.enums
 
-enum class TriggerReason(val detail: String) {
-    TRIGGER_SUCCESS("Trigger success"),
-    CI_DISABLED("CI is disabled"),
-    BUILD_PUSHED_BRANCHES_DISABLED("This project has not yet opened the push event monitoring configuration"),
-    BUILD_MERGE_REQUEST_DISABLED("This project has not yet opened the MR event monitoring configuration"),
-    CI_YAML_NOT_FOUND("The YAML file cannot be found in the .ci directory"),
-    CI_YAML_CONTENT_NULL("The YAML file is null"),
-    CI_YAML_INVALID("YAML is invalid: %s"),
-    CI_YAML_VERSION_BEHIND("The YAML file version of the source branch lags behind the target branch"),
-    CI_MERGE_CHECKING("Checking whether there is a conflict in MR, please wait"),
-    CI_MERGE_CHECK_TIMEOUT("MR check timeout"),
-    CI_MERGE_CONFLICT("MR conflict, please resolve the conflict first"),
-    TRIGGER_NOT_MATCH("Does not meet the trigger condition"),
-    PIPELINE_RUN_ERROR("pipeline run with error"),
-    PIPELINE_DISABLE("Pipeline is disabled"),
-    CI_YAML_TEMPLATE_ERROR("YAML template parse error: %s"),
-    PIPELINE_PREPARE_ERROR("Pipeline prepare error: %s"),
-    UNKNOWN_ERROR("Unknown error, please contact DevOps-helper. %s");
+enum class TriggerReason(val summary: String, val detail: String) {
+    TRIGGER_SUCCESS("Trigger success", "Trigger success"),
+    CI_DISABLED("CI is disabled", "CI is disabled"),
+    BUILD_PUSHED_BRANCHES_DISABLED(
+        "This project has not yet opened the push event monitoring configuration",
+        "This project has not yet opened the push event monitoring configuration"
+    ),
+    BUILD_MERGE_REQUEST_DISABLED(
+        "This project has not yet opened the MR event monitoring configuration",
+        "This project has not yet opened the MR event monitoring configuration"
+    ),
+    CI_YAML_NOT_FOUND(
+        "The YAML file cannot be found in the .ci directory",
+        "The YAML file cannot be found in the .ci directory"
+    ),
+    CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null: %s"),
+    CI_YAML_INVALID("YAML is invalid", "YAML is invalid: %s"),
+    CI_YAML_NEED_MERGE_OR_REBASE(
+        "The YAML is modified. " +
+            "Please execute either REBASE or MERGE to update your YAML from remote target branch.",
+        "The YAML is modified. " +
+            "Please execute either REBASE or MERGE to update your YAML from remote target branch."
+    ),
+    CI_MERGE_CHECKING(
+        "Checking whether there is a conflict in MR, please wait",
+        "Checking whether there is a conflict in MR, please wait"
+    ),
+    CI_MERGE_CHECK_TIMEOUT("MR check timeout", "MR check timeout"),
+    CI_MERGE_CONFLICT(
+        "MR conflict, please resolve the conflict first",
+        "MR conflict, please resolve the conflict first"
+    ),
+    TRIGGER_NOT_MATCH(
+        "Does not meet the trigger condition",
+        "Does not meet the trigger condition"
+    ),
+    PIPELINE_RUN_ERROR("Pipeline run with error", "pipeline run with error"),
+    PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
+    CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
+    PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
+    CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
+    UNKNOWN_ERROR(
+        "Unknown error, please contact DevOps-helper",
+        "Unknown error, please contact DevOps-helper. %s"
+    );
 
     companion object {
 

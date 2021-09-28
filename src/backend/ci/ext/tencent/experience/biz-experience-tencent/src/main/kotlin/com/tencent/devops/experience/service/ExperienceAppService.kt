@@ -112,7 +112,7 @@ class ExperienceAppService(
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
 
-        val isPublic = experienceBaseService.isPublic(experienceId)
+        val isPublic = experienceBaseService.isPublic(experienceId, isOuter)
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
 
         val experience = experienceDao.get(dslContext, experienceId)

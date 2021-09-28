@@ -27,11 +27,13 @@
 
 package com.tencent.devops.scm.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工蜂CI查询代码库项目信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCIProjectInfo(
     @ApiModelProperty("项目ID")
     @JsonProperty("id")
@@ -53,5 +55,11 @@ data class GitCIProjectInfo(
     val gitSshUrl: String?,
     @ApiModelProperty("带有所有者的项目名称")
     @JsonProperty("name_with_namespace")
-    val pathWithNamespace: String
+    val nameWithNamespace: String,
+    @ApiModelProperty("带有所有者的项目路径")
+    @JsonProperty("path_with_namespace")
+    val pathWithNamespace: String?,
+    @ApiModelProperty("项目的默认分支")
+    @JsonProperty("default_branch")
+    val defaultBranch: String?
 )

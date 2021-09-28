@@ -62,7 +62,7 @@ import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
 import okhttp3.RequestBody
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
@@ -98,7 +98,14 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             fileIdcGateway?.contains("bkrepo", true) == true
     }
 
-    fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
+    fun createBkRepoTemporaryToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        type: TokenType,
+        expireSeconds: Long
+    ): String {
         val url = "/bkrepo/api/build/generic/temporary/token/create"
         val requestData = mapOf(
             "projectId" to projectId,
@@ -106,16 +113,17 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             "fullPathSet" to listOf(path),
             "authorizedUserSet" to listOf<String>(),
             "authorizedIpSet" to listOf<String>(),
-            "expireSeconds" to 86400,
+            "expireSeconds" to expireSeconds,
             "permits" to null,
             "type" to type.name
         )
         val request = buildPost(
-            url,
-            RequestBody.create(
+            path = url,
+            requestBody = RequestBody.create(
                 MediaType.parse("application/json; charset=utf-8"),
                 objectMapper.writeValueAsString(requestData)
-            )
+            ),
+            headers = mapOf(BKREPO_UID to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
@@ -168,8 +176,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         isVmBuildEnv: Boolean
     ) {
         val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
-        var header = HashMap<String, String>()
-        header.set("X-BKREPO-UID", userId)
+        val header = HashMap<String, String>()
+        header[BKREPO_UID] = userId
         val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
@@ -182,8 +190,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         destPath: File
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullPath"
-        var header = HashMap<String, String>()
-        header.set("X-BKREPO-UID", user)
+        val header = HashMap<String, String>()
+        header[BKREPO_UID] = user
         val request = buildGet(url, header, true)
         download(request, destPath)
     }
@@ -192,17 +200,11 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         file: File,
         repoName: String,
         destFullPath: String,
-        tokenAuthPath: String,
         buildVariables: BuildVariables,
-        parseAppMetadata: Boolean
+        parseAppMetadata: Boolean,
+        token: String? = null
     ) {
-        if (tokenAccess()) {
-            val token = createBkRepoTemporaryToken(
-                projectId = buildVariables.projectId,
-                repoName = repoName,
-                path = tokenAuthPath,
-                type = TokenType.UPLOAD
-            )
+        if (!token.isNullOrBlank()) {
             uploadFileByToken(
                 file = file,
                 projectId = buildVariables.projectId,
@@ -229,21 +231,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         projectId: String,
         repoName: String,
         fullPath: String,
-        destPath: File
+        destPath: File,
+        token: String? = null
     ) {
         if (tokenAccess()) {
-            val token = createBkRepoTemporaryToken(
-                projectId = projectId,
-                repoName = repoName,
-                path = fullPath,
-                type = TokenType.DOWNLOAD
-            )
             downloadFileByToken(
                 userId = userId,
                 projectId = projectId,
                 repoName = repoName,
                 fullPath = fullPath,
-                token = token,
+                token = token!!,
                 destPath = destPath,
                 isVmBuildEnv = true
             )

@@ -37,6 +37,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -153,4 +154,27 @@ interface ServicePermissionAuthResource {
         @ApiParam("资源类型")
         resourceType: String
     ): Result<Map<AuthPermission, List<String>>>
+
+    @Path("/projects/{projectCode}/create/relation")
+    @POST
+    fun resourceCreateRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源类型")
+        resourceCode: String,
+        @QueryParam("resourceName")
+        @ApiParam("资源名称")
+        resourceName: String
+    ): Result<Boolean>
 }

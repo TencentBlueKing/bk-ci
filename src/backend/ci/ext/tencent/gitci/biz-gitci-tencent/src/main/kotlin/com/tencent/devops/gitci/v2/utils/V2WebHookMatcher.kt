@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.utils
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -53,6 +54,7 @@ class V2WebHookMatcher @Autowired constructor(
         private val matcher = AntPathMatcher()
     }
 
+    @Throws(ErrorCodeException::class)
     fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,
@@ -340,8 +342,14 @@ class V2WebHookMatcher @Autowired constructor(
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Mr Include path set($pathList)")
             val mrId = (event as GitMergeRequestEvent).object_attributes.id
+            // 使用本次触发的项目ID，不然fork库过来的请求未开启CI无法触发
             val gitProjectId = gitRequestEvent.gitProjectId
-            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(event.user.name, gitProjectId, mrId)
+            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
+                userId = event.user.name,
+                token = null,
+                gitProjectId = gitProjectId,
+                mrId = mrId
+            )
 
             if (gitMrChangeInfo != null) {
                 val mrChangeFiles = gitMrChangeInfo.files.map {

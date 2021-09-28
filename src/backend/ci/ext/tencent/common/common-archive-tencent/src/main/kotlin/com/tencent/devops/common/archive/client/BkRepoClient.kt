@@ -323,7 +323,7 @@ class BkRepoClient constructor(
         val gateway = gatewayUrl ?: getGatewaytUrl()
         val url = "$gateway/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
-            override fun writeTo(sink: BufferedSink?) {
+            override fun writeTo(sink: BufferedSink) {
                 val limit = if (fileSizeLimitInMB > 0) {
                     fileSizeLimitInMB * 1024 * 1024L
                 } else {
@@ -1159,7 +1159,7 @@ class BkRepoClient constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
         private const val METADATA_PREFIX = "X-BKREPO-META-"
 
         private const val BK_REPO_UID = "X-BKREPO-UID"

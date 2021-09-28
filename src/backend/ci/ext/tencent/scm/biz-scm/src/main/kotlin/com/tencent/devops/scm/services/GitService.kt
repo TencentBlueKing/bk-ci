@@ -392,8 +392,14 @@ class GitService @Autowired constructor(
                     MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), "")
                 )
                 .build()
-
             OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$tokenUrl]|getToken($gitProjectId) with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
                 val data = response.body()!!.string()
                 return objectMapper.readValue(data, GitToken::class.java)
             }
@@ -521,13 +527,13 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "fail to get the git mrRequest info with: $url(${it.code()}): ${it.message()}"
+                        message = "(${it.code()})${it.message()}"
                     )
                 }
+                val data = it.body()!!.string()
                 return JsonUtil.getObjectMapper().readValue(data) as GitCIMrInfo
             }
         } finally {
@@ -603,13 +609,13 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "fail to get the git commits with: $url(${it.code()}): ${it.message()}"
+                        message = "(${it.code()})${it.message()}"
                     )
                 }
+                val data = it.body()!!.string()
                 return JsonUtil.getObjectMapper().readValue(data) as List<Commit>
             }
         } finally {
@@ -630,11 +636,10 @@ class GitService @Autowired constructor(
             .build()
         logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
             if (!it.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "fail to create file with: $url(${it.code()}): ${it.message()}"
+                    message = "(${it.code()})${it.message()}"
                 )
             }
             return true
@@ -686,13 +691,13 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "fail to get git file tree with: $url(${it.code()}): ${it.message()}"
+                        message = "(${it.code()})${it.message()}"
                     )
                 }
+                val data = it.body()!!.string()
                 return JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
             }
         } finally {
@@ -935,7 +940,7 @@ class GitService @Autowired constructor(
                 if (frontendGitFileDir.exists()) {
                     FileSystemUtils.deleteRecursively(frontendGitFileDir)
                 }
-                FileSystemUtils.copyRecursively(frontendProjectDir, frontendFileDir)
+                FileSystemUtils.copyRecursively(frontendProjectDir!!, frontendFileDir)
                 FileSystemUtils.deleteRecursively(frontendProjectDir)
             }
             // 3、重新生成git信息

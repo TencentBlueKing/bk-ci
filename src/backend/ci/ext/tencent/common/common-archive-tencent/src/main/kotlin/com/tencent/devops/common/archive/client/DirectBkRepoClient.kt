@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.io.File
@@ -131,7 +131,7 @@ class DirectBkRepoClient {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(DirectBkRepoClient::class.java)
         private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
         private const val BK_REPO_METADATA = "X-BKREPO-META"

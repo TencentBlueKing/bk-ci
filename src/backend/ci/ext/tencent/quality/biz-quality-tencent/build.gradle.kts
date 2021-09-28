@@ -31,4 +31,7 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
+    api(project(":core:auth:api-auth"))
+    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
 }

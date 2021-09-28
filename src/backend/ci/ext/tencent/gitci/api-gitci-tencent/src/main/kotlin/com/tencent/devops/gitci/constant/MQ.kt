@@ -29,18 +29,18 @@ package com.tencent.devops.gitci.constant
 
 object MQ {
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+    // Stream webhook请求
+    const val EXCHANGE_GITCI_REQUEST_EVENT = "e.gitci.request.event"
+    const val ROUTE_GITCI_REQUEST_EVENT = "r.gitci.request.event"
+    const val QUEUE_GITCI_REQUEST_EVENT = "q.gitci.request.event"
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
-
-    // 工蜂Mr请求冲突检查
+    // Stream Mr webhook 冲突检查
     const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
     const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
     const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
+
+    // Stream 触发请求
+    const val EXCHANGE_STREAM_TRIGGER_EVENT = "e.stream.trigger.event"
+    const val ROUTE_STREAM_TRIGGER_EVENT = "r.stream.trigger.event"
+    const val QUEUE_STREAM_TRIGGER_EVENT = "q.stream.trigger.event"
 }

@@ -40,7 +40,7 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
@@ -210,10 +210,17 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
+            // 脚本解析器类型
+            val cmd = if (containerInfo.token.isEmpty()) {
+                "/bin/sh"
+            } else {
+                containerInfo.token
+            }
+
             val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
                 .withName(containerName)
-                .withCmd("/bin/sh", entryPointCmd)
+                .withCmd(cmd, entryPointCmd)
                 .withEnv(
                     envList.plus(
                         listOf(

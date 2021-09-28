@@ -29,10 +29,10 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -45,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwBuildResourceV3Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
 ) : ApigwBuildResourceV3 {
     override fun manualStartupInfo(
         appCode: String?,
@@ -59,7 +60,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -77,7 +78,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -97,7 +98,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -117,7 +118,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             values = values,
             buildNo = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -135,7 +136,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -159,7 +160,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -177,7 +178,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 

@@ -45,3 +45,12 @@ enum class GitCodeBranchesSort(val value: String) {
     ASC("asc"),
     DESC("desc")
 }
+
+enum class GitCodeProjectsOrder(val value: String) {
+    ID("id"),
+    NAME("name"),
+    PATH("path"),
+    CREATED("created_at"),
+    UPDATE("updated_at"),
+    ACTIVITY("activity")
+}

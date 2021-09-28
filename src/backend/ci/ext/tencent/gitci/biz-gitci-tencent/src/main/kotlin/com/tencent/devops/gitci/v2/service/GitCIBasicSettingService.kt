@@ -30,10 +30,14 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
+import com.tencent.devops.gitci.common.exception.GitCINoEnableException
+import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.constant.GitCIConstant
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,6 +109,21 @@ class GitCIBasicSettingService @Autowired constructor(
         enabled: Boolean,
         projectInfo: GitCIProjectInfo
     ): Boolean {
+        val httpUrl = if (projectInfo.gitHttpUrl.startsWith("https://")) {
+            projectInfo.gitHttpUrl
+        } else {
+            val projectResult = requestGitProjectInfo(gitProjectId)
+            if (projectResult != null) {
+                if (projectResult.gitHttpsUrl?.startsWith("https://") == true) {
+                    projectResult.gitHttpsUrl
+                } else {
+                    projectInfo.gitHttpUrl
+                }
+            } else {
+                projectInfo.gitHttpUrl
+            }
+        } ?: projectInfo.gitHttpUrl
+
         return saveGitCIConf(
             userId,
             GitCIBasicSetting(
@@ -112,7 +131,7 @@ class GitCIBasicSettingService @Autowired constructor(
                 name = projectInfo.name,
                 url = projectInfo.gitSshUrl ?: "",
                 homepage = projectInfo.homepage ?: "",
-                gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
+                gitHttpUrl = httpUrl,
                 gitSshUrl = projectInfo.gitSshUrl ?: "",
                 enableCi = enabled,
                 enableUserId = userId,
@@ -132,9 +151,28 @@ class GitCIBasicSettingService @Autowired constructor(
     fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
+
+        // gitRepoConf为null表示新项目
         if (gitRepoConf?.projectCode == null) {
+            // 根据url截取group + project的完整路径名称
+            var gitProjectName = if (setting?.gitHttpUrl != null) {
+                GitUtils.getDomainAndRepoName(setting?.gitHttpUrl).second
+            } else {
+                setting.name
+            }
+
+            // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
+            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                gitProjectName = gitProjectName.substring(gitProjectName.length -
+                    GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+            }
+
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createGitCIProject(setting.gitProjectId, userId)
+                client.get(ServiceTxProjectResource::class).createGitCIProject(
+                    gitProjectId = setting.gitProjectId,
+                    userId = userId,
+                    gitProjectName = gitProjectName
+                )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
@@ -160,35 +198,63 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     fun fixProjectInfo(): Int {
-        val limitCount = 5
         var count = 0
-        var startId = 0L
-        var currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+        var currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
-                try {
-                    val projectResult =
-                        client.get(ServiceTxUserResource::class).get(it.enableUserId)
-                    val userInfo = projectResult.data!!
-                    count += gitCIBasicSettingDao.fixProjectInfo(
-                        dslContext = dslContext,
-                        gitProjectId = it.id,
-                        creatorBgName = userInfo.bgName,
-                        creatorDeptName = userInfo.deptName,
-                        creatorCenterName = userInfo.centerName
-                    )
-                } catch (t: Throwable) {
-                    logger.error("Update git ci project in devops failed, msg: ${t.message}")
-                    return@forEach
-                } finally {
-                    startId = it.id
-                }
+                refresh(it)
+                count++
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)
-            currProjects = gitCIBasicSettingDao.getProjectAfterId(dslContext, startId, limitCount)
+            currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
+    }
+
+    fun refreshSetting(gitProjectId: Long) {
+        val projectInfo = requestGitProjectInfo(gitProjectId)
+        if (projectInfo != null) gitCIBasicSettingDao.updateInfoSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: "",
+            homePage = projectInfo.homepage ?: "",
+            httpUrl = projectInfo.gitHttpsUrl ?: "",
+            sshUrl = projectInfo.gitSshUrl ?: ""
+        )
+    }
+
+    private fun refresh(it: TGitBasicSettingRecord) {
+        try {
+            val projectResult = requestGitProjectInfo(it.id)
+            if (projectResult != null) {
+                val httpUrl = if (!projectResult.gitHttpsUrl.isNullOrBlank()) {
+                    projectResult.gitHttpsUrl!!
+                } else {
+                    projectResult.gitHttpUrl
+                }
+                gitCIBasicSettingDao.fixProjectInfo(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    httpUrl = httpUrl
+                )
+            }
+        } catch (t: Throwable) {
+            logger.error("Update git ci project in devops failed, msg: ${t.message}")
+        }
+    }
+
+    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
+        return try {
+            val accessToken =
+                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
+            client.getScm(ServiceGitCiResource::class)
+                .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
+        } catch (e: Throwable) {
+            logger.error("requestGitProjectInfo, msg: ${e.message}")
+            return null
+        }
     }
 }

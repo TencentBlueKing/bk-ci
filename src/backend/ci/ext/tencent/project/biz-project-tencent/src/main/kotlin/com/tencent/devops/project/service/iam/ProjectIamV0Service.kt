@@ -28,11 +28,12 @@
 
 package com.tencent.devops.project.service.iam
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -47,7 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProjectIamV0Service @Autowired constructor(
-    private val bkAuthProjectApi: BSAuthProjectApi,
+    private val bkAuthProjectApi: AuthProjectApi,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val tofService: TOFService,
@@ -145,7 +146,10 @@ class ProjectIamV0Service @Autowired constructor(
         roleName: String?
     ): Boolean {
         logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(ProjectMessageCode.PROJECT_NOT_EXIST, null)
+            )
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
         roleList.forEach {

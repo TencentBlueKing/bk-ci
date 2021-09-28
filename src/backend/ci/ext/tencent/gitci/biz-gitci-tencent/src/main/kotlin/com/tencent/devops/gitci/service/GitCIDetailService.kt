@@ -48,6 +48,7 @@ import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -115,7 +116,7 @@ class GitCIDetailService @Autowired constructor(
         return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
-    fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
+    fun batchGetBuildHistory(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
         val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
@@ -227,9 +228,11 @@ class GitCIDetailService @Autowired constructor(
             .data!!.toMutableList()
         // 更换域名来支持工蜂的页面
         reportList.forEachIndexed { index, report ->
-            reportList[index] = report.copy(
-                indexFileUrl = reportPrefix + report.indexFileUrl
-            )
+            if (report.type == ReportTypeEnum.INTERNAL.name) {
+                reportList[index] = report.copy(
+                    indexFileUrl = reportPrefix + report.indexFileUrl
+                )
+            }
         }
         return reportList.toList()
     }

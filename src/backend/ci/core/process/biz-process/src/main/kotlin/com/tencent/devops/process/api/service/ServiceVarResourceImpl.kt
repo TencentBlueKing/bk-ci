@@ -30,14 +30,33 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceVarResourceImpl @Autowired constructor(
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService
 ) : ServiceVarResource {
     override fun getBuildVar(buildId: String, varName: String?): Result<Map<String, String>> {
-        return if (varName.isNullOrBlank()) Result(buildVariableService.getAllVariable(buildId))
-        else Result(mapOf(varName!! to (buildVariableService.getVariable(buildId, varName) ?: "")))
+        return if (varName.isNullOrBlank()) {
+            Result(buildVariableService.getAllVariable(buildId))
+        } else {
+            Result(mapOf(varName to (buildVariableService.getVariable(buildId, varName) ?: "")))
+        }
+    }
+
+    override fun getContextVar(buildId: String, contextName: String?): Result<Map<String, String>> {
+        val buildVars = buildVariableService.getAllVariable(buildId)
+        return if (contextName.isNullOrBlank()) {
+            Result(pipelineContextService.getAllBuildContext(buildVars))
+        } else {
+            val context = pipelineContextService.getBuildContext(buildVars, contextName)
+            if (context.isNullOrEmpty()) {
+                Result(emptyMap())
+            } else {
+                Result(mapOf(contextName to context))
+            }
+        }
     }
 }

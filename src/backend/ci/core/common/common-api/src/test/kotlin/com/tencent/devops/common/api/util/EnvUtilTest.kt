@@ -31,15 +31,84 @@ import org.junit.Assert
 import org.junit.Test
 
 class EnvUtilTest {
+
     @Test
-    fun parseEnvTest() {
+    fun parseEnvNested() {
+        val data = HashMap<String, String>()
+        data["Nested"] = "first"
+        data["first"] = "hello"
+        parseAndEquals(data = data, template = "\${\${Nested}}.html", expect = "hello.html")
+    }
+
+    @Test
+    fun parseEnvTwice() {
+        val map = mutableMapOf<String, String>()
+        map["GDP"] = "10000000"
+        map["People"] = "1400000000"
+        map["Country"] = "中华人民共和国"
+        map["twice"] = "\${Country}" // twice 二次解析
+
+        parseAndEquals(
+            data = map,
+            template = "{\"GDP\": \"\${{GDP}}亿\", \"People\": \${{People}} \"Country\": \"\${twice}\"}",
+            expect = "{\"GDP\": \"${map["GDP"]}亿\", \"People\": ${map["People"]} \"Country\": \"${map["Country"]}\"}"
+        )
+
+        val data = HashMap<String, String>()
+        data["ab3c"] = "123"
+        data["ab.cd"] = "5678"
+        data["t.cd"] = "\${{ab.cd}}" // 二次替换 只能 对应处理 一直是双括号或者一直是单括号
+
+        val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+        val buff = EnvUtils.parseEnv(template2, data)
+        Assert.assertEquals(template2, buff)
+
+        parseAndEquals(
+            data = data,
+            template = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end",
+            expect = "中国\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
+        )
+
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{ce}}_\${{t.cd}}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            expect = "abcd_\${abc}_ffs_twice_${data["ab.cd"]}_ end结束%\n # 这是注释行a1\$ab_^%!#@",
+            contextMap = mapOf("ce" to "twice")
+        )
+
+        data["c_e"] = "\${none}"
+        parseAndEquals(
+            data = data,
+            template = "abcd_\${abc}_ffs_\${{c_e}}_\${{t.cd}}_ end",
+            expect = "abcd_\${abc}_ffs_\${none}_${data["ab.cd"]}_ end"
+        )
+
+        data["center中"] = "中国"
+        parseAndEquals(data = data, template = "abcd_\${center中}_ffs", expect = "abcd_中国_ffs")
+
+        data["blank"] = ""
+        parseAndEquals(data = data, template = "\${blank}", expect = "")
+
+        data["all"] = "hello"
+        parseAndEquals(data = data, template = "\${all}", expect = "hello")
+    }
+
+    private fun parseAndEquals(
+        data: Map<String, String>,
+        template: String,
+        expect: String,
+        contextMap: Map<String, String> = emptyMap()
+    ) {
+        val buff = EnvUtils.parseEnv(template, data, contextMap = contextMap)
+        println("template=$template\nreplaced=$buff\n")
+        Assert.assertEquals(expect, buff)
+    }
+
+    @Test
+    fun parseEnvTestContextMap() {
         val map = mutableMapOf<String, String>()
         map["age"] = "1"
         map["name"] = "jacky"
-        val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println(command)
-        val parseEnv = EnvUtils.parseEnv(command, map)
-        println(parseEnv)
 
         val command1 = "hello \${{variables.abc}} world"
         val command2 = "\${{variables.abc}}world"
@@ -56,6 +125,9 @@ class EnvUtilTest {
             "variables.abc" to "variables.value",
             "variables.hello" to "hahahahaha"
         )
+
+        Assert.assertEquals("", EnvUtils.parseEnv(null, emptyMap(), contextMap = data))
+        Assert.assertEquals("", EnvUtils.parseEnv("", emptyMap(), contextMap = data))
 
         Assert.assertEquals("hello variables.value world",
             EnvUtils.parseEnv(command1, emptyMap(), contextMap = data))
@@ -77,21 +149,23 @@ class EnvUtilTest {
             EnvUtils.parseEnv(
                 command = command9,
                 data = map,
-                replaceWithEmpty = false,
-                isEscape = false,
+                replaceWithEmpty = false, // 这里如果为true，则会导致先识别到 ${{ci.workspace} 并替换为空格，无法正常识别 ${{}}
+                isEscape = true,
                 contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
             ))
     }
 
     @Test
-    fun parseEnvTest1() {
+    fun parseEnvTestData() {
         val map = mutableMapOf<String, String>()
-        map["age"] = "1"
+        map["age"] = ""
         map["name"] = "jacky"
         val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println(command)
-        val parseEnv = EnvUtils.parseEnv(command, map)
-        println(parseEnv)
+        println("parseEnvTestData $command")
+        Assert.assertEquals(
+            "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
+            EnvUtils.parseEnv(command, map)
+        )
 
         val command1 = "hello \${{variables.abc}} world"
         val command2 = "\${{variables.abc}}world"

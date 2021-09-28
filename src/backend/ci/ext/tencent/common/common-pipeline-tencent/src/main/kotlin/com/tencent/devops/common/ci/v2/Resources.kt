@@ -37,17 +37,23 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Resources(
-    val repositories: List<Repositories>?
+    val repositories: List<Repositories>?,
+    val pools: List<ResourcesPools>?
 )
 
 data class Repositories(
     val repository: String,
     val name: String,
-    val ref: String? = "master",
+    val ref: String?,
     val credentials: ResCredentials?
 )
 
 data class ResCredentials(
     @JsonProperty("personal-access-token")
     val personalAccessToken: String?
+)
+
+data class ResourcesPools(
+    val from: String?,
+    val name: String?
 )

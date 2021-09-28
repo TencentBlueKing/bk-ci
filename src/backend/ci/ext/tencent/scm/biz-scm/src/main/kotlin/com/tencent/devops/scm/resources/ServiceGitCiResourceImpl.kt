@@ -29,6 +29,7 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -36,6 +37,8 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
@@ -87,7 +90,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     }
 
     override fun getGitCIFileContent(
-        gitProjectId: Long,
+        gitProjectId: String,
         filePath: String,
         token: String,
         ref: String,
@@ -139,9 +142,34 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         userId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>> {
-        return Result(gitCiService.getProjectList(accessToken, userId, page, pageSize, search))
+        return Result(
+            gitCiService.getProjectList(
+                accessToken = accessToken, userId = userId, page = page, pageSize = pageSize, search = search,
+                orderBy = orderBy, sort = sort, owned = owned, minAccessLevel = minAccessLevel
+            )
+        )
+    }
+
+    override fun getGitFileInfo(
+        gitProjectId: String,
+        filePath: String?,
+        token: String,
+        ref: String?,
+        useAccessToken: Boolean
+    ): Result<GitCodeFileInfo> {
+        return gitCiService.getFileInfo(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            ref = ref,
+            useAccessToken = useAccessToken
+        )
     }
 
     override fun getProjectMembersAll(

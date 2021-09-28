@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.CommonEnv
+import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -50,6 +51,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpMethod
 import java.io.File
 import java.io.FileOutputStream
 import java.net.ConnectException
@@ -102,7 +104,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             true
         } catch (re: SocketTimeoutException) {
-            if (re.message == "connect timed out") {
+            if (re.message == "connect timed out" ||
+                (request.method() == HttpMethod.GET.name && re.message == "timeout")
+            ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 true
             } else { // 对于因为服务器的超时，不一定能幂等重试的，抛出原来的异常，外层业务自行决定是否重试
@@ -152,8 +156,19 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         }
     }
 
-    protected fun download(request: Request, destPath: File) {
-        okHttpClient.newBuilder().build().newCall(request).execute().use { response ->
+    protected fun download(
+        request: Request,
+        destPath: File,
+        connectTimeoutInSec: Long? = null,
+        readTimeoutInSec: Long? = null,
+        writeTimeoutInSec: Long? = null
+    ) {
+        requestForResponse(
+            request = request,
+            connectTimeoutInSec = connectTimeoutInSec,
+            readTimeoutInSec = readTimeoutInSec,
+            writeTimeoutInSec = writeTimeoutInSec
+        ).use { response ->
             download(response, destPath)
         }
     }
@@ -167,7 +182,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             throw RemoteServiceException("获取文件失败")
         }
         if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
-        LoggerService.addNormalLine("save file >>>> ${destPath.canonicalPath}")
+        LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
 
         response.body()!!.byteStream().use { bs ->
             val buf = ByteArray(BYTE_ARRAY_SIZE)
@@ -258,12 +273,20 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
-    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
+    fun buildGet(
+        path: String,
+        headers: Map<String, String> = emptyMap(),
+        useFileDevnetGateway: Boolean? = null
+    ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
-    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
+    fun buildPost(
+        path: String,
+        headers: Map<String, String> = emptyMap(),
+        useFileDevnetGateway: Boolean? = null
+    ): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
         return buildPost(path, requestBody, headers, useFileDevnetGateway)
     }
@@ -278,7 +301,11 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
 
-    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileDevnetGateway: Boolean? = null): Request {
+    fun buildPut(
+        path: String,
+        headers: Map<String, String> = emptyMap(),
+        useFileDevnetGateway: Boolean? = null
+    ): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
         return buildPut(path, requestBody, headers, useFileDevnetGateway)
     }

@@ -27,9 +27,6 @@
 
 package com.tencent.ops.common.wechatwork
 
-import org.springframework.stereotype.Component
-
-@Component
 data class WechatWorkConfiguration(
     val corpId: String? = null,
     val serviceId: String? = null,

@@ -48,6 +48,6 @@ data class PreScriptBuildYaml(
     var steps: List<Step>? = null,
     var extends: Extends? = null,
     var resources: Resources?,
-    var notices: List<Notices>?,
+    var notices: List<GitNotices>?,
     var finally: Map<String, PreJob>? = null
 )

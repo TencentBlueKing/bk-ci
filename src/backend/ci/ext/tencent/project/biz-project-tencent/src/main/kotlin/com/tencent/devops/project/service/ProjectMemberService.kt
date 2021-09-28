@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProjectMemberService @Autowired constructor(
-    private val bsAuthProjectApi: BSAuthProjectApi,
+    private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) {
 

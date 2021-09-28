@@ -49,6 +49,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -285,7 +286,10 @@ interface ServiceTxProjectResource {
         gitProjectId: Long,
         @ApiParam("用户名", required = true)
         @PathParam("userId")
-        userId: String
+        userId: String,
+        @ApiParam("工蜂项目名称", required = false)
+        @QueryParam("gitProjectName")
+        gitProjectName: String?
     ): Result<ProjectVO>
 
     @POST
@@ -361,4 +365,15 @@ interface ServiceTxProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long
     ): Result<List<BKAuthProjectRolesResources>>
+
+    @PUT
+    @Path("{projectCode}/relation/bind")
+    fun bindRelationSystem(
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("关联系统ID", required = true)
+        @QueryParam("relationId")
+        relationId: String
+    ): Result<Boolean>
 }

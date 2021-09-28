@@ -34,6 +34,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -42,9 +43,18 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) : ProjectProxyService {
+
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
     override fun checkProject(projectId: String, userId: String): Boolean {
+        if (!tag.isNullOrBlank() && tag.contains(IGNORETAG)) {
+            return true
+        }
+
         try {
-            val redisData = redisOperation.get(WebsocketKeys.PROJECT_USER_REDIS_KEY + userId)
+            val redisKey = WebsocketKeys.PROJECT_USER_REDIS_KEY + tag + userId
+            val redisData = redisOperation.get(redisKey)
             if (redisData != null) {
                 val redisProjectList = redisData.split(",")
                 if (redisProjectList.contains(projectId)) {
@@ -58,14 +68,16 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
                 privilegeProjectCodeList.add(it.projectCode)
             }
             redisOperation.set(
-                WebsocketKeys.PROJECT_USER_REDIS_KEY + userId,
-                objectMapper.writeValueAsString(privilegeProjectCodeList)
+                redisKey,
+                objectMapper.writeValueAsString(privilegeProjectCodeList),
+                86400
             )
 
             return if (privilegeProjectCodeList.contains(projectId)) {
                 true
             } else {
-                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
+                logger.warn("changePage checkProject fail:" +
+                    " user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
                 false
             }
         } catch (e: Exception) {
@@ -76,6 +88,7 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(TencentProjectProxyServiceImpl::class.java)
+        const val IGNORETAG = "gitci"
     }
 }

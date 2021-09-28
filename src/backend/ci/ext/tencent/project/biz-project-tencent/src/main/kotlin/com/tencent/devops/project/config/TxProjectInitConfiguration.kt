@@ -38,7 +38,9 @@ import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.GitCIProjectPermissionService
-import com.tencent.devops.project.service.impl.V0ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
+import com.tencent.devops.project.service.impl.TxV0ProjectPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -65,7 +67,7 @@ class TxProjectInitConfiguration {
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         managerService: ManagerService
-    ): ProjectPermissionService = V0ProjectPermissionServiceImpl(
+    ): ProjectPermissionService = TxV0ProjectPermissionServiceImpl(
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
         objectMapper = objectMapper,
@@ -75,6 +77,20 @@ class TxProjectInitConfiguration {
         managerService = managerService,
         authPermissionApi = authPermissionApi
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun txProjectPermissionServiceImpl(
+        objectMapper: ObjectMapper,
+        projectIamV0Service: ProjectIamV0Service
+    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIProjectPermissionServiceImpl(
+        objectMapper: ObjectMapper,
+        projectIamV0Service: ProjectIamV0Service
+    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")

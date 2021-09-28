@@ -75,7 +75,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return result.data?.fileUrlList ?: emptyList()
     }
 
-    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
+    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String?) {
         // 过滤掉用../尝试遍历上层目录的操作
         val purePath = purePath(destPath)
         val path = purePath + "/" + file.name
@@ -106,7 +106,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
+    override fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String?) {
         LoggerService.addNormalLine("upload file >>> ${file.name}")
         val url = "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_ARCHIVE}"
         val fileBody = RequestBody.create(MultipartFormData, file)
@@ -129,7 +129,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables, token: String?) {
         logger.warn("uploadLog not implemented")
     }
 
@@ -138,7 +138,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         projectId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String?
     ) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
@@ -157,7 +158,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         buildId: String,
         uri: String,
         destPath: File,
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean,
+        token: String?
     ) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri

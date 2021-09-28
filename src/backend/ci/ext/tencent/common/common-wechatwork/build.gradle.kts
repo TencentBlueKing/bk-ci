@@ -28,6 +28,5 @@
 dependencies {
     api(project(":core:common:common-web"))
     api("dom4j:dom4j")
-    api("commons-codec:commons-codec:1.9")
-//    api("org.ansj:ansj_seg:5.1.6"
+    api("commons-codec:commons-codec")
 }
