@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.service.ExperienceBaseService
@@ -59,8 +60,14 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.get(userId, experienceHashId, false))
     }
 
-    override fun check(userId: String, experienceHashId: String): Result<Boolean> {
-        return Result(experienceBaseService.userCanExperience(userId, HashUtil.decodeIdToLong(experienceHashId)))
+    override fun check(userId: String, experienceHashId: String, organization: String?): Result<Boolean> {
+        return Result(
+            experienceBaseService.userCanExperience(
+                userId,
+                HashUtil.decodeIdToLong(experienceHashId),
+                organization == ExperienceConstant.ORGANIZATION_OUTER
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {
