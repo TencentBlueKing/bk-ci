@@ -66,9 +66,9 @@ class TemplateInstanceItemDao {
                         UUIDUtil.generate(),
                         it.pipelineId,
                         it.pipelineName,
-                        if (buildNo != null) JsonUtil.toJson(buildNo) else null,
+                        buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         status,
-                        if (param != null) JsonUtil.toJson(param) else null,
+                        param?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         baseId,
                         userId,
                         userId
