@@ -1265,8 +1265,7 @@
                 border-radius: 3px;
                 border: 1px solid transparent;
             }
-            &.success,
-            &.stage_success {
+            &.success {
                 &:before {
                     border-color: $successColor;
                     background-color: #cdffe2;
@@ -1288,13 +1287,6 @@
             }
             .text-link {
                 font-size: 14px;
-            }
-            .build-status-tips {
-                width: 8px;
-                height: 20px;
-                position: absolute;
-                left: 18px;
-                cursor: pointer;
             }
         }
     }

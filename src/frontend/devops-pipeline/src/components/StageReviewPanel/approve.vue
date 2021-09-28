@@ -62,7 +62,7 @@
             canTriggerStage () {
                 const reviewGroups = this.stageControl.reviewGroups || []
                 const curReviewGroup = reviewGroups.find((review) => (review.status === undefined))
-                return curReviewGroup.reviewers.includes(this.$userInfo ? this.$userInfo.username : '')
+                return curReviewGroup.reviewers.includes(this.$userInfo.username)
             },
 
             disabled () {

@@ -12,11 +12,6 @@
             <template slot-scope="{ row }">
                 <div class="table-list-name text-overflow"
                     :class="row.feConfig && row.feConfig.status">
-                    <div
-                        v-if="row.latestBuildStatus"
-                        class="build-status-tips"
-                        v-bk-tooltips="{ content: getStatusTips(row.latestBuildStatus), disabled: !row.latestBuildStatus }"
-                    ></div>
                     <a
                         v-if="row.hasPermission"
                         :href="getHistoryURL(row.pipelineId)"
@@ -200,15 +195,6 @@
                 } else {
                     return '--'
                 }
-            },
-            getStatusTips (status) {
-                const statusTipsMap = {
-                    'SUCCEED': this.$t('newlist.success'),
-                    'FAILED': this.$t('newlist.failed'),
-                    'CANCELED': this.$t('newlist.cancel'),
-                    'STAGE_SUCCESS': this.$t('newlist.stageSuccess')
-                }
-                return statusTipsMap[status] || ''
             }
         }
     }

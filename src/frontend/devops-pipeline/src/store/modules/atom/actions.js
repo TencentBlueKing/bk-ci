@@ -31,7 +31,6 @@ import {
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_CONTAINER_DETAIL,
-    SET_ATOMS,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     UPDATE_ATOM_TYPE,
@@ -61,7 +60,6 @@ import {
     UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     FETCHING_ATOM_LIST,
-    SET_STORE_DATA,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -71,7 +69,25 @@ import {
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
-    SET_EDIT_FROM
+    SET_EDIT_FROM,
+    SET_CUR_JOBTYPE,
+    IS_RECOMMEND_MORE_LOADING,
+    IS_UNRECOMMEND_MORE_LOADING,
+    IS_PROJECT_PAGE_OVER,
+    IS_STORE_PAGE_OVER,
+    IS_UNRECOMMEND_STORE_PAGE_OVER,
+    IS_UNRECOMMEND_PROJECT_PAGE_OVER,
+    SET_STORE_DATA,
+    SET_UNRECOMMEND_STORE_DATA,
+    SET_UNRECOMMEND_PROJECT_DATA,
+    SET_PROJECT_DATA,
+    SET_PROJECT_ATOMS,
+    SET_STORE_ATOMS,
+    SET_PROJECT_UNRECOMMEN_ATOMS,
+    SET_STORE_UNRECOMMEN_ATOMS,
+    SET_CLASSIFY,
+    SET_INNER_ACTIVE_NAME,
+    SET_ATOM_CODE
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -236,30 +252,292 @@ export default {
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
     },
-    fetchAtoms: async ({ commit }, { projectCode }) => {
-        try {
-            commit(FETCHING_ATOM_LIST, true)
-            const [{ data: atomClassifyList }, { data: atomList }] = await Promise.all([
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`),
-                request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
-                    params: {
-                        projectCode
-                    }
-                })
-            ])
-
-            const [atomCodeList, atomMap] = getMapByKey(atomList.records, 'atomCode')
-            const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(atomClassifyList, 'classifyCode')
-            commit(SET_ATOMS, {
-                atomCodeList,
-                atomClassifyCodeList,
-                atomMap,
-                atomClassifyMap
+    setCurJobType: ({ commit }, str) => {
+        commit(SET_CUR_JOBTYPE, str)
+    },
+    fetchClassify: async ({ commit }) => {
+        const { data: atomClassifyList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`)
+        const [atomClassifyCodeList, atomClassifyMap] = getMapByKey(atomClassifyList, 'classifyCode')
+        Object.assign(atomClassifyMap, {
+            'all': {
+                classifyCode: 'all',
+                classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.all')) || 'all'
+            }
+        })
+        commit(SET_CLASSIFY, {
+            atomClassifyCodeList,
+            atomClassifyMap
+        })
+    },
+    setInnerActiveName: async ({ commit }, innerActiveName) => {
+        commit(SET_INNER_ACTIVE_NAME, innerActiveName)
+    },
+    setProjectData: async ({ commit }, projectData) => {
+        commit(SET_PROJECT_DATA, projectData)
+    },
+    setStoreData: async ({ commit }, storeData) => {
+        commit(SET_STORE_DATA, storeData)
+    },
+    setUnRecommendProjectData: async ({ commit }, unRecommendProjectData) => {
+        commit(SET_UNRECOMMEND_PROJECT_DATA, unRecommendProjectData)
+    },
+    setUnRecommendStoreData: async ({ commit }, unRecommendStoreData) => {
+        commit(SET_UNRECOMMEND_STORE_DATA, unRecommendStoreData)
+    },
+    setProjectPageOver: async ({ commit }, payload) => {
+        commit(IS_PROJECT_PAGE_OVER, payload)
+    },
+    updateProjectAtoms: async ({ state, commit }, payload) => {
+        const { atoms, recommend } = payload
+        if (recommend) {
+            commit(SET_PROJECT_ATOMS, {
+                projectRecommendAtomMap: atoms
             })
+            let page = 1
+            const { projectRecommendAtomMap, projectData } = state
+            if ((Object.keys(projectRecommendAtomMap).length / projectData.pageSize) !== (projectData.page - 1)) {
+                page = projectData.page - 1 || 1
+            }
+            commit(SET_PROJECT_DATA, {
+                page
+            })
+        } else {
+            commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                projectUnRecommendAtomMap: atoms
+            })
+            commit(SET_UNRECOMMEND_PROJECT_DATA, {
+                page: state.unRecommendProjectData.page - 1
+            })
+        }
+    },
+    updateStoreAtoms: async ({ commit, state }, payload) => {
+        const { atoms, recommend } = payload
+        const mutation = recommend ? SET_STORE_ATOMS : SET_STORE_UNRECOMMEN_ATOMS
+        commit(mutation, {
+            storeRecommendAtomMap: atoms
+        })
+    },
+
+    setAtomCode: async ({ commit }, atomCode) => {
+        commit(SET_ATOM_CODE, atomCode)
+    },
+    /**
+     * 获取项目下插件
+     */
+    fetchProjectAtoms: async ({ commit, state }, { projectCode, category, recommendFlag, os, queryProjectAtomFlag }) => {
+        let projectData, unRecommendProjectData, page, pageSize, keyword
+        if (recommendFlag) {
+            // 适用插件
+            projectData = state.projectData || {}
+            page = projectData.page || 1
+            pageSize = projectData.pageSize || 15
+            keyword = projectData.keyword || undefined
+        } else {
+            // 不适用插件
+            unRecommendProjectData = state.unRecommendProjectData || {}
+            page = unRecommendProjectData.page || 1
+            pageSize = unRecommendProjectData.pageSize || 15
+            keyword = unRecommendProjectData.keyword || undefined
+        }
+        if (category === 'TRIGGER') {
+            pageSize = 15
+            page = 1
+            commit(SET_PROJECT_DATA, {
+                page: 1
+            })
+        }
+
+        // 前提：查询不适用当前job插件
+        // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
+        let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+        const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+        if (!recommendFlag && jobType === 'AGENT_LESS') {
+            jobType = 'AGENT'
+        }
+        
+        try {
+            if (page === 1) {
+                commit(FETCHING_ATOM_LIST, true)
+            } else {
+                recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
+            }
+            const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    category,
+                    projectCode,
+                    os,
+                    queryProjectAtomFlag,
+                    jobType,
+                    fitOsFlag,
+                    recommendFlag,
+                    page,
+                    pageSize,
+                    keyword
+                }
+            })
+
+            const projectAtomMap = getMapByKey(atomList.records, 'atomCode')[1]
+
+            if (page === 1) {
+                if (recommendFlag) {
+                    commit(SET_PROJECT_ATOMS, {
+                        projectRecommendAtomMap: projectAtomMap
+                    })
+                } else {
+                    commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                        projectUnRecommendAtomMap: projectAtomMap
+                    })
+                }
+            } else {
+                if (recommendFlag) {
+                    commit(SET_PROJECT_ATOMS, {
+                        projectRecommendAtomMap: Object.assign(state.projectRecommendAtomMap, projectAtomMap)
+                    })
+                } else {
+                    commit(SET_PROJECT_UNRECOMMEN_ATOMS, {
+                        projectUnRecommendAtomMap: Object.assign(state.projectUnRecommendAtomMap, projectAtomMap)
+                    })
+                }
+            }
+            
+            if (recommendFlag && category === 'TASK') {
+                // 保存请求页码、搜索关键字
+                const isProjectPageOver = Object.keys(state.projectRecommendAtomMap).length === atomList.count
+                const projectData = {
+                    page: ++page,
+                    pageSize,
+                    keyword,
+                    count: atomList.count
+                }
+                commit(IS_PROJECT_PAGE_OVER, isProjectPageOver)
+                commit(SET_PROJECT_DATA, projectData)
+            }
+            // 不适用插件请求页码数据保存
+            if (!recommendFlag && category === 'TASK') {
+                const isUnRecommendProjectPageOver = Object.keys(state.projectUnRecommendAtomMap).length === atomList.count
+                const curUnRecommendProjectData = {
+                    page: ++page,
+                    pageSize,
+                    keyword
+                }
+                commit(IS_UNRECOMMEND_PROJECT_PAGE_OVER, isUnRecommendProjectPageOver)
+                commit(SET_UNRECOMMEND_PROJECT_DATA, curUnRecommendProjectData)
+            }
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         } finally {
             commit(FETCHING_ATOM_LIST, false)
+            commit(IS_RECOMMEND_MORE_LOADING, false)
+        }
+    },
+    /**
+     * 获取研发商店插件
+     */
+    fetchStoreAtoms: async ({ commit, state }, { projectCode, classifyId, recommendFlag, category, os, queryProjectAtomFlag }) => {
+        let storeData, unRecommendStoreData, page, pageSize, keyword
+        if (recommendFlag) {
+            // 适用插件
+            storeData = state.storeData || {}
+            page = storeData.page || 1
+            pageSize = storeData.pageSize || 15
+            keyword = storeData.keyword || undefined
+        } else {
+            // 不适用插件
+            unRecommendStoreData = state.unRecommendStoreData || {}
+            page = unRecommendStoreData.page || 1
+            pageSize = unRecommendStoreData.pageSize || 15
+            keyword = unRecommendStoreData.keyword || undefined
+        }
+
+        if (state.storeData && state.storeData.classifyId !== classifyId) {
+            page = 1
+        }
+
+        try {
+            if (page === 1) {
+                commit(FETCHING_ATOM_LIST, true)
+            } else {
+                recommendFlag ? commit(IS_RECOMMEND_MORE_LOADING, true) : commit(IS_UNRECOMMEND_MORE_LOADING, true)
+            }
+
+            let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+
+            // 前提：查询不适用当前job插件
+            // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
+            const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+            if (!recommendFlag && jobType === 'AGENT_LESS') {
+                jobType = 'AGENT'
+            }
+
+            const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
+                params: {
+                    projectCode,
+                    classifyId,
+                    recommendFlag,
+                    category,
+                    os,
+                    queryProjectAtomFlag,
+                    jobType,
+                    fitOsFlag,
+                    page,
+                    pageSize,
+                    keyword
+                }
+            })
+
+            const storeAtomMap = getMapByKey(atomList.records, 'atomCode')[1]
+            if (page === 1) {
+                if (recommendFlag) {
+                    commit(SET_STORE_ATOMS, {
+                        storeRecommendAtomMap: storeAtomMap
+                    })
+                } else {
+                    commit(SET_STORE_UNRECOMMEN_ATOMS, {
+                        storeUnRecommendAtomMap: storeAtomMap
+                    })
+                }
+            } else {
+                if (recommendFlag) {
+                    commit(SET_STORE_ATOMS, {
+                        storeRecommendAtomMap: Object.assign(state.storeRecommendAtomMap, storeAtomMap)
+                    })
+                } else {
+                    commit(SET_STORE_UNRECOMMEN_ATOMS, {
+                        storeUnRecommendAtomMap: Object.assign(state.storeUnRecommendAtomMap, storeAtomMap)
+                    })
+                }
+            }
+            // 适用插件请求页码数据保存
+            if (recommendFlag && category === 'TASK') {
+                const isStorePageOver = Object.keys(state.storeRecommendAtomMap).length === atomList.count
+                const storeData = {
+                    page: ++page,
+                    pageSize,
+                    keyword,
+                    classifyId
+                }
+                commit(IS_STORE_PAGE_OVER, isStorePageOver)
+                commit(SET_STORE_DATA, storeData)
+            }
+
+            // 不适用插件请求页码数据保存
+            if (!recommendFlag && category === 'TASK') {
+                const isUnRecommendStorePageOver = Object.keys(state.storeUnRecommendAtomMap).length === atomList.count
+                const curUnRecommendStoreData = {
+                    page: ++page,
+                    pageSize,
+                    keyword,
+                    classifyId
+                }
+                commit(IS_UNRECOMMEND_STORE_PAGE_OVER, isUnRecommendStorePageOver)
+                commit(SET_UNRECOMMEND_STORE_DATA, curUnRecommendStoreData)
+            }
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        } finally {
+            commit(FETCHING_ATOM_LIST, false)
+            commit(IS_RECOMMEND_MORE_LOADING, false)
+            commit(IS_UNRECOMMEND_MORE_LOADING, false)
         }
     },
     fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {
@@ -431,8 +709,13 @@ export default {
     },
 
     // 获取项目下已安装的插件列表
-    getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
+    getInstallAtomList ({ commit }, { projectCode, name }) {
+        console.log(projectCode, name, 222222222)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/installedAtoms/list?page=1&pageSize=15`, {
+            params: {
+                name
+            }
+        })
     },
 
     // 获取已安装的插件详情
@@ -479,10 +762,6 @@ export default {
                 debug
             }
         })
-    },
-
-    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
-        return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {

@@ -195,13 +195,14 @@
                 'getStage',
                 'isTriggerContainer',
                 'isNewAtomTemplate',
-                'atomVersionChangedKeys'
+                'atomVersionChangedKeys',
+                'getAtomCode'
             ]),
             ...mapState('atom', [
                 'globalEnvs',
                 'atomCodeList',
                 'atomClassifyCodeList',
-                'atomMap',
+                'projectRecommendAtomMap',
                 'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
@@ -278,12 +279,12 @@
                 return ''
             },
             atomVersion () {
-                return this.element.version || this.getDefaultVersion(this.atomCode)
+                return this.element.version || this.getDefaultVersion(this.atomCode || this.selectAtomCode)
             },
             atom () {
-                const { atomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
-                const atom = atomMap[atomCode]
-                const version = element.version || getDefaultVersion(atomCode)
+                const { projectRecommendAtomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
+                const atom = projectRecommendAtomMap[atomCode]
+                const version = element.version || getDefaultVersion(atomCode || this.selectAtomCode)
                 const atomModal = getAtomModal({
                     atomCode,
                     version
@@ -354,6 +355,9 @@
                     manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
+            },
+            selectAtomCode () {
+                return this.getAtomCode
             }
         },
         watch: {
@@ -383,7 +387,7 @@
         },
         mounted () {
             const { projectId, element, globalEnvs, atomCode, requestGlobalEnvs, getDefaultVersion } = this
-            const version = element.version ? element.version : getDefaultVersion(atomCode)
+            const version = element.version ? element.version : getDefaultVersion(atomCode || this.selectAtomCode)
             this.handleFetchAtomModal(atomCode, version)
             this.fetchAtomVersionList({
                 projectCode: projectId,
@@ -537,7 +541,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },

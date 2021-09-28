@@ -1,7 +1,16 @@
 <template>
     <article class="atom-manage-home" v-bkloading="{ isLoading }">
         <h3 class="atom-manage-title">
-            {{ $t('atomManage.installedAtom') }}
+            <span>
+                {{ $t('atomManage.installedAtom') }}
+                <bk-input
+                    style="width: 300px; margin-left: 20px;"
+                    v-model="searchKey"
+                    :placeholder="$t('editPage.searchTips')"
+                    @input="handleInput"
+                    @enter="handleSearch"
+                ></bk-input>
+            </span>
             <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
         </h3>
         <bk-tab :active.sync="active" class="atom-manage-main" @tab-change="tabChange">
@@ -31,7 +40,7 @@
                     </bk-table-column>
                     <bk-table-column class-name="primary-color" width="120">
                         <template slot-scope="props">
-                            <bk-popover :content="$t('atomManage.relatedNumTips', [props.row.pipelineCnt])" placement="top">
+                            <bk-popover :content="$t('atomManage.relatedNumTips', [props.row.pipelineCnt])" placement="left">
                                 <span @click="showDetail(props.row)" class="cursor-pointer">{{ props.row.pipelineCnt }}</span>
                             </bk-popover>
                         </template>
@@ -134,7 +143,8 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                }
+                },
+                searchKey: ''
             }
         },
 
@@ -156,10 +166,14 @@
                 const otherId = lastReason.id
                 const selectIds = this.deleteObj.reasonList || []
                 return selectIds.includes(otherId)
+            },
+            atomName () {
+                return this.$route.params.name || ''
             }
         },
 
         created () {
+            if (this.atomName) this.searchKey = this.atomName
             this.initData()
         },
 
@@ -168,9 +182,10 @@
 
             initData () {
                 this.isLoading = true
-                Promise.all([this.getInstallAtomList(this.projectId), this.getAtomClassify(), this.getDeleteReasons()]).then(([{ data: atomList }, { data: classifyList }, { data: reasons }]) => {
+                Promise.all([this.getInstallAtomList({ projectCode: this.projectId, name: this.searchKey }), this.getAtomClassify(), this.getDeleteReasons()]).then(([{ data: atomList }, { data: classifyList }, { data: reasons }]) => {
                     this.installAtomList = atomList.records || []
                     this.deleteReasons = reasons || []
+                    this.classifyList = classifyList || []
                     this.panels = (classifyList || []).map((classify) => {
                         const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
                         return { name: classify.classifyCode, label: classify.classifyName, count }
@@ -186,6 +201,7 @@
             },
 
             showDetail (row) {
+                console.log(row)
                 this.isLoading = true
                 this.detailObj.detail = row
                 this.getInstallAtomDetail({ projectCode: this.projectId, atomCode: row.atomCode }).then(({ data }) => {
@@ -256,6 +272,30 @@
 
             goToStore () {
                 window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=atom`, '_blank')
+            },
+
+            handleInput (str) {
+                if (str === '') {
+                    this.handleSearch()
+                }
+            },
+
+            handleSearch () {
+                this.isLoading = true
+                this.panels = []
+                this.getInstallAtomList({
+                    projectCode: this.projectId,
+                    name: this.searchKey
+                }).then(({ data: atomList }) => {
+                    this.installAtomList = atomList.records || []
+                    this.panels = (this.classifyList || []).map((classify) => {
+                        const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
+                        return { name: classify.classifyCode, label: classify.classifyName, count }
+                    })
+                    this.panels.unshift({ name: 'all', label: this.$t('atomManage.all'), count: this.installAtomList.length })
+                }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
+                    this.isLoading = false
+                })
             }
         }
     }
@@ -271,6 +311,8 @@
         padding-bottom: 30px;
         width: auto !important;
         .atom-manage-title {
+            display: flex;
+            justify-content: space-between;
             margin: 0 150px 15px;
             margin-right: calc(150px - 100vw + 100%);
             min-width: 1000px;
@@ -337,6 +379,7 @@
                     color: $primaryColor;
                 }
             }
+            
             /deep/ .bk-table-body-wrapper .cursor-pointer {
                 cursor: pointer;
             }
