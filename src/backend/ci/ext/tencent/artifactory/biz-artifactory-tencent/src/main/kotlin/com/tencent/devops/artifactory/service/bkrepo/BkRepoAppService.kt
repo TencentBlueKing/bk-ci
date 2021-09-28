@@ -53,6 +53,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("LongMethod")
 class BkRepoAppService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient,
@@ -71,31 +72,7 @@ class BkRepoAppService @Autowired constructor(
             "getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
         )
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
-        when (artifactoryType) {
-            ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
-            }
-            ArtifactoryType.PIPELINE -> {
-                val properties = bkRepoClient.listMetadata(
-                    userId,
-                    projectId,
-                    RepoUtils.getRepoByType(artifactoryType),
-                    normalizedPath
-                )
-                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(Response.Status.BAD_REQUEST, "元数据(pipelineId)不存在，请通过共享下载文件")
-                }
-                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId!!,
-                    AuthPermission.DOWNLOAD,
-                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
-                )
-            }
-        }
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
             userId,
             projectId,
@@ -128,6 +105,21 @@ class BkRepoAppService @Autowired constructor(
             "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
         )
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        val url =
+            StringUtil.chineseUrlEncode(
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
+                        "$artifactoryType/filePlist?path=$normalizedPath"
+            )
+        return Url(url)
+    }
+
+    private fun getNormalizePath(
+        argPath: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String
+    ): String {
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -153,12 +145,7 @@ class BkRepoAppService @Autowired constructor(
                 )
             }
         }
-        val url =
-            StringUtil.chineseUrlEncode(
-                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
-                        "$artifactoryType/filePlist?path=$normalizedPath"
-            )
-        return Url(url)
+        return normalizedPath
     }
 
     override fun getPlistFile(
@@ -168,19 +155,20 @@ class BkRepoAppService @Autowired constructor(
         argPath: String,
         ttl: Int,
         directed: Boolean,
-        experienceHashId: String?
+        experienceHashId: String?,
+        organization: String?
     ): String {
         logger.info(
             "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
                     "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
         )
 
-//        if (experienceHashId != null) {
-//            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId)
-//            if (!check.isOk() || !check.data!!) {
-//                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
-//            }
-//        }
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+            }
+        }
 
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
