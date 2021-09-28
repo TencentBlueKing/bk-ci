@@ -175,12 +175,12 @@ class BkRepoAppService @Autowired constructor(
                     "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
         )
 
-        if (experienceHashId != null) {
-            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId)
-            if (!check.isOk() || !check.data!!) {
-                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
-            }
-        }
+//        if (experienceHashId != null) {
+//            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId)
+//            if (!check.isOk() || !check.data!!) {
+//                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+//            }
+//        }
 
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
