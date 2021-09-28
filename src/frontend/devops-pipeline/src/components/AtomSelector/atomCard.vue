@@ -84,7 +84,7 @@
         </div>
         <div v-if="('uninstallFlag' in atom && !atom.defaultFlag) || (atomCode === atom.atomCode && !atom.defaultFlag)" id="unRemoveAtomTips" class="un-remove-atom-tips">
             <span class="row">{{ $t('editPage.unRemoveAtom') }}，</span>
-            <span class="row" style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage(atom.atomCode, atom.name)">
+            <span class="row" style="color: #3A84FF; cursor: pointer;" @click="handleGoPipelineAtomManage(atom.name)">
                 {{ $t('editPage.viewPipeline') }}
             </span>
         </div>
@@ -179,9 +179,9 @@
                 return `${this.$t('适用于')}${os.join(' / ')}`
             },
 
-            handleGoPipelineAtomManage (atomCode, name) {
+            handleGoPipelineAtomManage (name) {
                 const routeData = this.$router.resolve({
-                    path: `/pipeline/${this.projectCode}/list/atomManage/${atomCode}/${name}`
+                    path: `/pipeline/${this.projectCode}/list/atomManage/${name}`
                 })
                 window.open(routeData.href, '_blank')
             },
