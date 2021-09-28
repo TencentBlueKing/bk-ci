@@ -349,7 +349,7 @@ class QualityRuleCheckService @Autowired constructor(
         ruleOp: QualityRule.RuleOp
     ) {
         with(buildCheckParams) {
-            logger.info("buildCheckParams is: ${buildCheckParams}")
+            logger.info("buildCheckParams is: $buildCheckParams")
             val createTime = LocalDateTime.now()
             if (ruleOp.operation == RuleOperation.END) {
                 sendEndNotification(
