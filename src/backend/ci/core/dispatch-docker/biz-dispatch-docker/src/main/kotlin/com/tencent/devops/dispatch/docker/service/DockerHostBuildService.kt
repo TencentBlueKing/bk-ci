@@ -36,7 +36,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
-import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
@@ -78,35 +77,6 @@ class DockerHostBuildService @Autowired constructor(
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
-
-    fun getQpcWhitelist(userId: String): List<String> {
-        val whiteList = mutableListOf<String>()
-
-        val whiteSet = redisOperation.getSetMembers(Constants.QPC_WHITE_LIST_KEY_PREFIX)
-        return if (whiteSet != null) {
-            whiteSet.parallelStream().forEach {
-                whiteList.add(it)
-            }
-
-            whiteList
-        } else {
-            emptyList()
-        }
-    }
-
-    fun addQpcWhitelist(userId: String, gitProjectId: String): Boolean {
-        redisOperation.addSetValue(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-        return true
-    }
-
-    fun deleteQpcWhitelist(userId: String, gitProjectId: String): Boolean {
-        redisOperation.removeSetMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-        return true
-    }
-
-    fun checkQpcWhitelist(gitProjectId: String): Boolean {
-        return redisOperation.isMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-    }
 
     fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
         LOG.info("${event.buildId}|finishDockerBuild|vmSeqId(${event.vmSeqId})|result(${event.buildResult})")

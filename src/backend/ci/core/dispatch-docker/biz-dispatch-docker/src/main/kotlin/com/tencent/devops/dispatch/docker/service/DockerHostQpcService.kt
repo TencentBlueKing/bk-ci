@@ -25,36 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.docker.common.Constants
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(
-    private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostQpcService: DockerHostQpcService
-)
-    : OpDockerBuildResource {
+@Service
+class DockerHostQpcService @Autowired constructor(
+    private val redisOperation: RedisOperation
+) {
 
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
+    fun getQpcWhitelist(userId: String): List<String> {
+        val whiteList = mutableListOf<String>()
+
+        val whiteSet = redisOperation.getSetMembers(Constants.QPC_WHITE_LIST_KEY_PREFIX)
+        return if (whiteSet != null) {
+            whiteSet.parallelStream().forEach {
+                whiteList.add(it)
+            }
+
+            whiteList
+        } else {
+            emptyList()
+        }
     }
 
-    override fun getQpcWhitelist(userId: String): Result<List<String>> {
-        return Result(dockerHostQpcService.getQpcWhitelist(userId))
+    fun addQpcWhitelist(userId: String, gitProjectId: String): Boolean {
+        redisOperation.addSetValue(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+        return true
     }
 
-    override fun addQpcWhitelist(userId: String, gitProjectId: String): Result<Boolean> {
-        return Result(dockerHostQpcService.addQpcWhitelist(userId, gitProjectId))
+    fun deleteQpcWhitelist(userId: String, gitProjectId: String): Boolean {
+        redisOperation.removeSetMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+        return true
     }
 
-    override fun deleteQpcWhitelist(userId: String, gitProjectId: String): Result<Boolean> {
-        return Result(dockerHostQpcService.deleteQpcWhitelist(userId, gitProjectId))
+    fun checkQpcWhitelist(gitProjectId: String): Boolean {
+        return redisOperation.isMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(DockerHostQpcService::class.java)
     }
 }

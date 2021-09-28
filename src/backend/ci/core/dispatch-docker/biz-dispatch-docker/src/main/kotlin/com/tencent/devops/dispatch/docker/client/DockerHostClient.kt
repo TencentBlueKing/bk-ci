@@ -53,6 +53,7 @@ import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
+import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
@@ -81,7 +82,7 @@ class DockerHostClient @Autowired constructor(
     private val dslContext: DSLContext,
     private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostProxyService: DockerHostProxyService,
-    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostQpcService: DockerHostQpcService,
     private val redisUtils: RedisUtils
 ) {
 
@@ -502,7 +503,7 @@ class DockerHostClient @Autowired constructor(
 
     private fun getQpcUniquePath(projectId: String): String? {
         return if (projectId.startsWith("git_")
-            && dockerHostBuildService.checkQpcWhitelist(projectId.removePrefix("git_"))
+            && dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
         ) {
             return projectId.removePrefix("git_")
         } else {
