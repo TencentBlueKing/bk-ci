@@ -285,7 +285,8 @@ open class MarketAtomTask : ITask() {
                 atomFilePath = atomData.pkgPath!!,
                 publicFlag = atomData.publicFlag,
                 atomCreateTime = atomData.createTime,
-                workspace = atomTmpSpace
+                workspace = atomTmpSpace,
+                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
             )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -871,6 +872,7 @@ open class MarketAtomTask : ITask() {
         publicFlag: Boolean,
         atomCreateTime: Long,
         workspace: File,
+        isVmBuildEnv: Boolean
     ): File {
         try {
             // 取插件文件名
@@ -884,7 +886,8 @@ open class MarketAtomTask : ITask() {
                 atomFilePath = atomFilePath,
                 publicFlag = publicFlag,
                 atomCreateTime = atomCreateTime,
-                file = file
+                file = file,
+                isVmBuildEnv = isVmBuildEnv
             )
             return file
         } catch (t: Throwable) {

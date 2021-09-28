@@ -196,6 +196,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         publicFlag: Boolean,
         atomCreateTime: Long,
         file: File,
+        isVmBuildEnv: Boolean
     ) {
         val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
             URLEncoder.encode(
