@@ -278,6 +278,7 @@ open class MarketAtomTask : ITask() {
             // 下载atom执行文件
             LoggerService.addFoldStartLine("[Install plugin]")
             atomExecuteFile = downloadAtomExecuteFile(
+                projectId = buildVariables.projectId,
                 atomFilePath = atomData.pkgPath!!,
                 publicFlag = atomData.publicFlag,
                 atomCreateTime = atomData.createTime,
@@ -864,6 +865,7 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun downloadAtomExecuteFile(
+        projectId: String,
         atomFilePath: String,
         publicFlag: Boolean,
         atomCreateTime: Long,
@@ -879,6 +881,7 @@ open class MarketAtomTask : ITask() {
                 File(workspace, atomFilePath)
             }
             atomApi.downloadAtom(
+                projectId = projectId,
                 atomFilePath = atomFilePath,
                 publicFlag = publicFlag,
                 atomCreateTime = atomCreateTime,
