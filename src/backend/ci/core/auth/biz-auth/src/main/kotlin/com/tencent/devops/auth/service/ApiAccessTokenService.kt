@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("MagicNumber")
 class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
@@ -89,13 +90,13 @@ class ApiAccessTokenService @Autowired constructor(
         }
         val tokenInfo = TokenInfo(
             userId = userDetails,
-            expirationTime = System.currentTimeMillis() + (expirationTime ?: 14400000),
+            expirationTime = System.currentTimeMillis() + (expirationTime ?: EXPIRE_TIME_MILLS),
             accessToken = null
         )
         tokenInfo.accessToken = try {
             URLEncoder.encode(AESUtil.encrypt(
                 secret,
-                JsonUtil.toUnformattedJson(tokenInfo)
+                JsonUtil.toJson(tokenInfo, formatted = false)
             ), "UTF-8")
         } catch (ignore: Throwable) {
             logger.error("AUTH| generateUserToken failed because $ignore ")
@@ -139,6 +140,7 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     companion object {
+        private const val EXPIRE_TIME_MILLS: Int = 14400000
         private val logger = LoggerFactory.getLogger(ApiAccessTokenService::class.java)
     }
 }

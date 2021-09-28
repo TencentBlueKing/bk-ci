@@ -181,7 +181,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 storeFlag = false
             )
 
@@ -433,7 +433,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = versionName,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 type = latestTemplate.type,
                 category = latestTemplate.category,
                 logoUrl = latestTemplate.logoUrl,
@@ -1969,7 +1969,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("the userId is:$userId,addMarketTemplateRequest is:$addMarketTemplateRequest")
         val templateCode = addMarketTemplateRequest.templateCode
         val publicFlag = addMarketTemplateRequest.publicFlag // 是否为公共模板
-        val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>())
+        val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>(), false)
         val projectCodeList = addMarketTemplateRequest.projectCodeList
         // 校验安装的模板是否合法
         if (!publicFlag && redisOperation.get("checkInstallTemplateModelSwitch")?.toBoolean() != false) {
@@ -2038,16 +2038,16 @@ class TemplateFacadeService @Autowired constructor(
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         logger.info("the userId is:$userId,updateMarketTemplateReference Request is:$updateMarketTemplateRequest")
         val templateCode = updateMarketTemplateRequest.templateCode
-        val category = JsonUtil.toJson(updateMarketTemplateRequest.categoryCodeList ?: listOf<String>())
+        val category = JsonUtil.toJson(updateMarketTemplateRequest.categoryCodeList ?: listOf<String>(), false)
         val referenceList = templateDao.listTemplateReference(dslContext, templateCode).map { it["ID"] as String }
         if (referenceList.isNotEmpty()) {
             pipelineSettingDao.updateSettingName(dslContext, referenceList, updateMarketTemplateRequest.templateName)
             templateDao.updateTemplateReference(
-                dslContext,
-                templateCode,
-                updateMarketTemplateRequest.templateName,
-                category,
-                updateMarketTemplateRequest.logoUrl
+                dslContext = dslContext,
+                srcTemplateId = templateCode,
+                name = updateMarketTemplateRequest.templateName,
+                category = category,
+                logoUrl = updateMarketTemplateRequest.logoUrl
             )
         }
         return com.tencent.devops.common.api.pojo.Result(true)
