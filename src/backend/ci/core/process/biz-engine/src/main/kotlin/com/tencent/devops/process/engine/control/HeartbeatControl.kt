@@ -77,6 +77,7 @@ class HeartbeatControl @Autowired constructor(
         }
     }
 
+    @Suppress("ReturnCount")
     private fun timeout(event: PipelineContainerAgentHeartBeatEvent, elapse: Long) {
         val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
@@ -100,8 +101,7 @@ class HeartbeatControl @Autowired constructor(
 
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask =
-            pipelineRuntimeService.getRunningTask(projectId = container.projectId, buildId = container.buildId)
+        val runningTask = pipelineRuntimeService.getRunningTask(container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true

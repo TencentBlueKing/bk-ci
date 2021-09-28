@@ -37,7 +37,7 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
@@ -154,7 +154,17 @@ class QualityIndicatorService @Autowired constructor(
                 QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
             }
             convertRecord(indicator, metadata)
-        }?.toList() ?: listOf()
+        } ?: listOf()
+    }
+
+    fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        return indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
+            val metadataIds = convertMetaIds(indicator.metadataIds)
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
+            convertRecord(indicator, metadata)
+        } ?: listOf()
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {
@@ -335,7 +345,7 @@ class QualityIndicatorService @Autowired constructor(
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc,
+                    desc = indicator.desc ?: "",
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 

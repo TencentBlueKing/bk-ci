@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -44,6 +45,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     override fun getInitLogs(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -57,6 +59,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
                 "elementId[$elementId] jobId[$jobId] executeCount[$executeCount] debug[$debug] jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -70,6 +73,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     override fun getMoreLogs(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -87,6 +91,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
                 "executeCount[$executeCount]fromStart[$fromStart]start[$start]end[$end]tag[$tag]jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -104,6 +109,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     override fun getAfterLogs(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -119,6 +125,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
                 "start[$start]tag[$tag]jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -133,6 +140,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     override fun downloadLogs(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -145,6 +153,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
                 "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).downloadLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -154,7 +163,31 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun getLogMode(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String,
+        executeCount: Int?
+    ): Result<QueryLogStatus> {
+        logger.info(
+            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
+                "executeCount[$executeCount] tag[$tag]"
+        )
+        return client.get(ServiceLogResource::class).getLogMode(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            executeCount = executeCount
+        )
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwLogResourceV3Impl::class.java)
     }
 }

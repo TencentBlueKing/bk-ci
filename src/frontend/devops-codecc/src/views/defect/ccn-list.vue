@@ -129,7 +129,7 @@
                                     </bk-select>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-if="isSearchDropdown || lineAverageOpt >= 6">
+                            <!-- <div class="cc-col" v-if="isSearchDropdown || lineAverageOpt >= 6">
                                 <bk-form-item :label="$t('函数类型')">
                                     <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
                                         <bk-checkbox :value="1">{{$t('新函数')}}(<em class="count">{{newDefectCount}}</em>)</bk-checkbox>
@@ -145,7 +145,7 @@
                                         </bk-popover>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </div>
+                            </div> -->
                             <div class="cc-col-2" v-if="isSearchDropdown || lineAverageOpt >= 7">
                                 <bk-form-item :label="$t('风险级别')">
                                     <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
@@ -1547,7 +1547,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
                 }

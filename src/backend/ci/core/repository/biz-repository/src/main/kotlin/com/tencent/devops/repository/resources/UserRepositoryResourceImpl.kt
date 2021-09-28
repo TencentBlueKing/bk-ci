@@ -123,21 +123,6 @@ class UserRepositoryResourceImpl @Autowired constructor(
         repositoryHashId: String,
         repository: Repository
     ): Result<Boolean> {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (repositoryHashId.isBlank()) {
-            throw ParamBlankException("Invalid repositoryHashId")
-        }
-        if (repository.aliasName.isBlank()) {
-            throw ParamBlankException("Invalid repository aliasName")
-        }
-        if (repository.url.isBlank()) {
-            throw ParamBlankException("Invalid repository url")
-        }
         repositoryService.userEdit(userId, projectId, repositoryHashId, repository)
         return Result(true)
     }

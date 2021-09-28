@@ -35,6 +35,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
@@ -201,9 +202,9 @@ class TaskAtomService @Autowired(required = false) constructor(
     }
 
     /**
-     * 尝试结束插件任务[task], [force]表示是强制结束，如果为false则表示尝试探测是否结束，但不会做强制结束
+     * 尝试结束插件任务[task], actionType为TERMINATE表示是强制结束，如果为其它值则表示尝试探测是否结束，但不会做强制结束
      */
-    fun tryFinish(task: PipelineBuildTask, force: Boolean): AtomResponse {
+    fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
         val startTime = System.currentTimeMillis()
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
@@ -211,8 +212,10 @@ class TaskAtomService @Autowired(required = false) constructor(
             val runVariables = buildVariableService.getAllVariable(task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
-            atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, force = force)
-            log(atomResponse, task, force)
+            atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)
+            val runCondition = task.additionalOptions?.runCondition
+            val stopFlag = actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            log(atomResponse, task, stopFlag)
         } catch (t: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -241,7 +244,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         return atomResponse
     }
 
-    private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, force: Boolean) {
+    private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
         if (atomResponse.buildStatus.isFinish()) {
             buildLogPrinter.addLine(
                 buildId = task.buildId,
@@ -251,7 +254,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 executeCount = task.executeCount ?: 1
             )
         } else {
-            if (force) {
+            if (stopFlag) {
                 buildLogPrinter.addLine(
                     buildId = task.buildId,
                     message = "Try to Stop Task [${task.taskName}]...",

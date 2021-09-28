@@ -79,6 +79,9 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
                 convertTarget = "$executePath$target"
             }
         }
+        if (!postEntryParam.isNullOrBlank()) {
+            convertTarget = "$target --post-action=$postEntryParam"
+        }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
     }

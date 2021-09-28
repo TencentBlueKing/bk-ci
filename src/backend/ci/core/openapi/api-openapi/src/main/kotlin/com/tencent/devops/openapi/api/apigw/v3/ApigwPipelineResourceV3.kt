@@ -36,10 +36,11 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.PipelineWithModel
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import io.swagger.annotations.Api
@@ -195,6 +196,23 @@ interface ApigwPipelineResourceV3 {
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
     ): Result<List<PipelineWithModel>>
+
+    @ApiOperation("复制流水线编排")
+    @POST
+    @Path("/{pipelineId}/copy")
+    fun copy(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线COPY", required = true)
+        pipeline: PipelineCopy
+    ): Result<PipelineId>
 
     @ApiOperation("删除流水线编排")
     @DELETE

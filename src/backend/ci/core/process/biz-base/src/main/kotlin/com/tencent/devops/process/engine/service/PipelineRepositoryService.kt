@@ -189,6 +189,8 @@ class PipelineRepositoryService constructor(
         val containerSeqId = AtomicInteger(0)
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
+            // #4531 对存量的stage审核数据做兼容处理
+            s.refreshReviewOption(true)
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,
@@ -492,7 +494,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )
@@ -600,7 +602,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )
@@ -683,7 +685,7 @@ class PipelineRepositoryService constructor(
                 templatePipelineDao.delete(transactionContext, pipelineId)
             } else {
                 // 删除前改名，防止名称占用
-                val deleteTime = LocalDateTime.now().toString("yyyyMMddHHmm")
+                val deleteTime = LocalDateTime.now().toString("yyMMddHHmmSS")
                 var deleteName = "${record.pipelineName}[$deleteTime]"
                 if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
                     deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)

@@ -1,7 +1,7 @@
 <template>
     <div style="text-align: left">
         <form class="bk-form" action="http://localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
-            <form-field v-for="(param, index) in paramList"
+            <form-field v-for="param in paramList"
                 :key="param.id" :required="param.required"
                 :is-error="errors.has('devops' + param.name)"
                 :error-msg="errors.first('devops' + param.name)"
@@ -10,11 +10,6 @@
             >
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
-                    <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
-                        <aside class="metadata-box">
-                            <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
-                        </aside>
-                    </span>
                     <div class="file-upload" v-if="showFileUploader(param.type)">
                         <file-param-input :file-path="param.value"></file-param-input>
                     </div>
@@ -42,7 +37,6 @@
         isGitParam,
         isCodelibParam,
         isFileParam,
-        isArtifactoryParam,
         ParamComponentMap,
         STRING,
         BOOLEAN,
@@ -99,24 +93,26 @@
                         }
                     }
 
-                    if (isMultipleParam(param.type)) { // 去除不在选项里面的值
-                        const mdv = this.getMultiSelectorValue(this.paramValues[param.id], param.options.map(v => v.key))
-                        const mdvStr = mdv.join(',')
-                        // debugger
-                        Object.assign(restParam, {
-                            multiSelect: true,
-                            value: mdv
-                        })
-
-                        if (this.paramValues[param.id] !== mdvStr) {
-                            this.handleParamChange(param.id, mdvStr)
-                        }
-                    } else if (isEnumParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isCodelibParam(param.type)) { // 若默认值不在选项里，清除对应的默认值
-                        if (this.paramValues[param.id] && !param.options.find(opt => opt.key === this.paramValues[param.id])) {
-                            this.handleParamChange(param.id, '')
+                    if (!param.searchUrl) {
+                        if (isMultipleParam(param.type)) { // 去除不在选项里面的值
+                            const mdv = this.getMultiSelectorValue(this.paramValues[param.id], param.options.map(v => v.key))
+                            const mdvStr = mdv.join(',')
+                            // debugger
                             Object.assign(restParam, {
-                                value: ''
+                                multiSelect: true,
+                                value: mdv
                             })
+
+                            if (this.paramValues[param.id] !== mdvStr) {
+                                this.handleParamChange(param.id, mdvStr)
+                            }
+                        } else if (isEnumParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isCodelibParam(param.type)) { // 若默认值不在选项里，清除对应的默认值
+                            if (this.paramValues[param.id] && !param.options.find(opt => opt.key === this.paramValues[param.id])) {
+                                this.handleParamChange(param.id, '')
+                                Object.assign(restParam, {
+                                    value: ''
+                                })
+                            }
                         }
                     }
                     return {
@@ -169,9 +165,6 @@
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
                 this.handleParamChange(param.name, value)
-            },
-            showMetadata (type, value) {
-                return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1

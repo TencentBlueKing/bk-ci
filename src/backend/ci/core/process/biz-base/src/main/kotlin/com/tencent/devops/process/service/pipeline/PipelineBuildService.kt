@@ -255,13 +255,20 @@ class PipelineBuildService(
                     key = PIPELINE_BUILD_MSG
                 ), startType = startType, channelCode = channelCode
             )
+            // 增加对containsKey(PIPELINE_NAME)的逻辑判断,如果有传值，默认使用。
             val paramsWithType = startParamsList.asSequence().plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
                 .plus(BuildParameters(PIPELINE_START_CHANNEL, channelCode.name))
                 .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
-                .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
+                .plus(
+                    if (startValues?.containsKey(PIPELINE_NAME) == true) {
+                        BuildParameters(PIPELINE_NAME, startValues[PIPELINE_NAME].toString())
+                    } else {
+                        BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName)
+                    }
+                )
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
                 .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
@@ -285,7 +292,7 @@ class PipelineBuildService(
                     buildId = buildId,
                     param = JsonUtil.toJson(startParams.filter {
                         realStartParamKeys.contains(it.key) || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG
-                    })
+                    }, formatted = false)
                 )
             }
             // 构建过程中可获取构建启动参数 #2800
@@ -403,6 +410,10 @@ class PipelineBuildService(
                         startValues = startValues,
                         finallyStage = stage.finally
                     )
+                }
+                if (finalElementList.size > originalElementList.size) {
+                    // 最终生成的元素集合比原元素集合数量多，则说明包含post任务
+                    container.containPostTaskFlag = true
                 }
                 container.elements = finalElementList
             }

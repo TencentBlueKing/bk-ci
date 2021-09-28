@@ -98,7 +98,8 @@ auth:
   appSecret: __BK_CI_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
-
+  # 用户组权限申请前端跳转页面HOST
+  webHost: __BK_CI_IAM_WEB_URL__
 
 #bk esb config for cd plugin in pipeline
 esb:
@@ -137,3 +138,17 @@ bkci:
     
 process:
   deletedPipelineStoreDays: 30    
+
+net:
+  proxy:
+    # 是否开启，设置为 true 才生效
+    enable: false
+    # 需要代理的hosts，多个使用","隔开，支持正则表达式
+    hosts: ".*google.*"
+    server:
+      # 代理服务器类型，可 HTTP, SOCKS
+      type: "HTTP"
+      # 代理服务器主机，host 或者 ip
+      host: 127.0.0.1
+      # 代理服务器端口
+      port: 8080

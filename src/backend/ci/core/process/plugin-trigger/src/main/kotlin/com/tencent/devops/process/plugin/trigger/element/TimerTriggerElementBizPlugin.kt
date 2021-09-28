@@ -28,7 +28,6 @@
 package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -68,15 +67,14 @@ class TimerTriggerElementBizPlugin constructor(
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
         if (element.isElementEnable()) {
 
-            val eConvertExpressions = element.convertExpressions()
+            val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {
                 throw ErrorCodeException(
                     defaultMessage = "定时触发器的定时参数不合法",
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
             }
-            eConvertExpressions.forEach { eCron ->
-                val cron = EnvUtils.parseEnv(command = eCron, data = params)
+            eConvertExpressions.forEach { cron ->
                 if (!CronExpression.isValidExpression(cron)) {
                     throw ErrorCodeException(
                         defaultMessage = "定时触发器的定时参数[$cron]不合法",

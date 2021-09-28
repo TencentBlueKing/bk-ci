@@ -44,7 +44,6 @@ import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 
 class BluekingV3AuthProjectApi constructor(
-    private val bkAuthPermissionApi: BluekingV3AuthPermissionApi,
     private val policyService: PolicyService,
     private val authHelper: AuthHelper,
     private val iamConfiguration: IamConfiguration,
@@ -160,6 +159,6 @@ class BluekingV3AuthProjectApi constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(BluekingV3AuthProjectApi::class.java)
     }
 }

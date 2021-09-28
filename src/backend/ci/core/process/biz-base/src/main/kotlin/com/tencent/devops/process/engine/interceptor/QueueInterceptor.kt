@@ -46,7 +46,8 @@ import org.springframework.stereotype.Component
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
  * @version 1.0
  */
-@Component@Suppress("ALL")
+@Component
+@Suppress("ALL")
 class QueueInterceptor @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -75,7 +76,11 @@ class QueueInterceptor @Autowired constructor(
                 Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
                 // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
-                val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId, pipelineId)
+                val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildStatus = BuildStatus.UNEXEC
+                )
                 if (buildInfo != null) {
                     buildLogPrinter.addRedLine(
                         buildId = buildInfo.buildId,

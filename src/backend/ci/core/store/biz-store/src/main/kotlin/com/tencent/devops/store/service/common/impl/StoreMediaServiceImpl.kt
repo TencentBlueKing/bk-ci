@@ -111,6 +111,6 @@ class StoreMediaServiceImpl : StoreMediaService {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StoreMediaServiceImpl::class.java)
     }
 }
