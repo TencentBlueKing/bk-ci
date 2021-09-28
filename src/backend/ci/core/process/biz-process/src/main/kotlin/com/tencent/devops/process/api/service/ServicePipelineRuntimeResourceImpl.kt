@@ -59,7 +59,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactListJsonString = JsonUtil.toJson(artifactoryFileList)
+            artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false)
         )
         if (success) {
 
