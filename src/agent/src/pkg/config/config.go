@@ -55,6 +55,7 @@ const (
 	ConfigKeyEnvType           = "landun.env"
 	ConfigKeySlaveUser         = "devops.slave.user"
 	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
+	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 )
 
 type AgentConfig struct {
@@ -68,6 +69,7 @@ type AgentConfig struct {
 	EnvType           string
 	SlaveUser         string
 	CollectorOn       bool
+	TimeoutSec        int64
 }
 
 type AgentEnv struct {
@@ -85,6 +87,7 @@ var GIsAgentUpgrading = false
 var GWorkDir string
 var GEnvVars map[string]string
 var UseCert bool
+
 func Init() {
 	err := LoadAgentConfig()
 	if err != nil {
@@ -224,6 +227,10 @@ func LoadAgentConfig() error {
 	if err != nil {
 		collectorOn = true
 	}
+	timeout, err := conf.Int64(ConfigKeyRequestTimeoutSec)
+	if err != nil {
+		timeout = 30
+	}
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
@@ -246,7 +253,10 @@ func LoadAgentConfig() error {
 	logs.Info("SlaveUser: ", GAgentConfig.SlaveUser)
 	GAgentConfig.CollectorOn = collectorOn
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
-	return nil
+	GAgentConfig.TimeoutSec = timeout
+	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
+	return GAgentConfig.SaveConfig()
 }
 
 func (a *AgentConfig) SaveConfig() error {
@@ -262,6 +272,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyTaskCount + "=" + strconv.Itoa(GAgentConfig.ParallelTaskCount) + "\n")
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
+	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {

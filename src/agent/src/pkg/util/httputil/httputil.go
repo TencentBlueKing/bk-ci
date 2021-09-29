@@ -28,14 +28,17 @@ package httputil
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
+	"time"
 )
 
 type HttpClient struct {
@@ -154,7 +157,9 @@ func (r *HttpClient) Execute() *HttpResult {
 		value.Add(k, v)
 	}
 	req.Form = value
-
+	withTimeout, cancel := context.WithTimeout(context.TODO(), time.Duration(config.GAgentConfig.TimeoutSec)*time.Second)
+	defer cancel()
+	req.WithContext(withTimeout)
 	resp, err := r.client.Do(req)
 	if err != nil {
 		result.Error = err
