@@ -35,6 +35,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
 
+@Suppress("NestedBlockDepth")
 abstract class ITask {
 
     private val environment = HashMap<String, String>()
@@ -53,26 +54,11 @@ abstract class ITask {
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
                 if (variables != null) {
-                    additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
-                        variables[it.key!!] = it.value ?: ""
+                    additionalOptions.customEnv!!.forEach {
+                        if (!it.key.isNullOrBlank()) variables[it.key!!] = it.value ?: ""
                     }
+                    return execute(buildTask.copy(buildVariable = variables), buildVariables, workspace)
                 }
-                return execute(
-                    BuildTask(
-                        buildId = buildTask.buildId,
-                        vmSeqId = buildTask.vmSeqId,
-                        status = buildTask.status,
-                        taskId = buildTask.taskId,
-                        elementId = buildTask.elementId,
-                        elementName = buildTask.elementName,
-                        type = buildTask.type,
-                        params = buildTask.params,
-                        buildVariable = variables,
-                        containerType = buildTask.containerType
-                    ),
-                    buildVariables,
-                    workspace
-                )
             }
         }
         execute(buildTask, buildVariables, workspace)

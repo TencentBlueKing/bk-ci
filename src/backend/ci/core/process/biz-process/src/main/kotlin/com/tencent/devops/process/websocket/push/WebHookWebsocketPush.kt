@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.websocket.push
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
@@ -46,10 +45,15 @@ data class WebHookWebsocketPush(
     override val userId: String,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,
-    override val objectMapper: ObjectMapper,
     override var page: String?,
     override var notifyPost: NotifyPost
-) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+) : WebsocketPush(
+    userId = userId,
+    pushType = pushType,
+    redisOperation = redisOperation,
+    page = page,
+    notifyPost = notifyPost
+) {
 
     override fun findSession(page: String): List<String>? {
         return super.findSession(page)

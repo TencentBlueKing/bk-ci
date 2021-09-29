@@ -235,7 +235,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         buildId: String,
         artifactoryType: ArtifactoryType,
         customFilePath: String?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         val filePath = generateDestPath(
             fileType = artifactoryType.toFileType(),
@@ -246,13 +247,14 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         )
         return getFileDownloadUrls(filePath = "$projectId/${BkRepoUtils.getRepoName(artifactoryType)}/$filePath",
             artifactoryType = artifactoryType,
-            fileChannelType = fileChannelType)
+            fileChannelType = fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
         filePath: String,
         artifactoryType: ArtifactoryType,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         logger.info("getFileDownloadUrls, filePath: $filePath, artifactoryType, $artifactoryType, " +
             "fileChannelType, $fileChannelType")
@@ -272,7 +274,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             page = 1,
             pageSize = DOWNLOAD_FILE_URL_LIMIT
         ).map {
-            generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}")
+            generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}", fullUrl)
         }
         if (fileUrls.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))

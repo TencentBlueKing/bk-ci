@@ -30,7 +30,11 @@ package com.tencent.devops.common.util
 @Suppress("MagicNumber", "ReturnCount")
 object RegexUtils {
 
-    private val httpContextPathRegex = Regex("(http[s]?:)(//)([-.a-z0-9A-Z]+)(/.*)")
+    private const val line = 2
+    private const val domain = 3
+    private const val liPort = 4
+    private const val context = 5
+    private val httpContextPathRegex = Regex("(http[s]?:)(//)([-.a-z0-9A-Z]+)(:\\d+)?(/.*)")
 
     /**
      * 解析 [url], 并且返回 域名(xx.xx.xx or xx.xx.xx) 以及 ContextPath绝对路径(/ or /xx/yy...)
@@ -39,20 +43,24 @@ object RegexUtils {
      */
     fun splitDomainContextPath(url: String): Pair<String/*http domain*/, String/*context path*/>? {
         val groups = httpContextPathRegex.find(url)?.groups
-        if (groups != null && groups.size == 5) {
-            return groups[3]!!.value to groups[4]!!.value
+        if (groups != null && groups.size == 6) {
+            return groups[domain]!!.value to groups[context]!!.value
         }
         return null
     }
 
     /**
-     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx/a/b/c 返回 //xx.xx.xx/a/b/c 表示遵守当前主站的协议
+     * 解析[url] 将协议头去掉， 比如 https://xx.xx.xx:1234/a/b/c 返回 //xx.xx.xx:1234/a/b/c 表示遵守当前主站的协议
      */
     fun trimProtocol(url: String?): String? {
         if (url.isNullOrBlank()) {
             return url
         }
         val groups = httpContextPathRegex.find(url)?.groups ?: return url
-        return groups[2]!!.value + groups[3]!!.value + groups[4]!!.value
+        return if (groups.size == 6) {
+            groups[line]!!.value + groups[domain]!!.value + (groups[liPort]?.value ?: "") + groups[context]!!.value
+        } else {
+            url
+        }
     }
 }

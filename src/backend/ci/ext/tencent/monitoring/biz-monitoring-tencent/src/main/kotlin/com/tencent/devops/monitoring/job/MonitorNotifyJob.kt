@@ -470,7 +470,6 @@ class MonitorNotifyJob @Autowired constructor(
                 "process",
                 "dispatch",
                 "openapi",
-                "artifactory",
                 "websocket",
                 "store",
                 "log",
