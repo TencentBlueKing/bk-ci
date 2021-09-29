@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.v2.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
@@ -242,7 +243,7 @@ class GitCIBasicSettingDao {
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
                     lastCiInfo = if (hasLastInfo) {
-                        JsonUtil.to<CIInfo>(conf.lastCiInfo)
+                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
                     } else {
                         null
                     }

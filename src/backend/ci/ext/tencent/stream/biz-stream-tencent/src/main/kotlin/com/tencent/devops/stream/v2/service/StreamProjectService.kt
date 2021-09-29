@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.v2.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
@@ -116,7 +117,7 @@ class StreamProjectService @Autowired constructor(
                     lastBuildMessage = null
                 )
             } else {
-                JsonUtil.to(project.lastCiInfo)
+                JsonUtil.to(project.lastCiInfo, object : TypeReference<CIInfo>() {})
             }
             ProjectCIInfo(
                 id = it.id!!,
@@ -183,7 +184,7 @@ class StreamProjectService @Autowired constructor(
                 webUrl = it.homePage,
                 avatarUrl = it.gitProjectAvatar,
                 description = it.gitProjectDesc,
-                ciInfo = JsonUtil.to(it.lastCiInfo)
+                ciInfo = JsonUtil.to(it.lastCiInfo, object : TypeReference<CIInfo>() {})
             )
         }
     }
