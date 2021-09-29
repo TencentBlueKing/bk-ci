@@ -8,12 +8,14 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
+import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 @Component
@@ -53,7 +55,10 @@ class TXDockerHostImageScanService(
                     val inputStream = longDockerClient.saveImageCmd(it.substringBeforeLast(":"))
                         .withTag(it.substringAfterLast(":"))
                         .exec()
-                    val imageSavedPath = "$dockerSavedPath/${it.substringBeforeLast(":")}.tar"
+
+                    val uniqueImageCode = toHexStr(MessageDigest.getInstance("SHA-1")
+                        .digest(it.toByteArray()))
+                    val imageSavedPath = "$dockerSavedPath/$uniqueImageCode.tar"
                     val targetSavedImagesFile = File(imageSavedPath)
                     FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
 
@@ -66,6 +71,7 @@ class TXDockerHostImageScanService(
                             "image name and tag: $it")
                     try {
                         longDockerClient.removeImageCmd(it).exec()
+                        File(imageSavedPath).deleteOnExit()
                         logger.info("[$buildId]|[$vmSeqId] Remove local image success")
                     } catch (e: Throwable) {
                         logger.error("[$buildId]|[$vmSeqId] Docker remove image failed, msg: ${e.message}")
@@ -82,6 +88,17 @@ class TXDockerHostImageScanService(
             }
         }
     }
+
+    fun toHexStr(byteArray: ByteArray) =
+        with(StringBuilder()) {
+            byteArray.forEach {
+                val hex = it.toInt() and (0xFF)
+                val hexStr = Integer.toHexString(hex)
+                if (hexStr.length == 1) append("0").append(hexStr)
+                else append(hexStr)
+            }
+            toString()
+        }
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXDockerHostImageScanService::class.java)
