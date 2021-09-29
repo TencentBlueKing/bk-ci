@@ -94,7 +94,8 @@ class ScheduleTriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = buildBranch
         )
 
         // 流水线未启用在定时什么都不管，不触发不提醒
@@ -159,7 +160,9 @@ class ScheduleTriggerService @Autowired constructor(
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
-            pipelineName = buildPipeline.displayName
+            pipelineName = buildPipeline.displayName,
+            event = null,
+            changeSet = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(

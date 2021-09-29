@@ -99,8 +99,11 @@ class YamlTriggerV2 @Autowired constructor(
             return false
         }
 
-        val gitProjectInfo =
-            scmService.getProjectInfoRetry(gitToken.accessToken, gitRequestEvent.gitProjectId.toString())
+        val gitProjectInfo = scmService.getProjectInfoRetry(
+            gitToken.accessToken,
+            gitRequestEvent.gitProjectId.toString(),
+            useAccessToken = true
+        )
 
         val (isTrigger, isTiming) = triggerMatcher.isMatch(
             event = event,

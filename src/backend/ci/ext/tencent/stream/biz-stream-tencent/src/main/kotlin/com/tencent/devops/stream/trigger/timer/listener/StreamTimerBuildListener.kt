@@ -80,7 +80,8 @@ class StreamTimerBuildListener @Autowired constructor(
                     listOf(
                         scmService.getProjectInfoRetry(
                             token = token.accessToken,
-                            gitProjectId = event.gitProjectId.toString()
+                            gitProjectId = event.gitProjectId.toString(),
+                            useAccessToken = true
                         ).defaultBranch!!
                     )
                 } else {
