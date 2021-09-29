@@ -82,7 +82,7 @@ interface UserGitCIProjectResource {
 
     @ApiOperation("获取用户最近访问的项目")
     @GET
-    @Path("/{type}/list/history")
+    @Path("/history")
     fun getProjectsHistory(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
