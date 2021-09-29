@@ -184,7 +184,11 @@ class StreamProjectService @Autowired constructor(
                 webUrl = it.homePage,
                 avatarUrl = it.gitProjectAvatar,
                 description = it.gitProjectDesc,
-                ciInfo = JsonUtil.to(it.lastCiInfo, object : TypeReference<CIInfo>() {})
+                ciInfo = if (it.lastCiInfo == null) {
+                    null
+                } else {
+                    JsonUtil.to(it.lastCiInfo, object : TypeReference<CIInfo>() {})
+                }
             )
         }
     }

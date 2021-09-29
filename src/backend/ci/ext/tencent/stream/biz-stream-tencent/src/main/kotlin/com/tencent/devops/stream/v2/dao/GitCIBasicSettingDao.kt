@@ -242,7 +242,7 @@ class GitCIBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName,
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
-                    lastCiInfo = if (hasLastInfo) {
+                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
                         JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
                     } else {
                         null
