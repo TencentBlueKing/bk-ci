@@ -156,7 +156,7 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathHosts}")
     var hostPathHosts: String? = null
 
-    @Value("\${dockerCli.hostPathOverlayfsCache}")
+    @Value("\${dockerCli.hostPathOverlayfsCache:#{null}}")
     var hostPathOverlayfsCache: String? = "/data/overlayfscache"
 
     @Value("\${dockerCli.shareProjectCodeWhiteList}")
