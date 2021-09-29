@@ -57,6 +57,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_COMMIT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_RESTRICT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
@@ -106,6 +108,16 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID] = event.reviewableId ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE] = event.reviewableType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_RESTRICT_TYPE] = event.restrictType ?: ""
+        val approvingReviews = mutableListOf<String>()
+        val approvedReviews = mutableListOf<String>()
+        event.reviewers.forEach { reviewer ->
+            when (reviewer.state) {
+                "approving" -> approvingReviews.add(reviewer.reviewer.username)
+                "approved" -> approvedReviews.add(reviewer.reviewer.username)
+            }
+        }
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = approvingReviews.joinToString(",")
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS] = approvedReviews.joinToString(",")
         if (event.reviewableType == "merge_request" && event.reviewableId != null) {
             startParams.putAll(
                 mrStartParam(
