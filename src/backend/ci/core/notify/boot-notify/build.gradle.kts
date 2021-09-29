@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":core:notify:biz-notify"))
-    api(project(":core:notify:biz-notify-blueking"))
+    api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
+    implementation(project(":core:notify:biz-notify-wework")) // 对接企业微信实现
 }
-
-
