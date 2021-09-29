@@ -31,6 +31,7 @@ class TXDockerHostImageScanService(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
     ) {
@@ -63,7 +64,7 @@ class TXDockerHostImageScanService(
                     FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
 
                     val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
-                            "-T $projectId -b $buildId -n sawyersong"
+                            "-T $projectId -b $buildId -n $userName"
                     val scanResult = ShellUtil.executeEnhance(script)
                     logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
 
