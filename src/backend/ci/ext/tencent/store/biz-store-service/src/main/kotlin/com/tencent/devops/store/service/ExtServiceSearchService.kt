@@ -34,7 +34,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceInfoResource
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
@@ -44,6 +43,7 @@ import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
@@ -63,7 +63,7 @@ class ExtServiceSearchService @Autowired constructor(
     val storeVisibleDeptService: StoreVisibleDeptService,
     val storeMemberService: TxExtServiceMemberImpl,
     val classifyService: ClassifyService,
-    val storeStatisticDao: StoreStatisticDao,
+    val storeCommonService: StoreCommonService,
     val storeTotalStatisticService: StoreTotalStatisticService
 ) {
 
@@ -246,7 +246,7 @@ class ExtServiceSearchService @Autowired constructor(
             val statistic = statisticData[serviceCode]
             val publicFlag = it["PUBLIC_FLAG"] as Boolean
             val members = memberData?.get(serviceCode)
-            val flag = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
+            val flag = storeCommonService.generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
             val classifyId = it["CLASSIFY_ID"] as String
             results.add(
                 ExtServiceItem(
@@ -268,21 +268,6 @@ class ExtServiceSearchService @Autowired constructor(
             )
         }
         return SearchExtServiceVO(count, page, pageSize, results)
-    }
-
-    fun generateInstallFlag(
-        publicFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        logger.info("generateInstallFlag publicFlag is: $publicFlag visibleList is:$visibleList,userDeptList is:$userDeptList members is:$members,userId is:$userId")
-        return if (publicFlag || (members != null && members.contains(userId))) {
-            true
-        } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
-        }
     }
 
     companion object {

@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
@@ -45,9 +46,9 @@ import org.springframework.stereotype.Repository
 @Repository
 class AtomLabelRelDao {
 
-    fun getLabelsByAtomId(
+    fun getLabelsByAtomIds(
         dslContext: DSLContext,
-        atomId: String
+        atomIds: Set<String>
     ): Result<out Record>? {
         val a = TLabel.T_LABEL.`as`("a")
         val b = TAtomLabelRel.T_ATOM_LABEL_REL.`as`("b")
@@ -57,9 +58,10 @@ class AtomLabelRelDao {
             a.LABEL_NAME.`as`(KEY_LABEL_NAME),
             a.TYPE.`as`(KEY_LABEL_TYPE),
             a.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            b.ATOM_ID.`as`(KEY_ID)
         ).from(a).join(b).on(a.ID.eq(b.LABEL_ID))
-            .where(b.ATOM_ID.eq(atomId))
+            .where(b.ATOM_ID.`in`(atomIds))
             .fetch()
     }
 

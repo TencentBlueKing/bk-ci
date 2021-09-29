@@ -27,42 +27,35 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-/**
- * store用户通用业务逻辑类
- *
- * since: 2019-03-26
- */
 @Service
-class SampleStoreUserServiceImpl : StoreUserService {
+class TxStoreCommonServiceImpl : StoreCommonServiceImpl() {
 
-    /**
-     * 获取用户机构ID信息
-     */
-    override fun getUserDeptList(userId: String): List<Int> {
-        return listOf() // 开源版用户暂无机构信息
-    }
+    @Autowired
+    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
 
-    /**
-     * 获取用户机构名称
-     */
-    override fun getUserFullDeptName(userId: String): Result<String?> {
-        return Result(data = "") // 开源版用户暂无机构信息
-    }
-
-    /**
-     * 判断用户是否能安装store组件
-     */
-    override fun isCanInstallStoreComponent(
+    override fun generateInstallFlag(
         defaultFlag: Boolean,
+        members: MutableList<String>?,
         userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
     ): Boolean {
-        return true // 开源版默认都有安装权限
+        return if (defaultFlag || (members != null && members.contains(userId))) {
+            true
+        } else {
+            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
+        }
+    }
+
+    override fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>? {
+        return storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data
     }
 }

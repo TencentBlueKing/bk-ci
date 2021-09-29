@@ -259,7 +259,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }.toList()
             // 获取可见范围
             val storeType = StoreTypeEnum.ATOM
-            val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
+            val atomVisibleData = storeCommonService.generateStoreVisibleData(atomCodeList, storeType)
             val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
@@ -280,7 +280,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
-                val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
+                val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                    members = members,
+                    userId = userId,
+                    visibleList = visibleList,
+                    userDeptList = userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
                 var logoUrl = it["LOGO_URL"] as? String
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
@@ -323,19 +327,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             return@Callable MarketAtomResp(count, page, pageSize, results)
         })
     }
-
-    abstract fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean
-
-    abstract fun generateAtomVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?>
 
     /**
      * 插件市场，首页
@@ -497,10 +488,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                dslContext,
-                userId,
-                it["atomCode"] as String,
-                StoreTypeEnum.ATOM
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = it["atomCode"] as String,
+                storeType = StoreTypeEnum.ATOM
             )
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
@@ -572,7 +563,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
-            val labelList = atomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
+            val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val atomEnvInfoRecord = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)

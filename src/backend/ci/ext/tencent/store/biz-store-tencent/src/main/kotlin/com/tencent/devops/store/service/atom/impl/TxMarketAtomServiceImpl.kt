@@ -33,49 +33,21 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxMarketAtomService
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
 
-    @Autowired
-    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
-
     private val logger = LoggerFactory.getLogger(TxMarketAtomServiceImpl::class.java)
-
-    override fun generateAtomVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?> {
-        logger.info("generateAtomVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
-        return Result(storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data)
-    }
-
-    override fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        return if (defaultFlag || (members != null && members.contains(userId))) {
-            true
-        } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
-        }
-    }
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
         var repositoryInfo: Repository? = null
         // 历史插件没有代码库，不需要获取代码库信息
         if (!projectCode.isNullOrEmpty() && !repositoryHashId.isNullOrEmpty()) {
             val getGitRepositoryResult =
-                client.get(ServiceRepositoryResource::class).get(projectCode!!, repositoryHashId!!, RepositoryType.ID)
+                client.get(ServiceRepositoryResource::class).get(projectCode, repositoryHashId, RepositoryType.ID)
             if (getGitRepositoryResult.isOk()) {
                 repositoryInfo = getGitRepositoryResult.data
             } else {
