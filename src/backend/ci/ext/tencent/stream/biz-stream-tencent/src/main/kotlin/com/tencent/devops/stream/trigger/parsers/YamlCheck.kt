@@ -42,11 +42,18 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.pojo.isMr
+import com.tencent.devops.stream.trigger.StreamContext
+import com.tencent.devops.stream.trigger.StreamTriggerContext
 import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
 import com.tencent.devops.stream.v2.common.CommonConst
 import io.jsonwebtoken.io.IOException
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 
 @Component
@@ -56,6 +63,14 @@ class YamlCheck @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
     }
+
+    val ciSchema = getSchemaStr("ci")
+    val templateExtendSchema = getSchemaStr("template-extends")
+    val templateStageSchema = getSchemaStr("template-stages")
+    val templateJobSchema = getSchemaStr("template-jobs")
+    val templateStepSchema = getSchemaStr("template-steps")
+    val templateVariablesSchema = getSchemaStr("template-variables")
+    val templateGateSchema = getSchemaStr("template-gates")
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     fun formatAndCheckYaml(
@@ -130,5 +145,64 @@ class YamlCheck @Autowired constructor(
         ScriptYmlUtils.checkYaml(preTemplateYamlObject, originYaml)
 
         return preTemplateYamlObject
+    }
+
+    fun checkCiYamlSchema(context: StreamTriggerContext) {
+
+    }
+
+    private fun schemaExceptionHandle(
+        context: StreamTriggerContext,
+        action: () -> Unit
+    ) {
+        try {
+            action()
+        } catch (e: Throwable) {
+            val gitRequestEvent = context.requestEvent
+            logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
+            val (block, message, reason) = when (e) {
+                is YamlFormatException, is CustomException -> {
+                    Triple(gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                }
+                is IOException, is TypeCastException -> {
+                    Triple(gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                }
+                // 指定异常直接扔出在外面统一处理
+                is TriggerBaseException, is ErrorCodeException -> {
+                    throw e
+                }
+                else -> {
+                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
+                }
+            }
+            TriggerException.triggerError(
+                request = gitRequestEvent,
+                filePath = context.pipeline.filePath,
+                reason = reason,
+                reasonParams = listOf(message ?: ""),
+                yamls = Yamls(context.originYaml, null, null),
+                version = YamlTriggerV2.ymlVersion,
+                commitCheck = CommitCheck(
+                    block = block,
+                    state = GitCICommitCheckState.FAILURE
+                )
+            )
+        }
+    }
+
+    private fun checkSchema(){
+
+    }
+
+    private final fun getSchemaStr(file: String): String {
+        val isReader = InputStreamReader(ClassPathResource("schema/$file.json").inputStream)
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        return JsonLoader.fromString(sb.toString())
     }
 }

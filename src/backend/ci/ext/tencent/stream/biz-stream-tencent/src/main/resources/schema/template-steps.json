@@ -1,0 +1,322 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "steps"
+  ],
+  "properties": {
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "(\\bstring\\b|\\bnumber\\b|\\bboolean\\b|\\barray\\b)"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          }
+        },
+        "dependencies": {
+          "values": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "pattern": "\\barray\\b"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      }
+    },
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "steps": {
+      "$ref": "#/definitions/steps"
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repositories"
+      ],
+      "properties": {
+        "repositories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "repository",
+              "name"
+            ],
+            "properties": {
+              "repository": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "personal-access-token"
+                ],
+                "properties": {
+                  "personal-access-token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "uses": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "if": {
+                "type": "string"
+              },
+              "with": {
+                "type": "object"
+              },
+              "timeout-minutes": {
+                "minimum": 1,
+                "maximum": 480,
+                "type": "integer"
+              },
+              "continue-on-error": {
+                "type": "boolean"
+              },
+              "retry-times": {
+                "minimum": 0,
+                "maximum": 180,
+                "type": "integer"
+              },
+              "env": {
+                "$ref": "#/definitions/env"
+              },
+              "run": {
+                "type": "string"
+              },
+              "checkout": {
+                "type": "string"
+              }
+            },
+            "oneOf": [
+              {
+                "not": {
+                  "properties": {
+                    "uses": {
+                      "type": "string"
+                    },
+                    "run": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "uses",
+                    "run"
+                  ]
+                },
+                "required": [
+                  "checkout"
+                ]
+              },
+              {
+                "not": {
+                  "properties": {
+                    "checkout": {
+                      "type": "string"
+                    },
+                    "uses": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "checkout",
+                    "uses"
+                  ]
+                },
+                "required": [
+                  "run"
+                ]
+              },
+              {
+                "not": {
+                  "properties": {
+                    "run": {
+                      "type": "string"
+                    },
+                    "checkout": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "run",
+                    "checkout"
+                  ]
+                },
+                "required": [
+                  "uses"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "template"
+            ],
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "parameters": {
+                "$ref": "#/definitions/inputParam"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "env": {
+      "maxProperties": 20,
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Z_]*$": {
+          "type": "string"
+        }
+      }
+    },
+    "objectTemplate": {
+      "anyOf": [
+        {
+          "type": "array",
+          "required": [
+            "name"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "parameters": {
+                "$ref": "#/definitions/inputParam"
+              }
+            }
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "inputParam": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -683,10 +683,8 @@ object ScriptYmlUtils {
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
-        val schemaNode =
-            jsonNodeFromString(schema)
-        val jsonNode =
-            jsonNodeFromString(yamlJson)
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()
