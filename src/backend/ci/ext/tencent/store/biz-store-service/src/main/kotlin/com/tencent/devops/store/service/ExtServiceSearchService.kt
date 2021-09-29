@@ -34,7 +34,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceInfoResource
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
