@@ -226,7 +226,6 @@ export const ParamComponentMap = {
     [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
-    [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'VuexInput'
 }
