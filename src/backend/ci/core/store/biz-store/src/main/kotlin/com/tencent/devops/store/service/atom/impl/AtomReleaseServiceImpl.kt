@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
@@ -378,6 +379,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
+        val logoUrl = marketAtomUpdateRequest.logoUrl
+        val iconData = marketAtomUpdateRequest.iconData
+        if (iconData.isNullOrBlank() && !logoUrl.isNullOrBlank()) {
+            try {
+                marketAtomUpdateRequest.iconData = client.get(ServiceImageManageResource::class)
+                    .compressImage(imageUrl = logoUrl,
+                        compressWidth = 18,
+                        compressHeight = 18).data
+            } catch (e: Exception) {
+                logger.error("$atomCode compressImage error.", e)
+            }
+        }
 
         val propsMap = mutableMapOf<String, Any?>()
         propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
@@ -450,6 +463,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
                 }
             }
+
+            // 更新红线标识
+            val qualityFlag = getAtomQualityResult.errorCode == "0"
+            marketAtomFeatureDao.updateAtomFeature(
+                context,
+                userId,
+                AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
+            )
+
             asyncHandleUpdateAtom(context, atomId, userId)
         }
         return Result(atomId)

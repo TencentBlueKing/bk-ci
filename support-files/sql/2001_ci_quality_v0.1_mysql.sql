@@ -37,6 +37,22 @@ BEGIN
 	        DROP KEY `ELEMENT_TYPE_INDEX` ;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_HISTORY'
+                    AND COLUMN_NAME = 'CHECK_TIMES') THEN
+        ALTER TABLE `T_HISTORY` ADD COLUMN `CHECK_TIMES` INT DEFAULT 1;
+    ELSEIF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_HISTORY'
+                        AND COLUMN_NAME = 'CHECK_TIMES'
+                        AND COLUMN_TYPE = 'INT') THEN
+        ALTER TABLE T_HISTORY
+            CHANGE `CHECK_TIMES` `CHECK_TIMES` INT DEFAULT 1;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

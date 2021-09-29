@@ -91,8 +91,8 @@ class ArchiveServiceImpl @Autowired constructor(
                     return false
                 }
             }
-        } catch (e: Exception) {
-            logger.error("artifactory upload file with error. url:$url", e)
+        } catch (ignore: Throwable) {
+            logger.error("artifactory upload file with error. url:$url", ignore)
             return false
         }
         return true

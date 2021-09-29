@@ -1436,7 +1436,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 const dispatchUrl = data.changeAuthorType === 3 ? 'defect/authorEdit' : 'defect/batchEdit'
                 this.authorEditDialogVisiable = false
                 this.tableLoading = true

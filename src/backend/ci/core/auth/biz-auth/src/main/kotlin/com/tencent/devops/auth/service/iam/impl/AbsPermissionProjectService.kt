@@ -3,12 +3,12 @@ package com.tencent.devops.auth.service.iam.impl
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.common.Constants.ALL_ACTION
 import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
@@ -16,17 +16,20 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
     open val permissionRoleService: PermissionRoleService,
     open val permissionRoleMemberService: PermissionRoleMemberService,
@@ -47,9 +50,9 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         val allGroupAndUser = getProjectGroupAndUserList(projectCode)
         return if (group == null) {
-            val allMembers = mutableListOf<String>()
+            val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
-            allMembers
+            allMembers.toList()
         } else {
             // 获取扩展系统内项目下的用户
             getUserByExt(group, projectCode)
@@ -72,7 +75,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null) ?: null
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
                     }
@@ -128,8 +131,19 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
-        // 校验是否有project_view权限
-        return iamCacheService.checkProjectView(userId, projectCode)
+        // 优先匹配缓存
+        if (iamCacheService.checkProjectUser(userId, projectCode)) {
+            return true
+        }
+        var checkProjectUser = false
+
+        val extProjectId = getProjectId(projectCode)
+        val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
+        if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
+            iamCacheService.cacheProjectUser(userId, projectCode)
+            checkProjectUser = true
+        }
+        return checkProjectUser
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
@@ -181,17 +195,14 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         }
         if (iamProjectId.isNullOrEmpty()) {
             logger.warn("[IAM] $projectCode iamProject is empty")
-            throw RuntimeException()
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+                )
+            )
         }
         return iamProjectId.toInt()
-    }
-
-    private fun buildInstance(id: String, type: String): InstanceDTO {
-        val instance = InstanceDTO()
-        instance.id = id
-        instance.system = iamConfiguration.systemId
-        instance.type = type
-        return instance
     }
 
     abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>

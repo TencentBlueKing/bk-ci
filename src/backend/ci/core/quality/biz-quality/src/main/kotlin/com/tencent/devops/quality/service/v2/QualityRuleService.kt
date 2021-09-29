@@ -37,7 +37,7 @@ import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -45,7 +45,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
@@ -253,7 +253,7 @@ class QualityRuleService @Autowired constructor(
         // 过滤已删除的模板
         val templateIds = rule.templateRange.toSet()
         val templateMap = if (templateIds.isNotEmpty()) {
-            client.get(ServiceTemplateResource::class).listTemplateById(templateIds, null).data?.templates
+            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, null).data?.templates
         } else {
             mapOf()
         }
@@ -405,7 +405,7 @@ class QualityRuleService @Autowired constructor(
         ruleRecordList?.filter { !it.pipelineTemplateRange.isNullOrBlank() }?.forEach {
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
-        val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
+        val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServicePTemplateResource::class)
             .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
         val templateIdMap = mutableMapOf<String, OptionalTemplate>()

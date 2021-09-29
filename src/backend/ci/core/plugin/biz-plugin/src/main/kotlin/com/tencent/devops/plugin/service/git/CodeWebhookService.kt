@@ -67,6 +67,7 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -104,7 +105,7 @@ class CodeWebhookService @Autowired constructor(
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
                     when {
-                        webhookEventType == CodeEventType.MERGE_REQUEST &&
+                        enableCheck && webhookEventType == CodeEventType.MERGE_REQUEST &&
                             (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) -> {
                             logger.info(
                                 "$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
@@ -168,7 +169,7 @@ class CodeWebhookService @Autowired constructor(
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
 
                     when {
-                        (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
+                        enableCheck && (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
                             webhookEventType == CodeEventType.MERGE_REQUEST -> {
                             val state = if (buildStatus == BuildStatus.SUCCEED) {
                                 GIT_COMMIT_CHECK_STATE_SUCCESS
@@ -288,6 +289,7 @@ class CodeWebhookService @Autowired constructor(
 
             val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
+            val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
 
             action(
                 GitCommitCheckInfo(
@@ -300,8 +302,9 @@ class CodeWebhookService @Autowired constructor(
                     triggerType = triggerType,
                     mergeRequestId = mrId,
                     userId = userId,
-                    webhookType = webhookTypeStr!!,
-                    webhookEventType = webhookEventTypeStr!!
+                    webhookType = webhookTypeStr,
+                    webhookEventType = webhookEventTypeStr,
+                    enableCheck = enableCheck
                 )
             )
         } catch (ignore: Throwable) {

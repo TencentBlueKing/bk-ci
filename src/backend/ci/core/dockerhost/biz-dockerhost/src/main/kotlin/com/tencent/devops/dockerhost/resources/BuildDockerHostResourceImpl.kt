@@ -45,7 +45,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(private val dockerServi
         vmSeqId: String,
         buildId: String,
         elementId: String,
-        syncFlag: Boolean?,
+        scanFlag: Boolean?,
         dockerBuildParam: DockerBuildParam
     ): Result<Boolean> {
         logger.info("Enter ServiceDockerHostResourceImpl.dockerBuild...")
@@ -57,7 +57,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(private val dockerServi
             elementId = elementId,
             dockerBuildParam = dockerBuildParam,
             outer = true,
-            syncFlag = syncFlag
+            scanFlag = scanFlag
         ))
     }
 

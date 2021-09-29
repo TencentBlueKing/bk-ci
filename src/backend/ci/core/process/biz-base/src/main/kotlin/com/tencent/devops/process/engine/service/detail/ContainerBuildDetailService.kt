@@ -60,6 +60,8 @@ class ContainerBuildDetailService(
             modelInterface = object : ModelInterface {
                 var update = false
                 override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                    logger.info("[$buildId]|containerPreparing|id=$id&containerId=$containerId|startVMStatus " +
+                        "changed from ${container.startVMStatus} to RUNNING")
                     if (id == containerId) {
                         container.startEpoch = System.currentTimeMillis()
                         container.status = BuildStatus.PREPARE_ENV.name

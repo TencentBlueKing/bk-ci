@@ -28,7 +28,6 @@
 dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:notify:api-notify"))
-//    api(project(":ext:blueking:common:common-auth:common-auth-blueking")
     api(project(":core:notify:model-notify"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-notify"))

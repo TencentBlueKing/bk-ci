@@ -1,7 +1,7 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
-        <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
-            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon" size="28" />
+        <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip(stage.checkIn)" @click.stop="startNextStage('checkIn')">
+            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon(stage.checkIn)" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
             <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP', 'show-right-icon': (showCheckedToatal || canStageRetry) }">
@@ -153,7 +153,8 @@
             ...mapState('atom', [
                 'insertStageIndex',
                 'pipeline',
-                'pipelineLimit'
+                'pipelineLimit',
+                'showStageReviewPanel'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -195,12 +196,8 @@
             stageDisabled () {
                 return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
             },
-            canTriggerStage () {
-                try {
-                    return this.stage.stageControlOption.triggerUsers.includes(this.$userInfo.username)
-                } catch (e) {
-                    return false
-                }
+            stageReviewType () {
+                return this.showStageReviewPanel.type
             },
             computedContainer: {
                 get () {
@@ -223,13 +220,6 @@
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
                     disabled: !this.editable
-                }
-            },
-            isStagePause () {
-                try {
-                    return this.stage.reviewStatus === 'REVIEWING'
-                } catch (error) {
-                    return false
                 }
             },
             iconCls () {
@@ -257,40 +247,6 @@
                         return 'circle-2-1 spin-icon'
                     default:
                         return ''
-                }
-            },
-            enableReview () {
-                return this.stage.stageControlOption && this.stage.stageControlOption.manualTrigger
-            },
-            reviewStatausIcon () {
-                try {
-                    if (this.stage.stageControlOption && this.stage.stageControlOption.isReviewError) return 'review-error'
-                    switch (true) {
-                        case this.stage.reviewStatus === 'REVIEWING':
-                            return 'reviewing'
-                        case this.stage.reviewStatus === 'QUEUE':
-                            return 'review-waiting'
-                        case this.stage.reviewStatus === 'REVIEW_PROCESSED':
-                            return 'reviewed'
-                        case this.stage.reviewStatus === 'REVIEW_ABORT':
-                            return 'review-abort'
-                        case this.stageStatusCls === 'SKIP':
-                        case !this.stageStatusCls && this.isExecDetail:
-                            return this.enableReview ? 'review-waiting' : 'review-auto-gray'
-                        case !!this.stageStatusCls:
-                            return 'review-auto-pass'
-                        default:
-                            return this.enableReview ? 'review-enable' : 'review-auto'
-                    }
-                } catch (e) {
-                    console.warn('get review icon error: ', e)
-                    return 'review-auto'
-                }
-            },
-            reviewTooltip () {
-                return {
-                    content: this.canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
-                    disabled: !this.isStagePause
                 }
             }
         },
@@ -335,9 +291,48 @@
                 'setPipelineEditing',
                 'updateStage',
                 'deleteStage',
-                'toggleReviewDialog',
                 'toggleStageReviewPanel'
             ]),
+
+            reviewTooltip (stageControl = {}) {
+                const reviewGroups = stageControl.reviewGroups || []
+                const curReviewGroup = reviewGroups.find((review) => (review.status === undefined)) || {}
+                const canTriggerStage = (curReviewGroup.reviewers || []).includes(this.$userInfo ? this.$userInfo.username : '')
+                const isStagePause = stageControl.status !== 'REVIEWING'
+                return {
+                    content: canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
+                    disabled: isStagePause
+                }
+            },
+
+            reviewStatausIcon (stageControl = {}) {
+                try {
+                    if (stageControl.isReviewError) return 'review-error'
+                    switch (true) {
+                        case stageControl.status === 'REVIEWING':
+                            return 'reviewing'
+                        case stageControl.status === 'QUEUE':
+                            return 'review-waiting'
+                        case stageControl.status === 'REVIEW_PROCESSED':
+                            return 'reviewed'
+                        case stageControl.status === 'REVIEW_ABORT':
+                            return 'review-abort'
+                        case stageControl.status === 'QUALITY_CHECK_FAIL':
+                            return 'quality_check_fail'
+                        case this.stageStatusCls === 'SKIP':
+                        case !this.stageStatusCls && this.isExecDetail:
+                            return stageControl.manualTrigger ? 'review-waiting' : 'review-auto-gray'
+                        case !!this.stageStatusCls:
+                            return 'review-auto-pass'
+                        default:
+                            return stageControl.manualTrigger ? 'review-enable' : 'review-auto'
+                    }
+                } catch (e) {
+                    console.warn('get review icon error: ', e)
+                    return 'review-auto'
+                }
+            },
+
             confirmRetry () {
                 this.showRetryStageDialog = false
                 this.singleRetry(this.stage.id)
@@ -470,20 +465,16 @@
                 this.isAddMenuShow = false
             },
 
-            startNextStage () {
-                if (this.canTriggerStage && this.isStagePause) {
-                    this.toggleReviewDialog({
+            startNextStage (type) {
+                this.toggleStageReviewPanel({
+                    showStageReviewPanel: {
                         isShow: true,
-                        reviewInfo: this.stage
-                    })
-                } else {
-                    this.toggleStageReviewPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex: this.stageIndex
-                        }
-                    })
-                }
+                        type
+                    },
+                    editingElementPos: {
+                        stageIndex: this.stageIndex
+                    }
+                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
