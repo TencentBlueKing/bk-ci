@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
@@ -78,7 +77,6 @@ class TencentMeasureConfig {
         @Autowired pipelineRuntimeService: PipelineRuntimeService,
         @Autowired buildVariableService: BuildVariableService,
         @Autowired dslContext: DSLContext,
-        @Autowired objectMapper: ObjectMapper,
         @Autowired templateService: TemplateService,
         @Autowired redisOperation: RedisOperation,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
@@ -89,7 +87,6 @@ class TencentMeasureConfig {
         pipelineRuntimeService = pipelineRuntimeService,
         buildVariableService = buildVariableService,
         templateService = templateService,
-        objectMapper = objectMapper,
         redisOperation = redisOperation,
         pipelineEventDispatcher = pipelineEventDispatcher,
         atomMonitorSwitch = atomMonitorSwitch,

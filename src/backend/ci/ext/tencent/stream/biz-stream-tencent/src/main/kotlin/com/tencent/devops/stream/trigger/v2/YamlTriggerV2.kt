@@ -57,6 +57,7 @@ import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
 import org.jooq.DSLContext
@@ -91,7 +92,8 @@ class YamlTriggerV2 @Autowired constructor(
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        changeSet: Set<String>?
     ): Boolean {
         if (originYaml.isNullOrBlank()) {
             return false
@@ -109,8 +111,10 @@ class YamlTriggerV2 @Autowired constructor(
         )
 
         if (!isTrigger && !isTiming) {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
+            logger.warn(
+                "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}"
+            )
             triggerError(
                 request = gitRequestEvent,
                 event = event,
@@ -129,7 +133,9 @@ class YamlTriggerV2 @Autowired constructor(
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName
+            pipelineName = gitProjectPipeline.displayName,
+            event = event,
+            changeSet = changeSet
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -151,7 +157,7 @@ class YamlTriggerV2 @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个移到后面启动构建处
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -209,14 +215,16 @@ class YamlTriggerV2 @Autowired constructor(
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?
     ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
             return null
         }
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
-            gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+                gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         val preTemplateYamlObject = yamlCheck.formatAndCheckYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
@@ -231,7 +239,9 @@ class YamlTriggerV2 @Autowired constructor(
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
             gitRequestEvent = gitRequestEvent,
-            originYaml = originYaml
+            originYaml = originYaml,
+            event = event,
+            changeSet = changeSet
         )
     }
 
@@ -255,7 +265,9 @@ class YamlTriggerV2 @Autowired constructor(
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
-        originYaml: String?
+        originYaml: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?
     ): YamlObjects {
         // 替换yaml文件中的模板引用
         try {
@@ -266,14 +278,13 @@ class YamlTriggerV2 @Autowired constructor(
                 triggerUserId = gitRequestEvent.userId,
                 sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
-                triggerToken = if (isFork) {
-                    forkGitToken!!.accessToken
-                } else {
-                    gitToken.accessToken
-                },
+                triggerToken = gitToken.accessToken,
                 repo = null,
                 repoTemplateGraph = TemplateGraph(),
-                getTemplateMethod = yamlTemplateService::getTemplate
+                getTemplateMethod = yamlTemplateService::getTemplate,
+                forkGitToken = forkGitToken?.accessToken,
+                changeSet = changeSet,
+                event = event
             ).replace()
             return YamlObjects(
                 preYaml = preYamlObject,
@@ -284,6 +295,9 @@ class YamlTriggerV2 @Autowired constructor(
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
+                }
+                is YamlBehindException -> {
+                    Triple(isMr, e.filePath, TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE)
                 }
                 is YamlFormatException, is JsonProcessingException, is CustomException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)

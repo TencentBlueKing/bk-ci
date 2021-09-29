@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -41,6 +42,7 @@ data class GitRequestEvent(
     val objectKind: String,
     @ApiModelProperty("操作类型")
     val operationKind: String?,
+    // 对于Push是action对于Mr是extension
     @ApiModelProperty("拓展操作")
     val extensionAction: String?,
     @ApiModelProperty("工蜂项目ID")
@@ -74,3 +76,9 @@ data class GitRequestEvent(
     @ApiModelProperty("Git事件对象")
     var gitEvent: GitEvent?
 )
+
+fun GitRequestEvent.isFork(): Boolean {
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+            sourceGitProjectId != null &&
+            sourceGitProjectId != gitProjectId
+}

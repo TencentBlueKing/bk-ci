@@ -286,7 +286,10 @@ interface ServiceTxProjectResource {
         gitProjectId: Long,
         @ApiParam("用户名", required = true)
         @PathParam("userId")
-        userId: String
+        userId: String,
+        @ApiParam("工蜂项目名称", required = false)
+        @QueryParam("gitProjectName")
+        gitProjectName: String?
     ): Result<ProjectVO>
 
     @POST

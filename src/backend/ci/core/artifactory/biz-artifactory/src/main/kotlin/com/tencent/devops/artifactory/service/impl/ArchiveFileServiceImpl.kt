@@ -111,11 +111,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val path = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        val destPath = if (!path.endsWith(disposition.fileName)) {
-            path + fileSeparator + disposition.fileName
+        val destPath = if (customFilePath?.endsWith(disposition.fileName) != true) {
+            (customFilePath ?: "") + fileSeparator + disposition.fileName
         } else {
-            path
+            customFilePath
         }
         val servicePipelineResource = client.get(ServicePipelineResource::class)
         val pipelineName = servicePipelineResource.getPipelineNameByIds(
@@ -177,23 +176,36 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return flag
     }
 
-    protected fun generateFileDownloadUrl(fileChannelType: FileChannelTypeEnum, destPath: String): String {
-        val urlPrefix = when (fileChannelType) {
+    protected fun generateFileDownloadUrl(
+        fileChannelType: FileChannelTypeEnum,
+        destPath: String,
+        fullUrl: Boolean = true
+    ): String {
+        val urlPrefix = StringBuilder()
+        when (fileChannelType) {
             FileChannelTypeEnum.WEB_SHOW -> {
-                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                    "/ms/artifactory/api/user/artifactories/file/download"
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download")
             }
             FileChannelTypeEnum.WEB_DOWNLOAD -> {
-                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                    "/ms/artifactory/api/user/artifactories/file/download/local"
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download/local")
             }
             FileChannelTypeEnum.SERVICE -> {
-                HomeHostUtil.getHost(commonConfig.devopsApiGateway!!) +
-                    "/ms/artifactory/api/service/artifactories/file/download"
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/service/artifactories/file/download")
             }
             FileChannelTypeEnum.BUILD -> {
-                HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!) +
-                    "/ms/artifactory/api/build/artifactories/file/download"
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/build/artifactories/file/download")
             }
         }
         val filePath = URLEncoder.encode("/$destPath", "UTF-8")

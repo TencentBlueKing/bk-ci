@@ -58,12 +58,12 @@ import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
-import com.tencent.devops.stream.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import org.jooq.DSLContext
@@ -80,7 +80,7 @@ class YamlBuildV2 @Autowired constructor(
     gitRequestEventBuildDao: GitRequestEventBuildDao,
     gitCIEventSaveService: GitCIEventService,
     websocketService: GitCIV2WebsocketService,
-    gitPipelineBranchService: GitPipelineBranchService,
+    streamPipelineBranchService: StreamPipelineBranchService,
     gitCheckService: GitCheckService,
     streamGitConfig: StreamGitConfig,
     triggerMessageUtil: StreamTriggerMessageUtils,
@@ -91,7 +91,7 @@ class YamlBuildV2 @Autowired constructor(
     private val streamTimerService: StreamTimerService
 ) : YamlBaseBuildV2<ScriptBuildYaml>(
     client, kafkaClient, dslContext, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, gitPipelineBranchService,
+    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, streamPipelineBranchService,
     gitCheckService, streamGitConfig, triggerMessageUtil
 ) {
 

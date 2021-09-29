@@ -36,6 +36,8 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.constant.GitCIConstant
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -150,8 +152,25 @@ class GitCIBasicSettingService @Autowired constructor(
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
+
+            // 根据url截取group + project的完整路径名称
+            var gitProjectName = if (setting?.gitHttpUrl != null) {
+                GitUtils.getDomainAndRepoName(setting?.gitHttpUrl).second
+            } else {
+                setting.name
+            }
+
+            // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
+            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                gitProjectName = gitProjectName.substring(gitProjectName.length -
+                    GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+            }
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createGitCIProject(setting.gitProjectId, userId)
+                client.get(ServiceTxProjectResource::class).createGitCIProject(
+                    gitProjectId = setting.gitProjectId,
+                    userId = userId,
+                    gitProjectName = gitProjectName
+                )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
@@ -215,6 +234,36 @@ class GitCIBasicSettingService @Autowired constructor(
             httpUrl = projectInfo.gitHttpsUrl ?: "",
             sshUrl = projectInfo.gitSshUrl ?: ""
         )
+    }
+
+    fun getMaxId(
+        gitProjectIdList: List<Long>? = null
+    ): Long {
+        return gitCIBasicSettingDao.getMaxId(dslContext, gitProjectIdList)
+    }
+
+    fun getBasicSettingList(
+        gitProjectIdList: List<Long>? = null,
+        minId: Long? = null,
+        maxId: Long? = null
+    ): List<Long>? {
+        val basicSettingRecords = gitCIBasicSettingDao.getBasicSettingList(
+            dslContext = dslContext,
+            gitProjectIdList = gitProjectIdList,
+            minId = minId,
+            maxId = maxId
+        )
+        return if (basicSettingRecords.isEmpty()) {
+            null
+        } else {
+            val idList = mutableListOf<Long>()
+            basicSettingRecords.forEach { record ->
+                idList.add(
+                    record.id
+                )
+            }
+            idList
+        }
     }
 
     private fun refresh(it: TGitBasicSettingRecord) {

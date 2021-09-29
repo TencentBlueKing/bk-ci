@@ -28,7 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.enums.CharSetType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -47,7 +47,7 @@ data class WindowsScriptElement(
     @ApiModelProperty("脚本类型", required = true)
     val scriptType: BuildScriptType,
     @ApiModelProperty("字符集类型", required = false)
-    val charSetType: CharSetType? = null
+    val charsetType: CharsetType? = null
 
 ) : Element(name, id, status) {
 

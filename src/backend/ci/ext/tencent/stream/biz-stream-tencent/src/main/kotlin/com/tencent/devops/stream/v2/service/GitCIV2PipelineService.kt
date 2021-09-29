@@ -36,9 +36,10 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +50,8 @@ class GitCIV2PipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIV2DetailService: GitCIV2DetailService,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val scmService: ScmService,
     private val redisOperation: RedisOperation,
     private val websocketService: GitCIV2WebsocketService
@@ -66,7 +68,6 @@ class GitCIV2PipelineService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<GitProjectPipeline> {
-        logger.info("get pipeline list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -85,17 +86,8 @@ class GitCIV2PipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
-        val latestBuilds =
-            try {
-                gitCIV2DetailService.batchGetBuildDetail(
-                    userId = userId,
-                    gitProjectId = gitProjectId,
-                    buildIds = pipelines.map { it.latestBuildId }
-                )
-            } catch (e: Exception) {
-                logger.info("getPipelineList batchGetBuildDetail error gitProjectId: $gitProjectId")
-                emptyMap<String, GitCIBuildHistory>()
-            }
+        // 获取流水线最后一次构建分支
+        val pipelineBranchMap = getPipelineLastBuildBranch(gitProjectId, pipelines.map { it.pipelineId }.toSet())
         return Page(
             count = count.toLong(),
             page = pageNotNull,
@@ -109,7 +101,8 @@ class GitCIV2PipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = latestBuilds[it.latestBuildId]
+                    latestBuildInfo = null,
+                    latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master"
                 )
             }
         )
@@ -117,13 +110,24 @@ class GitCIV2PipelineService @Autowired constructor(
 
     fun getPipelineListWithoutHistory(
         userId: String,
-        gitProjectId: Long
+        gitProjectId: Long,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
     ): List<GitProjectPipeline> {
-        logger.info("get pipeline info list, gitProjectId: $gitProjectId")
-        val pipelines = pipelineResourceDao.getAllByGitProjectId(
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 10
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelines = pipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
-            gitProjectId = gitProjectId
+            gitProjectId = gitProjectId,
+            keyword = keyword,
+            offset = limit.offset,
+            limit = limit.limit
         )
+        if (pipelines.isEmpty()) {
+            return emptyList()
+        }
         return pipelines.map {
             GitProjectPipeline(
                 gitProjectId = gitProjectId,
@@ -132,7 +136,8 @@ class GitCIV2PipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                latestBuildBranch = null
             )
         }
     }
@@ -155,7 +160,8 @@ class GitCIV2PipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
     }
 
@@ -213,6 +219,46 @@ class GitCIV2PipelineService @Autowired constructor(
             ref = ref,
             useAccessToken = true
         )
+    }
+
+    private fun getPipelineLastBuildBranch(
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): Map<String, String> {
+        var branch: String? = null
+        val result = mutableMapOf<String, String>()
+        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
+            ?.associate { it.pipelineId to it.branch }
+        // 获取没有构建记录的流水线的未构建成功的分支
+        val noBuildPipelines = (pipelineIds - pipelineBuild?.keys).map { it.toString() }.toSet()
+        val pipelineNoBuild: Map<String, String>? = if (noBuildPipelines.isEmpty()) {
+            emptyMap()
+        } else {
+            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, noBuildPipelines)
+                ?.associate { it.pipelineId to it.branch }
+        }
+        pipelineIds.forEach { pipelineId ->
+            if (!pipelineBuild?.get(pipelineId).isNullOrBlank()) {
+                result[pipelineId] = pipelineBuild?.get(pipelineId).toString()
+                return@forEach
+            }
+            if (!pipelineNoBuild?.get(pipelineId).isNullOrBlank()) {
+                result[pipelineId] = pipelineNoBuild?.get(pipelineId).toString()
+                return@forEach
+            }
+            // 构建记录和未构建记录都没得，就去拿默认分支
+            if (branch.isNullOrBlank()) {
+                branch = scmService.getProjectInfo(
+                    token = scmService.getToken(gitProjectId.toString()).accessToken,
+                    gitProjectId = gitProjectId.toString(),
+                    useAccessToken = true
+                )?.defaultBranch ?: "master"
+                result[pipelineId] = branch!!
+            } else {
+                result[pipelineId] = branch!!
+            }
+        }
+        return result
     }
 
     private fun getLock(gitProjectId: Long, pipelineId: String): RedisLock {

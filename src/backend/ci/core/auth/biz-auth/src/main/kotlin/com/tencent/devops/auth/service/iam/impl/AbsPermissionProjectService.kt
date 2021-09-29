@@ -146,14 +146,14 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return checkProjectUser
     }
 
-    override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
+    override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
         val extProjectId = getProjectId(projectCode)
-        val projectRoles = groupService.getGroupByName(projectCode, role)
+        val projectRoles = groupService.getGroupByCode(projectCode, roleCode)
         if (projectRoles == null) {
-            logger.warn("$projectCode | $role group not exists")
-            throw ParamBlankException("user group $role not exists")
+            logger.warn("$projectCode | $roleCode group not exists")
+            throw ParamBlankException("user group $roleCode not exists")
         }
-        val managerRole = role == BkAuthGroup.MANAGER.value
+        val managerRole = roleCode == BkAuthGroup.MANAGER.value
         val members = mutableListOf<RoleMemberDTO>()
         members.add(RoleMemberDTO(type = ManagerScopesEnum.USER, id = userId))
         permissionRoleMemberService.createRoleMember(

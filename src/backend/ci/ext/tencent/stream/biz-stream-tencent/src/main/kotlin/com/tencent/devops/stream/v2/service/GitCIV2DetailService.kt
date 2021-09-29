@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.utils.GitCommonUtils
@@ -114,35 +113,6 @@ class GitCIV2DetailService @Autowired constructor(
             modelDetail = modelDetail,
             buildHistoryRemark = remark
         )
-    }
-
-    fun batchGetBuildDetail(
-        userId: String,
-        gitProjectId: Long,
-        buildIds: List<String>
-    ): Map<String, GitCIBuildHistory> {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-        val history = client.get(ServiceBuildResource::class).getBatchBuildStatus(
-            projectId = conf.projectCode!!,
-            buildId = buildIds.toSet(),
-            channelCode = channelCode
-        ).data!!
-        val infoMap = mutableMapOf<String, GitCIBuildHistory>()
-        history.forEach {
-            val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
-            val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
-            val pipeline =
-                pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
-            infoMap[it.id] = GitCIBuildHistory(
-                displayName = pipeline.displayName,
-                pipelineId = pipeline.pipelineId,
-                gitRequestEvent = realEvent,
-                buildHistory = it
-            )
-        }
-        return infoMap
     }
 
     fun search(
@@ -235,7 +205,8 @@ class GitCIV2DetailService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
     }
 }

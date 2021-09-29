@@ -51,7 +51,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
  */
 data class StartBuildContext(
     val actionType: ActionType,
-    val retryCount: Int,
+    val executeCount: Int = 1,
     val stageRetry: Boolean,
     val retryStartTaskId: String?,
     var firstTaskId: String,
@@ -140,20 +140,20 @@ data class StartBuildContext(
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
-            val (actionType, retryCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
+            val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
                 val count = try {
-                    params[PIPELINE_RETRY_COUNT].toString().trim().toInt()
+                    params[PIPELINE_RETRY_COUNT].toString().trim().toInt().coerceAtLeast(0) // 不允许负数
                 } catch (ignored: NumberFormatException) {
                     0
                 }
-                Triple(ActionType.RETRY, count, retryStartTaskId?.startsWith("stage-") == true)
+                Triple(ActionType.RETRY, count + 1, retryStartTaskId?.startsWith("stage-") == true)
             } else {
-                Triple(ActionType.START, 0, false)
+                Triple(ActionType.START, 1, false)
             }
 
             return StartBuildContext(
                 actionType = actionType,
-                retryCount = retryCount,
+                executeCount = executeCount,
                 firstTaskId = params[PIPELINE_START_TASK_ID]?.toString() ?: "",
                 stageRetry = isStageRetry,
                 retryStartTaskId = retryStartTaskId,
