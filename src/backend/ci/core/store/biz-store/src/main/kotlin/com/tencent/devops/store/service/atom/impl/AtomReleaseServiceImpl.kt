@@ -973,7 +973,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 // 查找插件最近一个已经发布的版本
                 val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 1)
-                val newestReleaseAtomRecord = releaseAtomRecords?.get(0)
+                val newestReleaseAtomRecord = if (releaseAtomRecords.isNullOrEmpty()) {
+                    null
+                } else {
+                    releaseAtomRecords[0]
+                }
                 var newestReleaseFlag = false
                 if (newestReleaseAtomRecord != null) {
                     // 比较当前版本是否比最近一个已经发布的版本新
