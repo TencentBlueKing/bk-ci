@@ -171,25 +171,32 @@ class StreamProjectService @Autowired constructor(
         if (list.isNullOrEmpty()) {
             return null
         }
-        val gitProjectIds = list.map { it.removePrefix("git_").toLong() }
+        // zset 默认从小到大排序，所以取反
+        val gitProjectIds = list.map { it.removePrefix("git_").toLong() }.reversed()
         val settings = gitCIBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
-        return settings.map {
-            ProjectCIInfo(
-                id = it.id,
-                projectCode = it.projectCode,
-                public = null,
-                name = it.name,
-                nameWithNamespace = GitCommonUtils.getPathWithNameSpace(it.gitHttpUrl),
-                httpsUrlToRepo = it.gitHttpUrl,
-                webUrl = it.homePage,
-                avatarUrl = it.gitProjectAvatar,
-                description = it.gitProjectDesc,
-                ciInfo = if (it.lastCiInfo == null) {
-                    null
-                } else {
-                    JsonUtil.to(it.lastCiInfo, object : TypeReference<CIInfo>() {})
-                }
+            .associateBy { it.id }
+        val result = mutableListOf<ProjectCIInfo>()
+        gitProjectIds.forEach {
+            val setting = settings[it] ?: return@forEach
+            result.add(
+                ProjectCIInfo(
+                    id = setting.id,
+                    projectCode = setting.projectCode,
+                    public = null,
+                    name = setting.name,
+                    nameWithNamespace = GitCommonUtils.getPathWithNameSpace(setting.gitHttpUrl),
+                    httpsUrlToRepo = setting.gitHttpUrl,
+                    webUrl = setting.homePage,
+                    avatarUrl = setting.gitProjectAvatar,
+                    description = setting.gitProjectDesc,
+                    ciInfo = if (setting.lastCiInfo == null) {
+                        null
+                    } else {
+                        JsonUtil.to(setting.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    }
+                )
             )
         }
+        return result
     }
 }
