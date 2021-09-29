@@ -244,7 +244,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         buildId: String,
         artifactoryType: ArtifactoryType,
         customFilePath: String?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         logger.info("getFileDownloadUrls userId: $userId, projectId: $projectId, pipelineId:$pipelineId, " +
             "buildId: $buildId, artifactoryType: $artifactoryType, customFilePath : $customFilePath, " +
@@ -265,7 +266,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     override fun getFileDownloadUrls(
         filePath: String,
         artifactoryType: ArtifactoryType,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
         logger.info("getFileDownloadUrls, filePath: $filePath, artifactoryType, $artifactoryType, " +
             "fileChannelType, $fileChannelType")
@@ -294,7 +296,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             buildId = buildId,
             artifactoryType = artifactoryType,
             customFilePath = customFilePath,
-            fileChannelType = fileChannelType
+            fileChannelType = fileChannelType,
+            fullUrl = fullUrl
         )
     }
 
