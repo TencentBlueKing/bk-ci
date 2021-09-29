@@ -48,7 +48,7 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
             val responseContent = request(request, "保存脚本元数据失败")
             return Result(responseContent)
         } catch (ignore: Exception) {
-            LoggerService.addRedLine("保存脚本元数据失败: ${ignore.message}")
+            LoggerService.addErrorLine("保存脚本元数据失败: ${ignore.message}")
             logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
         return Result("")

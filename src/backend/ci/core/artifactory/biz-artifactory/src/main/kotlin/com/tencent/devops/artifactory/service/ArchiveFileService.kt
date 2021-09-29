@@ -142,16 +142,19 @@ interface ArchiveFileService {
         buildId: String,
         artifactoryType: ArtifactoryType,
         customFilePath: String?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean = true
     ): GetFileDownloadUrlsResponse
 
     /**
      * 获取仓库指定路径下的文件下载路径列表
+     * [fullUrl]表示是否返回包含域名的全url地址
      */
     fun getFileDownloadUrls(
         filePath: String,
         artifactoryType: ArtifactoryType,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        fullUrl: Boolean = true
     ): GetFileDownloadUrlsResponse
 
     /**
