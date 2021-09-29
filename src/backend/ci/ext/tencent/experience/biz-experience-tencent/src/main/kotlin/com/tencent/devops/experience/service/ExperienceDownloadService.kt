@@ -172,7 +172,7 @@ class ExperienceDownloadService @Autowired constructor(
                     "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
             client.get(ServiceArtifactoryResource::class)
-                .externalUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
+                .externalUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 

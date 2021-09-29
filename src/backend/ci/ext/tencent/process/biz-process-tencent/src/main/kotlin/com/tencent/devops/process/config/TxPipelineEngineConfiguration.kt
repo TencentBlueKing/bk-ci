@@ -100,15 +100,15 @@ class TxPipelineEngineConfiguration {
     ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
 
     @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun detailPage() = GitCIDetailPageBuild()
 
     @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun historyPage() = GitCIHistoryPageBuild()
 
     @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun statusPage() = GitCIStatusPageBuild()
 
     @Bean
@@ -131,7 +131,7 @@ class TxPipelineEngineConfiguration {
         )
 
     @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "gitci")
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun pipelineUrlBeanGitCI(
         @Autowired commonConfig: CommonConfig,
         @Autowired client: Client

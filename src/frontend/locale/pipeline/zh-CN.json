@@ -457,7 +457,11 @@
         "constraintMode": "约束模式",
         "constraintModeTips": "不能自由调整流水线编排，可通过模版更新实例",
         "noTemplateTips": "请先选择模板",
-        "noSearchResult": "未搜索到任何的结果"
+        "noSearchResult": "未搜索到任何的结果",
+        "success": "成功",
+        "failed": "失败",
+        "cancel": "用户取消",
+        "stageSuccess": "Stage成功"
     },
     "subpage": {
         "saveAndExec": "保存并执行",
@@ -707,6 +711,8 @@
         "imageType": "image类型",
         "assignResource": "指定构建资源",
         "imageTicket": "镜像对应凭证",
+        "performance": "机型",
+        "cpuUnit": "核",
         "workspace": "指定工作空间",
         "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/src",
         "envDependency": "nfs方式挂载依赖环境",
@@ -814,7 +820,6 @@
         "confirmMsg": "离开后，新编辑的数据将会丢失",
         "confirmTitle": "确认要离开",
         "operateSuc": "操作成功",
-        "addImage": "新增自定义构建镜像",
         "publicResTips": "由蓝盾官方提供的构建集群，你无需担心资源不足、安全等问题。",
         "seeMore": "查看更多",
         "docker": {
@@ -900,6 +905,7 @@
         "automaticRetry": "可自动重试",
         "manualRetry": "可手动重试",
         "skipType": "跳过方式",
+        "customEnv": "自定义环境变量",
         "continueWhenFailedDesc": "如果同时开启了”失败时重试“，我们将优先尝试重试，如果所有重试都失败后才会继续",
         "retryWhenFailed": "失败时自动重试",
         "retryCount": "重试次数",

@@ -40,12 +40,12 @@ class ElementBizPluginLoader : BeanPostProcessor {
 
     private val logger = LoggerFactory.getLogger(ElementBizPluginLoader::class.java)
 
-    override fun postProcessBeforeInitialization(bean: Any?, p1: String?): Any {
-        return bean!!
+    override fun postProcessBeforeInitialization(bean: Any, p1: String): Any {
+        return bean
     }
 
-    override fun postProcessAfterInitialization(bean: Any?, p1: String?): Any {
-        val elementBiz = AnnotationUtils.findAnnotation(bean!!::class.java, ElementBiz::class.java)
+    override fun postProcessAfterInitialization(bean: Any, p1: String): Any {
+        val elementBiz = AnnotationUtils.findAnnotation(bean::class.java, ElementBiz::class.java)
         if (elementBiz != null) {
             if (bean is ElementBizPlugin<out Element>) {
                 ElementBizRegistrar.register(bean)

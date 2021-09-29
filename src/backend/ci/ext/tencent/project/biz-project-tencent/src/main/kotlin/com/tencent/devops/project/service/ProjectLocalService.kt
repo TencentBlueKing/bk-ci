@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -48,7 +49,7 @@ import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -459,7 +460,14 @@ class ProjectLocalService @Autowired constructor(
     ): List<UserRole> {
         val groupAndUsersList = authProjectApi.getProjectGroupAndUserList(serviceCode, projectCode)
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
-            .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
+            .map {
+                // 因历史原因,前端是通过roleName==manager 来判断是否为管理员,故此处需兼容
+                if (it.displayName == DefaultGroupType.MANAGER.displayName) {
+                    UserRole(it.displayName, it.roleId, DefaultGroupType.MANAGER.value, it.type)
+                } else {
+                    UserRole(it.displayName, it.roleId, it.roleName, it.type)
+                }
+            }
     }
 
     fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
@@ -543,7 +551,7 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+    fun createGitCIProject(userId: String, gitProjectId: Long, gitProjectName: String?): ProjectVO {
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
@@ -551,7 +559,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         val projectCreateInfo = ProjectCreateInfo(
-            projectName = projectCode,
+            projectName = gitProjectName ?: projectCode,
             englishName = projectCode,
             projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
             description = "git ci project for git projectId: $gitProjectId",

@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -111,7 +111,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     }
 
     private fun getTemplateModel(templateCode: String): Result<Model?> {
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
+        val result = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(templateCode)
         val templateDetailInfo = result.data
         val templateModel = templateDetailInfo?.templateModel
         return Result(templateModel)

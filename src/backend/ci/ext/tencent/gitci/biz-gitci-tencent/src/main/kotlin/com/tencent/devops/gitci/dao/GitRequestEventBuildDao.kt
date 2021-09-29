@@ -29,9 +29,9 @@ package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.pojo.BranchBuilds
-import com.tencent.devops.model.gitci.tables.TGitRequestEvent
-import com.tencent.devops.model.gitci.tables.TGitRequestEventBuild
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.SelectConditionStep

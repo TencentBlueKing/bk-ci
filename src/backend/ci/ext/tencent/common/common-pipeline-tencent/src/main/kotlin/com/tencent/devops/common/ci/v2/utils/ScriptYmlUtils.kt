@@ -61,6 +61,8 @@ import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
@@ -98,8 +100,7 @@ object ScriptYmlUtils {
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal =
-            formatYamlCustom(yamlStr)
+        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
         val yaml = Yaml()
         val obj = yaml.load(yamlNormal) as Any
@@ -146,7 +147,8 @@ object ScriptYmlUtils {
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             val realValue = settingMap[matcher.group(1).trim()]
-            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
+            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
         }
 
         return newValue
@@ -400,10 +402,19 @@ object ScriptYmlUtils {
         }
 
         val stepList = mutableListOf<Step>()
+        val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach {
             if (it.uses == null && it.run == null && it.checkout == null) {
                 throw YamlFormatException("step必须包含uses或run或checkout!")
             }
+
+            // 校验stepId唯一性
+            if (it.id != null && stepIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
+            } else if (it.id != null && !stepIdSet.contains(it.id)) {
+                stepIdSet.add(it.id)
+            }
+
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
 
@@ -433,7 +444,15 @@ object ScriptYmlUtils {
         }
 
         val stageList = mutableListOf<Stage>()
+        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
+            // 校验stageId唯一性
+            if (it.id != null && stageIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
+            } else if (it.id != null && !stageIdSet.contains(it.id)) {
+                stageIdSet.add(it.id)
+            }
+
             stageList.add(
                 Stage(
                     id = it.id ?: randomString(stageNamespace),
@@ -543,8 +562,14 @@ object ScriptYmlUtils {
                 tag = TagRule(
                     tags = listOf("*")
                 ),
+                // TODO: 暂时使用工蜂的事件，等后续修改为Stream事件
                 mr = MrRule(
-                    targetBranches = listOf("*")
+                    targetBranches = listOf("*"),
+                    action = listOf(
+                        TGitMergeActionKind.OPEN.value,
+                        TGitMergeActionKind.REOPEN.value,
+                        TGitMergeExtensionActionKind.PUSH_UPDATE.value
+                    )
                 )
             )
         }
@@ -746,5 +771,24 @@ object ScriptYmlUtils {
             logger.error("Format label  failed.", e)
             listOf<String>()
         }
+    }
+
+    fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
+        val stages = formatStage(
+            preScriptBuildYaml
+        )
+
+        return ScriptBuildYaml(
+            name = preScriptBuildYaml.name,
+            version = preScriptBuildYaml.version,
+            triggerOn = null,
+            variables = preScriptBuildYaml.variables,
+            extends = preScriptBuildYaml.extends,
+            resource = preScriptBuildYaml.resources,
+            notices = preScriptBuildYaml.notices,
+            stages = stages,
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
+            label = preScriptBuildYaml.label ?: emptyList()
+        )
     }
 }

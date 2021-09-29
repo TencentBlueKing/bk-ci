@@ -65,7 +65,7 @@
                 <stage @close="showLog = false" />
             </template>
             <template v-else-if="showStageReviewPanel.isShow">
-                <stage-review-panel :stage="stage" />
+                <stage-review-panel :stage="stage" @approve="requestPipelineExecDetail(routerParams)" />
             </template>
         </template>
         <template v-if="execDetail && showCompleteLog">

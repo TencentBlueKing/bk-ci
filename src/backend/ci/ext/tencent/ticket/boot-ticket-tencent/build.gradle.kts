@@ -30,7 +30,3 @@ dependencies {
     api(project(":core:ticket:biz-ticket-sample"))
     api(project(":core:common:common-auth:common-auth-mock"))
 }
-
-plugins{
-    `task-spring-boot-package`
-}

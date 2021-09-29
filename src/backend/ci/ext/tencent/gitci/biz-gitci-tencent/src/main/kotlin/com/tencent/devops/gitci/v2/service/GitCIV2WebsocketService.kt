@@ -1,6 +1,5 @@
 package com.tencent.devops.gitci.v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -15,8 +14,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIV2WebsocketService @Autowired constructor(
     val webSocketDispatcher: WebSocketDispatcher,
-    val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    val redisOperation: RedisOperation
 ) {
     fun pushNotifyWebsocket(userId: String, gitProjectId: String?) {
         val projectCode = if (gitProjectId == null) {
@@ -32,7 +30,6 @@ class GitCIV2WebsocketService @Autowired constructor(
                     userId = userId,
                     pushType = WebSocketType.NOTIFY,
                     redisOperation = redisOperation,
-                    objectMapper = objectMapper,
                     page = "",
                     notifyPost = NotifyPost(
                         module = "gitci",
@@ -60,7 +57,6 @@ class GitCIV2WebsocketService @Autowired constructor(
                     userId = userId,
                     pushType = WebSocketType.STATUS,
                     redisOperation = redisOperation,
-                    objectMapper = objectMapper,
                     page = "",
                     notifyPost = NotifyPost(
                         module = "gitci",

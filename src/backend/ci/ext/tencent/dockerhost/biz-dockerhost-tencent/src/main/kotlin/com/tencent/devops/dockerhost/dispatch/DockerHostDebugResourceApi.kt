@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.MediaType
 import okhttp3.RequestBody

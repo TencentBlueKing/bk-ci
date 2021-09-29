@@ -131,8 +131,19 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
-        // 校验是否有project_view权限
-        return iamCacheService.checkProjectView(userId, projectCode)
+        // 优先匹配缓存
+        if (iamCacheService.checkProjectUser(userId, projectCode)) {
+            return true
+        }
+        var checkProjectUser = false
+
+        val extProjectId = getProjectId(projectCode)
+        val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
+        if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
+            iamCacheService.cacheProjectUser(userId, projectCode)
+            checkProjectUser = true
+        }
+        return checkProjectUser
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {

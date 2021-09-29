@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -36,7 +37,7 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.config.StreamGitConfig
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -46,6 +47,9 @@ import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.StreamBuildInfo
 import com.tencent.devops.gitci.trigger.GitCIEventService
+import com.tencent.devops.gitci.trigger.GitCheckService
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -64,13 +68,14 @@ import java.time.format.DateTimeFormatter
 abstract class YamlBaseBuildV2<T> @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
-    private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitCIEventSaveService: GitCIEventService,
     private val websocketService: GitCIV2WebsocketService,
-    private val gitPipelineBranchService: GitPipelineBranchService
+    private val gitPipelineBranchService: GitPipelineBranchService,
+    private val gitCheckService: GitCheckService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBaseBuildV2::class.java)
@@ -183,7 +188,7 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
-                scmClient.pushCommitCheck(
+                gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
                     description = if (event.description.isNullOrBlank()) {
                         buildRunningDesc.format(pipeline.displayName)
@@ -194,10 +199,17 @@ abstract class YamlBaseBuildV2<T> @Autowired constructor(
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,
-                    context = pipeline.filePath,
+                    context = "${pipeline.filePath}@${event.objectKind.toUpperCase()}",
                     gitCIBasicSetting = gitCIBasicSetting,
-                    pipelineId = pipeline.pipelineId,
-                    block = event.objectKind == OBJECT_KIND_MERGE_REQUEST
+                    isFinish = false,
+                    targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                        homePage = streamGitConfig.tGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                        projectName = GitCommonUtils.getRepoName(gitCIBasicSetting.gitHttpUrl, gitCIBasicSetting.name),
+                        pipelineId = pipeline.pipelineId,
+                        buildId = buildId
+                    ),
+                    block = (event.objectKind == OBJECT_KIND_MERGE_REQUEST && gitCIBasicSetting.enableMrBlock),
+                    pipelineId = pipeline.pipelineId
                 )
             }
             return BuildId(buildId)

@@ -30,8 +30,8 @@ package com.tencent.devops.gitci.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.gitci.pojo.GitYamlContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
-import com.tencent.devops.model.gitci.tables.TGitWebStarterYaml.T_GIT_WEB_STARTER_YAML
-import com.tencent.devops.model.gitci.tables.records.TGitWebStarterYamlRecord
+import com.tencent.devops.model.stream.tables.TGitWebStarterYaml.T_GIT_WEB_STARTER_YAML
+import com.tencent.devops.model.stream.tables.records.TGitWebStarterYamlRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.springframework.stereotype.Repository

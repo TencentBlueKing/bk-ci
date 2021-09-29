@@ -28,6 +28,4 @@
 dependencies {
     api(project(":ext:tencent:monitoring:biz-monitoring"))
 }
-plugins {
-    `task-spring-boot-package`
-}
+

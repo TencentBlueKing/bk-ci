@@ -29,6 +29,4 @@ dependencies {
     api(project(":ext:tencent:gitci:biz-gitci-tencent"))
 }
 
-plugins {
-    `task-spring-boot-package`
-}
+

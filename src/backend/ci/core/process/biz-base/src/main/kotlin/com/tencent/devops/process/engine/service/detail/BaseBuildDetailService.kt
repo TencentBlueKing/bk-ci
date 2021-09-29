@@ -96,7 +96,7 @@ open class BaseBuildDetailService constructor(
                 null
             } else {
                 watcher.start("toJson")
-                JsonUtil.toJson(model)
+                JsonUtil.toJson(model, formatted = false)
             }
 
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)

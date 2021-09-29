@@ -28,8 +28,8 @@
 package com.tencent.devops.gitci.v2.dao
 
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
-import com.tencent.devops.model.gitci.tables.TGitUserMessage
-import com.tencent.devops.model.gitci.tables.records.TGitUserMessageRecord
+import com.tencent.devops.model.stream.tables.TGitUserMessage
+import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
 import org.jooq.DSLContext
 import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository

@@ -30,7 +30,7 @@ package com.tencent.devops.gitci.dao
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.model.gitci.tables.TGitRequestEvent
+import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
