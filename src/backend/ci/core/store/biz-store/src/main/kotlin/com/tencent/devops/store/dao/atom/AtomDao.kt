@@ -543,7 +543,7 @@ class AtomDao : AtomBaseDao() {
                 fitOsFlag = fitOsFlag
             ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
-        var queryInitTestAtomStep:SelectOnConditionStep<Record>? = null
+        var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
         if (!projectCode.isNullOrBlank()) {
             queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
