@@ -207,6 +207,7 @@ include(":core:notify")
 include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
+include(":core:notify:biz-notify-wework")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 
