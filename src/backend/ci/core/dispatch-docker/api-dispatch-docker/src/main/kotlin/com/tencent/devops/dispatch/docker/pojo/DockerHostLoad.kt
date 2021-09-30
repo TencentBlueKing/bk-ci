@@ -52,4 +52,3 @@ data class Load(
     @ApiModelProperty("集群可用节点数量")
     val enableNode: Int
 )
-

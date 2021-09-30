@@ -7,7 +7,6 @@ data class Pool(
     val buildType: BuildType? = BuildType.DEVCLOUD
 )
 
-
 enum class BuildType {
     DOCKER_VM,
     DEVCLOUD

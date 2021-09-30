@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import javax.management.loading.ClassLoaderRepository
 
 data class DockerDispatchType(
     @JsonProperty("value") override var dockerBuildVersion: String?,
