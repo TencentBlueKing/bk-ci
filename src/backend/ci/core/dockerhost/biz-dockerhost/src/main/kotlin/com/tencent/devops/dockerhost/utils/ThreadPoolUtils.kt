@@ -1,7 +1,11 @@
 package com.tencent.devops.dockerhost.utils
 
 import org.slf4j.LoggerFactory
-import java.util.concurrent.*
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionHandler
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * 线程池封装类
@@ -46,11 +50,10 @@ class ThreadPoolUtils private constructor() {
         val SINGLE_HOLDER = ThreadPoolUtils()
     }
 
-
     /**
      *   @param tag 针对每个TAG 获取对应的线程池
-     *   @param corePoolSize  线程池中核心线程的数量
-     *   @param maximumPoolSize  线程池中最大线程数量
+     *   @param corePoolSize 线程池中核心线程的数量
+     *   @param maximumPoolSize 线程池中最大线程数量
      *   @param keepAliveTime 非核心线程的超时时长，
      *   当系统中非核心线程闲置时间超过keepAliveTime之后，则会被回收
      *   如果ThreadPoolExecutor的allowCoreThreadTimeOut属性设置为true，则该参数也表示核心线程的超时时长
@@ -79,7 +82,7 @@ class ThreadPoolUtils private constructor() {
                     logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
                 }
             )
-            //允许核心线程闲置超时时被回收
+            // 允许核心线程闲置超时时被回收
             threadPoolExecutor.allowCoreThreadTimeOut(true)
             threadPoolMap[tag] = threadPoolExecutor
         }
@@ -107,8 +110,8 @@ class ThreadPoolUtils private constructor() {
      *   取消 移除线程池
      * */
 
-    //shutDown()：关闭线程池后不影响已经提交的任务
-    //shutDownNow()：关闭线程池后会尝试去终止正在执行任务的线程
+    // shutDown()：关闭线程池后不影响已经提交的任务
+    // shutDownNow()：关闭线程池后会尝试去终止正在执行任务的线程
     fun exitThreadPool(tag: String) {
         var threadPoolExecutor = threadPoolMap[tag]
         if (threadPoolExecutor != null) {
