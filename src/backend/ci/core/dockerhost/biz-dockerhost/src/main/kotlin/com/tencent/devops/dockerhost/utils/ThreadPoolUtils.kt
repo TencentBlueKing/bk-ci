@@ -29,7 +29,7 @@ class ThreadPoolUtils private constructor() {
     /**
      * 线程活跃时间 秒，超时线程会被回收
      * */
-    private val KEEP_ALIVE_TIME: Long = 3
+    private val KEEP_ALIVE_TIME: Long = 60
 
     /**
      * 等待队列大小
@@ -73,7 +73,7 @@ class ThreadPoolUtils private constructor() {
                 MAXIMUM_POOL_SIZE,
                 KEEP_ALIVE_TIME,
                 TimeUnit.SECONDS,
-                ArrayBlockingQueue<Runnable>(QUEUE_SIZE),
+                ArrayBlockingQueue(QUEUE_SIZE),
                 Executors.defaultThreadFactory(),
                 RejectedExecutionHandler { _, _ ->
                     logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
