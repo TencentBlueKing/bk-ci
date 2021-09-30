@@ -63,9 +63,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.Optional
+import java.util.concurrent.TimeUnit
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkAgent")
+@Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class WeworkServiceImpl(
     private val weWorkConfiguration: WeworkConfiguration,
     private val weworkNotifyDao: WeworkNotifyDao,
@@ -74,6 +76,9 @@ class WeworkServiceImpl(
 ) : WeworkService {
 
     companion object {
+        private const val maxUserNum = 1000
+        private const val maxGroupNum = 100
+        private const val maxSeconds = 600
         private val LOG = LoggerFactory.getLogger(WeworkServiceImpl::class.java.name)
         private const val WEWORK_ACCESS_TOKEN_KEY = "notify_wework_access_token_key"
     }
@@ -140,8 +145,9 @@ class WeworkServiceImpl(
         val errMsg = requestBodies.asSequence().map { it.get() }.map {
             send(it)
         }.filter { it.isPresent }.joinToString(", ")
-        if (errMsg.isNotBlank())
+        if (errMsg.isNotBlank()) {
             throw RemoteServiceException(errMsg)
+        }
     }
 
     private fun saveResult(receivers: Collection<String>, body: String, success: Boolean, errMsg: String?) {
@@ -164,7 +170,8 @@ class WeworkServiceImpl(
                     throw RemoteServiceException(
                         httpStatus = it.code(),
                         responseContent = responseBody,
-                        errorMessage = "send wework message failed"
+                        errorMessage = "send wework message failed",
+                        errorCode = sendMessageResp.errCode
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
@@ -188,7 +195,7 @@ class WeworkServiceImpl(
     ): Optional<AbstractSendMessageRequest> {
         val agentId =
             weWorkConfiguration.agentId.toIntOrNull() ?: throw OperationException("Wework agent id is invalid")
-        return if (mediaType != null && mediaId != null)
+        return if (mediaType != null && mediaId != null) {
             when (mediaType) {
                 WeworkMediaType.file -> {
                     Optional.of<AbstractSendMessageRequest>(
@@ -246,7 +253,8 @@ class WeworkServiceImpl(
                         )
                     )
                 }
-            } else if (textType != null && content != null) {
+            }
+        } else if (textType != null && content != null) {
             when (textType) {
                 WeworkTextType.text -> Optional.of<AbstractSendMessageRequest>(
                     TextSendMessageRequest(
@@ -274,7 +282,9 @@ class WeworkServiceImpl(
                     )
                 )
             }
-        } else Optional.empty()
+        } else {
+            Optional.empty()
+        }
     }
 
     /**
@@ -288,12 +298,12 @@ class WeworkServiceImpl(
     ): Pair<List<String>, List<String>> {
         return when (receiverType) {
             WeworkReceiverType.single -> {
-                val toUser = HashSet(this).chunked(1000)
+                val toUser = HashSet(this).chunked(maxUserNum)
                     .map { it.joinToString(separator = "|") }
                 Pair(toUser, emptyList())
             }
             WeworkReceiverType.group -> {
-                val toParty = HashSet(this).chunked(100).map { it.joinToString(separator = "|") }
+                val toParty = HashSet(this).chunked(maxGroupNum).map { it.joinToString(separator = "|") }
                 Pair(emptyList(), toParty)
             }
         }
@@ -322,13 +332,14 @@ class WeworkServiceImpl(
                         throw RemoteServiceException(
                             httpStatus = it.code(),
                             responseContent = responseBody,
-                            errorMessage = "upload media($mediaName) to wework failed"
+                            errorMessage = "upload media($mediaName) to wework failed",
+                            errorCode = uploadMediaResp.errCode
                         )
                     }
                     mediaId
                 }.onFailure { _ ->
                     LOG.warn("${it.request()}|upload media($mediaName) to wework failed, $responseBody")
-                }.getOrThrow()!!
+                }.getOrThrow()
             }
         } finally {
             Files.deleteIfExists(tempFile)
@@ -341,10 +352,14 @@ class WeworkServiceImpl(
         val accessTokenCache = redisOperation.get(WEWORK_ACCESS_TOKEN_KEY)
             ?.let { json ->
                 JsonUtil.to(json, jacksonTypeRef<AccessTokenCache>())
-                    .takeIf { it.expiresIn * 1000L + now < it.timestamp }
+                    .takeIf { (TimeUnit.SECONDS.toMillis(it.expiresIn.toLong()) + now) < it.timestamp }
             }
-        if (accessTokenCache != null) return accessTokenCache.accessToken
-        else redisOperation.delete(WEWORK_ACCESS_TOKEN_KEY)
+        if (accessTokenCache != null) {
+            return accessTokenCache.accessToken
+        } else {
+            redisOperation.delete(WEWORK_ACCESS_TOKEN_KEY)
+        }
+
         OkhttpUtils.doGet(
             buildUrl(
                 "${weWorkConfiguration.apiUrl}/cgi-bin" +
@@ -359,17 +374,18 @@ class WeworkServiceImpl(
                     throw RemoteServiceException(
                         httpStatus = it.code(),
                         responseContent = responseBody,
-                        errorMessage = "failed to get wework access token: $responseBody"
+                        errorMessage = "failed to get wework access token: $responseBody",
+                        errorCode = accessTokenResp.errCode
                     )
                 }
                 val accessToken = accessTokenResp.accessToken!!
                 val expiresIn = accessTokenResp.expiresIn
-                if (expiresIn != null && expiresIn > 600) {
+                if (expiresIn != null && expiresIn > maxSeconds) {
                     // 提前 10 分钟过期，防止在操作过程中过期
                     redisOperation.set(
                         key = WEWORK_ACCESS_TOKEN_KEY,
                         value = JsonUtil.toJson(AccessTokenCache(accessToken, expiresIn, now)),
-                        expiredInSecond = expiresIn.toLong() - 600
+                        expiredInSecond = expiresIn.toLong() - maxSeconds
                     )
                 }
                 accessToken
@@ -385,7 +401,7 @@ class WeworkServiceImpl(
 
     private data class AccessTokenCache(
         val accessToken: String,
-        val expiresIn: Int,
+        val expiresIn: Int, // 秒
         val timestamp: Long
     )
 }
