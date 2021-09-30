@@ -63,19 +63,21 @@ class TXDockerHostImageScanService(
                     val targetSavedImagesFile = File(imageSavedPath)
                     FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
 
-                    val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
-                            "-T $projectId -b $buildId -n $userName"
-                    val scanResult = ShellUtil.executeEnhance(script)
-                    logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
-
-                    logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
-                            "image name and tag: $it")
                     try {
+                        logger.info("[$buildId]|[$vmSeqId] start scan dockeriamge, imageSavedPath: $imageSavedPath")
+                        val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
+                                "-T $projectId -b $buildId -n $userName"
+                        val scanResult = ShellUtil.executeEnhance(script)
+                        logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
+
+                        logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
+                                "image name and tag: $it")
+                    } catch (e: Throwable) {
+                        logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
+                    } finally {
                         longDockerClient.removeImageCmd(it).exec()
                         File(imageSavedPath).deleteOnExit()
                         logger.info("[$buildId]|[$vmSeqId] Remove local image success")
-                    } catch (e: Throwable) {
-                        logger.error("[$buildId]|[$vmSeqId] Docker remove image failed, msg: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
