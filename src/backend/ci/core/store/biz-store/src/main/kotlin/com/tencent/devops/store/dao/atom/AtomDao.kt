@@ -815,7 +815,8 @@ class AtomDao : AtomBaseDao() {
         }
         if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
             if (fitOsFlag == false) {
-                conditions.add(ta.OS.notContains(os))
+                conditions.add(ta.OS.notLike("%$os%")
+                    .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
             } else {
                 conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             }
