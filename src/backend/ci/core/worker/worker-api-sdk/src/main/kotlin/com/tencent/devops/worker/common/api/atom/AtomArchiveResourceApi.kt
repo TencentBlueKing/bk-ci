@@ -194,7 +194,6 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        publicFlag: Boolean,
         atomCreateTime: Long,
         file: File,
         isVmBuildEnv: Boolean
