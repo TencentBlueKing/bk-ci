@@ -339,22 +339,30 @@ export default {
             pageSize = unRecommendProjectData.pageSize || 15
             keyword = unRecommendProjectData.keyword || undefined
         }
+
+        // 前提：查询不适用当前job插件
+        // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来,jobType不传
+        // 无编译环境不用传fitOsFlag这个参数，jobType传AGENT
+        let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+        const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+        if (fitOsFlag === false) {
+            jobType = undefined
+        }
+        
+        if (!recommendFlag && jobType === 'AGENT_LESS') {
+            jobType = 'AGENT'
+        }
+
         if (category === 'TRIGGER') {
+            // 请求触发器类插件时不jobType
             pageSize = 15
             page = 1
+            jobType = undefined
             commit(SET_PROJECT_DATA, {
                 page: 1
             })
         }
 
-        // 前提：查询不适用当前job插件
-        // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
-        let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
-        const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
-        if (!recommendFlag && jobType === 'AGENT_LESS') {
-            jobType = 'AGENT'
-        }
-        
         try {
             if (page === 1) {
                 commit(FETCHING_ATOM_LIST, true)
@@ -463,10 +471,24 @@ export default {
             let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
 
             // 前提：查询不适用当前job插件
-            // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来；无编译环境不用传这个参数，jobType传AGENT
+            // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来,jobType不传
+            // 无编译环境不用传fitOsFlag这个参数，jobType传AGENT
             const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
+            if (fitOsFlag === false) {
+                jobType = undefined
+            }
             if (!recommendFlag && jobType === 'AGENT_LESS') {
                 jobType = 'AGENT'
+            }
+            
+            if (category === 'TRIGGER') {
+                // 请求触发器类插件时不jobType
+                pageSize = 15
+                page = 1
+                jobType = undefined
+                commit(SET_STORE_DATA, {
+                    page: 1
+                })
             }
 
             const { data: atomList } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {

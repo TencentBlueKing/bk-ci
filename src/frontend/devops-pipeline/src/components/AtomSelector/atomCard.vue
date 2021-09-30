@@ -52,7 +52,7 @@
                     <span class="fire-num">
                         <logo v-if="atom.recentExecuteNum >= 50000" class="fire-icon" name="fire-red" size="14" style="position:relative; top:2px;" />
                         <logo v-else class="fire-red-icon" name="fire" size="14" style="position:relative; top:2px;" />
-                        {{ getHeatNum(atom.recentExecuteNum) }}
+                        {{ getHeatNum(atom.recentExecuteNum) || '-' }}
                     </span>
                     <bk-rate class="atom-rate" width="10" :rate.sync="atom.score" :edit="false" />
                 </a>
