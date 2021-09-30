@@ -190,7 +190,13 @@ class StreamProjectService @Autowired constructor(
                     avatarUrl = setting.gitProjectAvatar,
                     description = setting.gitProjectDesc,
                     ciInfo = if (setting.lastCiInfo == null) {
-                        null
+                        CIInfo(
+                            enableCI = setting.enableCi ?: false,
+                            lastBuildId = null,
+                            lastBuildStatus = null,
+                            lastBuildPipelineId = null,
+                            lastBuildMessage = null
+                        )
                     } else {
                         JsonUtil.to(setting.lastCiInfo, object : TypeReference<CIInfo>() {})
                     }
