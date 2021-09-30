@@ -86,7 +86,7 @@ object GitUtils {
     private fun partApiUrl(apiUrl: String): Triple<String, String, String>? {
         val groups = Regex("(http[s]?://)([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(apiUrl)?.groups
             ?: return null
-        return Triple(groups[1]!!.value, groups[2]!!.value, groups[3]!!.value) // http[s]//, xxx.com, api/v4
+        return Triple(groups[1]!!.value, groups[2]!!.value, groups[4]!!.value) // http[s]//, xxx.com, api/v4
     }
 
     fun isPrePushBranch(branchName: String?): Boolean {
