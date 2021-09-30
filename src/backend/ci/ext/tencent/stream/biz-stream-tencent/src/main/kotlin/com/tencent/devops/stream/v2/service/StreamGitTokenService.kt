@@ -64,6 +64,7 @@ class StreamGitTokenService @Autowired constructor(
         } else token
     }
 
+    // TODO 暂时不加入销毁逻辑
     fun clearToken(gitProjectId: Long): Boolean {
         val token = redisOperation.get(getGitTokenKey(gitProjectId))
         if (token.isNullOrBlank()) return true

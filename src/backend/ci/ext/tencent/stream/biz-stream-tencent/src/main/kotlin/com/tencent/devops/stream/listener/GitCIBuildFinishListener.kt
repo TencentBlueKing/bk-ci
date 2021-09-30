@@ -334,9 +334,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                         build = build
                     )
                 }
-
-                // 销毁该项目当前的token缓存
-                tokenService.clearToken(gitProjectId)
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
