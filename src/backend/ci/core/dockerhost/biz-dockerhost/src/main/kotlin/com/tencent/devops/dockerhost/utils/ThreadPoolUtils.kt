@@ -18,27 +18,27 @@ class ThreadPoolUtils private constructor() {
     /**
      * cpu数量
      * */
-    private val CPU_COUNT = Runtime.getRuntime().availableProcessors()
+    private val cpuCount = Runtime.getRuntime().availableProcessors()
 
     /**
      * 核心线程数为手机CPU数量+1
      * */
-    private val CORE_POOL_SIZE = CPU_COUNT + 1
+    private val coolPoolSize = cpuCount + 1
 
     /**
      * 最大线程数为手机CPU数量×2+1
      * */
-    private val MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1
+    private val maxPoolSize = cpuCount * 2 + 1
 
     /**
      * 线程活跃时间 秒，超时线程会被回收
      * */
-    private val KEEP_ALIVE_TIME: Long = 60
+    private val keepAliveTime: Long = 60
 
     /**
      * 等待队列大小
      * */
-    private val QUEUE_SIZE = 128
+    private val queueSize = 128
 
     companion object {
         fun getInstance() = SingleHolder.SINGLE_HOLDER
@@ -72,11 +72,11 @@ class ThreadPoolUtils private constructor() {
         var threadPoolExecutor = threadPoolMap[tag]
         if (threadPoolExecutor == null) {
             threadPoolExecutor = ThreadPoolExecutor(
-                CORE_POOL_SIZE,
-                MAXIMUM_POOL_SIZE,
-                KEEP_ALIVE_TIME,
+                coolPoolSize,
+                maxPoolSize,
+                keepAliveTime,
                 TimeUnit.SECONDS,
-                ArrayBlockingQueue(QUEUE_SIZE),
+                ArrayBlockingQueue(queueSize),
                 Executors.defaultThreadFactory(),
                 RejectedExecutionHandler { _, _ ->
                     logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
