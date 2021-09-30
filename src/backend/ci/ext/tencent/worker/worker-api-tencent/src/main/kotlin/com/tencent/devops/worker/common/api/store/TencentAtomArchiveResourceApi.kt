@@ -278,7 +278,6 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        publicFlag: Boolean,
         atomCreateTime: Long,
         file: File,
         isVmBuildEnv: Boolean
@@ -291,16 +290,16 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             val atomMigrateTimeStr = PropertyUtil.getPropertyValue("atom.migrate.time", AGENT_PROPERTIES_FILE_NAME)
             val atomMigrateTime = DateTimeUtil.stringToLocalDateTime(atomMigrateTimeStr).timestampmilli()
             if (atomCreateTime > atomMigrateTime) {
-                val bkrepoHost = if (isVmBuildEnv) {
-                    PropertyUtil.getPropertyValue("bkrepo.file.devnet.gateway", AGENT_PROPERTIES_FILE_NAME)
-                } else {
-                    PropertyUtil.getPropertyValue("bkrepo.file.idc.gateway", AGENT_PROPERTIES_FILE_NAME)
-                }
                 val envType = AgentEnv.getEnv().name.toLowerCase()
+                val bkrepoHost = if (isVmBuildEnv) {
+                    PropertyUtil.getPropertyValue("bkrepo.file.devnet.gateway.$envType", AGENT_PROPERTIES_FILE_NAME)
+                } else {
+                    PropertyUtil.getPropertyValue("bkrepo.file.idc.gateway.$envType", AGENT_PROPERTIES_FILE_NAME)
+                }
                 val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
                 val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
                 val bkrepoUrl = "${HomeHostUtil.getHost(bkrepoHost)}/generic/ext/bkstore/atom/$bkrepoProjectName/" +
-                    "bk-plugin/$atomFilePath?publicFlag=$publicFlag"
+                    "bk-plugin/$atomFilePath"
                 request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
             }
         }
