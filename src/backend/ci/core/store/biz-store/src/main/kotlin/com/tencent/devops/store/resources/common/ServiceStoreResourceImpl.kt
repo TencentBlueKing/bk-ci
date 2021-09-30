@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
@@ -42,6 +43,7 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
+import com.tencent.devops.store.utils.StoreUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -50,7 +52,8 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
     private val storeBuildService: StoreBuildService,
     private val storeCommonService: StoreCommonService,
-    private val clientTokenService: ClientTokenService
+    private val clientTokenService: ClientTokenService,
+    private val redisOperation: RedisOperation
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -82,8 +85,13 @@ class ServiceStoreResourceImpl @Autowired constructor(
         token: String,
         projectCode: String,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
     ): Result<Boolean> {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            return Result(true)
+        }
         // 校验token是否合法
         val validateTokenFlag = clientTokenService.checkToken(null, token)
         if (!validateTokenFlag) {

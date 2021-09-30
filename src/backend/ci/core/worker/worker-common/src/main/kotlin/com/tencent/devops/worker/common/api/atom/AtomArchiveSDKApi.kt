@@ -89,7 +89,6 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     fun downloadAtom(
         projectId: String,
         atomFilePath: String,
-        publicFlag: Boolean,
         atomCreateTime: Long,
         file: File,
         isVmBuildEnv: Boolean

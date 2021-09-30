@@ -284,7 +284,6 @@ open class MarketAtomTask : ITask() {
             atomExecuteFile = downloadAtomExecuteFile(
                 projectId = buildVariables.projectId,
                 atomFilePath = atomData.pkgPath!!,
-                publicFlag = atomData.publicFlag,
                 atomCreateTime = atomData.createTime,
                 workspace = atomTmpSpace,
                 isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
@@ -871,7 +870,6 @@ open class MarketAtomTask : ITask() {
     private fun downloadAtomExecuteFile(
         projectId: String,
         atomFilePath: String,
-        publicFlag: Boolean,
         atomCreateTime: Long,
         workspace: File,
         isVmBuildEnv: Boolean
@@ -887,7 +885,6 @@ open class MarketAtomTask : ITask() {
             atomApi.downloadAtom(
                 projectId = projectId,
                 atomFilePath = atomFilePath,
-                publicFlag = publicFlag,
                 atomCreateTime = atomCreateTime,
                 file = file,
                 isVmBuildEnv = isVmBuildEnv
