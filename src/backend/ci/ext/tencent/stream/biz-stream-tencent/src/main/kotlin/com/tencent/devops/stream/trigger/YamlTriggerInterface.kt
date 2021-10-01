@@ -43,7 +43,7 @@ interface YamlTriggerInterface<T> {
         event: GitEvent,
         originYaml: String?,
         filePath: String,
-        changeSet: Set<String>? = null
+        changeSet: Set<String>?
     ): Boolean
 
     fun prepareCIBuildYaml(
@@ -56,7 +56,7 @@ interface YamlTriggerInterface<T> {
         pipelineId: String?,
         pipelineName: String?,
         event: GitEvent?,
-        changeSet: Set<String>? = null
+        changeSet: Set<String>?
     ): T?
 
     fun checkYamlSchema(userId: String, yaml: String): Result<String>

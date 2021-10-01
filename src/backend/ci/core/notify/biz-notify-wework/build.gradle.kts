@@ -25,9 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
-
-enum class CharSetType {
-    UTF_8,
-    GBK
+dependencies {
+    implementation(project(":core:notify:api-notify"))
+    implementation(project(":core:notify:biz-notify"))
+    implementation(project(":core:notify:model-notify"))
+    implementation(project(":core:common:common-db"))
+    implementation(project(":core:common:common-notify"))
 }

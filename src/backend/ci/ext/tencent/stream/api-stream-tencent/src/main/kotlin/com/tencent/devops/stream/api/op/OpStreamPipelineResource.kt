@@ -24,23 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
-import com.tencent.devops.notify.service.WeworkService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+package com.tencent.devops.stream.api.op
 
-@Service
-@Suppress("ALL")
-class WeworkServiceImpl @Autowired constructor() : WeworkService {
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        TODO("Not yet implemented")
-    }
+@Api(tags = ["OP_STREAM_PIPELINE"], description = "Stream流水线op系统")
+@Path("/op/stream/pipeline")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStreamPipelineResource {
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
-        TODO("Not yet implemented")
-    }
+    @ApiOperation("删除在Stream中已经删除但未被删除的流水线")
+    @POST
+    @Path("/delete")
+    fun checkBranches(
+        @ApiParam(value = "删除指定的用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

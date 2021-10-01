@@ -104,6 +104,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
     const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
+    const val QUEUE_PIPELINE_BUILD_FINISH_NOTIFY_QUEUE = "q.engine.pipeline.build.finish.notify.queue"
 
     const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
     const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"

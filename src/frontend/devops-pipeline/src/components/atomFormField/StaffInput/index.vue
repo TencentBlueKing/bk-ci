@@ -1,24 +1,23 @@
 <template>
-    <custom-selector name="value" type="text"
-        :value="curInsertVal"
-        :disabled="disabled"
+    <bk-tag-input
+        v-model="tagValue"
+        allow-create
+        clearable
         :placeholder="placeholder"
-        :config="dataInputConfig"
-        :selected-list="value"
-        :set-value="setValue"
-        :delete-item="deleteItem" />
+        :search-key="['id', 'name']"
+        separator=","
+        :disabled="disabled"
+        :create-tag-validator="checkVariable"
+        :paste-fn="paste"
+        :list="list">
+    </bk-tag-input>
 </template>
 
 <script>
     import atomFieldMixin from '../atomFieldMixin'
-    import customSelector from '@/components/common/custom-selector'
-    import ajax from '@/utils/ajax'
 
     export default {
         name: 'staff-input',
-        components: {
-            customSelector
-        },
         mixins: [atomFieldMixin],
         props: {
             value: {
@@ -26,89 +25,53 @@
                 required: true,
                 default: () => []
             },
-            disabled: {
-                type: Boolean,
-                default: false
-            },
             placeholder: {
                 type: String,
                 default: ''
+            },
+            listUrl: {
+                type: String,
+                default: ''
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
-                isLoading: false,
-                curInsertVal: '',
-                list: [],
-                initData: []
+                list: []
             }
         },
         computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            dataInputConfig () {
-                return {
-                    initData: this.initData || [],
-                    data: this.list || [],
-                    onChange: this.onChange
+            tagValue: {
+                get () {
+                    return this.value
+                },
+                set (value) {
+                    this.handleChange(this.name, value)
                 }
             }
         },
-        watch: {
-            value (value) { // 选中列表发生变化时更新list数据
-                this.list = this.initData.filter(val => !value.includes(val))
-            }
-        },
-        async created () {
-            await this.getList()
+        created () {
+            this.getList()
         },
         methods: {
-            async getList () {
-                const url = `/project/api/user/users/projects/${this.projectId}/list`
-
-                try {
-                    const res = await ajax.get(`${AJAX_URL_PIRFIX}${url}`).then(response => {
-                        return response.data.data
-                    })
-
-                    res.map(item => {
-                        this.initData.push(item)
-                        this.list.push(item)
-                    })
-
-                    this.$nextTick(() => {
-                        this.value.forEach(item => {
-                            this.list = this.list.filter(val => val.indexOf(item) === -1)
-                        })
-                    })
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
-                    })
-                }
+            getList () {
+                // 默认是拥有流水线权限的人员
+                const url = this.listUrl || `/project/api/user/users/projectUser/${this.$route.params.projectId}/${this.$route.params.pipelineId}/map`
+                this.$ajax.get(`${url}`).then(res => {
+                    this.list = res.data
+                })
             },
-            onChange (name, value) {
-                this.handleValueChange('value', value)
+            // 检验变量
+            checkVariable (val) {
+                return /^\$\{(.*)\}$/.test(val)
             },
-            handleValueChange (name, value) {
-                this.curInsertVal = value
-            },
-            setValue (name, index, item, type) {
-                let newVal = []
-                if (type) {
-                    newVal = [...this.value.slice(0, index), ...item, ...this.value.slice(index, this.value.length)]
-                } else {
-                    newVal = [...this.value.slice(0, index), item, ...this.value.slice(index, this.value.length)]
-                }
-                this.handleChange(this.name, newVal)
-                this.curInsertVal = ''
-            },
-            deleteItem (name, index, item) {
-                if (!/^\$\{(.*)\}$/.test(item)) this.list.push(item)
-                const updateVal = [...this.value.slice(0, index - 1), ...this.value.slice(index, this.value.length)]
-                this.handleChange(this.name, updateVal)
+            paste (val) {
+                const newArr = val.split(',').filter(v => !this.tagValue.find(w => w === v))
+                this.tagValue = [...this.tagValue, ...newArr]
+                return []
             }
         }
     }

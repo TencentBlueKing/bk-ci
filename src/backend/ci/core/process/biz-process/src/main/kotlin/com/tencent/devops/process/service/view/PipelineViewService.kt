@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -263,14 +264,14 @@ class PipelineViewService @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 projectId = projectId,
-                settings = objectMapper.writeValueAsString(viewIdList)
+                settings = JsonUtil.toJson(viewIdList, formatted = false)
             )
         } else {
             pipelineViewUserSettingDao.update(
                 dslContext = dslContext,
                 userId = userId,
                 projectId = projectId,
-                settings = objectMapper.writeValueAsString(viewIdList)
+                settings = JsonUtil.toJson(viewIdList, formatted = false)
             )
         }
     }

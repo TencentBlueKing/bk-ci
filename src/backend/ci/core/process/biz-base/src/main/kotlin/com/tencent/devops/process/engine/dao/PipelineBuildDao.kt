@@ -306,7 +306,7 @@ class PipelineBuildDao {
             }
 
             if (errorInfoList != null) {
-                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
+                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList, formatted = false))
             }
 
             baseQuery.where(BUILD_ID.eq(buildId)).execute()
@@ -804,7 +804,7 @@ class PipelineBuildDao {
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
-                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
+                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
