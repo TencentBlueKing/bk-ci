@@ -75,14 +75,15 @@ class ProcessDataClearService @Autowired constructor(
 
     /**
      * 清除流水线基础构建数据
+     * @param projectId 项目ID
      * @param buildId 构建ID
      */
-    fun clearBaseBuildData(buildId: String) {
+    fun clearBaseBuildData(projectId: String, buildId: String) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             processDataClearDao.deleteBuildTaskByBuildId(context, buildId)
             processDataClearDao.deleteBuildVarByBuildId(context, buildId)
-            processDataClearDao.deleteBuildContainerByBuildId(context, buildId)
+            processDataClearDao.deleteBuildContainerByBuildId(context, projectId, buildId)
             processDataClearDao.deleteBuildStageByBuildId(context, buildId)
         }
     }
@@ -100,15 +101,15 @@ class ProcessDataClearService @Autowired constructor(
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            processDataClearDao.deleteBuildDetailByBuildId(context, buildId)
+            processDataClearDao.deleteBuildDetailByBuildId(context, projectId, buildId)
             processDataClearDao.deleteReportByBuildId(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deleteBuildStartupParamByBuildId(context, buildId)
-            processDataClearDao.deleteMetadataByBuildId(context, buildId)
+            processDataClearDao.deleteBuildStartupParamByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteMetadataByBuildId(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,

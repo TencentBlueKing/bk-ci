@@ -355,7 +355,7 @@ class SubPipelineStartUpService(
         return Result(data)
     }
 
-    fun getSubPipelineStatus(buildId: String): Result<SubPipelineStatus> {
-        return Result(subPipelineStatusService.getSubPipelineStatus(buildId))
+    fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
+        return Result(subPipelineStatusService.getSubPipelineStatus(projectId, buildId))
     }
 }

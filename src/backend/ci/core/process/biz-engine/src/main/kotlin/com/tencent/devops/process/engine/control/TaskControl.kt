@@ -98,7 +98,7 @@ class TaskControl @Autowired constructor(
      */
     private fun PipelineBuildAtomTaskEvent.execute() {
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
         val buildTask = pipelineRuntimeService.getBuildTask(buildId, taskId)
         // 检查构建状态,防止重复跑
@@ -299,7 +299,7 @@ class TaskControl @Autowired constructor(
             return
         }
 
-        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.projectId, buildTask.subBuildId!!)
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {

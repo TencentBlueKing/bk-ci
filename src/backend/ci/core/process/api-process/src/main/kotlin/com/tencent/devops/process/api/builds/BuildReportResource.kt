@@ -96,6 +96,9 @@ interface BuildReportResource {
     @Path("/{taskId}/rootUrl")
     @GET
     fun getRootUrl(
+        @ApiParam(value = "项目英文名", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,

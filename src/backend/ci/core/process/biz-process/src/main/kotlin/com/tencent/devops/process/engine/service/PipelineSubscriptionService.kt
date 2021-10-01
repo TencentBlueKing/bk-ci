@@ -60,7 +60,7 @@ class PipelineSubscriptionService constructor(
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
         }
         val executionVar = getExecutionVariables(pipelineId, vars)
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
         logger.info("buildInfo is $buildInfo")
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return
         var pipelineName = pipelineInfo.pipelineName

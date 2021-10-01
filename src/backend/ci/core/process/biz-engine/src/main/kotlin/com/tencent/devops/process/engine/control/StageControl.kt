@@ -96,7 +96,7 @@ class StageControl @Autowired constructor(
 
     private fun PipelineBuildStageEvent.execute(watcher: Watcher) {
         watcher.start("init_context")
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("ENGINE|$buildId|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
@@ -108,7 +108,7 @@ class StageControl @Autowired constructor(
                 return
             }
         val variables = buildVariableService.getAllVariable(buildId)
-        val containers = pipelineRuntimeService.listContainers(buildId, stageId)
+        val containers = pipelineRuntimeService.listContainers(buildInfo.projectId, buildId, stageId)
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态

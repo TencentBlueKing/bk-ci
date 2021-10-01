@@ -968,12 +968,12 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
     }
 
     fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         return buildInfo != null && buildInfo.status.isRunning()
     }
 
@@ -1089,13 +1089,13 @@ class PipelineListFacadeService @Autowired constructor(
         }
     }
 
-    fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
+    fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): Map<String, String> {
         if (buildIds.isEmpty()) return mapOf()
 
         val watcher = Watcher(id = "getBuildNoByByPair|${buildIds.size}")
         try {
             watcher.start("s_r_bs")
-            return pipelineRuntimeService.getBuildNoByByPair(buildIds)
+            return pipelineRuntimeService.getBuildNoByByPair(buildIds, projectId)
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
         }
@@ -1221,8 +1221,8 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     // 旧接口
-    fun getPipelineIdAndProjectIdByBuildId(buildId: String): Pair<String, String> {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    fun getPipelineIdAndProjectIdByBuildId(projectId: String, buildId: String): Pair<String, String> {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,

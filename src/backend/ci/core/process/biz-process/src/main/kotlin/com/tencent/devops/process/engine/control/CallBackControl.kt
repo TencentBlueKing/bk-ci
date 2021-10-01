@@ -158,7 +158,11 @@ class CallBackControl @Autowired constructor(
             return
         }
 
-        val modelDetail = pipelineBuildDetailService.get(buildId = event.buildId, refreshStatus = false) ?: return
+        val modelDetail = pipelineBuildDetailService.get(
+            projectId = projectId,
+            buildId = event.buildId,
+            refreshStatus = false
+        ) ?: return
 
         val buildEvent = BuildEvent(
             buildId = event.buildId,

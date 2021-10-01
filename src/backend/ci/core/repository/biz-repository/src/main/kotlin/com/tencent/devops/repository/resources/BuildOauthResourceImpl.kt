@@ -41,7 +41,7 @@ class BuildOauthResourceImpl @Autowired constructor(
 ) : BuildOauthResource {
 
     @SensitiveApiPermission("get_oauth_token")
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
+    override fun gitGet(projectId: String, buildId: String, userId: String): Result<GitToken?> {
+        return Result(gitOauthService.checkAndGetAccessToken(projectId, buildId, userId))
     }
 }

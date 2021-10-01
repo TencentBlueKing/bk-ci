@@ -409,7 +409,10 @@ interface ServicePipelineResource {
     @Path("/buildIds/getBuildNo")
     fun getBuildNoByBuildIds(
         @ApiParam("构建id", required = true)
-        buildIds: Set<String>
+        buildIds: Set<String>,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
 
     @ApiOperation("流水线重命名")

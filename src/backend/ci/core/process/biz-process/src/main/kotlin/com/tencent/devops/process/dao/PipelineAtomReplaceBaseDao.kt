@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineAtomReplaceBase
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -72,14 +73,6 @@ class PipelineAtomReplaceBaseDao {
         }
     }
 
-    fun getAtomReplaceBase(dslContext: DSLContext, baseId: String): TPipelineAtomReplaceBaseRecord? {
-        return with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
-            dslContext.selectFrom(this)
-                .where(ID.eq(baseId))
-                .fetchOne()
-        }
-    }
-
     fun getAtomReplaceBaseList(
         dslContext: DSLContext,
         statusList: List<String>? = null,
@@ -98,14 +91,6 @@ class PipelineAtomReplaceBaseDao {
                 baseStep.orderBy(CREATE_TIME.asc())
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        }
-    }
-
-    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
-        with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
-            dslContext.deleteFrom(this)
-                .where(ID.eq(baseId))
-                .execute()
         }
     }
 

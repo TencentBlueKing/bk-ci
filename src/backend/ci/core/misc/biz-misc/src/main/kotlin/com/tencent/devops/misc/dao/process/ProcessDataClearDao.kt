@@ -70,10 +70,11 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildContainerByBuildId(dslContext: DSLContext, buildId: String) {
+    fun deleteBuildContainerByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
             dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
@@ -86,10 +87,11 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildDetailByBuildId(dslContext: DSLContext, buildId: String) {
+    fun deleteBuildDetailByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
@@ -109,10 +111,11 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildStartupParamByBuildId(dslContext: DSLContext, buildId: String) {
+    fun deleteBuildStartupParamByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
             dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
@@ -125,10 +128,11 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteMetadataByBuildId(dslContext: DSLContext, buildId: String) {
+    fun deleteMetadataByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TMetadata.T_METADATA) {
             dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .execute()
         }
     }

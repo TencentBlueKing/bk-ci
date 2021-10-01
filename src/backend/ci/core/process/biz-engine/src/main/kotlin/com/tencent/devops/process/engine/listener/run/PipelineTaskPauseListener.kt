@@ -94,6 +94,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         // 修改详情model
         taskBuildDetailService.taskContinue(
+            projectId = task.projectId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
@@ -131,6 +132,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         // 刷新detail内model
         taskBuildDetailService.taskCancel(
+            projectId = task.projectId,
             buildId = task.buildId,
             containerId = task.containerId,
             taskId = task.taskId,
@@ -145,6 +147,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             executeCount = task.executeCount ?: 1
         )
         val containerRecord = pipelineRuntimeService.getContainer(
+            projectId = task.projectId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId
@@ -206,6 +209,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         // 修改容器状态位运行
         pipelineRuntimeService.updateContainerStatus(
+            projectId = current.projectId,
             buildId = current.buildId,
             stageId = current.stageId,
             containerId = current.containerId,

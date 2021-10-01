@@ -55,8 +55,8 @@ class BuildStartupParamService @Autowired constructor(
             pipelineId = pipelineId
         )
 
-    fun getParam(buildId: String) =
-        buildStartupParamDao.get(dslContext, buildId)
+    fun getParam(projectId: String, buildId: String) =
+        buildStartupParamDao.get(dslContext, projectId, buildId)
 
     fun deletePipelineBuildParam(projectId: String, pipelineId: String) {
         buildStartupParamDao.deletePipelineBuildParams(

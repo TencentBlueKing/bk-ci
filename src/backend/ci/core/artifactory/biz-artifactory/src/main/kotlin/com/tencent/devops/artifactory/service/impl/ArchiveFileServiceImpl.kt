@@ -121,7 +121,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             projectId = projectId,
             pipelineIds = setOf(pipelineId)
         ).data!![pipelineId] ?: ""
-        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
+        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId), projectId).data!![buildId] ?: ""
         val props: Map<String, String?> = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,

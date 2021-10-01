@@ -45,15 +45,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "TooManyFunctions")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
-    fun buildContext(buildId: String, containerId: String?, buildVar: Map<String, String>): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+    fun buildContext(
+        projectId: String,
+        buildId: String,
+        containerId: String?,
+        buildVar: Map<String, String>
+    ): Map<String, String> {
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val varMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->

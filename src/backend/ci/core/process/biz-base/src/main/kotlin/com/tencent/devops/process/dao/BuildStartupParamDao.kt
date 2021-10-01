@@ -54,10 +54,11 @@ class BuildStartupParamDao {
         }
     }
 
-    fun get(dslContext: DSLContext, buildId: String): String? {
+    fun get(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
             val record = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .fetchOne()
             return record?.param
         }

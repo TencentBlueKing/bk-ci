@@ -357,8 +357,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
-        return Result(pipelineListFacadeService.getBuildNoByByPair(buildIds))
+    override fun getBuildNoByBuildIds(buildIds: Set<String>, projectId: String?): Result<Map<String, String>> {
+        return Result(pipelineListFacadeService.getBuildNoByByPair(buildIds, projectId))
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {

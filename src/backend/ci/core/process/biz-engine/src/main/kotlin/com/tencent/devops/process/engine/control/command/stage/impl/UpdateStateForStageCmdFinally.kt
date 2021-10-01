@@ -186,10 +186,14 @@ class UpdateStateForStageCmdFinally(
                 commandContext.buildStatus = BuildStatus.FAILED
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
-                buildId = event.buildId, stageId = event.stageId,
+                projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
                 buildStatus = commandContext.buildStatus
             )
-            pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
+            pipelineRuntimeService.updateBuildHistoryStageState(
+                projectId = event.projectId,
+                buildId = event.buildId,
+                allStageStatus = allStageStatus
+            )
         }
     }
 
@@ -206,6 +210,7 @@ class UpdateStateForStageCmdFinally(
         commandContext.containers.forEach { c ->
             if (!c.status.isFinish()) { // #4315 未结束的，都需要刷新
                 pipelineRuntimeService.updateContainerStatus(
+                    projectId = c.projectId,
                     buildId = c.buildId,
                     stageId = c.stageId,
                     containerId = c.containerId,
