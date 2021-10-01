@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BKPermissionGraderServiceImpl @Autowired constructor(
+class BkPermissionGraderServiceImpl @Autowired constructor(
     override val iamManagerService: ManagerService
 ) : AbsPermissionGradeServiceImpl(iamManagerService) {
     override fun checkGradeManagerUser(userId: String, projectId: Int) {

@@ -173,7 +173,14 @@ class TxV3AuthPermissionApi @Autowired constructor(
         userIdList: List<String>,
         supplier: (() -> List<String>)?
     ): Boolean {
-        TODO("Not yet implemented")
+        return client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType.value,
+            action = permission.value,
+            token = tokenService.getSystemToken(null)!!
+        ).data ?: false
     }
 
     private fun allActionPermission(

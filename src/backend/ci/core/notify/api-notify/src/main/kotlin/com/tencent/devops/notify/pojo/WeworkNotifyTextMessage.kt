@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("企业微信多媒体消息")
 data class WeworkNotifyTextMessage(
     @ApiModelProperty("接收人Id", required = true)
-    val receivers: List<String>,
+    val receivers: Collection<String>,
     @ApiModelProperty("接收人类型", required = true)
     val receiverType: WeworkReceiverType,
     @ApiModelProperty("文本内容类型", required = true)

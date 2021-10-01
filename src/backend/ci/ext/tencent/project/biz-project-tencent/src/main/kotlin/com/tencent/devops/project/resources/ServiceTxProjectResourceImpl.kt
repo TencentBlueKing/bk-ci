@@ -320,13 +320,21 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createPipelinePermission(
-            createUser = createUser,
+//        return Result(projectIamV0Service.createPipelinePermission(
+//            createUser = createUser,
+//            projectId = createInfo.projectId,
+//            userId = createInfo.userId,
+//            permission = createInfo.permission,
+//            resourceType = createInfo.resourceType,
+//            resourceTypeCode = createInfo.resourceTypeCode
+//        ))
+        return Result(projectLocalService.grantInstancePermission(
+            userId = createUser,
             projectId = createInfo.projectId,
-            userId = createInfo.userId,
-            permission = createInfo.permission,
             resourceType = createInfo.resourceType,
-            resourceTypeCode = createInfo.resourceTypeCode
+            resourceCode = createInfo.resourceTypeCode,
+            action = createInfo.permission,
+            userList = arrayListOf(createInfo.userId)
         ))
     }
 

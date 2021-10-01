@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.api.ServiceRoleResource
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
@@ -157,6 +158,25 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             checkGradeManager = checkManager
         )
         return true
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean {
+        logger.info("grantInstancePermission $userId|$projectId|$action|$resourceType|$resourceCode|$userList")
+        return client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = resourceCode,
+            resourceType = resourceType,
+            action = action,
+            token = tokenService.getSystemToken(null)!!
+        ).data ?: false
     }
 
     companion object {
