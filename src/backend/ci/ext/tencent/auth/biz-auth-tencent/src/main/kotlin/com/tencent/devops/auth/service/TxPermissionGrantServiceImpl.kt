@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service
 @Service
 class TxPermissionGrantServiceImpl @Autowired constructor(
     override val grantServiceImpl: GrantServiceImpl,
-    override val iamConfiguration: IamConfiguration
+    override val iamConfiguration: IamConfiguration,
+    val authPipelineIdService: AuthPipelineIdService
 ) : AbsPermissionGrantServiceImpl(grantServiceImpl, iamConfiguration) {
     override fun grantInstancePermission(
         userId: String,
@@ -18,6 +19,8 @@ class TxPermissionGrantServiceImpl @Autowired constructor(
         resourceCode: String,
         resourceType: String
     ): Boolean {
-        return super.grantInstancePermission(userId, action, projectId, resourceCode, resourceType)
+        // 如果校验的资源为pipeline,需要兼容传pipelineId的情况
+        val useResourceCode = authPipelineIdService.findPipelineAutoId(resourceType, resourceCode)
+        return super.grantInstancePermission(userId, action, projectId, useResourceCode, resourceType)
     }
 }

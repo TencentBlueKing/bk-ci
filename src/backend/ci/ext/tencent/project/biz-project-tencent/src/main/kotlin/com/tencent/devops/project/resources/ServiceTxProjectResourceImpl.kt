@@ -333,8 +333,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             projectId = createInfo.projectId,
             resourceType = createInfo.resourceType,
             resourceCode = createInfo.resourceTypeCode,
-            action = createInfo.permission,
-            userList = arrayListOf(createInfo.userId)
+            permission = createInfo.permission,
+            createUserList = arrayListOf(createInfo.userId)
         ))
     }
 

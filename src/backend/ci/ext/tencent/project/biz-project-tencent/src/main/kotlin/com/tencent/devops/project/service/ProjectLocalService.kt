@@ -720,7 +720,7 @@ class ProjectLocalService @Autowired constructor(
             projectId = projectId,
             permission = permission,
             resourceType = resourceType,
-            resourceTypeCode = resourceTypeCode,
+            resourceCode = resourceTypeCode,
             createUserList = createUserList
         )
     }
@@ -734,10 +734,10 @@ class ProjectLocalService @Autowired constructor(
         projectId: String,
         permission: String,
         resourceType: String,
-        resourceTypeCode: String,
+        resourceCode: String,
         createUserList: List<String>
     ): Boolean {
-        logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceTypeCode")
+        logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
         // 操作人必须为项目的管理员
         if (!authProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.error("$userId is not manager for project[$projectId]")
@@ -760,7 +760,7 @@ class ProjectLocalService @Autowired constructor(
             projectId = projectId,
             action = permission,
             resourceType = resourceType,
-            resourceCode = resourceTypeCode,
+            resourceCode = resourceCode,
             userList = createUserList
         )
 //
