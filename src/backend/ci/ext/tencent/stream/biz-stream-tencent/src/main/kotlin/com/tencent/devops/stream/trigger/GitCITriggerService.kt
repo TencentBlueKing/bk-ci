@@ -64,6 +64,7 @@ import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -87,7 +88,8 @@ class GitCITriggerService @Autowired constructor(
     private val mergeConflict: MergeConflict,
     private val yamlVersion: YamlVersion,
     private val pipelineDelete: PipelineDelete,
-    private val triggerExceptionService: TriggerExceptionService
+    private val triggerExceptionService: TriggerExceptionService,
+    private val yamlSchemaCheck: YamlSchemaCheck
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -223,11 +225,13 @@ class GitCITriggerService @Autowired constructor(
             yamlPathList.add(ciFileName)
         }
 
-        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
-            "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
-            "commitTime:${gitRequestEvent.commitTimeStamp}, " +
-            "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
-            "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}")
+        logger.info(
+            "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
+                    "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
+                    "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+                    "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
+                    "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
+        )
 
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
@@ -396,6 +400,16 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
+        yamlSchemaCheck.check(
+            StreamTriggerContext(
+                gitEvent = event,
+                requestEvent = gitRequestEvent,
+                streamSetting = gitProjectConf,
+                pipeline = buildPipeline,
+                originYaml = originYaml
+            ), templateType = null, isCiFile = true
+        )
+
         // 为已存在的流水线设置名称
         buildPipeline.displayName = displayName
 
@@ -463,8 +477,10 @@ class GitCITriggerService @Autowired constructor(
         block: Boolean,
         state: GitCICommitCheckState
     ) {
-        logger.info("CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
-            "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}")
+        logger.info(
+            "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
+                    "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
+        )
         if (gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,

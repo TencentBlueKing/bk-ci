@@ -33,9 +33,10 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.common.exception.YamlBlankException
-import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.v2.service.OauthService
 import com.tencent.devops.stream.v2.service.ScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -47,7 +48,8 @@ class YamlTemplateService @Autowired constructor(
     private val oauthService: OauthService,
     private val scmService: ScmService,
     private val ticketService: TicketService,
-    private val yamlVersion: YamlVersion
+    private val yamlVersion: YamlVersion,
+    private val yamlSchemaCheck: YamlSchemaCheck
 ) {
 
     companion object {
@@ -64,18 +66,22 @@ class YamlTemplateService @Autowired constructor(
      * 3、如果是fork库，凭证系统使用目标库的蓝盾项目的凭证系统
      * 注：gitProjectId: fork库为主库ID
      */
+    @Suppress("ComplexMethod")
     @Throws(YamlBlankException::class, YamlFormatException::class, JsonProcessingException::class)
     fun getTemplate(
-        token: String?,
-        forkToken: String?,
-        gitProjectId: Long,
-        targetRepo: String?,
-        ref: String?,
-        personalAccessToken: String?,
-        fileName: String,
-        changeSet: Set<String>?,
-        event: GitEvent?
+        param: GetTemplateParam
     ): String {
+        val token = param.token
+        val event = param.event
+        val forkToken = param.forkToken
+        val gitProjectId = param.gitProjectId
+        val targetRepo = param.targetRepo
+        val ref = param.ref
+        val personalAccessToken = param.personalAccessToken
+        val fileName = param.fileName
+        val changeSet = param.changeSet
+        val templateType = param.templateType
+
         if (token != null) {
             // 获取触发库的模板需要对比版本问题
             val content = if (event is GitMergeRequestEvent && event.object_attributes.action !=
@@ -101,17 +107,25 @@ class YamlTemplateService @Autowired constructor(
                     useAccessToken = true
                 ).ifBlank { throw YamlBlankException(templateDirectory + fileName) }
             }
+
+            yamlSchemaCheck.check(content, templateType, false)
+
             return ScriptYmlUtils.formatYaml(content)
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
+
+            val content = scmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo!!,
                 ref = ref ?: getDefaultBranch(oAuthToken, targetRepo, true),
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
-            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
+
+            yamlSchemaCheck.check(content, templateType, false)
+
+            return ScriptYmlUtils.formatYaml(content)
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
             val personToken = if (isTicket) {
@@ -126,13 +140,19 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            return ScriptYmlUtils.formatYaml(scmService.getYamlFromGit(
+
+            val content = scmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo!!,
                 ref = ref ?: getDefaultBranch(personToken, targetRepo, false),
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
-            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) })
+            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
+
+            // 针对模板替换时，如果类型为空就不校验
+            yamlSchemaCheck.check(content, templateType, false)
+
+            return ScriptYmlUtils.formatYaml(content)
         }
     }
 

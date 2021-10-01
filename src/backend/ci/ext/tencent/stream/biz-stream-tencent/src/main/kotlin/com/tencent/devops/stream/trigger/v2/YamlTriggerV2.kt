@@ -59,7 +59,8 @@ import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.YamlCheck
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,7 +74,7 @@ class YamlTriggerV2 @Autowired constructor(
     private val gitBasicSettingService: GitCIBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
-    private val yamlCheck: YamlCheck,
+    private val yamlSchemaCheck: YamlSchemaCheck,
     private val yamlBuildV2: YamlBuildV2
 ) : YamlTriggerInterface<YamlObjects> {
 
@@ -220,7 +221,7 @@ class YamlTriggerV2 @Autowired constructor(
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val preTemplateYamlObject = yamlCheck.formatAndCheckYaml(
+        val preTemplateYamlObject = YamlFormat.formatYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
             filePath = filePath,
@@ -242,8 +243,7 @@ class YamlTriggerV2 @Autowired constructor(
 
     override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
         return try {
-            yamlCheck.formatAndCheckYaml(yaml)
-
+            yamlSchemaCheck.check(yaml, null, true)
             Result("OK")
         } catch (e: Exception) {
             logger.error("Check yaml schema failed.", e)

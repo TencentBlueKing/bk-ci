@@ -9,22 +9,27 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 // Stream 触发构建时的上下文参数
 interface StreamContext {
     // gitWebHook过来的事件原文
-    val gitEvent: GitEvent get() = gitEvent
+    val gitEvent: GitEvent
 
     // stream 当前对git event 做了预处理的部分数据
-    val requestEvent: GitRequestEvent get() = requestEvent
+    val requestEvent: GitRequestEvent
 
     // stream 项目的设置
-    val streamSetting: GitCIBasicSetting get() = streamSetting
+    val streamSetting: GitCIBasicSetting
 }
 
-
 data class StreamRequestContext(
-    val streamContext: StreamContext
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting
 ) : StreamContext
 
 data class StreamTriggerContext(
-    val streamContext: StreamContext,
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting,
+    // 用来构建的流水线
     val pipeline: GitProjectPipeline,
+    // yaml原文配置
     val originYaml: String
 ) : StreamContext

@@ -71,5 +71,12 @@ dependencies {
     api("com.vmware:vijava")
     api("org.json:json")
     api(group = "org.apache.ant", name = "ant", version = "1.10.5")
+
+    // jsonschema
+    api("com.networknt:json-schema-validator")
+    api(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
+    api(group = "org.slf4j", name = "slf4j-simple", version = "1.7.32")
+    api(group = "org.apache.commons", name = "commons-lang3", version = "3.12.0")
+
     testImplementation(project(":core:common:common-test"))
 }
