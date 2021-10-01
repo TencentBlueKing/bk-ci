@@ -31,10 +31,11 @@ interface ProcessorService {
 
     /**
      * 根据规则名称获取规则值
+     * @param projectId 项目ID
      * @param ruleName 规则名称
      * @param pipelineId 流水线ID
      * @param buildId 构建ID
      * @return 具体规则值
      */
-    fun getRuleValue(ruleName: String, pipelineId: String? = null, buildId: String? = null): String?
+    fun getRuleValue(projectId: String, ruleName: String, pipelineId: String? = null, buildId: String? = null): String?
 }

@@ -85,10 +85,11 @@ class MetadataDao {
         }
     }
 
-    fun list(dslContext: DSLContext, buildId: String): Result<TMetadataRecord> {
+    fun list(dslContext: DSLContext, projectId: String, buildId: String): Result<TMetadataRecord> {
         with(TMetadata.T_METADATA) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .fetch()
         }
     }

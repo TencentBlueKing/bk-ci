@@ -146,6 +146,7 @@ class PipelineBuildContainerDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String?,
         containerId: String
@@ -163,6 +164,7 @@ class PipelineBuildContainerDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
         containerId: String,
@@ -190,18 +192,20 @@ class PipelineBuildContainerDao {
                 }
             }
 
-            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
+            update.where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STAGE_ID.eq(stageId))
                 .and(CONTAINER_ID.eq(containerId)).execute()
         }
     }
 
     fun listByBuildId(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String? = null
     ): Collection<TPipelineBuildContainerRecord> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
-            val conditionStep = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            val conditionStep = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId)).and(BUILD_ID.eq(buildId))
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }

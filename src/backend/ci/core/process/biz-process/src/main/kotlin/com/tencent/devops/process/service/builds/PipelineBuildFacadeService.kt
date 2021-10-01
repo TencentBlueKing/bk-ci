@@ -199,7 +199,7 @@ class PipelineBuildFacadeService(
             // 获取最后一次的构建id
             val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
             if (lastTimeBuildInfo != null) {
-                val latestParamsStr = buildStartupParamService.getParam(lastTimeBuildInfo.buildId)
+                val latestParamsStr = buildStartupParamService.getParam(projectId, lastTimeBuildInfo.buildId)
                 // 为空的时候不处理
                 if (latestParamsStr != null) {
                     val latestParams =
@@ -289,7 +289,7 @@ class PipelineBuildFacadeService(
         )
 
         return try {
-            val startupParam = buildStartupParamService.getParam(buildId)
+            val startupParam = buildStartupParamService.getParam(projectId, buildId)
             if (startupParam == null || startupParam.isEmpty()) {
                 emptyList()
             } else {
@@ -335,7 +335,7 @@ class PipelineBuildFacadeService(
 
             redisLock.lock()
 
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -370,7 +370,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
+            val model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
             val startParamsWithType = mutableListOf<BuildParameters>()
@@ -436,7 +436,7 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
                 try {
-                    val startupParam = buildStartupParamService.getParam(buildId)
+                    val startupParam = buildStartupParamService.getParam(projectId, buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
                         startParamsWithType.addAll(
                             JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
@@ -696,7 +696,7 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true
     ) {
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -755,7 +755,7 @@ class PipelineBuildFacadeService(
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|params=$params")
         pipelineRuntimeService.manualDealBuildTask(buildId, elementId, userId, params)
         if (params.status == ManualReviewAction.ABORT) {
-            buildDetailService.updateBuildCancelUser(buildId, userId)
+            buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
         }
     }
 
@@ -775,7 +775,7 @@ class PipelineBuildFacadeService(
                 defaultMessage = "流水线不存在",
                 params = arrayOf(buildId)
             )
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -871,7 +871,7 @@ class PipelineBuildFacadeService(
         elementId: String
     ): ReviewParam {
 
-        pipelineRuntimeService.getBuildInfo(buildId)
+        pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -931,15 +931,16 @@ class PipelineBuildFacadeService(
         try {
             redisLock.lock()
 
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
             if (buildInfo == null) {
                 return
             } else {
-                if (buildInfo.parentBuildId != null && buildInfo.parentBuildId != buildId) {
+                val parentBuildId = buildInfo.parentBuildId
+                if (parentBuildId != null && parentBuildId != buildId) {
                     if (StartType.PIPELINE.name == buildInfo.trigger) {
                         if (buildInfo.parentTaskId != null) {
-                            val superPipeline = pipelineRuntimeService.getBuildInfo(buildInfo.parentBuildId!!)
+                            val superPipeline = pipelineRuntimeService.getBuildInfo(projectId, parentBuildId)
                             if (superPipeline != null) {
                                 serviceShutdown(
                                     projectId = projectId,
@@ -961,7 +962,11 @@ class PipelineBuildFacadeService(
                     userId = buildInfo.startUser,
                     buildStatus = BuildStatus.FAILED
                 )
-                buildDetailService.updateBuildCancelUser(buildId = buildId, cancelUserId = buildInfo.startUser)
+                buildDetailService.updateBuildCancelUser(
+                    projectId = projectId,
+                    buildId = buildId,
+                    cancelUserId = buildInfo.startUser
+                )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
                 logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
@@ -1004,7 +1009,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         channelCode: ChannelCode
     ): ModelDetail {
-        val newModel = buildDetailService.get(buildId) ?: throw ErrorCodeException(
+        val newModel = buildDetailService.get(projectId, buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -1095,17 +1100,14 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
-
-        if (buildHistories.isEmpty()) {
-            throw ErrorCodeException(
+        val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
+            ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
-        }
-        val buildHistory = buildHistories[0]
+
         val variables = buildVariableService.getAllVariable(buildId)
         return BuildHistoryWithVars(
             id = buildHistory.id,
@@ -1156,14 +1158,11 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
-
-        if (buildHistories.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(
+        val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 arrayOf(buildId)
             )
-        }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return MessageCodeUtil.generateResponseDataObject(
@@ -1175,15 +1174,15 @@ class PipelineBuildFacadeService(
 
         return Result(
             BuildHistoryVariables(
-                id = buildHistories[0].id,
-                userId = buildHistories[0].userId,
-                trigger = buildHistories[0].trigger,
+                id = buildHistory.id,
+                userId = buildHistory.userId,
+                trigger = buildHistory.trigger,
                 pipelineName = pipelineInfo.pipelineName,
-                buildNum = buildHistories[0].buildNum ?: 1,
-                pipelineVersion = buildHistories[0].pipelineVersion,
-                status = buildHistories[0].status,
-                startTime = buildHistories[0].startTime,
-                endTime = buildHistories[0].endTime,
+                buildNum = buildHistory.buildNum ?: 1,
+                pipelineVersion = buildHistory.pipelineVersion,
+                status = buildHistory.status,
+                startTime = buildHistory.startTime,
+                endTime = buildHistory.endTime,
                 variables = allVariable
             )
         )
@@ -1222,7 +1221,7 @@ class PipelineBuildFacadeService(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): List<BuildHistory> {
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(buildIdSet)
+        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(buildIdSet, projectId)
 
         if (buildHistories.isEmpty()) {
             return emptyList()
@@ -1488,8 +1487,8 @@ class PipelineBuildFacadeService(
         return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias)
     }
 
-    fun serviceBuildBasicInfo(buildId: String): BuildBasicInfo {
-        val build = pipelineRuntimeService.getBuildInfo(buildId)
+    fun serviceBuildBasicInfo(projectId: String, buildId: String): BuildBasicInfo {
+        val build = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1667,8 +1666,7 @@ class PipelineBuildFacadeService(
         try {
             redisLock.lock()
 
-            val modelDetail = buildDetailService.get(buildId)
-                ?: return
+            val modelDetail = buildDetailService.get(projectId, buildId) ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
 
             if (BuildStatus.parse(modelDetail.status).isFinish()) {
@@ -1707,7 +1705,7 @@ class PipelineBuildFacadeService(
                 return
             }
 
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             if (buildInfo == null) {
                 logger.warn("The build($buildId) of pipeline($pipelineId) is not exist")
                 throw ErrorCodeException(
@@ -1753,7 +1751,11 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED
                 )
-                buildDetailService.updateBuildCancelUser(buildId = buildId, cancelUserId = userId)
+                buildDetailService.updateBuildCancelUser(
+                    projectId = projectId,
+                    buildId = buildId,
+                    cancelUserId = userId
+                )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
                 logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
@@ -1782,13 +1784,18 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
+        val container = pipelineRuntimeService.getContainer(
+            projectId = buildInfo.projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = vmSeqId
+        )
         if (container != null) {
             val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
@@ -1839,7 +1846,7 @@ class PipelineBuildFacadeService(
                 message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
             )
         }
-        return pipelineRuntimeService.getBuildInfo(buildId)?.status?.name
+        return pipelineRuntimeService.getBuildInfo(projectId, buildId)?.status?.name
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,

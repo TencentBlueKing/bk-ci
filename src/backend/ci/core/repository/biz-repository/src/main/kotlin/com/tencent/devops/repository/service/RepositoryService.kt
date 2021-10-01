@@ -702,8 +702,8 @@ class RepositoryService @Autowired constructor(
         }
     }
 
-    fun buildGet(buildId: String, repositoryConfig: RepositoryConfig): Repository {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+    fun buildGet(projectId: String, buildId: String, repositoryConfig: RepositoryConfig): Repository {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }

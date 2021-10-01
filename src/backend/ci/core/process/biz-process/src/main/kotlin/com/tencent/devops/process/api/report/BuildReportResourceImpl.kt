@@ -66,7 +66,7 @@ class BuildReportResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getRootUrl(buildId: String, taskId: String): Result<String> {
-        return Result(reportService.getRootUrl(buildId, taskId))
+    override fun getRootUrl(projectId: String, buildId: String, taskId: String): Result<String> {
+        return Result(reportService.getRootUrl(projectId, buildId, taskId))
     }
 }

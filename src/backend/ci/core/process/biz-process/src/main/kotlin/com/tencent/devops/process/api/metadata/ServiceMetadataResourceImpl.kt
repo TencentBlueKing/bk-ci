@@ -41,7 +41,7 @@ class ServiceMetadataResourceImpl @Autowired constructor(
 ) : ServiceMetadataResource {
     override fun list(projectId: String, pipelineId: String, buildId: String): Result<List<Property>> {
         checkParams(projectId, pipelineId, buildId)
-        val result = metadataService.list(projectId, pipelineId, buildId)
+        val result = metadataService.list(projectId, buildId)
         return Result(result)
     }
 

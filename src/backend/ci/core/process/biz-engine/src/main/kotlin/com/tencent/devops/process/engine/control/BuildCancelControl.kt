@@ -99,21 +99,25 @@ class BuildCancelControl @Autowired constructor(
 
     private fun execute(event: PipelineBuildCancelEvent): Boolean {
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId = event.projectId, buildId = buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("[$$buildId|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId = buildId)
+        val model = pipelineBuildDetailService.getBuildModel(projectId = event.projectId, buildId = buildId)
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
             // 往redis中设置取消构建标识以防止重复提交
             setBuildCancelRedisFlag(buildId)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
-            pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
+            pipelineBuildDetailService.buildCancel(
+                projectId = event.projectId,
+                buildId = event.buildId,
+                buildStatus = event.status
+            )
 
             val pendingStage = pipelineStageService.getPendingStage(buildId)
             if (pendingStage != null) {
@@ -187,7 +191,12 @@ class BuildCancelControl @Autowired constructor(
             stage.containers.forEach C@{ container ->
                 val stageId = stage.id ?: ""
                 val containerId = container.id ?: ""
-                val pipelineContainer = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+                val pipelineContainer = pipelineRuntimeService.getContainer(
+                    projectId = event.projectId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId
+                ) ?: run {
                     LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
                     return@C
                 }
@@ -206,6 +215,7 @@ class BuildCancelControl @Autowired constructor(
                         dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
                     ) {
                         pipelineRuntimeService.updateContainerStatus(
+                            projectId = event.projectId,
                             buildId = event.buildId,
                             stageId = stageId,
                             containerId = containerId,

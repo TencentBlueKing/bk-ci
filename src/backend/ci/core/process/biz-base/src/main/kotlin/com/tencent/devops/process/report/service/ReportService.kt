@@ -178,8 +178,8 @@ class ReportService @Autowired constructor(
         }
     }
 
-    fun getRootUrl(buildId: String, taskId: String): String {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    fun getRootUrl(projectId: String, buildId: String, taskId: String): String {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,

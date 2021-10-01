@@ -82,7 +82,11 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildStatus = BuildStatus.RUNNING
             )
             // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(buildId = task.buildId, taskId = task.taskId)
+            pipelineBuildDetailService.taskStart(
+                projectId = task.projectId,
+                buildId = task.buildId,
+                taskId = task.taskId
+            )
             val runVariables = buildVariableService.getAllVariable(task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
@@ -166,6 +170,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorMsg = atomResponse.errorMsg
             )
             pipelineBuildDetailService.taskEnd(
+                projectId = task.projectId,
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,

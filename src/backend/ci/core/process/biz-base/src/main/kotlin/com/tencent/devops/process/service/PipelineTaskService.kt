@@ -227,7 +227,7 @@ class PipelineTaskService @Autowired constructor(
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
             ?: return
-        val model = taskBuildDetailService.getBuildModel(buildId)
+        val model = taskBuildDetailService.getBuildModel(projectId, buildId)
         val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
         val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
         try {
@@ -335,6 +335,7 @@ class PipelineTaskService @Autowired constructor(
         pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
         taskBuildDetailService.taskPause(
+            projectId = task.projectId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,

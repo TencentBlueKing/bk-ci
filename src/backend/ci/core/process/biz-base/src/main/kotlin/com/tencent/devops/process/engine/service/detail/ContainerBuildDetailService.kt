@@ -54,8 +54,9 @@ class ContainerBuildDetailService(
     redisOperation
 ) {
 
-    fun containerPreparing(buildId: String, containerId: Int) {
+    fun containerPreparing(projectId: String, buildId: String, containerId: Int) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -81,8 +82,9 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun containerStarted(buildId: String, containerId: Int, containerBuildStatus: BuildStatus) {
+    fun containerStarted(projectId: String, buildId: String, containerId: Int, containerBuildStatus: BuildStatus) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -114,9 +116,9 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun updateContainerStatus(buildId: String, containerId: String, buildStatus: BuildStatus) {
+    fun updateContainerStatus(projectId: String, buildId: String, containerId: String, buildStatus: BuildStatus) {
         logger.info("[$buildId]|container_end|containerId=$containerId|status=$buildStatus")
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
 
             var update = false
 
@@ -140,9 +142,10 @@ class ContainerBuildDetailService(
         }, BuildStatus.RUNNING)
     }
 
-    fun containerSkip(buildId: String, containerId: String) {
+    fun containerSkip(projectId: String, buildId: String, containerId: String) {
         logger.info("[$buildId|$containerId] Normal container skip")
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
 

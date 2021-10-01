@@ -38,8 +38,8 @@ class MetadataService @Autowired constructor(
     private val dslContext: DSLContext,
     private val metadataDao: MetadataDao
 ) {
-    fun list(projectId: String, pipelineId: String, buildId: String): List<Property> {
-        val result = metadataDao.list(dslContext, buildId)
+    fun list(projectId: String, buildId: String): List<Property> {
+        val result = metadataDao.list(dslContext, projectId, buildId)
         return result.map {
             Property(it.metaDataId, it.metaDataValue)
         }

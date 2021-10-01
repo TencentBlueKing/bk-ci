@@ -114,13 +114,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机报告启动完毕
      */
-    fun buildVMStarted(buildId: String, vmSeqId: String, vmName: String): BuildVariables {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    fun buildVMStarted(projectId: String, buildId: String, vmSeqId: String, vmName: String): BuildVariables {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         val variables = buildVariableService.getAllVariable(buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
-        val model = taskBuildDetailService.getBuildModel(buildId)
+        val model = taskBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
         model!!.stages.forEachIndexed { index, s ->
@@ -232,6 +232,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
             if (!startUpVMTask.status.isFinish()) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
                 pipelineRuntimeService.updateContainerStatus(
+                    projectId = projectId,
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
                     containerId = startUpVMTask.containerId,
@@ -240,6 +241,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     buildStatus = BuildStatus.RUNNING
                 )
                 containerBuildDetailService.containerStarted(
+                    projectId = projectId,
                     buildId = buildId,
                     containerId = vmSeqId.toInt(),
                     containerBuildStatus = buildStatus
@@ -284,12 +286,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机请求执行任务
      */
-    fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-        return buildClaim(buildId, vmSeqId, vmName)
+    fun buildClaimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): BuildTask {
+        return buildClaim(projectId, buildId, vmSeqId, vmName)
     }
 
-    private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    private fun buildClaim(projectId: String, buildId: String, vmSeqId: String, vmName: String): BuildTask {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|buildInfo was finish")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
@@ -467,7 +469,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
                 // 认领任务
                 pipelineRuntimeService.claimBuildTask(task, userId)
-                taskBuildDetailService.taskStart(buildId, task.taskId)
+                taskBuildDetailService.taskStart(task.projectId, buildId, task.taskId)
                 jmxElements.execute(task.taskType)
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStatusBroadCastEvent(
@@ -499,8 +501,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机完成任务请求
      */
-    fun buildCompleteTask(buildId: String, vmSeqId: String, vmName: String, result: BuildTaskResult) {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
+    fun buildCompleteTask(projectId: String, buildId: String, vmSeqId: String, vmName: String, result: BuildTaskResult) {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
         if (!result.success && !result.type.isNullOrBlank()) {
             jmxElements.fail(result.type!!)
         }
@@ -536,7 +538,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         taskBuildDetailService.taskEnd(
-            buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
+            projectId = buildInfo.projectId, buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
         )
         // 重置前置暂停插件暂停状态位

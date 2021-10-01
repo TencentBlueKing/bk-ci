@@ -64,7 +64,7 @@ class DefaultCalendarProcessorService : ProcessorService {
         }
     }
 
-    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+    override fun getRuleValue(projectId: String, ruleName: String, pipelineId: String?, buildId: String?): String? {
         val ruleValue = publicFieldNameMap[ruleName]
         return if (ruleValue != null && ruleValue is Int) {
             calendar.get(ruleValue).toString()

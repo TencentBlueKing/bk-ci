@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -56,6 +57,9 @@ interface BuildRepositoryResource {
     @Path("/{repositoryHashId}/")
     @GET
     fun get(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -76,10 +80,14 @@ interface BuildRepositoryResource {
      * 如果是带了 '/' 之后， 虽然agent会做url encode, 但是网关那层会把这个自动decode， 导致请求会返回404，
      * 所以新加了这个API， repository ID以query方式传递过来
      */
+    @Suppress("LongParameterList")
     @ApiOperation("构建机获取代码库详情")
     @Path("/")
     @GET
     fun getByType(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -103,6 +111,9 @@ interface BuildRepositoryResource {
     @Path("/repositoryHashId/{repositoryHashId}/")
     @GET
     fun getV2(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,

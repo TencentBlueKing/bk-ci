@@ -148,7 +148,7 @@ class BuildStartControl @Autowired constructor(
         val buildIdLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         return try {
             buildIdLock.lock()
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             if (buildInfo == null || buildInfo.status.isFinish() || buildInfo.status.isNeverRun()) {
                 buildLogPrinter.addLine(message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
@@ -289,6 +289,7 @@ class BuildStartControl @Autowired constructor(
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineRuntimeService.updateContainerStatus(
+                        projectId = buildInfo.projectId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
                         containerId = container.id!!,
@@ -319,7 +320,7 @@ class BuildStartControl @Autowired constructor(
         container.elementElapsed = 0
         container.startVMStatus = BuildStatus.SUCCEED.name
 
-        buildDetailService.updateModel(buildId = buildInfo.buildId, model = model)
+        buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
     }
 
     @Suppress("ALL")
@@ -440,7 +441,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo, executeCount: Int) {
-        val model = buildDetailService.getBuildModel(buildId) ?: run {
+        val model = buildDetailService.getBuildModel(projectId, buildId) ?: run {
             pipelineEventDispatcher.dispatch(PipelineBuildCancelEvent(
                 source = TAG, projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId, status = BuildStatus.UNEXEC

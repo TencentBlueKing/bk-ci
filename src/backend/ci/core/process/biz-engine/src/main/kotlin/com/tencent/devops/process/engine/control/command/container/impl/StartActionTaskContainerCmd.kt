@@ -259,7 +259,13 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
+        val projectId = containerContext.container.projectId
+        val contextMap = pipelineContextService.buildContext(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            buildVar = containerContext.variables
+        )
         if (containerContext.event.actionType == ActionType.END) {
             containerContext.buildStatus = BuildStatus.CANCELED
         }
@@ -302,6 +308,7 @@ class StartActionTaskContainerCmd(
                 // 更新任务状态
                 pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                    projectId = projectId,
                     buildId = buildId,
                     taskId = taskId,
                     buildStatus = taskStatus
@@ -406,6 +413,7 @@ class StartActionTaskContainerCmd(
             // 更新排队中的post任务的构建状态
             pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             taskBuildDetailService.updateTaskStatus(
+                projectId = currentTask.projectId,
                 buildId = currentTask.buildId,
                 taskId = currentTask.taskId,
                 taskStatus = taskStatus,

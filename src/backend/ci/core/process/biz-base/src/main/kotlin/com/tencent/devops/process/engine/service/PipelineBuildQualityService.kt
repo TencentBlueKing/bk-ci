@@ -109,7 +109,7 @@ class PipelineBuildQualityService(
             )
         }
 
-        val model = buildDetailService.getBuildModel(buildId)
+        val model = buildDetailService.getBuildModel(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,

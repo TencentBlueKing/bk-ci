@@ -95,7 +95,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<SubPipelineStatus> {
-        return subPipeService.getSubPipelineStatus(buildId)
+        return subPipeService.getSubPipelineStatus(projectId, buildId)
     }
 
     override fun subpipManualStartupInfo(

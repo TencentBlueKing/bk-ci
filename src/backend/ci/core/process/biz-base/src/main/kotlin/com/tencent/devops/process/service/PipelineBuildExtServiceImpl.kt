@@ -36,7 +36,12 @@ class PipelineBuildExtServiceImpl@Autowired constructor(
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
     override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
-        return pipelineContextService.buildContext(task.buildId, task.containerId, variable)
+        return pipelineContextService.buildContext(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            containerId = task.containerId,
+            buildVar = variable
+        )
     }
 
     override fun endBuild(task: PipelineBuildTask) {

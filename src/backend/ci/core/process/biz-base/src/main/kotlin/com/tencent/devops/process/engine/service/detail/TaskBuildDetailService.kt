@@ -39,6 +39,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
@@ -73,8 +75,15 @@ class TaskBuildDetailService(
     redisOperation
 ) {
 
-    fun taskPause(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+    fun taskPause(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        buildStatus: BuildStatus
+    ) {
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
@@ -99,6 +108,7 @@ class TaskBuildDetailService(
     }
 
     fun updateTaskStatus(
+        projectId: String,
         buildId: String,
         taskId: String,
         taskStatus: BuildStatus,
@@ -106,6 +116,7 @@ class TaskBuildDetailService(
         operation: String
     ) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -127,8 +138,9 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskStart(buildId: String, taskId: String) {
+    fun taskStart(projectId: String, buildId: String, taskId: String) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -165,7 +177,12 @@ class TaskBuildDetailService(
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
-                        e.version = findTaskVersion(buildId, e.getAtomCode(), e.version, e.getClassType())
+                        e.version = findTaskVersion(
+                            projectId = projectId,
+                            atomCode = e.getAtomCode(),
+                            atomVersion = e.version,
+                            atomClass = e.getClassType()
+                        )
                         update = true
                         return Traverse.BREAK
                     }
@@ -181,8 +198,9 @@ class TaskBuildDetailService(
         )
     }
 
-    fun taskCancel(buildId: String, containerId: String, taskId: String, cancelUser: String?) {
+    fun taskCancel(projectId: String, buildId: String, containerId: String, taskId: String, cancelUser: String?) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -210,6 +228,7 @@ class TaskBuildDetailService(
     }
 
     fun taskEnd(
+        projectId: String,
         buildId: String,
         taskId: String,
         buildStatus: BuildStatus,
@@ -218,7 +237,7 @@ class TaskBuildDetailService(
         errorMsg: String? = null
     ): List<PipelineTaskStatusInfo> {
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
 
             var update = false
             override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
@@ -453,8 +472,16 @@ class TaskBuildDetailService(
     }
 
     @Suppress("NestedBlockDepth")
-    fun taskContinue(buildId: String, stageId: String, containerId: String, taskId: String, element: Element?) {
+    fun taskContinue(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        element: Element?
+    ) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
 
@@ -503,13 +530,6 @@ class TaskBuildDetailService(
         )
     }
 
-    private val projectCache = Caffeine.newBuilder()
-        .maximumSize(50000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, String/*projectId*/> { buildId ->
-            pipelineBuildDao.getBuildInfo(dslContext, buildId)?.projectId
-        }
-
     private val atomCache = Caffeine.newBuilder()
         .maximumSize(2000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
@@ -519,18 +539,18 @@ class TaskBuildDetailService(
                 .getAtomEnv(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data?.version
         }
 
-    fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String, atomClass: String): String {
+    fun findTaskVersion(
+        projectId: String,
+        atomCode: String,
+        atomVersion: String,
+        atomClass: String,
+    ): String {
         // 只有是研发商店插件,获取插件的版本信息
-        if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
+        if (atomClass != MarketBuildAtomElement.classType && atomClass != MarketBuildLessAtomElement.classType) {
             return atomVersion
         }
         return if (atomVersion.contains("*")) {
-            val projectCode = projectCache.get(buildId)
-            if (projectCode != null) {
-                atomCache.get("$projectCode VS $atomCode VS $atomVersion") ?: atomVersion
-            } else {
-                atomVersion
-            }
+            atomCache.get("$projectId VS $atomCode VS $atomVersion") ?: atomVersion
         } else {
             atomVersion
         }

@@ -86,7 +86,7 @@ class BuildMonitorControl @Autowired constructor(
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, buildId)
         if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|BUILD_MONITOR|status=${buildInfo?.status}|ec=${event.executeCount}")
             return true
@@ -123,7 +123,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
 
-        val containers = pipelineRuntimeService.listContainers(event.buildId) // #5090 ==0 是为了兼容旧的监控事件
+        val containers = pipelineRuntimeService.listContainers(event.projectId, event.buildId) // #5090 ==0 是为了兼容旧的监控事件
             .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
@@ -309,10 +309,11 @@ class BuildMonitorControl @Autowired constructor(
             if (canStart) {
                 val buildId = event.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(buildInfo.buildId) ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildInfo.buildId)
-                )
+                val model = pipelineBuildDetailService.getBuildModel(event.projectId, buildInfo.buildId)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                        params = arrayOf(buildInfo.buildId)
+                    )
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(

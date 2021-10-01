@@ -126,8 +126,11 @@ interface ServiceBuildResource {
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
     @GET
     // @Path("/builds/{buildId}/basic")
-    @Path("/{buildId}/basic")
+    @Path("/projects/{projectId}/{buildId}/basic")
     fun serviceBasic(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String

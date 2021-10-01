@@ -43,7 +43,7 @@ interface IGitOauthService {
     fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
     fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String? = null): AuthorizeResult
     fun gitCallback(code: String, state: String): Response
-    fun checkAndGetAccessToken(buildId: String, userId: String): GitToken?
+    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken?
     fun getAccessToken(userId: String): GitToken?
     fun saveAccessToken(userId: String, tGitToken: GitToken): Int
     fun deleteToken(userId: String): Int

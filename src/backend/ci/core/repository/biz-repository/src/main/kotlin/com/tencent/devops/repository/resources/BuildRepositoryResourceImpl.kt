@@ -43,12 +43,19 @@ class BuildRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : BuildRepositoryResource {
 
-    override fun get(buildId: String, vmSeqId: String, vmName: String, repositoryHashId: String): Result<Repository> {
+    override fun get(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        repositoryHashId: String
+    ): Result<Repository> {
         checkParam(buildId, vmSeqId, vmName, repositoryHashId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryHashId, null)))
+        return Result(repositoryService.buildGet(projectId, buildId, buildConfig(repositoryHashId, null)))
     }
 
     override fun getByType(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -56,12 +63,18 @@ class BuildRepositoryResourceImpl @Autowired constructor(
         repositoryType: RepositoryType?
     ): Result<Repository> {
         checkParam(buildId, vmSeqId, vmName, repositoryId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryId, repositoryType)))
+        return Result(repositoryService.buildGet(projectId, buildId, buildConfig(repositoryId, repositoryType)))
     }
 
-    override fun getV2(buildId: String, vmSeqId: String, vmName: String, repositoryHashId: String): Result<Repository> {
+    override fun getV2(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        repositoryHashId: String
+    ): Result<Repository> {
         checkParam(buildId, vmSeqId, vmName, repositoryHashId)
-        return Result(repositoryService.buildGet(buildId, buildConfig(repositoryHashId, null)))
+        return Result(repositoryService.buildGet(projectId, buildId, buildConfig(repositoryHashId, null)))
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String, repositoryId: String) {

@@ -179,9 +179,10 @@ interface CertService {
 
     fun getTls(projectId: String, certId: String): CertTlsInfo
 
-    fun queryIos(buildId: String, certId: String, publicKey: String): CertIOS
+    fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS
 
     fun queryEnterprise(
+        projectId: String,
         buildId: String,
         certId: String,
         publicKey: String
@@ -189,7 +190,7 @@ interface CertService {
 
     fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise
 
-    fun queryAndroid(buildId: String, certId: String, publicKey: String): CertAndroid
+    fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid
 
     fun queryAndroidByProject(
         projectId: String,

@@ -129,7 +129,11 @@ class PipelineStageService @Autowired constructor(
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
+            val allStageStatus = stageBuildDetailService.stageSkip(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId
+            )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
@@ -139,7 +143,7 @@ class PipelineStageService @Autowired constructor(
                 )
 
                 pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                    dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                 )
             }
             pipelineEventDispatcher.dispatch(
@@ -154,7 +158,7 @@ class PipelineStageService @Autowired constructor(
     fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId, stageId = stageId,
+                projectId = projectId, buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
                 buildStatus = BuildStatus.FAILED,
                 checkIn = checkIn, checkOut = checkOut
@@ -168,7 +172,10 @@ class PipelineStageService @Autowired constructor(
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                    dslContext = context,
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageStatus = allStageStatus
                 )
             }
             pipelineEventDispatcher.dispatch(
@@ -183,7 +190,7 @@ class PipelineStageService @Autowired constructor(
     fun checkQualityPassStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId, stageId = stageId,
+                projectId = projectId, buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
                 buildStatus = BuildStatus.RUNNING,
                 checkIn = checkIn, checkOut = checkOut
@@ -197,7 +204,7 @@ class PipelineStageService @Autowired constructor(
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                    dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                 )
             }
             pipelineEventDispatcher.dispatch(
@@ -213,6 +220,7 @@ class PipelineStageService @Autowired constructor(
         with(buildStage) {
             checkIn?.status = BuildStatus.REVIEWING.name
             val allStageStatus = stageBuildDetailService.stagePause(
+                projectId = projectId,
                 buildId = buildId,
                 stageId = stageId,
                 controlOption = controlOption!!,
@@ -231,7 +239,7 @@ class PipelineStageService @Autowired constructor(
                     oldBuildStatus = BuildStatus.RUNNING, newBuildStatus = BuildStatus.STAGE_SUCCESS
                 )
                 pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                    dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                 )
                 // 被暂停的流水线不占构建队列，在执行数-1
                 pipelineBuildSummaryDao.updateRunningCount(
@@ -256,7 +264,7 @@ class PipelineStageService @Autowired constructor(
             )
             if (success != true) return false
             stageBuildDetailService.stageReview(
-                buildId = buildId, stageId = stageId,
+                projectId = projectId, buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
@@ -277,7 +285,7 @@ class PipelineStageService @Autowired constructor(
                 )
             } else {
                 val allStageStatus = stageBuildDetailService.stageStart(
-                    buildId = buildId, stageId = stageId,
+                    projectId = projectId, buildId = buildId, stageId = stageId,
                     controlOption = controlOption!!,
                     checkIn = checkIn, checkOut = checkOut
                 )
@@ -292,7 +300,7 @@ class PipelineStageService @Autowired constructor(
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     pipelineBuildDao.updateBuildStageStatus(
-                        dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                        dslContext = context, projectId = projectId, buildId = buildId, stageStatus = allStageStatus
                     )
                     pipelineBuildSummaryDao.updateRunningCount(
                         dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
@@ -326,7 +334,7 @@ class PipelineStageService @Autowired constructor(
             // 5019 暂时只有准入有审核逻辑，准出待产品规划
             checkIn?.status = BuildStatus.REVIEW_ABORT.name
             stageBuildDetailService.stageCancel(
-                buildId = buildId, stageId = stageId, controlOption = controlOption!!,
+                projectId = projectId, buildId = buildId, stageId = stageId, controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
 
