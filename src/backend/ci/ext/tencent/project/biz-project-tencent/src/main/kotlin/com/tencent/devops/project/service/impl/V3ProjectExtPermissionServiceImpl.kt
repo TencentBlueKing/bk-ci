@@ -36,7 +36,10 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -174,7 +177,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceCode = resourceCode,
             resourceType = resourceType,
-            action = action,
+            action = TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType)),
             token = tokenService.getSystemToken(null)!!
         ).data ?: false
     }

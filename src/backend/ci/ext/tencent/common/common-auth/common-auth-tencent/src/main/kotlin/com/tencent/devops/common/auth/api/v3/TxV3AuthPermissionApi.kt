@@ -178,7 +178,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
             projectCode = projectCode,
             resourceCode = resourceCode,
             resourceType = resourceType.value,
-            action = permission.value,
+            action = TActionUtils.buildAction(permission, resourceType),
             token = tokenService.getSystemToken(null)!!
         ).data ?: false
     }
