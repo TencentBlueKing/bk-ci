@@ -80,13 +80,13 @@ class PipelineDelete @Autowired constructor(
     ) {
         val deleteYamlFiles = when (event) {
             is GitPushEvent -> {
-                event.commits.flatMap {
+                event.commits?.flatMap {
                     if (it.removed != null) {
                         it.removed!!.asIterable()
                     } else {
                         emptyList()
                     }
-                }.filter { isCiFile(it) }
+                }?.filter { isCiFile(it) }
             }
             is GitMergeRequestEvent -> {
                 val deleteList = mutableListOf<String>()
