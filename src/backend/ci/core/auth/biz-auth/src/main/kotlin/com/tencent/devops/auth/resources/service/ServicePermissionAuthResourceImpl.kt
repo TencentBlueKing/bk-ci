@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -38,7 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService
+    val permissionExtService: PermissionExtService,
+    val permissionGrantService: PermissionGrantService
 ) : ServicePermissionAuthResource {
 
     override fun validateUserActionPermission(
@@ -157,5 +159,22 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceCode = resourceCode,
                 resourceName = resourceName
             ))
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String
+    ): Result<Boolean> {
+        return Result(permissionGrantService.grantInstancePermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            action = action
+        ))
     }
 }

@@ -197,10 +197,34 @@ interface ServicePermissionAuthResource {
         @ApiParam("资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @ApiParam("资源类型")
+        @ApiParam("资源Code")
         resourceCode: String,
         @QueryParam("resourceName")
         @ApiParam("资源名称")
         resourceName: String
+    ): Result<Boolean>
+
+    @Path("/projects/{projectCode}/grant")
+    @POST
+    @ApiOperation("授权实例级别权限")
+    fun grantInstancePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源Code")
+        resourceCode: String,
+        @QueryParam("action")
+        @ApiParam("操作类型")
+        action: String
     ): Result<Boolean>
 }
