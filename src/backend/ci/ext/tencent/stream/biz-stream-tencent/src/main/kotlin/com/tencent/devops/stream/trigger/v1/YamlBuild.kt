@@ -529,7 +529,7 @@ class YamlBuild @Autowired constructor(
             is GitPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
                 startParams[BK_REPO_GIT_EVENT_CONTENT] = JsonUtil.toJson(
-                    bean = originEvent.copy(commits = emptyList()),
+                    bean = originEvent.copy(commits = null),
                     formatted = false
                 )
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
@@ -540,7 +540,7 @@ class YamlBuild @Autowired constructor(
             is GitTagPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
                 startParams[BK_REPO_GIT_EVENT_CONTENT] = JsonUtil.toJson(
-                    bean = originEvent.copy(commits = emptyList()),
+                    bean = originEvent.copy(commits = null),
                     formatted = false
                 )
 //                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
