@@ -9,9 +9,9 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-open class AbsPermissionGrantServiceImpl @Autowired constructor(
-    val grantServiceImpl: GrantServiceImpl,
-    val iamConfiguration: IamConfiguration
+abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
+    open val grantServiceImpl: GrantServiceImpl,
+    open val iamConfiguration: IamConfiguration
 ): PermissionGrantService {
     override fun grantInstancePermission(
         userId: String,

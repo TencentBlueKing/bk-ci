@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class BkAuthGrantPermissionServiceImpl @Autowired constructor(
-    val grantServiceImpl: GrantServiceImpl,
-    val iamConfiguration: IamConfiguration
+    override val grantServiceImpl: GrantServiceImpl,
+    override val iamConfiguration: IamConfiguration
 ) : AbsPermissionGrantServiceImpl(grantServiceImpl, iamConfiguration) {
     override fun grantInstancePermission(
         userId: String,
