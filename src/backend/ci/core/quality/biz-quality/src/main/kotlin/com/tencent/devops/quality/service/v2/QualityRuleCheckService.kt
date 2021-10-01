@@ -740,7 +740,6 @@ class QualityRuleCheckService @Autowired constructor(
             emailResult.append("<br>")
         }
 
-        logger.info("projectName: $projectName, pipelineName: $pipelineName, runtimeVariable: $runtimeVariable")
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2,
             receivers = notifyUserSet,
