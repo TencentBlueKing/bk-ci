@@ -66,7 +66,7 @@ class SampleImageInitService @Autowired constructor(
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        val projectCode = imageInitRequest?.projectCode ?: "demo"
+        val projectCode = imageInitRequest?.projectCode ?: "Demo"
         val userId = imageInitRequest?.userId ?: "admin"
         val imageCode = imageInitRequest?.imageCode ?: "bkci"
         val accessToken = imageInitRequest?.accessToken ?: ""
@@ -85,9 +85,9 @@ class SampleImageInitService @Autowired constructor(
             val createDemoProjectResult = client.get(ServiceProjectResource::class).create(
                 userId = userId,
                 projectCreateInfo = ProjectCreateInfo(
-                    projectName = "Demo",
+                    projectName = imageInitRequest?.projectCode ?: "Demo",
                     englishName = projectCode,
-                    description = "demo project"
+                    description = imageInitRequest?.projectDesc ?: "demo project"
                 )
             )
             if (createDemoProjectResult.isNotOk() || createDemoProjectResult.data != true) {
@@ -146,7 +146,7 @@ class SampleImageInitService @Autowired constructor(
                 dockerFileType = imageInitRequest?.dockerFileType ?: "INPUT",
                 dockerFileContent = imageInitRequest?.dockerFileContent
                     ?: "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
-                version = imageInitRequest?.versionContent ?: "1.0.0",
+                version = "1.0.0",
                 releaseType = ReleaseTypeEnum.NEW,
                 versionContent = imageInitRequest?.versionContent ?: "bkci",
                 publisher = userId

@@ -7,6 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class ImageInitRequest(
     @ApiModelProperty("所属项目ID", required = true)
     val projectCode: String,
+    @ApiModelProperty("所属项目描述", required = true)
+    val projectDesc: String?,
     @ApiModelProperty("拥有者用户ID", required = true)
     val userId: String,
     @ApiModelProperty("市场镜像ID", required = true)
