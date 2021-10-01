@@ -59,6 +59,7 @@ import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
@@ -78,6 +79,7 @@ class GitCITriggerService @Autowired constructor(
     private val scmClient: ScmClient,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
+    private val streamStorageBean: StreamStorageBean,
     private val gitCISettingDao: GitCIBasicSettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val rabbitTemplate: RabbitTemplate,
@@ -101,8 +103,8 @@ class GitCITriggerService @Autowired constructor(
     }
 
     fun externalCodeGitBuild(event: String): Boolean? {
+        val start = LocalDateTime.now().timestampmilli()
         logger.info("Trigger code git build($event)")
-
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
         } catch (e: Exception) {
@@ -118,6 +120,8 @@ class GitCITriggerService @Autowired constructor(
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
             return null
         }
+
+        streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
         return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
             checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
@@ -160,7 +164,8 @@ class GitCITriggerService @Autowired constructor(
         ) {
             return false
         }
-        logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}ms to match trigger pipeline")
+
+        streamStorageBean.pipelineAndConflictTime(LocalDateTime.now().timestampmilli() - start)
 
         return matchAndTriggerPipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
     }
@@ -172,6 +177,8 @@ class GitCITriggerService @Autowired constructor(
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
+        val start = LocalDateTime.now().timestampmilli()
+
         val mrEvent = event is GitMergeRequestEvent
         val isMerged = if (mrEvent) {
             val e = event as GitMergeRequestEvent
@@ -270,6 +277,8 @@ class GitCITriggerService @Autowired constructor(
             emptySet()
         }
 
+        streamStorageBean.yamlListCheckTime(LocalDateTime.now().timestampmilli() - start)
+
         yamlPathList.forEach { filePath ->
 
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
@@ -346,6 +355,8 @@ class GitCITriggerService @Autowired constructor(
         isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting
     ) {
+        val start = LocalDateTime.now().timestampmilli()
+
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
@@ -450,6 +461,7 @@ class GitCITriggerService @Autowired constructor(
                 changeSet = null
             )
         }
+        streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
     }
 
     private fun dispatchStreamTrigger(event: StreamTriggerEvent) {
