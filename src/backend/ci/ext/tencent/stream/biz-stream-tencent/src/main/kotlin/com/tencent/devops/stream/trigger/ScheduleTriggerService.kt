@@ -87,6 +87,11 @@ class ScheduleTriggerService @Autowired constructor(
             return false
         }
 
+        // 流水线未启用在定时什么都不管，不触发不提醒
+        if (!existsPipeline.enabled) {
+            return false
+        }
+
         val buildPipeline = GitProjectPipeline(
             gitProjectId = existsPipeline.gitProjectId,
             pipelineId = existsPipeline.pipelineId,
@@ -97,11 +102,6 @@ class ScheduleTriggerService @Autowired constructor(
             latestBuildInfo = null,
             latestBuildBranch = buildBranch
         )
-
-        // 流水线未启用在定时什么都不管，不触发不提醒
-        if (!buildPipeline.enabled) {
-            return false
-        }
 
         handleTrigger(
             userId = streamTimerEvent.userId,

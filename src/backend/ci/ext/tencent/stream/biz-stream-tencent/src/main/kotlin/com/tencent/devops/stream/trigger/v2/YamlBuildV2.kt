@@ -148,6 +148,14 @@ class YamlBuildV2 @Autowired constructor(
                         originYaml = originYaml
                     )
                 )
+                // TODO: 等没有使用蓝盾定时触发编排的，这里可以干掉
+                // 需要保存一次手动触发的流水线顶掉旧的使用蓝盾定时触发的流水线编排
+                saveTimerPipeline(
+                    pipeline = pipeline,
+                    event = event,
+                    yaml = yaml,
+                    gitBasicSetting = gitBasicSetting
+                )
             }
 
             return if (gitBuildId != null) {
@@ -242,5 +250,18 @@ class YamlBuildV2 @Autowired constructor(
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    private fun saveTimerPipeline(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml,
+        gitBasicSetting: GitCIBasicSetting
+    ) {
+        // create or refresh pipeline
+        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
+        logger.info("Git request pipeline:$pipeline, model: $model")
+
+        savePipeline(pipeline, event, gitBasicSetting, model)
     }
 }
