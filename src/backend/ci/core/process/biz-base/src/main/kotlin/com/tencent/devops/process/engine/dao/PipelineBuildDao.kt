@@ -288,7 +288,6 @@ class PipelineBuildDao {
         buildId: String,
         buildStatus: BuildStatus,
         executeTime: Long?,
-        buildParameters: String?,
         recommendVersion: String?,
         remark: String? = null,
         errorInfoList: List<ErrorInfo>?
@@ -298,7 +297,6 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
 
             if (!remark.isNullOrBlank()) {
@@ -805,15 +803,6 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-                .where(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(BUILD_PARAMETERS, buildParameters)
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
