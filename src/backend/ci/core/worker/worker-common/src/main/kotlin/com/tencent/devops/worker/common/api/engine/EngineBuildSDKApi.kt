@@ -50,7 +50,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun timeout(): Result<Boolean>
 
-    fun getCiToken(): String
+    fun getJobContext(): Map<String, String>
 
-    fun getCiUrl(): String
+    fun getBuildDetailUrl(): String
 }

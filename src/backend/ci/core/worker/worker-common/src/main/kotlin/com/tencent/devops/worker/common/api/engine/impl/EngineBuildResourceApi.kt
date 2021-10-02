@@ -135,11 +135,11 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun getCiToken(): String {
-        return ""
+    override fun getJobContext(): Map<String, String> {
+        return emptyMap()
     }
 
-    override fun getCiUrl(): String {
+    override fun getBuildDetailUrl(): String {
         return AgentEnv.getGateway()
     }
 }

@@ -59,28 +59,12 @@ object EngineService {
             throw RemoteServiceException("Report builder startup status failed")
         }
         val ret = result.data ?: throw RemoteServiceException("Report builder startup status failed")
-        val ciToken = buildApi.getCiToken()
-        return if (ciToken.isBlank()) {
-            ret
-        } else {
-            BuildVariables(
-                buildId = ret.buildId,
-                vmSeqId = ret.vmSeqId,
-                vmName = ret.vmName,
-                projectId = ret.projectId,
-                pipelineId = ret.pipelineId,
-                variables = ret.variables.plus(mapOf(
-                    CI_TOKEN_CONTEXT to ciToken,
-                    JOB_OS_CONTEXT to AgentEnv.getOS().name
-                )),
-                buildEnvs = ret.buildEnvs,
-                containerId = ret.containerId,
-                containerHashId = ret.containerHashId,
-                variablesWithType = ret.variablesWithType,
-                timeoutMills = ret.timeoutMills,
-                containerType = ret.containerType
-            )
-        }
+
+        // #5277 将Job上下文传入本次agent任务
+        val jobContext = buildApi.getJobContext().toMutableMap()
+        jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
+
+        return ret.copy(variables = ret.variables.plus(jobContext))
     }
 
     fun claimTask(): BuildTask {
