@@ -67,6 +67,7 @@ interface OpCallBackResource {
     @POST
     @Path("/gateway")
     fun refreshGateway(
+        @ApiParam("新旧网关映射")
         oldToNewMap: Map<String, String>
     ): Result<Boolean>
 }
