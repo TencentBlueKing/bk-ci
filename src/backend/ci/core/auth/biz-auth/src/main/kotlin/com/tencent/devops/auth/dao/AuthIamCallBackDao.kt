@@ -82,13 +82,10 @@ class AuthIamCallBackDao {
                 val transactionContext = DSL.using(configuration)
                 transactionContext.selectFrom(this).fetch().forEach { record ->
                     oldToNewMap.forEach { (old, new) ->
-                        if (record.gateway.contains(old)) {
-                            record.gateway.replace(old, new)
-                            updates.add(
-                                transactionContext.update(this)
-                                    .set(GATEWAY, record.gateway.replace(old, new))
-                            )
-                        }
+                        if (record.gateway.contains(old)) updates.add(
+                            transactionContext.update(this)
+                                .set(GATEWAY, record.gateway.replace(old, new))
+                        )
                     }
                 }
                 transactionContext.batch(updates).execute()
