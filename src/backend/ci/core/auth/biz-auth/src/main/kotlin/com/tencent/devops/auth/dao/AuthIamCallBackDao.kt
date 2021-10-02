@@ -32,6 +32,8 @@ import com.tencent.devops.model.auth.tables.TAuthIamCallback
 import com.tencent.devops.model.auth.tables.records.TAuthIamCallbackRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -70,6 +72,27 @@ class AuthIamCallBackDao {
     fun list(dslContext: DSLContext): Result<TAuthIamCallbackRecord>? {
         with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
             return dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).fetch()
+        }
+    }
+
+    fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TAuthIamCallbackRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    oldToNewMap.forEach { (old, new) ->
+                        if (record.gateway.contains(old)) {
+                            record.gateway.replace(old, new)
+                            updates.add(
+                                transactionContext.update(this)
+                                    .set(GATEWAY, record.gateway.replace(old, new))
+                            )
+                        }
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
         }
     }
 }

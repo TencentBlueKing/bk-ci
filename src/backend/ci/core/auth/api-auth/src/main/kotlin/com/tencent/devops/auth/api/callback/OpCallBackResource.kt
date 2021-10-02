@@ -63,4 +63,10 @@ interface OpCallBackResource {
     @GET
     @Path("/list")
     fun list(): Result<List<IamCallBackInfo>?>
+
+    @POST
+    @Path("/gateway")
+    fun refreshGateway(
+        oldToNewMap: Map<String, String>
+    ): Result<Boolean>
 }

@@ -33,15 +33,20 @@ import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.auth.tables.TAuthIamCallback
+import com.tencent.devops.model.auth.tables.records.TAuthIamCallbackRecord
+import kotlin.math.log
 import org.jooq.DSLContext
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class CallBackService @Autowired constructor(
-    val iamCallBackDao: AuthIamCallBackDao,
-    val dslContext: DSLContext
+    private val iamCallBackDao: AuthIamCallBackDao,
+    private val dslContext: DSLContext
 ) {
 
     fun createOrUpdate(resourceMap: Map<String, IamCallBackInterfaceDTO>): Boolean {
@@ -105,6 +110,16 @@ class CallBackService @Autowired constructor(
             ))
         }
         return iamResourceList
+    }
+
+    fun refreshGateway(oldToNewMap: Map<String, String>): Boolean {
+        return try {
+            iamCallBackDao.refreshGateway(dslContext, oldToNewMap)
+            true
+        } catch (ignore: Throwable) {
+            logger.error("AUTH|refreshGateway failed with error: ", ignore)
+            false
+        }
     }
 
     private fun checkRelatedResource(relatedResource: List<String>, resourceList: Set<String>) {
