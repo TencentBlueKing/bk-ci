@@ -35,7 +35,6 @@ import com.tencent.devops.model.artifactory.Tables.T_TIPELINE_ARTIFACETORY_INFO
 import com.tencent.devops.model.artifactory.tables.TTipelineArtifacetoryInfo
 import com.tencent.devops.model.artifactory.tables.records.TTipelineArtifacetoryInfoRecord
 import org.jooq.DSLContext
-import org.jooq.Insert
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.Instant

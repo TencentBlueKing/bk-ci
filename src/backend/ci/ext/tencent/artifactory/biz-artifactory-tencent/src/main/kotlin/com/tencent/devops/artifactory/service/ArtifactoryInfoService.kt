@@ -28,7 +28,6 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.dao.ArtifactoryInfoDao
-import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
 import com.tencent.devops.artifactory.pojo.ArtifactoryInfo
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.TrendInfoDto
