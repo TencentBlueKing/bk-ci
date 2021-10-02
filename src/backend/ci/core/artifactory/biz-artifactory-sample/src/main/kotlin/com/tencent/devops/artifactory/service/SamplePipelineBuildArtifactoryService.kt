@@ -98,17 +98,4 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         }
         return fileInfoList
     }
-
-    override fun synArtifactoryInfo(
-        userId: String,
-        artifactList: List<FileInfo>,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildNum: Int
-    ) = Unit
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SamplePipelineBuildArtifactoryService::class.java)
-    }
 }
