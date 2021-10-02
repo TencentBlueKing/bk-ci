@@ -51,19 +51,22 @@ class QualityCacheService @Autowired constructor(
     private val redisTimeOut = 300L
 
     fun getCacheRuleListByPipelineId(projectId: String, pipelineId: String): List<QualityRuleMatchTask>? {
-        val redisData = redisOperation.getAndSet(buildPipelineRedisKey(projectId, pipelineId))
-        return buildCacheData(redisData)
+        val redisKey = buildPipelineRedisKey(projectId, pipelineId)
+        val redisData = redisOperation.get(redisKey)
+        return buildCacheData(redisData, redisKey)
     }
 
     fun getCacheRuleListByTemplateId(projectId: String, templateId: String): List<QualityRuleMatchTask>? {
-        val redisData = redisOperation.getAndSet(buildTemplateRedisKey(projectId, templateId))
-        return buildCacheData(redisData)
+        val redisKey = buildTemplateRedisKey(projectId, templateId)
+        val redisData = redisOperation.get(buildTemplateRedisKey(projectId, templateId))
+        return buildCacheData(redisData, redisKey)
     }
 
-    private fun buildCacheData(redisData: String?): List<QualityRuleMatchTask>? {
+    private fun buildCacheData(redisData: String?, redisKey: String): List<QualityRuleMatchTask>? {
         return if (redisData == null) {
             null
         } else {
+            redisOperation.set(redisKey, redisData, redisTimeOut, true)
             if (redisData == "") {
                 emptyList()
             } else {
