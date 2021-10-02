@@ -29,10 +29,8 @@ package com.tencent.devops.environment.dao.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
-import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext

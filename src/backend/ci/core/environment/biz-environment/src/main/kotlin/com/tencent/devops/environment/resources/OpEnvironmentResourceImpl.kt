@@ -30,11 +30,7 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpEnvironmentResource
-import com.tencent.devops.environment.api.UserNodeResource
-import com.tencent.devops.environment.pojo.DisplayName
-import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.service.NodeService
-import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
