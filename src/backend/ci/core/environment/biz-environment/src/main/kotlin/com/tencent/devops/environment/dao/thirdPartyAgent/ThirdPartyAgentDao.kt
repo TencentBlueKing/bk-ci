@@ -29,8 +29,10 @@ package com.tencent.devops.environment.dao.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
+import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
@@ -39,6 +41,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.UpdateSetMoreStep
 
 @Repository
 @Suppress("ALL")
@@ -442,6 +445,32 @@ class ThirdPartyAgentDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(OS.eq(os.name))
                 .fetch()
+        }
+    }
+
+    fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentThirdpartyAgentRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    oldToNewMap.forEach { (old, new) ->
+                        val update = transactionContext.update(this)
+                            .set(CREATED_TIME, record.createdTime)
+                        var needUpdate = false
+                        if (record.gateway.contains(old)) {
+                            update.set(GATEWAY, record.gateway.replace(old, new))
+                            needUpdate = true
+                        }
+                        if (record.fileGateway.contains(old)) {
+                            update.set(GATEWAY, record.gateway.replace(old, new))
+                            needUpdate = true
+                        }
+                        if (needUpdate) updates.add(update)
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
         }
     }
 }

@@ -25,38 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.dao.slave
+package com.tencent.devops.environment.api
 
-import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
-import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
-import org.jooq.DSLContext
-import org.jooq.UpdateSetMoreStep
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Repository
-class SlaveGatewayDao {
+@Api(tags = ["OP_ENVIRONMENT"], description = "OP-环境服务数据刷新")
+@Path("/op/env")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpEnvironmentResource {
 
-    fun list(dslContext: DSLContext): List<TEnvironmentSlaveGatewayRecord> {
-        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
-            return dslContext.selectFrom(this).fetch()
-        }
-    }
-
-    fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
-        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
-            dslContext.transaction { configuration ->
-                val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentSlaveGatewayRecord>>()
-                val transactionContext = org.jooq.impl.DSL.using(configuration)
-                transactionContext.selectFrom(this).fetch().forEach { record ->
-                    oldToNewMap.forEach { (old, new) ->
-                        if (record.gateway.contains(old)) updates.add(
-                            transactionContext.update(this)
-                                .set(GATEWAY, record.gateway.replace(old, new))
-                        )
-                    }
-                }
-                transactionContext.batch(updates).execute()
-            }
-        }
-    }
+    @POST
+    @Path("/gateway")
+    fun refreshGateway(
+        @ApiParam("新旧网关映射")
+        oldToNewMap: Map<String, String>
+    ): Result<Boolean>
 }
