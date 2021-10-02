@@ -33,12 +33,15 @@ import com.tencent.devops.auth.api.ServiceRoleResource
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -172,14 +175,26 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         userList: List<String>
     ): Boolean {
         logger.info("grantInstancePermission $userId|$projectId|$action|$resourceType|$resourceCode|$userList")
-        return client.get(ServicePermissionAuthResource::class).grantInstancePermission(
-            userId = userId,
-            projectCode = projectId,
-            resourceCode = resourceCode,
-            resourceType = resourceType,
-            action = TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType)),
-            token = tokenService.getSystemToken(null)!!
-        ).data ?: false
+        // 此处做保护,防止用户一次加太多用户
+        if (userList.size > TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE) {
+            TxV3AuthPermissionApi.logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
+            throw ParamBlankException("授权用户数越界:${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
+        }
+        userList.forEach {
+            val grantInstanceDTO = GrantInstanceDTO(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                permission = action,
+                createUser = it
+            )
+            client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+                userId = userId,
+                projectCode = projectId,
+                token = tokenService.getSystemToken(null)!!,
+                grantInstance = grantInstanceDTO
+            ).data ?: false
+        }
+        return true
     }
 
     companion object {
