@@ -25,44 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.service
+package com.tencent.devops.stream.resources.op
 
-import com.tencent.devops.stream.v2.dao.GitPipelineBranchDao
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.api.op.OpStreamPipelineResource
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.trigger.GitCIEventService
+import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class GitPipelineBranchService @Autowired constructor(
+@RestResource
+class OpStreamPipelineResourceImpl @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
-    private val gitPipelineBranchDao: GitPipelineBranchDao
-) {
-    fun save(
-        gitProjectId: Long,
-        pipelineId: String,
-        branch: String
-    ) {
-        gitPipelineBranchDao.save(
-            dslContext = dslContext, gitProjectId = gitProjectId, pipelineId = pipelineId, branch = branch
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamPipelineBranchService: StreamPipelineBranchService,
+    private val gitCIEventService: GitCIEventService
+) : OpStreamPipelineResource {
+    override fun checkBranches(userId: String, gitProjectId: Long, pipelineId: String): Result<Boolean> {
+        streamPipelineBranchService.deleteBranch(
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            branch = null
         )
-    }
-
-    fun deleteBranch(
-        pipelineId: String,
-        branch: String?
-    ): Boolean {
-        if (branch.isNullOrBlank()) {
-            return gitPipelineBranchDao.deletePipeline(dslContext = dslContext, pipelineId = pipelineId) > 0
-        } else {
-            return gitPipelineBranchDao.deleteBranch(
-                dslContext = dslContext, pipelineId = pipelineId, branch = branch
-            ) > 0
-        }
-    }
-
-    fun hasBranchExist(
-        pipelineId: String
-    ): Boolean {
-        return gitPipelineBranchDao.pipelineBranchCount(dslContext, pipelineId) > 0
+        pipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
+        client.get(ServicePipelineResource::class).delete(
+            userId = userId, projectId = "git_$gitProjectId", pipelineId = pipelineId,
+            channelCode = ChannelCode.GIT
+        )
+        // 删除相关的构建记录
+        gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
+        return Result(true)
     }
 }

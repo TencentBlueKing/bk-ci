@@ -25,67 +25,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.dao
+package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.model.stream.tables.TGitPipelineBranch
+import com.tencent.devops.stream.v2.dao.StreamPipelineBranchDao
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class GitPipelineBranchDao {
-
-    fun save(
-        dslContext: DSLContext,
+@Service
+class StreamPipelineBranchService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val streamPipelineBranchDao: StreamPipelineBranchDao
+) {
+    fun saveOrUpdate(
         gitProjectId: Long,
         pipelineId: String,
         branch: String
     ) {
-        with(TGitPipelineBranch.T_GIT_PIPELINE_BRANCH) {
-            dslContext.insertInto(
-                this,
-                GIT_PROJECT_ID,
-                PIPELINE_ID,
-                BRANCH
-            ).values(
-                gitProjectId,
-                pipelineId,
-                branch
-            ).execute()
-        }
-    }
-
-    fun deletePipeline(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): Int {
-        with(TGitPipelineBranch.T_GIT_PIPELINE_BRANCH) {
-            return dslContext.delete(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .execute()
-        }
+        streamPipelineBranchDao.saveOrUpdate(
+            dslContext = dslContext, gitProjectId = gitProjectId, pipelineId = pipelineId, branch = branch
+        )
     }
 
     fun deleteBranch(
-        dslContext: DSLContext,
+        gitProjectId: Long,
         pipelineId: String,
-        branch: String
-    ): Int {
-        with(TGitPipelineBranch.T_GIT_PIPELINE_BRANCH) {
-            return dslContext.delete(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(BRANCH.eq(branch))
-                .execute()
+        branch: String?
+    ): Boolean {
+        return if (branch.isNullOrBlank()) {
+            streamPipelineBranchDao.deletePipeline(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId
+            ) > 0
+        } else {
+            streamPipelineBranchDao.deleteBranch(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                branch = branch
+            ) > 0
         }
     }
 
-    fun pipelineBranchCount(
-        dslContext: DSLContext,
+    fun hasBranchExist(
+        gitProjectId: Long,
         pipelineId: String
-    ): Int {
-        with(TGitPipelineBranch.T_GIT_PIPELINE_BRANCH) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .count()
-        }
+    ): Boolean {
+        return streamPipelineBranchDao.pipelineBranchCount(dslContext, gitProjectId, pipelineId) > 0
     }
 }

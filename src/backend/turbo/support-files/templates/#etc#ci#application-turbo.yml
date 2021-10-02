@@ -1,6 +1,4 @@
 spring:
-  application:
-    name: turbo
   rabbitmq:
     virtual-host: __BK_CI_TURBO_RABBITMQ_VHOST__
     username: __BK_CI_TURBO_RABBITMQ_USER__

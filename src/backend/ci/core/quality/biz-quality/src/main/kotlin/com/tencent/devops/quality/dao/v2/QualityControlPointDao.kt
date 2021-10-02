@@ -55,9 +55,7 @@ class QualityControlPointDao {
             val filterResult = mutableListOf<TQualityControlPointRecord>()
             // 获取生产跑的，或者测试项目对应的
             result.groupBy { it.elementType }.forEach { elementType, list ->
-                val testControlPoint = list.firstOrNull {
-                    projectId.isBlank() && it.testProject == projectId
-                }
+                val testControlPoint = list.firstOrNull { it.testProject == projectId }
                 val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
                 if (testControlPoint != null) {
                     filterResult.add(testControlPoint)
@@ -208,9 +206,9 @@ class QualityControlPointDao {
 
                 // 测试为空，代表quality.json被删了，直接把生产的也删了
                 if (testControlPoint == null) {
-                    transactionContext.deleteFrom(this)
-                        .where(ELEMENT_TYPE.eq(elementType))
-                        .execute()
+//                    transactionContext.deleteFrom(this)
+//                        .where(ELEMENT_TYPE.eq(elementType))
+//                        .execute()
                     return@transaction
                 }
 

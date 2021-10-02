@@ -1,8 +1,8 @@
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.OpGitCIBasicSettingResource
+import com.tencent.devops.stream.api.op.OpGitCIBasicSettingResource
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired

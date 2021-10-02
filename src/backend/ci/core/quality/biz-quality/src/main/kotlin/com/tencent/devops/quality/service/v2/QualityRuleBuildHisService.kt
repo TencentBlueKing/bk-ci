@@ -32,13 +32,16 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
+import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -68,10 +71,12 @@ class QualityRuleBuildHisService constructor(
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
                 indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
+                    val requestIndicator = indicatorMap[it.enName]
+                    checkThresholdType(requestIndicator!!, it)
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
-                        indicatorMap[it.enName]!!.operation,
-                        indicatorMap[it.enName]!!.threshold
+                        requestIndicator.operation,
+                        requestIndicator.threshold
                     ))
                 }
             }
@@ -81,6 +86,37 @@ class QualityRuleBuildHisService constructor(
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
         }
+    }
+
+    @Suppress("ReturnCount")
+    private fun checkThresholdType(
+        requestIndicator: RuleCreateRequestV3.CreateRequestIndicator,
+        indicator: QualityIndicator
+    ) {
+        when (indicator.thresholdType) {
+            QualityDataType.INT -> {
+                if (NumberUtils.isDigits(requestIndicator.threshold)) {
+                    return
+                }
+            }
+            QualityDataType.FLOAT -> {
+                if (NumberUtils.isCreatable(requestIndicator.threshold)) {
+                    return
+                }
+            }
+            QualityDataType.BOOLEAN -> {
+                if (requestIndicator.threshold == "true" || requestIndicator.threshold == "false") {
+                    return
+                }
+            }
+            else -> {
+                if (NumberUtils.isDigits(requestIndicator.threshold)) {
+                    return
+                }
+            }
+        }
+        throw IllegalArgumentException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
+            "请修改红线阈值[${requestIndicator.threshold}]")
     }
 
     fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {

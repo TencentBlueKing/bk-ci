@@ -47,6 +47,7 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
@@ -59,6 +60,9 @@ class YamlTemplate(
     val triggerUserId: String,
     val triggerRef: String,
     val triggerToken: String,
+    val forkGitToken: String?,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
 
     // 添加图防止远程库之间循环依赖
     val repoTemplateGraph: TemplateGraph<String>,
@@ -82,11 +86,14 @@ class YamlTemplate(
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
         token: String?,
+        forkGitToken: String?,
         gitProjectId: Long,
         targetRepo: String?,
-        ref: String,
+        ref: String?,
         personalAccessToken: String?,
-        fileName: String
+        fileName: String,
+        changeSet: Set<String>?,
+        event: GitEvent?
     ) -> String
 
 ) {
@@ -129,7 +136,7 @@ class YamlTemplate(
         const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
         const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
         const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
-            "The %s template can only contain parameters, resources and %s keywords"
+                "The %s template can only contain parameters, resources and %s keywords"
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
@@ -582,8 +589,22 @@ class YamlTemplate(
         if (check == null) {
             return null
         }
-        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
         val gateList = mutableListOf<Gate>()
+
+        if (check["gates"] != null) {
+            val gates = transValue<List<Map<String, Any>>>(fromPath, TemplateType.GATE.text, check["gates"])
+            var isTemplate = false
+            gates.forEach { gate ->
+                if (TEMPLATE_KEY in gate.keys) {
+                    isTemplate = true
+                }
+            }
+            if (!isTemplate) {
+                return YamlObjects.getObjectFromYaml<PreStageCheck>(fromPath, YamlUtil.toYaml(check))
+            }
+        }
+
+        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, YamlUtil.toYaml(check))
 
         checkObject.gates?.forEach { gate ->
             val toPath = gate.template
@@ -630,7 +651,8 @@ class YamlTemplate(
                         repo = checkAndGetRepo(
                             fromPath,
                             toPath.split(FILE_REPO_SPLIT)[1]
-                        ))
+                        )
+                    )
                 } else {
                     replaceResTemplateFile(
                         templateType = templateType,
@@ -692,11 +714,14 @@ class YamlTemplate(
             triggerUserId = triggerUserId,
             triggerRef = triggerRef,
             triggerToken = triggerToken,
+            forkGitToken = forkGitToken,
+            changeSet = changeSet,
             repo = toRepo,
             repoTemplateGraph = repoTemplateGraph,
             templateDeep = templateDeep,
             resTemplateType = templateType,
-            getTemplateMethod = getTemplateMethod
+            getTemplateMethod = getTemplateMethod,
+            event = event
         ).replace(parameters = parameters)
         // 替换后的远程模板去除不必要参数
         resYamlObject.resources = null
@@ -756,8 +781,12 @@ class YamlTemplate(
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
-                            error(VALUE_NOT_IN_ENUM.format(fromPath, valueName, newValue,
-                                param.values!!.joinToString(",")))
+                            error(
+                                VALUE_NOT_IN_ENUM.format(
+                                    fromPath, valueName, newValue,
+                                    param.values!!.joinToString(",")
+                                )
+                            )
                         } else {
                             newParameters[index] = param.copy(default = newValue)
                         }
@@ -884,20 +913,26 @@ class YamlTemplate(
             val template = if (repo == null) {
                 getTemplateMethod(
                     triggerToken,
+                    forkGitToken,
                     triggerProjectId,
                     null,
                     triggerRef,
                     null,
-                    path
+                    path,
+                    changeSet,
+                    event
                 )
             } else {
                 getTemplateMethod(
                     null,
+                    null,
                     sourceProjectId,
                     repo.repository,
-                    repo.ref ?: triggerRef,
+                    repo.ref,
                     repo.credentials?.personalAccessToken,
-                    path
+                    path,
+                    null,
+                    null
                 )
             }
             setTemplate(path, template)
@@ -908,11 +943,14 @@ class YamlTemplate(
     private fun getTemplate(path: String, repo: Repositories): String {
         val template = getTemplateMethod(
             null,
+            null,
             sourceProjectId,
             repo.repository,
-            repo.ref ?: triggerRef,
+            repo.ref,
             repo.credentials?.personalAccessToken,
-            path
+            path,
+            changeSet,
+            null
         )
         setTemplate(path, template)
         return templates[path]!!

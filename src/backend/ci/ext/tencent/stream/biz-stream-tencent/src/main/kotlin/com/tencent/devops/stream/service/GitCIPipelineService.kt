@@ -104,7 +104,8 @@ class GitCIPipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = latestBuilds[it.latestBuildId]
+                    latestBuildInfo = latestBuilds[it.latestBuildId],
+                    latestBuildBranch = null
                 )
             }
         )
@@ -132,7 +133,8 @@ class GitCIPipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                latestBuildBranch = null
             )
         }
     }
@@ -168,7 +170,8 @@ class GitCIPipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = latestBuildInfo
+            latestBuildInfo = latestBuildInfo,
+            latestBuildBranch = null
         )
     }
 

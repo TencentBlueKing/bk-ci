@@ -224,7 +224,7 @@ class PipelineRuleService @Autowired constructor(
             if (ruleNameList.isNotEmpty()) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
+                    params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList, formatted = false)})")
                 )
             }
         }
