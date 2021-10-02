@@ -43,6 +43,6 @@ class OpEnvironmentResourceImpl @Autowired constructor(
 ) : OpEnvironmentResource {
 
     override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(nodeService.refreshGateway(oldToNewMap))
     }
 }
