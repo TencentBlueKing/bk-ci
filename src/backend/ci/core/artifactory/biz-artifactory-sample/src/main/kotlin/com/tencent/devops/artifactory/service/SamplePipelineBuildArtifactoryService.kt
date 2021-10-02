@@ -98,4 +98,8 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         }
         return fileInfoList
     }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SamplePipelineBuildArtifactoryService::class.java)
+    }
 }
