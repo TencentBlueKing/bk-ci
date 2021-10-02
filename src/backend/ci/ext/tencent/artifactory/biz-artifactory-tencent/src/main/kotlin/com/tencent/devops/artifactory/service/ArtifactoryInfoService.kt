@@ -107,18 +107,6 @@ class ArtifactoryInfoService @Autowired constructor(
         }
     }
 
-    fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Int {
-        var count = 0
-
-        count = artifactoryInfoDao.batchCreate(infoList, dslContext)
-
-        if (count == 0) {
-            logger.error("批量添加artifactoryInfo失败")
-        }
-
-        return count
-    }
-
     // 获取时间范围内构建条数--buildId去重
     fun getInfoCount(startTime: Long, endTime: Long, dataForm: Int): Int {
         return artifactoryInfoDao.selectCountByDataFrom(dslContext, dataForm, startTime, endTime)
