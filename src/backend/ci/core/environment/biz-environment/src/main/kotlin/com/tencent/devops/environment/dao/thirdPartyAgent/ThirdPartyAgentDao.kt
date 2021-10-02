@@ -461,7 +461,7 @@ class ThirdPartyAgentDao {
                             needUpdate = true
                         }
                         if (record.fileGateway.contains(old)) {
-                            update.set(GATEWAY, record.gateway.replace(old, new))
+                            update.set(FILE_GATEWAY, record.fileGateway.replace(old, new))
                             needUpdate = true
                         }
                         if (needUpdate) updates.add(update)
