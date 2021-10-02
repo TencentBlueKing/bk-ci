@@ -1311,7 +1311,7 @@ class PipelineRuntimeService @Autowired constructor(
     ): Pair<TPipelineBuildTaskRecord, Element>? {
         lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
             val additionalOptionsStr = buildTaskRecord.additionalOptions
-            if (additionalOptionsStr.isNotEmpty() && additionalOptionsStr != "null") {
+            if (!additionalOptionsStr.isNullOrBlank() && additionalOptionsStr != "null") {
                 val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
                 val elementPostInfo = additionalOptions.elementPostInfo
                 if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
