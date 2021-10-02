@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -165,16 +166,14 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         userId: String,
         token: String,
         projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        action: String
+        grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
         return Result(permissionGrantService.grantInstancePermission(
-            userId = userId,
+            userId = grantInstance.createUser,
             projectId = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            action = action
+            resourceType = grantInstance.resourceType,
+            resourceCode = grantInstance.resourceCode,
+            action = grantInstance.permission
         ))
     }
 }
