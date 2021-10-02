@@ -27,14 +27,20 @@
 
 package com.tencent.devops.artifactory.dao
 
+import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.artifactory.Tables.T_TIPELINE_ARTIFACETORY_INFO
 import com.tencent.devops.model.artifactory.tables.TTipelineArtifacetoryInfo
 import com.tencent.devops.model.artifactory.tables.records.TTipelineArtifacetoryInfoRecord
 import org.jooq.DSLContext
+import org.jooq.Insert
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Repository
 class ArtifactoryInfoDao {
