@@ -40,7 +40,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         projectId: String,
         buildStatus: BuildStatus
     ) {
-        logger.info("onPipelineShutdown $pipelineId|$buildId|$buildStatus")
+        logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
         val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
         vars[PIPELINE_TIME_DURATION]?.takeIf { it.isNotBlank() }?.toLongOrNull()?.let {
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
@@ -60,7 +60,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isFailure() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, FAIL_TYPE),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -69,7 +69,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isCancel() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, FAIL_TYPE),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -78,7 +78,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isSuccess() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, SUCCESS_TYPE),
+                    receivers = getReceivers(settingInfo, SUCCESS_TYPE, projectId),
                     notifyType = settingInfo.successSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -97,7 +97,7 @@ abstract class PipelineNotifyService @Autowired constructor(
 
     abstract fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String>
 
-    abstract fun getReceivers(setting: PipelineSetting, type: String): Set<String>
+    abstract fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String>
 
     private fun buildPipelineInfo(
         projectId: String,

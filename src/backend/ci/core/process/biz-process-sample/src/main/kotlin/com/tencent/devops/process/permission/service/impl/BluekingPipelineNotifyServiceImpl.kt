@@ -126,7 +126,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getReceivers(setting: PipelineSetting, type: String): Set<String> {
+    override fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String> {
         return if (type == SUCCESS_TYPE) {
             setting.successSubscription.users.split(",").toMutableSet()
         } else {
