@@ -2,6 +2,8 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -35,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ComplexMethod")
 class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val buildVariableService: BuildVariableService,
     override val pipelineRuntimeService: PipelineRuntimeService,
@@ -43,7 +46,9 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
     override val client: Client,
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val bsAuthProjectApi: AuthProjectApi,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) : PipelineNotifyService(
     buildVariableService,
     pipelineRuntimeService,
@@ -113,9 +118,29 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
 
     override fun getReceivers(setting: PipelineSetting, type: String): Set<String> {
         return if (type == SUCCESS_TYPE) {
-            setting.successSubscription.users.split(",").toMutableSet()
+            val users = mutableSetOf<String>()
+            users.addAll(setting.successSubscription.users.split(",").toMutableSet())
+            if (setting.successSubscription.groups.isNotEmpty()) {
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
+                projectRoleUsers.forEach {
+                    if (it.roleName in setting.successSubscription.groups) {
+                        users.addAll(it.userIdList)
+                    }
+                }
+            }
+            users
         } else {
-            setting.failSubscription.users.split(",").toMutableSet()
+            val users = mutableSetOf<String>()
+            users.addAll(setting.failSubscription.users.split(",").toMutableSet())
+            if (setting.failSubscription.groups.isNotEmpty()) {
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
+                projectRoleUsers.forEach {
+                    if (it.roleName in setting.failSubscription.groups) {
+                        users.addAll(it.userIdList)
+                    }
+                }
+            }
+            users
         }
     }
 
