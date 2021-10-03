@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("ComplexMethod","NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth")
 class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val buildVariableService: BuildVariableService,
     override val pipelineRuntimeService: PipelineRuntimeService,
