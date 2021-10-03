@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
@@ -66,5 +67,25 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
             logger.error("get context failed: ", e)
         }
         return context
+    }
+
+    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+        // #5277 对所有job下变量做收尾处理，可以在try区域内逐步追加
+        try {
+            val projectId = AgentEnv.getProjectId()
+            val gitToken = buildVariables.variables[CI_TOKEN_CONTEXT]
+            if (projectId.startsWith("git_") && !gitToken.isNullOrBlank()) {
+                val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
+                val request = buildDelete(url)
+                val responseContent = request(request, "获取工蜂CI项目Token失败！")
+                val result = objectMapper.readValue<Result<Boolean>>(responseContent)
+                if (result.data == true) {
+                    logger.info("ci token for project[$projectId] is cleared.")
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("get context failed: ", e)
+        }
+        return workerEnd(retryCount)
     }
 }
