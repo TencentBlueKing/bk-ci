@@ -142,7 +142,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    private fun workerEnd(retryCount: Int): Result<Boolean> {
+    protected fun workerEnd(retryCount: Int): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
         val request = buildPost(path)
         val errorMessage = "构建完成请求失败"
