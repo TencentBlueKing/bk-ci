@@ -60,7 +60,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isFailure() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = settingInfo.failSubscription.users.split(",").toMutableSet(),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -69,7 +69,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isCancel() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = settingInfo.failSubscription.users.split(",").toMutableSet(),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -78,7 +78,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isSuccess() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE,
-                    receivers = settingInfo.successSubscription.users.split(",").toMutableSet(),
+                    receivers = getReceivers(settingInfo, SUCCESS_TYPE),
                     notifyType = settingInfo.successSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -96,6 +96,8 @@ abstract class PipelineNotifyService @Autowired constructor(
     abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus)
 
     abstract fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String>
+
+    abstract fun getReceivers(setting: PipelineSetting, type: String): Set<String>
 
     private fun buildPipelineInfo(
         projectId: String,
@@ -222,5 +224,7 @@ abstract class PipelineNotifyService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineNotifyService::class.java)
+        val SUCCESS_TYPE = "success"
+        val FAIL_TYPE = "fail"
     }
 }

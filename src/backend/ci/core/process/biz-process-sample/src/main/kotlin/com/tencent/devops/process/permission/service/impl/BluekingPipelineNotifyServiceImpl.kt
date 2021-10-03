@@ -126,6 +126,14 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getReceivers(setting: PipelineSetting, type: String): Set<String> {
+        return if (type == SUCCESS_TYPE) {
+            setting.successSubscription.users.split(",").toMutableSet()
+        } else {
+            setting.failSubscription.users.split(",").toMutableSet()
+        }
+    }
+
     private fun getCodeccTaskName(detail: ModelDetail): LinuxCodeCCScriptElement? {
         for (stage in detail.model.stages) {
             stage.containers.forEach { container ->
