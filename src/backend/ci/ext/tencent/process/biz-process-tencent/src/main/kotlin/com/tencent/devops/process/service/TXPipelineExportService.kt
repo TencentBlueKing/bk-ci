@@ -37,7 +37,13 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.v2.*
+import com.tencent.devops.common.ci.v2.Credentials
+import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
