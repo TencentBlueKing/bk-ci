@@ -92,7 +92,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(retryCount: Int): Result<Boolean> {
+    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
         return workerEnd(retryCount)
     }
 
