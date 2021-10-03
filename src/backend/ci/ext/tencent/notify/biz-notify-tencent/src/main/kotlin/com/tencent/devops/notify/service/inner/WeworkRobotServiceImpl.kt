@@ -75,7 +75,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val sendRequest = mutableListOf<WeworkRobotSingleTextMessage>()
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
-
+                return
             }
             WeworkReceiverType.single -> {
                 weworkNotifyTextMessage.receivers.forEach {
@@ -141,7 +141,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     private fun chunkedReceivers(receivers: Collection<String>): String {
-        return receivers.joinToString("|", "","", -1)
+        return receivers.joinToString("|", "", "", -1)
     }
 
     private fun saveResult(receivers: Collection<String>, body: String, success: Boolean, errMsg: String?) {

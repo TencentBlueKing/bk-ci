@@ -43,8 +43,8 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
     override val client: Client,
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
-): PipelineNotifyService(
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+) : PipelineNotifyService(
     buildVariableService,
     pipelineRuntimeService,
     pipelineRepositoryService,
@@ -131,7 +131,6 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
-
     private fun checkPipelineCall(buildId: String, vars: Map<String, String>) {
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
@@ -165,7 +164,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
             "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(TxPipelineNotifyServiceImpl::class.java)
         private const val SHORT_URL_TTL = 24 * 3600 * 180
     }

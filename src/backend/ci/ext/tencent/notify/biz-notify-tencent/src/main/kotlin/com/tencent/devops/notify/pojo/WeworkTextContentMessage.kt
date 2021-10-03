@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("企业微信机器人消息内容")
-data class WeworkTextContentMessage (
+data class WeworkTextContentMessage(
     /**
      * 文本内容，最长不超过2048个字节，必须是utf8编码
      */
