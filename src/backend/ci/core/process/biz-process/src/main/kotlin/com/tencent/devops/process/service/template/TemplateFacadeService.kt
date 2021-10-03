@@ -901,33 +901,43 @@ class TemplateFacadeService @Autowired constructor(
             )
         } else {
             val templateIdList = mutableSetOf<String>()
-            getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+            val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+
             val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
             templates.forEach { record ->
                 val templateId = record["templateId"] as String
                 val type = record["templateType"] as String
 
-                val modelStr = record["template"] as String
-                val version = record["version"] as Long
+                val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
+                    val srcTemplateId = record["srcTemplateId"] as String
+                    srcTemplates?.get(srcTemplateId)
+                } else {
+                    record
+                }
 
-                val model: Model = objectMapper.readValue(modelStr)
-                val setting = settings[templateId]
-                val logoUrl = record["logoUrl"] as? String
-                val categoryStr = record["category"] as? String
-                val key = templateId
-                result[key] = OptionalTemplate(
-                    name = setting?.name ?: model.name,
-                    templateId = templateId,
-                    projectId = record["projectId"] as String,
-                    version = version,
-                    versionName = record["versionName"] as String,
-                    templateType = type,
-                    templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
-                    logoUrl = logoUrl ?: "",
-                    category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
-                        .readValue(categoryStr, List::class.java) as List<String> else listOf(),
-                    stages = model.stages
-                )
+                if (templateRecord != null) {
+                    val modelStr = templateRecord["template"] as String
+                    val version = templateRecord["version"] as Long
+
+                    val model: Model = objectMapper.readValue(modelStr)
+                    val setting = settings[templateId]
+                    val logoUrl = record["logoUrl"] as? String
+                    val categoryStr = record["category"] as? String
+                    val key = templateId
+                    result[key] = OptionalTemplate(
+                        name = setting?.name ?: model.name,
+                        templateId = templateId,
+                        projectId = templateRecord["projectId"] as String,
+                        version = version,
+                        versionName = templateRecord["versionName"] as String,
+                        templateType = type,
+                        templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
+                        logoUrl = logoUrl ?: "",
+                        category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                            .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                        stages = model.stages
+                    )
+                }
             }
             return OptionalTemplateList(
                 count = templateCount,

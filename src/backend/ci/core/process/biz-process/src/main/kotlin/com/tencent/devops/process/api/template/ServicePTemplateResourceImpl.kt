@@ -132,17 +132,6 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         templateIds: Collection<String>,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(
-            projectId = null,
-            templateType = templateType,
-            templateIds = templateIds
-        ))
-    }
-
-    override fun listNotSrcTemplateById(
-        templateIds: Collection<String>,
-        templateType: TemplateType?
-    ): Result<OptionalTemplateList> {
         return Result(templateFacadeService.listTemplateByIds(
             projectId = null,
             templateType = templateType,

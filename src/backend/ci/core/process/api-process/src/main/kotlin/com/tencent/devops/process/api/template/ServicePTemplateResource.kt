@@ -185,17 +185,6 @@ interface ServicePTemplateResource {
         templateType: TemplateType?
     ): Result<OptionalTemplateList>
 
-    @ApiOperation("根据id获取模版列表")
-    @POST
-    @Path("/listNotSrcTemplateById")
-    fun listNotSrcTemplateById(
-        @ApiParam("模板ID", required = true)
-        templateIds: Collection<String>,
-        @ApiParam("模版类型", required = false)
-        @QueryParam("templateType")
-        templateType: TemplateType?
-    ): Result<OptionalTemplateList>
-
     @ApiOperation("检查模板是否合法")
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/check")
