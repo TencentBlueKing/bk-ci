@@ -36,7 +36,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -94,17 +93,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun endTask(retryCount: Int): Result<Boolean> {
-        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
-        val request = buildPost(path)
-        val errorMessage = "构建完成请求失败"
-        val responseContent = request(
-            request = request,
-            connectTimeoutInSec = 5L,
-            errorMessage = errorMessage,
-            readTimeoutInSec = 30L,
-            writeTimeoutInSec = 30L
-        )
-        return objectMapper.readValue(responseContent)
+        return workerEnd(retryCount)
     }
 
     override fun heartbeat(): Result<HeartBeatInfo> {
@@ -140,6 +129,30 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun getBuildDetailUrl(): String {
-        return AgentEnv.getGateway()
+        val path = getRequestUrl(path = "api/build/builds/detail_url")
+        val request = buildGet(path)
+        val errorMessage = "构建超时结束请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    private fun workerEnd(retryCount: Int): Result<Boolean> {
+        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
+        val request = buildPost(path)
+        val errorMessage = "构建完成请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
     }
 }
