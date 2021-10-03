@@ -69,7 +69,10 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     client,
     pipelineBuildFacadeService
 ) {
-    override fun getExecutionVariables(pipelineId: String, vars: Map<String, String>): ExecutionVariables {
+    override fun getExecutionVariables(
+        pipelineId: String,
+        vars: MutableMap<String, String>
+    ): ExecutionVariables {
         // 兼容旧流水线的旧变量
         PipelineVarUtil.fillOldVar(vars.toMutableMap())
 
@@ -123,7 +126,11 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
-    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>) {
+    override fun sendWeworkGroupMsg(
+        setting: PipelineSetting,
+        buildStatus: BuildStatus,
+        vars: MutableMap<String, String>
+    ) {
         var groups = mutableSetOf<String>()
         var content = ""
         var markerDownFlag = false
@@ -147,7 +154,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         setting: PipelineSetting,
         type: String,
         projectId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Set<String> {
         val users = mutableSetOf<String>()
         return if (type == SUCCESS_TYPE) {
@@ -183,7 +190,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Map<String, String> {
         val detailUrl = detailUrl(projectId, pipelineId, buildId)
         val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
