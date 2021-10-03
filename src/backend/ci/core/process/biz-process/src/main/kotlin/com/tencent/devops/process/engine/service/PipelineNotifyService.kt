@@ -88,25 +88,25 @@ abstract class PipelineNotifyService @Autowired constructor(
         }
 
         // 发送企业微信群消息
-        sendWeworkGroupMsg(settingInfo, buildStatus, mapData)
+        sendWeworkGroupMsg(settingInfo, buildStatus, mapData as MutableMap<String, String>)
     }
 
-    abstract fun getExecutionVariables(pipelineId: String, vars: Map<String, String>): ExecutionVariables
+    abstract fun getExecutionVariables(pipelineId: String, vars: MutableMap<String, String>): ExecutionVariables
 
-    abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>)
+    abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: MutableMap<String, String>)
 
     abstract fun buildUrl(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Map<String, String>
 
     abstract fun getReceivers(
         setting: PipelineSetting,
         type: String,
         projectId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Set<String>
 
     private fun buildPipelineInfo(
@@ -177,7 +177,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         return mapData
     }
 
-    private fun buildNotifyContent(pipelineId: String, vars: Map<String, String>): Map<String, String> {
+    private fun buildNotifyContent(pipelineId: String, vars: MutableMap<String, String>): Map<String, String> {
         val replaceWithEmpty = true
         val setting = pipelineSettingDao.getSetting(dslContext, pipelineId) ?: return emptyMap()
 
