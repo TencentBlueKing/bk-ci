@@ -181,26 +181,18 @@ abstract class PipelineNotifyService @Autowired constructor(
         val replaceWithEmpty = true
         val setting = pipelineSettingDao.getSetting(dslContext, pipelineId) ?: return emptyMap()
 
-        setting.successReceiver = EnvUtils.parseEnv(setting.successReceiver, vars, replaceWithEmpty)
-        setting.failReceiver = EnvUtils.parseEnv(setting.failReceiver, vars, replaceWithEmpty)
         // 内容为null的时候处理为空字符串
-        setting.successContent = setting.successContent ?: NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
-        setting.failContent = setting.failContent ?: NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
-        // 内容
-        var emailSuccessContent = setting.successContent
-        var emailFailContent = setting.failContent
+        var successContent = setting.successContent ?: NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
+        var failContent = setting.failContent ?: NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
 
-        emailSuccessContent = EnvUtils.parseEnv(emailSuccessContent, vars, replaceWithEmpty)
-        emailFailContent = EnvUtils.parseEnv(emailFailContent, vars, replaceWithEmpty)
-        setting.successContent = EnvUtils.parseEnv(setting.successContent, vars, replaceWithEmpty)
-
-        setting.failContent = EnvUtils.parseEnv(setting.failContent, vars, replaceWithEmpty)
+        successContent = EnvUtils.parseEnv(successContent, vars, replaceWithEmpty)
+        failContent = EnvUtils.parseEnv(failContent, vars, replaceWithEmpty)
 
         return mutableMapOf(
-            "successContent" to setting.successContent,
-            "failContent" to setting.failContent,
-            "emailSuccessContent" to emailSuccessContent,
-            "emailFailContent" to emailFailContent
+            "successContent" to successContent,
+            "failContent" to failContent,
+            "emailSuccessContent" to successContent,
+            "emailFailContent" to failContent
         )
     }
 
