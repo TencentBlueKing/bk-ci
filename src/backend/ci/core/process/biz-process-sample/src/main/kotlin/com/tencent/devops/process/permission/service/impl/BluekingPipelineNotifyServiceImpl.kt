@@ -123,7 +123,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         return mutableMapOf(
             "detailUrl" to detailUrl,
             "detailOuterUrl" to detailUrl,
-            "detailShortOuterUrl" to detailUrl,
+            "detailShortOuterUrl" to detailUrl
         )
     }
 

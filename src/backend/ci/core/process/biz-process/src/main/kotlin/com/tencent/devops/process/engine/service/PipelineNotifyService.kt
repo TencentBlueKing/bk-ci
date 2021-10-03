@@ -188,7 +188,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             "successContent" to setting.successContent,
             "failContent" to setting.failContent,
             "emailSuccessContent" to emailSuccessContent,
-            "emailFailContent" to emailFailContent,
+            "emailFailContent" to emailFailContent
         )
 
     }
