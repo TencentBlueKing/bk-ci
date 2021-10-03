@@ -11,6 +11,15 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
+import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
+import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineNotifyService
@@ -37,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod","NestedBlockDepth")
 class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val buildVariableService: BuildVariableService,
     override val pipelineRuntimeService: PipelineRuntimeService,
@@ -48,7 +57,8 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val bsAuthProjectApi: AuthProjectApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val wechatWorkService: WechatWorkService
 ) : PipelineNotifyService(
     buildVariableService,
     pipelineRuntimeService,
@@ -112,7 +122,39 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
-    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus) {
+    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>) {
+
+        val successContent = vars["successContent"]
+        val pipelineName = vars["pipelineName"]
+        val buildNum = vars["buildNum"]
+        val detailUrl = vars["detailUrl"]
+
+        // 发送企业微信群信息
+        if (setting.successSubscription.wechatGroupFlag) {
+            val successWechatGroups = mutableSetOf<String>()
+            successWechatGroups.addAll(setting.successSubscription.wechatGroup.split("[,;]".toRegex()))
+            successWechatGroups.forEach {
+                if (setting.successSubscription.wechatGroupMarkdownFlag) {
+                    wechatWorkService.sendMarkdownGroup(successContent!!, it)
+                } else {
+                    val receiver = Receiver(ReceiverType.group, it)
+                    val richtextContentList = mutableListOf<RichtextContent>()
+                    richtextContentList.add(
+                        RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
+                    )
+                    richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
+                    if (setting.successSubscription.detailFlag) {
+                        richtextContentList.add(
+                            RichtextView(
+                                RichtextViewLink(text = "查看详情", key = detailUrl!!, browser = 1)
+                            )
+                        )
+                    }
+                    val richtextMessage = RichtextMessage(receiver, richtextContentList)
+                    wechatWorkService.sendRichText(richtextMessage)
+                }
+            }
+        }
         return
     }
 
