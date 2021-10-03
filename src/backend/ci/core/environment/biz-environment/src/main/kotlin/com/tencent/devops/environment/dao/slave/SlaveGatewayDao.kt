@@ -48,11 +48,12 @@ class SlaveGatewayDao {
                 val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentSlaveGatewayRecord>>()
                 val transactionContext = org.jooq.impl.DSL.using(configuration)
                 transactionContext.selectFrom(this).fetch().forEach { record ->
-                    oldToNewMap.forEach { (old, new) ->
-                        if (record.gateway.contains(old)) updates.add(
-                            transactionContext.update(this)
-                                .set(GATEWAY, record.gateway.replace(old, new))
-                        )
+                    oldToNewMap.forEach nextOne@{ (old, new) ->
+                        if (!record.gateway.contains(old)) return@nextOne
+                        val update = transactionContext.update(this)
+                            .set(GATEWAY, record.gateway.replace(old, new))
+                        update.where(ID.eq(record.id))
+                        updates.add(update)
                     }
                 }
                 transactionContext.batch(updates).execute()

@@ -464,7 +464,10 @@ class ThirdPartyAgentDao {
                             update.set(FILE_GATEWAY, record.fileGateway.replace(old, new))
                             needUpdate = true
                         }
-                        if (needUpdate) updates.add(update)
+                        if (needUpdate) {
+                            update.where(ID.eq(record.id))
+                            updates.add(update)
+                        }
                     }
                 }
                 transactionContext.batch(updates).execute()
