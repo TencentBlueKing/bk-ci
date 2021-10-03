@@ -142,12 +142,13 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         return
     }
 
-    override fun getReceivers(setting: PipelineSetting, type: String): Set<String> {
+    override fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String> {
         val users = mutableSetOf<String>()
         return if (type == SUCCESS_TYPE) {
             users.addAll(setting.successSubscription.users.split(",").toMutableSet())
             if (setting.successSubscription.groups.isNotEmpty()) {
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
+                logger.info("success notify config group: ${setting.successSubscription.groups}")
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
                 projectRoleUsers.forEach {
                     if (it.roleName in setting.successSubscription.groups) {
                         users.addAll(it.userIdList)
@@ -158,7 +159,8 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         } else {
             users.addAll(setting.failSubscription.users.split(",").toMutableSet())
             if (setting.failSubscription.groups.isNotEmpty()) {
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
+                logger.info("fail notify config group: ${setting.successSubscription.groups}")
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
                 projectRoleUsers.forEach {
                     if (it.roleName in setting.failSubscription.groups) {
                         users.addAll(it.userIdList)
