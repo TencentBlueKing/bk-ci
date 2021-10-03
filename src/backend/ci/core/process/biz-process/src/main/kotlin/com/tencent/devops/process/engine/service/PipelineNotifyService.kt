@@ -88,12 +88,12 @@ abstract class PipelineNotifyService @Autowired constructor(
         }
 
         // 发送企业微信群消息
-        sendWeworkGroupMsg(settingInfo, buildStatus)
+        sendWeworkGroupMsg(settingInfo, buildStatus, mapData)
     }
 
     abstract fun getExecutionVariables(pipelineId: String, vars: Map<String, String>): ExecutionVariables
 
-    abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus)
+    abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>)
 
     abstract fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String>
 
