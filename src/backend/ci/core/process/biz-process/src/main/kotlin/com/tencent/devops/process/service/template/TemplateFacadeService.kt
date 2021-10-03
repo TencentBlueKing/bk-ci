@@ -871,6 +871,7 @@ class TemplateFacadeService @Autowired constructor(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun listTemplateByIds(
         projectId: String?,
         templateType: TemplateType?,
@@ -900,7 +901,7 @@ class TemplateFacadeService @Autowired constructor(
             )
         }else{
             val templateIdList = mutableSetOf<String>()
-            val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+            getConstrainedSrcTemplates(templates, templateIdList, dslContext)
             val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
             templates.forEach { record ->
                 val templateId = record["templateId"] as String
