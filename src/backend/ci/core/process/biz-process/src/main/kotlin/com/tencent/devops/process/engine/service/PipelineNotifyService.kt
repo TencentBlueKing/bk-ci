@@ -60,7 +60,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isFailure() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId, vars),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -69,7 +69,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isCancel() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId),
+                    receivers = getReceivers(settingInfo, FAIL_TYPE, projectId, vars),
                     notifyType = settingInfo.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
@@ -78,7 +78,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             buildStatus.isSuccess() -> {
                 sendNotifyByTemplate(
                     templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE,
-                    receivers = getReceivers(settingInfo, SUCCESS_TYPE, projectId),
+                    receivers = getReceivers(settingInfo, SUCCESS_TYPE, projectId, vars),
                     notifyType = settingInfo.successSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = mapData,
                     bodyParams = mapData
