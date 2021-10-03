@@ -2,6 +2,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -142,10 +143,16 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         return
     }
 
-    override fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String> {
+    override fun getReceivers(
+        setting: PipelineSetting,
+        type: String,
+        projectId: String,
+        vars: Map<String, String>
+    ): Set<String> {
         val users = mutableSetOf<String>()
         return if (type == SUCCESS_TYPE) {
-            users.addAll(setting.successSubscription.users.split(",").toMutableSet())
+            val successReceiver = EnvUtils.parseEnv(setting.successSubscription.users, vars, true)
+            users.addAll(successReceiver.split(",").toMutableSet())
             if (setting.successSubscription.groups.isNotEmpty()) {
                 logger.info("success notify config group: ${setting.successSubscription.groups}")
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
@@ -157,7 +164,8 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
             }
             users
         } else {
-            users.addAll(setting.failSubscription.users.split(",").toMutableSet())
+            val failReceiver = EnvUtils.parseEnv(setting.failSubscription.users, vars, true)
+            users.addAll(failReceiver.split(",").toMutableSet())
             if (setting.failSubscription.groups.isNotEmpty()) {
                 logger.info("fail notify config group: ${setting.successSubscription.groups}")
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
@@ -171,7 +179,12 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         }
     }
 
-    override fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String> {
+    override fun buildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vars: Map<String, String>
+    ): Map<String, String> {
         val detailUrl = detailUrl(projectId, pipelineId, buildId)
         val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
         val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(

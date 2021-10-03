@@ -569,12 +569,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains(NotifyType.WEWORK.name)) {
                 logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.WEWORK}|template=${request.templateCode}")
             } else {
+                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
                 val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
                 // 替换内容里的动态参数
                 val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                logger.info("send wework msg: $body ${weworkTplRecord.sender}")
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,

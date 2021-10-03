@@ -267,14 +267,14 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                     .forEach { successUsers.addAll(it.userIdList) }
                 successUsers.addAll(successReceiver.split(","))
                 val notifyTypeList = settingInfo.successSubscription.types.map { it.name }.toMutableSet()
-                sendTemplateNotify(
-                    users = successUsers,
-                    notifyTypes = notifyTypeList,
-                    pipelineId = pipelineId,
-                    type = shutdownType,
-                    mapData = mapData,
-                    detailFlag = settingDetailFlag
-                )
+//                sendTemplateNotify(
+//                    users = successUsers,
+//                    notifyTypes = notifyTypeList,
+//                    pipelineId = pipelineId,
+//                    type = shutdownType,
+//                    mapData = mapData,
+//                    detailFlag = settingDetailFlag
+//                )
 
                 // 发送企业微信群信息
                 if (settingInfo.successSubscription.wechatGroupFlag) {
@@ -311,14 +311,14 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                     .forEach { failUsers.addAll(it.userIdList) }
                 failUsers.addAll(failReceiver.split(","))
                 val notifyTypeList = settingInfo.failSubscription.types.map { it.name }.toMutableSet()
-                sendTemplateNotify(
-                    users = failUsers,
-                    notifyTypes = notifyTypeList,
-                    pipelineId = pipelineId,
-                    type = shutdownType,
-                    mapData = mapData,
-                    detailFlag = settingDetailFlag
-                )
+//                sendTemplateNotify(
+//                    users = failUsers,
+//                    notifyTypes = notifyTypeList,
+//                    pipelineId = pipelineId,
+//                    type = shutdownType,
+//                    mapData = mapData,
+//                    detailFlag = settingDetailFlag
+//                )
 
                 // 发送企业微信群信息
                 if (settingInfo.failSubscription.wechatGroupFlag) {
