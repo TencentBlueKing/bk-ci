@@ -123,44 +123,28 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     }
 
     override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>) {
-
-        val successContent = vars["successContent"]
-        val pipelineName = vars["pipelineName"]
-        val buildNum = vars["buildNum"]
-        val detailUrl = vars["detailUrl"]
-
-        // 发送企业微信群信息
-        if (setting.successSubscription.wechatGroupFlag) {
-            val successWechatGroups = mutableSetOf<String>()
-            successWechatGroups.addAll(setting.successSubscription.wechatGroup.split("[,;]".toRegex()))
-            successWechatGroups.forEach {
-                if (setting.successSubscription.wechatGroupMarkdownFlag) {
-                    wechatWorkService.sendMarkdownGroup(successContent!!, it)
-                } else {
-                    val receiver = Receiver(ReceiverType.group, it)
-                    val richtextContentList = mutableListOf<RichtextContent>()
-                    richtextContentList.add(
-                        RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
-                    )
-                    richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
-                    if (setting.successSubscription.detailFlag) {
-                        richtextContentList.add(
-                            RichtextView(
-                                RichtextViewLink(text = "查看详情", key = detailUrl!!, browser = 1)
-                            )
-                        )
-                    }
-                    val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                    wechatWorkService.sendRichText(richtextMessage)
-                }
-            }
+        var groups = mutableSetOf<String>()
+        var content = ""
+        var markerDownFlag = false
+        var detailFlag = false
+        if (buildStatus.isCancel() || buildStatus.isFailure()) {
+            groups.addAll(setting.failSubscription.wechatGroup.split("[,;]".toRegex()))
+            content = setting.failSubscription.content
+            markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
+            detailFlag = setting.failSubscription.detailFlag
+        } else if (buildStatus.isSuccess()) {
+            groups.addAll(setting.successSubscription.wechatGroup.split("[,;]".toRegex()))
+            content = setting.successSubscription.content
+            markerDownFlag = setting.successSubscription.wechatGroupMarkdownFlag
+            detailFlag = setting.successSubscription.detailFlag
         }
+        sendWeworkGroup(groups, markerDownFlag, content, vars, detailFlag)
         return
     }
 
     override fun getReceivers(setting: PipelineSetting, type: String): Set<String> {
+        val users = mutableSetOf<String>()
         return if (type == SUCCESS_TYPE) {
-            val users = mutableSetOf<String>()
             users.addAll(setting.successSubscription.users.split(",").toMutableSet())
             if (setting.successSubscription.groups.isNotEmpty()) {
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
@@ -172,7 +156,6 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
             }
             users
         } else {
-            val users = mutableSetOf<String>()
             users.addAll(setting.failSubscription.users.split(",").toMutableSet())
             if (setting.failSubscription.groups.isNotEmpty()) {
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, "")
@@ -222,6 +205,40 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
                 actionType = ActionType.REFRESH
             )
         )
+    }
+
+    private fun sendWeworkGroup(
+        weworkGroup: Set<String>,
+        markerDownFlag: Boolean,
+        content: String,
+        vars: Map<String, String>,
+        detailFlag: Boolean
+    ) {
+        val pipelineName = vars["pipelineName"]
+        val buildNum = vars["buildNum"]
+        val detailUrl = vars["detailUrl"]
+        weworkGroup.forEach {
+            if (markerDownFlag) {
+                wechatWorkService.sendMarkdownGroup(content!!, it)
+            } else {
+                val receiver = Receiver(ReceiverType.group, it)
+                val richtextContentList = mutableListOf<RichtextContent>()
+                richtextContentList.add(
+                    RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
+                )
+                // TODO: 此处也需传入
+                richtextContentList.add(RichtextText(RichtextTextText("✔️$content\n")))
+                if (detailFlag) {
+                    richtextContentList.add(
+                        RichtextView(
+                            RichtextViewLink(text = "查看详情", key = detailUrl!!, browser = 1)
+                        )
+                    )
+                }
+                val richtextMessage = RichtextMessage(receiver, richtextContentList)
+                wechatWorkService.sendRichText(richtextMessage)
+            }
+        }
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
