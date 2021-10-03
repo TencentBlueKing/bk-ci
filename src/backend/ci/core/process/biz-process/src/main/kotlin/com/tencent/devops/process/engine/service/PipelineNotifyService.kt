@@ -224,7 +224,7 @@ abstract class PipelineNotifyService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineNotifyService::class.java)
-        val SUCCESS_TYPE = "success"
-        val FAIL_TYPE = "fail"
+        const val SUCCESS_TYPE = "success"
+        const val FAIL_TYPE = "fail"
     }
 }
