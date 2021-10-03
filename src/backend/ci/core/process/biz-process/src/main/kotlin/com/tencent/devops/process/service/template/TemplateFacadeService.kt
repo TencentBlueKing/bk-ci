@@ -871,6 +871,73 @@ class TemplateFacadeService @Autowired constructor(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
+    fun listTemplateByIds(
+        projectId: String?,
+        templateType: TemplateType?,
+        templateIds: Collection<String>?,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): OptionalTemplateList {
+        val result = mutableMapOf<String, OptionalTemplate>()
+        val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
+        val templates = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = true,
+            templateType = templateType,
+            templateIdList = templateIds,
+            storeFlag = null,
+            page = page,
+            pageSize = pageSize
+        )
+        if (templates == null || templates.isEmpty()) {
+            // 如果查询模板列表为空，则不再执行后续逻辑
+            return OptionalTemplateList(
+                count = templateCount,
+                page = page,
+                pageSize = pageSize,
+                templates = result
+            )
+        }else{
+            val templateIdList = mutableSetOf<String>()
+            getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+            val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+            templates.forEach { record ->
+                val templateId = record["templateId"] as String
+                val type = record["templateType"] as String
+
+                val modelStr = record["template"] as String
+                val version = record["version"] as Long
+
+                val model: Model = objectMapper.readValue(modelStr)
+                val setting = settings[templateId]
+                val logoUrl = record["logoUrl"] as? String
+                val categoryStr = record["category"] as? String
+                val key = templateId
+                result[key] = OptionalTemplate(
+                    name = setting?.name ?: model.name,
+                    templateId = templateId,
+                    projectId = record["projectId"] as String,
+                    version = version,
+                    versionName = record["versionName"] as String,
+                    templateType = type,
+                    templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
+                    logoUrl = logoUrl ?: "",
+                    category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                        .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                    stages = model.stages
+                )
+            }
+            return OptionalTemplateList(
+                count = templateCount,
+                page = page,
+                pageSize = pageSize,
+                templates = result
+            )
+        }
+    }
+
     fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
         var templates = templateDao.listTemplate(dslContext, projectId, templateId)
         if (templates.isEmpty()) {
