@@ -50,6 +50,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 
@@ -206,6 +208,28 @@ class StoreEnvVarDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .execute()
+        }
+    }
+
+    fun convertEncryptedEnvVar(dslContext: DSLContext, oldKey: String, newKey: String): Int {
+        with(TStoreEnvVar.T_STORE_ENV_VAR) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TStoreEnvVarRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this)
+                    .where(ENCRYPT_FLAG.eq(true))
+                    .fetch().forEach { record ->
+                        val originContent = AESUtil.decrypt(oldKey, record.varValue)
+                        val update = transactionContext.update(this)
+                            .set(VAR_VALUE, AESUtil.encrypt(newKey, originContent))
+                        update.where(ID.eq(record.id))
+                        updates.add(update)
+                        count++
+                    }
+                transactionContext.batch(updates).execute()
+            }
+            return count
         }
     }
 }

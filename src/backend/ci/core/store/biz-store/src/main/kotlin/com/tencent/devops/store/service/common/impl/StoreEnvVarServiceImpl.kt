@@ -27,12 +27,14 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreEnvVarDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
@@ -76,6 +78,12 @@ class StoreEnvVarServiceImpl @Autowired constructor(
 
     @Value("\${aes.aesMock}")
     private lateinit var aesMock: String
+
+    @Value("\${aes.oldKey:#{null}}")
+    private var oldKey: String? = null
+
+    @Value("\${aes.newKey:#{null}}")
+    private var newKey: String? = null
 
     override fun create(userId: String, storeEnvVarRequest: StoreEnvVarRequest): Result<Boolean> {
         logger.info("storeEnvVar create userId:$userId,storeEnvVarRequest:$storeEnvVarRequest")
@@ -240,5 +248,26 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         } else {
             Result(data = null)
         }
+    }
+
+    override fun convertEncryptedEnvVar(): Int {
+        logger.info("convertEncryptedEnvVar with oldKey :$oldKey, newKey is :$newKey")
+        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
+                params = arrayOf("aes.oldKey or aes.newKey is not config"),
+                defaultMessage = "Convert failed because of config: " +
+                    "aes.oldKey or aes.newKey is not defined"
+            )
+        }
+        if (newKey != aesKey) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
+                params = arrayOf("The values of aes.aesKey and  aes.newKey are inconsistent"),
+                defaultMessage = "Convert failed because of config: " +
+                    "The values of aes.aesKey and  aes.newKey are inconsistent"
+            )
+        }
+        return storeEnvVarDao.convertEncryptedEnvVar(dslContext, oldKey!!, newKey!!)
     }
 }

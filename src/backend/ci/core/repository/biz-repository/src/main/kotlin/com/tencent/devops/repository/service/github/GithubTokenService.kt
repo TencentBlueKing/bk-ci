@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.github
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -43,6 +44,12 @@ class GithubTokenService @Autowired constructor(
 ) {
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
+
+    @Value("\${aes.oldKey:#{null}}")
+    private var oldKey: String? = null
+
+    @Value("\${aes.newKey:#{null}}")
+    private var newKey: String? = null
 
     fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
         val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
@@ -65,6 +72,23 @@ class GithubTokenService @Autowired constructor(
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
+    }
+
+    fun convertEncryptedToken(): Int {
+        logger.info("convertEncryptedToken with oldKey :$oldKey, newKey is :$newKey")
+        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
+            throw OperationException(
+                message = "Convert failed because of config: " +
+                    "aes.oldKey or aes.newKey is not defined"
+            )
+        }
+        if (newKey != aesKey) {
+            throw OperationException(
+                message = "Convert failed because of config: " +
+                    "The values of aes.aesKey and  aes.newKey are inconsistent"
+            )
+        }
+        return githubTokenDao.convertEncryptedToken(dslContext, oldKey!!, newKey!!)
     }
 
     companion object {

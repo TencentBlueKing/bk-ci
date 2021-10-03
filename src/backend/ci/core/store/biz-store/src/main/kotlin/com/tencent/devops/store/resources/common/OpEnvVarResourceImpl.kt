@@ -25,59 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpBusinessConfigResource
+import com.tencent.devops.store.api.common.OpEnvVarResource
+import com.tencent.devops.store.pojo.common.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.BusinessConfigResponse
+import com.tencent.devops.store.service.common.BusinessConfigService
+import com.tencent.devops.store.service.common.StoreEnvVarService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface StoreEnvVarService {
+@RestResource
+class OpEnvVarResourceImpl @Autowired constructor(
+    private val storeEnvVarService: StoreEnvVarService
+) : OpEnvVarResource {
 
-    /**
-     * 新增环境变量
-     */
-    fun create(
-        userId: String,
-        storeEnvVarRequest: StoreEnvVarRequest
-    ): Result<Boolean>
-
-    /**
-     * 删除环境变量
-     */
-    fun delete(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        varNames: String
-    ): Result<Boolean>
-
-    /**
-     * 获取最近的环境变量列表
-     */
-    @Suppress("ALL")
-    fun getLatestEnvVarList(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        scopes: String? = null,
-        varName: String? = null,
-        isDecrypt: Boolean = false,
-        checkPermissionFlag: Boolean = true
-    ): Result<List<StoreEnvVarInfo>?>
-
-    /**
-     * 获取环境变量变更记录
-     */
-    fun getEnvVarChangeLogList(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        varName: String
-    ): Result<List<StoreEnvChangeLogInfo>?>
-
-    /**
-     * 将数据库中已存的所有加密变量都替换为新key加密
-     */
-    fun convertEncryptedEnvVar(): Int
+    override fun convertEnvVar(): Result<Int> {
+        return Result(storeEnvVarService.convertEncryptedEnvVar())
+    }
 }

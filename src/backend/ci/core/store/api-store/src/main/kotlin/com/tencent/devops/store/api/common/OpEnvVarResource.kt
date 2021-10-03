@@ -25,59 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
-import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
+import com.tencent.devops.store.pojo.common.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.BusinessConfigResponse
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-interface StoreEnvVarService {
+@Api(tags = ["OP_STORE_ENV_VAR"], description = "OP-STORE-数据转换")
+@Path("/op/store/env/var")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpEnvVarResource {
 
-    /**
-     * 新增环境变量
-     */
-    fun create(
-        userId: String,
-        storeEnvVarRequest: StoreEnvVarRequest
-    ): Result<Boolean>
-
-    /**
-     * 删除环境变量
-     */
-    fun delete(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        varNames: String
-    ): Result<Boolean>
-
-    /**
-     * 获取最近的环境变量列表
-     */
-    @Suppress("ALL")
-    fun getLatestEnvVarList(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        scopes: String? = null,
-        varName: String? = null,
-        isDecrypt: Boolean = false,
-        checkPermissionFlag: Boolean = true
-    ): Result<List<StoreEnvVarInfo>?>
-
-    /**
-     * 获取环境变量变更记录
-     */
-    fun getEnvVarChangeLogList(
-        userId: String,
-        storeType: String,
-        storeCode: String,
-        varName: String
-    ): Result<List<StoreEnvChangeLogInfo>?>
-
-    /**
-     * 将数据库中已存的所有加密变量都替换为新key加密
-     */
-    fun convertEncryptedEnvVar(): Int
+    @ApiOperation("使用新的AES秘钥对存量加密数据进行转换")
+    @PUT
+    @Path("/convert")
+    fun convertEnvVar(): Result<Int>
 }

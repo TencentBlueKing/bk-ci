@@ -27,11 +27,14 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.model.repository.tables.TRepositoryGithubToken
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubTokenRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 
 @Repository
 class GithubTokenDao {
@@ -77,6 +80,27 @@ class GithubTokenDao {
     fun delete(dslContext: DSLContext, userId: String) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.deleteFrom(this).where(USER_ID.eq(userId))
+        }
+    }
+
+    fun convertEncryptedToken(dslContext: DSLContext, oldKey: String, newKey: String): Int {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TRepositoryGithubTokenRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this)
+                    .fetch().forEach { record ->
+                        val originContent = AESUtil.decrypt(oldKey, record.accessToken)
+                        val update = transactionContext.update(this)
+                            .set(ACCESS_TOKEN, AESUtil.encrypt(newKey, originContent))
+                        update.where(ID.eq(record.id))
+                        updates.add(update)
+                        count++
+                    }
+                transactionContext.batch(updates).execute()
+            }
+            return count
         }
     }
 }
