@@ -899,7 +899,7 @@ class TemplateFacadeService @Autowired constructor(
                 pageSize = pageSize,
                 templates = result
             )
-        }else{
+        } else {
             val templateIdList = mutableSetOf<String>()
             getConstrainedSrcTemplates(templates, templateIdList, dslContext)
             val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
