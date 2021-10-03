@@ -97,7 +97,12 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         return
     }
 
-    override fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String> {
+    override fun buildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vars: Map<String, String>
+    ): Map<String, String> {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return emptyMap()
         var pipelineName = pipelineInfo.pipelineName
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return emptyMap()
@@ -126,7 +131,12 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String> {
+    override fun getReceivers(
+        setting: PipelineSetting,
+        type: String,
+        projectId: String,
+        vars: Map<String, String>
+    ): Set<String> {
         return if (type == SUCCESS_TYPE) {
             setting.successSubscription.users.split(",").toMutableSet()
         } else {

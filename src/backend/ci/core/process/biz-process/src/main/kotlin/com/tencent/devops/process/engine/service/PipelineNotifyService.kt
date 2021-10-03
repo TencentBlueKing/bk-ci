@@ -95,9 +95,19 @@ abstract class PipelineNotifyService @Autowired constructor(
 
     abstract fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>)
 
-    abstract fun buildUrl(projectId: String, pipelineId: String, buildId: String): Map<String, String>
+    abstract fun buildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vars: Map<String, String>
+    ): Map<String, String>
 
-    abstract fun getReceivers(setting: PipelineSetting, type: String, projectId: String): Set<String>
+    abstract fun getReceivers(
+        setting: PipelineSetting,
+        type: String,
+        projectId: String,
+        vars: Map<String, String>
+    ): Set<String>
 
     private fun buildPipelineInfo(
         projectId: String,
@@ -160,7 +170,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         vars: MutableMap<String, String>
     ): Map<String, String> {
         val mapData = mutableMapOf<String, String>()
-        mapData.putAll(buildUrl(projectId, pipelineId, buildId))
+        mapData.putAll(buildUrl(projectId, pipelineId, buildId, vars))
         mapData.putAll(buildNotifyContent(buildId, vars))
         mapData.putAll(buildPipelineInfo(projectId, pipelineId, buildId, vars))
 
