@@ -47,7 +47,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
     client,
     pipelineBuildFacadeService
 ) {
-    override fun getExecutionVariables(pipelineId: String, vars: Map<String, String>): ExecutionVariables {
+    override fun getExecutionVariables(pipelineId: String, vars: MutableMap<String, String>): ExecutionVariables {
         var buildUser = ""
         var triggerType = ""
         var buildNum: Int? = null
@@ -93,7 +93,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
             isMobileStart = isMobileStart)
     }
 
-    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>) {
+    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: MutableMap<String, String>) {
         return
     }
 
@@ -101,7 +101,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Map<String, String> {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return emptyMap()
         var pipelineName = pipelineInfo.pipelineName
@@ -135,7 +135,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
         setting: PipelineSetting,
         type: String,
         projectId: String,
-        vars: Map<String, String>
+        vars: MutableMap<String, String>
     ): Set<String> {
         return if (type == SUCCESS_TYPE) {
             setting.successSubscription.users.split(",").toMutableSet()
