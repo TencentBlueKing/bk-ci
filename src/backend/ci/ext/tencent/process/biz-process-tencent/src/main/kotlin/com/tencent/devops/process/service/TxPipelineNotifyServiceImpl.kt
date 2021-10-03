@@ -43,7 +43,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
     override val client: Client,
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineNotifyService(
     buildVariableService,
     pipelineRuntimeService,
