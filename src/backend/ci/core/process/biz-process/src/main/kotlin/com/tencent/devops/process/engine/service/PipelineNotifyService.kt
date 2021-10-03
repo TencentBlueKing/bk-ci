@@ -190,7 +190,6 @@ abstract class PipelineNotifyService @Autowired constructor(
             "emailSuccessContent" to emailSuccessContent,
             "emailFailContent" to emailFailContent
         )
-
     }
 
     private fun getFailTaskName(detail: ModelDetail): String {
