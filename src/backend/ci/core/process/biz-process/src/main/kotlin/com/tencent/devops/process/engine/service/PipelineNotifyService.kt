@@ -218,7 +218,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         val trigger: String,
         val originTriggerType: String,
         val user: String,
-        val isMobileStart: Boolean,
+        val isMobileStart: Boolean
     )
 
     companion object {

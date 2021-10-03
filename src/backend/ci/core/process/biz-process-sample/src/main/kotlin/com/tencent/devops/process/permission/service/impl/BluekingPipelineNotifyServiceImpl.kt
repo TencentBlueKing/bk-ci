@@ -91,7 +91,6 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
             originTriggerType = triggerType,
             user = buildUser,
             isMobileStart = isMobileStart)
-
     }
 
     override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus) {
