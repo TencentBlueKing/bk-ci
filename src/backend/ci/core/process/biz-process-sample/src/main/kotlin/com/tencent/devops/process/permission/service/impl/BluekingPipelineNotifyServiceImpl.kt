@@ -93,7 +93,7 @@ class BluekingPipelineNotifyServiceImpl @Autowired constructor(
             isMobileStart = isMobileStart)
     }
 
-    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus) {
+    override fun sendWeworkGroupMsg(setting: PipelineSetting, buildStatus: BuildStatus, vars: Map<String, String>) {
         return
     }
 
