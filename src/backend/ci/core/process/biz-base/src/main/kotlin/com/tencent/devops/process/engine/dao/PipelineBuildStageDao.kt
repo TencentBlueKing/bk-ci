@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.util.JooqUtils
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck

@@ -38,8 +38,11 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc")) // MarketBuildUtils依赖了CodeCC，考虑移除
     api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
     api(project(":core:process:model-process"))
+    api("org.springframework.boot:spring-boot-starter-jooq")
     api("com.zaxxer:HikariCP")
+    api("org.jooq:jooq")
     api("mysql:mysql-connector-java")
+    api("org.apache.shardingsphere:sharding-jdbc-core:${Versions.ShardingJdbc}")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

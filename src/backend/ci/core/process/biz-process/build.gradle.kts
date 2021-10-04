@@ -48,15 +48,11 @@ dependencies {
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:process:biz-base-sample"))
 
-    api("org.springframework.boot:spring-boot-starter-jooq")
-    api("com.zaxxer:HikariCP")
-    api("org.jooq:jooq")
-    api("mysql:mysql-connector-java")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
-    api("org.apache.shardingsphere:sharding-jdbc-core:${Versions.ShardingJdbc}")
     testImplementation(project(":core:common:common-test"))
 }

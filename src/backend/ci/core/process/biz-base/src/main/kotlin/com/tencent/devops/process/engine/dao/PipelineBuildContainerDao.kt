@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.util.JooqUtils
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER

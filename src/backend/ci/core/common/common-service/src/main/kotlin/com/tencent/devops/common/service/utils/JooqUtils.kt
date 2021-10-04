@@ -25,40 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.common.service.utils
 
-import org.jooq.DSLContext
-import org.jooq.SQLDialect
-import org.jooq.conf.Settings
+import org.jooq.DatePart
+import org.jooq.Field
 import org.jooq.impl.DSL
-import org.jooq.impl.DefaultConfiguration
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
-import javax.sql.DataSource
-import javax.validation.constraints.NotNull
+import java.sql.Timestamp
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@Import(BkShardingDataSourceConfiguration::class)
-class JooqConfiguration {
+object JooqUtils {
 
-    @Bean
-    @NotNull
-    fun shardingDslContest(
-        @Qualifier("shardingDataSource")
-        shardingDataSource: DataSource
-    ): DSLContext {
-        val configuration: org.jooq.Configuration = DefaultConfiguration()
-            .set(shardingDataSource)
-            .set(Settings().withRenderSchema(false)
-                .withExecuteLogging(true)
-                .withRenderFormatted(false))
-            .set(SQLDialect.MYSQL)
-        return DSL.using(configuration)
+    fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
+        return DSL.field(
+            "timestampdiff({0}, {1}, {2})",
+            Long::class.java, DSL.keyword(part.toSQL()), t1, t2
+        )
+    }
+
+    fun strPosition(data: Field<String>, param: String): Field<Int> {
+        return DSL.field(
+            "POSITION({0} IN {1})",
+            Int::class.java,
+            data,
+            param
+        )
+    }
+
+    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+        return if (lower) {
+            DSL.field(
+                "LOWER(JSON_EXTRACT({0}, {1}))",
+                String::class.java, t1, t2
+            )
+        } else {
+            DSL.field(
+                "JSON_EXTRACT({0}, {1})",
+                String::class.java, t1, t2
+            )
+        }
     }
 }
