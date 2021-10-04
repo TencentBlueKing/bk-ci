@@ -197,7 +197,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             val pipelines = pipelineWebhookService.getWebhookPipelines(
                 name = matcher.getRepoName(),
                 type = codeRepositoryType
-            ).toSet()
+            )
 
             if (pipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
@@ -205,10 +205,12 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             watcher.start("webhookTriggerPipelineBuild")
-            pipelines.forEach outside@{ pipelineId ->
+            pipelines.forEach outside@{ pipeline ->
+                val projectId = pipeline.projectId
+                val pipelineId = pipeline.pipelineId
                 try {
                     logger.info("pipelineId is $pipelineId")
-                    val model = pipelineRepositoryService.getModel(pipelineId) ?: run {
+                    val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
                         logger.info("$pipelineId|pipeline does not exists, ignore")
                         return@outside
                     }
@@ -224,7 +226,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) return@outside
+                    if (webhookTriggerPipelineBuild(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            codeRepositoryType = codeRepositoryType,
+                            matcher = matcher
+                        )
+                    ) return@outside
                 } catch (e: Throwable) {
                     logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
@@ -306,20 +314,20 @@ class PipelineBuildWebhookService @Autowired constructor(
     }
 
     fun webhookTriggerPipelineBuild(
+        projectId: String,
         pipelineId: String,
         codeRepositoryType: String,
         matcher: ScmWebhookMatcher
     ): Boolean {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return false
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return false
         }
 
-        val projectId = pipelineInfo.projectId
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
@@ -431,12 +439,12 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val repoName = webhookCommit.repoName
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
 
         permFixService.checkPermission(pipelineInfo.lastModifyUser, projectId, pipelineId = pipelineId)
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return ""

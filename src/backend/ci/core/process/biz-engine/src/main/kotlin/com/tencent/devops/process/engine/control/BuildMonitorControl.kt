@@ -145,7 +145,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
-        val stages = pipelineStageService.listStages(event.buildId)
+        val stages = pipelineStageService.listStages(event.projectId, event.buildId)
             .filter {
                 !it.status.isFinish() &&
                     it.status != BuildStatus.STAGE_SUCCESS &&
@@ -269,7 +269,7 @@ class BuildMonitorControl @Autowired constructor(
     @Suppress("LongMethod")
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
-        if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
+        if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.startTime!!)) {
             val exitQueue = pipelineRuntimeExtService.existQueue(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,

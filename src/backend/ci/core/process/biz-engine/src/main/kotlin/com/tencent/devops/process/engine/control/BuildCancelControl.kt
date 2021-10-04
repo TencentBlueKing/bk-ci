@@ -119,7 +119,7 @@ class BuildCancelControl @Autowired constructor(
                 buildStatus = event.status
             )
 
-            val pendingStage = pipelineStageService.getPendingStage(buildId)
+            val pendingStage = pipelineStageService.getPendingStage(event.projectId, buildId)
             if (pendingStage != null) {
                 pendingStage.dispatchEvent(event)
             } else {
@@ -171,9 +171,10 @@ class BuildCancelControl @Autowired constructor(
 
     @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
+        val projectId = event.projectId
         val buildId = event.buildId
-        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(event.buildId) }
-        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(buildId = event.buildId) }
+        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
+        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
         val stages = model.stages
         stages.forEachIndexed forEach@{ index, stage ->
             if (stage.finally && index > 1) {

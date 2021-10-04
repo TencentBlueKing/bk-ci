@@ -245,7 +245,7 @@ open class TestBase {
                 startTime = startTime?.plusSeconds(vmContainer.cost.toLong()), status = status, stageId = stageId,
                 taskId = taskId, taskAtom = "", taskName = "Demo", taskParams = mutableMapOf(), taskSeq = 1,
                 taskType = vmContainer.containerType, starter = "user1",
-                containerHashId = containerId, approver = null, subBuildId = null,
+                containerHashId = containerId, approver = null, subProjectId = null, subBuildId = null,
                 additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions()
             )
         }

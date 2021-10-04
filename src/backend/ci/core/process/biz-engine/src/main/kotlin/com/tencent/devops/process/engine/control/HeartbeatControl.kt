@@ -101,7 +101,7 @@ class HeartbeatControl @Autowired constructor(
         }
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask = pipelineRuntimeService.getRunningTask(container.buildId)
+        val runningTask = pipelineRuntimeService.getRunningTask(container.projectId, container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true

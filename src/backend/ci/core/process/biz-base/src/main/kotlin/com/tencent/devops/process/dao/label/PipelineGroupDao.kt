@@ -74,6 +74,7 @@ class PipelineGroupDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         name: String,
         userId: String
@@ -84,7 +85,7 @@ class PipelineGroupDao {
                 .set(NAME, name)
                 .set(UPDATE_USER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(groupId))
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
@@ -130,6 +131,17 @@ class PipelineGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.`in`(ids))
                 .fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        groupId: Long
+    ): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(groupId))
+                .fetchOne()
         }
     }
 

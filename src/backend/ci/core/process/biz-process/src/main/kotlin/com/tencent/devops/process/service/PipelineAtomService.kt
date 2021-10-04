@@ -202,8 +202,8 @@ class PipelineAtomService @Autowired constructor(
             )?.map { pipelineModelTask ->
                 val pipelineId = pipelineModelTask[KEY_PIPELINE_ID] as String
                 val projectId = pipelineModelTask[KEY_PROJECT_ID] as String
-                val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
-                val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, pipelineId)
+                val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
+                val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, false)
                 PipelineAtomRel(

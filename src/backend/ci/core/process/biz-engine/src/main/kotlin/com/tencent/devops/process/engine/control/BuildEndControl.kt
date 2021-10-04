@@ -212,10 +212,10 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String) {
-        val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+        val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
         if (buildNo != null && pipelineRuntimeService.getBuildInfo(projectId, buildId)?.retryFlag != true) {
-            pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildNo + 1)
+            pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号
             val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
             val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
@@ -230,7 +230,7 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
-        val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
+        val allBuildTask = pipelineRuntimeService.getAllBuildTask(projectId, buildId)
         val errorInfos = mutableListOf<ErrorInfo>()
         allBuildTask.forEach {
             // 将所有还在运行中的任务全部结束掉

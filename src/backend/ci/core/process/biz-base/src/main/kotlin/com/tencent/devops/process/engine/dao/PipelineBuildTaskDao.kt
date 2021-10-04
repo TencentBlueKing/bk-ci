@@ -60,6 +60,7 @@ class PipelineBuildTaskDao {
             with(T_PIPELINE_BUILD_TASK) {
                 dslContext.insertInto(
                     this,
+                    PROJECT_ID,
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
@@ -70,6 +71,7 @@ class PipelineBuildTaskDao {
                     TASK_ID,
                     TASK_TYPE,
                     TASK_ATOM,
+                    SUB_PROJECT_ID,
                     SUB_BUILD_ID,
                     STATUS,
                     STARTER,
@@ -81,6 +83,7 @@ class PipelineBuildTaskDao {
                     ATOM_CODE
                 )
                     .values(
+                        buildTask.projectId,
                         buildTask.pipelineId,
                         buildTask.buildId,
                         buildTask.stageId,
@@ -91,6 +94,7 @@ class PipelineBuildTaskDao {
                         buildTask.taskId,
                         buildTask.taskType,
                         buildTask.taskAtom,
+                        buildTask.subProjectId,
                         buildTask.subBuildId,
                         buildTask.status.ordinal,
                         buildTask.starter,
@@ -129,6 +133,7 @@ class PipelineBuildTaskDao {
                     .set(STATUS, it.status.ordinal)
                     .set(EXECUTE_COUNT, it.executeCount)
                     .set(TASK_SEQ, it.taskSeq)
+                    .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_BUILD_ID, it.subBuildId)
                     .set(CONTAINER_TYPE, it.containerType)
                     .set(
@@ -164,7 +169,6 @@ class PipelineBuildTaskDao {
             taskList.forEach {
                 records.add(
                     dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
                         .set(PIPELINE_ID, it.pipelineId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
@@ -179,6 +183,7 @@ class PipelineBuildTaskDao {
                         .set(STATUS, it.status)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(TASK_SEQ, it.taskSeq)
+                        .set(SUB_PROJECT_ID, it.subProjectId)
                         .set(SUB_BUILD_ID, it.subBuildId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(ADDITIONAL_OPTIONS, it.additionalOptions)
@@ -188,7 +193,7 @@ class PipelineBuildTaskDao {
                         .set(ERROR_CODE, it.errorCode)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(ATOM_CODE, it.atomCode)
-                        .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
+                        .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)).and(PROJECT_ID.eq(it.projectId)))
                 )
             }
             dslContext.batch(records).execute()
@@ -197,13 +202,14 @@ class PipelineBuildTaskDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         taskId: String?
     ): TPipelineBuildTaskRecord? {
 
         return with(T_PIPELINE_BUILD_TASK) {
 
-            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (taskId != null) {
                 where.and(TASK_ID.eq(taskId))
             }
@@ -213,13 +219,14 @@ class PipelineBuildTaskDao {
 
     fun listByStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         containerId: String?,
         statusSet: Collection<BuildStatus>?
     ): List<TPipelineBuildTaskRecord> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (!containerId.isNullOrBlank()) {
                 where.and(CONTAINER_ID.eq(containerId))
             }
@@ -234,9 +241,11 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun getByBuildId(dslContext: DSLContext, buildId: String): Collection<TPipelineBuildTaskRecord> {
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<TPipelineBuildTaskRecord> {
         return with(T_PIPELINE_BUILD_TASK) {
-            dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).orderBy(TASK_SEQ.asc()).fetch()
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(TASK_SEQ.asc()).fetch()
         }
     }
 
@@ -270,6 +279,7 @@ class PipelineBuildTaskDao {
                 executeCount = executeCount ?: 1,
                 starter = starter,
                 approver = approver,
+                subProjectId = subProjectId,
                 subBuildId = subBuildId,
                 startTime = startTime,
                 endTime = endTime,
@@ -281,17 +291,28 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun updateSubBuildId(dslContext: DSLContext, buildId: String, taskId: String, subBuildId: String): Int {
+    fun updateSubBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        subBuildId: String,
+        subProjectId: String
+    ): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.update(this)
                 .set(SUB_BUILD_ID, subBuildId)
+                .set(SUB_PROJECT_ID, subProjectId)
                 .where(BUILD_ID.eq(buildId))
-                .and(TASK_ID.eq(taskId)).execute()
+                .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 
     fun updateTaskInfo(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         taskId: String,
         updateTaskInfo: UpdateTaskInfo
@@ -322,12 +343,13 @@ class PipelineBuildTaskDao {
             if (null != totalTime) {
                 baseStep.set(TOTAL_TIME, totalTime)
             }
-            baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
+            baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
     fun setTaskErrorInfo(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         taskId: String,
         errorType: ErrorType,
@@ -339,24 +361,32 @@ class PipelineBuildTaskDao {
                 .set(ERROR_TYPE, errorType.num)
                 .set(ERROR_CODE, errorCode)
                 .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
-                .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
+                .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
-    fun updateTaskParam(dslContext: DSLContext, buildId: String, taskId: String, taskParam: String): Int {
+    fun updateTaskParam(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        taskParam: String
+    ): Int {
         with(T_PIPELINE_BUILD_TASK) {
             return dslContext.update(this)
                 .set(TASK_PARAMS, taskParam)
                 .where(BUILD_ID.eq(buildId))
-                .and(TASK_ID.eq(taskId)).execute()
+                .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 
-    fun list(dslContext: DSLContext, buildId: String): Result<TPipelineBuildTaskRecord> {
+    fun list(dslContext: DSLContext, projectId: String, buildId: String): Result<TPipelineBuildTaskRecord> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }

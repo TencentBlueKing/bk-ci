@@ -230,19 +230,22 @@ interface BuildBuildResource {
     @GET
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @ApiParam("任务ID", required = false)
         @PathParam("taskId")
-        taskId: String
+        taskId: String,
     ): Result<Map<String, String>>
 
     @ApiOperation("构建过程中主动更新atoms缓存信息")
     @PUT
     @Path("/project/updateRedisAtoms")
     fun updateRedisAtoms(
-        @ApiParam("", required = true)
+        @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("构建ID", required = true)

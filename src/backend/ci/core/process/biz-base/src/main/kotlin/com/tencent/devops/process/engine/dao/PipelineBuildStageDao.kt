@@ -128,7 +128,6 @@ class PipelineBuildStageDao {
             taskList.forEach {
                 records.add(
                     dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
                         .set(PIPELINE_ID, it.pipelineId)
                         .set(SEQ, it.seq)
                         .set(STATUS, it.status)
@@ -139,16 +138,16 @@ class PipelineBuildStageDao {
                         .set(CONDITIONS, it.conditions)
                         .set(CHECK_IN, it.checkIn)
                         .set(CHECK_OUT, it.checkOut)
-                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
+                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(PROJECT_ID.eq(it.projectId)))
                 )
             }
         }
         dslContext.batch(records).execute()
     }
 
-    fun get(dslContext: DSLContext, buildId: String, stageId: String?): TPipelineBuildStageRecord? {
+    fun get(dslContext: DSLContext, projectId: String, buildId: String, stageId: String?): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
-            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (!stageId.isNullOrBlank()) {
                 where.and(STAGE_ID.eq(stageId))
             }
@@ -156,19 +155,30 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun getNextStage(dslContext: DSLContext, buildId: String, currentStageSeq: Int): TPipelineBuildStageRecord? {
+    fun getNextStage(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        currentStageSeq: Int
+    ): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq))
+                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq)).and(PROJECT_ID.eq(projectId))
                 .orderBy(SEQ.asc())
                 .limit(1)
                 .fetchAny()
         }
     }
 
-    fun listByBuildId(dslContext: DSLContext, buildId: String): Collection<TPipelineBuildStageRecord> {
+    fun listByBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): Collection<TPipelineBuildStageRecord> {
         return with(T_PIPELINE_BUILD_STAGE) {
-            dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).orderBy(SEQ.asc()).fetch()
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(SEQ.asc()).fetch()
         }
     }
 
@@ -228,6 +238,7 @@ class PipelineBuildStageDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
         buildStatus: BuildStatus,
@@ -253,12 +264,13 @@ class PipelineBuildStageDao {
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
             if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn, formatted = false))
             if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut, formatted = false))
-            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
         startTime: LocalDateTime,
@@ -278,21 +290,27 @@ class PipelineBuildStageDao {
                         END_TIME.cast(java.sql.Timestamp::class.java)
                     )
                 )
-                .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+                .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
-    fun getMaxStage(dslContext: DSLContext, buildId: String): TPipelineBuildStageRecord? {
+    fun getMaxStage(dslContext: DSLContext, projectId: String, buildId: String): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).orderBy(SEQ.desc()).limit(1).fetchAny()
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(SEQ.desc()).limit(1).fetchAny()
         }
     }
 
-    fun getByStatus(dslContext: DSLContext, buildId: String, status: BuildStatus): PipelineBuildStage? {
+    fun getByStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        status: BuildStatus
+    ): PipelineBuildStage? {
         with(T_PIPELINE_BUILD_STAGE) {
             val data = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal))
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal)).and(PROJECT_ID.eq(projectId))
                 .orderBy(SEQ.asc()).limit(1).fetchAny()
             return convert(data)
         }

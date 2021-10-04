@@ -105,6 +105,7 @@ class CallBackControl @Autowired constructor(
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
             pipelineId = pipelineId,
             delete = null
         ) ?: return

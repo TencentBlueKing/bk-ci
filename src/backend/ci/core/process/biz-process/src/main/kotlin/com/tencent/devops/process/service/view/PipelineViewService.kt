@@ -181,7 +181,7 @@ class PipelineViewService @Autowired constructor(
             val currentViewIdList = objectMapper.readValue<List<String>>(pipelineViewSettingsRecord.settings)
 
             val userViewIdList = currentViewIdList.filterNot { it in SYSTEM_VIEW_ID_LIST }.map { decode(it) }
-            val pipelineViewRecordList = pipelineViewDao.list(dslContext, userViewIdList.toSet())
+            val pipelineViewRecordList = pipelineViewDao.list(dslContext, projectId, userViewIdList.toSet())
 
             val pipelineViewMap = mutableMapOf<Long, TPipelineViewRecord>()
             pipelineViewRecordList.forEach {
@@ -298,7 +298,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -352,7 +352,7 @@ class PipelineViewService @Autowired constructor(
 
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext, projectId, decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -369,13 +369,13 @@ class PipelineViewService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             pipelineViewLabelDao.detachLabelByView(context, id, userId)
-            pipelineViewDao.delete(context, id)
+            pipelineViewDao.delete(context, projectId, id)
         }
     }
 
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -395,6 +395,7 @@ class PipelineViewService @Autowired constructor(
                 pipelineViewLabelDao.detachLabelByView(context, id, userId)
                 val result = pipelineViewDao.update(
                     dslContext = context,
+                    projectId = projectId,
                     viewId = id,
                     name = pipelineView.name,
                     logic = pipelineView.logic.name,

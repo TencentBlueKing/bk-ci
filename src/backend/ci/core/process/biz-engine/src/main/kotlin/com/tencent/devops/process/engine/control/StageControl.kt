@@ -102,14 +102,14 @@ class StageControl @Autowired constructor(
             LOG.info("ENGINE|$buildId|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
             return
         }
-        val stage = pipelineStageService.getStage(buildId, stageId)
+        val stage = pipelineStageService.getStage(projectId, buildId, stageId)
             ?: run {
                 LOG.warn("ENGINE|$buildId|$source|BAD_STAGE|$stageId|${buildInfo.status}")
                 return
             }
-        val variables = buildVariableService.getAllVariable(buildId)
-        val containers = pipelineRuntimeService.listContainers(buildInfo.projectId, buildId, stageId)
-        val executeCount = buildVariableService.getBuildExecuteCount(buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val containers = pipelineRuntimeService.listContainers(projectId, buildId, stageId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,

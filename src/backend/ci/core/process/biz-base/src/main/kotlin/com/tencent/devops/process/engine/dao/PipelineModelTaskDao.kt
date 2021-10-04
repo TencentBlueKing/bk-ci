@@ -147,6 +147,7 @@ class PipelineModelTaskDao {
 
     fun getModelTasks(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         isAtomVersionNull: Boolean? = null
     ): Result<TPipelineModelTaskRecord>? {
