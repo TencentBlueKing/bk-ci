@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -259,5 +260,10 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             )
         }
         return Result(sensitiveConfRespList)
+    }
+
+    override fun convertEncryptedFieldValue(oldKey: String, newKey: String): Int {
+        logger.info("convertEncryptedFieldValue with oldKey :$oldKey, newKey is :$newKey")
+        return sensitiveConfDao.convertEncryptedEnvVar(dslContext, oldKey, newKey)
     }
 }

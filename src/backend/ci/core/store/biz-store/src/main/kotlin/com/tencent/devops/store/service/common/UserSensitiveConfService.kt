@@ -85,4 +85,9 @@ interface UserSensitiveConfService {
         isDecrypt: Boolean,
         types: String? = null
     ): Result<List<SensitiveConfResp>?>
+
+    /**
+     * 将数据库中已存的所有加密变量都替换为新key加密
+     */
+    fun convertEncryptedFieldValue(oldKey: String, newKey: String): Int
 }

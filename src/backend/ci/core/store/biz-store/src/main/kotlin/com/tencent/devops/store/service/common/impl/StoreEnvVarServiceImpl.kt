@@ -250,24 +250,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         }
     }
 
-    override fun convertEncryptedEnvVar(): Int {
+    override fun convertEncryptedEnvVar(oldKey: String, newKey: String): Int {
         logger.info("convertEncryptedEnvVar with oldKey :$oldKey, newKey is :$newKey")
-        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
-                params = arrayOf("aes.oldKey or aes.newKey is not config"),
-                defaultMessage = "Convert failed because of config: " +
-                    "aes.oldKey or aes.newKey is not defined"
-            )
-        }
-        if (newKey != aesKey) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
-                params = arrayOf("The values of aes.aesKey and  aes.newKey are inconsistent"),
-                defaultMessage = "Convert failed because of config: " +
-                    "The values of aes.aesKey and  aes.newKey are inconsistent"
-            )
-        }
-        return storeEnvVarDao.convertEncryptedEnvVar(dslContext, oldKey!!, newKey!!)
+        return storeEnvVarDao.convertEncryptedEnvVar(dslContext, oldKey, newKey)
     }
 }

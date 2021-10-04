@@ -45,10 +45,10 @@ class GithubTokenService @Autowired constructor(
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
-    @Value("\${aes.oldKey:#{null}}")
+    @Value("\${aes.github.oldKey:#{null}}")
     private var oldKey: String? = null
 
-    @Value("\${aes.newKey:#{null}}")
+    @Value("\${aes.github.newKey:#{null}}")
     private var newKey: String? = null
 
     fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
@@ -74,18 +74,18 @@ class GithubTokenService @Autowired constructor(
         )
     }
 
-    fun convertEncryptedToken(): Int {
-        logger.info("convertEncryptedToken with oldKey :$oldKey, newKey is :$newKey")
+    fun convertEncryptedGithubToken(): Int {
+        logger.info("convertEncryptedGithubToken with oldKey :$oldKey, newKey is :$newKey")
         if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
             throw OperationException(
-                message = "Convert failed because of config: " +
+                message = "Convert github access token failed because of config: " +
                     "aes.oldKey or aes.newKey is not defined"
             )
         }
         if (newKey != aesKey) {
             throw OperationException(
-                message = "Convert failed because of config: " +
-                    "The values of aes.aesKey and  aes.newKey are inconsistent"
+                message = "Convert github access token failed because of config: " +
+                    "The values of aes.github.aesKey and  aes.github.newKey are inconsistent"
             )
         }
         return githubTokenDao.convertEncryptedToken(dslContext, oldKey!!, newKey!!)

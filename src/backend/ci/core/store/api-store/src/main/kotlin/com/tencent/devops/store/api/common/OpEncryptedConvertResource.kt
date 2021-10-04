@@ -25,20 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.OpGithubResource
-import com.tencent.devops.repository.service.github.GithubTokenService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class OpGithubResourceImpl @Autowired constructor(
-    private val githubTokenService: GithubTokenService
-) : OpGithubResource {
+@Api(tags = ["OP_STORE_ENCRYPTED_CONVERT"], description = "OP-STORE-数据转换")
+@Path("/op/store/encrypted")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpEncryptedConvertResource {
 
-    override fun convertEnvVar(): Result<Int> {
-        return Result(githubTokenService.convertEncryptedToken())
-    }
+    @ApiOperation("使用新的AES秘钥对存量加密数据进行转换")
+    @PUT
+    @Path("/convert")
+    fun convertEncryptedData(): Result<Boolean>
 }

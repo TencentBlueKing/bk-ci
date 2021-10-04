@@ -79,5 +79,5 @@ interface StoreEnvVarService {
     /**
      * 将数据库中已存的所有加密变量都替换为新key加密
      */
-    fun convertEncryptedEnvVar(): Int
+    fun convertEncryptedEnvVar(oldKey: String, newKey: String): Int
 }

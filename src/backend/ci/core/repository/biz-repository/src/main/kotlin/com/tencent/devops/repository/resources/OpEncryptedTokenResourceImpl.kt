@@ -25,25 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.api
+package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.OpEncryptedTokenResource
+import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.repository.service.scm.IGitOauthService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OP_GITHUB"], description = "OP-GITHUB-数据转换")
-@Path("/op/github")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpGithubResource {
+@RestResource
+class OpEncryptedTokenResourceImpl @Autowired constructor(
+    private val githubTokenService: GithubTokenService,
+    private val gitOauthService: IGitOauthService
+) : OpEncryptedTokenResource {
 
-    @ApiOperation("使用新的AES秘钥对存量加密数据进行转换")
-    @PUT
-    @Path("/token/convert")
-    fun convertEnvVar(): Result<Int>
+    override fun convertGithubToken(): Result<Int> {
+        return Result(githubTokenService.convertEncryptedGithubToken())
+    }
+
+    override fun convertGitOauthToken(): Result<Int> {
+        return Result(gitOauthService.convertEncryptedGitToken())
+    }
 }

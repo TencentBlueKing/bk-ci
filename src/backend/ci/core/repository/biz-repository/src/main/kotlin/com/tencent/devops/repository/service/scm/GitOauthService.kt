@@ -46,6 +46,7 @@ import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
@@ -74,6 +75,12 @@ class GitOauthService @Autowired constructor(
 
     @Value("\${aes.git:#{null}}")
     private val aesKey: String? = ""
+
+    @Value("\${aes.git.oldKey:#{null}}")
+    private var oldKey: String? = null
+
+    @Value("\${aes.git.newKey:#{null}}")
+    private var newKey: String? = null
 
     companion object {
         val logger = LoggerFactory.getLogger(GitOauthService::class.java)
@@ -255,5 +262,22 @@ class GitOauthService @Autowired constructor(
 
     override fun deleteToken(userId: String): Int {
         return gitTokenDao.deleteToken(dslContext, userId)
+    }
+
+    override fun convertEncryptedGitToken(): Int {
+        logger.info("convertEncryptedToken with oldKey :$oldKey, newKey is :$newKey")
+        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
+            throw OperationException(
+                message = "Convert git access token failed because of config: " +
+                    "aes.oldKey or aes.git.newKey is not defined"
+            )
+        }
+        if (newKey != aesKey) {
+            throw OperationException(
+                message = "Convert git access token failed because of config: " +
+                    "The values of aes.git.aesKey and  aes.newKey are inconsistent"
+            )
+        }
+        return gitTokenDao.convertEncryptedToken(dslContext, oldKey!!, newKey!!)
     }
 }

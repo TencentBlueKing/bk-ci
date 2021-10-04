@@ -27,13 +27,19 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.model.store.tables.TStoreEnvVar
 import com.tencent.devops.model.store.tables.TStoreSensitiveConf
+import com.tencent.devops.model.store.tables.records.TStoreEnvVarRecord
 import com.tencent.devops.model.store.tables.records.TStoreSensitiveConfRecord
+import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 
 @Suppress("ALL")
 @Repository
@@ -189,6 +195,32 @@ class SensitiveConfDao {
             dslContext.deleteFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .execute()
+        }
+    }
+
+    /**
+     * 使用新的aesKey对已存数据做转换
+     */
+    fun convertEncryptedEnvVar(dslContext: DSLContext, oldKey: String, newKey: String): Int {
+        with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TStoreSensitiveConfRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    if (record.fieldType == FieldTypeEnum.BACKEND.name && !record.fieldValue.isNullOrEmpty()) {
+                        val originContent = AESUtil.decrypt(oldKey, record.fieldValue)
+                        val update = transactionContext.update(this)
+                            .set(FIELD_VALUE, AESUtil.encrypt(newKey, originContent))
+                        update.where(ID.eq(record.id))
+                        updates.add(update)
+                        count++
+                    }
+
+                }
+                transactionContext.batch(updates).execute()
+            }
+            return count
         }
     }
 }
