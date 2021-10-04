@@ -1240,6 +1240,18 @@ class CertServiceImpl @Autowired constructor(
         return certList
     }
 
+    override fun convertEncryptedCert(): Boolean {
+        logger.info("convertEncryptedCert with certHelper")
+        try {
+            certDao.convertEncryptedFileContent(dslContext, certHelper)
+            certTlsDao.convertEncryptedFileContent(dslContext, certHelper)
+        } catch (t: Throwable) {
+            logger.error("convertEncryptedCert failed with error: ", t)
+            return false
+        }
+        return true
+    }
+
     override fun searchByCertId(projectId: String, offset: Int, limit: Int, certId: String): SQLPage<Cert> {
             val count = certDao.countByIdLike(dslContext, projectId, certId)
             val certList = mutableListOf<Cert>()

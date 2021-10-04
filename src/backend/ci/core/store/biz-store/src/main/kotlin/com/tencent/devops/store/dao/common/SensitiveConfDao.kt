@@ -28,9 +28,7 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.AESUtil
-import com.tencent.devops.model.store.tables.TStoreEnvVar
 import com.tencent.devops.model.store.tables.TStoreSensitiveConf
-import com.tencent.devops.model.store.tables.records.TStoreEnvVarRecord
 import com.tencent.devops.model.store.tables.records.TStoreSensitiveConfRecord
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import org.jooq.Condition
@@ -216,7 +214,6 @@ class SensitiveConfDao {
                         updates.add(update)
                         count++
                     }
-
                 }
                 transactionContext.batch(updates).execute()
             }

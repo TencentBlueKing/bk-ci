@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -48,7 +49,6 @@ import javax.ws.rs.core.MediaType
 @Path("/op/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Suppress("ALL")
 interface OpCredentialResource {
 
     @ApiOperation("获取凭据列表")
@@ -74,4 +74,9 @@ interface OpCredentialResource {
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<CredentialWithPermission>>
+
+    @ApiOperation("使用新的AES秘钥对存量加密数据进行转换")
+    @PUT
+    @Path("/encrypted/convert")
+    fun convertEncryptedData(): Result<Boolean>
 }

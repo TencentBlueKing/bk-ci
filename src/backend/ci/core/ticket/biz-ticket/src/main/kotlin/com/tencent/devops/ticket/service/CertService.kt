@@ -208,6 +208,8 @@ interface CertService {
         certId: String
     ): SQLPage<Cert>
 
+    fun convertEncryptedCert(): Boolean
+
     private fun encryptCert(
         cert: ByteArray,
         publicKeyByteArray: ByteArray,

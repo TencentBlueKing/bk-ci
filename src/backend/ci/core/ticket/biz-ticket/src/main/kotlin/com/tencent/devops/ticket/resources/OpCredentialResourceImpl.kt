@@ -34,13 +34,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.OpCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.service.CertService
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-@Suppress("ALL")
 class OpCredentialResourceImpl @Autowired constructor(
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
+    private val certService: CertService
 ) : OpCredentialResource {
 
     override fun list(
@@ -57,7 +58,16 @@ class OpCredentialResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = credentialService.userList(userId, projectId, credentialTypes, limit.offset, limit.limit, keyword)
+        val result = credentialService.userList(userId = userId,
+            projectId = projectId,
+            credentialTypes = credentialTypes,
+            offset = limit.offset,
+            limit = limit.limit,
+            keyword = keyword)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun convertEncryptedData(): Result<Boolean> {
+        return Result(certService.convertEncryptedCert())
     }
 }
