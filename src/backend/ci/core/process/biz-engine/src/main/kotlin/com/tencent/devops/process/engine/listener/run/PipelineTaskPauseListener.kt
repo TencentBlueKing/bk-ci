@@ -62,7 +62,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
-        val taskRecord = pipelineRuntimeService.getBuildTask(event.buildId, event.taskId)
+        val taskRecord = pipelineRuntimeService.getBuildTask(event.projectId, event.buildId, event.taskId)
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             redisLock.lock()
@@ -83,12 +83,16 @@ class PipelineTaskPauseListener @Autowired constructor(
         continuePauseTask(current = task, userId = userId)
 
         var newElement: Element? = null
-        val newElementRecord = pipelineTaskPauseService.getPauseTask(buildId = task.buildId, taskId = task.taskId)
+        val newElementRecord = pipelineTaskPauseService.getPauseTask(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            taskId = task.taskId
+        )
         if (newElementRecord != null) {
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
-            pipelineBuildTaskService.updateTaskParam(task.buildId, task.taskId, newElement)
+            pipelineBuildTaskService.updateTaskParam(task.projectId, task.buildId, task.taskId, newElement)
             logger.info("update task param success | ${task.buildId}| ${task.taskId} ")
         }
 
@@ -183,7 +187,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         logger.info("ENGINE|${current.buildId}]|PAUSE|${current.stageId}]|j(${current.containerId}|${current.taskId}")
 
         // 将启动和结束任务置为排队。用于启动构建机
-        val taskRecords = pipelineRuntimeService.getAllBuildTask(current.buildId)
+        val taskRecords = pipelineRuntimeService.getAllBuildTask(current.projectId, current.buildId)
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.containerId == current.containerId && task.stageId == current.stageId) {

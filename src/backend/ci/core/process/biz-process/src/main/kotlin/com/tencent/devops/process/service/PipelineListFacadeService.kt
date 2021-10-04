@@ -173,7 +173,7 @@ class PipelineListFacadeService @Autowired constructor(
             val finishCount = it["FINISH_COUNT"] as Int? ?: 0
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
-            val model = pipelineRepositoryService.getModel(pipelineId, version) ?: continue
+            val model = pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: continue
             val pipelineBuildStatus = if (buildStatusOrd != null) {
                 val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
                 if (tmpStatus.isFinish()) {
@@ -256,9 +256,12 @@ class PipelineListFacadeService @Autowired constructor(
         }
 
         if (templateIdList != null) {
-            val templatePipelineIds =
-                templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList)
-                    .map { it.pipelineId }
+            val templatePipelineIds = templatePipelineDao.listPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                templateIds = templateIdList
+            ).map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
@@ -345,7 +348,8 @@ class PipelineListFacadeService @Autowired constructor(
                 val pipelines = buildPipelines(
                     pipelineBuildSummary = pipelineBuildSummary,
                     favorPipelines = favorPipelines,
-                    authPipelines = hasPermissionList
+                    authPipelines = hasPermissionList,
+                    projectId = projectId
                 )
                 allPipelines.addAll(pipelines)
 
@@ -415,7 +419,8 @@ class PipelineListFacadeService @Autowired constructor(
                     buildPipelines(
                         pipelineBuildSummary = pipelineBuildSummary,
                         favorPipelines = favorPipelines,
-                        authPipelines = emptyList()
+                        authPipelines = emptyList(),
+                        projectId = projectId
                     )
                 } else {
                     mutableListOf()
@@ -674,7 +679,12 @@ class PipelineListFacadeService @Autowired constructor(
             pageSize = pageSize,
             offsetNum = offsetNum
         )
-        pipelineList.addAll(buildPipelines(pipelineRecords, favorPipelines, authPipelines))
+        pipelineList.addAll(buildPipelines(
+            pipelineBuildSummary = pipelineRecords,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            projectId = projectId
+        ))
     }
 
     private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(): Map<String, List<String>>? {
@@ -907,10 +917,15 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelines = mutableListOf<Pipeline>()
         try {
             watcher.start("s_s_r_summary")
-            projectId.forEach { project_id ->
-                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(project_id, channelCode)
+            projectId.forEach { tmpProjectId ->
+                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(tmpProjectId, channelCode)
                 if (pipelineBuildSummary.isNotEmpty) {
-                    pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+                    pipelines.addAll(buildPipelines(
+                        pipelineBuildSummary = pipelineBuildSummary,
+                        favorPipelines = emptyList(),
+                        authPipelines = emptyList(),
+                        projectId = tmpProjectId
+                    ))
                 }
             }
             watcher.stop()
@@ -997,7 +1012,12 @@ class PipelineListFacadeService @Autowired constructor(
             )
             watcher.start("s_r_fav")
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-            val pipelineList = buildPipelines(pipelineBuildSummary, favorPipelines, pipelinesPermissions)
+            val pipelineList = buildPipelines(
+                pipelineBuildSummary = pipelineBuildSummary,
+                favorPipelines = favorPipelines,
+                authPipelines = pipelinesPermissions,
+                projectId = projectId
+            )
             sortPipelines(pipelineList, PipelineSortType.UPDATE_TIME)
             watcher.stop()
             return pipelineList
@@ -1046,8 +1066,9 @@ class PipelineListFacadeService @Autowired constructor(
             )
             watcher.start("listTemplate")
             val templatePipelineIds = templatePipelineDao.listByPipelines(
-                dslContext,
-                pipelineIds
+                dslContext = dslContext,
+                pipelineIds = pipelineIds,
+                projectId = projectId
             ).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
             watcher.stop()
             return pipelines.map {
@@ -1105,7 +1126,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineBuildSummary: Result<out Record>,
         favorPipelines: List<String>,
         authPipelines: List<String>,
-        excludePipelineId: String? = null
+        excludePipelineId: String? = null,
+        projectId: String? = null
     ): MutableList<Pipeline> {
 
         val pipelines = mutableListOf<Pipeline>()
@@ -1162,7 +1184,11 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+        val pipelineRecords = templatePipelineDao.listByPipelines(
+            dslContext = dslContext,
+            pipelineIds = pipelineIds,
+            projectId = projectId
+        )
         val pipelineTemplateMap = mutableMapOf<String, String>()
         pipelineRecords.forEach {
             pipelineTemplateMap[it.pipelineId] = it.templateId
@@ -1390,6 +1416,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId
         ) ?: return null
         if (pipelineInfo.projectId != projectId) {
@@ -1401,11 +1428,12 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        val templateId = templatePipelineDao.get(dslContext, pipelineId)?.templateId
+        val templateId = templatePipelineDao.get(dslContext, projectId, pipelineId)?.templateId
         val instanceFromTemplate = templateId != null
         val favorInfos = pipelineFavorDao.listByPipelineId(
             dslContext = dslContext,
             userId = userId,
+            projectId = projectId,
             pipelineId = pipelineId
         )
         val hasCollect = if (favorInfos != null) {

@@ -132,10 +132,11 @@ class StartContainerStageCmd(
         var cancel: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage (排除Finally）
-        if (commandContext.stage.controlOption?.finally == true) {
-            commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
+        val stage = commandContext.stage
+        if (stage.controlOption?.finally == true) {
+            commandContext.previousStageStatus = pipelineStageService.listStages(stage.projectId, stage.buildId)
                 .lastOrNull {
-                    it.stageId != commandContext.stage.stageId &&
+                    it.stageId != stage.stageId &&
                         (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS)
                 }?.status
         }

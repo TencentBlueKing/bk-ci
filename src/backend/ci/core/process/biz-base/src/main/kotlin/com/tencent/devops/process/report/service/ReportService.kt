@@ -138,15 +138,15 @@ class ReportService @Autowired constructor(
     }
 
     fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
-
+        val projectId = reportListDTO.projectId
         val reportRecordList = reportDao.list(
             dslContext = dslContext,
-            projectId = reportListDTO.projectId,
+            projectId = projectId,
             pipelineId = reportListDTO.pipelineId,
             buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
+            val taskRecord = pipelineRuntimeService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
             if (it.type == ReportTypeEnum.INTERNAL.name) {

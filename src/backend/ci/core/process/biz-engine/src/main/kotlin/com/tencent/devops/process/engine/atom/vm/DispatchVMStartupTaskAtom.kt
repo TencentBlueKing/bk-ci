@@ -257,7 +257,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.buildId))
+        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.projectId, task.buildId))
         return dispatchType
     }
 

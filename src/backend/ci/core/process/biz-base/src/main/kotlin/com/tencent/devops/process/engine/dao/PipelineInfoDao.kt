@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Repository
 class PipelineInfoDao {
 
@@ -99,6 +100,7 @@ class PipelineInfoDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         userId: String,
         updateVersion: Boolean = true,
@@ -133,7 +135,8 @@ class PipelineInfoDao {
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
             }
-            val conditions = ArrayList<Condition>(2)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             if (latestVersion > 0) {
                 conditions.add(VERSION.eq(latestVersion))
@@ -191,14 +194,6 @@ class PipelineInfoDao {
             }
 
             query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    @Suppress("unused")
-    fun listAll(dslContext: DSLContext): Result<TPipelineInfoRecord> {
-        return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .fetch()
         }
     }
 
@@ -298,28 +293,6 @@ class PipelineInfoDao {
         }
     }
 
-    /**
-     * 查找updateTime之前被删除的流水线
-     */
-    @Suppress("unused")
-    fun listDeletePipelineBefore(
-        dslContext: DSLContext,
-        updateTime: LocalDateTime,
-        offset: Int?,
-        limit: Int?
-    ): Result<TPipelineInfoRecord>? {
-        with(T_PIPELINE_INFO) {
-            val baseQuery = dslContext.selectFrom(this)
-                .where(DELETE.eq(true))
-                .and(UPDATE_TIME.le(updateTime))
-            return if (offset != null && offset >= 0 && limit != null && limit >= 0) {
-                baseQuery.limit(offset, limit).fetch()
-            } else {
-                baseQuery.fetch()
-            }
-        }
-    }
-
     fun isNameExist(dslContext: DSLContext, projectId: String, pipelineName: String, channelCode: ChannelCode) =
         isNameExist(dslContext, projectId, pipelineName, channelCode, null)
 
@@ -347,12 +320,13 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
 
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
@@ -363,7 +337,7 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean? = false,
@@ -464,12 +438,13 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int
     ): TPipelineInfoRecord {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.eq(version))
             query.fetch().first()
         }
@@ -585,11 +560,11 @@ class PipelineInfoDao {
         var fetchSize = 0
         do {
             with(T_PIPELINE_INFO) {
-                val fetch = dslContext.select(PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
+                val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
                     .limit(offset, limit).fetch()
                 val updates = fetch.map {
                     dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))
-                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]))
+                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]).and(PROJECT_ID.eq(it[PROJECT_ID])))
                 }
                 dslContext.batch(updates).execute()
                 val size = fetch.size

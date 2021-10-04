@@ -118,7 +118,7 @@ class UpdateStateForStageCmdFinally(
             event.source == BS_STAGE_CANCELED_END_SOURCE
 
         if (gotoFinal) {
-            nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
+            nextStage = pipelineStageService.getLastStage(projectId = event.projectId, buildId = event.buildId)
             if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
 
                 LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
@@ -127,7 +127,11 @@ class UpdateStateForStageCmdFinally(
                 return finishBuild(commandContext = commandContext)
             }
         } else {
-            nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
+            nextStage = pipelineStageService.getNextStage(
+                projectId = event.projectId,
+                buildId = event.buildId,
+                currentStageSeq = stage.seq
+            )
         }
 
         // #5019 在结束阶段做stage准出判断
@@ -166,6 +170,7 @@ class UpdateStateForStageCmdFinally(
         val event = commandContext.event
         // 更新状态
         pipelineStageService.updateStageStatus(
+            projectId = event.projectId,
             buildId = event.buildId,
             stageId = event.stageId,
             buildStatus = commandContext.buildStatus,

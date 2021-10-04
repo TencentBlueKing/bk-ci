@@ -63,7 +63,7 @@ class PipelineTemplateService @Autowired constructor(
             }
         }
         val srcTemplates = mutableMapOf<String, String>()
-        templateDao.listLatestTemplateByIds(dslContext, srcTemplateIdList).forEach {
+        templateDao.listLatestTemplateByIds(dslContext, projectCode, srcTemplateIdList).forEach {
             srcTemplates[it["ID"] as String] = it["TEMPLATE"] as String
         }
 

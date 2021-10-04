@@ -162,7 +162,13 @@ class PipelineBuildQualityService(
         }
 
         logger.info("[$buildId]|buildManualReview|taskId=$elementId|userId=$userId|action=$action")
-        pipelineRuntimeService.manualDealBuildTask(buildId, elementId, userId, action)
+        pipelineRuntimeService.manualDealBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = elementId,
+            userId = userId,
+            manualAction = action
+        )
     }
 
     fun addQualityGateReviewUsers(projectId: String, pipelineId: String, buildId: String, model: Model) {
@@ -216,7 +222,7 @@ class PipelineBuildQualityService(
                 taskId = taskId
             ).data ?: setOf()
 
-            auditUserSet.map { buildVariableService.replaceTemplate(buildId, it) }.toSet()
+            auditUserSet.map { buildVariableService.replaceTemplate(projectId, buildId, it) }.toSet()
         } catch (ignore: Exception) {
             logger.error("quality get audit user list fail: ${ignore.message}", ignore)
             setOf()

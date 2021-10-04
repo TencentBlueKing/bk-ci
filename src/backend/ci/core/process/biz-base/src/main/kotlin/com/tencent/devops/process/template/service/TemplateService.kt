@@ -46,12 +46,20 @@ class TemplateService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao
 ) {
 
-    fun getTemplateIdByPipeline(pipelineId: String): String? {
-        return templatePipelineDao.get(dslContext = dslContext, pipelineId = pipelineId)?.templateId
+    fun getTemplateIdByPipeline(projectId: String, pipelineId: String): String? {
+        return templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.templateId
     }
 
-    fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.isTemplatePipeline(dslContext = dslContext, pipelineId = pipelineId)
+    fun isTemplatePipeline(projectId: String, pipelineId: String): Boolean {
+        return templatePipelineDao.isTemplatePipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     /**
@@ -59,6 +67,7 @@ class TemplateService @Autowired constructor(
      */
     fun createRelationBtwTemplate(
         userId: String,
+        projectId: String,
         templateId: String,
         pipelineId: String,
         instanceType: String,
@@ -82,7 +91,7 @@ class TemplateService @Autowired constructor(
             }
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
-                versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
+                versionName = templateDao.getTemplate(dslContext, projectId, fixTemplateVersion).versionName
             }
             else -> { // 以指定的模板Id创建
                 templateVersion = latestTemplate.version
@@ -92,6 +101,7 @@ class TemplateService @Autowired constructor(
 
         templatePipelineDao.create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             instanceType = instanceType,
             rootTemplateId = rootTemplateId,

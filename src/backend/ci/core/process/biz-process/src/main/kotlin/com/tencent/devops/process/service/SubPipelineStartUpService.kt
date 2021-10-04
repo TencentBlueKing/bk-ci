@@ -101,7 +101,7 @@ class SubPipelineStartUpService(
         }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = buildVariableService.getAllVariable(buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"
@@ -138,6 +138,7 @@ class SubPipelineStartUpService(
             userId = userId,
             startType = StartType.PIPELINE,
             projectId = project,
+            parentProjectId = projectId,
             parentPipelineId = parentPipelineId,
             parentBuildId = buildId,
             parentTaskId = taskId,
@@ -148,9 +149,11 @@ class SubPipelineStartUpService(
         )
         pipelineBuildTaskDao.updateSubBuildId(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId
+            subBuildId = subBuildId,
+            subProjectId = project
         )
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId)
@@ -190,7 +193,7 @@ class SubPipelineStartUpService(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getModel(pipelineId, pipeline.version) ?: return
+        val existModel = pipelineRepositoryService.getModel(projectId, pipelineId, pipeline.version) ?: return
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
@@ -323,17 +326,18 @@ class SubPipelineStartUpService(
         return Result(parameter)
     }
 
-    fun getSubVar(buildId: String, taskId: String): Result<Map<String, String>> {
+    fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
         logger.info("getSubVar | $buildId | $taskId")
         val taskRecord = pipelineBuildTaskDao.get(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             taskId = taskId
         ) ?: return Result(emptyMap())
         logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
 
         val subBuildId = taskRecord.subBuildId
-        return Result(buildVariableService.getAllVariable(subBuildId))
+        return Result(buildVariableService.getAllVariable(taskRecord.subProjectId, subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

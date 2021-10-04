@@ -53,8 +53,8 @@ class PipelineSettingService @Autowired constructor(
         private const val PIPELINE_CURRENT_DAY_BUILD_COUNT_KEY_PREFIX = "PIPELINE_CURRENT_DAY_BUILD_COUNT"
     }
 
-    fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
-        val setting = pipelineSettingDao.getSetting(dslContext, pipelineId)
+    fun isQueueTimeout(projectId: String, pipelineId: String, startTime: Long): Boolean {
+        val setting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
         val waitQueueTimeMills =
             when {
                 setting == null -> {

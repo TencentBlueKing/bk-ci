@@ -71,13 +71,14 @@ class PipelineViewProjectDao {
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         id: Long,
         userId: String
     ): Int {
         logger.info("Delete the view $id by user $userId")
         with(TPipelineViewProject.T_PIPELINE_VIEW_PROJECT) {
             return dslContext.deleteFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

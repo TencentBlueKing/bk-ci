@@ -49,17 +49,18 @@ class RunLockInterceptor @Autowired constructor(
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = pipelineRepositoryService.getSetting(pipelineId)
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val runLockType = setting?.runLockType
-        return checkRunLock(runLockType, pipelineId)
+        return checkRunLock(runLockType, projectId, pipelineId)
     }
 
-    fun checkRunLock(runLockType: PipelineRunLockType?, pipelineId: String): Response<BuildStatus> {
+    fun checkRunLock(runLockType: PipelineRunLockType?, projectId: String, pipelineId: String): Response<BuildStatus> {
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
             Response(ERROR_PIPELINE_LOCK.toInt(), "当前流水线已被锁定，无法执行，请解锁后重试")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+            val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
                 logger.info("[$pipelineId] 当前流水线已设置为同时只能运行一个构建任务，开始排队！")
                 Response(BuildStatus.QUEUE)

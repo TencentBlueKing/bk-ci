@@ -95,7 +95,14 @@ class BuildJobResourceImpl @Autowired constructor(
 
     override fun jobEnd(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vMBuildService.buildEndTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     override fun jobTimeout(

@@ -71,7 +71,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             runVariables = runVariables,
             buildLogPrinter = buildLogPrinter,
             position = ControlPointPosition.BEFORE_POSITION,
-            templateId = templateService.getTemplateIdByPipeline(task.pipelineId)
+            templateId = templateService.getTemplateIdByPipeline(task.projectId, task.pipelineId)
         )
 
         return pipelineBuildQualityService.handleResult(

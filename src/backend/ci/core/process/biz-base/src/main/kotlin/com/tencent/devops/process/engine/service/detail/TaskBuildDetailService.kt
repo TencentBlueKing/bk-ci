@@ -153,7 +153,8 @@ class TaskBuildDetailService(
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers.forEach { reviewUser ->
-                                list.addAll(buildVariableService.replaceTemplate(buildId, reviewUser).split(delimiters))
+                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                    .split(delimiters))
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
@@ -294,6 +295,7 @@ class TaskBuildDetailService(
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineRuntimeService.updateTaskStatusInfo(
+                projectId = projectId,
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
                 taskStatus = updateTaskStatusInfo.buildStatus,

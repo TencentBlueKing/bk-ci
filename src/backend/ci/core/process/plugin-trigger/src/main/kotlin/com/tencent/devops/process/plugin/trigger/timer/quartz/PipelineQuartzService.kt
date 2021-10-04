@@ -148,7 +148,8 @@ class PipelineJobBean(
         val comboKeys = comboKey.split("_")
         val pipelineId = comboKeys[0]
         val crontabMd5 = comboKeys[1]
-        val pipelineTimer = pipelineTimerService.get(pipelineId)
+        val projectId = comboKeys[2]
+        val pipelineTimer = pipelineTimerService.get(projectId, pipelineId)
         if (null == pipelineTimer) {
             logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
             schedulerManager.deleteJob(comboKey)

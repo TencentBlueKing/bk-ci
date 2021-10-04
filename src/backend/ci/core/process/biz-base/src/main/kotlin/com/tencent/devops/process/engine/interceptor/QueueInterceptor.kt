@@ -59,11 +59,11 @@ class QueueInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = pipelineRepositoryService.getSetting(pipelineId)
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: return Response(status = PIPELINE_SETTING_NOT_EXISTS.toInt(), message = "流水线设置不存在/Setting not found")
         val runLockType = setting.runLockType
 
-        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
         return if (buildSummaryRecord == null) {
             // Summary为空是不正常的，抛错
             Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(), message = "异常：流水线的基础构建数据Summary不存在，请联系管理员")

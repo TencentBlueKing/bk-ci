@@ -44,8 +44,8 @@ class PipelineBuildTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao
 ) {
-    fun getAllBuildTask(buildId: String): List<PipelineBuildTaskInfo> {
-        val list = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
+    fun getAllBuildTask(projectId: String, buildId: String): List<PipelineBuildTaskInfo> {
+        val list = pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
         return list.map {
             with(it) {
                 PipelineBuildTaskInfo(
@@ -78,7 +78,13 @@ class PipelineBuildTaskService @Autowired constructor(
         }
     }
 
-    fun updateTaskParam(buildId: String, taskId: String, newElement: Element) {
-        pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, JsonUtil.toJson(newElement, false))
+    fun updateTaskParam(projectId: String, buildId: String, taskId: String, newElement: Element) {
+        pipelineBuildTaskDao.updateTaskParam(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            taskParam = JsonUtil.toJson(newElement, false)
+        )
     }
 }

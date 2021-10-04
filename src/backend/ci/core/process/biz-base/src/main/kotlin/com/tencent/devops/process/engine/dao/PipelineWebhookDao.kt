@@ -107,16 +107,17 @@ class PipelineWebhookDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, pipelineId: String): Int {
+    fun deleteByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
-    fun delete(
+    fun deleteByTaskId(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         taskId: String
     ): Int {
@@ -124,6 +125,7 @@ class PipelineWebhookDao {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
@@ -160,6 +162,7 @@ class PipelineWebhookDao {
 
     fun updateProjectNameAndTaskId(
         dslContext: DSLContext,
+        projectId: String,
         projectName: String,
         taskId: String,
         id: Long
@@ -168,19 +171,20 @@ class PipelineWebhookDao {
             dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
                 .set(TASK_ID, taskId)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun deleteById(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ): Int {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.update(this)
                 .set(DELETE, true)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
@@ -190,7 +194,7 @@ class PipelineWebhookDao {
             return null
         }
         return try {
-            RepositoryType.valueOf(repoType!!)
+            RepositoryType.valueOf(repoType)
         } catch (e: Exception) {
             logger.warn("Fail to convert the repo type - ($repoType)")
             null
@@ -199,14 +203,16 @@ class PipelineWebhookDao {
 
     fun listWebhook(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int
+        limit: Int,
     ): List<PipelineWebhook>? {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(DELETE.eq(false))
+                .and(PROJECT_ID.eq(projectId))
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }

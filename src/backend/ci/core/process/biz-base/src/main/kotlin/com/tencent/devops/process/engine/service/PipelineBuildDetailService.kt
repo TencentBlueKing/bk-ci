@@ -107,9 +107,9 @@ class PipelineBuildDetailService @Autowired constructor(
             projectId = projectId,
             buildId = buildId)) ?: return null
 
-        val latestVersion = pipelineRepositoryService.getPipelineInfo(buildInfo.pipelineId)?.version ?: -1
+        val latestVersion = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId)?.version ?: -1
 
-        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
         val model = JsonUtil.to(record.model, Model::class.java)
 

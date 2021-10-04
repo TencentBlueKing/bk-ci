@@ -79,7 +79,7 @@ class SubPipelineCallAtom constructor(
             )
         } else {
             val subBuildId = task.subBuildId!!
-            val subBuildInfo = pipelineRuntimeService.getBuildInfo(task.projectId, subBuildId)
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(task.subProjectId!!, subBuildId)
             return if (subBuildInfo == null) {
                 buildLogPrinter.addRedLine(
                     buildId = task.buildId,
@@ -176,6 +176,7 @@ class SubPipelineCallAtom constructor(
         val subBuildId = pipelineBuildService.subPipelineStartup(
             userId = userId,
             projectId = task.projectId,
+            parentProjectId = task.projectId,
             parentPipelineId = task.pipelineId,
             parentBuildId = task.buildId,
             parentTaskId = task.taskId,

@@ -127,6 +127,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                 logger.info("webhook queue|$projectId|$pipelineId|$buildId is ${buildInfo.status}, delete")
                 pipelineWebHookQueueDao.deleteByBuildIds(
                     dslContext = dslContext,
+                    projectId = projectId,
                     buildIds = listOf(buildId)
                 )
             }
@@ -147,6 +148,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                 with(pipelineWebHookQueue) {
                     val webHookBuildHistory = pipelineWebHookQueueDao.getWebHookBuildHistory(
                         dslContext = dslContext,
+                        projectId = projectId,
                         pipelineId = pipelineId,
                         sourceProjectId = sourceProjectId,
                         sourceBranch = sourceBranch,
@@ -179,10 +181,12 @@ class PipelineWebHookQueueService @Autowired constructor(
                             val context = DSL.using(configuration)
                             pipelineWebHookQueueDao.deleteByBuildIds(
                                 dslContext = context,
+                                projectId = projectId,
                                 buildIds = webHookBuildHistory.map { it.buildId }
                             )
                             pipelineWebHookQueueDao.save(
                                 dslContext = context,
+                                projectId = projectId,
                                 pipelineId = pipelineId,
                                 sourceProjectId = sourceProjectId,
                                 sourceRepoName = sourceRepoName,
@@ -196,6 +200,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                     } else {
                         pipelineWebHookQueueDao.save(
                             dslContext = dslContext,
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             sourceProjectId = sourceProjectId,
                             sourceRepoName = sourceRepoName,

@@ -145,7 +145,13 @@ class PipelineGroupService @Autowired constructor(
 
     fun updateGroup(userId: String, pipelineGroup: PipelineGroupUpdate): Boolean {
         try {
-            return pipelineGroupDao.update(dslContext, decode(pipelineGroup.id), pipelineGroup.name, userId)
+            return pipelineGroupDao.update(
+                dslContext = dslContext,
+                projectId = pipelineGroup.projectId,
+                groupId = decode(pipelineGroup.id),
+                name = pipelineGroup.name,
+                userId = userId
+            )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the group $pipelineGroup by userId $userId")
             throw OperationException("The group is already exist")
@@ -181,8 +187,10 @@ class PipelineGroupService @Autowired constructor(
                     defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
                 )
             }
+            val groupInfo = pipelineGroupDao.get(dslContext, groupId)
             pipelineLabelDao.create(
                 dslContext = dslContext,
+                projectId = groupInfo.projectId,
                 groupId = groupId,
                 name = pipelineLabel.name,
                 userId = userId
@@ -305,14 +313,19 @@ class PipelineGroupService @Autowired constructor(
                 pipelineId = pipelineId
             )
         } else {
-            pipelineFavorDao.delete(dslContext = dslContext, userId = userId, pipelineId = pipelineId)
+            pipelineFavorDao.delete(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         }
         return true
     }
 
     // 删除流水线后联带删除整个流水线相关的收藏
-    fun deleteAllUserFavorByPipeline(userId: String, pipelineId: String): Int {
-        val count = pipelineFavorDao.deleteAllUserFavorByPipeline(dslContext, pipelineId)
+    fun deleteAllUserFavorByPipeline(userId: String, projectId: String, pipelineId: String): Int {
+        val count = pipelineFavorDao.deleteAllUserFavorByPipeline(dslContext, projectId, pipelineId)
         logger.info("Delete pipeline-favor of pipeline $pipelineId by user $userId. count=$count")
         return count
     }

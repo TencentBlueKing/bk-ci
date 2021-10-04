@@ -78,44 +78,42 @@ class PipelineBuildSummaryDao {
     fun delete(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.delete(this)
-                .where(PIPELINE_ID.eq(pipelineId)).execute()
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
-    fun get(dslContext: DSLContext, pipelineId: String): TPipelineBuildSummaryRecord? {
+    fun get(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildSummaryRecord? {
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
         }
     }
 
-    fun getBuildNo(dslContext: DSLContext, pipelineId: String): Int {
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NO).from(this)
-                .where(PIPELINE_ID.eq(pipelineId)).fetchOne(BUILD_NO, Int::class.java)!!
-        }
-    }
-
-    fun getSummaries(dslContext: DSLContext, pipelineIds: Set<String>): Result<TPipelineBuildSummaryRecord> {
+    fun getSummaries(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Set<String>,
+    ): Result<TPipelineBuildSummaryRecord> {
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }
 
-    fun updateBuildNo(dslContext: DSLContext, pipelineId: String, buildNo: Int) {
+    fun updateBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String, buildNo: Int) {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
                 .set(BUILD_NO, buildNo)
-                .where(PIPELINE_ID.eq(pipelineId)).execute()
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
     fun updateBuildNum(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         buildNum: Int = 0
     ): Int {
@@ -124,30 +122,31 @@ class PipelineBuildSummaryDao {
             if (buildNum == 0) {
                 dslContext.update(this)
                     .set(BUILD_NUM, BUILD_NUM + 1)
-                    .where(PIPELINE_ID.eq(pipelineId)).execute()
+                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(BUILD_NUM, buildNum)
-                    .where(PIPELINE_ID.eq(pipelineId)).execute()
+                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
         }
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.select(BUILD_NUM)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun updateBuildNumAlias(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         buildNumAlias: String
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
                 .set(BUILD_NUM_ALIAS, buildNumAlias)
-                .where(PIPELINE_ID.eq(pipelineId)).execute()
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
@@ -506,11 +505,11 @@ class PipelineBuildSummaryDao {
     /**
      * 1：新构建时都先进入排队，计数
      */
-    fun updateQueueCount(dslContext: DSLContext, pipelineId: String, queueIncrement: Int = 1) {
+    fun updateQueueCount(dslContext: DSLContext, projectId: String, pipelineId: String, queueIncrement: Int = 1) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
                 .set(QUEUE_COUNT, QUEUE_COUNT + queueIncrement)
-                .where(PIPELINE_ID.eq(pipelineId)).execute()
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
@@ -530,11 +529,11 @@ class PipelineBuildSummaryDao {
                     .set(QUEUE_COUNT, QUEUE_COUNT - 1)
                     .set(RUNNING_COUNT, RUNNING_COUNT + 1)
                     .set(LATEST_START_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId)).execute()
+                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
                 dslContext.update(this)
                     .set(LATEST_STATUS, status.ordinal) // 一般必须是RUNNING
                     .where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId)).execute()
+                    .and(LATEST_BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId))).execute()
             }
         }
     }
@@ -544,6 +543,7 @@ class PipelineBuildSummaryDao {
      */
     fun updateCurrentBuildTask(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         currentTaskId: String? = null,
@@ -554,7 +554,9 @@ class PipelineBuildSummaryDao {
                 .set(LATEST_TASK_ID, currentTaskId)
                 .set(LATEST_TASK_NAME, currentTaskName)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .and(LATEST_BUILD_ID.eq(buildId)).execute()
+                .and(LATEST_BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
         }
     }
 
@@ -579,6 +581,7 @@ class PipelineBuildSummaryDao {
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                 update.where(PIPELINE_ID.eq(pipelineId))
                     .and(LATEST_BUILD_ID.eq(buildId))
+                    .and(PROJECT_ID.eq(projectId))
                     .execute()
             }
         }
@@ -591,6 +594,7 @@ class PipelineBuildSummaryDao {
                             .set(FINISH_COUNT, FINISH_COUNT + 1)
                     if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                     update.where(PIPELINE_ID.eq(pipelineId))
+                        .and(PROJECT_ID.eq(projectId))
                         .execute()
                 }
             }
@@ -602,6 +606,7 @@ class PipelineBuildSummaryDao {
      */
     fun updateRunningCount(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         runningIncrement: Int = 1
@@ -625,7 +630,7 @@ class PipelineBuildSummaryDao {
                         .set(LATEST_END_TIME, LocalDateTime.now())
                 }
             }
-            update.where(PIPELINE_ID.eq(pipelineId))
+            update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

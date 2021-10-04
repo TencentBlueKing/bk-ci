@@ -42,6 +42,7 @@ class ProcessMiscService @Autowired constructor(
 ) {
 
     fun getHistoryBuildIdList(
+        projectId: String,
         pipelineId: String,
         totalHandleNum: Int,
         handlePageSize: Int,
@@ -51,6 +52,7 @@ class ProcessMiscService @Autowired constructor(
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             totalHandleNum = totalHandleNum,
             handlePageSize = handlePageSize,
@@ -105,8 +107,8 @@ class ProcessMiscService @Autowired constructor(
         return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
     }
 
-    fun getPipelineInfoIdListByPipelineId(pipelineId: String): Long {
-        return processDao.getPipelineInfoByPipelineId(dslContext, pipelineId)?.id ?: 0L
+    fun getPipelineInfoIdListByPipelineId(projectId: String, pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(
@@ -117,12 +119,14 @@ class ProcessMiscService @Autowired constructor(
     }
 
     fun getTotalBuildCount(
+        projectId: String,
         pipelineId: String,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null
     ): Long {
         return processDao.getTotalBuildCount(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime

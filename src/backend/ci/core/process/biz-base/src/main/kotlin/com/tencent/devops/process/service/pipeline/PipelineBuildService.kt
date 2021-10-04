@@ -99,8 +99,8 @@ class PipelineBuildService(
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
     }
 
-    fun getModel(pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(pipelineId, version) ?: throw ErrorCodeException(
+    fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
+        pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -110,6 +110,7 @@ class PipelineBuildService(
         userId: String,
         startType: StartType = StartType.PIPELINE,
         projectId: String,
+        parentProjectId: String,
         parentPipelineId: String,
         parentBuildId: String,
         parentTaskId: String,
@@ -129,7 +130,8 @@ class PipelineBuildService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
+            val model =
+                getModel(projectId = projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val inputBuildParam = mutableListOf<BuildParameters>()
@@ -164,9 +166,11 @@ class PipelineBuildService(
             )
             // 更新父流水线关联子流水线构建id
             pipelineRuntimeService.updateTaskSubBuildId(
+                projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId
+                subBuildId = subBuildId,
+                subProjectId = readyToBuildPipelineInfo.projectId
             )
             return subBuildId
         } finally {
@@ -192,7 +196,7 @@ class PipelineBuildService(
         val pipelineId = readyToBuildPipelineInfo.pipelineId
         var acquire = false
         val projectId = readyToBuildPipelineInfo.projectId
-        val pipelineSetting = pipelineRepositoryService.getSetting(pipelineId)
+        val pipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val bucketSize = pipelineSetting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
@@ -315,7 +319,7 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true
     ) {
         val templateId = if (model.instanceFromTemplate == true) {
-            templateService.getTemplateIdByPipeline(pipelineId)
+            templateService.getTemplateIdByPipeline(projectId, pipelineId)
         } else {
             null
         }

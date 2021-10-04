@@ -103,7 +103,14 @@ class BuildBuildResourceImpl @Autowired constructor(
     @Deprecated("replace by BuildJobResourceImpl")
     override fun endTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vmBuildService.buildEndTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     @Deprecated("replace by BuildJobResourceImpl")
@@ -179,8 +186,8 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
-        return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
+    override fun getSubBuildVars(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
+        return subPipelineStartUpService.getSubVar(projectId = projectId, buildId = buildId, taskId = taskId)
     }
 
     override fun updateRedisAtoms(
