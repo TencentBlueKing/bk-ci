@@ -187,7 +187,7 @@ class PipelineGroupService @Autowired constructor(
                     defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
                 )
             }
-            val groupInfo = pipelineGroupDao.get(dslContext, groupId)
+            val groupInfo = pipelineGroupDao.get(dslContext, groupId)!!
             pipelineLabelDao.create(
                 dslContext = dslContext,
                 projectId = groupInfo.projectId,
