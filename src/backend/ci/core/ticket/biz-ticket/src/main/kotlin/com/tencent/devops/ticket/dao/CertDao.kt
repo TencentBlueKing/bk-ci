@@ -29,11 +29,14 @@ package com.tencent.devops.ticket.dao
 
 import com.tencent.devops.model.ticket.tables.TCert
 import com.tencent.devops.model.ticket.tables.records.TCertRecord
+import com.tencent.devops.ticket.service.CertHelper
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 
 @Suppress("ALL")
 @Repository
@@ -337,6 +340,41 @@ class CertDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.like("%$certId%"))
                     .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun convertEncryptedFileContent(dslContext: DSLContext, certHelper: CertHelper): Int {
+        with(TCert.T_CERT) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TCertRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    val now = LocalDateTime.now()
+                    val update = transactionContext.update(this)
+                        .set(CERT_UPDATE_TIME, now)
+                    var needUpdate = false
+                    if (record.certMpFileContent.isNotEmpty()) {
+                        update.set(CERT_MP_FILE_CONTENT, certHelper.convertEncryptedData(record.certMpFileContent))
+                        needUpdate = true
+                    }
+                    if (record.certP12FileContent.isNotEmpty()) {
+                        update.set(CERT_P12_FILE_CONTENT, certHelper.convertEncryptedData(record.certP12FileContent))
+                        needUpdate = true
+                    }
+                    if (record.certJksFileContent.isNotEmpty()) {
+                        update.set(CERT_JKS_FILE_CONTENT, certHelper.convertEncryptedData(record.certJksFileContent))
+                        needUpdate = true
+                    }
+                    update.where(CERT_ID.eq(record.certId))
+                    if (needUpdate) {
+                        updates.add(update)
+                        count++
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
+            return count
         }
     }
 }

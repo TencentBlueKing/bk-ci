@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.AESUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -44,6 +45,12 @@ class CertHelper {
 
     @Value("\${cert.aes-key}")
     private val aesKey = "d/R%3{?OS}IeGT21"
+
+    @Value("\${cert.oldKey:#{null}}")
+    private var oldKey: String? = null
+
+    @Value("\${cert.newKey:#{null}}")
+    private var newKey: String? = null
 
     companion object {
         private const val JKS = "JKS"
@@ -142,6 +149,22 @@ class CertHelper {
         return if (bytes != null) {
             AESUtil.decrypt(aesKey, bytes)
         } else null
+    }
+
+    fun convertEncryptedData(encryptedContent: ByteArray): ByteArray {
+        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
+            throw OperationException(
+                message = "Convert failed because of config: " +
+                    "aes.oldKey or aes.newKey is not defined"
+            )
+        }
+        if (newKey != aesKey) {
+            throw OperationException(
+                message = "Convert failed because of config: " +
+                    "The values of aes.aesKey and  aes.newKey are inconsistent"
+            )
+        }
+        return AESUtil.encrypt(newKey!!, AESUtil.decrypt(oldKey!!, encryptedContent))
     }
 
     data class JksInfo(

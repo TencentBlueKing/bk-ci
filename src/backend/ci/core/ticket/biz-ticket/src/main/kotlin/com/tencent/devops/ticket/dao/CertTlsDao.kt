@@ -29,10 +29,13 @@ package com.tencent.devops.ticket.dao
 
 import com.tencent.devops.model.ticket.tables.TCertTls
 import com.tencent.devops.model.ticket.tables.records.TCertTlsRecord
+import com.tencent.devops.ticket.service.CertHelper
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 
 @Repository
 @Suppress("ALL")
@@ -130,6 +133,45 @@ class CertTlsDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(CERT_ID.eq(certId))
                 .execute()
+        }
+    }
+
+    fun convertEncryptedFileContent(dslContext: DSLContext, certHelper: CertHelper): Int {
+        with(TCertTls.T_CERT_TLS) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TCertTlsRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    val now = LocalDateTime.now()
+                    val update = transactionContext.update(this)
+                        .set(CERT_UPDATE_TIME, now)
+                    var needUpdate = false
+                    if (record.certServerCrtFile.isNotEmpty()) {
+                        update.set(CERT_SERVER_CRT_FILE, certHelper.convertEncryptedData(record.certServerCrtFile))
+                        needUpdate = true
+                    }
+                    if (record.certServerKeyFile.isNotEmpty()) {
+                        update.set(CERT_SERVER_KEY_FILE, certHelper.convertEncryptedData(record.certServerKeyFile))
+                        needUpdate = true
+                    }
+                    if (record.certClientCrtFile.isNotEmpty()) {
+                        update.set(CERT_CLIENT_CRT_FILE, certHelper.convertEncryptedData(record.certClientCrtFile))
+                        needUpdate = true
+                    }
+                    if (record.certClientKeyFile.isNotEmpty()) {
+                        update.set(CERT_CLIENT_KEY_FILE, certHelper.convertEncryptedData(record.certClientKeyFile))
+                        needUpdate = true
+                    }
+                    update.where(CERT_ID.eq(record.certId))
+                    if (needUpdate) {
+                        updates.add(update)
+                        count++
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
+            return count
         }
     }
 }
