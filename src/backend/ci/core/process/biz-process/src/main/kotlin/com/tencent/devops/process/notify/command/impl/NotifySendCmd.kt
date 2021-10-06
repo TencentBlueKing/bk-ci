@@ -9,6 +9,7 @@ import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 
 @Service
 class NotifySendCmd @Autowired constructor(
@@ -20,10 +21,18 @@ class NotifySendCmd @Autowired constructor(
 
     override fun execute(commandContextBuild: BuildNotifyContext) {
         val buildStatus = commandContextBuild.buildStatus
+        val shutdownType = when {
+            buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
+            buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
+            else -> TYPE_SHUTDOWN_SUCCESS
+        }
+
         when {
             buildStatus.isFailure() -> {
+                val settingDetailFlag = commandContextBuild.pipelineSetting.successSubscription.detailFlag
+                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
-                    templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
+                    templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
                     notifyType = commandContextBuild.pipelineSetting.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
@@ -31,8 +40,10 @@ class NotifySendCmd @Autowired constructor(
                 )
             }
             buildStatus.isCancel() -> {
+                val settingDetailFlag = commandContextBuild.pipelineSetting.failSubscription.detailFlag
+                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
-                    templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE,
+                    templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
                     notifyType = commandContextBuild.pipelineSetting.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
@@ -40,8 +51,10 @@ class NotifySendCmd @Autowired constructor(
                 )
             }
             buildStatus.isSuccess() -> {
+                val settingDetailFlag = commandContextBuild.pipelineSetting.failSubscription.detailFlag
+                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
-                    templateCode = PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE,
+                    templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
                     notifyType = commandContextBuild.pipelineSetting.successSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
@@ -52,9 +65,37 @@ class NotifySendCmd @Autowired constructor(
         }
     }
 
+    private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean): String {
+        return if (detailFlag) {
+            when (type) {
+                TYPE_STARTUP ->
+                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
+            }
+        } else {
+            when (type) {
+                TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
+            }
+        }
+    }
 
     private fun sendNotifyByTemplate(
-        templateCode: PipelineNotifyTemplateEnum,
+        templateCode: String,
         receivers: Set<String>,
         notifyType: Set<String>,
         titleParams: Map<String, String>,
@@ -62,7 +103,7 @@ class NotifySendCmd @Autowired constructor(
     ) {
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
-                templateCode = templateCode.templateCode,
+                templateCode = templateCode,
                 receivers = receivers as MutableSet<String>,
                 notifyType = notifyType as MutableSet<String>,
                 titleParams = titleParams,
@@ -71,5 +112,12 @@ class NotifySendCmd @Autowired constructor(
                 bcc = null
             )
         )
+    }
+
+    companion object {
+        const val TYPE_STARTUP = 1
+        const val TYPE_SHUTDOWN_SUCCESS = 2
+        const val TYPE_SHUTDOWN_FAILURE = 3
+        const val TYPE_SHUTDOWN_CANCEL = 4
     }
 }
