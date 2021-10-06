@@ -36,6 +36,9 @@ class NotifyCmdChain(private val commandList: List<NotifyCmd>) : CmdChain<BuildN
             commandContextBuild.cmdFlowSeq = 0
         }
         // 每次调用，都增1，走向下一条命令链
-        commandList.getOrNull(commandContextBuild.cmdFlowSeq++)?.doExecute(commandContext = commandContextBuild, chain = this)
+        commandList.getOrNull(commandContextBuild.cmdFlowSeq++)?.doExecute(
+            commandContext = commandContextBuild,
+            chain = this
+        )
     }
 }

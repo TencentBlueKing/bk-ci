@@ -21,6 +21,7 @@ class NotifySendCmd @Autowired constructor(
 
     override fun execute(commandContextBuild: BuildNotifyContext) {
         val buildStatus = commandContextBuild.buildStatus
+        val setting = commandContextBuild.pipelineSetting
         val shutdownType = when {
             buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
             buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
@@ -29,12 +30,12 @@ class NotifySendCmd @Autowired constructor(
 
         when {
             buildStatus.isFailure() -> {
-                val settingDetailFlag = commandContextBuild.pipelineSetting.successSubscription.detailFlag
+                val settingDetailFlag = setting.successSubscription.detailFlag
                 val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
                     templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
-                    notifyType = commandContextBuild.pipelineSetting.failSubscription.types.map { it.name }.toMutableSet(),
+                    notifyType = setting.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
                     bodyParams = commandContextBuild.notifyValue
                 )
@@ -45,7 +46,7 @@ class NotifySendCmd @Autowired constructor(
                 sendNotifyByTemplate(
                     templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
-                    notifyType = commandContextBuild.pipelineSetting.failSubscription.types.map { it.name }.toMutableSet(),
+                    notifyType = setting.failSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
                     bodyParams = commandContextBuild.notifyValue
                 )
@@ -56,7 +57,7 @@ class NotifySendCmd @Autowired constructor(
                 sendNotifyByTemplate(
                     templateCode = templateCode,
                     receivers = commandContextBuild.receivers,
-                    notifyType = commandContextBuild.pipelineSetting.successSubscription.types.map { it.name }.toMutableSet(),
+                    notifyType = setting.successSubscription.types.map { it.name }.toMutableSet(),
                     titleParams = commandContextBuild.notifyValue,
                     bodyParams = commandContextBuild.notifyValue
                 )
