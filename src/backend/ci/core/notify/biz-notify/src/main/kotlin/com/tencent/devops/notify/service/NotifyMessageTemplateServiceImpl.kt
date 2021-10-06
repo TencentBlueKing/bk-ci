@@ -542,10 +542,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 //                    sender = rtxTplRecord.sender
 //                )
                 logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
-                val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
-                    dslContext = dslContext,
-                    commonTemplateId = commonNotifyMessageTemplateRecord.id
-                )!!
+                val weworkTplRecord =
+                    notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
+                        dslContext = dslContext,
+                        commonTemplateId = commonNotifyMessageTemplateRecord.id
+                    )!!
                 // 替换内容里的动态参数
                 val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
                 logger.info("send wework msg: $body ${weworkTplRecord.sender}")
