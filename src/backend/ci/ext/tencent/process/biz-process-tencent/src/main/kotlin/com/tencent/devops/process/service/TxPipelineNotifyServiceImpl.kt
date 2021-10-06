@@ -1,6 +1,5 @@
 package com.tencent.devops.process.service
 
-
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.service.PipelineNotifyService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
