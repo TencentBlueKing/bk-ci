@@ -8,7 +8,9 @@ import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
+@Service
 class NotifySendCmd @Autowired constructor(
     val client: Client
 ): NotifyCmd {
