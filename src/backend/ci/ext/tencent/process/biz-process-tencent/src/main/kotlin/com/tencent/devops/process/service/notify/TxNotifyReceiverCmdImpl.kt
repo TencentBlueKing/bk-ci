@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ComplexMethod", "NestedBlockDepth")
-class TxNotifyReceiverCmdImpl @@Autowired constructor(
+class TxNotifyReceiverCmdImpl @Autowired constructor(
     val bsAuthProjectApi: AuthProjectApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) : NotifyReceiversCmd() {
