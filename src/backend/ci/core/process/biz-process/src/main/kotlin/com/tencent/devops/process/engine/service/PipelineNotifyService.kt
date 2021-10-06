@@ -5,10 +5,8 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.NotifyCmdChain
@@ -18,21 +16,14 @@ import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 
 abstract class PipelineNotifyService @Autowired constructor(
     open val buildVariableService: BuildVariableService,
-    open val pipelineRuntimeService: PipelineRuntimeService,
-    open val pipelineRepositoryService: PipelineRepositoryService,
-    open val pipelineSettingDao: PipelineSettingDao,
-    open val dslContext: DSLContext,
-    open val client: Client,
-    open val pipelineBuildFacadeService: PipelineBuildFacadeService
+    open val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     private val commandCache: LoadingCache<Class<out NotifyCmd>, NotifyCmd> = CacheBuilder.newBuilder()
@@ -78,21 +69,14 @@ abstract class PipelineNotifyService @Autowired constructor(
             commandCache.get(NotifySendCmd::class.java) // 发送消息
         )
         // 添加自定义扩展
-        commandList.addAll(addExtCmd())
+        if (addExtCmd() != null) {
+            commandList.addAll(addExtCmd()!!)
+        }
 
         NotifyCmdChain(commandList).doCommand(context)
     }
 
-    abstract fun addExtCmd(): MutableList<NotifyCmd>
-
-    data class ExecutionVariables(
-        val pipelineVersion: Int?,
-        val buildNum: Int?,
-        val trigger: String,
-        val originTriggerType: String,
-        val user: String,
-        val isMobileStart: Boolean
-    )
+    abstract fun addExtCmd(): MutableList<NotifyCmd>?
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineNotifyService::class.java)
