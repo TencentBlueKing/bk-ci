@@ -2,11 +2,11 @@ package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.service.PipelineNotifyService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
+import com.tencent.devops.process.notify.command.ExecutionVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -29,7 +29,9 @@ abstract class NotifyPipelineCmd @Autowired constructor(
     override fun execute(commandContextBuild: BuildNotifyContext) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(commandContextBuild.pipelineId) ?: return
         var pipelineName = pipelineInfo.pipelineName
-        val executionVar = getExecutionVariables(commandContextBuild.pipelineId, commandContextBuild.variables as MutableMap<String, String>)
+        val executionVar = getExecutionVariables(
+            pipelineId = commandContextBuild.pipelineId,
+            vars = commandContextBuild.variables as MutableMap<String, String>)
         val buildInfo = pipelineRuntimeService.getBuildInfo(commandContextBuild.buildId) ?: return
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum
@@ -75,5 +77,5 @@ abstract class NotifyPipelineCmd @Autowired constructor(
         return current.format(formatter)
     }
 
-    abstract fun getExecutionVariables(pipelineId: String, vars: MutableMap<String, String>): PipelineNotifyService.ExecutionVariables
+    abstract fun getExecutionVariables(pipelineId: String, vars: MutableMap<String, String>): ExecutionVariables
 }

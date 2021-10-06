@@ -3,9 +3,9 @@ package com.tencent.devops.process.permission.notify
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.engine.service.PipelineNotifyService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.notify.command.ExecutionVariables
 import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -33,7 +33,7 @@ class BluekingNotifyPipelineCmd @Autowired constructor(
     override fun getExecutionVariables(
         pipelineId: String,
         vars: MutableMap<String, String>
-    ): PipelineNotifyService.ExecutionVariables {
+    ): ExecutionVariables {
         var buildUser = ""
         var triggerType = ""
         var buildNum: Int? = null
@@ -71,7 +71,7 @@ class BluekingNotifyPipelineCmd @Autowired constructor(
         }
 
         val trigger = StartType.toReadableString(triggerType, channelCode)
-        return PipelineNotifyService.ExecutionVariables(pipelineVersion = pipelineVersion,
+        return ExecutionVariables(pipelineVersion = pipelineVersion,
             buildNum = buildNum,
             trigger = trigger,
             originTriggerType = triggerType,
