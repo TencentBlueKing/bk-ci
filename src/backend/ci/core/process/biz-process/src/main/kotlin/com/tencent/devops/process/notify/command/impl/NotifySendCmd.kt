@@ -14,7 +14,7 @@ import java.lang.IllegalArgumentException
 @Service
 class NotifySendCmd @Autowired constructor(
     val client: Client
-): NotifyCmd {
+) : NotifyCmd {
     override fun canExecute(commandContextBuild: BuildNotifyContext): Boolean {
         return true
     }

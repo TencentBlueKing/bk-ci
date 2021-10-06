@@ -21,7 +21,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
     open val pipelineRuntimeService: PipelineRuntimeService,
     open val pipelineBuildFacadeService: PipelineBuildFacadeService,
     open val client: Client
-): NotifyCmd {
+) : NotifyCmd {
     override fun canExecute(commandContextBuild: BuildNotifyContext): Boolean {
         return true
     }

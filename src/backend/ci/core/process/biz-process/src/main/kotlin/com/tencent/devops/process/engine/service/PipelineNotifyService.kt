@@ -20,7 +20,6 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-
 abstract class PipelineNotifyService @Autowired constructor(
     open val buildVariableService: BuildVariableService,
     open val pipelineRepositoryService: PipelineRepositoryService

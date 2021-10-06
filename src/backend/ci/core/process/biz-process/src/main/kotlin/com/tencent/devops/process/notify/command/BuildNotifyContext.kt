@@ -23,4 +23,3 @@ data class BuildNotifyContext(
     cmdFlowSeq = cmdFlowSeq,
     watcher = watcher
 )
-

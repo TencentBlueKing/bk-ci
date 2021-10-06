@@ -3,11 +3,10 @@ package com.tencent.devops.process.notify.command.impl
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.springframework.stereotype.Service
 
 @Service
-class NotifyContentCmd: NotifyCmd {
+class NotifyContentCmd : NotifyCmd {
     override fun canExecute(commandContextBuild: BuildNotifyContext): Boolean {
         return true
     }
