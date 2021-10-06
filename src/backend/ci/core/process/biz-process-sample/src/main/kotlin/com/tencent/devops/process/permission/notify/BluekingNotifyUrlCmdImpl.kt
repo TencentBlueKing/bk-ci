@@ -21,7 +21,7 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
     val pipelineRepositoryService: PipelineRepositoryService,
     val pipelineRuntimeService: PipelineRuntimeService,
     val pipelineBuildFacadeService: PipelineBuildFacadeService
-): NotifyUrlBuildCmd() {
+) : NotifyUrlBuildCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
@@ -48,7 +48,7 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
         } else {
             detailUrl(commandContext.projectId, commandContext.pipelineId, commandContext.buildId)
         }
-        val urlMap =  mutableMapOf(
+        val urlMap = mutableMapOf(
             "detailUrl" to detailUrl,
             "detailOuterUrl" to detailUrl,
             "detailShortOuterUrl" to detailUrl

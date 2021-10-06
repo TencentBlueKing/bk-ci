@@ -13,10 +13,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 class BluekingPipelineNotifyService @Autowired constructor(
     override val buildVariableService: BuildVariableService,
     override val pipelineRepositoryService: PipelineRepositoryService
-): PipelineNotifyService(
+) : PipelineNotifyService(
     buildVariableService,
     pipelineRepositoryService
-){
+) {
     override fun addExtCmd(): MutableList<NotifyCmd>? {
         return null
     }
