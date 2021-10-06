@@ -131,6 +131,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
         buildStatus: BuildStatus,
         vars: MutableMap<String, String>
     ) {
+        logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
         var groups = mutableSetOf<String>()
         var content = ""
         var markerDownFlag = false
@@ -146,6 +147,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
             markerDownFlag = setting.successSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.successSubscription.detailFlag
         }
+        logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markerDownFlag|$content")
         sendWeworkGroup(groups, markerDownFlag, content, vars, detailFlag)
         return
     }
@@ -174,7 +176,7 @@ class TxPipelineNotifyServiceImpl @Autowired constructor(
             val failReceiver = EnvUtils.parseEnv(setting.failSubscription.users, vars, true)
             users.addAll(failReceiver.split(",").toMutableSet())
             if (setting.failSubscription.groups.isNotEmpty()) {
-                logger.info("fail notify config group: ${setting.successSubscription.groups}")
+                logger.info("fail notify config group: ${setting.failSubscription.groups}")
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
                 projectRoleUsers.forEach {
                     if (it.roleName in setting.failSubscription.groups) {
