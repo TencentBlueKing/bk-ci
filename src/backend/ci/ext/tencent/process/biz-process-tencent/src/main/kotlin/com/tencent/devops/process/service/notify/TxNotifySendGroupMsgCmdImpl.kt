@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     val wechatWorkService: WechatWorkService
-): NotifyCmd{
+) : NotifyCmd {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
@@ -46,7 +46,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         sendWeworkGroup(groups, markerDownFlag, content, commandContext.variables, detailFlag)
         return
     }
-
 
     private fun sendWeworkGroup(
         weworkGroup: Set<String>,

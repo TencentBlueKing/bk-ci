@@ -36,7 +36,7 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : NotifyPipelineCmd(
     pipelineRepositoryService, pipelineRuntimeService, pipelineBuildFacadeService, client
-){
+) {
     override fun getExecutionVariables(pipelineId: String, vars: MutableMap<String, String>): ExecutionVariables {
         // 兼容旧流水线的旧变量
         PipelineVarUtil.fillOldVar(vars.toMutableMap())

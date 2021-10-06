@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val buildVariableService: BuildVariableService,
-    override val pipelineRepositoryService: PipelineRepositoryService,
+    override val pipelineRepositoryService: PipelineRepositoryService
 ) : PipelineNotifyService(
     buildVariableService,
     pipelineRepositoryService

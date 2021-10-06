@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxNotifyUrlCmdImpl @Autowired constructor(
     val client: Client
-): NotifyUrlBuildCmd() {
+) : NotifyUrlBuildCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
