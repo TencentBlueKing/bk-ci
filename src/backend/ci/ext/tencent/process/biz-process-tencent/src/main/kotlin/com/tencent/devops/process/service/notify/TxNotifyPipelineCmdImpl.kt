@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("ComplexMethod")
 class TxNotifyPipelineCmdImpl @Autowired constructor(
     override val pipelineRepositoryService: PipelineRepositoryService,
     override val pipelineRuntimeService: PipelineRuntimeService,
