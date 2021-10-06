@@ -25,31 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.process.notify.command
 
-/**
- * 定义引擎命令
- */
-interface Cmd<T : CmdContext> {
+import com.tencent.devops.process.command.CmdChain
 
-    /**
-     * 当前[commandContext]上下文能否满足运行条件
-     */
-    fun canExecute(commandContext: T): Boolean
+class NotifyCmdChain(private val commandList: List<NotifyCmd>) : CmdChain<BuildNotifyContext> {
 
-    /**
-     * 本命令[commandContext]上下文执行核心处理逻辑
-     */
-    fun execute(commandContext: T)
-
-    /**
-     * 执行总入口，将调用[canExecute]判断是否满足再执行[execute]函数，
-     * 并将[chain]链式传递[commandContext]继续执行下去
-     */
-    fun doExecute(commandContext: T, chain: CmdChain<T>) {
-        if (canExecute(commandContext)) {
-            execute(commandContext)
+    override fun doCommand(commandContextBuild: BuildNotifyContext) {
+        if (commandContextBuild.cmdFlowSeq < 0) { // 校正
+            commandContextBuild.cmdFlowSeq = 0
         }
-        chain.doCommand(commandContext)
+        // 每次调用，都增1，走向下一条命令链
+        commandList.getOrNull(commandContextBuild.cmdFlowSeq++)?.doExecute(commandContext = commandContextBuild, chain = this)
     }
 }

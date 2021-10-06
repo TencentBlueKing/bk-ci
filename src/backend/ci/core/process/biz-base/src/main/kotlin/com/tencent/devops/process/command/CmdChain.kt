@@ -25,16 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
-
-import com.tencent.devops.common.api.util.Watcher
+package com.tencent.devops.process.command
 
 /**
- * 命令上下文基础类
+ * 引擎控制命令链
  */
-open class CmdContext(
-    open var cmdFlowSeq: Int,
-    open val executeCount: Int = 1,
-    open val variables: Map<String, String>,
-    open val watcher: Watcher
-)
+interface CmdChain<T : CmdContext> {
+    /**
+     * 使用泛型的命令上下文[commandContext]执行命令
+     * [commandContext]具备传递和存储中间数据，由各部件定义
+     */
+    fun doCommand(commandContext: T)
+}
