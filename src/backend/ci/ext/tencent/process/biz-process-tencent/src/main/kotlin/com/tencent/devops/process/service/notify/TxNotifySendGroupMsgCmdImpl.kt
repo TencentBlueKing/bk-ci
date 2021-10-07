@@ -32,18 +32,29 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         var markerDownFlag = false
         var detailFlag = false
         if (buildStatus.isCancel() || buildStatus.isFailure()) {
+            if (emptyGroup(setting.failSubscription.wechatGroup) || !setting.failSubscription.wechatGroupFlag) {
+                return
+            }
             groups.addAll(setting.failSubscription.wechatGroup.split("[,;]".toRegex()))
             content = commandContext.notifyValue["successContent"]!!
             markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.failSubscription.detailFlag
         } else if (buildStatus.isSuccess()) {
+            if (emptyGroup(setting.successSubscription.wechatGroup)
+                || !setting.successSubscription.wechatGroupFlag) {
+                return
+            }
             groups.addAll(setting.successSubscription.wechatGroup.split("[,;]".toRegex()))
             content = commandContext.notifyValue["failContent"]!!
             markerDownFlag = setting.successSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.successSubscription.detailFlag
         }
         logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markerDownFlag|$content")
-        sendWeworkGroup(groups, markerDownFlag, content, commandContext.variables, detailFlag)
+        try {
+            sendWeworkGroup(groups, markerDownFlag, content, commandContext.notifyValue, detailFlag)
+        } catch (e: Exception) {
+            logger.warn("sendweworkGroup msg fail: ${e.message}")
+        }
         return
     }
 
@@ -75,6 +86,13 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                 wechatWorkService.sendRichText(richtextMessage)
             }
         }
+    }
+
+    fun emptyGroup(groups: String): Boolean {
+        if (groups.isNullOrBlank()) {
+            return true
+        }
+        return false
     }
 
     companion object {
