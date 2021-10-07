@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
@@ -15,13 +16,14 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_ATOM_V3"], description = "OPENAPI-插件资源")
+@Api(tags = ["OPENAPI_AUTh_V3"], description = "OPENAPI-权限相关")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwAuthResourceV3 {
 
+    @ApiOperation("实例授权")
     @POST
     @Path("/projects/{projectId}/instance/grant")
     fun grantInstancePermission(
