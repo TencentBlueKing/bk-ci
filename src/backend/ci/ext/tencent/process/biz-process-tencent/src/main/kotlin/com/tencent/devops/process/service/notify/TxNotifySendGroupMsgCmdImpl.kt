@@ -40,14 +40,14 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.failSubscription.detailFlag
         } else if (buildStatus.isSuccess()) {
-            if (emptyGroup(setting.successSubscription.wechatGroup)
-                || !setting.successSubscription.wechatGroupFlag) {
+            val successSubscription = setting.successSubscription
+            if (emptyGroup(successSubscription.wechatGroup) || !successSubscription.wechatGroupFlag) {
                 return
             }
-            groups.addAll(setting.successSubscription.wechatGroup.split("[,;]".toRegex()))
+            groups.addAll(successSubscription.wechatGroup.split("[,;]".toRegex()))
             content = commandContext.notifyValue["failContent"]!!
-            markerDownFlag = setting.successSubscription.wechatGroupMarkdownFlag
-            detailFlag = setting.successSubscription.detailFlag
+            markerDownFlag = successSubscription.wechatGroupMarkdownFlag
+            detailFlag = successSubscription.detailFlag
         }
         logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markerDownFlag|$content")
         try {
