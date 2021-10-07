@@ -232,6 +232,20 @@ class BuildCancelControl @Autowired constructor(
                             jobId = container.containerId,
                             executeCount = executeCount
                         )
+                    } else if (containerBuildStatus.isRunning()) {
+                        container.elements.forEach { task ->
+                            // 暂停的场景,流水线终止需要停止整条流水线
+                            val taskStatus = BuildStatus.parse(task.status)
+                            if (taskStatus.isPause()) {
+                                // 修改stage状态,以便后续不被finalStage影响
+                                pipelineStageService.updateStageStatus(
+                                    buildId = buildId,
+                                    stageId = stageId,
+                                    buildStatus = BuildStatus.PAUSE,
+                                    checkIn = null,
+                                    checkOut = null)
+                            }
+                        }
                     }
                 } finally {
                     containerIdLock.unlock()
