@@ -35,10 +35,13 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             pipelineId = commandContextBuild.pipelineId,
             vars = commandContextBuild.variables as MutableMap<String, String>)
         val buildInfo = pipelineRuntimeService.getBuildInfo(commandContextBuild.buildId) ?: return
+        val startTime = buildInfo.startTime
+        val endTime = System.currentTimeMillis()
+        val duration = ((endTime - startTime!!) / 1000).toString()
+
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum
         val user = executionVar.user
-        val duration = commandContextBuild.variables[PIPELINE_TIME_DURATION]
         val detail = pipelineBuildFacadeService.getBuildDetail(buildInfo.startUser,
             commandContextBuild.projectId,
             commandContextBuild.pipelineId,
