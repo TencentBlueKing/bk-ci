@@ -41,6 +41,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         buildStatus: BuildStatus
     ) {
         logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
+
         val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
         vars[PIPELINE_TIME_DURATION]?.takeIf { it.isNotBlank() }?.toLongOrNull()?.let {
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
