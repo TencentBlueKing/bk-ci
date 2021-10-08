@@ -35,8 +35,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (emptyGroup(setting.failSubscription.wechatGroup) || !setting.failSubscription.wechatGroupFlag) {
                 return
             }
-            groups.addAll(setting.failSubscription.wechatGroup.split("[,;]".toRegex()))
-            content = commandContext.notifyValue["successContent"]!!
+            groups.addAll(setting.failSubscription.wechatGroup.split("[;]".toRegex()))
+            content = commandContext.notifyValue["failContent"]!!
             markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.failSubscription.detailFlag
         } else if (buildStatus.isSuccess()) {
@@ -44,8 +44,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (emptyGroup(successSubscription.wechatGroup) || !successSubscription.wechatGroupFlag) {
                 return
             }
-            groups.addAll(successSubscription.wechatGroup.split("[,;]".toRegex()))
-            content = commandContext.notifyValue["failContent"]!!
+            groups.addAll(successSubscription.wechatGroup.split("[;]".toRegex()))
+            content = commandContext.notifyValue["successContent"]!!
             markerDownFlag = successSubscription.wechatGroupMarkdownFlag
             detailFlag = successSubscription.detailFlag
         }
