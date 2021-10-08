@@ -31,7 +31,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("人工审核-自定义参数")
+@ApiModel("stage准入准出-质量红线触发")
 data class StageQualityRequest(
     @ApiModelProperty("准入准出标识", required = true)
     val position: ControlPointPosition,
