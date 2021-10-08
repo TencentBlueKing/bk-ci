@@ -90,14 +90,19 @@ class BuildStartupParamService @Autowired constructor(
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
             params.putAll(
-                triggerContainer.params.map {
+                // 做下真实传值的替换
+                triggerContainer.params.associate {
                     // 做下真实传值的替换
-                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
-                    else it.id to it.defaultValue.toString()
-                }.toMap()
+                    it.id to (allVariable[it.id] ?: JsonUtil.toJson(it.defaultValue, formatted = false))
+//                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
+//                    else it.id to it.defaultValue.toString()
+                }
             )
-            addParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.toJson(params, formatted = false)
             )
         }
     }

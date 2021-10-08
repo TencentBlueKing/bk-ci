@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
@@ -50,6 +51,9 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -70,7 +74,8 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
-    private val stageBuildDetailService: StageBuildDetailService
+    private val stageBuildDetailService: StageBuildDetailService,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -148,12 +153,11 @@ class PipelineStageService @Autowired constructor(
 
     fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQualityFail(
-                buildId = buildId,
-                stageId = stageId,
+            val allStageStatus = stageBuildDetailService.stageCheckQuality(
+                buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
-                checkIn = checkIn,
-                checkOut = checkOut
+                buildStatus = BuildStatus.FAILED,
+                checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -176,9 +180,37 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
+    fun checkQualityPassStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = stageBuildDetailService.stageCheckQuality(
+                buildId = buildId, stageId = stageId,
+                controlOption = controlOption!!,
+                buildStatus = BuildStatus.RUNNING,
+                checkIn = checkIn, checkOut = checkOut
+            )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    stageId = stageId, controlOption = controlOption!!,
+                    buildStatus = BuildStatus.QUALITY_CHECK_PASS,
+                    checkIn = checkIn, checkOut = checkOut
+                )
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "checkQualityPassStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
     fun pauseStage(buildStage: PipelineBuildStage) {
         with(buildStage) {
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
             checkIn?.status = BuildStatus.REVIEWING.name
             val allStageStatus = stageBuildDetailService.stagePause(
                 buildId = buildId,
@@ -195,7 +227,7 @@ class PipelineStageService @Autowired constructor(
                     controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateStatus(
-                    dslContext = context, buildId = buildId,
+                    dslContext = context, buildId = buildId, projectId = projectId,
                     oldBuildStatus = BuildStatus.RUNNING, newBuildStatus = BuildStatus.STAGE_SUCCESS
                 )
                 pipelineBuildDao.updateBuildStageStatus(
@@ -256,7 +288,7 @@ class PipelineStageService @Autowired constructor(
                         controlOption = controlOption, checkIn = checkIn, checkOut = checkOut
                     )
                     pipelineBuildDao.updateStatus(
-                        dslContext = context, buildId = buildId,
+                        dslContext = context, buildId = buildId, projectId = projectId,
                         oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                     )
                     pipelineBuildDao.updateBuildStageStatus(
@@ -291,7 +323,7 @@ class PipelineStageService @Autowired constructor(
                 action = ManualReviewAction.ABORT,
                 suggest = if (timeout == true) "TIMEOUT" else reviewRequest?.suggest
             )
-            // TODO 暂时只处理准入逻辑，后续和checkOut保持逻辑一致
+            // 5019 暂时只有准入有审核逻辑，准出待产品规划
             checkIn?.status = BuildStatus.REVIEW_ABORT.name
             stageBuildDetailService.stageCancel(
                 buildId = buildId, stageId = stageId, controlOption = controlOption!!,
@@ -306,7 +338,7 @@ class PipelineStageService @Autowired constructor(
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateStatus(
-                    dslContext = context, buildId = buildId,
+                    dslContext = context, buildId = buildId, projectId = projectId,
                     oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
                 )
                 // #4255 stage审核超时恢复运行状态需要将运行状态+1，即使直接结束也会在finish阶段减回来
@@ -374,6 +406,48 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         )
+    }
+
+    /**
+     * 流水线引擎Stage事件 [event]
+     * 该Stage的当前配置属性 [stage]
+     * 上下文中的环境变量 [variables]
+     * 控制当前检查是准入还是准出使用 [inOrOut] 准入为true，准出为false
+     */
+    fun checkQualityPassed(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        variables: Map<String, String>,
+        inOrOut: Boolean
+    ): Boolean {
+        val (check, position) = if (inOrOut) {
+            Pair(stage.checkIn, ControlPointPosition.BEFORE_POSITION)
+        } else {
+            Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
+        }
+        return try {
+            val request = BuildCheckParamsV3(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                position = position,
+                templateId = null,
+                interceptName = null,
+                ruleBuildIds = check?.ruleIds!!.toSet(),
+                runtimeVariable = variables
+            )
+            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
+                "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}")
+            val result = client.get(ServiceQualityRuleResource::class).check(request).data!!
+            logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
+                "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
+            check.checkTimes = result.checkTimes
+            result.success
+        } catch (ignore: Throwable) {
+            logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
+                "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
+            false
+        }
     }
 
     fun retryRefreshStage(model: Model) {

@@ -24,23 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
-import com.tencent.devops.notify.service.WeworkService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+package com.tencent.devops.process.pojo.classify
 
-@Service
-@Suppress("ALL")
-class WeworkServiceImpl @Autowired constructor() : WeworkService {
+import io.swagger.annotations.ApiModelProperty
 
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        TODO("Not yet implemented")
-    }
-
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
-        TODO("Not yet implemented")
-    }
-}
+data class PipelineLabelDetail(
+    @ApiModelProperty("流水线标签信息", required = false)
+    val pipelineLabelInfo: List<PipelineGroupLabels>?
+)

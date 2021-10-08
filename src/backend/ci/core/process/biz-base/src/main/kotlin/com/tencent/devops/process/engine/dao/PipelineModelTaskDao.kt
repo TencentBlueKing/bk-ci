@@ -57,8 +57,8 @@ class PipelineModelTaskDao {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineModelTaskRecord>>()
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
-                val taskParamJson = JsonUtil.toJson(modelTask.taskParams)
-                val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "")
+                val taskParamJson = JsonUtil.toJson(modelTask.taskParams, formatted = false)
+                val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "", formatted = false)
                 val currentTime = LocalDateTime.now()
                 val set = dslContext.insertInto(this)
                     .set(PIPELINE_ID, modelTask.pipelineId)

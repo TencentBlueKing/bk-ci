@@ -809,8 +809,8 @@ class PipelineBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
-                defaultMessage = "(${group?.name ?: "default"})非Stage($stageId)当前待审核组",
-                params = arrayOf(stageId, reviewRequest?.id ?: "default")
+                defaultMessage = "(${group?.name ?: "Flow 1"})非Stage($stageId)当前待审核组",
+                params = arrayOf(stageId, reviewRequest?.id ?: "Flow 1")
             )
         }
 
@@ -846,9 +846,6 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                // TODO 暂时兼容前端显示的变量刷新，下次发版去掉
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                buildStage.controlOption!!.stageControlOption.triggered = true
                 pipelineStageService.startStage(
                     userId = userId,
                     buildStage = buildStage,
@@ -1724,7 +1721,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val tasks = getRunningTask(projectId, buildId)
+            val tasks = pipelineRuntimeService.getRunningTask(buildId)
 
             tasks.forEach { task ->
                 val taskId = task["taskId"] ?: ""
@@ -1767,10 +1764,6 @@ class PipelineBuildFacadeService(
         } finally {
             redisLock.unlock()
         }
-    }
-
-    private fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
-        return pipelineRuntimeService.getRunningTask(projectId, buildId)
     }
 
     fun getPipelineLatestBuildByIds(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {

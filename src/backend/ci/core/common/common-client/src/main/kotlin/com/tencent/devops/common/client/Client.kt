@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
+import feign.MethodMetadata
 import feign.Request
 import feign.RequestInterceptor
 import feign.RetryableException
@@ -55,6 +56,7 @@ import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryCl
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
+import java.lang.reflect.Method
 import java.security.cert.CertificateException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -135,7 +137,7 @@ class Client @Autowired constructor(
     )
 
     private val feignClient = OkHttpClient(okHttpClient)
-    private val jaxRsContract = JAXRSContract()
+    private val clientContract = ClientContract()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
@@ -168,7 +170,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
+            .contract(clientContract)
             .requestInterceptor(requestInterceptor)
             .options(Request.Options(10 * 1000, 30 * 60 * 1000))
             .retryer(object : Retryer {
@@ -190,7 +192,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
+            .contract(clientContract)
             .requestInterceptor(requestInterceptor)
             .options(Request.Options(10 * 1000, 30 * 60 * 1000))
             .retryer(object : Retryer {
@@ -218,7 +220,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
+            .contract(clientContract)
             .requestInterceptor(requestInterceptor)
             .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = gatewayType))
     }
@@ -234,7 +236,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
+            .contract(clientContract)
             .requestInterceptors(requestInterceptor)
             .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY))
     }
@@ -251,7 +253,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
-            .contract(jaxRsContract)
+            .contract(clientContract)
             .requestInterceptor(requestInterceptor)
             .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, tag))
     }
@@ -305,5 +307,13 @@ class Client @Autowired constructor(
                 "http://$gateway/${path.removePrefix("/")}"
             }
         }
+    }
+}
+
+class ClientContract : JAXRSContract() {
+    override fun parseAndValidateMetadata(targetType: Class<*>?, method: Method?): MethodMetadata {
+        val parseAndValidateMetadata = super.parseAndValidateMetadata(targetType, method)
+        parseAndValidateMetadata.template().decodeSlash(false)
+        return parseAndValidateMetadata
     }
 }

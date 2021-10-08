@@ -32,7 +32,10 @@ dependencies {
     api(project(":core:process:model-process"))
     api(project(":core:process:api-process"))
     api(project(":core:process:plugin-sdk"))
-    implementation("org.quartz-scheduler:quartz")
+    api(project(":core:project:api-project"))
+    implementation("org.quartz-scheduler:quartz") {
+        exclude(group = "com.zaxxer", module = "HikariCP-java7")
+    }
 }
 
 plugins {

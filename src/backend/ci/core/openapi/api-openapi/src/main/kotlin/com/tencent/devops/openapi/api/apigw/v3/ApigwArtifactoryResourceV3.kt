@@ -108,4 +108,28 @@ interface ApigwArtifactoryResourceV3 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<FileInfo>>
+
+    @ApiOperation("下载熔断归档的全量日志（开源版暂未实现）")
+    @GET
+    @Path("/log/{pipelineId}/{buildId}/{elementId}/{executeCount}")
+    fun getPluginLogUrl(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目 ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线 ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建 ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("插件 elementId", required = true)
+        @PathParam("elementId")
+        elementId: String,
+        @ApiParam("执行序号", required = true)
+        @PathParam("executeCount")
+        executeCount: String
+    ): Result<Url>
 }

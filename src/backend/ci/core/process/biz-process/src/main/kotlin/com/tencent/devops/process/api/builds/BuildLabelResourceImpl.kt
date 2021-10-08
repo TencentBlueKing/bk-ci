@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.service
+package com.tencent.devops.process.api.builds
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.classify.PipelineLabelDetail
+import com.tencent.devops.process.service.label.PipelineLabelService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- *   Date on 2018-12-05.
- */
-@ApiModel("服务-修改模型")
-data class ServiceUrlUpdateInfo(
-    @ApiModelProperty("服务名称", required = true)
-    val name: String,
-    @ApiModelProperty("cssUrl")
-    val cssUrl: String,
-    @ApiModelProperty("jsUrl")
-    val jsUrl: String
-)
+@RestResource
+class BuildLabelResourceImpl @Autowired constructor(
+    private val pipelineLabelService: PipelineLabelService
+) : BuildLabelResource {
+
+    override fun getLabelInfo(pipelineId: String): Result<PipelineLabelDetail> {
+        return Result(pipelineLabelService.getLabelInfo(pipelineId))
+    }
+}

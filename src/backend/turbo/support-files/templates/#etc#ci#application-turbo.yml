@@ -1,6 +1,4 @@
 spring:
-  application:
-    name: turbo
   rabbitmq:
     virtual-host: __BK_CI_TURBO_RABBITMQ_VHOST__
     username: __BK_CI_TURBO_RABBITMQ_USER__
@@ -33,7 +31,7 @@ server:
     context-path: /api
 
 tbs:
-  rootpath: __BK_TURBO_GATEWAY_PRIVATE_URL__
+  rootpath: __BK_TURBO_PRIVATE_URL__/gw/
   urltemplate: api/v1/{engine}/resource/{resource_type}
 
 devops:

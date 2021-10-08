@@ -25,9 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.process.engine.pojo
 
-enum class CharSetType {
-    UTF_8,
-    GBK
-}
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import java.time.LocalDateTime
+
+data class UpdateTaskInfo(
+    val taskStatus: BuildStatus? = null, // 构建状态
+    val starter: String? = null, // 启动人
+    val approver: String? = null, // 审批人
+    val startTime: LocalDateTime? = null, // 开始时间
+    val endTime: LocalDateTime? = null, // 结束时间
+    val totalTime: Long? = null // 耗费时间
+)

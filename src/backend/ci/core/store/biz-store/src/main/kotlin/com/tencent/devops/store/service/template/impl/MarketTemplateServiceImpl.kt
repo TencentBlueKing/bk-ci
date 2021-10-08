@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
@@ -442,7 +442,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         run check@{
             if (!projectCode.isNullOrBlank()) {
                 val installedTemplatesResult =
-                    client.get(ServiceTemplateResource::class).getSrcTemplateCodes(projectCode!!)
+                    client.get(ServicePTemplateResource::class).getSrcTemplateCodes(projectCode!!)
                 if (installedTemplatesResult.isNotOk()) {
                     throw RemoteServiceException("Failed to get project($projectCode) installedTemplates")
                 }
@@ -576,7 +576,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         dslContext.transaction { t ->
             val context = DSL.using(t)
 
-            client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, false)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, false)
             storeCommonService.deleteStoreInfo(context, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
             templateCategoryRelDao.deleteByTemplateCode(context, templateCode)
             templateLabelRelDao.deleteByTemplateCode(context, templateCode)
@@ -636,7 +636,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             publisher = template.publisher
         )
-        val addMarketTemplateResult = client.get(ServiceTemplateResource::class)
+        val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
             .addMarketTemplate(userId = userId, addMarketTemplateRequest = addMarketTemplateRequest)
         logger.info("addMarketTemplateResult is $addMarketTemplateResult")
         if (addMarketTemplateResult.isNotOk()) {
@@ -663,7 +663,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         templateCode: String,
         projectCodeList: ArrayList<String>
     ): Result<Boolean> {
-        val templateDetailResult = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
+        val templateDetailResult = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(templateCode)
         if (templateDetailResult.isNotOk()) {
             // 抛出错误提示
             return Result(templateDetailResult.status, templateDetailResult.message ?: "")
@@ -897,7 +897,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     ) {
         try {
             logger.info("start to copy the quality rule for template: $templateCode")
-            val sourceTemplate = client.get(ServiceTemplateResource::class).listTemplateById(
+            val sourceTemplate = client.get(ServicePTemplateResource::class).listTemplateById(
                 setOf(templateCode), null).data?.templates!!.getValue(templateCode)
             projectCodeList.forEach { projectCode ->
                 client.get(ServiceQualityRuleResource::class).copyRule(CopyRuleRequest(
