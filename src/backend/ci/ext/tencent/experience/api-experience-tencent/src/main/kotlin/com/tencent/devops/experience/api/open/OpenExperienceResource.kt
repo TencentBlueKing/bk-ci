@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import io.swagger.annotations.Api
@@ -49,12 +50,6 @@ interface OpenExperienceResource {
         token: String
     ): Result<OuterProfileVO>
 
-    // TODO 修复数据用,20210621之后可以删除掉
-    @ApiOperation("重载热门推荐数据")
-    @Path("/reloadHot")
-    @GET
-    fun reloadHot()
-
     @ApiOperation("苹果应用商店跳转")
     @Path("/appstore/redirect")
     @GET
@@ -66,4 +61,19 @@ interface OpenExperienceResource {
         @QueryParam("userId")
         userId: String
     ): Response
+
+    @ApiOperation("通过bundleId获取公开体验跳转信息")
+    @Path("/jumpInfo")
+    @GET
+    fun jumpInfo(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("bundleId", required = true)
+        @QueryParam("bundleIdentifier")
+        bundleIdentifier: String,
+        @ApiParam("平台", required = true)
+        @QueryParam("platform")
+        platform: String
+    ): Result<ExperienceJumpInfo>
 }
