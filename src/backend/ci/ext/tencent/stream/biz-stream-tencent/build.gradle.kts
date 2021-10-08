@@ -79,6 +79,7 @@ dependencies {
     api(group = "org.slf4j", name = "slf4j-simple")
     api(group = "org.apache.commons", name = "commons-lang3")
     api(group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml")
+    api(group = "com.fasterxml.jackson.core", name = "jackson-databind")
 
     testImplementation(project(":core:common:common-test"))
 }

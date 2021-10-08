@@ -38,6 +38,7 @@ allprojects {
             dependency("org.slf4j:slf4j-api:${Versions.YamlSchemaLog4j}")
             dependency("org.slf4j:slf4j-simple:${Versions.YamlSchemaLog4j}")
             dependency("org.apache.commons:commons-lang3:${Versions.YamlSchemaCommonsLang3}")
+            dependency("com.fasterxml.jackson.core:jackson-databind:${Versions.JackSon}")
             dependency("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${Versions.JackSon}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
