@@ -35,8 +35,8 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
-import com.tencent.devops.stream.v2.dao.GitUserMessageDao
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.dao.StreamUserMessageDao
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -60,8 +60,8 @@ class StreamEventHistoryClearJob @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitUserMessageDao: GitUserMessageDao,
-    private val streamBasicSettingService: GitCIBasicSettingService
+    private val streamUserMessageDao: StreamUserMessageDao,
+    private val streamBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamEventHistoryClearJob::class.java)
@@ -339,7 +339,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     val context = DSL.using(t)
                     gitRequestEventDao.deleteById(context, eventId)
                     gitRequestEventNotBuildDao.deleteByEventId(context, gitProjectId, eventId)
-                    gitUserMessageDao.deleteByMessageId(
+                    streamUserMessageDao.deleteByMessageId(
                         context,
                         "git_$gitProjectId",
                         eventId.toString(),

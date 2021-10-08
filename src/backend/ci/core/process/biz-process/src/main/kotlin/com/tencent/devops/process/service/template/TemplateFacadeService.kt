@@ -76,6 +76,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -154,7 +155,8 @@ class TemplateFacadeService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineInfoExtService: PipelineInfoExtService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -183,7 +185,14 @@ class TemplateFacadeService @Autowired constructor(
                 storeFlag = false
             )
 
-            pipelineSettingDao.insertNewSetting(context, projectId, templateId, template.name, true)
+            pipelineSettingDao.insertNewSetting(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = templateId,
+                pipelineName = template.name,
+                isTemplate = true,
+                failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+            )
             logger.info("Get the template version $version")
         }
 
@@ -234,11 +243,12 @@ class TemplateFacadeService @Autowired constructor(
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
                 pipelineSettingDao.insertNewSetting(
-                    context,
-                    projectId,
-                    newTemplateId,
-                    copyTemplateReq.templateName,
-                    true
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = newTemplateId,
+                    pipelineName = copyTemplateReq.templateName,
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                 )
             }
 
@@ -298,7 +308,8 @@ class TemplateFacadeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = templateId,
                     pipelineName = saveAsTemplateReq.templateName,
-                    isTemplate = true
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                 )
             }
 
@@ -1258,7 +1269,8 @@ class TemplateFacadeService @Autowired constructor(
                             dslContext = context,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            pipelineName = pipelineName
+                            pipelineName = pipelineName,
+                            failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                         )
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
@@ -2011,7 +2023,8 @@ class TemplateFacadeService @Autowired constructor(
                     projectId = it,
                     pipelineId = templateId,
                     pipelineName = templateName,
-                    isTemplate = true
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                 )
                 projectTemplateMap[it] = templateId
             }

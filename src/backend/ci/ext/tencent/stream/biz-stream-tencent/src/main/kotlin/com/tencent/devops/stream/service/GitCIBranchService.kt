@@ -37,7 +37,7 @@ import com.tencent.devops.stream.pojo.BranchBuildHistory
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.enums.BranchType
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -50,7 +50,7 @@ import javax.ws.rs.core.Response
 class GitCIBranchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val pipelineResourceDao: GitPipelineResourceDao
@@ -64,7 +64,7 @@ class GitCIBranchService @Autowired constructor(
     fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): List<BranchBuildHistory> {
         val default = (defaultBranch ?: "master").removePrefix("refs/heads/")
         logger.info("get branch build list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
 
         val branchBuildsList = gitRequestEventBuildDao.getBranchBuildList(dslContext, gitProjectId)
