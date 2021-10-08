@@ -37,4 +37,5 @@ object Versions {
     const val YamlSchema = "1.0.60"
     const val YamlSchemaLog4j = "1.7.32"
     const val YamlSchemaCommonsLang3 = "3.12.0"
+    const val JackSon = "2.12.4"
 }

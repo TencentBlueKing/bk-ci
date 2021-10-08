@@ -35,12 +35,12 @@ class StreamGitConfig {
     @Value("\${rtx.v2GitUrl:#{null}}")
     val tGitUrl: String? = null
 
-    @Value("schema.git.projectId:#{null}")
-    val schemaGitProjectId: String? = null
+    @Value("\${schema.git.projectId:#{null}}")
+    val schemaGitProjectId: Long? = null
 
-    @Value("schema.git.gitRef:#{null}")
+    @Value("\${schema.git.gitRef:#{null}}")
     val schemaGitRef: String? = null
 
-    @Value("schema.git.schemaPath:#{null}")
+    @Value("\${schema.git.schemaPath:#{null}}")
     val schemaGitPath: String? = null
 }

@@ -65,6 +65,13 @@ class YamlSchemaCheck @Autowired constructor(
 
     companion object {
         private const val REDIS_STREAM_YAML_SCHEMA = "stream:yaml.schema.v2:json"
+        private const val CI_SCHEMA = "ci"
+        private const val TEMPLATE_EXTEND_SCHEMA = "template-extends"
+        private const val TEMPLATE_STAGE_SCHEMA = "template-stages"
+        private const val TEMPLATE_JOB_SCHEMA = "template-jobs"
+        private const val TEMPLATE_STEP_SCHEMA = "template-steps"
+        private const val TEMPLATE_VARIABLE_SCHEMA = "template-variables"
+        private const val TEMPLATE_GATE_SCHEMA = "template-gates"
     }
 
     private val logger = LoggerFactory.getLogger(YamlSchemaCheck::class.java)
@@ -74,13 +81,7 @@ class YamlSchemaCheck @Autowired constructor(
         .objectMapper(yamlFactory)
         .build()
 
-    private val ciSchema = getSchemaFromGit("ci")
-    private val templateExtendSchema = getSchemaFromGit("template-extends")
-    private val templateStageSchema = getSchemaFromGit("template-stages")
-    private val templateJobSchema = getSchemaFromGit("template-jobs")
-    private val templateStepSchema = getSchemaFromGit("template-steps")
-    private val templateVariablesSchema = getSchemaFromGit("template-variables")
-    private val templateGateSchema = getSchemaFromGit("template-gates")
+    private val schemaMap = mutableMapOf<String, JsonSchema>()
 
     // 给来自前端的接口用，直接扔出去就好
     fun check(originYaml: String, templateType: TemplateType?, isCiFile: Boolean) {
@@ -96,7 +97,7 @@ class YamlSchemaCheck @Autowired constructor(
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val yamlJson = yamlFactory.readTree(originYaml)
         if (isCiFile) {
-            getSchema("ci", ciSchema).check(yamlJson)
+            getSchema(CI_SCHEMA).check(yamlJson)
             // 校验schema后有一些特殊的校验
             yamlJson.checkCiRequired()
             yamlJson.checkVariablesFormat()
@@ -106,18 +107,18 @@ class YamlSchemaCheck @Autowired constructor(
         }
         when (templateType) {
             TemplateType.EXTEND -> {
-                getSchema("template-extends", templateExtendSchema).check(yamlJson)
+                getSchema(TEMPLATE_EXTEND_SCHEMA).check(yamlJson)
                 yamlJson.checkExtendsRequired()
                 yamlJson.checkVariablesFormat()
             }
             TemplateType.VARIABLE -> {
-                getSchema("template-variables", templateVariablesSchema).check(yamlJson)
+                getSchema(TEMPLATE_VARIABLE_SCHEMA).check(yamlJson)
                 yamlJson.checkVariablesFormat()
             }
-            TemplateType.STAGE -> getSchema("template-stages", templateStageSchema).check(yamlJson)
-            TemplateType.GATE -> getSchema("template-gates", templateGateSchema).check(yamlJson)
-            TemplateType.JOB -> getSchema("template-jobs", templateJobSchema).check(yamlJson)
-            TemplateType.STEP -> getSchema("template-steps", templateStepSchema).check(yamlJson)
+            TemplateType.STAGE -> getSchema(TEMPLATE_STAGE_SCHEMA).check(yamlJson)
+            TemplateType.GATE -> getSchema(TEMPLATE_GATE_SCHEMA).check(yamlJson)
+            TemplateType.JOB -> getSchema(TEMPLATE_JOB_SCHEMA).check(yamlJson)
+            TemplateType.STEP -> getSchema(TEMPLATE_STEP_SCHEMA).check(yamlJson)
             else -> {
                 return
             }
@@ -164,24 +165,31 @@ class YamlSchemaCheck @Autowired constructor(
         }
     }
 
-    private fun getSchema(file: String, schema: JsonSchema): JsonSchema {
+    private fun getSchema(file: String): JsonSchema {
         // TODO: 上线schema时先实验一段时间，使用redis做兜底，没有问题后下掉redis逻辑
         // 先去取下redis看看有没有变量，没有拿代码里初始化好的变量
-        val str = redisOperation.get("$REDIS_STREAM_YAML_SCHEMA:$file") ?: return schema
+        val str = redisOperation.get("$REDIS_STREAM_YAML_SCHEMA:$file") ?: return getSchemaFromGit(file)
         return schemaFactory.getSchema(str)
     }
 
-    private fun getSchemaFromGit(file: String): JsonSchema = schemaFactory.getSchema(
-        scmService.getYamlFromGit(
-            token = streamGitTokenService.getToken(streamGitConfig.schemaGitProjectId!!.toLong()),
-            gitProjectId = streamGitConfig.schemaGitProjectId!!,
-            fileName = "${streamGitConfig.schemaGitPath}/$file.json",
-            ref = streamGitConfig.schemaGitRef!!,
-            useAccessToken = true
-        ).ifBlank {
-            throw RuntimeException("init yaml schema for git error: yaml blank")
+    private fun getSchemaFromGit(file: String): JsonSchema {
+        if (schemaMap[file] != null) {
+            return schemaMap[file]!!
         }
-    )
+        val schema = schemaFactory.getSchema(
+            scmService.getYamlFromGit(
+                token = streamGitTokenService.getToken(streamGitConfig.schemaGitProjectId!!),
+                gitProjectId = streamGitConfig.schemaGitProjectId!!.toString(),
+                fileName = "${streamGitConfig.schemaGitPath}/$file.json",
+                ref = streamGitConfig.schemaGitRef!!,
+                useAccessToken = true
+            ).ifBlank {
+                throw RuntimeException("init yaml schema for git error: yaml blank")
+            }
+        )
+        schemaMap[file] = schema
+        return schema
+    }
 }
 
 private fun JsonSchema.check(yaml: JsonNode) {
