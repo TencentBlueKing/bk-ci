@@ -70,15 +70,9 @@ class DockerHostImageService(
     ): Pair<Boolean, String?> {
         lateinit var dockerClient: DockerClient
         try {
-            val repoAddr = dockerBuildParam.repoAddr
-            val userName = dockerBuildParam.userName
-            val password = dockerBuildParam.password
             val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerConfig(dockerHostConfig.dockerConfig)
                 .withApiVersion(dockerHostConfig.apiVersion)
-                .withRegistryUrl(repoAddr)
-                .withRegistryUsername(userName)
-                .withRegistryPassword(password)
                 .build()
 
             val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
@@ -95,7 +89,7 @@ class DockerHostImageService(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                userName = userName,
+                userName = dockerBuildParam.userId,
                 dockerBuildParam = dockerBuildParam,
                 dockerClient = dockerClient,
                 pipelineTaskId = elementId,

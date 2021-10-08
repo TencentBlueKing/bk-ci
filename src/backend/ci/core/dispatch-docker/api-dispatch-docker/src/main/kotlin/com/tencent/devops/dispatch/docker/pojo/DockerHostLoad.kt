@@ -25,21 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.enums
+package com.tencent.devops.dispatch.docker.pojo
 
-enum class DockerHostClusterType {
-    /**
-     * 公共构建机集群
-     */
-    COMMON,
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    /**
-     * 无编译环境构建机群
-     */
-    AGENT_LESS,
+@ApiModel("DockerHostLoad")
+data class DockerHostLoad(
+    val clusterLoad: Map<String, Load>
+)
 
-    /**
-     * mac构建机群
-     */
-    MACOS
-}
+@ApiModel("DockerHostLoad")
+data class Load(
+    @ApiModelProperty("构建机已使用量")
+    val usedNum: Int,
+    @ApiModelProperty("构建机CPU负载")
+    val averageCpuLoad: Int,
+    @ApiModelProperty("构建机内存负载")
+    val averageMemLoad: Int,
+    @ApiModelProperty("构建机硬盘负载")
+    val averageDiskLoad: Int,
+    @ApiModelProperty("构建机硬盘IO负载")
+    val averageDiskIOLoad: Int,
+    @ApiModelProperty("集群节点数量")
+    val totalNode: Int,
+    @ApiModelProperty("集群可用节点数量")
+    val enableNode: Int
+)
