@@ -935,25 +935,25 @@ class PipelineBuildFacadeService(
                 )
             }
             // TODO 红线审核操作
-            val success = if (isCancel) {
-                pipelineStageService.cancelStage(
-                    userId = userId,
-                    buildStage = buildStage,
-                    reviewRequest = reviewRequest
-                )
-            } else {
-                pipelineStageService.startStage(
-                    userId = userId,
-                    buildStage = buildStage,
-                    reviewRequest = reviewRequest
-                )
-            }
-            if (!success) throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
-                defaultMessage = "审核Stage($stageId)数据异常",
-                params = arrayOf(stageId)
-            )
+//            val success = if (isCancel) {
+//                pipelineStageService.cancelStage(
+//                    userId = userId,
+//                    buildStage = buildStage,
+//                    reviewRequest = reviewRequest
+//                )
+//            } else {
+//                pipelineStageService.startStage(
+//                    userId = userId,
+//                    buildStage = buildStage,
+//                    reviewRequest = reviewRequest
+//                )
+//            }
+//            if (!success) throw ErrorCodeException(
+//                statusCode = Response.Status.BAD_REQUEST.statusCode,
+//                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
+//                defaultMessage = "审核Stage($stageId)数据异常",
+//                params = arrayOf(stageId)
+//            )
         } finally {
             runLock.unlock()
         }
