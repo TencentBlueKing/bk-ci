@@ -34,8 +34,5 @@ object Versions {
     const val Lucene = "8.2.0"
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
-    const val YamlSchema = "1.0.60"
-    const val YamlSchemaLog4j = "1.7.32"
-    const val YamlSchemaCommonsLang3 = "3.12.0"
-    const val JackSon = "2.12.4"
+    const val YamlSchema = "1.0.49"
 }
