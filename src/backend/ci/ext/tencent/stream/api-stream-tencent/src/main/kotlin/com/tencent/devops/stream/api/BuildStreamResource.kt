@@ -25,36 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger
+package com.tencent.devops.stream.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface YamlTriggerInterface<T> {
+@Api(tags = ["BUILD_CI_BUILD"], description = "CI Build")
+@Path("/build/ci")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildStreamResource {
 
-    fun triggerBuild(
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): Boolean
-
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
+    @ApiOperation("获取URL链接")
+    @GET
+    @Path("/url/{projectId}")
+    fun getUrl(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
 }

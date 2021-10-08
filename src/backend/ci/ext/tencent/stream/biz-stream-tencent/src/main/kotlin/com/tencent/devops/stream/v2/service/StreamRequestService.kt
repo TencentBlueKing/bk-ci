@@ -47,17 +47,17 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class GitCIV2RequestService @Autowired constructor(
+class StreamRequestService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIV2RequestService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamRequestService::class.java)
         private const val ymlVersion = "v2.0"
     }
 
@@ -67,7 +67,7 @@ class GitCIV2RequestService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get request list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
         val requestList = gitRequestEventDao.getRequestList(
             dslContext = dslContext,

@@ -29,8 +29,8 @@ package com.tencent.devops.stream.mq.streamMrConflict
 
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.GitCITriggerService
+import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIMrConflictCheckListener @Autowired
 constructor(
-    private val mergeConflict: MergeConflict,
+    private val mergeConflictCheck: MergeConflictCheck,
     private val gitCITriggerService: GitCITriggerService,
     private val rabbitTemplate: RabbitTemplate,
     private val triggerExceptionService: TriggerExceptionService
@@ -65,7 +65,7 @@ constructor(
     fun listenGitCIRequestTriggerEvent(checkEvent: GitCIMrConflictCheckEvent) {
 
         val (isFinish, isTrigger) = with(checkEvent) {
-            mergeConflict.checkMrConflictByListener(
+            mergeConflictCheck.checkMrConflictByListener(
                 token = token,
                 gitProjectConf = gitProjectConf,
                 path2PipelineExists = path2PipelineExists,

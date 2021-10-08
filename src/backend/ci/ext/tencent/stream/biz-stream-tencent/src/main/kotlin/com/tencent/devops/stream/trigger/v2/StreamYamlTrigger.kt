@@ -51,34 +51,35 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class YamlTriggerV2 @Autowired constructor(
+class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitBasicSettingService: GitCIBasicSettingService,
+    private val gitBasicSettingService: StreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
     private val yamlCheck: YamlCheck,
-    private val yamlBuildV2: YamlBuildV2
+    private val yamlBuildV2: StreamYamlBuild,
+    private val tokenService: StreamGitTokenService
 ) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(YamlTriggerV2::class.java)
+        private val logger = LoggerFactory.getLogger(StreamYamlTrigger::class.java)
         const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
@@ -86,14 +87,13 @@ class YamlTriggerV2 @Autowired constructor(
     }
 
     override fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
         filePath: String,
-        changeSet: Set<String>?
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): Boolean {
         if (originYaml.isNullOrBlank()) {
             return false
@@ -129,8 +129,6 @@ class YamlTriggerV2 @Autowired constructor(
         }
 
         val yamlObjects = prepareCIBuildYaml(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
@@ -138,7 +136,8 @@ class YamlTriggerV2 @Autowired constructor(
             pipelineId = gitProjectPipeline.pipelineId,
             pipelineName = gitProjectPipeline.displayName,
             event = event,
-            changeSet = changeSet
+            changeSet = changeSet,
+            forkGitProjectId = forkGitProjectId
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -211,8 +210,6 @@ class YamlTriggerV2 @Autowired constructor(
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     override fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
@@ -220,7 +217,8 @@ class YamlTriggerV2 @Autowired constructor(
         pipelineId: String?,
         pipelineName: String?,
         event: GitEvent?,
-        changeSet: Set<String>?
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
             return null
@@ -237,8 +235,7 @@ class YamlTriggerV2 @Autowired constructor(
         return replaceYamlTemplate(
             isFork = isFork,
             isMr = isMr,
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
+            forkGitProjectId = forkGitProjectId,
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
             gitRequestEvent = gitRequestEvent,
@@ -263,29 +260,30 @@ class YamlTriggerV2 @Autowired constructor(
     private fun replaceYamlTemplate(
         isFork: Boolean,
         isMr: Boolean,
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String?,
         event: GitEvent?,
-        changeSet: Set<String>?
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): YamlObjects {
         // 替换yaml文件中的模板引用
         try {
             val preYamlObject = YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
-                triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
+                triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
                 triggerUserId = gitRequestEvent.userId,
                 sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
-                triggerToken = gitToken.accessToken,
+                triggerToken = tokenService.getToken(gitRequestEvent.gitProjectId),
                 repo = null,
                 repoTemplateGraph = TemplateGraph(),
                 getTemplateMethod = yamlTemplateService::getTemplate,
-                forkGitToken = forkGitToken?.accessToken,
+                forkGitToken = if (forkGitProjectId != null) {
+                    tokenService.getToken(forkGitProjectId)
+                } else null,
                 changeSet = changeSet,
                 event = event
             ).replace()

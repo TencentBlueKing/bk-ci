@@ -55,7 +55,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -192,7 +192,7 @@ object ModelParameters {
         yaml.variables!!.forEach { (key, variable) ->
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = YamlBuildV2.VARIABLE_PREFIX + key,
+                    id = StreamYamlBuild.VARIABLE_PREFIX + key,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",

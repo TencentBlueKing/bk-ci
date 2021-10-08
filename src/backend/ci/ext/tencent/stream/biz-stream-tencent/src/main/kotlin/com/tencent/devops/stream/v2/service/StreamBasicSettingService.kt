@@ -29,12 +29,11 @@ package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
@@ -44,13 +43,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIBasicSettingService @Autowired constructor(
+class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao
+    private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val tokenService: StreamGitTokenService,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIBasicSettingService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
     }
 
     fun updateProjectSetting(
@@ -61,7 +62,7 @@ class GitCIBasicSettingService @Autowired constructor(
         enableCi: Boolean? = null,
         enableUserId: String? = null
     ): Boolean {
-        val setting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+        val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
             logger.info("git repo not exists.")
             return false
@@ -78,7 +79,7 @@ class GitCIBasicSettingService @Autowired constructor(
                 setting.creatorCenterName = userInfo.centerName
             }
         }
-        gitCIBasicSettingDao.updateProjectSetting(
+        streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             buildPushedBranches = buildPushedBranches,
@@ -94,11 +95,11 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     fun getGitCIConf(gitProjectId: Long): GitCIBasicSetting? {
-        return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+        return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
 
     fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
-        return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+        return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
             ?: throw GitCINoEnableException(gitProjectId.toString())
     }
 
@@ -150,7 +151,7 @@ class GitCIBasicSettingService @Autowired constructor(
 
     fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
-        val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
+        val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
 
             // 根据url截取group + project的完整路径名称
@@ -178,7 +179,7 @@ class GitCIBasicSettingService @Autowired constructor(
             setting.creatorBgName = projectInfo.bgName
             setting.creatorDeptName = projectInfo.deptName
             setting.creatorCenterName = projectInfo.centerName
-            gitCIBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
+            streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
             val projectResult =
                 client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
@@ -190,14 +191,14 @@ class GitCIBasicSettingService @Autowired constructor(
             setting.creatorBgName = userInfo.bgName
             setting.creatorDeptName = userInfo.deptName
             setting.creatorCenterName = userInfo.centerName
-            gitCIBasicSettingDao.saveSetting(dslContext, setting, gitRepoConf.projectCode!!)
+            streamBasicSettingDao.saveSetting(dslContext, setting, gitRepoConf.projectCode!!)
         }
         return true
     }
 
     fun fixProjectInfo(): Int {
         var count = 0
-        var currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
+        var currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
         while (currProjects.isNotEmpty()) {
             currProjects.forEach {
                 refresh(it)
@@ -205,7 +206,7 @@ class GitCIBasicSettingService @Autowired constructor(
             }
             logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
             Thread.sleep(100)
-            currProjects = gitCIBasicSettingDao.getProjectNoHttpUrl(dslContext)
+            currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
         }
         logger.info("fixProjectInfo finished count: $count")
         return count
@@ -213,7 +214,7 @@ class GitCIBasicSettingService @Autowired constructor(
 
     fun refreshSetting(gitProjectId: Long) {
         val projectInfo = requestGitProjectInfo(gitProjectId)
-        if (projectInfo != null) gitCIBasicSettingDao.updateInfoSetting(
+        if (projectInfo != null) streamBasicSettingDao.updateInfoSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             gitProjectName = projectInfo.name,
@@ -239,7 +240,7 @@ class GitCIBasicSettingService @Autowired constructor(
     fun getMaxId(
         gitProjectIdList: List<Long>? = null
     ): Long {
-        return gitCIBasicSettingDao.getMaxId(dslContext, gitProjectIdList)
+        return streamBasicSettingDao.getMaxId(dslContext, gitProjectIdList)
     }
 
     fun getBasicSettingList(
@@ -247,7 +248,7 @@ class GitCIBasicSettingService @Autowired constructor(
         minId: Long? = null,
         maxId: Long? = null
     ): List<Long>? {
-        val basicSettingRecords = gitCIBasicSettingDao.getBasicSettingList(
+        val basicSettingRecords = streamBasicSettingDao.getBasicSettingList(
             dslContext = dslContext,
             gitProjectIdList = gitProjectIdList,
             minId = minId,
@@ -275,7 +276,7 @@ class GitCIBasicSettingService @Autowired constructor(
                 } else {
                     projectResult.gitHttpUrl
                 }
-                gitCIBasicSettingDao.fixProjectInfo(
+                streamBasicSettingDao.fixProjectInfo(
                     dslContext = dslContext,
                     gitProjectId = it.id,
                     httpUrl = httpUrl
@@ -288,10 +289,8 @@ class GitCIBasicSettingService @Autowired constructor(
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
         return try {
-            val accessToken =
-                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
-            client.getScm(ServiceGitCiResource::class)
-                .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
+            val accessToken = tokenService.getToken(gitProjectId)
+            streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null

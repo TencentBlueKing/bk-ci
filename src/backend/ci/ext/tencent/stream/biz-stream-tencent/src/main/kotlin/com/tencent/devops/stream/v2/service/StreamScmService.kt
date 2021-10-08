@@ -51,19 +51,22 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ScmService @Autowired constructor(
+class StreamScmService @Autowired constructor(
     private val client: Client,
-    private val oauthService: OauthService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val dslContext: DSLContext,
+    private val oauthService: StreamOauthService,
+    private val streamBasicSettingDao: StreamBasicSettingDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ScmService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamScmService::class.java)
         const val PROJECT_PERMISSION_ERROR = "[%s] No permissions"
     }
 
@@ -77,6 +80,21 @@ class ScmService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+            }
+        )
+    }
+
+    // 销毁工蜂超级token
+    @Throws(ErrorCodeException::class)
+    fun clearToken(
+        gitProjectId: Long,
+        token: String
+    ): Boolean {
+        return retryFun(
+            log = "$gitProjectId clear token fail",
+            apiErrorCode = ErrorCodeEnum.CLEAR_TOKEN_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).clearToken(token).data ?: false
             }
         )
     }
@@ -426,7 +444,7 @@ class ScmService @Autowired constructor(
     }
 
     fun getFileTreeFromGit(
-        gitToken: GitToken,
+        gitToken: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String,
         isMrEvent: Boolean = false
@@ -439,7 +457,7 @@ class ScmService @Autowired constructor(
                 client.getScm(ServiceGitResource::class).getGitCIFileTree(
                     gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
                     path = filePath,
-                    token = gitToken.accessToken,
+                    token = gitToken,
                     ref = getTriggerBranch(gitRequestEvent.branch)
                 ).data ?: emptyList()
             }
@@ -456,8 +474,8 @@ class ScmService @Autowired constructor(
 
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
-            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+            val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+            oauthService.getAndCheckOauthToken(setting!!.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken
         }

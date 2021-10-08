@@ -29,14 +29,14 @@ package com.tencent.devops.stream.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.BuildCIBuildResource
+import com.tencent.devops.stream.api.BuildStreamResource
 import com.tencent.devops.stream.service.GitCIBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildCIBuildResourceImpl @Autowired constructor(
+class BuildStreamResourceImpl @Autowired constructor(
     private val buildService: GitCIBuildService
-) : BuildCIBuildResource {
+) : BuildStreamResource {
 
     override fun getUrl(projectId: String): Result<String?> {
         return Result(buildService.getCIUrl(projectId))

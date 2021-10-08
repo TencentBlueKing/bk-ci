@@ -35,9 +35,9 @@ import com.tencent.devops.stream.constant.GitCIConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.GitCIConstant.STREAM_FILE_SUFFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.service.OauthService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
@@ -48,18 +48,19 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIGitCodeResourceImpl @Autowired constructor(
-    private val scmService: ScmService,
-    private val oauthService: OauthService,
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService
 ) : UserGitCIGitCodeResource {
+
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
         return Result(
-            scmService.getProjectInfo(
-                token = scmService.getTokenForProject(gitProjectId)!!.accessToken,
+            streamScmService.getProjectInfo(
+                token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
                 gitProjectId = gitProjectId,
                 useAccessToken = true
             )
@@ -75,7 +76,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     ): Result<List<GitMember>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
-            scmService.getProjectMembers(
+            streamScmService.getProjectMembers(
                 token = getOauthToken(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
@@ -98,7 +99,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         permissionService.checkGitCIPermission(userId, projectId)
         return Result(
-            scmService.getCommits(
+            streamScmService.getCommits(
                 token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
                 gitProjectId = gitProjectId,
                 filePath = filePath,
@@ -123,7 +124,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
             filePath = getFilePath(gitCICreateFile.filePath)
         )
         return Result(
-            scmService.createNewFile(
+            streamScmService.createNewFile(
                 userId = userId,
                 token = getOauthToken(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
@@ -155,7 +156,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     ): Result<List<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
-            scmService.getProjectBranches(
+            streamScmService.getProjectBranches(
                 token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
@@ -170,7 +171,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
-            val setting = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+            val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
             oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken

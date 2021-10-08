@@ -49,7 +49,7 @@ import com.tencent.devops.stream.pojo.v2.message.UserMessage
 import com.tencent.devops.stream.pojo.v2.message.UserMessageRecord
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.dao.GitUserMessageDao
+import com.tencent.devops.stream.v2.dao.StreamUserMessageDao
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -60,12 +60,12 @@ import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 
 @Service
-class GitUserMessageService @Autowired constructor(
+class StreamUserMessageService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val gitUserMessageDao: GitUserMessageDao,
-    private val websocketService: GitCIV2WebsocketService,
+    private val streamUserMessageDao: StreamUserMessageDao,
+    private val websocketService: StreamWebsocketService,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
@@ -73,7 +73,7 @@ class GitUserMessageService @Autowired constructor(
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        private val logger = LoggerFactory.getLogger(GitUserMessageService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamUserMessageService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT
@@ -95,7 +95,7 @@ class GitUserMessageService @Autowired constructor(
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
         // 后台单独做项目级别的信息获取兼容
         val messageCount = if (projectId != null) {
-            gitUserMessageDao.getMessageCount(
+            streamUserMessageDao.getMessageCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 userId = null,
@@ -103,7 +103,7 @@ class GitUserMessageService @Autowired constructor(
                 haveRead = haveRead
             )
         } else {
-            gitUserMessageDao.getMessageCount(
+            streamUserMessageDao.getMessageCount(
                 dslContext = dslContext,
                 projectId = "",
                 userId = userId,
@@ -125,7 +125,7 @@ class GitUserMessageService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         // 后台单独做项目级别的信息获取兼容
         val messageRecords = if (projectId != null) {
-            gitUserMessageDao.getMessages(
+            streamUserMessageDao.getMessages(
                 dslContext = dslContext,
                 projectId = projectId,
                 userId = null,
@@ -135,7 +135,7 @@ class GitUserMessageService @Autowired constructor(
                 offset = sqlLimit.offset
             )!!
         } else {
-            gitUserMessageDao.getMessages(
+            streamUserMessageDao.getMessages(
                 dslContext = dslContext,
                 projectId = "",
                 userId = userId,
@@ -200,7 +200,7 @@ class GitUserMessageService @Autowired constructor(
         projectId: String?
     ): Boolean {
         websocketService.pushNotifyWebsocket(userId, projectId)
-        return gitUserMessageDao.readMessage(dslContext, id) >= 0
+        return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
     fun readAllMessage(
@@ -209,13 +209,13 @@ class GitUserMessageService @Autowired constructor(
     ): Boolean {
         websocketService.pushNotifyWebsocket(userId, projectId)
         return if (projectId != null) {
-            gitUserMessageDao.readAllMessage(
+            streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,
                 projectId = projectId,
                 userId = null
             ) >= 0
         } else {
-            gitUserMessageDao.readAllMessage(
+            streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,
                 userId = userId
             ) >= 0
@@ -227,13 +227,13 @@ class GitUserMessageService @Autowired constructor(
         userId: String
     ): Int {
         return if (projectId != null) {
-            gitUserMessageDao.getNoReadCount(
+            streamUserMessageDao.getNoReadCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 userId = null
             )
         } else {
-            gitUserMessageDao.getNoReadCount(
+            streamUserMessageDao.getNoReadCount(
                 dslContext = dslContext,
                 projectId = "",
                 userId = userId

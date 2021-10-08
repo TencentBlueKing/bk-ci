@@ -55,16 +55,16 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-class GitCIV2DetailService @Autowired constructor(
+class StreamDetailService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIV2DetailService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamDetailService::class.java)
     }
 
     @Value("\${gateway.reportPrefix}")
@@ -73,7 +73,7 @@ class GitCIV2DetailService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord =
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
@@ -91,7 +91,7 @@ class GitCIV2DetailService @Autowired constructor(
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
@@ -123,7 +123,7 @@ class GitCIV2DetailService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): FileInfoPage<FileInfo> {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val prop = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
         return client.get(ServiceArtifactoryResource::class).search(
             userId = userId,
@@ -141,7 +141,7 @@ class GitCIV2DetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         try {
             val url = client.get(ServiceArtifactoryDownLoadResource::class).downloadIndexUrl(
                 projectId = conf.projectCode!!,
@@ -171,7 +171,7 @@ class GitCIV2DetailService @Autowired constructor(
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val reportList = client.get(TXUserReportResource::class)
             .getGitCI(userId, conf.projectCode!!, pipelineId, buildId)
             .data!!.toMutableList()

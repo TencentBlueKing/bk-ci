@@ -46,18 +46,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIV2PipelineService @Autowired constructor(
+class StreamPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
+    private val tokenService: StreamGitTokenService,
     private val redisOperation: RedisOperation,
-    private val websocketService: GitCIV2WebsocketService
+    private val websocketService: StreamWebsocketService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
         private val channelCode = ChannelCode.GIT
     }
 
@@ -207,13 +208,13 @@ class GitCIV2PipelineService @Autowired constructor(
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
         val token = try {
-            scmService.getToken(gitProjectId.toString())
+            tokenService.getToken(gitProjectId)
         } catch (e: Exception) {
             logger.error("getYamlByPipeline $pipelineId $ref can't get token")
             return null
         }
-        return scmService.getYamlFromGit(
-            token = token.accessToken,
+        return streamScmService.getYamlFromGit(
+            token = token,
             gitProjectId = gitProjectId.toString(),
             fileName = filePath,
             ref = ref,
@@ -248,8 +249,8 @@ class GitCIV2PipelineService @Autowired constructor(
             }
             // 构建记录和未构建记录都没得，就去拿默认分支
             if (branch.isNullOrBlank()) {
-                branch = scmService.getProjectInfo(
-                    token = scmService.getToken(gitProjectId.toString()).accessToken,
+                branch = streamScmService.getProjectInfo(
+                    token = streamScmService.getToken(gitProjectId.toString()).accessToken,
                     gitProjectId = gitProjectId.toString(),
                     useAccessToken = true
                 )?.defaultBranch ?: "master"
