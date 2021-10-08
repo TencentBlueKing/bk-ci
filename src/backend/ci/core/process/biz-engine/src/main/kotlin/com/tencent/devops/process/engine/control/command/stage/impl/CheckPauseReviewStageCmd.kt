@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
+import com.tencent.devops.process.engine.common.BS_QUALITY_START_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -70,18 +71,35 @@ class CheckPauseReviewStageCmd(
 
             // #5019 只用第一次进入时做准入质量红线检查，如果是审核后的检查则跳过红线
             if (stage.checkIn?.ruleIds?.isNotEmpty() == true && event.source != BS_MANUAL_START_STAGE) {
-                if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, true)) {
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
-                    commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
-                    pipelineStageService.checkQualityPassStage(event.userId, commandContext.stage)
-                } else {
-                    // #4732 优先判断是否能通过质量红线检查
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_FAILED|${event.stageId}")
-                    commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
-                    commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
-                    commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY
-                    return
+                val checkStatus = pipelineStageService.checkStageQuality(
+                    event = event,
+                    stage = stage,
+                    variables = commandContext.variables,
+                    inOrOut = true
+                )
+                when (checkStatus) {
+                    BuildStatus.QUALITY_CHECK_PASS -> {
+                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
+                        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
+                        pipelineStageService.checkQualityPassStage(event.userId, commandContext.stage)
+                    }
+                    BuildStatus.REVIEWING -> {
+                        // #5246 如果设置了把关人则卡在运行状态等待审核
+                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_REVIEWING|${event.stageId}")
+                        commandContext.stage.checkIn?.status = BuildStatus.REVIEWING.name
+                        pipelineStageService.checkQualityReviewingStage(event.userId, commandContext.stage)
+                        commandContext.cmdFlowState = CmdFlowState.BREAK
+                        return
+                    }
+                    else -> {
+                        // #4732 优先判断是否能通过质量红线检查
+                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_FAILED|${event.stageId}")
+                        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+                        commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+                        commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
+                        commandContext.cmdFlowState = CmdFlowState.FINALLY
+                        return
+                    }
                 }
             }
 

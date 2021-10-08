@@ -151,6 +151,35 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
+    fun checkQualityReviewingStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = stageBuildDetailService.stageCheckQuality(
+                buildId = buildId, stageId = stageId,
+                controlOption = controlOption!!,
+                buildStatus = BuildStatus.RUNNING,
+                checkIn = checkIn, checkOut = checkOut
+            )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    stageId = stageId, controlOption = controlOption!!,
+                    buildStatus = BuildStatus.REVIEWING,
+                    checkIn = checkIn, checkOut = checkOut
+                )
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "checkQualityReviewingStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
     fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
@@ -414,12 +443,12 @@ class PipelineStageService @Autowired constructor(
      * 上下文中的环境变量 [variables]
      * 控制当前检查是准入还是准出使用 [inOrOut] 准入为true，准出为false
      */
-    fun checkQualityPassed(
+    fun checkStageQuality(
         event: PipelineBuildStageEvent,
         stage: PipelineBuildStage,
         variables: Map<String, String>,
         inOrOut: Boolean
-    ): Boolean {
+    ): BuildStatus {
         val (check, position) = if (inOrOut) {
             Pair(stage.checkIn, ControlPointPosition.BEFORE_POSITION)
         } else {
@@ -442,11 +471,19 @@ class PipelineStageService @Autowired constructor(
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_RESPONSE|${event.stageId}|" +
                 "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
             check.checkTimes = result.checkTimes
-            result.success
+
+            // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
+            if (result.success) {
+                BuildStatus.QUALITY_CHECK_PASS
+            } else if (result.failEnd) {
+                BuildStatus.QUALITY_CHECK_FAIL
+            } else {
+                BuildStatus.REVIEWING
+            }
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
                 "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
-            false
+            BuildStatus.QUALITY_CHECK_FAIL
         }
     }
 
