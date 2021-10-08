@@ -43,7 +43,6 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.StreamYamlService
 import com.tencent.devops.stream.trigger.YamlTriggerFactory
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.common.CommonConst
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

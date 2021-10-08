@@ -47,8 +47,8 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.StreamTriggerContext
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
-import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
+import com.tencent.devops.stream.v2.service.StreamScmService
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +57,7 @@ import org.springframework.stereotype.Component
 @Component
 class YamlSchemaCheck @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val scmService: ScmService,
+    private val scmService: StreamScmService,
     private val streamGitConfig: StreamGitConfig
 ) {
 
@@ -153,7 +153,7 @@ class YamlSchemaCheck @Autowired constructor(
                 reason = reason,
                 reasonParams = listOf(message ?: ""),
                 yamls = Yamls(context.originYaml, null, null),
-                version = YamlTriggerV2.ymlVersion,
+                version = StreamYamlTrigger.ymlVersion,
                 commitCheck = CommitCheck(
                     block = block,
                     state = GitCICommitCheckState.FAILURE
