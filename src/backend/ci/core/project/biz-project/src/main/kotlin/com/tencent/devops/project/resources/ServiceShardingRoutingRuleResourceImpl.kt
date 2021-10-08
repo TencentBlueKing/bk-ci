@@ -24,30 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.resources
 
-dependencies {
-    api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
-    api("org.hashids:hashids")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
-    api("com.github.fge:json-schema-validator")
-    api("com.google.guava:guava")
-    api("com.squareup.okhttp3:okhttp")
-    api("commons-codec:commons-codec")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-compress")
-    api("org.apache.commons:commons-exec")
-    api("javax.servlet:javax.servlet-api")
-    api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java")
-    api("org.apache.lucene:lucene-core")
-    api("org.apache.commons:commons-csv")
-    api("com.github.ben-manes.caffeine:caffeine")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
+import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.project.service.ShardingRoutingRuleService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
+    private val shardingRoutingRuleService: ShardingRoutingRuleService
+) : ServiceShardingRoutingRuleResource {
+
+    override fun getShardingRoutingRuleByName(routingName: String): Result<ShardingRoutingRule?> {
+        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(routingName))
+    }
 }

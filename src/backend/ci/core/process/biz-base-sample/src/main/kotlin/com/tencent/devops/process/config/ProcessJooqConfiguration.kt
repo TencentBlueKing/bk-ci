@@ -39,10 +39,6 @@ import org.springframework.context.annotation.Import
 import javax.sql.DataSource
 import javax.validation.constraints.NotNull
 
-/**
- *
- * Powered By Tencent
- */
 @Configuration
 @Import(BkShardingDataSourceConfiguration::class)
 class ProcessJooqConfiguration {
