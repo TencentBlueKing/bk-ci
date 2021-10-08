@@ -1,0 +1,65 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": "commonjs",
+        "targets": {
+          "chrome": "62",
+          "ie": "not"
+        },
+        "debug": false,
+        "useBuiltIns": "usage"
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "corejs": 2
+      }
+    ],
+    "@babel/plugin-transform-object-assign",
+    "lodash",
+    "@babel/plugin-syntax-dynamic-import",
+    "transform-vue-jsx",
+    "@babel/plugin-syntax-import-meta",
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-json-strings",
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    "@babel/plugin-proposal-function-sent",
+    "@babel/plugin-proposal-export-namespace-from",
+    "@babel/plugin-proposal-numeric-separator",
+    "@babel/plugin-proposal-throw-expressions"
+  ],
+  "env": {
+    "test": {
+      "presets": [
+        "@babel/preset-env"
+      ],
+      "plugins": [
+        "istanbul",
+        "@babel/plugin-syntax-dynamic-import",
+        "@babel/plugin-syntax-import-meta",
+        "@babel/plugin-proposal-class-properties",
+        "@babel/plugin-proposal-json-strings",
+        [
+          "@babel/plugin-proposal-decorators",
+          {
+            "legacy": true
+          }
+        ],
+        "@babel/plugin-proposal-function-sent",
+        "@babel/plugin-proposal-export-namespace-from",
+        "@babel/plugin-proposal-numeric-separator",
+        "@babel/plugin-proposal-throw-expressions"
+      ]
+    }
+  }
+}

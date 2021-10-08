@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import Router from 'vue-router'
+import Router, { RouteMeta } from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
@@ -139,10 +139,10 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     return router
 }
 
-function updateHeaderConfig ({ showProjectList, showNav }) {
+function updateHeaderConfig (routeMeta: RouteMeta) {
     return {
-        showProjectList: showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof showProjectList === 'undefined'),
-        showNav: showNav || (window.currentPage && window.currentPage.show_nav && typeof showNav === 'undefined')
+        showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
+        showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')
     }
 }
 
