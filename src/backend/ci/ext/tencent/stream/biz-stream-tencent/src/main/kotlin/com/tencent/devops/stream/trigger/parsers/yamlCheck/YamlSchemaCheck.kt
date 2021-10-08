@@ -48,6 +48,7 @@ import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.StreamTriggerContext
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
@@ -58,6 +59,7 @@ import org.springframework.stereotype.Component
 class YamlSchemaCheck @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val scmService: StreamScmService,
+    private val streamGitTokenService: StreamGitTokenService,
     private val streamGitConfig: StreamGitConfig
 ) {
 
@@ -171,7 +173,7 @@ class YamlSchemaCheck @Autowired constructor(
 
     private fun getSchemaFromGit(file: String): JsonSchema = schemaFactory.getSchema(
         scmService.getYamlFromGit(
-            token = scmService.getToken(streamGitConfig.schemaGitProjectId!!).accessToken,
+            token = streamGitTokenService.getToken(streamGitConfig.schemaGitProjectId!!.toLong()),
             gitProjectId = streamGitConfig.schemaGitProjectId!!,
             fileName = "${streamGitConfig.schemaGitPath}/$file.json",
             ref = streamGitConfig.schemaGitRef!!,
