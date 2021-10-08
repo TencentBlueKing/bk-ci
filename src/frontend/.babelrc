@@ -3,11 +3,6 @@
     [
       "@babel/preset-env",
       {
-        "modules": "commonjs",
-        "targets": {
-          "chrome": "62",
-          "ie": "not"
-        },
         "debug": false,
         "useBuiltIns": "usage"
       }
