@@ -10,6 +10,7 @@ import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.ExecutionVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
@@ -37,6 +38,8 @@ abstract class NotifyPipelineCmd @Autowired constructor(
         val startTime = buildInfo.startTime
         val endTime = System.currentTimeMillis()
         val duration = ((endTime - startTime!!) / 1000).toString()
+
+        commandContextBuild.variables[PIPELINE_TIME_DURATION] = duration
 
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum

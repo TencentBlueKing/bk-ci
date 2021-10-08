@@ -63,9 +63,9 @@ abstract class PipelineNotifyService @Autowired constructor(
 
         val commandList = mutableListOf(
             commandCache.get(NotifyUrlBuildCmd::class.java), // 构建发送url相关信息
+            commandCache.get(NotifyPipelineCmd::class.java), // 构建流水线相关相关信息
             commandCache.get(NotifyContentCmd::class.java), // 构建发送内容相关信息
             commandCache.get(NotifyReceiversCmd::class.java), // 构建发送人相关信息
-            commandCache.get(NotifyPipelineCmd::class.java), // 构建流水线相关相关信息
             commandCache.get(NotifySendCmd::class.java) // 发送消息
         )
         // 添加自定义扩展
