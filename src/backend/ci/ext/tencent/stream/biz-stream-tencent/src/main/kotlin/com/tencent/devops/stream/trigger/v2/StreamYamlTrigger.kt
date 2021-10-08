@@ -69,6 +69,7 @@ import org.springframework.stereotype.Component
 class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamScmService: StreamScmService,
+    private val streamGitTokenService: StreamGitTokenService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: StreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
@@ -99,9 +100,9 @@ class StreamYamlTrigger @Autowired constructor(
             return false
         }
 
-        val gitProjectInfo = scmService.getProjectInfoRetry(
-            gitToken.accessToken,
-            gitRequestEvent.gitProjectId.toString(),
+        val gitProjectInfo = streamScmService.getProjectInfoRetry(
+            token = streamGitTokenService.getToken(gitRequestEvent.gitProjectId),
+            gitProjectId = gitRequestEvent.gitProjectId.toString(),
             useAccessToken = true
         )
 

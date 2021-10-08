@@ -44,9 +44,9 @@ import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.service.OauthService
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,13 +55,13 @@ import org.springframework.stereotype.Service
 @Service
 class ScheduleTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val oauthService: OauthService,
+    private val oauthService: StreamOauthService,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
-    private val yamlBuildV2: YamlBuildV2,
+    private val gitCIBasicSettingService: StreamBasicSettingService,
+    private val yamlBuildV2: StreamYamlBuild,
     private val streamTimerService: StreamTimerService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
@@ -151,10 +151,7 @@ class ScheduleTriggerService @Autowired constructor(
             )
         }
 
-        val token = oauthService.getAndCheckOauthToken(userId)
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitToken = token,
-            forkGitToken = null,
             gitRequestEvent = gitRequestEvent,
             isMr = false,
             originYaml = originYaml,
@@ -162,7 +159,8 @@ class ScheduleTriggerService @Autowired constructor(
             pipelineId = buildPipeline.pipelineId,
             pipelineName = buildPipeline.displayName,
             event = null,
-            changeSet = null
+            changeSet = null,
+            forkGitProjectId = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(

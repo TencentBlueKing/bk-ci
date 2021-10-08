@@ -41,7 +41,7 @@ import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -56,7 +56,7 @@ class StreamTimerBuildListener @Autowired constructor(
     private val streamTimerBranchService: StreamTimerBranchService,
     private val client: Client,
     private val scheduleTriggerService: ScheduleTriggerService,
-    private val scmService: ScmService
+    private val scmService: StreamScmService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
