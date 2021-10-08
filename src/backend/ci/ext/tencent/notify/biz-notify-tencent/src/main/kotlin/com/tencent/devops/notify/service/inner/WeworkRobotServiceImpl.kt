@@ -80,7 +80,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             WeworkReceiverType.single -> {
                 weworkNotifyTextMessage.receivers.forEach {
                     val singleTextMessage = WeworkRobotSingleTextMessage(
-                        chatid = chunkedReceivers(weworkNotifyTextMessage.receivers),
+                        chatid = it,
                         text = WeworkTextContentMessage(
                             content = weworkNotifyTextMessage.message,
                             mentionedList = null,
