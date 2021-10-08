@@ -46,16 +46,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIV2HistoryService @Autowired constructor(
+class StreamHistoryService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIV2HistoryService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamHistoryService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT
@@ -68,7 +68,7 @@ class GitCIV2HistoryService @Autowired constructor(
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
-        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

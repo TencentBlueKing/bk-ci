@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
@@ -51,19 +51,19 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Service
-class GitCIProjectService @Autowired constructor(
+class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val scmService: ScmService,
-    private val oauthService: OauthService,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCIProjectService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamProjectService::class.java)
     }
 
     fun getProjectList(
@@ -86,7 +86,7 @@ class GitCIProjectService @Autowired constructor(
             pageSize
         }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
-        val gitProjects = scmService.getProjectList(
+        val gitProjects = streamScmService.getProjectList(
             accessToken = token,
             userId = userId,
             page = realPage,
@@ -104,7 +104,7 @@ class GitCIProjectService @Autowired constructor(
         if (gitProjects.isNullOrEmpty()) {
             return Pagination(false, emptyList())
         }
-        val projectIdMap = gitCIBasicSettingDao.searchProjectByIds(
+        val projectIdMap = streamBasicSettingDao.searchProjectByIds(
             dslContext = dslContext,
             projectIds = gitProjects.map { it.id!! }.toSet()
         ).associateBy { it.id }

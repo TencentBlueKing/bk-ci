@@ -48,7 +48,7 @@ import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
+import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -68,21 +68,21 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-abstract class YamlBaseBuildV2<T> @Autowired constructor(
+abstract class StreamYamlBaseBuild<T> @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitCIEventSaveService: GitCIEventService,
-    private val websocketService: GitCIV2WebsocketService,
+    private val websocketService: StreamWebsocketService,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitCheckService: GitCheckService,
     private val streamGitConfig: StreamGitConfig,
     private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(YamlBaseBuildV2::class.java)
+        private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
         private const val ymlVersion = "v2.0"
     }
 

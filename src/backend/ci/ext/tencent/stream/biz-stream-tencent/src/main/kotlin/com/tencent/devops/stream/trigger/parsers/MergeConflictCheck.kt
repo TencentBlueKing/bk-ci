@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.parsers
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.TriggerThirdException
@@ -44,7 +43,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -52,17 +51,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class MergeConflict @Autowired constructor(
+class MergeConflictCheck @Autowired constructor(
     private val dslContext: DSLContext,
     private val rabbitTemplate: RabbitTemplate,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val scmService: ScmService,
+    private val streamScmService: StreamScmService,
     private val gitCIEventService: GitCIEventService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MergeConflict::class.java)
+        private val logger = LoggerFactory.getLogger(MergeConflictCheck::class.java)
     }
 
     /**
@@ -77,7 +76,7 @@ class MergeConflict @Autowired constructor(
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting,
-        gitToken: GitToken
+        gitToken: String
     ): Boolean {
         logger.info("get token form scm, token: $gitToken")
 
@@ -87,10 +86,10 @@ class MergeConflict @Autowired constructor(
         val mrInfo = triggerExceptionService.handleErrorCode(
             request = gitRequestEvent,
             action = {
-                scmService.getMergeInfo(
+                streamScmService.getMergeInfo(
                     gitProjectId = projectId,
                     mergeRequestId = mrRequestId,
-                    token = gitToken.accessToken
+                    token = gitToken
                 )
             }
         )!!
@@ -109,7 +108,7 @@ class MergeConflict @Autowired constructor(
 
                 dispatchMrConflictCheck(
                     GitCIMrConflictCheckEvent(
-                        token = gitToken.accessToken,
+                        token = gitToken,
                         gitRequestEvent = gitRequestEvent,
                         event = event,
                         path2PipelineExists = path2PipelineExists,
@@ -148,7 +147,7 @@ class MergeConflict @Autowired constructor(
         val projectId = gitRequestEvent.gitProjectId
         val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
         val mrInfo = try {
-            scmService.getMergeInfo(
+            streamScmService.getMergeInfo(
                 gitProjectId = projectId,
                 mergeRequestId = mrRequestId,
                 token = token

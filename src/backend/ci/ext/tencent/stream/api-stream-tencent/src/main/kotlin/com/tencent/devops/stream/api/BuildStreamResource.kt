@@ -25,20 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources
+package com.tencent.devops.stream.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.BuildCIBuildResource
-import com.tencent.devops.stream.service.GitCIBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class BuildCIBuildResourceImpl @Autowired constructor(
-    private val buildService: GitCIBuildService
-) : BuildCIBuildResource {
+@Api(tags = ["BUILD_CI_BUILD"], description = "CI Build")
+@Path("/build/ci")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildStreamResource {
 
-    override fun getUrl(projectId: String): Result<String?> {
-        return Result(buildService.getCIUrl(projectId))
-    }
+    @ApiOperation("获取URL链接")
+    @GET
+    @Path("/url/{projectId}")
+    fun getUrl(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
 }
