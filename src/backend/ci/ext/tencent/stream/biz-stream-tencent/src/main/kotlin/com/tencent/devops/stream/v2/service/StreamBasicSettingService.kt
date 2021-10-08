@@ -226,7 +226,7 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     fun updateProjectInfo(projectInfo: GitCIProjectInfo) {
-        gitCIBasicSettingDao.updateInfoSetting(
+        streamBasicSettingDao.updateInfoSetting(
             dslContext = dslContext,
             gitProjectId = projectInfo.gitProjectId.toLong(),
             gitProjectName = projectInfo.name,
