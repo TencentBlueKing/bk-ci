@@ -30,7 +30,7 @@ class NotifySendCmd @Autowired constructor(
 
         when {
             buildStatus.isFailure() -> {
-                val settingDetailFlag = setting.successSubscription.detailFlag
+                val settingDetailFlag = setting.failSubscription.detailFlag
                 val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
                     templateCode = templateCode,
@@ -41,7 +41,7 @@ class NotifySendCmd @Autowired constructor(
                 )
             }
             buildStatus.isCancel() -> {
-                val settingDetailFlag = commandContextBuild.pipelineSetting.failSubscription.detailFlag
+                val settingDetailFlag = setting.failSubscription.detailFlag
                 val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
                     templateCode = templateCode,
@@ -52,7 +52,7 @@ class NotifySendCmd @Autowired constructor(
                 )
             }
             buildStatus.isSuccess() -> {
-                val settingDetailFlag = commandContextBuild.pipelineSetting.failSubscription.detailFlag
+                val settingDetailFlag = setting.successSubscription.detailFlag
                 val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 sendNotifyByTemplate(
                     templateCode = templateCode,
