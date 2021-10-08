@@ -298,7 +298,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                                 )
                             }
                             val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                            wechatWorkService.sendRichText(richtextMessage)
+//                            wechatWorkService.sendRichText(richtextMessage)
                         }
                     }
                 }
@@ -340,7 +340,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                                 )
                             }
                             val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                            wechatWorkService.sendRichText(richtextMessage)
+//                            wechatWorkService.sendRichText(richtextMessage)
                         }
                     }
                 }
