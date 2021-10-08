@@ -55,6 +55,8 @@ class BkProcessDatabaseShardingAlgorithm : PreciseShardingAlgorithm<String> {
                     params = arrayOf(routingName)
                 )
             routingRule = ruleObj.routingRule
+            // 将路由规则信息放入本地缓存
+            BkShardingRoutingCacheUtil.put(routingName, routingRule)
         }
         if (!availableTargetNames.contains(routingRule)) {
             // 路由规则非法则抛出错误提示
