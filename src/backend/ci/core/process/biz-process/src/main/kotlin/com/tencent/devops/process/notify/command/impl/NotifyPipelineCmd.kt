@@ -39,7 +39,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
         val endTime = System.currentTimeMillis()
         val duration = endTime - startTime!!
 
-        commandContextBuild.variables[PIPELINE_TIME_DURATION] = duration.toString()
+        commandContextBuild.variables[PIPELINE_TIME_DURATION] = (duration / 1000).toString()
 
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum
