@@ -211,20 +211,20 @@ private fun JsonNode.checkVariablesFormat() {
 }
 
 private fun JsonNode.checkCiRequired() {
-    if (get("stages") == null &&
-        get("jobs") == null &&
-        get("steps") == null &&
-        get("extends") == null
-    ) {
+    val requireds = listOf("stages", "jobs", "steps", "extends")
+    var flag = false
+    requireds.forEach {
+        if (get(it) != null) {
+            flag = true
+        }
+    }
+    if (flag) {
         throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
     }
 }
 
 private fun JsonNode.checkExtendsRequired() {
-    if (get("stages") == null &&
-        get("jobs") == null &&
-        get("steps") == null
-    ) {
+    if (get("stages") == null && get("jobs") == null && get("steps") == null) {
         throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
     }
 }
