@@ -56,6 +56,7 @@ class BkShardingDataSourceConfiguration {
 
     companion object {
         private const val PROJECT_ID_FIELD = "PROJECT_ID"
+        private const val DEFAULT_DATA_SOURCE_NAME = "process_ds_0"
     }
 
     @Value("\${spring.datasource.url:#{null}}")
@@ -68,12 +69,16 @@ class BkShardingDataSourceConfiguration {
     private val datasourceInitSql: String? = null
     @Value("\${spring.datasource.leakDetectionThreshold:#{0}}")
     private val datasouceLeakDetectionThreshold: Long = 0
+    @Value("\${sharding.projectStrategy.tableConfig:#{null}}")
+    private val shardingProjectStrategyTableConfig: String? = null
+    @Value("\${sharding.broadcastStrategy.tableConfig:#{null}}")
+    private val shardingBroadcastStrategyTableConfig: String? = null
 
     private fun dataSourceMap(): Map<String, DataSource> {
         val dataSourceMap: MutableMap<String, DataSource> = HashMap(2)
         // 开源版process分库方案默认只配置单实例
-        dataSourceMap["process_ds_1"] = HikariDataSource().apply {
-            poolName = "process_ds_1"
+        dataSourceMap[DEFAULT_DATA_SOURCE_NAME] = HikariDataSource().apply {
+            poolName = DEFAULT_DATA_SOURCE_NAME
             jdbcUrl = datasourceUrl
             username = datasourceUsername
             password = datasourcePassword
@@ -91,12 +96,22 @@ class BkShardingDataSourceConfiguration {
     @Primary
     fun shardingDataSource(): DataSource {
         val shardingRuleConfig = ShardingRuleConfiguration()
-        shardingRuleConfig.tableRuleConfigs.addAll(
-            listOf(
-                getDefaultTableRuleConfiguration("T_AUDIT_RESOURCE"),
-                getDefaultTableRuleConfiguration("T_BUILD_STARTUP_PARAM")
-            )
-        )
+        // 设置表的路由规则
+        val tableRuleConfigs = shardingRuleConfig.tableRuleConfigs
+        val projectStrategyTableNames = shardingProjectStrategyTableConfig?.split(",")
+        if (!projectStrategyTableNames.isNullOrEmpty()) {
+            projectStrategyTableNames.forEach { projectStrategyTableName ->
+                tableRuleConfigs.add(getDefaultTableRuleConfiguration(projectStrategyTableName))
+            }
+        }
+        // 设置广播表
+        val broadcastTables = shardingRuleConfig.broadcastTables
+        val broadcastStrategyTableNames = shardingBroadcastStrategyTableConfig?.split(",")
+        if (!broadcastStrategyTableNames.isNullOrEmpty()) {
+            broadcastStrategyTableNames.forEach { broadcastStrategyTableName ->
+                broadcastTables.add(broadcastStrategyTableName)
+            }
+        }
         shardingRuleConfig.defaultTableShardingStrategyConfig = NoneShardingStrategyConfiguration()
         shardingRuleConfig.defaultDatabaseShardingStrategyConfig =
             StandardShardingStrategyConfiguration(PROJECT_ID_FIELD, BkProcessDatabaseShardingAlgorithm())
@@ -107,7 +122,7 @@ class BkShardingDataSourceConfiguration {
     }
 
     fun getDefaultTableRuleConfiguration(tableName: String): TableRuleConfiguration? {
-        val tableRuleConfig = TableRuleConfiguration(tableName, "process_ds_\${0..1}.$tableName")
+        val tableRuleConfig = TableRuleConfiguration(tableName, "$DEFAULT_DATA_SOURCE_NAME.$tableName")
         tableRuleConfig.tableShardingStrategyConfig = NoneShardingStrategyConfiguration()
         tableRuleConfig.databaseShardingStrategyConfig =
             StandardShardingStrategyConfiguration(PROJECT_ID_FIELD, BkProcessDatabaseShardingAlgorithm())

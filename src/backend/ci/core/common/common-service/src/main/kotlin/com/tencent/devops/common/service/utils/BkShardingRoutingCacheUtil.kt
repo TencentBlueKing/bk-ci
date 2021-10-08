@@ -25,29 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
-    api("org.hashids:hashids")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
-    api("com.github.fge:json-schema-validator")
-    api("com.google.guava:guava")
-    api("com.squareup.okhttp3:okhttp")
-    api("commons-codec:commons-codec")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-compress")
-    api("org.apache.commons:commons-exec")
-    api("javax.servlet:javax.servlet-api")
-    api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java")
-    api("org.apache.lucene:lucene-core")
-    api("org.apache.commons:commons-csv")
-    api("com.github.ben-manes.caffeine:caffeine")
+package com.tencent.devops.common.service.utils
+
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.service.config.CommonConfig
+
+/**
+ * DB分片路由缓存
+ *
+ * @since: 2021-10-05
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object BkShardingRoutingCacheUtil {
+
+    private val shardingRoutingCache = Caffeine.newBuilder()
+        .maximumSize(SpringContextUtil.getBean(CommonConfig::class.java).shardingRoutingCacheSize)
+        .build<String, String>()
+
+    fun invalidate(routingName: String) {
+        shardingRoutingCache.invalidate(routingName)
+    }
+
+    fun put(routingName: String, routingRule: String) {
+        shardingRoutingCache.put(routingName, routingRule)
+    }
+
+    fun getIfPresent(routingName: String): String? {
+        return shardingRoutingCache.getIfPresent(routingName)
+    }
 }

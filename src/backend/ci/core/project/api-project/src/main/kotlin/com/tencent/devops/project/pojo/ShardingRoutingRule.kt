@@ -24,30 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.pojo
+import com.tencent.devops.common.web.annotation.BkField
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-dependencies {
-    api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
-    api("org.hashids:hashids")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
-    api("com.github.fge:json-schema-validator")
-    api("com.google.guava:guava")
-    api("com.squareup.okhttp3:okhttp")
-    api("commons-codec:commons-codec")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-compress")
-    api("org.apache.commons:commons-exec")
-    api("javax.servlet:javax.servlet-api")
-    api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java")
-    api("org.apache.lucene:lucene-core")
-    api("org.apache.commons:commons-csv")
-    api("com.github.ben-manes.caffeine:caffeine")
-}
+@ApiModel("DB分片路由规则")
+data class ShardingRoutingRule(
+    @ApiModelProperty("路由规则名称")
+    @field:BkField(minLength = 1, maxLength = 128)
+    val routingName: String,
+    @ApiModelProperty("路由规则值")
+    @field:BkField(minLength = 1, maxLength = 256)
+    val routingRule: String,
+)

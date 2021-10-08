@@ -25,23 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.project.api.service
 
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.project.pojo.ShardingRoutingRule
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-class BkProcessDatabaseShardingAlgorithm : PreciseShardingAlgorithm<String> {
+@Api(tags = ["SERVICE_SHARDING_ROUTING_RULE"], description = "SERVICE-DB分片规则")
+@Path("/service/sharding/routing/rules")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceShardingRoutingRuleResource {
 
-    override fun doSharding(
-        availableTargetNames: MutableCollection<String>,
-        shardingValue: PreciseShardingValue<String>
-    ): String {
-        val suffix = if (shardingValue.value.contains("devops")) 0 else 1
-        for (targetName in availableTargetNames) {
-           if (targetName.endsWith(suffix.toString())) {
-               return targetName
-           }
-        }
-        throw IllegalArgumentException("错误的参数")
-    }
+    @ApiOperation("根据名称获取分片规则信息")
+    @GET
+    @Path("/names/{routingName}/get")
+    fun getShardingRoutingRuleByName(
+        @ApiParam("规则名称", required = true)
+        @PathParam("routingName")
+        @BkField(minLength = 1, maxLength = 128)
+        routingName: String,
+    ): Result<ShardingRoutingRule?>
 }
