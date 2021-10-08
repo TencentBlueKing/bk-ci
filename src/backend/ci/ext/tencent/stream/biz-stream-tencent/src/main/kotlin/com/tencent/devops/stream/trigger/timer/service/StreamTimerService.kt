@@ -169,31 +169,37 @@ class StreamTimerService @Autowired constructor(
     }
 
     private fun convert(timerRecord: TStreamTimerRecord): StreamTimer? {
-        return StreamTimer(
-            projectId = timerRecord.projectId,
-            pipelineId = timerRecord.pipelineId,
-            userId = timerRecord.creator,
-            crontabExpressions = try {
-                JsonUtil.to(timerRecord.crontab, object : TypeReference<List<String>>() {})
-            } catch (ignored: Throwable) {
-                listOf(timerRecord.crontab)
-            },
-            gitProjectId = timerRecord.gitProjectId,
-            branchs = try {
-                JsonUtil.to(timerRecord.branchs, object : TypeReference<List<String>>() {})
-            } catch (ignored: Throwable) {
-                listOf(timerRecord.branchs)
-            },
-            always = timerRecord.always,
-            channelCode = try {
-                ChannelCode.valueOf(timerRecord.channel)
-            } catch (e: IllegalArgumentException) {
-                logger.warn("Unkown channel code", e)
-                return null
-            },
-            eventId = timerRecord.eventId,
-            originYaml = timerRecord.originYaml
-        )
+        return with(timerRecord) {
+            StreamTimer(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = creator,
+                crontabExpressions = try {
+                    JsonUtil.to(crontab, object : TypeReference<List<String>>() {})
+                } catch (ignored: Throwable) {
+                    listOf(crontab)
+                },
+                gitProjectId = gitProjectId,
+                branchs = if (branchs != null) {
+                    try {
+                        JsonUtil.to(branchs, object : TypeReference<List<String>>() {})
+                    } catch (ignored: Throwable) {
+                        listOf(branchs)
+                    }
+                } else {
+                    null
+                },
+                always = always,
+                channelCode = try {
+                    ChannelCode.valueOf(channel)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Unkown channel code", e)
+                    return null
+                },
+                eventId = eventId,
+                originYaml = originYaml
+            )
+        }
     }
 
     fun list(start: Int, limit: Int): Result<Collection<StreamTimer>> {
