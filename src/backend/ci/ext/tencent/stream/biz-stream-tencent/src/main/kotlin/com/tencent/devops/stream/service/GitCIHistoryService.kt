@@ -38,7 +38,7 @@ import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
@@ -54,7 +54,7 @@ class GitCIHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val repositoryConfService: GitRepositoryConfService,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
@@ -80,7 +80,7 @@ class GitCIHistoryService @Autowired constructor(
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return Page(
@@ -157,7 +157,7 @@ class GitCIHistoryService @Autowired constructor(
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )

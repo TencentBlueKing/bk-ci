@@ -29,7 +29,7 @@ package com.tencent.devops.stream.v2.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
@@ -51,9 +51,9 @@ import java.util.concurrent.TimeUnit
 class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val scmService: ScmService,
-    private val oauthService: OauthService,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService,
+    private val streamBasicSettingDao: StreamBasicSettingDao
 ) {
 
     companion object {
@@ -83,7 +83,7 @@ class StreamProjectService @Autowired constructor(
             pageSize
         }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
-        val gitProjects = scmService.getProjectList(
+        val gitProjects = streamScmService.getProjectList(
             accessToken = token,
             userId = userId,
             page = realPage,
@@ -101,7 +101,7 @@ class StreamProjectService @Autowired constructor(
         if (gitProjects.isNullOrEmpty()) {
             return Pagination(false, emptyList())
         }
-        val projectIdMap = gitCIBasicSettingDao.searchProjectByIds(
+        val projectIdMap = streamBasicSettingDao.searchProjectByIds(
             dslContext = dslContext,
             projectIds = gitProjects.map { it.id!! }.toSet()
         ).associateBy { it.id }
@@ -173,7 +173,7 @@ class StreamProjectService @Autowired constructor(
         }
         // zset 默认从小到大排序，所以取反
         val gitProjectIds = list.map { it.removePrefix("git_").toLong() }.reversed()
-        val settings = gitCIBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
+        val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
             .associateBy { it.id }
         val result = mutableListOf<ProjectCIInfo>()
         gitProjectIds.forEach {

@@ -89,7 +89,8 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129018,
         formatErrorMessage = "manual trigger third party error: [%s]"
-    );
+    ),
+    CLEAR_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129019, "clear token from git error %s"), ;
 
     companion object {
 

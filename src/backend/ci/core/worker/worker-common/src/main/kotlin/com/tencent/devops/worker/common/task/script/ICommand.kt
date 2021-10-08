@@ -50,7 +50,7 @@ interface ICommand {
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
         elementId: String? = null,
-        charSetType: String? = null
+        charsetType: String? = null
     )
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {

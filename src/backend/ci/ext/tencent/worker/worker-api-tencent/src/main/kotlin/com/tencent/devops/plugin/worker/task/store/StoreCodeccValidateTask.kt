@@ -88,7 +88,7 @@ class StoreCodeccValidateTask : ITask() {
         val codeccValidateResult = storeCodeccResourceApi.validate(storeValidateCodeccResultRequest)
         LoggerService.addNormalLine("codeccValidateResult: $codeccValidateResult")
         if (codeccValidateResult.isNotOk()) {
-            LoggerService.addRedLine(JsonUtil.toJson(codeccValidateResult))
+            LoggerService.addErrorLine(JsonUtil.toJson(codeccValidateResult))
             throw TaskExecuteException(
                 errorMsg = "validate fail: ${codeccValidateResult.message}",
                 errorType = ErrorType.USER,

@@ -82,15 +82,9 @@ class PipelineBuildStageDao {
                     buildStage.endTime,
                     buildStage.cost,
                     buildStage.executeCount,
-                    if (buildStage.controlOption != null) {
-                        JsonUtil.toJson(buildStage.controlOption!!)
-                    } else null,
-                    if (buildStage.checkIn != null) {
-                        JsonUtil.toJson(buildStage.checkIn!!)
-                    } else null,
-                    if (buildStage.checkOut != null) {
-                        JsonUtil.toJson(buildStage.checkOut!!)
-                    } else null
+                    buildStage.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
                 )
                 .execute()
         }
@@ -113,9 +107,9 @@ class PipelineBuildStageDao {
                         .set(END_TIME, it.endTime)
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
-                        .set(CHECK_IN, if (it.checkIn != null) JsonUtil.toJson(it.checkIn!!) else null)
-                        .set(CHECK_OUT, if (it.checkOut != null) JsonUtil.toJson(it.checkOut!!) else null)
+                        .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)
@@ -256,9 +250,9 @@ class PipelineBuildStageDao {
             } else if (buildStatus.isRunning()) {
                 update.set(START_TIME, LocalDateTime.now())
             }
-            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
-            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn))
-            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut))
+            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
+            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn, formatted = false))
+            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut, formatted = false))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
         }
     }
