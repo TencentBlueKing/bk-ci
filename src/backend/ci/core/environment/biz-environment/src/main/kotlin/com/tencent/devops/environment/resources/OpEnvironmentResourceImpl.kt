@@ -25,49 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.callback
+package com.tencent.devops.environment.resources
 
-import com.tencent.devops.auth.pojo.IamCallBackInfo
-import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.OpEnvironmentResource
+import com.tencent.devops.environment.service.NodeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OP_CALLBACK_RESOURCE"], description = "权限-op-iam回调注册")
-@Path("/op/auth/iam/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpCallBackResource {
+@RestResource
+class OpEnvironmentResourceImpl @Autowired constructor(
+    private val nodeService: NodeService
+) : OpEnvironmentResource {
 
-    @POST
-    @Path("/")
-    fun create(
-        resourceMap: Map<String, IamCallBackInterfaceDTO>
-    ): Result<Boolean>
-
-    @GET
-    @Path("/resource/{resourceId}")
-    fun get(
-        @ApiParam("资源类型")
-        @PathParam("resourceId")
-        resourceId: String
-    ): Result<IamCallBackInfo?>
-
-    @GET
-    @Path("/list")
-    fun list(): Result<List<IamCallBackInfo>?>
-
-    @POST
-    @Path("/gateway")
-    fun refreshGateway(
-        @ApiParam("新旧网关映射")
-        oldToNewMap: Map<String, String>
-    ): Result<Boolean>
+    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
+        return Result(nodeService.refreshGateway(oldToNewMap))
+    }
 }
