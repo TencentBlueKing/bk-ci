@@ -169,7 +169,7 @@ class ExtServiceBuildDeployTask : ITask() {
         val responseContent = response.body()?.string()
         if (!response.isSuccessful) {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
-            LoggerService.addRedLine(response.message())
+            LoggerService.addErrorLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "dockerBuildAndPushImage fail: message ${response.message()} and response ($responseContent)",
                 errorType = ErrorType.USER,
@@ -182,7 +182,7 @@ class ExtServiceBuildDeployTask : ITask() {
         LoggerService.addNormalLine("dockerBuildAndPushImageResult: $dockerBuildAndPushImageResult")
         val pushFlag = dockerBuildAndPushImageResult.data
         if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag)) {
-            LoggerService.addRedLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
+            LoggerService.addErrorLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
             throw TaskExecuteException(
                 errorMsg = "dockerBuildAndPushImage fail",
                 errorType = ErrorType.USER,
@@ -229,7 +229,7 @@ class ExtServiceBuildDeployTask : ITask() {
         )
         logger.info("ExtServiceBuildDeployTask deployAppResult: $deployAppResult")
         if (deployAppResult.isNotOk()) {
-            LoggerService.addRedLine(JsonUtil.toJson(deployAppResult))
+            LoggerService.addErrorLine(JsonUtil.toJson(deployAppResult))
             throw TaskExecuteException(
                 errorMsg = "deployApp fail: ${deployAppResult.message}",
                 errorType = ErrorType.USER,

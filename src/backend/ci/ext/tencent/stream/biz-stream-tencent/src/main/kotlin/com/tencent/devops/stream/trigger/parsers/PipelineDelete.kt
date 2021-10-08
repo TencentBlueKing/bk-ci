@@ -40,7 +40,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -54,7 +54,7 @@ class PipelineDelete @Autowired constructor(
     private val client: Client,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
-    private val scmService: ScmService,
+    private val scmService: StreamScmService,
     private val gitCIEventService: GitCIEventService
 ) {
     companion object {

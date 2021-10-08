@@ -79,6 +79,6 @@ class PipelineBuildTaskService @Autowired constructor(
     }
 
     fun updateTaskParam(buildId: String, taskId: String, newElement: Element) {
-        pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, JsonUtil.toJson(newElement))
+        pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, JsonUtil.toJson(newElement, false))
     }
 }

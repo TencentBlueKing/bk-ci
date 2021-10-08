@@ -66,7 +66,7 @@ open class ScriptTask : ITask() {
         )
 
         // #4601 如果task.json没有指定字符集选项则保持为空
-        val charSetType = taskParams["charSetType"]
+        val charsetType = taskParams["charsetType"]
 
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
@@ -104,12 +104,12 @@ open class ScriptTask : ITask() {
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charSetType = charSetType
+                charsetType = charsetType
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
+                LoggerService.addErrorLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val token = RepoServiceFactory.getInstance().getRepoToken(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
@@ -125,7 +125,7 @@ open class ScriptTask : ITask() {
                     token = token
                 )
                 if (count == 0) {
-                    LoggerService.addRedLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
             throw TaskExecuteException(
@@ -176,7 +176,7 @@ open class ScriptTask : ITask() {
             gatewayResourceApi.saveScriptHisMetadata(elementType, data)
             gatewayFile.delete()
         } catch (ignore: Exception) {
-            LoggerService.addRedLine("save gateway value fail: ${ignore.message}")
+            LoggerService.addErrorLine("save gateway value fail: ${ignore.message}")
             logger.error("setGatewayValue|${ignore.message}", ignore)
         }
     }

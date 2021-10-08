@@ -75,16 +75,11 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         .build<String, String>()
 
     override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
-        val groupInfo = groupService.getGroupByName(projectCode, group.value) ?: return emptyList()
+        val groupInfo = groupService.getGroupByCode(projectCode, group.value) ?: return emptyList()
         val extProjectId = getExtProjectId(projectCode)
-        val relationId = groupInfo!!.relationId
-        if (relationId.isNullOrEmpty()) {
-            logger.warn("$projectCode not bind iam userGroup")
-            return emptyList()
-        }
         val groupMemberInfos = permissionRoleMemberService.getRoleMember(
             projectId = extProjectId,
-            roleId = relationId.toInt(),
+            roleId = groupInfo.id,
             page = 0,
             pageSize = 1000
         ).results
