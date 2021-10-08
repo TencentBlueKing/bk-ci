@@ -180,9 +180,9 @@ class StreamTimerService @Autowired constructor(
             },
             gitProjectId = timerRecord.gitProjectId,
             branchs = try {
-                JsonUtil.to(timerRecord.crontab, object : TypeReference<List<String>>() {})
+                JsonUtil.to(timerRecord.branchs, object : TypeReference<List<String>>() {})
             } catch (ignored: Throwable) {
-                listOf(timerRecord.crontab)
+                listOf(timerRecord.branchs)
             },
             always = timerRecord.always,
             channelCode = try {

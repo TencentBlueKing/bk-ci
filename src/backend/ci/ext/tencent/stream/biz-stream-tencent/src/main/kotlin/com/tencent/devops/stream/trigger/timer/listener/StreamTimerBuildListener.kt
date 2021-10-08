@@ -35,7 +35,6 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
@@ -75,7 +74,7 @@ class StreamTimerBuildListener @Autowired constructor(
                 }
 
                 val token = gitTokenResult.data!!
-
+                // 如果分支不存在，每次获取最新的默认分支
                 val realBranches = if (branchs.isNullOrEmpty()) {
                     listOf(
                         scmService.getProjectInfoRetry(
@@ -89,15 +88,11 @@ class StreamTimerBuildListener @Autowired constructor(
                 }
 
                 realBranches.forEach { branch ->
-                    if (always) {
-                        timerTrigger(branch = branch)
-                    } else {
-                        scmChangeTimerTrigger(
-                            gitCIConf = gitCIConfResult.data!!,
-                            branch = branch,
-                            token = token.accessToken
-                        )
-                    }
+                    timerTrigger(
+                        gitCIConf = gitCIConfResult.data!!,
+                        branch = branch,
+                        token = token.accessToken
+                    )
                 }
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
@@ -107,51 +102,48 @@ class StreamTimerBuildListener @Autowired constructor(
         }
     }
 
-    private fun StreamTimerBuildEvent.scmChangeTimerTrigger(
+    private fun StreamTimerBuildEvent.timerTrigger(
         gitCIConf: GitCIBasicSetting,
         branch: String,
         token: String
-    ) {
-        val latestRevisionResult = client.get(ServiceScmOauthResource::class).getLatestRevision(
+    ): Boolean {
+        val latestRevisionInfo = scmService.getLatestRevisionRetry(
+            pipelineId = pipelineId,
+            gitToken = token,
             projectName = GitUtils.getProjectName(gitCIConf.url),
             url = gitCIConf.url,
             type = ScmType.CODE_GIT,
             branchName = branch,
-            additionalPath = null,
-            privateKey = null,
-            passPhrase = null,
-            token = token,
-            region = null,
             userName = userId
-        )
-        if (latestRevisionResult.isNotOk() || latestRevisionResult.data == null) {
-            logger.warn("[$pipelineId] get latestRevision fail!")
-            return
+        ) ?: return false
+
+        return if (!always) {
+            branchChangeTimerTrigger(branch = branch, latestRevision = latestRevisionInfo.revision)
+        } else {
+            scheduleTriggerService.triggerBuild(this, branch)
         }
+    }
+
+    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevision: String): Boolean {
         val timerBranch = streamTimerBranchService.get(
             pipelineId = pipelineId,
             gitProjectId = gitProjectId,
             branch = branch
         )
-        val latestRevision = latestRevisionResult.data!!.revision
-
-        if (timerBranch == null || timerBranch.revision != latestRevision) {
-            if (timerTrigger(branch = branch)) {
-                streamTimerBranchService.save(
-                    StreamTimerBranch(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        gitProjectId = gitProjectId,
-                        branch = branch,
-                        revision = latestRevision
-                    )
+        if ((timerBranch == null || timerBranch.revision != latestRevision) &&
+            scheduleTriggerService.triggerBuild(this, branch)
+        ) {
+            streamTimerBranchService.save(
+                StreamTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    gitProjectId = gitProjectId,
+                    branch = branch,
+                    revision = latestRevision
                 )
-            }
+            )
+            return true
         }
-    }
-
-    private fun StreamTimerBuildEvent.timerTrigger(branch: String): Boolean {
-        // 触发stream处的触发逻辑
-        return scheduleTriggerService.triggerBuild(this, branch)
+        return false
     }
 }
