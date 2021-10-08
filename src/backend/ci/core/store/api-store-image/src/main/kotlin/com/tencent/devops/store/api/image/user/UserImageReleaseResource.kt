@@ -29,13 +29,17 @@ package com.tencent.devops.store.api.image.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -63,9 +67,11 @@ interface UserImageReleaseResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("镜像代码", required = true)
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         @PathParam("imageCode")
         imageCode: String,
         @ApiParam("关联镜像请求报文体", required = true)
+        @Valid
         marketImageRelRequest: MarketImageRelRequest
     ): Result<String>
 
@@ -141,4 +147,13 @@ interface UserImageReleaseResource {
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取镜像支持的机器类型列表")
+    @GET
+    @Path("/image/agentType/list")
+    fun getImageAgentTypes(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<ImageAgentTypeInfo>>
 }

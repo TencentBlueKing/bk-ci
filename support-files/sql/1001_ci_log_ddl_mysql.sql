@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`
     `TAG`           varchar(64)          DEFAULT NULL,
     `SUB_TAG` varchar(256) DEFAULT NULL,
     `JOB_ID`        varchar(64)          DEFAULT NULL,
+    `MODE`        varchar(32)          DEFAULT NULL,
     `EXECUTE_COUNT` int(11)     NOT NULL,
     `FINISHED`      bit(1)      NOT NULL DEFAULT b'0' COMMENT 'build is finished or not',
     `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

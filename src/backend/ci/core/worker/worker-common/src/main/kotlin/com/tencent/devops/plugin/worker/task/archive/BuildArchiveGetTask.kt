@@ -40,14 +40,18 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
 
+@Suppress("ComplexMethod")
 @TaskClassType(classTypes = [BuildArchiveGetElement.classType])
 class BuildArchiveGetTask : ITask() {
 
@@ -58,6 +62,7 @@ class BuildArchiveGetTask : ITask() {
     private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
+    @Suppress("ComplexMethod", "MagicNumber")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")
@@ -92,13 +97,23 @@ class BuildArchiveGetTask : ITask() {
                     File(destPath, decodeUrl)
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo!")
+                val token = RepoServiceFactory.getInstance().getRepoToken(
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    repoName = "pipeline",
+                    path = fileUrl,
+                    type = TokenType.DOWNLOAD,
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+                )
                 archiveGetResourceApi.downloadPipelineFile(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     uri = fileUrl,
-                    destPath = file
+                    destPath = file,
+                    isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType),
+                    token = token
                 )
                 count++
             }

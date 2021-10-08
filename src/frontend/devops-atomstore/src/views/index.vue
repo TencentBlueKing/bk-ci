@@ -34,8 +34,10 @@
                 const doc = window.document
                 const docEl = doc.documentElement
                 const designWidth = 1580 // 默认设计图宽度
+                const maxRate = 2300 / designWidth
+                const minRate = 1280 / designWidth
                 const clientWidth = docEl.getBoundingClientRect().width || window.innerWidth
-                const flexibleRem = Math.max(Math.min(clientWidth / designWidth, 1.2151), 0.8101) * 100
+                const flexibleRem = Math.max(Math.min(clientWidth / designWidth, maxRate), minRate) * 100
                 docEl.style.fontSize = flexibleRem + 'px'
             }
         }

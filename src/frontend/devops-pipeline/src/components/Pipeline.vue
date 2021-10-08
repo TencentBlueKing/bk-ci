@@ -10,7 +10,7 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
+                <stages :key="pipeline.name" :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 
@@ -53,11 +53,11 @@
                     :editable="pipelineEditable"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel">
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel.isShow">
                 <stage-review-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
-                    :disabled="!pipelineEditable"
+                    :editable="pipelineEditable"
                 />
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
@@ -77,7 +77,7 @@
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
-    import StageReviewPanel from './StagePropertyPanel/StageReviewPanel'
+    import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
     import { isObject } from '../utils/util'
 

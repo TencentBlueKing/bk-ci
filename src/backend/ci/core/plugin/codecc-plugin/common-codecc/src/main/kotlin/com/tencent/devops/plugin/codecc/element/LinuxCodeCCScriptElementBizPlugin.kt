@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.codecc.element
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -43,7 +44,8 @@ class LinuxCodeCCScriptElementBizPlugin : ElementBizPlugin<LinuxCodeCCScriptElem
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) = Unit
 
     override fun beforeDelete(element: LinuxCodeCCScriptElement, param: BeforeDeleteParam) = Unit

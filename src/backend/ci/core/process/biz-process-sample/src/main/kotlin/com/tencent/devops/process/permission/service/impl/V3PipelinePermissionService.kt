@@ -139,13 +139,7 @@ class V3PipelinePermissionService constructor(
     }
 
     override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).forEach {
-                fakeList.add(it)
-            }
-            fakeList
-        }
+        return { mutableListOf() }
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
@@ -183,6 +177,6 @@ class V3PipelinePermissionService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(V3PipelinePermissionService::class.java)
     }
 }

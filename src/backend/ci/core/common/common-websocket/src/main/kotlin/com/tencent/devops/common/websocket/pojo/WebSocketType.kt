@@ -33,6 +33,7 @@ enum class WebSocketType {
     STATUS, // 状态，首页
     HISTORY, // 历史页
     AMD, // 其他页面推送
+    NOTIFY, // 消息推送
     DETAIL; // 详情页
 
     companion object {
@@ -43,6 +44,10 @@ enum class WebSocketType {
             }
             if (webSocketType == STATUS || webSocketType == HISTORY || webSocketType == DETAIL) {
                 return "IFRAME"
+            }
+
+            if (webSocketType == NOTIFY) {
+                return "NOTIFY"
             }
 
             if (webSocketType == AMD) {

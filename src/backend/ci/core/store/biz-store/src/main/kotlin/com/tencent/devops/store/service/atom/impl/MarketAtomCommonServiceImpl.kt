@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -271,10 +272,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         fieldCheckConfirmFlag: Boolean? = false
     ) {
         val invalidAtomInputNames = mutableSetOf<String>()
-        // 判断新增的参数是否有默认值
+        // 判断新增的必填参数是否有默认值
         atomAddInputNames.forEach { atomInputName ->
             val atomInputField = atomInputMap[atomInputName] as? Map<String, Any>
-            if (atomInputField?.get(KEY_DEFAULT) == null) {
+            if (atomInputField?.get(REQUIRED) == true && atomInputField[KEY_DEFAULT] == null) {
                 invalidAtomInputNames.add(atomInputName)
             }
         }

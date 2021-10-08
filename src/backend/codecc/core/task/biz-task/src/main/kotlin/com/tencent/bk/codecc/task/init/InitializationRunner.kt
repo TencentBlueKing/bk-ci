@@ -39,7 +39,6 @@ import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.RedisKeyConstants
 import com.tencent.devops.common.constant.RedisKeyConstants.STANDARD_LANG
 import com.tencent.devops.common.service.ToolMetaCacheService
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.ThreadPoolUtil
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -48,6 +47,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
@@ -69,8 +69,6 @@ class InitializationRunner @Autowired constructor(
     }
 
     override fun run(vararg arg: String?) {
-        val redisTemplate: RedisTemplate<String, String> =
-            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val currentVal = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
         if (null == currentVal || currentVal.toLong() < ComConstants.COMMON_NUM_10000L) {
             logger.info("start to initialize redis key!")
@@ -83,6 +81,12 @@ class InitializationRunner @Autowired constructor(
                     .set(RedisKeyConstants.CODECC_TASK_ID, (taskInfoEntity.taskId + 1).toString())
             }
         }
+
+        val jedisConnectionFactory: JedisConnectionFactory = redisTemplate.connectionFactory as JedisConnectionFactory
+        logger.info("start to init data with redis: {}, {}, {}",
+            jedisConnectionFactory.hostName,
+            jedisConnectionFactory.port,
+            jedisConnectionFactory.database)
 
         // 国际化操作[ 响应码、操作记录、规则包、规则名称、报表日期、工具参数、工具描述、操作类型 ]
         globalMessage(redisTemplate)
@@ -132,10 +136,12 @@ class InitializationRunner @Autowired constructor(
         // 工具参数标签[ labelName ]国际化
         val labelName = initResponseCode.getToolParams()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_TOOL_PARAMS_LABEL_NAME, labelName)
+        logger.info("init global params GLOBAL_TOOL_PARAMS_LABEL_NAME: {}", labelName)
 
         // 工具参数提示[ tips ]国际化
         val tips = initResponseCode.getToolParamsTips()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_TOOL_PARAMS_TIPS, tips)
+        logger.info("init global params GLOBAL_TOOL_PARAMS_TIPS: {}", tips)
 
         // 操作类型国际化
         val operTypeMap = initResponseCode.getOperTypeMap()
@@ -256,10 +262,12 @@ class InitializationRunner @Autowired constructor(
     }
 
     private fun setToolOrder() {
-        val redisTemplate: RedisTemplate<String, String> =
-            SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val toolOrder = commonDao.toolOrder
         val langOrder = commonDao.langOrder
+
+        logger.info("start to set tool order: {}", commonDao.toolOrder)
+        logger.info("start to set lang order: {}", commonDao.langOrder)
+
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder)
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_LANG_ORDER, langOrder)
     }

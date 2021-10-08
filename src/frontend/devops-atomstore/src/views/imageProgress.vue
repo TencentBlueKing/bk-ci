@@ -94,7 +94,7 @@
 
         data () {
             return {
-                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7518`,
+                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
                 isLoading: false,
                 isTestLoading: false,
                 progressStatus: [],

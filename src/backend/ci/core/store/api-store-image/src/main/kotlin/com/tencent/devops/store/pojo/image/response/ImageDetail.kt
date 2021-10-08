@@ -195,7 +195,7 @@ data class ImageDetail(
     val updateTime: Long,
 
     @ApiModelProperty("是否已安装", required = true)
-    var isInstalled: Boolean? = null,
+    var installedFlag: Boolean? = null,
 
     @ApiModelProperty("是否可编辑", required = false)
     val editFlag: Boolean? = null

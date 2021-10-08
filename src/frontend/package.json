@@ -58,6 +58,7 @@
     "devops-ticket",
     "devops-pipeline",
     "devops-quality",
-    "devops-nav"
+    "devops-nav",
+    "devops-turbo"
   ]
 }

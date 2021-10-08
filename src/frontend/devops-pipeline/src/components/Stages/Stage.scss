@@ -225,14 +225,18 @@ span.skip-name {
     .container-title {
         cursor: pointer;
         background-color: $fontWeightColor;
-
-        &.QUEUE {
-            color: $loadingColor;
+        
+        &.UNEXEC,
+        &.DISABLED {
+            background-color: $fontWeightColor;
         }
+
+        &.QUEUE,
         &.RUNNING,
         &.REVIEWING,
         &.PREPARE_ENV,
         &.LOOP_WAITING,
+        &.DEPENDENT_WAITING,
         &.CALL_WAITING {
             background-color: $loadingColor;
         }
@@ -240,9 +244,11 @@ span.skip-name {
         &.REVIEW_ABORT,
         &.TRY_FINALLY,
         &.QUEUE_CACHE,
-        &.UNEXEC
         &.SKIP {
             background-color: $cancelColor;
+            .container-name span.skip-name {
+                color: white;
+            }
         }
         &.FAILED,
         &.TERMINATE,
@@ -264,8 +270,39 @@ span.skip-name {
         &:after {
             border-top-color: $lineColor;
         }
-        > .container-name span:hover {
+        > .container-name span {
             color: white;
         }
+    }
+}
+
+.editing {
+    .stage-connector {
+        background: $primaryColor;
+        color: $primaryColor;
+        &:before {
+            background: $primaryColor;
+        }
+    }
+    .connect-line {
+        &.left,
+        &.right {
+            stroke: $primaryColor;
+
+            &:before {
+                stroke: $primaryColor;
+            }
+            &:after {
+                stroke: $primaryColor;
+                background-color: $primaryColor;
+            }
+        }
+    }
+    &:after {
+        background: $primaryColor;
+    }
+    // 三角箭头
+    &:before {
+        color: $primaryColor;
     }
 }

@@ -266,7 +266,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
+                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
@@ -75,5 +76,9 @@ class PipelineBuildTaskService @Autowired constructor(
                 )
             }
         }
+    }
+
+    fun updateTaskParam(buildId: String, taskId: String, newElement: Element) {
+        pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, JsonUtil.toJson(newElement, false))
     }
 }

@@ -190,7 +190,8 @@ class PipelineElementService @Autowired constructor(
             originAtomElement.id = originElementId
         } else {
             if (startValues != null) {
-                val status = originAtomElement.initStatus(params = startValues, rerun = finallyStage)
+                originAtomElement.disableBySkipVar(variables = startValues)
+                val status = originAtomElement.initStatus(rerun = finallyStage)
                 // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
                 if (status == BuildStatus.SKIP) {
                     elementStatus = BuildStatus.SKIP.name
@@ -202,10 +203,16 @@ class PipelineElementService @Autowired constructor(
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
         var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-        if (postCondition == "failed()") {
-            postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-        } else if (postCondition == "always()") {
-            postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        when (postCondition) {
+            "failed()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            }
+            "always()" -> {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+            }
+            "canceledOrTimeOut()" -> {
+                postAtomRunCondition = RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT
+            }
         }
         val additionalOptions = ElementAdditionalOptions(
             enable = true,

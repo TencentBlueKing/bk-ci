@@ -73,7 +73,7 @@ import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
 
 @Component
-@Suppress("ALL")
+@Suppress("UNUSED", "LongParameterList", "LargeClass", "TooManyFunctions", "MagicNumber", "ThrowsCount")
 class DefaultBkRepoClient constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -106,8 +106,8 @@ class DefaultBkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT)
             true
-        } catch (e: Exception) {
-            logger.error("create repo resource error", e)
+        } catch (ignore: Exception) {
+            logger.error("BKSystemErrorMonitor|BK-REPO|create repo resource error", ignore)
             false
         }
     }
@@ -136,9 +136,9 @@ class DefaultBkRepoClient constructor(
             if (response.code() == 400 && responseData.code == 25102) {
                 logger.warn("project[$projectId] already exists")
             } else if (!response.isSuccessful) {
-                logger.error("BKREPO_createProject_fail|http request failed, request: ${request.url()}, " +
+                logger.warn("BKREPO_createProject_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("http request failed")
+                throw RemoteServiceException("create repo project failed: $responseContent", response.code())
             }
         }
     }
@@ -170,9 +170,9 @@ class DefaultBkRepoClient constructor(
             if (response.code() == 400 && responseData.code == 251004) {
                 logger.warn("repo $projectId|$repoName already exists")
             } else if (!response.isSuccessful) {
-                logger.error("BKREPO_createGenericRepo_fail|http request failed, request: ${request.url()}, " +
+                logger.warn("BKREPO_createGenericRepo_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("http request failed")
+                throw RemoteServiceException("create generic repo failed: $responseContent", response.code())
             }
         }
     }
@@ -191,16 +191,16 @@ class DefaultBkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("get file size failed, request: ${request.url()}, responseContent: $responseContent")
+                logger.warn("get file size failed, request: ${request.url()}, responseContent: $responseContent")
                 if (response.code() == 404) {
-                    throw NotFoundException("not found")
+                    throw NotFoundException("get file size failed: $path not found")
                 }
-                throw RuntimeException("get file size failed")
+                throw RemoteServiceException("get file size failed: $responseContent", response.code())
             }
 
             val responseData = objectMapper.readValue<Response<NodeSizeInfo>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("get file size failed: ${responseData.message}")
+                throw RemoteServiceException("get file size failed: ${responseData.message}", response.code())
             }
 
             return responseData.data!!
@@ -226,9 +226,10 @@ class DefaultBkRepoClient constructor(
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("BKREPO_setMetadata_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_setMetadata_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("set file metadata failed")
+                throw RemoteServiceException("set file metadata failed: $responseContent", response.code())
             }
         }
     }
@@ -247,16 +248,16 @@ class DefaultBkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("list file metadata failed, request: ${request.url()}, responseContent: $responseContent")
+                logger.warn("list file metadata failed, request: ${request.url()}, responseContent: $responseContent")
                 if (response.code() == 404) {
-                    throw NotFoundException("not found")
+                    throw NotFoundException("list file metadata failed: $path not found")
                 }
-                throw RuntimeException("list file metadata failed")
+                throw RemoteServiceException("list file metadata failed: $responseContent", response.code())
             }
 
             val responseData = objectMapper.readValue<Response<Map<String, String>>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("list file metadata failed: ${responseData.message}")
+                throw RemoteServiceException("list file metadata failed: ${responseData.message}", response.code())
             }
 
             return responseData.data!!
@@ -282,16 +283,16 @@ class DefaultBkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("list file failed, request: ${request.url()}, responseContent: $responseContent")
+                logger.warn("list file failed, request: ${request.url()}, responseContent: $responseContent")
                 if (response.code() == 404) {
-                    throw NotFoundException("not found")
+                    throw NotFoundException("list file failed: $path not found")
                 }
-                throw RuntimeException("get file info failed")
+                throw RemoteServiceException("get file info failed: $responseContent", response.code())
             }
 
             val responseData = objectMapper.readValue<Response<List<FileInfo>>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("get file info failed: ${responseData.message}")
+                throw RemoteServiceException("get file info failed: ${responseData.message}", response.code())
             }
 
             return responseData.data!!
@@ -324,9 +325,10 @@ class DefaultBkRepoClient constructor(
         val request = requestBuilder.build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("BKREPO_uploadLocalFile_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_uploadLocalFile_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("upload file failed")
+                throw RemoteServiceException("upload file failed: $responseContent", httpStatus = response.code())
             }
         }
 
@@ -349,8 +351,8 @@ class DefaultBkRepoClient constructor(
                         metadata = mapOf(METADATA_DISPLAY_NAME to metadata.getValue("buildNum")))
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("set pipeline displayName failed")
+        } catch (ignore: Exception) {
+            logger.warn("set pipeline displayName failed", ignore)
         }
     }
 
@@ -375,9 +377,10 @@ class DefaultBkRepoClient constructor(
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("BKREPO_delete_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_delete_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("delete file info failed")
+                throw RemoteServiceException("delete file failed: $responseContent", response.code())
             }
         }
     }
@@ -408,9 +411,10 @@ class DefaultBkRepoClient constructor(
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("BKREPO_move_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_move_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("move file failed")
+                throw RemoteServiceException("move file failed: $responseContent", response.code())
             }
         }
     }
@@ -449,9 +453,10 @@ class DefaultBkRepoClient constructor(
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("BKREPO_copy_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_copy_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("copy file failed")
+                throw RemoteServiceException("copy file failed: $responseContent", response.code())
             }
         }
     }
@@ -472,10 +477,10 @@ class DefaultBkRepoClient constructor(
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-// logger.error("rename failed, request: ${request.url()}, responseContent: ${response.body()!!.string()}")
-                logger.error("BKREPO_rename_fail|http request failed, request: ${request.url()}, " +
+                val responseContent = response.body()?.string()
+                logger.warn("BKREPO_rename_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}")
-                throw RuntimeException("rename failed")
+                throw RemoteServiceException("rename failed: $responseContent", httpStatus = response.code())
             }
         }
     }
@@ -493,8 +498,9 @@ class DefaultBkRepoClient constructor(
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("mkdir failed, request: ${request.url()}, responseContent: ${response.body()!!.string()}")
-                throw RuntimeException("mkdir failed")
+                val responseContent = response.body()?.string()
+                logger.warn("mkdir failed, request: ${request.url()}, responseContent: $responseContent")
+                throw RemoteServiceException("mkdir failed: $responseContent", httpStatus = response.code())
             }
         }
     }
@@ -517,13 +523,13 @@ class DefaultBkRepoClient constructor(
                     logger.warn("file not found, repoName: $repoName, path: $path")
                     return null
                 }
-                logger.error("get file info failed, request: ${request.url()}, responseContent: $responseContent")
-                throw RuntimeException("get file info failed")
+                logger.warn("get file info failed, request: ${request.url()}, responseContent: $responseContent")
+                throw RemoteServiceException("get file info failed: $responseContent", httpStatus = response.code())
             }
 
             val responseData = objectMapper.readValue<Response<NodeDetail>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("get file info failed: ${responseData.message}")
+                throw RemoteServiceException("get file info failed: ${responseData.message}", response.code())
             }
             return responseData.data!!
         }
@@ -544,8 +550,8 @@ class DefaultBkRepoClient constructor(
             val responseContent = response.body()!!.bytes()
             val mediaType = response.body()!!.contentType()!!
             if (!response.isSuccessful) {
-                logger.error("get file content failed, request: ${request.url()}, responseContent: $responseContent")
-                throw RuntimeException("get file content failed")
+                logger.warn("get file content failed, request: ${request.url()}, responseContent: $responseContent")
+                throw RemoteServiceException("get file content failed: $responseContent", httpStatus = response.code())
             }
             return Pair(responseContent, mediaType)
         }
@@ -559,9 +565,9 @@ class DefaultBkRepoClient constructor(
         buildId: String,
         isCustom: Boolean
     ): List<BkRepoFile> {
-        var repoName: String
-        var filePath: String
-        var fileName: String
+        val repoName: String
+        val filePath: String
+        val fileName: String
         if (isCustom) {
             val normalizedPath = "/${srcPath.removePrefix("./").removePrefix("/")}"
             repoName = "custom"
@@ -610,10 +616,22 @@ class DefaultBkRepoClient constructor(
     }
 
     fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
-        downloadFile(userId, projectId, repoName, fullPath, destFile.outputStream())
+        downloadFile(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            fullPath = fullPath,
+            outputStream = destFile.outputStream()
+        )
     }
 
-    fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, outputStream: OutputStream) {
+    fun downloadFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        outputStream: OutputStream
+    ) {
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
         val request = Request.Builder().url(url)
             .header("Authorization", bkRepoAuthorization)
@@ -624,12 +642,12 @@ class DefaultBkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             if (response.code() == 404) {
                 logger.warn("file($url) not found")
-                throw RemoteServiceException("File is not exist!")
+                throw NotFoundException("File is not exist!")
             }
             if (!response.isSuccessful) {
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body()?.string()
                 logger.warn("download file($url) failed, code ${response.code()}, content: $responseContent")
-                throw RemoteServiceException("download file failed")
+                throw RemoteServiceException("download file failed", response.code(), responseContent)
             }
             FileCopyUtils.copy(response.body()!!.byteStream(), outputStream)
         }
@@ -735,16 +753,16 @@ class DefaultBkRepoClient constructor(
                 )
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body()?.string()
             if (!response.isSuccessful) {
-                logger.error("createShareUri_fail|http request failed, request: ${request.url()}, " +
+                logger.warn("createShareUri_fail|http request failed, request: ${request.url()}, " +
                     "response.code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("create share uri failed")
+                throw RemoteServiceException("create share uri failed: $responseContent", response.code())
             }
 
-            val responseData = objectMapper.readValue<Response<ShareRecordInfo>>(responseContent)
+            val responseData = objectMapper.readValue<Response<ShareRecordInfo>>(responseContent!!)
             if (responseData.isNotOk()) {
-                throw RuntimeException("create share uri failed: ${responseData.message}")
+                throw RemoteServiceException("create share uri failed: ${responseData.message}", response.code())
             }
 
             return responseData.data!!.shareUrl
@@ -776,7 +794,7 @@ class DefaultBkRepoClient constructor(
             }.toMutableList())
             ruleList.add(metadataRule)
         }
-        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }
@@ -852,7 +870,7 @@ class DefaultBkRepoClient constructor(
             }.toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
-        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }
@@ -884,13 +902,13 @@ class DefaultBkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("query failed, request: ${request.url()}, responseContent: $responseContent")
-                throw RuntimeException("query failed")
+                logger.warn("query failed, request: ${request.url()}, responseContent: $responseContent")
+                throw RemoteServiceException("query failed: $responseContent", httpStatus = response.code())
             }
 
             val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("query failed: ${responseData.message}")
+                throw RemoteServiceException("query failed: ${responseData.message}", httpStatus = response.code())
             }
 
             return responseData.data!!.records

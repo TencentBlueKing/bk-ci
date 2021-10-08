@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -59,20 +61,16 @@ class StartContainerStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
-//        val event = commandContext.event
-        val stageId = commandContext.stage.stageId
         // 执行成功则结束本次事件处理，否则要尝试下一stage
-        commandContext.buildStatus = judgeStageContainer(commandContext)
-//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|$stageId|${commandContext.buildStatus}")
-        commandContext.latestSummary = "from_s($stageId)"
-//        }
+        judgeStageContainer(commandContext)
+        commandContext.latestSummary = "from_s(${commandContext.stage.stageId})"
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     /**
-     * 判断当前[commandContext]里的Stage并发下发Container消息，并返回Stage状态
+     * 判断当前[commandContext]里的Stage并发下发Container消息
      */
-    private fun judgeStageContainer(commandContext: StageContext): BuildStatus {
+    private fun judgeStageContainer(commandContext: StageContext) {
         val event = commandContext.event
         var stageStatus = commandContext.stage.status
         var newActionType = event.actionType
@@ -83,36 +81,55 @@ class StartContainerStageCmd(
             }
 
             when {
-                newActionType.isStart() -> stageStatus = BuildStatus.RUNNING // 要启动Stage
+                newActionType.isStart() -> {
+                    sendStageStartCallback(commandContext)
+                    stageStatus = BuildStatus.RUNNING // 要启动Stage
+                }
                 newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
         }
 
-        return if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
-            stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
+        if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
+            commandContext.buildStatus = stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
         } else {
-            val runningStatus = sendContainerEvent(commandContext, actionType = newActionType, userId = event.userId)
-            return when {
-                runningStatus != null -> runningStatus
-                commandContext.failureContainerNum > 0 -> BuildStatus.FAILED // 存在失败
-                commandContext.cancelContainerNum > 0 -> BuildStatus.CANCELED // 存在取消
-                commandContext.skipContainerNum == commandContext.containers.size -> BuildStatus.SKIP // 全部跳过
-                else -> BuildStatus.SUCCEED
+            stageStatus = pickJob(commandContext, actionType = newActionType, userId = event.userId)
+
+            if (commandContext.skipContainerNum == commandContext.containers.size) {
+                stageStatus = BuildStatus.SKIP
             }
+
+            commandContext.buildStatus = stageStatus
         }
     }
 
+    private fun sendStageStartCallback(commandContext: StageContext) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStatusBroadCastEvent(
+                source = "StartContainerStageCmd",
+                projectId = commandContext.stage.projectId,
+                pipelineId = commandContext.stage.pipelineId,
+                userId = commandContext.event.userId,
+                buildId = commandContext.stage.buildId,
+                actionType = ActionType.START,
+                stageId = commandContext.stage.stageId
+            )
+        )
+    }
+
     /**
+     * 根据Job状态补偿Stage状态
      * [userId]执行人利用当前[commandContext]的容器列表，以事件动作[actionType]
      * 加上各容器的状态，决定是否对相应容器进行下发容器动作事件，并最终返回当前stage的构建状态:
-     * 仍然有容器未结束，会继续向该容器下发事件，并返回：[BuildStatus.RUNNING]
-     * 所有容器都结束，但有失败的容器，则直接返回:[BuildStatus.FAILED]
-     * 所有容器都结束，但有取消的容器，则直接返回:[BuildStatus.CANCELED]
+     * 仍然有容器未结束，会继续向该容器下发事件，并将stageStatus设置为：[BuildStatus.RUNNING]
+     * 所有容器都结束，但有失败的容器，则根据容器的状态判断[BuildStatusSwitcher.stageStatusMaker]决定哪种失败状态设置stageStatus
+     * 所有容器都结束，但有取消的容器，则直接返回[BuildStatusSwitcher.stageStatusMaker] 决定取消的状态设置stageStatus
      */
-    private fun sendContainerEvent(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus? {
-
-        var stageStatus: BuildStatus? = null
+    private fun pickJob(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
+        // hotfix：可能在出现最后的Job失败将前面的运行中的Job中断
+        var running: BuildStatus? = null
+        var fail: BuildStatus? = null
+        var cancel: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage (排除Finally）
         if (commandContext.stage.controlOption?.finally == true) {
@@ -126,16 +143,17 @@ class StartContainerStageCmd(
         commandContext.containers.forEach { container ->
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
+                cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
+                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
-            } else if (container.status.isRunning() && !actionType.isTerminate()) {
-                // 已经在运行中的, 只接受强制终止
-                stageStatus = BuildStatus.RUNNING
+            } else if (container.status.isRunning() && !actionType.isEnd()) {
+                // 已经在运行中的, 只接受终止
+                running = BuildStatus.RUNNING
             } else if (!container.status.isFinish()) {
-
-                stageStatus = BuildStatus.RUNNING
+                running = BuildStatus.RUNNING
                 sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
 
                 LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
@@ -143,7 +161,8 @@ class StartContainerStageCmd(
             }
         }
 
-        return stageStatus
+        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后是成功
+        return running ?: fail ?: cancel ?: BuildStatus.SUCCEED
     }
 
     private fun sendBuildContainerEvent(

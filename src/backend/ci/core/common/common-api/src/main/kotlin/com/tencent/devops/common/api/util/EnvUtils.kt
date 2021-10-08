@@ -27,20 +27,19 @@
 
 package com.tencent.devops.common.api.util
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+@Suppress("LongParameterList")
 object EnvUtils {
+
     fun parseEnv(
         command: String?,
         data: Map<String, String>,
         replaceWithEmpty: Boolean = false,
         isEscape: Boolean = false
     ): String {
-        return parseEnv(
-            command = command,
-            data = data,
-            replaceWithEmpty = replaceWithEmpty,
-            isEscape = isEscape,
-            contextMap = emptyMap()
-        )
+        return parseEnv(command, data, replaceWithEmpty, isEscape, emptyMap())
     }
 
     fun parseEnv(
@@ -48,70 +47,46 @@ object EnvUtils {
         data: Map<String, String>,
         replaceWithEmpty: Boolean = false,
         isEscape: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String> = emptyMap()
     ): String {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
-        // 先处理${} 单个花括号的情况
-        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap)
-        // 再处理${{}} 双花括号的情况
-        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap)
+        return parseTokenTwice(command, data, contextMap, replaceWithEmpty, isEscape)
     }
 
-    fun parseWithDoubleCurlyBraces(
-        value: String,
-        data: Map<String, String>,
-        escape: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
-    ): String {
-        val newValue = StringBuilder()
-        var index = 0
-        while (index < value.length) {
-            val c = value[index]
-            if (checkPrefix(c, index, value)) {
-                val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, contextMap)
-                if (escape) {
-                    newValue.append(escapeSpecialWord(inside.toString()))
-                } else {
-                    newValue.append(inside)
-                }
-            } else {
-                newValue.append(c)
-                index++
-            }
-        }
-        return newValue.toString()
-    }
-
-    private fun parseWithSingleCurlyBraces(
+    private fun parseTokenTwice(
         command: String,
         data: Map<String, String>,
-        replaceWithEmpty: Boolean,
-        isEscape: Boolean,
-        contextMap: Map<String, String>? = emptyMap()
+        contextMap: Map<String, String>?,
+        replaceWithEmpty: Boolean = false,
+        isEscape: Boolean = false,
+        depth: Int = 1
     ): String {
-        val newValue = StringBuilder()
-        var index = 0
-        while (index < command.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
-                if (isEscape) {
-                    // 将动态参数值里面的特殊字符转义
-                    newValue.append(escapeSpecialWord(inside.toString()))
-                } else {
-                    newValue.append(inside)
-                }
-            } else {
-                newValue.append(c)
-                index++
-            }
+        if (depth < 0) {
+            return command
         }
-        return newValue.toString()
+        val matcher = tPattern.matcher(command)
+        val buff = StringBuffer()
+        while (matcher.find()) {
+            val key = (matcher.group("single") ?: matcher.group("double")).trim()
+            var value = data[key] ?: contextMap?.get(key)
+            if (value == null) {
+                value = if (!replaceWithEmpty) matcher.group() else ""
+            } else {
+                if (depth > 0 && tPattern.matcher(value).find()) {
+                    value = parseTokenTwice(value, data, contextMap, replaceWithEmpty, isEscape, depth = depth - 1)
+                } else if (isEscape) {
+                    value = escapeSpecialWord(value)
+                }
+            }
+            matcher.appendReplacement(buff, Matcher.quoteReplacement(value))
+        }
+        matcher.appendTail(buff)
+        return buff.toString()
     }
+
+    private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")
 
     private fun escapeSpecialWord(keyword: String): String {
         var replaceWord = keyword
@@ -125,70 +100,4 @@ object EnvUtils {
         }
         return replaceWord
     }
-
-    private fun parseVariable(
-        command: String,
-        start: Int,
-        newValue: StringBuilder,
-        data: Map<String, String>,
-        replaceWithEmpty: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
-    ): Int {
-        val token = StringBuilder()
-        var index = start
-        while (index < command.length) {
-            val c = command[index]
-            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
-                val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
-                token.append(inside)
-            } else if (c == '}') {
-                val value = data[token.toString()] ?: contextMap?.get(token.toString()) ?: if (replaceWithEmpty) {
-                    ""
-                } else {
-                    "\${$token}"
-                }
-
-                newValue.append(value)
-                return index + 1
-            } else {
-                token.append(c)
-                index++
-            }
-        }
-        newValue.append("\${").append(token)
-        return index
-    }
-
-    private fun parseVariableWithDoubleCurlyBraces(
-        command: String,
-        start: Int,
-        newValue: StringBuilder,
-        data: Map<String, String>,
-        contextMap: Map<String, String>? = emptyMap()
-    ): Int {
-        val token = StringBuilder()
-        var index = start
-        while (index < command.length) {
-            val c = command[index]
-            if (checkPrefix(c, index, command)) {
-                val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data)
-                token.append(inside)
-            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
-                val tokenStr = token.toString().trim()
-                val value = data[tokenStr] ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
-                newValue.append(value)
-                return index + 2
-            } else {
-                token.append(c)
-                index++
-            }
-        }
-        newValue.append("\${{").append(token)
-        return index
-    }
-
-    private fun checkPrefix(c: Char, index: Int, value: String) =
-        c == '$' && (index + 2) < value.length && value[index + 1] == '{' && value[index + 2] == '{'
 }

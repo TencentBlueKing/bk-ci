@@ -30,6 +30,7 @@ package com.tencent.devops.misc.cron.environment
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
@@ -45,7 +46,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class ThirdPartyAgentHeartBeat @Autowired constructor(
     private val dslContext: DSLContext,
     private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
@@ -58,16 +59,12 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     @Scheduled(initialDelay = 5000, fixedDelay = 3000)
     fun heartbeat() {
-        val lockValue = redisOperation.get(LOCK_KEY)
-        if (lockValue != null) {
-            logger.info("get lock failed, skip")
-            return
-        } else {
-            redisOperation.set(
-                LOCK_KEY,
-                LOCK_VALUE, 60)
-        }
+        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
         try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
             checkOKAgent()
 
             checkExceptionAgent()
@@ -76,7 +73,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to check the third party agent heartbeat", t)
         } finally {
-            redisOperation.delete(LOCK_KEY)
+            lock.unlock()
         }
     }
 
@@ -177,6 +174,5 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeat::class.java)
         private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
-        private const val LOCK_VALUE = "env_cron_agent_heartbeat_check"
     }
 }

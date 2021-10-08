@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -52,7 +53,8 @@ interface MarketAtomService {
     fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): Result<List<MarketMainItem>>
 
     /**
@@ -67,9 +69,11 @@ interface MarketAtomService {
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): MarketAtomResp
 
     /**
@@ -148,6 +152,21 @@ interface MarketAtomService {
         classType: String? = null,
         defaultShowFlag: Boolean? = true
     ): String
+
+    /**
+     * 生成插件yml 2.0文件
+     */
+    fun generateCiV2Yaml(
+        atomCode: String,
+        os: String? = null,
+        classType: String? = null,
+        defaultShowFlag: Boolean? = true
+    ): String
+
+    /**
+     * 获得插件依赖关系
+     */
+    fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>>
 
     /**
      * 查找带post属性的插件

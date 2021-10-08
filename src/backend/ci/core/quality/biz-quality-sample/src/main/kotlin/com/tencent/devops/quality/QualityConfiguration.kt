@@ -30,8 +30,12 @@ package com.tencent.devops.quality
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.service.SampleQualityPermissionServiceImpl
+import com.tencent.devops.quality.service.V3QualityPermissionServiceImpl
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -47,11 +51,29 @@ class QualityConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun sampleProjectPermissionService(
+    fun sampleQualityPermissionService(
+        authPermissionApi: AuthPermissionApi,
+        authResourceApi: AuthResourceApi,
+        qualityAuthServiceCode: QualityAuthServiceCode,
+        qualityRuleDao: QualityRuleDao,
+        groupDao: QualityNotifyGroupDao,
+        dslContext: DSLContext
+    ): QualityPermissionService = SampleQualityPermissionServiceImpl(
+        authPermissionApi = authPermissionApi,
+        authResourceApi = authResourceApi,
+        qualityAuthServiceCode = qualityAuthServiceCode,
+        qualityRuleDao = qualityRuleDao,
+        groupDao = groupDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3QualityPermissionServiceImpl(
         authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
         qualityAuthServiceCode: QualityAuthServiceCode
-    ): QualityPermissionService = SampleQualityPermissionServiceImpl(
+    ): QualityPermissionService = V3QualityPermissionServiceImpl(
         authPermissionApi = authPermissionApi,
         authResourceApi = authResourceApi,
         qualityAuthServiceCode = qualityAuthServiceCode

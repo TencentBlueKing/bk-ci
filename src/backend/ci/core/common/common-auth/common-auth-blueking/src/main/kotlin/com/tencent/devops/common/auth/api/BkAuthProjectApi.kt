@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -42,6 +43,7 @@ import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import javax.ws.rs.BadRequestException
 
 @Suppress("ALL")
 class BkAuthProjectApi constructor(
@@ -65,7 +67,7 @@ class BkAuthProjectApi constructor(
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("Fail to get project users. $responseContent")
-                throw RuntimeException("Fail to get project users")
+                throw RemoteServiceException("Fail to get project users", response.code(), responseContent)
             }
 
             val responseObject = objectMapper.readValue<BkAuthResponse<List<String>>>(responseContent)
@@ -74,7 +76,7 @@ class BkAuthProjectApi constructor(
                     bkAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.error("Fail to get project users. $responseContent")
-                throw RuntimeException("Fail to get project users")
+                throw BadRequestException(responseObject.message)
             }
             return responseObject.data ?: emptyList()
         }
@@ -176,6 +178,6 @@ class BkAuthProjectApi constructor(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(this::class.java)
+        val logger: Logger = LoggerFactory.getLogger(BkAuthProjectApi::class.java)
     }
 }

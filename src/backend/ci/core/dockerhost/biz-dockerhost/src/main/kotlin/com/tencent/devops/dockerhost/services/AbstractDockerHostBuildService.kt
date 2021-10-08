@@ -28,13 +28,13 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
@@ -152,17 +152,15 @@ abstract class AbstractDockerHostBuildService constructor(
                     errorCodeEnum = ErrorCodeEnum.NO_AUTH_PULL_IMAGE_ERROR,
                     message = errorMessage
                 )
-                // throw NoSuchImageException(errorMessage)
             } catch (t: NotFoundException) {
                 val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-                throw ContainerException(
+    /*            throw ContainerException(
                     errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
                     message = errorMessage
-                )
-                // throw NoSuchImageException(errorMessage)
+                )*/
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
@@ -236,7 +234,7 @@ abstract class AbstractDockerHostBuildService constructor(
         private val dockerHostBuildApi: DockerHostBuildResourceApi,
         private val startTaskId: String?,
         private val containerHashId: String?
-    ) : PullImageResultCallback() {
+    ) : ResultCallback.Adapter<PullResponseItem>() {
         private val totalList = mutableListOf<Long>()
         private val step = mutableMapOf<Int, Long>()
         override fun onNext(item: PullResponseItem?) {
@@ -253,7 +251,7 @@ abstract class AbstractDockerHostBuildService constructor(
                     currentProgress = 100
                 }
 
-                if (currentProgress >= step[lays]?.plus(25) ?: 5) {
+                if (currentProgress >= (step[lays]?.plus(25) ?: 5)) {
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,

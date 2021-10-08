@@ -181,7 +181,7 @@
                                     </bk-checkbox-group>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
+                            <!-- <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
                                 <bk-form-item :label="$t('时期')">
                                     <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
                                         <bk-checkbox
@@ -199,7 +199,7 @@
                                         </bk-popover>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </div>
+                            </div> -->
                             <div class="cc-col" v-show="lineAverageOpt >= 10 || isSearchDropdown">
                                 <bk-form-item :label="$t('聚类')">
                                     <bk-radio-group v-model="searchParams.clusterType">
@@ -470,12 +470,6 @@
                     </bk-button>
                 </div>
             </bk-dialog>
-            <new-analyse
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible"
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse">
-            </new-analyse>
         </section>
         <div class="coverity-list" v-else>
             <div class="main-container large boder-none">
@@ -499,7 +493,6 @@
     import defectCache from '@/mixins/defect-cache'
     // import CodeMirror from '@/common/codemirror'
     import Record from '@/components/operate-record/index'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import tableFile from './table-file'
     import tableDefect from './table-defect'
@@ -510,7 +503,6 @@
     export default {
         components: {
             Record,
-            newAnalyse,
             Empty,
             tableFile,
             tableDefect,
@@ -1377,7 +1369,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
                 }
@@ -1459,6 +1451,7 @@
                         } else {
                             const index = this.listData.defectList.records.findIndex(item => item.entityId === data.defectKeySet[0])
                             this.listData.defectList.records.splice(index, 1)
+                            this.totalCount -= 1
                         }
                         this.initParams()
 

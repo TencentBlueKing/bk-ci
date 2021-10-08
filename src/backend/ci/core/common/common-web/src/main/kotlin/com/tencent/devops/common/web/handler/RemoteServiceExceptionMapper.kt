@@ -44,6 +44,6 @@ class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
     override fun toResponse(exception: RemoteServiceException): Response {
         logger.error("Failed with remote service exception: $exception")
         return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.httpStatus, exception.errorMessage)).build()
+            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
     }
 }

@@ -77,8 +77,8 @@ data class VMBuildContainer(
     val dispatchType: DispatchType? = null,
     @ApiModelProperty("是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
-    @ApiModelProperty("是否可重试", required = false, hidden = true)
-    override var canRetry: Boolean? = false,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
     @ApiModelProperty("是否访问外网", required = false, hidden = true)
     var enableExternal: Boolean? = false,
     override var containerId: String? = null,
@@ -91,7 +91,9 @@ data class VMBuildContainer(
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
     override var executeCount: Int? = 0,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null
+    override val jobId: String? = null,
+    @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
+    override var containPostTaskFlag: Boolean? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"

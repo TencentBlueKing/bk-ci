@@ -28,10 +28,11 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -41,10 +42,11 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher
+    private val buildLogQueryService: BuildLogQueryService
 ) : ServiceLogResource {
 
     override fun getInitLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -53,7 +55,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getInitLogs(
+        return buildLogQueryService.getInitLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -65,6 +68,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun getMoreLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -77,7 +81,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getMoreLogs(
+        return buildLogQueryService.getMoreLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -93,6 +98,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -102,7 +108,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getAfterLogs(
+        return buildLogQueryService.getAfterLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -115,6 +122,7 @@ class ServiceLogResourceImpl @Autowired constructor(
     }
 
     override fun downloadLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -122,7 +130,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        return logDispatcher.downloadLogs(
+        return buildLogQueryService.downloadLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -130,6 +139,24 @@ class ServiceLogResourceImpl @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount,
             fileName = null
+        )
+    }
+
+    override fun getLogMode(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String,
+        executeCount: Int?
+    ): Result<QueryLogStatus> {
+        return buildLogQueryService.getLogMode(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            executeCount = executeCount
         )
     }
 }

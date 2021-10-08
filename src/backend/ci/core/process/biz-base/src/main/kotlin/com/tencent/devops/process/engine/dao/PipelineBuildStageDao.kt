@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -66,7 +67,9 @@ class PipelineBuildStageDao {
                 END_TIME,
                 COST,
                 EXECUTE_COUNT,
-                CONDITIONS
+                CONDITIONS,
+                CHECK_IN,
+                CHECK_OUT
             )
                 .values(
                     buildStage.projectId,
@@ -79,9 +82,9 @@ class PipelineBuildStageDao {
                     buildStage.endTime,
                     buildStage.cost,
                     buildStage.executeCount,
-                    if (buildStage.controlOption != null) {
-                        JsonUtil.toJson(buildStage.controlOption!!)
-                    } else null
+                    buildStage.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    buildStage.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
                 )
                 .execute()
         }
@@ -104,7 +107,9 @@ class PipelineBuildStageDao {
                         .set(END_TIME, it.endTime)
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                        .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
                         .onDuplicateKeyUpdate()
                         .set(STATUS, it.status.ordinal)
                         .set(START_TIME, it.startTime)
@@ -132,6 +137,8 @@ class PipelineBuildStageDao {
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, it.conditions)
+                        .set(CHECK_IN, it.checkIn)
+                        .set(CHECK_OUT, it.checkOut)
                         .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
                 )
             }
@@ -149,10 +156,13 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun getBySeq(dslContext: DSLContext, buildId: String, stageSeq: Int): TPipelineBuildStageRecord? {
+    fun getNextStage(dslContext: DSLContext, buildId: String, currentStageSeq: Int): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(SEQ.eq(stageSeq)).fetchAny()
+                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq))
+                .orderBy(SEQ.asc())
+                .limit(1)
+                .fetchAny()
         }
     }
 
@@ -182,6 +192,19 @@ class PipelineBuildStageDao {
                     )
                 }
 
+                val checkInOption = if (!checkIn.isNullOrBlank()) {
+                    JsonUtil.to(checkIn, StagePauseCheck::class.java)
+                } else {
+                    // #4531 兼容旧数据运行过程时的取值
+                    StagePauseCheck.convertControlOption(controlOption.stageControlOption)
+                }
+
+                val checkOutOption = if (!checkOut.isNullOrBlank()) {
+                    JsonUtil.to(checkOut, StagePauseCheck::class.java)
+                } else {
+                    null
+                }
+
                 PipelineBuildStage(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -193,7 +216,9 @@ class PipelineBuildStageDao {
                     endTime = endTime,
                     cost = cost ?: 0,
                     executeCount = executeCount ?: 1,
-                    controlOption = controlOption
+                    controlOption = controlOption,
+                    checkIn = checkInOption,
+                    checkOut = checkOutOption
                 )
             }
         } else {
@@ -206,7 +231,9 @@ class PipelineBuildStageDao {
         buildId: String,
         stageId: String,
         buildStatus: BuildStatus,
-        controlOption: PipelineBuildStageControlOption? = null
+        controlOption: PipelineBuildStageControlOption? = null,
+        checkIn: StagePauseCheck? = null,
+        checkOut: StagePauseCheck? = null
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -223,7 +250,9 @@ class PipelineBuildStageDao {
             } else if (buildStatus.isRunning()) {
                 update.set(START_TIME, LocalDateTime.now())
             }
-            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
+            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
+            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn, formatted = false))
+            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut, formatted = false))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
         }
     }
@@ -264,7 +293,7 @@ class PipelineBuildStageDao {
         with(T_PIPELINE_BUILD_STAGE) {
             val data = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal))
-                .orderBy(SEQ.desc()).limit(1).fetchAny()
+                .orderBy(SEQ.asc()).limit(1).fetchAny()
             return convert(data)
         }
     }

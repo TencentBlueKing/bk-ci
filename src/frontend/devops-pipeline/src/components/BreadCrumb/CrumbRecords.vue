@@ -1,11 +1,14 @@
 <template>
     <div class="record-list" v-if="records.length">
         <div class="search-area">
-            <input v-bk-focus="1" v-model.trim="searchValue" />
+            <input :placeholder="$t('searchForMore')" v-bk-focus="1" :disabled="searching" @compositionstart="handleCompositionStart" @compositionend="handleCompositionEnd" @input="handleInput" v-model.trim="searchValue" />
             <i class="devops-icon icon-search"></i>
         </div>
-        <ul>
-            <li v-for="item in filterRecords" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': activeId === item[paramId] }" @click.stop="handleRecordClick(item)">
+        <div class="record-list-searching-icon" v-if="searching">
+            <i class="devops-icon icon-circle-2-1 spin-icon" />
+        </div>
+        <ul v-else>
+            <li v-for="item in records" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': selectedValue === item[paramName] }" @click.stop="handleRecordClick(item)">
                 {{ item[paramName] }}
             </li>
         </ul>
@@ -23,7 +26,10 @@
             handleRecordClick: {
                 type: Function
             },
-            activeId: {
+            searching: {
+                type: Boolean
+            },
+            selectedValue: {
                 type: String,
                 default: ''
             },
@@ -38,16 +44,20 @@
         },
         data () {
             return {
-                searchValue: ''
+                searchValue: '',
+                isInputZH: false // 当前是否输入中文
             }
         },
-        computed: {
-            filterRecords () {
-                return this.records.filter(item => {
-                    const lcName = item[this.paramName].toLowerCase()
-                    const lcSearchValue = this.searchValue.toLowerCase()
-                    return lcName.indexOf(lcSearchValue) > -1
-                })
+        methods: {
+            handleInput (e) {
+                if (this.isInputZH) return
+                this.$emit('searchInput', this.searchValue, e)
+            },
+            handleCompositionStart () {
+                this.isInputZH = true
+            },
+            handleCompositionEnd () {
+                this.isInputZH = false
             }
         }
     }
@@ -55,6 +65,7 @@
 
 <style lang="scss">
     @import '../../scss/mixins/ellipsis';
+    @import "../../scss/conf";
     
     .record-list {
         position: absolute;
@@ -83,6 +94,9 @@
                 border: 1px solid #dde4eb;
                 border-radius: 2px;
                 color: #63656E;
+                &::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+                    color: #ccc;
+                }
             }
             > i.icon-search {
                 position: absolute;
@@ -92,6 +106,11 @@
                 line-height: 30px;
                 color: #ccc;
             }
+        }
+        .record-list-searching-icon {
+            display: flex;
+            margin: 20px 0;
+            justify-content: center;
         }
         ul {
             overflow: auto;

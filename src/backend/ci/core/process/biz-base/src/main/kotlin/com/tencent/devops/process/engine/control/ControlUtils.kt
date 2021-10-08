@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -35,12 +36,13 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 object ControlUtils {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -53,12 +55,9 @@ object ControlUtils {
         return additionalOptions.enable
     }
 
-    // 是否失败时继续
+    // 插件是否失败时自动跳过/继续
     fun continueWhenFailure(additionalOptions: ElementAdditionalOptions?): Boolean {
-        if (additionalOptions == null) {
-            return false
-        }
-        return additionalOptions.continueWhenFailed
+        return (additionalOptions?.continueWhenFailed ?: false) && additionalOptions?.manualSkip != true // 手动跳过不算
     }
 
     // 是否失败时自动重试
@@ -153,25 +152,33 @@ object ControlUtils {
         buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
         var skip = false
+        val runCondition = additionalOptions?.runCondition
         if (!isEnable(additionalOptions)) {
             skip = true
         } else when {
-            // [只有前面有任务失败时才运行]，容器状态必须是失败 && 之前存在失败的任务
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
-                skip = containerFinalStatus.isSuccess() && !hasFailedTaskInSuccessContainer
+            // [只有前面有任务失败时才运行]，之前存在失败的任务
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
+                skip = !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
             }
             // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
                 skip = containerFinalStatus.isCancel()
             }
-            //  即使前面有插件运行失败也运行，即使被取消也运行 [未实现] 永远不跳过
-            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
-            // 如果容器是失败状态，[其他条件] 都要跳过不执行
-            containerFinalStatus.isFailure() -> skip = true
+            //  即使前面有插件运行失败也运行，即使被取消也运行， 永远不跳过
+            runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
+            // 如果容器是失败或者取消状态，[其他条件] 都要跳过不执行
+            containerFinalStatus.isFailure() || containerFinalStatus.isCancel() -> skip = true
         }
-
-        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables) ||
-            checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
+        return if (runCondition in TaskUtils.customConditionList) skip || checkCustomVariableSkip(
+            buildId = buildId,
+            additionalOptions = additionalOptions,
+            variables = variables
+        ) || checkCustomConditionSkip(
+            buildId = buildId,
+            additionalOptions = additionalOptions,
+            variables = variables,
+            buildLogPrinter = buildLogPrinter
+        ) else skip
     }
 
     private fun checkCustomConditionSkip(
@@ -231,7 +238,7 @@ object ControlUtils {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
-            StageRunCondition.CUSTOM_CONDITION_MATCH -> {    // 满足以下自定义条件时运行
+            StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
             }
             else -> return false // 其它类型直接返回不跳过
@@ -261,15 +268,19 @@ object ControlUtils {
                 logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                     "|result=$expressionResult")
                 val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
-                    if (!expressionResult) { " will be skipped! " } else { "" }
+                    if (!expressionResult) {
+                        " will be skipped! "
+                    } else {
+                        ""
+                    }
                 buildLogPrinter?.addLine(buildId, logMessage, "", "", 1)
                 expressionResult
-            } catch (e: Exception) {
+            } catch (ignore: Exception) {
                 // 异常，则任务表达式为false
                 logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                    "|result=exception: ${e.message}", e)
+                    "|result=exception: ${ignore.message}", ignore)
                 val logMessage =
-                    "Custom condition($customCondition) parse failed, will be skipped! Detail message: ${e.message}"
+                    "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
                 buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
                 return false
             }

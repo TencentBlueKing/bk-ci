@@ -70,7 +70,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
     }
 
@@ -101,7 +101,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             throw ParamBlankException("Invalid event")
         }
         val events = event.split(",").map {
-            CallBackEvent.valueOf(it)
+            CallBackEvent.valueOf(it.trim())
         }
 
         val successEvents = mutableListOf<String>()
@@ -208,7 +208,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 events = events,
                 status = status,
                 errorMsg = errorMsg,
-                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
+                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it, formatted = false) },
                 requestBody = requestBody,
                 responseCode = responseCode,
                 responseBody = responseBody,

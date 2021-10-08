@@ -70,7 +70,7 @@ object DefaultPathUtils {
     fun resolvePipelineId(path: String): String {
         val roads = path.removePrefix("/").split("/")
         if (roads.size < 2) {
-            throw RuntimeException("Path $path doesn't contain pipelineId")
+            throw IllegalArgumentException("Path $path doesn't contain pipelineId")
         }
         return roads[0]
     }
@@ -78,7 +78,7 @@ object DefaultPathUtils {
     fun resolveBuildId(path: String): String {
         val roads = path.removePrefix("/").split("/")
         if (roads.size < 3) {
-            throw RuntimeException("Path $path doesn't contain buildId")
+            throw IllegalArgumentException("Path $path doesn't contain buildId")
         }
         return roads[1]
     }

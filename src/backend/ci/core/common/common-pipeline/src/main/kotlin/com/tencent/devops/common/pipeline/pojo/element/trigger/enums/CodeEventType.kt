@@ -33,6 +33,9 @@ enum class CodeEventType {
     TAG_PUSH,
     MERGE_REQUEST,
     MERGE_REQUEST_ACCEPT,
+    ISSUES,
+    NOTE,
+    REVIEW,
 
     // github event
     CREATE,

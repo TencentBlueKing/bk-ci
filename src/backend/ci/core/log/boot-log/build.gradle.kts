@@ -31,7 +31,3 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-v3"))
     api(project(":core:log:biz-log-sample"))
 }
-
-plugins {
-   `task-spring-boot-package`
-}

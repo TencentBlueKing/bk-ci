@@ -29,22 +29,24 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwBuildResourceV3Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
 ) : ApigwBuildResourceV3 {
     override fun manualStartupInfo(
         appCode: String?,
@@ -58,7 +60,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -76,7 +78,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -96,7 +98,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -116,7 +118,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             values = values,
             buildNo = buildNo,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -134,7 +136,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -146,7 +148,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         logger.info("$pipelineId|retry|user($userId)")
         return client.get(ServiceBuildResource::class).retry(
@@ -156,7 +159,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             buildId = buildId,
             taskId = taskId,
             failedContainer = failedContainer,
-            channelCode = ChannelCode.BS
+            skipFailedTask = skipFailedTask,
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -174,7 +178,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -217,6 +221,23 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             variableNames = variableNames
+        )
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskPauseExecute: BuildTaskPauseInfo
+    ): Result<Boolean> {
+        logger.info("$pipelineId| $buildId| $userId |executionPauseAtom $taskPauseExecute")
+        return client.get(ServiceBuildResource::class).executionPauseAtom(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskPauseExecute = taskPauseExecute
         )
     }
 

@@ -271,7 +271,7 @@
         &.bk-tab .bk-tab-header {
             height: 59px;
             line-height: 59px;
-            background-image: none;
+            background-image: none !important;
             .bk-tab-label-wrapper .bk-tab-label-list {
                 height: 59px;
                 li.bk-tab-label-item {

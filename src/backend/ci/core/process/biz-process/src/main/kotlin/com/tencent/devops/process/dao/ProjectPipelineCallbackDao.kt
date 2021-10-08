@@ -81,12 +81,14 @@ class ProjectPipelineCallbackDao {
     fun listProjectCallback(
         dslContext: DSLContext,
         projectId: String,
-        events: String
+        events: String,
+        enable: Boolean = true
     ): Result<TProjectPipelineCallbackRecord> {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(EVENTS.eq(events))
+                .and(ENABLE.eq(enable))
                 .fetch()
         }
     }

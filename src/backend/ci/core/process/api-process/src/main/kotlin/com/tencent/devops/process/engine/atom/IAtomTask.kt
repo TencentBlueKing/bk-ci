@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -85,7 +87,7 @@ interface IAtomTask<T> {
      *
      * @param task 执行任务
      * @param runVariables 运行时变量
-     * @param force 是否强制终止
+     * @param actionType 事件动作
      * @return BuildStatus
      *      返回标志位是否要等待其他任务结束才结束，如果返回 status.isFinish()
      *          true: 可以结束当前原子
@@ -93,9 +95,9 @@ interface IAtomTask<T> {
      *          例外: 当前原子执行失败则不会等待，直接标识为当前原子执行结束
      */
     @Suppress("ALL")
-    fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, force: Boolean = false): AtomResponse {
+    fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, actionType: ActionType): AtomResponse {
         val param = getParamElement(task)
-        var atomResponse = tryFinishImpl(task, param, runVariables, force)
+        var atomResponse = tryFinishImpl(task, param, runVariables, actionType)
         // 未结束？检查是否超时
         if (!atomResponse.buildStatus.isFinish()) {
             val startTime = task.startTime?.timestampmilli() ?: 0L
@@ -123,7 +125,7 @@ interface IAtomTask<T> {
                 } else {
                     0L
                 }
-
+            val runCondition = task.additionalOptions?.runCondition
             if (timeoutMills > 0 && System.currentTimeMillis() - startTime >= timeoutMills) {
                 logger.info(
                     "[${task.buildId}]|TIME_OUT|" +
@@ -135,9 +137,12 @@ interface IAtomTask<T> {
                     errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
                     errorMsg = "Task time out ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
                 )
-            } else if (force) { // 强制终止的设置为失败
+            } else if (actionType.isTerminate()) { // 强制终止的设置为失败
                 logger.info("[${task.buildId}]|FORCE_TERMINATE|job=${task.containerId}|task=${task.taskId}")
                 atomResponse = defaultFailAtomResponse
+            } else if (actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                logger.info("[${task.buildId}]|CANCEL|job=${task.containerId}|task=${task.taskId}")
+                atomResponse = AtomResponse(buildStatus = BuildStatus.CANCELED)
             }
         }
         return atomResponse
@@ -147,17 +152,21 @@ interface IAtomTask<T> {
         task: PipelineBuildTask,
         param: T,
         runVariables: Map<String, String>,
-        force: Boolean = false
+        actionType: ActionType
     ): AtomResponse {
-        val atomResponse = tryFinish(task, param, runVariables, force)
+        val atomResponse = tryFinish(task, param, runVariables, actionType.isTerminate())
+        val runCondition = task.additionalOptions?.runCondition
         return if (!atomResponse.buildStatus.isFinish()) {
-            if (force) { // 未结束，强制情况下则设置为失敗，此为旧内置插件才会有的问题。
+            if (actionType.isTerminate()) { // 未结束，强制情况下则设置为失敗，此为旧内置插件才会有的问题。
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.PLUGIN,
                     errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
                     errorMsg = "Force Terminate!"
                 )
+            } else if (actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                // 将能够取消的内置插件的状态设置为CANCELED
+                AtomResponse(buildStatus = BuildStatus.CANCELED)
             } else {
                 atomResponse
             }

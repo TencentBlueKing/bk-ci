@@ -60,7 +60,7 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', ['getPipelineList']),
+            ...mapGetters('pipelines', ['getCurPipeline']),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -68,13 +68,11 @@
                 return this.$route.params.pipelineId
             },
             currentPipeline () {
-                return this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
+                return this.getCurPipeline
             },
             // 最新的流水线版本信息
             latestPipelineVersionInfo () {
-                if (!this.getPipelineList.length) return
-                const latestPipeline = this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
-                return latestPipeline ? `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
+                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${this.currentPipeline.deploymentTime}` : this.$t('pipelinesEdit')
             }
         },
         methods: {

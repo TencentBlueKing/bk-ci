@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -45,7 +46,13 @@ import java.io.File
 @Suppress("ALL")
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
-    override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+    override fun uploadReport(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         logger.info("[${buildVariables.buildId}]| purePath=$purePath")
         val url = "/ms/artifactory/api/build/artifactories/file/archive" +
@@ -57,7 +64,11 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(url, requestBody, useFileGateway = true)
+        val request = buildPost(
+            path = url,
+            requestBody = requestBody,
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+        )
 
         val response = request(request, "上传自定义报告失败")
 

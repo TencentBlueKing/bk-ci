@@ -87,6 +87,7 @@ const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
 const val PIPELINE_RETRY_ALL_FAILED_CONTAINER = "BK_CI_RETRY_ALL_FAILED_CONTAINER"
+const val PIPELINE_SKIP_FAILED_TASK = "BK_CI_SKIP_FAILED_TASK"
 
 const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
@@ -108,6 +109,7 @@ const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
 const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
 const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
+const val BUILD_STATUS = "BK_CI_BUILD_STATUS" // "BuildStatus"
 
 /**
  * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改
@@ -115,7 +117,10 @@ const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
 const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
 const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
-const val PIPELINE_ATOM_FRONTEND_DIST_PATH = "BK_CI_CUSTOM_FRONTEND_DIST_PATH" // "流水线插件定制UI文件编译后的路径"
+const val PIPELINE_ATOM_NAME = "BK_CI_ATOM_NAME" // "流水线插件名称"
+const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"
+const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本"
+const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
 
 /**
  * 流水线设置-最大排队数量-默认值

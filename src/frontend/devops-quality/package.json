@@ -5,7 +5,7 @@
   "dependencies": {
     "vue-echarts": "^3.0.9",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "^2.5.16",
+    "vue-template-compiler": "2.6.12",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {    

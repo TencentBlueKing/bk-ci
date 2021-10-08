@@ -183,6 +183,19 @@ abstract class ImageService @Autowired constructor() {
         interfaceName: String? = "Anon interface"
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
+        // 判断当前用户是否是该镜像的成员
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(imageCode)
+            )
+        }
         // 参数校验
         val validPage = PageUtil.getValidPage(page)
         // 默认拉取所有
@@ -346,7 +359,7 @@ abstract class ImageService @Autowired constructor() {
                     modifier = it[KEY_MODIFIER] as String,
                     createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                     updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
-                    isInstalled = null
+                    installedFlag = null
                 )
             )
         }

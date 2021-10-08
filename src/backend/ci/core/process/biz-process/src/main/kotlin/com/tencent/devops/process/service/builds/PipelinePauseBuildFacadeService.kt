@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.service.builds
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -59,7 +59,6 @@ class PipelinePauseBuildFacadeService(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val objectMapper: ObjectMapper,
     private val pipelineTaskPauseService: PipelineTaskPauseService
 ) {
     companion object {
@@ -75,7 +74,7 @@ class PipelinePauseBuildFacadeService(
         stageId: String,
         containerId: String,
         isContinue: Boolean,
-        element: Element,
+        element: Element?,
         checkPermission: Boolean? = true
     ): Boolean {
         logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
@@ -86,17 +85,6 @@ class PipelinePauseBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
                 message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
-            )
-        }
-
-        val newElementStr = ParameterUtils.element2Str(element, objectMapper)
-        if (newElementStr.isNullOrEmpty()) {
-            logger.warn("executePauseAtom element is too long")
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
-                defaultMessage = "${buildId}element大小越界",
-                params = arrayOf(buildId)
             )
         }
 
@@ -125,24 +113,16 @@ class PipelinePauseBuildFacadeService(
 
         var actionType = ActionType.REFRESH
         if (!isContinue) {
-            actionType = ActionType.TERMINATE
+            actionType = ActionType.END // END才会对应成取消状态
         }
 
-        val isDiff = findDiffValue(
-            buildId = buildId,
-            taskId = taskId,
-            userId = userId,
-            newElement = element,
-            oldTask = taskRecord
-        )
-
-        if (isDiff) {
-            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+        if (element != null) {
+            findAndSaveDiff(
+                element = element,
                 buildId = buildId,
                 taskId = taskId,
-                newValue = newElementStr!!,
-                defaultValue = objectMapper.writeValueAsString(taskRecord.taskParams)
-            ))
+                taskRecord = taskRecord
+            )
         }
 
         pipelineEventDispatcher.dispatch(
@@ -161,14 +141,16 @@ class PipelinePauseBuildFacadeService(
         return true
     }
 
-    fun findDiffValue(
-        newElement: Element,
+    private fun findDiffValue(
+        newElement: Element?,
         buildId: String,
         taskId: String,
-        userId: String,
         oldTask: PipelineBuildTask
     ): Boolean {
         var isDiff = false
+        if (newElement == null) {
+            return isDiff
+        }
         val newInputData = ParameterUtils.getElementInput(newElement)
 
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: return isDiff
@@ -202,5 +184,38 @@ class PipelinePauseBuildFacadeService(
             }
         }
         return isDiff
+    }
+
+    private fun findAndSaveDiff(
+        element: Element,
+        buildId: String,
+        taskId: String,
+        taskRecord: PipelineBuildTask
+    ) {
+        val newElementStr = ParameterUtils.element2Str(element)
+        if (newElementStr.isNullOrBlank()) {
+            logger.warn("executePauseAtom element is too long")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
+                defaultMessage = "${buildId}element大小越界",
+                params = arrayOf(buildId)
+            )
+        }
+        val isDiff = findDiffValue(
+            buildId = buildId,
+            taskId = taskId,
+            newElement = element,
+            oldTask = taskRecord
+        )
+
+        if (isDiff) {
+            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+                buildId = buildId,
+                taskId = taskId,
+                newValue = newElementStr,
+                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
+            ))
+        }
     }
 }

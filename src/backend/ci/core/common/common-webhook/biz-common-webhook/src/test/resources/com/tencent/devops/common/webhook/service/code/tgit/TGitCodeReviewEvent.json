@@ -1,0 +1,71 @@
+{
+  "event": "approve",
+  "author": {
+    "name": "mingshewhe",
+    "username": "mingshewhe",
+    "web_url": "http://git.code.tencent.com/u/mingshewhe",
+    "id": 120593,
+    "avatar_url": null,
+    "state": null
+  },
+  "reviewer": {
+    "reviewer": {
+      "name": "fitzcao",
+      "username": "fitzcao",
+      "web_url": "http://git.code.tencent.com/u/fitzcao",
+      "id": 90935,
+      "avatar_url": null,
+      "state": null
+    },
+    "id": 11537017,
+    "review_id": 4210651,
+    "user_id": 90935,
+    "project_id": 331943,
+    "type": "invite",
+    "state": "approved",
+    "created_at": "2021-06-15T12:36:05+0000",
+    "updated_at": "2021-06-16T06:45:47+0000"
+  },
+  "reviewers": [
+    {
+      "reviewer": {
+        "name": "fitzcao",
+        "username": "fitzcao",
+        "web_url": "http://git.code.tencent.com/u/fitzcao",
+        "id": 90935,
+        "avatar_url": null,
+        "state": null
+      },
+      "id": 11537017,
+      "review_id": 4210651,
+      "user_id": 90935,
+      "project_id": 331943,
+      "type": "invite",
+      "state": "approved",
+      "created_at": "2021-06-15T12:36:05+0000",
+      "updated_at": "2021-06-16T06:45:47+0000"
+    }
+  ],
+  "id": 4210651,
+  "project_id": 331943,
+  "repository": {
+    "name": "webhook_test",
+    "url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+    "description": "webhook test",
+    "homepage": "http://git.code.tencent.com/mingshewhe/webhook_test3",
+    "git_http_url": "http://git.code.tencent.com/mingshewhe/webhook_test3.git",
+    "git_ssh_url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+    "visibility_level": 0
+  },
+  "iid": 178,
+  "author_id": 120593,
+  "reviewable_id": 3770787,
+  "reviewable_type": "merge_request",
+  "commit_id": null,
+  "state": "approved",
+  "approver_rule": 1,
+  "necessary_approver_rule": 0,
+  "push_reset_enabled": true,
+  "created_at": "2021-06-09T02:00:58+0000",
+  "updated_at": "2021-06-15T12:36:05+0000"
+}

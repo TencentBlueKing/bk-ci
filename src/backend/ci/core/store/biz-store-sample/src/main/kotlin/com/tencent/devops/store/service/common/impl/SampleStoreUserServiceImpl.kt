@@ -66,8 +66,6 @@ class SampleStoreUserServiceImpl : StoreUserService {
         storeCode: String,
         storeType: StoreTypeEnum
     ): Boolean {
-        logger.info("isCanInstallStoreComponent userId is :$userId,defaultFlag is :$defaultFlag")
-        logger.info("isCanInstallStoreComponent storeCode is :$storeCode,storeType is :$storeType")
         return true // 开源版默认都有安装权限
     }
 }

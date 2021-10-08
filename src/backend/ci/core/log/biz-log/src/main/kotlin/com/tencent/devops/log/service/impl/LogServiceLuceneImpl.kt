@@ -39,14 +39,14 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
-import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.lucene.LuceneClient
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
+import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -60,8 +60,8 @@ class LogServiceLuceneImpl constructor(
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
-    private val logBeanV2: LogBeanV2,
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val logStorageBean: LogStorageBean,
+    private val buildLogPrintService: BuildLogPrintService
 ) : LogService {
 
     companion object {
@@ -83,7 +83,7 @@ class LogServiceLuceneImpl constructor(
     override fun addLogEvent(event: LogEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
         }
     }
 
@@ -105,7 +105,7 @@ class LogServiceLuceneImpl constructor(
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.batchWrite(elapse, success)
+            logStorageBean.batchWrite(elapse, success)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
@@ -123,6 +123,7 @@ class LogServiceLuceneImpl constructor(
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
+                logStorageMode = logStorageMode,
                 finish = finished
             )
         }
@@ -152,7 +153,7 @@ class LogServiceLuceneImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - currentEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - currentEpoch, success)
         }
     }
 
@@ -201,7 +202,7 @@ class LogServiceLuceneImpl constructor(
             }
             return queryLogs
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -231,7 +232,7 @@ class LogServiceLuceneImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -263,7 +264,7 @@ class LogServiceLuceneImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -322,9 +323,9 @@ class LogServiceLuceneImpl constructor(
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -357,9 +358,9 @@ class LogServiceLuceneImpl constructor(
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } catch (e: Exception) {
             logger.error("Query bottom logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -412,7 +413,7 @@ class LogServiceLuceneImpl constructor(
                 status = pageResult.status
             )
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -420,8 +421,8 @@ class LogServiceLuceneImpl constructor(
         return true
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) =
-        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: Int) =
+        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
 
     private fun doQueryInitLogsPage(
         buildId: String,
@@ -453,10 +454,10 @@ class LogServiceLuceneImpl constructor(
                 pageSize = pageSize
             )
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
         }
         return queryLogs
@@ -555,11 +556,11 @@ class LogServiceLuceneImpl constructor(
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = size > logs.size
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }
@@ -616,7 +617,7 @@ class LogServiceLuceneImpl constructor(
             moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            moreLogs.status = LogStatus.FAIL
+            moreLogs.status = LogStatus.FAIL.status
             moreLogs.finished = true
             moreLogs.hasMore = false
         }
@@ -682,7 +683,7 @@ class LogServiceLuceneImpl constructor(
             queryLogs.hasMore = queryLogs.logs.size >= logSize
         } catch (e: Exception) {
             logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }

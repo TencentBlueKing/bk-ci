@@ -97,7 +97,6 @@ class EnvironmentNodeDao {
             return dslContext.selectFrom(this)
                 .where(NODE_TYPE.`in`(NodeType.CC.name,
                     NodeType.CMDB.name,
-                    NodeType.BCSVM.name,
                     NodeType.OTHER.name,
                     NodeType.DEVCLOUD.name))
                 .fetch()

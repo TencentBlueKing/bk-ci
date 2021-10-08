@@ -37,8 +37,8 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -47,7 +47,7 @@ import java.time.LocalDateTime
 class UpdateStateContainerCmdFinally(
     private val mutexControl: MutexControl,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : ContainerCmd {
@@ -120,10 +120,10 @@ class UpdateStateContainerCmdFinally(
                 pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            pipelineBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
+            containerBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
-            pipelineBuildDetailService.updateContainerStatus(
+            containerBuildDetailService.updateContainerStatus(
                 buildId = event.buildId, containerId = event.containerId, buildStatus = buildStatus
             )
         }

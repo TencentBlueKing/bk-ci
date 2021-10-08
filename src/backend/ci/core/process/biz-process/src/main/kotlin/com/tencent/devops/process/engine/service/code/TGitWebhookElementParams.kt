@@ -31,15 +31,15 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 
 class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerElement> {
     override fun getWebhookElementParams(
         element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
-    ): ScmWebhookMatcher.WebHookParams? {
-        val params = ScmWebhookMatcher.WebHookParams(
+    ): WebHookParams? {
+        val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables
@@ -58,6 +58,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
             params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
+            params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
             params.codeType = CodeType.GIT
@@ -65,6 +66,11 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
             params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
             params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
+            params.includeCrState = if (includeCrState.isNullOrEmpty()) {
+                ""
+            } else {
+                includeCrState!!.joinToString(",")
+            }
             return params
         }
     }

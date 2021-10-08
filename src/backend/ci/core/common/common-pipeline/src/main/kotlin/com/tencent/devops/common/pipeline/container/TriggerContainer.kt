@@ -54,15 +54,17 @@ data class TriggerContainer(
     val templateParams: List<BuildFormProperty>? = null,
     @ApiModelProperty("构建版本号", required = false)
     val buildNo: BuildNo? = null,
-    @ApiModelProperty("是否可重试", required = false, hidden = true)
-    override var canRetry: Boolean? = false,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
     override var containerId: String? = null,
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
     override var executeCount: Int? = 0,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
-    override val jobId: String? = null
+    override val jobId: String? = null,
+    @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
+    override var containPostTaskFlag: Boolean? = null
 ) : Container {
     companion object {
         const val classType = "trigger"
