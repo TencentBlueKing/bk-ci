@@ -36,13 +36,13 @@ import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitBasicSettingResourceImpl @Autowired constructor(
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: GitCIV2PermissionService
 ) : UserGitBasicSettingResource {
 
@@ -58,11 +58,11 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
-        val setting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            gitCIBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, projectInfo)
+            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, projectInfo)
         } else {
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )
@@ -74,7 +74,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)
-        return Result(gitCIBasicSettingService.getGitCIConf(gitProjectId))
+        return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
     }
 
     override fun saveGitCIConf(
@@ -87,7 +87,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableGitCI(gitProjectId)
         return Result(
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
@@ -101,7 +101,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableUserId = userId
             )

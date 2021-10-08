@@ -283,7 +283,7 @@ class MonitorNotifyJob @Autowired constructor(
         val userNum = bkDataBean.data.list.map { it.values.first() }.first().toDouble()
 
         // 上报数据
-        oteamStatus(userNum, oteamCoverageTarget, startTime)
+        oteamStatus(userNum, oteamUserTarget, startTime)
 
         return EmailModuleData(
             "Oteam",
@@ -470,7 +470,6 @@ class MonitorNotifyJob @Autowired constructor(
                 "process",
                 "dispatch",
                 "openapi",
-                "artifactory",
                 "websocket",
                 "store",
                 "log",

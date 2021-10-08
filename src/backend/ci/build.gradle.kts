@@ -87,8 +87,8 @@ allprojects {
                 entry("poi")
                 entry("poi-ooxml")
             }
-            dependencySet("com.hankcs:${Versions.HanLP}") {
-                entry("hanlp")
+            dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
+                entry("pinyin-plus")
             }
         }
     }

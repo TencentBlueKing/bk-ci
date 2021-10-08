@@ -65,6 +65,7 @@ dependencies {
 //    api("org.apache.poi:poi"
 //    api("org.apache.poi:poi-ooxml"
     api("org.springframework.boot:spring-boot-starter-websocket")
+    api("com.github.ben-manes.caffeine:caffeine")
     api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")

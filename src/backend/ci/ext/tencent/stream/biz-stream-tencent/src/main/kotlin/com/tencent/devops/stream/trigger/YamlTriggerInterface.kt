@@ -31,24 +31,20 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
 
 interface YamlTriggerInterface<T> {
 
     fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
         filePath: String,
-        changeSet: Set<String>? = null
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): Boolean
 
     fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
@@ -56,7 +52,8 @@ interface YamlTriggerInterface<T> {
         pipelineId: String?,
         pipelineName: String?,
         event: GitEvent?,
-        changeSet: Set<String>? = null
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): T?
 
     fun checkYamlSchema(userId: String, yaml: String): Result<String>

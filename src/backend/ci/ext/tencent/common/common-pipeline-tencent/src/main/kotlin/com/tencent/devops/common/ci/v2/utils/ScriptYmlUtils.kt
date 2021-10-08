@@ -770,4 +770,23 @@ object ScriptYmlUtils {
             listOf<String>()
         }
     }
+
+    fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
+        val stages = formatStage(
+            preScriptBuildYaml
+        )
+
+        return ScriptBuildYaml(
+            name = preScriptBuildYaml.name,
+            version = preScriptBuildYaml.version,
+            triggerOn = null,
+            variables = preScriptBuildYaml.variables,
+            extends = preScriptBuildYaml.extends,
+            resource = preScriptBuildYaml.resources,
+            notices = preScriptBuildYaml.notices,
+            stages = stages,
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
+            label = preScriptBuildYaml.label ?: emptyList()
+        )
+    }
 }

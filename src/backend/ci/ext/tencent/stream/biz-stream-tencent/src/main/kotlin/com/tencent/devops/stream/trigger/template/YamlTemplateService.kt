@@ -37,16 +37,16 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.v2.service.OauthService
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class YamlTemplateService @Autowired constructor(
-    private val oauthService: OauthService,
-    private val scmService: ScmService,
+    private val oauthService: StreamOauthService,
+    private val streamScmService: StreamScmService,
     private val ticketService: TicketService,
     private val yamlVersion: YamlVersion,
     private val yamlSchemaCheck: YamlSchemaCheck
@@ -99,13 +99,16 @@ class YamlTemplateService @Autowired constructor(
                 }
                 orgYaml
             } else {
-                scmService.getYamlFromGit(
+                streamScmService.getYamlFromGit(
                     token = forkToken ?: token,
                     gitProjectId = gitProjectId.toString(),
                     ref = ref!!,
                     fileName = templateDirectory + fileName,
                     useAccessToken = true
-                ).ifBlank { throw YamlBlankException(templateDirectory + fileName) }
+                )
+            }
+            if (content.isBlank()) {
+                throw YamlBlankException(templateDirectory + fileName)
             }
 
             yamlSchemaCheck.check(content, templateType, false)
@@ -115,7 +118,7 @@ class YamlTemplateService @Autowired constructor(
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
 
-            val content = scmService.getYamlFromGit(
+            val content = streamScmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo!!,
                 ref = ref ?: getDefaultBranch(oAuthToken, targetRepo, true),
@@ -141,7 +144,7 @@ class YamlTemplateService @Autowired constructor(
                 key
             }
 
-            val content = scmService.getYamlFromGit(
+            val content = streamScmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo!!,
                 ref = ref ?: getDefaultBranch(personToken, targetRepo, false),
@@ -157,7 +160,7 @@ class YamlTemplateService @Autowired constructor(
     }
 
     private fun getDefaultBranch(token: String, gitProjectId: String, useAccessToken: Boolean): String {
-        return scmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
+        return streamScmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
     }
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {

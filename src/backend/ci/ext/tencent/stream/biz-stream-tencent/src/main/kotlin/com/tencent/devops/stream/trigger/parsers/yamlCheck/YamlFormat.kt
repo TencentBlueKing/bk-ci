@@ -41,7 +41,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
-import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
+import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 
@@ -85,7 +85,7 @@ object YamlFormat {
                 reason = reason,
                 reasonParams = listOf(message ?: ""),
                 yamls = Yamls(originYaml, null, null),
-                version = YamlTriggerV2.ymlVersion,
+                version = StreamYamlTrigger.ymlVersion,
                 commitCheck = CommitCheck(
                     block = block,
                     state = GitCICommitCheckState.FAILURE

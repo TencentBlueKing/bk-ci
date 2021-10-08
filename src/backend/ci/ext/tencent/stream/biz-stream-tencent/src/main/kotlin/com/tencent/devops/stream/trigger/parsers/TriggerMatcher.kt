@@ -49,7 +49,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
-import com.tencent.devops.stream.v2.service.ScmService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,7 +59,7 @@ import java.util.regex.Pattern
 @Suppress("ComplexMethod", "NestedBlockDepth", "ComplexCondition")
 @Component
 class TriggerMatcher @Autowired constructor(
-    private val scmService: ScmService
+    private val streamScmService: StreamScmService
 ) {
 
     companion object {
@@ -397,7 +397,7 @@ class TriggerMatcher @Autowired constructor(
             val mrId = (event as GitMergeRequestEvent).object_attributes.id
             // 使用本次触发的项目ID，不然fork库过来的请求未开启CI无法触发
             val gitProjectId = gitRequestEvent.gitProjectId
-            val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
+            val gitMrChangeInfo = streamScmService.getMergeRequestChangeInfo(
                 userId = event.user.name,
                 token = null,
                 gitProjectId = gitProjectId,
