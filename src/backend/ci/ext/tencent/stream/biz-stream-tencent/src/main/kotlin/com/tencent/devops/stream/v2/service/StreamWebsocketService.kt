@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class GitCIV2WebsocketService @Autowired constructor(
+class StreamWebsocketService @Autowired constructor(
     val webSocketDispatcher: WebSocketDispatcher,
     val redisOperation: RedisOperation
 ) {
@@ -75,6 +75,6 @@ class GitCIV2WebsocketService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCIV2WebsocketService::class.java)
+        val logger = LoggerFactory.getLogger(StreamWebsocketService::class.java)
     }
 }

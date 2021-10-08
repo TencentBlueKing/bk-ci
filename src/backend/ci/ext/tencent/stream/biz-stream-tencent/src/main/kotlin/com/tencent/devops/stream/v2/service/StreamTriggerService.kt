@@ -36,7 +36,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
@@ -49,12 +49,12 @@ import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
-class TriggerBuildService @Autowired constructor(
+class StreamTriggerService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val yamlBuildV2: YamlBuildV2
+    private val yamlBuildV2: StreamYamlBuild
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -63,7 +63,7 @@ class TriggerBuildService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamTriggerService::class.java)
         private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."

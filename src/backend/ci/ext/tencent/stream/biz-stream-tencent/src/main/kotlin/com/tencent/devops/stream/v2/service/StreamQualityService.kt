@@ -43,10 +43,10 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class QualityService {
+class StreamQualityService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QualityService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamQualityService::class.java)
         private const val PIPELINE_NAME_TITLE = "Stream流水线"
     }
 

@@ -54,10 +54,10 @@ import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
-import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
+import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
@@ -70,29 +70,29 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class YamlBuildV2 @Autowired constructor(
+class StreamYamlBuild @Autowired constructor(
     client: Client,
     kafkaClient: KafkaClient,
     gitPipelineResourceDao: GitPipelineResourceDao,
     gitRequestEventBuildDao: GitRequestEventBuildDao,
     gitCIEventSaveService: GitCIEventService,
-    websocketService: GitCIV2WebsocketService,
+    websocketService: StreamWebsocketService,
     streamPipelineBranchService: StreamPipelineBranchService,
     gitCheckService: GitCheckService,
     streamGitConfig: StreamGitConfig,
     triggerMessageUtil: StreamTriggerMessageUtils,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val redisOperation: RedisOperation,
     private val modelCreate: ModelCreate
-) : YamlBaseBuildV2<ScriptBuildYaml>(
+) : StreamYamlBaseBuild<ScriptBuildYaml>(
     client, kafkaClient, dslContext, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitCIEventSaveService, websocketService, streamPipelineBranchService,
     gitCheckService, streamGitConfig, triggerMessageUtil
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(YamlBuildV2::class.java)
+        private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
         private const val ymlVersion = "v2.0"
         const val VARIABLE_PREFIX = "variables."
     }
@@ -114,7 +114,7 @@ class YamlBuildV2 @Autowired constructor(
         )
         try {
             triggerLock.lock()
-            val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
+            val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
             // 优先创建流水线为了绑定红线
             if (pipeline.pipelineId.isBlank()) {
                 savePipeline(

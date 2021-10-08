@@ -35,13 +35,13 @@ import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.v2.GitCIV2Startup
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.TriggerBuildService
+import com.tencent.devops.stream.v2.service.StreamTriggerService
 import com.tencent.devops.process.pojo.BuildId
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIBuildResourceImpl @Autowired constructor(
-    private val triggerBuildService: TriggerBuildService,
+    private val streamTriggerService: StreamTriggerService,
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCIBuildResource {
 
@@ -57,7 +57,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         checkParam(userId, pipelineId, buildId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
-            triggerBuildService.retry(
+            streamTriggerService.retry(
                 userId = userId,
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
@@ -78,7 +78,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         checkParam(userId, pipelineId, buildId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
-            triggerBuildService.manualShutdown(
+            streamTriggerService.manualShutdown(
                 userId = userId,
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
@@ -94,7 +94,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
             gitCIV2Startup.gitCIBasicSetting.gitProjectId
         )
         return Result(
-            triggerBuildService.startBuild(
+            streamTriggerService.startBuild(
                 pipeline = gitCIV2Startup.pipeline,
                 event = gitCIV2Startup.event,
                 gitCIBasicSetting = gitCIV2Startup.gitCIBasicSetting,
