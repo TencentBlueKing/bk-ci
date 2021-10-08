@@ -41,22 +41,36 @@ mysql:
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
     rootPassword: root
+  primary:
+    persistence:
+      size: 10Gi
 redis:
   enabled: true
   auth:
     password: user
   replica:
     replicaCount: 1
+    persistence: 
+      size: 10Gi
+  master:
+    persistence: 
+      size: 10Gi 
 elasticsearch:
   enabled: true
   master:
     replicas: 1
+    persistence:
+      size: 10Gi
   coordinating:
     replicas: 1
   data:
     replicas: 1
+    persistence:
+      size: 10Gi
 rabbitmq:
   enabled: true
+  persistence:
+    size: 10Gi
   auth:
     username: user
     password: user
@@ -78,7 +92,8 @@ influxdb:
       username: user
       password: password
       token: GnnsHwEcQ07sqpidcX2s
-
+  persistence:
+    size: 10Gi
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
@@ -91,6 +106,7 @@ mongodb:
     database: bkci
   persistence:
     subPath: mongodb
+    size: 10Gi
   initdbScripts:
     create_admin_user.sh: |
       $MONGODB_BIN_DIR/mongo admin --host 127.0.0.1 --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
