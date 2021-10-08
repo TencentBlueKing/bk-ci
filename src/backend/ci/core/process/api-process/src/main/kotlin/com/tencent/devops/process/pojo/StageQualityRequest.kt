@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,21 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:process:plugin-load")) // Model检查
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-client")) // 其他微服务调用
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-websocket")) // 依赖websocket枚举
-    api(project(":core:dispatch:api-dispatch")) // Dispatch配额实现在dispatch，考虑移除
-    api(project(":core:project:api-project")) // 依赖读取项目VO
-    api(project(":core:process:api-process"))
-    api(project(":core:plugin:codecc-plugin:common-codecc")) // MarketBuildUtils依赖了CodeCC，考虑移除
-    api(project(":core:notify:api-notify")) // 消息通知API，考虑移除
-    api(project(":core:process:model-process"))
-    api("com.zaxxer:HikariCP")
-    api("mysql:mysql-connector-java")
-    implementation("com.github.ben-manes.caffeine:caffeine")
-    testImplementation(project(":core:common:common-test"))
-}
+package com.tencent.devops.process.pojo
+
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("人工审核-自定义参数")
+data class StageQualityRequest(
+    @ApiModelProperty("准入准出标识", required = true)
+    val position: ControlPointPosition,
+    @ApiModelProperty("是否通过", required = true)
+    val success: Boolean,
+    @ApiModelProperty("失败后是否结束", required = true)
+    val failEnd: Boolean,
+    @ApiModelProperty("第几次检查", required = true)
+    val checkTimes: Int
+)
