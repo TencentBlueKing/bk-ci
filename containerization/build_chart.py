@@ -32,7 +32,8 @@ default_value_dict = {
     'bkCiPublicUrl': 'devops.example.com',
     'bkCiPublicHostIp': '127.0.0.1',
     'bkCiIamCallbackUser': 'bk_iam',
-    'bkCiAppCode': 'bk_ci'
+    'bkCiAppCode': 'bk_ci',
+    'bkCiNotifyWeworkSendChannel': 'weworkAgent'
 }
 
 if os.path.isfile('./values.json'):
