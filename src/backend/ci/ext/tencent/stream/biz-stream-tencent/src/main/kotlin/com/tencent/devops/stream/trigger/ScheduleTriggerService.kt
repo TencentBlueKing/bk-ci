@@ -69,10 +69,16 @@ class ScheduleTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ScheduleTriggerService::class.java)
     }
 
-    fun triggerBuild(streamTimerEvent: StreamTimerBuildEvent, buildBranch: String): Boolean {
-
-        // todo: 这里需要传入最新的定时触发id
-        val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(streamTimerEvent, buildBranch)
+    fun triggerBuild(
+        streamTimerEvent: StreamTimerBuildEvent,
+        buildBranch: String,
+        buildCommitId: String
+    ): Boolean {
+        val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(
+            streamTimerEvent,
+            buildBranch,
+            buildCommitId
+        )
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
@@ -104,7 +110,6 @@ class ScheduleTriggerService @Autowired constructor(
         )
 
         handleTrigger(
-            userId = streamTimerEvent.userId,
             gitRequestEvent = gitRequestEvent,
             originYaml = streamTimerEvent.originYaml,
             buildPipeline = buildPipeline
@@ -113,18 +118,16 @@ class ScheduleTriggerService @Autowired constructor(
     }
 
     fun handleTrigger(
-        userId: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline
     ) {
         triggerExceptionService.handle(gitRequestEvent, null, null) {
-            trigger(userId, gitRequestEvent, originYaml, buildPipeline)
+            trigger(gitRequestEvent, originYaml, buildPipeline)
         }
     }
 
     private fun trigger(
-        userId: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline

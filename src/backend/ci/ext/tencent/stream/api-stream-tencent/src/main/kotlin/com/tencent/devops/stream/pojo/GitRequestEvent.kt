@@ -77,8 +77,13 @@ data class GitRequestEvent(
     var gitEvent: GitEvent?
 )
 
+fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
+
 fun GitRequestEvent.isFork(): Boolean {
     return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
             sourceGitProjectId != null &&
             sourceGitProjectId != gitProjectId
 }
+
+// 当人工触发时不推送CommitCheck消息
+fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value

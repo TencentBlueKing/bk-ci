@@ -120,7 +120,7 @@ class StreamTimerBuildListener @Autowired constructor(
         return if (!always) {
             branchChangeTimerTrigger(branch = branch, latestRevision = latestRevisionInfo.revision)
         } else {
-            scheduleTriggerService.triggerBuild(this, branch)
+            scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo.revision)
         }
     }
 
@@ -131,7 +131,7 @@ class StreamTimerBuildListener @Autowired constructor(
             branch = branch
         )
         if ((timerBranch == null || timerBranch.revision != latestRevision) &&
-            scheduleTriggerService.triggerBuild(this, branch)
+            scheduleTriggerService.triggerBuild(this, branch, latestRevision)
         ) {
             streamTimerBranchService.save(
                 StreamTimerBranch(

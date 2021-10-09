@@ -142,7 +142,11 @@ object GitRequestEventHandle {
         )
     }
 
-    fun createScheduleTriggerEvent(streamTimerEvent: StreamTimerBuildEvent, buildBranch: String): GitRequestEvent {
+    fun createScheduleTriggerEvent(
+        streamTimerEvent: StreamTimerBuildEvent,
+        buildBranch: String,
+        buildCommit: String
+    ): GitRequestEvent {
         return GitRequestEvent(
             id = null,
             objectKind = TGitObjectKind.SCHEDULE.value,
@@ -152,7 +156,7 @@ object GitRequestEventHandle {
             sourceGitProjectId = null,
             branch = buildBranch,
             targetBranch = null,
-            commitId = "",
+            commitId = buildCommit,
             commitMsg = null,
             commitTimeStamp = getCommitTimeStamp(null),
             userId = streamTimerEvent.userId,
