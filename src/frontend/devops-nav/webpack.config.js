@@ -89,6 +89,9 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
+            minify: {
+                removeComments: false
+            },
             DEVOPS_LS_VERSION: lsVersion
         }),
         new AssetPlugin(),
