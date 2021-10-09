@@ -29,13 +29,11 @@ package com.tencent.devops.openapi.resources.apigw.v2
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.pojo.external.measure.ServiceMeasureResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwPipelineResourceV2
 import com.tencent.devops.openapi.pojo.BuildStatisticsResponse
+import com.tencent.devops.openapi.pojo.external.measure.ServiceMeasureResource
 import com.tencent.devops.openapi.service.apigw.ApigwPipelineServiceV2
-import com.tencent.devops.process.api.v2.ServicePipelineResourceV2
 import com.tencent.devops.process.pojo.Pipeline
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -87,26 +85,6 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
             page = page,
             pageSize = pageSize,
             interfaceName = "/v2/pipelines/organizationIds"
-        )
-    }
-
-    override fun getListByBuildResource(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        buildResourceType: String,
-        buildResourceValue: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<Pipeline>> {
-        // 1.直接调Process微服务根据构建资源查流水线接口获取结果返回
-        return client.getWithoutRetry(ServicePipelineResourceV2::class).listPipelinesByBuildResource(
-            userId = userId,
-            buildResourceType = buildResourceType,
-            buildResourceValue = buildResourceValue,
-            page = page,
-            pageSize = pageSize,
-            channelCode = ChannelCode.BS
         )
     }
 

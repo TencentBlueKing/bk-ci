@@ -64,6 +64,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
                 subscriptionPauseUser.addAll(sendUsers)
             }
             sendPauseNotify(
+                projectId = buildTask.projectId,
                 buildId = buildId,
                 taskName = buildTask.taskName,
                 pipelineId = buildTask.pipelineId,
@@ -76,18 +77,19 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     }
 
     private fun sendPauseNotify(
+        projectId: String,
         buildId: String,
         taskName: String,
         pipelineId: String,
         receivers: Set<String>?
     ) {
-        val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+        val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
         if (pipelineRecord == null) {
             logger.warn("sendPauseNotify pipeline[$pipelineId] is empty record")
             return
         }
 
-        val buildRecord = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildRecord = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         val pipelineName = (pipelineRecord?.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
@@ -137,6 +139,6 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineFailureBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(TxPipelinePauseExtServiceImpl::class.java)
     }
 }

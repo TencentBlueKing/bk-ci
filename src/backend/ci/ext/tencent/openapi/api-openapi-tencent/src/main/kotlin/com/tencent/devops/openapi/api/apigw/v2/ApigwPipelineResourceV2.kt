@@ -121,33 +121,6 @@ interface ApigwPipelineResourceV2 {
         pageSize: Int? = null
     ): Result<Page<Pipeline>>
 
-    @ApiOperation("获取使用指定构建资源的流水线列表")
-    @GET
-    @Path("/buildResource")
-    fun getListByBuildResource(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam(value = "构建类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_TYPE)
-        buildResourceType: String,
-        @ApiParam("构建资源值（镜像名称/节点ID/环境ID）", required = false, defaultValue = "")
-        @QueryParam("resourceValue")
-        buildResourceValue: String? = "",
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int? = null,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int? = null
-    ): Result<Page<Pipeline>>
-
     @ApiOperation("获取流水线构建结果统计数据")
     @GET
     @Path("/builds/statistics")
