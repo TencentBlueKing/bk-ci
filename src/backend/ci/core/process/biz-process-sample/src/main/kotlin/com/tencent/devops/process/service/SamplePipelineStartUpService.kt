@@ -25,21 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplate
-import com.tencent.devops.process.template.service.PipelineTemplateService
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServicePipelineTemplateResourceImpl @Autowired constructor(
-    private val pipelineTemplateService: PipelineTemplateService
-) : ServicePipelineTemplateResource {
+@Service
+class SamplePipelineStartUpService : SubPipelineStartUpService() {
 
-    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
-        return Result(pipelineTemplateService.listTemplate(projectCode))
+    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        // 开源版暂不做权限校验
     }
 }

@@ -66,30 +66,43 @@ import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
-@Service
-class PipelineBuildWebhookService @Autowired constructor(
-    private val objectMapper: ObjectMapper,
-    private val client: Client,
-    private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineBuildService: PipelineBuildService,
-    private val permFixService: PermFixService,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
-    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
-    private val pipelineWebHookQueueService: PipelineWebHookQueueService,
-    private val buildLogPrinter: BuildLogPrinter
-) {
+abstract class PipelineBuildWebhookService @Autowired constructor() {
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
+
+    @Autowired
+    lateinit var client: Client
+
+    @Autowired
+    lateinit var pipelineWebhookService: PipelineWebhookService
+
+    @Autowired
+    lateinit var pipelineRepositoryService: PipelineRepositoryService
+
+    @Autowired
+    lateinit var pipelineBuildService: PipelineBuildService
+
+    @Autowired
+    lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+
+    @Autowired
+    lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+
+    @Autowired
+    lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
+
+    @Autowired
+    lateinit var buildLogPrinter: BuildLogPrinter
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
 
@@ -441,8 +454,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
-
-        permFixService.checkPermission(pipelineInfo.lastModifyUser, projectId, pipelineId = pipelineId)
+        checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         if (model == null) {
@@ -500,4 +512,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
     }
+
+    abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
 }
