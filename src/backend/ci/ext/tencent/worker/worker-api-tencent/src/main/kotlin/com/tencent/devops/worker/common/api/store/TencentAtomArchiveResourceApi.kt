@@ -76,7 +76,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     AtomArchiveSDKApi {
 
     companion object {
-        private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+        private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
         private const val RELEASE_STAGE_KEY = "release.stage"
     }
 
