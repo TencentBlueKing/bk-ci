@@ -43,6 +43,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -58,7 +59,8 @@ class PipelineTaskPauseListener @Autowired constructor(
     val pipelineBuildTaskService: PipelineBuildTaskService,
     val pipelineRuntimeService: PipelineRuntimeService,
     val pipelineTaskPauseService: PipelineTaskPauseService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    val pipelineStageService: PipelineStageService
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
@@ -66,6 +68,13 @@ class PipelineTaskPauseListener @Autowired constructor(
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             redisLock.lock()
+            pipelineStageService.updateStageStatus(
+                buildId = event.buildId,
+                stageId = event.stageId,
+                buildStatus = BuildStatus.RUNNING,
+                checkIn = null,
+                checkOut = null
+            )
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(task = taskRecord!!, userId = event.userId)
             } else if (event.actionType == ActionType.END) {
