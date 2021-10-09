@@ -872,7 +872,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun listTemplateByIds(
+    fun listOriginTemplate(
         projectId: String?,
         templateType: TemplateType?,
         templateIds: Collection<String>?,
