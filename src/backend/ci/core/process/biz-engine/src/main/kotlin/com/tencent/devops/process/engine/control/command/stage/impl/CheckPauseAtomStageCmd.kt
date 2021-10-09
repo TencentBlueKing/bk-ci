@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class CheckPauseAtomStageCmd @Autowired constructor(
     val pipelineBuildService: PipelineRuntimeService
-) : StageCmd{
+) : StageCmd {
     override fun canExecute(commandContext: StageContext): Boolean {
         return commandContext.stage.controlOption?.finally != true &&
             commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
@@ -34,7 +34,7 @@ class CheckPauseAtomStageCmd @Autowired constructor(
         }
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(CheckPauseAtomStageCmd::class.java)
     }
 }
