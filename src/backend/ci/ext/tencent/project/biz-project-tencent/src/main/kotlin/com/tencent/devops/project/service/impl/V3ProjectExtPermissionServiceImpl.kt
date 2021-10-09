@@ -174,7 +174,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         logger.info("grantInstancePermission $userId|$projectId|$action|$resourceType|$resourceCode|$userList")
         // 此处做保护,防止用户一次加太多用户
         if (userList.size > TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE) {
-            TxV3AuthPermissionApi.logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
+            logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
             throw ParamBlankException("授权用户数越界:${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
         }
         userList.forEach {
