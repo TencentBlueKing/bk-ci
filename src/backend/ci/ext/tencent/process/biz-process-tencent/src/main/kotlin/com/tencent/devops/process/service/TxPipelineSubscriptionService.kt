@@ -41,14 +41,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
-import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
