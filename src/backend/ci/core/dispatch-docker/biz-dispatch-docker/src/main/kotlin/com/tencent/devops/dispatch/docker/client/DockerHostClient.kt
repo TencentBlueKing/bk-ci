@@ -131,8 +131,8 @@ class DockerHostClient @Autowired constructor(
         LOG.info("${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
             "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
             "|${dispatchType.credentialProject}")
-        var userName: String? = null
-        var password: String? = null
+        var userName = dispatchType.imageRepositoryUserName
+        var password = dispatchType.imageRepositoryPassword
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
                 val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {

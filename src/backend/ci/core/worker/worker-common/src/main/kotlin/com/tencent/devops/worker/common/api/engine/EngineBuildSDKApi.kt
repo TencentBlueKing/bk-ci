@@ -44,13 +44,13 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
 
-    fun endTask(retryCount: Int): Result<Boolean>
+    fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
 
     fun heartbeat(): Result<HeartBeatInfo>
 
     fun timeout(): Result<Boolean>
 
-    fun getCiToken(): String
+    fun getJobContext(): Map<String, String>
 
-    fun getCiUrl(): String
+    fun getBuildDetailUrl(): String
 }
