@@ -26,12 +26,6 @@
     "changelog": "conventional-changelog -c changelog.config.js -p github -i CHANGELOG.md -s",
     "public": "gulp -d frontend"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
   "lint-staged": {
     "*.{js,ts,tsx,vue}": [
       "eslint --fix"
