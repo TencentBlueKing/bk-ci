@@ -45,14 +45,14 @@ import com.tencent.devops.stream.trigger.StreamYamlService
 import com.tencent.devops.stream.trigger.YamlTriggerFactory
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.common.CommonConst
-import com.tencent.devops.stream.v2.service.GitCIV2PipelineService
+import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCITriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
-    private val gitCIV2PipelineService: GitCIV2PipelineService,
+    private val streamPipelineService: StreamPipelineService,
     private val permissionService: GitCIV2PermissionService,
     private val streamYamlService: StreamYamlService,
     private val yamlTriggerFactory: YamlTriggerFactory,
@@ -157,7 +157,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         } else {
             commitId
         }
-        return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
+        return Result(streamPipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 
     private fun checkParam(userId: String) {

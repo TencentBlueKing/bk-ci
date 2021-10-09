@@ -76,7 +76,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("销毁项目的token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(

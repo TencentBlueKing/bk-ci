@@ -137,7 +137,7 @@ class GitCommentCheckTask : ITask() {
                         errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
                 }
-                LoggerService.addYellowLine("Git Comment检查: ${it.fullMessage} 与匹配规则($commentPattern)不匹配")
+                LoggerService.addWarnLine("Git Comment检查: ${it.fullMessage} 与匹配规则($commentPattern)不匹配")
             }
         }
 

@@ -354,4 +354,16 @@ class ExperiencePublicDao {
                 .fetch()
         }
     }
+
+    fun listAllRecordId(dslContext: DSLContext): Result<Record1<Long>>? {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.select(RECORD_ID)
+                .from(this)
+                .where(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(10000)
+                .fetch()
+        }
+    }
 }
