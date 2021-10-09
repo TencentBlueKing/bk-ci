@@ -275,33 +275,6 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
 //                    mapData = mapData,
 //                    detailFlag = settingDetailFlag
 //                )
-
-                // 发送企业微信群信息
-                if (settingInfo.successSubscription.wechatGroupFlag) {
-                    val successWechatGroups = mutableSetOf<String>()
-                    successWechatGroups.addAll(settingInfo.successSubscription.wechatGroup.split("[,;]".toRegex()))
-                    successWechatGroups.forEach {
-                        if (settingInfo.successSubscription.wechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(successContent, it)
-                        } else {
-                            val receiver = Receiver(ReceiverType.group, it)
-                            val richtextContentList = mutableListOf<RichtextContent>()
-                            richtextContentList.add(
-                                RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
-                            )
-                            richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
-                            if (settingDetailFlag) {
-                                richtextContentList.add(
-                                    RichtextView(
-                                        RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
-                                    )
-                                )
-                            }
-                            val richtextMessage = RichtextMessage(receiver, richtextContentList)
-//                            wechatWorkService.sendRichText(richtextMessage)
-                        }
-                    }
-                }
             } else if (shutdownType == TYPE_SHUTDOWN_FAILURE) {
 
                 val settingDetailFlag = settingInfo.failSubscription.detailFlag
@@ -319,31 +292,6 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
 //                    mapData = mapData,
 //                    detailFlag = settingDetailFlag
 //                )
-
-                // 发送企业微信群信息
-                if (settingInfo.failSubscription.wechatGroupFlag) {
-                    val failWechatGroups = mutableSetOf<String>()
-                    failWechatGroups.addAll(settingInfo.failSubscription.wechatGroup.split("[,;]".toRegex()))
-                    failWechatGroups.forEach {
-                        if (settingInfo.failSubscription.wechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(failContent, it)
-                        } else {
-                            val receiver = Receiver(ReceiverType.group, it)
-                            val richtextContentList = mutableListOf<RichtextContent>()
-                            richtextContentList.add(RichtextText(
-                                RichtextTextText(content = "蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n"))
-                            )
-                            richtextContentList.add(RichtextText(RichtextTextText("❌$failContent\n")))
-                            if (settingDetailFlag) {
-                                richtextContentList.add(
-                                    RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))
-                                )
-                            }
-                            val richtextMessage = RichtextMessage(receiver, richtextContentList)
-//                            wechatWorkService.sendRichText(richtextMessage)
-                        }
-                    }
-                }
             }
         }
     }
