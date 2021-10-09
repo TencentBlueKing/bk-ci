@@ -16,7 +16,7 @@ class BkAuthGrantPermissionServiceImpl @Autowired constructor(
         action: String,
         projectId: String,
         resourceCode: String,
-        resourceType: String,
+        resourceType: String
     ): Boolean {
         return super.grantInstancePermission(userId, action, projectId, resourceCode, resourceType)
     }

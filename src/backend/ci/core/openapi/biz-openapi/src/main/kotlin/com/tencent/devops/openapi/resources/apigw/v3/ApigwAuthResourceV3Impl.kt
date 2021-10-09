@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwAuthResourceV3Impl @Autowired constructor(
     val client: Client,
-    val tokenService: ClientTokenService,
+    val tokenService: ClientTokenService
 ) : ApigwAuthResourceV3 {
     override fun grantInstancePermission(
         appCode: String?,
