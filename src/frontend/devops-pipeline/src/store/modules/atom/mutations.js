@@ -58,6 +58,7 @@ import {
     SET_STORE_DATA,
     SET_UNRECOMMEND_STORE_DATA,
     SET_UNRECOMMEND_PROJECT_DATA,
+    SET_UNRECOMMEND_ATOM_COUNT,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     FETCHING_ATOM_VERSION,
@@ -155,6 +156,7 @@ export default {
         return state
     },
     [IS_UNRECOMMEND_MORE_LOADING]: (state, loading) => {
+        console.log(loading, 222222)
         Vue.set(state, 'isUnRecommendMoreLoading', loading)
         return state
     },
@@ -250,6 +252,12 @@ export default {
     [SET_UNRECOMMEND_STORE_DATA]: (state, unRecommendStoreData) => {
         Object.assign(state, {
             unRecommendStoreData
+        })
+        return state
+    },
+    [SET_UNRECOMMEND_ATOM_COUNT]: (state, unRecommendAtomCount) => {
+        Object.assign(state, {
+            unRecommendAtomCount
         })
         return state
     },

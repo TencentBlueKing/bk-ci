@@ -37,7 +37,7 @@
             </template>
         </div>
         <div v-if="category !== 'TRIGGER'" :class="{ 'fixed-tool': true, 'active': isToolActive }" @click="handleToggleShowUnRecommend">
-            {{ $t('editPage.fixedTips') }} ({{ unRecommendAtomLength }})
+            {{ $t('editPage.fixedTips') }} ({{ unRecommendAtomCount }})
             <span class="devops-icon icon-angle-right"></span>
         </div>
         <!-- 不适用插件 -->
@@ -50,7 +50,7 @@
                 :atom="unRecommendAtom"
                 :is-recommend="false" />
             <template v-if="isUnRecommendMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></template>
-            <template v-if="unRecommendAtomLength">
+            <template v-if="unRecommendAtomCount">
                 <p v-if="isUnRecommendProjectPageOver && tabName === 'projectAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
                 <p v-if="isUnRecommendStorePageOver && tabName === 'storeAtom'" class="page-over">{{ $t('editPage.loadedAllAtom') }}</p>
             </template>
@@ -126,6 +126,7 @@
                 'isUnRecommendProjectPageOver',
                 'isStorePageOver',
                 'isUnRecommendStorePageOver',
+                'unRecommendAtomCount',
                 'showAtomSelectorPopup',
                 'atomClassifyMap',
                 'atomClassifyCodeList',
@@ -149,13 +150,6 @@
                 let result
                 if (this.curRecommendAtomMap) {
                     result = Object.keys(this.curRecommendAtomMap).length
-                }
-                return result
-            },
-            unRecommendAtomLength () {
-                let result
-                if (this.curUnRecommendAtomMap) {
-                    result = Object.keys(this.curUnRecommendAtomMap).length
                 }
                 return result
             },
@@ -274,6 +268,8 @@
                             os: this.os,
                             queryProjectAtomFlag: true
                         })
+                        
+                        if (this.category === 'TRIGGER') return
                         this.fetchProjectAtoms({
                             projectCode: this.$route.params.projectId,
                             category: this.category,
@@ -307,6 +303,8 @@
                             os: this.os,
                             queryProjectAtomFlag: false
                         })
+
+                        if (this.category === 'TRIGGER') return
                         this.fetchStoreAtoms({
                             projectCode: this.$route.params.projectId,
                             classifyId: undefined,
