@@ -38,7 +38,6 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
 import org.jooq.Record22
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
