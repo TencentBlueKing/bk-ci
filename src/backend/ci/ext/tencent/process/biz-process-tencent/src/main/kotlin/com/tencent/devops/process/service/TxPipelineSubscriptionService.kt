@@ -64,6 +64,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -353,7 +354,8 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
     private fun checkPipelineCall(buildId: String, vars: Map<String, String>) {
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
-        val parentBuildTask = pipelineRuntimeService.getBuildTask(parentBuildId, parentTaskId)
+        val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
+        val parentBuildTask = pipelineRuntimeService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
         if (parentBuildTask == null) {
             logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
