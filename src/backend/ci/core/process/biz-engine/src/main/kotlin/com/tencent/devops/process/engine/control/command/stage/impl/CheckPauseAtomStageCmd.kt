@@ -29,6 +29,7 @@ class CheckPauseAtomStageCmd @Autowired constructor(
             if (pauseTask.isNotEmpty()) {
                 logger.info("CheckPauseAtomStageCmd ${commandContext.stage.buildId} has pause task")
                 commandContext.buildStatus = BuildStatus.PAUSE
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
             }
         }
     }
