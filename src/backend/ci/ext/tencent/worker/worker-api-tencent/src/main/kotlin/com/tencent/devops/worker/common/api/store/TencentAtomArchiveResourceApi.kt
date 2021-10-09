@@ -178,7 +178,10 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
                 url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
             }
 
-            val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
+            val request = buildPut(
+                path = url.toString(),
+                requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
+            )
             val responseContent = request(request, "归档插件文件失败")
             try {
                 val obj = JsonParser().parse(responseContent).asJsonObject
