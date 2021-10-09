@@ -1,23 +1,24 @@
 const path = require('path')
 const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
-// const TerserPlugin = require('terser-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
+    console.log(env, 'sssss')
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
     return {
-        devtool: '#source-map',
+        cache: true,
+        devtool: 'source-map',
         entry,
         output: {
             publicPath,
             chunkFilename: '[name].[chunkhash].js',
-            filename: '[name].[contentHash].min.js',
+            filename: '[name].[contenthash].min.js',
             path: buildDist
         },
         module: {
@@ -49,7 +50,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     loader: 'url-loader',
                     options: {
                         limit: 10000,
-                        name: '[name].[ext]?[hash]'
+                        name: '[name].[ext]?[contenthash]'
                     }
                 },
                 {
@@ -79,25 +80,25 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 dist: envDist,
                 bundleName: 'assets_bundle'
             }),
-            new webpack.optimize.LimitChunkCountPlugin({
-                minChunkSize: 1000
-            }),
-            new webpack.HashedModuleIdsPlugin(),
             new MiniCssExtractPlugin({
-                filename: '[name].[chunkHash].css',
-                chunkName: '[id].css'
+                filename: '[name].[contenthash].css',
+                chunkFilename: '[id].css',
+                ignoreOrder: true
             }),
             new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])
         ],
         optimization: {
-            namedChunks: true,
+            chunkIds: 'named',
+            moduleIds: 'deterministic',
             minimize: !isDev
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
+            fallback: {
+                'path': false
+            },
             alias: {
                 '@': path.resolve('src'),
-                'vue$': 'vue/dist/vue.esm.js',
                 '@locale': path.resolve(__dirname, 'locale')
             }
         },

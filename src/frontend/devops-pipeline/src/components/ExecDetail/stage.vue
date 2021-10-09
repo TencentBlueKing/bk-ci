@@ -51,7 +51,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .stage-property-panel {
+    ::v-deep .stage-property-panel {
         padding: 10px 50px;
     }
 </style>

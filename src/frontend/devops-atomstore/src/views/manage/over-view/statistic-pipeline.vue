@@ -147,7 +147,7 @@
     }
     .statistic-pipeline-head {
         margin-bottom: 3.2vh;
-        /deep/ .bk-form-item {
+        ::v-deep .bk-form-item {
             margin-left: 20px;
         }
     }

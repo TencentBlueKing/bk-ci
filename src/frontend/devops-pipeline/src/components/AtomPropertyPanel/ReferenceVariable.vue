@@ -166,7 +166,7 @@
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);
                 transition: all .3s ease;
 
-                /deep/ .bk-table-row {
+                ::v-deep .bk-table-row {
                     line-height: 42px;
                 }
                 &:before {

@@ -14,11 +14,5 @@
         "stage-2"
     ],
     // "plugins": ["transform-runtime", "transform-object-assign", "lodash", "syntax-dynamic-import", "transform-vue-jsx", "@tencent/babel-plugin-import-bk-magic-vue"],
-    "plugins": ["transform-runtime", "transform-object-assign", "lodash", "syntax-dynamic-import", "transform-vue-jsx"],
-    "env": {
-        "test": {
-            "presets": ["env", "stage-2"],
-            "plugins": ["istanbul"]
-        }
-    }
+    "plugins": ["transform-runtime", "transform-object-assign", "syntax-dynamic-import", "transform-vue-jsx"]
 }

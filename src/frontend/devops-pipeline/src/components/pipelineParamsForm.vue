@@ -198,7 +198,7 @@
         .file-upload {
             display: flex;
             margin-left: 10px;
-            /deep/ .bk-upload.button {
+            ::v-deep .bk-upload.button {
                 position: static;
                 display: flex;
                 .file-wrapper {
