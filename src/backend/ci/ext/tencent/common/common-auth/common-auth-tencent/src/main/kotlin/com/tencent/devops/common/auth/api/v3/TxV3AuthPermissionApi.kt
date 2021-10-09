@@ -31,7 +31,6 @@ import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType

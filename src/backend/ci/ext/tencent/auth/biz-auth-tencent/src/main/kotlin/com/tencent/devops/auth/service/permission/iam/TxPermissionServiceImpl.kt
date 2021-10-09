@@ -34,14 +34,10 @@ import com.tencent.devops.auth.service.AuthPipelineIdService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxPermissionServiceImpl @Autowired constructor(
