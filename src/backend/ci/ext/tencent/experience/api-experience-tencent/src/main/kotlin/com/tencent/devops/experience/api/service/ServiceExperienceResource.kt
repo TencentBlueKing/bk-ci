@@ -101,6 +101,9 @@ interface ServiceExperienceResource {
         userId: String,
         @ApiParam("体验HashId", required = false)
         @PathParam("experienceHashId")
-        experienceHashId: String
+        experienceHashId: String,
+        @ApiParam("组织", required = false)
+        @QueryParam("organization")
+        organization: String?
     ): Result<Boolean>
 }
