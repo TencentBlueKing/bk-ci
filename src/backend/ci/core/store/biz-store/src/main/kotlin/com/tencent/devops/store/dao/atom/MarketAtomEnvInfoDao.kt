@@ -122,7 +122,7 @@ class MarketAtomEnvInfoDao {
     private fun getAtomEnvInfoBaseStep(
         dslContext: DSLContext,
         a: TAtom,
-        b: TAtomEnvInfo,
+        b: TAtomEnvInfo
     ): SelectOnConditionStep<Record22<String, String, Byte, String, String, String, Boolean, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
             a.ID.`as`("atomId"),
