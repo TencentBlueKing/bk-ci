@@ -32,6 +32,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
+import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -132,32 +134,35 @@ class UpdateStateForStageCmdFinally(
 
         // #5019 在结束阶段做stage准出判断
         if (stage.checkOut?.ruleIds?.isNotEmpty() == true) {
-            val checkStatus = pipelineStageService.checkStageQuality(
-                event = event,
-                stage = stage,
-                variables = commandContext.variables,
-                inOrOut = false
-            )
-            when (checkStatus) {
-                BuildStatus.QUALITY_CHECK_PASS -> {
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
-                    commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_PASS.name
-                    pipelineStageService.checkQualityPassStage(userId = event.userId, buildStage = commandContext.stage)
+            when (event.source) {
+                BS_QUALITY_PASS_STAGE -> {
+                    qualityCheckOutPass(commandContext)
                 }
-                BuildStatus.REVIEWING -> {
-                    // #5246 如果设置了把关人则卡在运行状态等待审核
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_OUT_REVIEWING|${event.stageId}")
-                    commandContext.stage.checkOut?.status = BuildStatus.REVIEWING.name
-                    commandContext.buildStatus = BuildStatus.RUNNING
-                    commandContext.latestSummary = "s(${stage.stageId}) need reviewing with QUALITY_CHECK_IN"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY
+                BS_QUALITY_ABORT_STAGE -> {
+                    qualityCheckOutFailed(commandContext)
+                    return finishBuild(commandContext = commandContext)
                 }
                 else -> {
-                    commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
-                    commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
-                    commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
-                    pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = commandContext.stage)
-                    return finishBuild(commandContext = commandContext)
+                    val checkStatus = pipelineStageService.checkStageQuality(
+                        event = event,
+                        stage = stage,
+                        variables = commandContext.variables,
+                        inOrOut = false
+                    )
+                    when (checkStatus) {
+                        BuildStatus.QUALITY_CHECK_PASS -> {
+                            qualityCheckOutPass(commandContext)
+                        }
+                        BuildStatus.REVIEWING -> {
+                            // #5246 如果设置了把关人则卡在运行状态等待审核
+                            qualityCheckOutNeedReview(commandContext)
+                            return
+                        }
+                        else -> {
+                            qualityCheckOutFailed(commandContext)
+                            return finishBuild(commandContext = commandContext)
+                        }
+                    }
                 }
             }
         }
@@ -174,6 +179,37 @@ class UpdateStateForStageCmdFinally(
             LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FINALLY|${stage.stageId}|" +
                 "${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
+    }
+
+    private fun qualityCheckOutNeedReview(
+        commandContext: StageContext
+    ) {
+        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+            "|STAGE_QUALITY_CHECK_OUT_REVIEWING|${commandContext.event.stageId}")
+        commandContext.stage.checkOut?.status = BuildStatus.REVIEWING.name
+        pipelineStageService.checkQualityReviewingStage(commandContext.event.userId, commandContext.stage, false)
+        commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_IN"
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
+    }
+
+    private fun qualityCheckOutFailed(commandContext: StageContext) {
+        commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+        commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+        commandContext.latestSummary = "s(${commandContext.stage.stageId}) failed with QUALITY_CHECK_OUT"
+        pipelineStageService.checkQualityFailStage(
+            userId = commandContext.event.userId,
+            buildStage = commandContext.stage
+        )
+    }
+
+    private fun qualityCheckOutPass(commandContext: StageContext) {
+        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+            "|STAGE_QUALITY_CHECK_OUT_PASSED|${commandContext.event.stageId}")
+        commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_PASS.name
+        pipelineStageService.checkQualityPassStage(
+            userId = commandContext.event.userId,
+            buildStage = commandContext.stage
+        )
     }
 
     /**

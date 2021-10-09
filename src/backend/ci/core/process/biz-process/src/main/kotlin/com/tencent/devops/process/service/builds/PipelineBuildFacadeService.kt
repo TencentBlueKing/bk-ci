@@ -105,6 +105,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -872,13 +873,6 @@ class PipelineBuildFacadeService(
         stageId: String,
         qualityRequest: StageQualityRequest
     ) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
-                params = arrayOf(buildId)
-            )
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -886,9 +880,8 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
-
         if (buildInfo.pipelineId != pipelineId) {
-            logger.warn("[$buildId]|buildManualStartStage error|input=$pipelineId|pipeline=${buildInfo.pipelineId}")
+            logger.warn("[$buildId]|qualityTriggerStage error|input=$pipelineId|pipeline=${buildInfo.pipelineId}")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
             )
@@ -908,8 +901,23 @@ class PipelineBuildFacadeService(
             defaultMessage = "Stage($stageId)未处于质量红线审核状态",
             params = arrayOf(stageId)
         )
-
-        if (buildStage.checkIn?.ruleKeepers?.contains(userId) != true) {
+        val check = when (qualityRequest.position) {
+            ControlPointPosition.BEFORE_POSITION -> {
+                buildStage.checkIn
+            }
+            ControlPointPosition.AFTER_POSITION -> {
+                buildStage.checkOut
+            }
+            else -> {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.FORBIDDEN.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND,
+                    defaultMessage = "Stage($stageId)的准入准出标识(${qualityRequest.position})不正确",
+                    params = arrayOf(stageId, qualityRequest.position)
+                )
+            }
+        }
+        if (check?.ruleKeepers?.contains(userId) != true) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
@@ -917,46 +925,11 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
-
-        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
-        try {
-            runLock.lock()
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo, null, StartType.MANUAL)
-            )
-
-            if (interceptResult.isNotOk()) {
-                // 发送排队失败的事件
-                logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = interceptResult.status.toString(),
-                    defaultMessage = "Stage启动失败![${interceptResult.message}]"
-                )
-            }
-            // TODO 红线审核操作
-//            val success = if (isCancel) {
-//                pipelineStageService.cancelStage(
-//                    userId = userId,
-//                    buildStage = buildStage,
-//                    reviewRequest = reviewRequest
-//                )
-//            } else {
-//                pipelineStageService.startStage(
-//                    userId = userId,
-//                    buildStage = buildStage,
-//                    reviewRequest = reviewRequest
-//                )
-//            }
-//            if (!success) throw ErrorCodeException(
-//                statusCode = Response.Status.BAD_REQUEST.statusCode,
-//                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
-//                defaultMessage = "审核Stage($stageId)数据异常",
-//                params = arrayOf(stageId)
-//            )
-        } finally {
-            runLock.unlock()
-        }
+        pipelineStageService.qualityTriggerStage(
+            userId = userId,
+            buildStage = buildStage,
+            qualityRequest = qualityRequest
+        )
     }
 
     fun goToReview(

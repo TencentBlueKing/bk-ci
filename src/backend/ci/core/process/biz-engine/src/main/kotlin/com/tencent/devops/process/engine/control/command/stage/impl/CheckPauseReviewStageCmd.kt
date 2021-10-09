@@ -29,7 +29,8 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
-import com.tencent.devops.process.engine.common.BS_QUALITY_START_STAGE
+import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
+import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -79,28 +80,24 @@ class CheckPauseReviewStageCmd(
                 )
                 when (checkStatus) {
                     BuildStatus.QUALITY_CHECK_PASS -> {
-                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
-                        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
-                        pipelineStageService.checkQualityPassStage(event.userId, commandContext.stage)
+                        qualityCheckInPass(commandContext)
                     }
                     BuildStatus.REVIEWING -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
-                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_REVIEWING|${event.stageId}")
-                        commandContext.stage.checkIn?.status = BuildStatus.REVIEWING.name
-                        pipelineStageService.checkQualityReviewingStage(event.userId, commandContext.stage)
-                        commandContext.cmdFlowState = CmdFlowState.BREAK
+                        qualityCheckInNeedReview(commandContext)
                         return
                     }
                     else -> {
                         // #4732 优先判断是否能通过质量红线检查
-                        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_FAILED|${event.stageId}")
-                        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
-                        commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
-                        commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_IN"
-                        commandContext.cmdFlowState = CmdFlowState.FINALLY
+                        qualityCheckInFailed(commandContext)
                         return
                     }
                 }
+            } else if (event.source == BS_QUALITY_PASS_STAGE) {
+                qualityCheckInPass(commandContext)
+            } else if (event.source == BS_QUALITY_ABORT_STAGE) {
+                qualityCheckInFailed(commandContext)
+                return
             }
 
             // 人工审核
@@ -128,6 +125,35 @@ class CheckPauseReviewStageCmd(
             }
         }
     }
+
+    private fun qualityCheckInFailed(commandContext: StageContext) {
+        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+            "|STAGE_QUALITY_CHECK_IN_FAILED|${commandContext.event.stageId}")
+        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+        commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+        commandContext.latestSummary = "s(${commandContext.stage.stageId}) failed with QUALITY_CHECK_IN"
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
+    }
+
+    private fun qualityCheckInNeedReview(commandContext: StageContext) {
+        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+            "|STAGE_QUALITY_CHECK_IN_REVIEWING|${commandContext.event.stageId}")
+        commandContext.stage.checkIn?.status = BuildStatus.REVIEWING.name
+        pipelineStageService.checkQualityReviewingStage(
+            userId = commandContext.event.userId,
+            buildStage = commandContext.stage,
+            inOrOut = true
+        )
+        commandContext.cmdFlowState = CmdFlowState.BREAK
+    }
+
+    private fun qualityCheckInPass(commandContext: StageContext) {
+        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+            "|STAGE_QUALITY_CHECK_IN_PASSED|${commandContext.event.stageId}")
+        commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
+        pipelineStageService.checkQualityPassStage(commandContext.event.userId, commandContext.stage)
+    }
+
 
     private fun saveStageReviewParams(stage: PipelineBuildStage) {
         val reviewVariables = mutableMapOf<String, Any>()

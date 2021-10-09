@@ -27,18 +27,15 @@
 
 package com.tencent.devops.process.pojo
 
-import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("stage准入准出-质量红线触发")
 data class StageQualityRequest(
     @ApiModelProperty("准入准出标识", required = true)
-    val position: ControlPointPosition,
-    @ApiModelProperty("是否通过", required = true)
-    val success: Boolean,
-    @ApiModelProperty("失败后是否结束", required = true)
-    val failEnd: Boolean,
+    val position: String,
+    @ApiModelProperty("把关是否通过", required = true)
+    val pass: Boolean,
     @ApiModelProperty("第几次检查", required = true)
     val checkTimes: Int
 )

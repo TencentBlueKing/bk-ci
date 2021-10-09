@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
+import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageCmdChain
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -120,6 +122,9 @@ class StageControl @Autowired constructor(
             variables = variables,
             executeCount = executeCount
         )
+        // #5246 如果是准出的相关时间直接跳到stage结束步骤
+        if (source == BS_QUALITY_ABORT_STAGE) stageContext.cmdFlowState = CmdFlowState.FINALLY
+
         watcher.stop()
 
         val commandList = listOf<StageCmd>(
