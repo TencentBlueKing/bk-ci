@@ -85,7 +85,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
         token: String,
         projectCode: String,
         storeCode: String,
-        storeType: StoreTypeEnum,
+        storeType: StoreTypeEnum
     ): Result<Boolean> {
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
         if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
