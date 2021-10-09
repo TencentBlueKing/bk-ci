@@ -5,12 +5,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.open.OpenExperienceResource
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import com.tencent.devops.experience.service.ExperienceAppService
+import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -18,7 +21,9 @@ import javax.ws.rs.core.Response
 class OpenExperienceResourceImpl @Autowired constructor(
     private val experienceOuterService: ExperienceOuterService,
     private val experienceAppService: ExperienceAppService,
-    private val experienceService: ExperienceService
+    private val experienceDownloadService: ExperienceDownloadService,
+    private val experiencePublicDao: ExperiencePublicDao,
+    private val dslContext: DSLContext
 ) : OpenExperienceResource {
     override fun outerLogin(
         platform: Int,
@@ -41,7 +46,11 @@ class OpenExperienceResourceImpl @Autowired constructor(
                 errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
-        return Result(ExperienceJumpInfo("test", "test"))
+
+        experiencePublicDao.getByBundleId(dslContext)
+        //android : bkdevopsapp://bkdevopsapp/app/experience/expDetail/{experienceHashId}
+        //ios : bkdevopsapp://app/experience/expDetail/{experienceHashId}
+        return Result(ExperienceJumpInfo("test", experienceDownloadService.getQrCodeUrl("test")))
     }
 
     override fun appStoreRedirect(id: String, userId: String): Response {
