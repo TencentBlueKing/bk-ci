@@ -19,7 +19,8 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             publicPath,
             chunkFilename: '[name].[chunkhash].js',
             filename: '[name].[contenthash].min.js',
-            path: buildDist
+            path: buildDist,
+            assetModuleFilename: '[name].[ext]?[contenthash]'
         },
         module: {
             rules: [
@@ -46,14 +47,6 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
                 },
                 {
-                    test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10000,
-                        name: '[name].[ext]?[contenthash]'
-                    }
-                },
-                {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
@@ -65,12 +58,15 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     }
                 },
                 {
-                    test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10000
+                    test: /\.(png|jpe?g|gif|svg|webp|woff2?|eot|ttf|otf)(\?.*)?$/,
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8 * 1024
+                        }
                     }
                 }
+                
             ]
         },
         plugins: [

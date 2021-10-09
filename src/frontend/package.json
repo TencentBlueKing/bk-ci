@@ -7,6 +7,7 @@
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
+    "gulp-svg-sprite": "^1.5.0",
     "husky": "^7.0.2",
     "lerna": "3.17.0",
     "lint-staged": "^10.2.11",
