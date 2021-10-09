@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -84,13 +85,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
     ): CreateCallBackResult {
         // 验证用户是否为管理员
         validAuth(userId, projectId, BkAuthGroup.MANAGER)
-        // 验证url的合法性
-        val regex = Regex(
-            pattern = "http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)",
-            option = RegexOption.IGNORE_CASE
-        )
-        val regexResult = url.matches(regex)
-        if (!regexResult) {
+        if (!validUrl(projectId, url)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
@@ -132,6 +127,16 @@ class ProjectPipelineCallBackService @Autowired constructor(
             successEvents = successEvents,
             failureEvents = failureEvents
         )
+    }
+
+    private fun validUrl(projectId: String, url: String): Boolean {
+        return try {
+            HttpUrl.get(url)
+            true
+        } catch (e: IllegalArgumentException) {
+            logger.warn("$projectId|callback url Invalid: ${e.message}")
+            false
+        }
     }
 
     fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
