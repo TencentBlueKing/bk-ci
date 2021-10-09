@@ -90,7 +90,7 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                 )
                 atomEnvRecords?.forEach { atomEnvRecord ->
                     val pkgPath = atomEnvRecord.pkgPath
-                    if (pkgPath.isNullOrBlank()){
+                    if (pkgPath.isNullOrBlank()) {
                         return@forEach
                     }
                     // 1、从jfrog下载插件包
@@ -106,7 +106,7 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                             storeCode = atomCode,
                             storeType = StoreTypeEnum.ATOM.type.toByte()
                         )
-                        val jfrogFileUrl = "${devopsIdcGateway}/jfrog/storage/service/atom/$initProjectCode/$pkgPath"
+                        val jfrogFileUrl = "$devopsIdcGateway/jfrog/storage/service/atom/$initProjectCode/$pkgPath"
                         OkhttpUtils.downloadFile(jfrogFileUrl, file)
                         // 2、上传插件包至bkrepo
                         val repoName = BkRepoEnum.PLUGIN.repoName
