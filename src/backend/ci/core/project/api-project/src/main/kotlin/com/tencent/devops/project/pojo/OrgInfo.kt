@@ -27,7 +27,13 @@
 
 package com.tencent.devops.project.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("")
 data class OrgInfo(
+    @ApiModelProperty("")
     val orgId: String,
+    @ApiModelProperty("")
     val orgLevel: Int
 )

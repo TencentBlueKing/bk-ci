@@ -28,37 +28,40 @@
 package com.tencent.devops.image.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("检查镜像信息返回模型")
 data class CheckDockerImageResponse(
-
+    @ApiModelProperty("错误代码")
     val errorCode: Int,
-
+    @ApiModelProperty("错误信息")
     val errorMessage: String? = "",
-
+    @ApiModelProperty("")
     val arch: String? = "",
-
+    @ApiModelProperty("作者")
     val author: String? = "",
-
+    @ApiModelProperty("评论")
     val comment: String? = "",
-
+    @ApiModelProperty("")
     val created: String? = "",
-
+    @ApiModelProperty("docker版本")
     val dockerVersion: String? = "",
-
+    @ApiModelProperty("id")
     val id: String? = "",
-
+    @ApiModelProperty("操作系统")
     val os: String? = "",
-
+    @ApiModelProperty("操作系统版本")
     val osVersion: String? = "",
-
+    @ApiModelProperty("")
     val parent: String? = "",
-
+    @ApiModelProperty("大小")
     val size: Long? = 0,
-
+    @ApiModelProperty("")
     val repoTags: List<String>? = null,
-
+    @ApiModelProperty("")
     val repoDigests: List<String>? = null,
-
+    @ApiModelProperty("虚拟大小")
     val virtualSize: Long? = 0
 )
