@@ -75,7 +75,7 @@ import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 
-@Suppress("MaximumLineLength")
+@Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
