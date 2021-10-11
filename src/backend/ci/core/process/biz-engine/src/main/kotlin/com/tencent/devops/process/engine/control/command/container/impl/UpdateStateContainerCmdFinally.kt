@@ -65,8 +65,7 @@ class UpdateStateContainerCmdFinally(
         }
         // 发送回Stage
         if (commandContext.buildStatus.isFinish() ||
-            commandContext.buildStatus == BuildStatus.UNKNOWN ||
-            commandContext.buildStatus == BuildStatus.PAUSE) {
+            commandContext.buildStatus == BuildStatus.UNKNOWN) {
             val source = commandContext.event.source
             val buildId = commandContext.container.buildId
             val stageId = commandContext.container.stageId

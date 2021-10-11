@@ -168,6 +168,11 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
+                if (!actionType.isStartOrRefresh()) { // 处于暂停的构建，要结束，状态要标志为取消，并且终止
+                    containerContext.buildStatus =
+                        BuildStatusSwitcher.jobStatusMaker.cancel(containerContext.container.status)
+                    needTerminate = true
+                }
             } else if (t.status.isRunning()) { // 当前有运行中任务
                 // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
                 breakFlag = actionType.isStartOrRefresh()
