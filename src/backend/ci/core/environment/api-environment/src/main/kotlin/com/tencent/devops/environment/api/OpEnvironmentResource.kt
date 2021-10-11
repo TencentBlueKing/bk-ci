@@ -25,43 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.environment.api
 
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    @Deprecated("待废除")
-    val status: Int? = 0,
-    val imageName: String,
-    val containerId: String,
-    @Deprecated("待废除")
-    val wsInHost: Boolean? = true,
-    val poolNo: Int,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    @Deprecated("待废除")
-    val imagePublicFlag: Boolean? = false,
-    @Deprecated("待废除")
-    val imageRDType: String? = "THIRD_PARTY",
-    val containerHashId: String?,
-    val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER,
-    val qpcUniquePath: String? = null,
-    val dockerResource: DockerResourceOptionsVO = DockerResourceOptionsVO(
-        memoryLimitBytes = 34359738368L,
-        cpuPeriod = 10000,
-        cpuQuota = 160000,
-        blkioDeviceReadBps = 125829120,
-        blkioDeviceWriteBps = 125829120,
-        disk = 100,
-        description = ""
-    )
-)
+@Api(tags = ["OP_ENVIRONMENT"], description = "OP-环境服务数据刷新")
+@Path("/op/env")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpEnvironmentResource {
+
+    @PUT
+    @Path("/refresh_gateway")
+    fun refreshGateway(
+        @ApiParam("新旧网关映射")
+        oldToNewMap: Map<String, String>
+    ): Result<Boolean>
+}
