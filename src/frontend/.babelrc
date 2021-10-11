@@ -3,8 +3,10 @@
     [
       "@babel/preset-env",
       {
+        "modules": "commonjs",
         "debug": false,
-        "useBuiltIns": "usage"
+        "useBuiltIns": "usage",
+        "corejs": 3
       }
     ]
   ],
@@ -12,7 +14,7 @@
     [
       "@babel/plugin-transform-runtime",
       {
-        "corejs": 2
+        "corejs": 3
       }
     ],
     "@babel/plugin-transform-object-assign",

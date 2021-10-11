@@ -6,6 +6,7 @@
     "brace": "^0.10.0",
     "clipboard": "^1.7.1",
     "cookie": "^0.3.1",
+    "core-js": "3.10.0",
     "vee-validate": "^2.0.3",
     "vue-file-upload": "^0.1.12",
     "vue-property-decorator": "^6.0.0",

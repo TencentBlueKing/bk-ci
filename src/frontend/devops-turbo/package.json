@@ -38,6 +38,7 @@
     "public:external": "cross-env NODE_ENV=external webpack --mode production"
   },
   "dependencies": {
-    "@blueking/bkcharts": "^2.0.10"
+    "@blueking/bkcharts": "^2.0.10",
+    "core-js": "3.10.0"
   }
 }

@@ -2,7 +2,8 @@
     "name": "devops-codelib",
     "version": "1.0.0",
     "description": "",
-    "dependencies": {
+    "dependencies": { 
+        "core-js": "3.10.0",
         "vuex-class": "^0.3.0"
     },
     "devDependencies": {
