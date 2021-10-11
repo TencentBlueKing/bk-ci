@@ -67,7 +67,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache))
             )
 
-            if (projectId != "test-sawyer2" && qpcUniquePath == null) {
+            if (qpcUniquePath == null) {
                 binds.add(Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace)))
             }
 
