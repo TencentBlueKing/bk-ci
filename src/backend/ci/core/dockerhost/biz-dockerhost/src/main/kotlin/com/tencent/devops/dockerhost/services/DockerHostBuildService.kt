@@ -253,7 +253,7 @@ class DockerHostBuildService(
     }
 
     private fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
-        if (dockerBuildInfo.projectId == "test-sawyer2" || dockerBuildInfo.qpcUniquePath != null) {
+        if (dockerBuildInfo.qpcUniquePath != null) {
             val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
             val workDir = "${getWorkspace(dockerBuildInfo)}work"
             if (!File(upperDir).exists()) {
@@ -263,11 +263,7 @@ class DockerHostBuildService(
                 File(workDir).mkdirs()
             }
 
-            val lowerDir = if (dockerBuildInfo.projectId == "test-sawyer2") {
-                "/data/overlayfsTest/demo"
-            } else {
-                "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
-            }
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
 
             val mount = Mount().withType(MountType.VOLUME)
                 .withTarget(dockerHostConfig.volumeWorkspace)
