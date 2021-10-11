@@ -24,33 +24,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-plugins {
-    id("com.github.johnrengelman.shadow")
-    application
-}
+package com.tencent.devops.common.web.handler
 
-tasks {
-    getByName<Jar>("jar") {
-        from("src/main/resources") {
-            include("*.*")
-        }
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-        manifest {
-            attributes(mapOf("Implementation-Version" to project.version))
-        }
+@BkExceptionMapper
+class NullPointerExceptionMapper : ExceptionMapper<NullPointerException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(NullPointerExceptionMapper::class.java)!!
     }
 
-    named<ShadowJar>("shadowJar") {
-        mergeServiceFiles()
-        destinationDirectory.set(File("${rootDir}/release"))
-        archiveClassifier.set("")
-        archiveVersion.set("")
-        isZip64 = true
-    }
-
-    getByName("installDist") {
-        enabled = false
+    override fun toResponse(exception: NullPointerException): Response {
+        logger.warn("Failed with null point exception", exception)
+        val status = Response.Status.BAD_REQUEST
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = exception.message, data = exception.message)).build()
     }
 }
