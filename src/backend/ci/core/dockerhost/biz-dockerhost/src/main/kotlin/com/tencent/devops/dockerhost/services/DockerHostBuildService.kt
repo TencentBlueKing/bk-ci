@@ -211,7 +211,6 @@ class DockerHostBuildService(
                 .withNetworkMode("bridge")
 
             mountOverlayfs(dockerBuildInfo, hostConfig)
-            
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
