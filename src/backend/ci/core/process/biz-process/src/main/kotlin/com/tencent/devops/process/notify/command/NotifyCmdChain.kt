@@ -25,17 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command.stage
+package com.tencent.devops.process.notify.command
 
 import com.tencent.devops.process.command.CmdChain
 
-class StageCmdChain(private val commandList: List<StageCmd>) : CmdChain<StageContext> {
+class NotifyCmdChain(private val commandList: List<NotifyCmd>) : CmdChain<BuildNotifyContext> {
 
-    override fun doCommand(commandContext: StageContext) {
-        if (commandContext.cmdFlowSeq < 0) { // 校正
-            commandContext.cmdFlowSeq = 0
+    override fun doCommand(commandContextBuild: BuildNotifyContext) {
+        if (commandContextBuild.cmdFlowSeq < 0) { // 校正
+            commandContextBuild.cmdFlowSeq = 0
         }
         // 每次调用，都增1，走向下一条命令链
-        commandList.getOrNull(commandContext.cmdFlowSeq++)?.doExecute(commandContext = commandContext, chain = this)
+        commandList.getOrNull(commandContextBuild.cmdFlowSeq++)?.doExecute(
+            commandContext = commandContextBuild,
+            chain = this
+        )
     }
 }
