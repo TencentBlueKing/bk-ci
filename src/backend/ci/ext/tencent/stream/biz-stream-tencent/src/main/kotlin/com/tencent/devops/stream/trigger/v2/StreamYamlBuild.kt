@@ -71,7 +71,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
 class StreamYamlBuild @Autowired constructor(
     client: Client,
@@ -147,14 +146,6 @@ class StreamYamlBuild @Autowired constructor(
                         eventId = event.id!!,
                         originYaml = originYaml
                     )
-                )
-                // TODO: 等没有使用蓝盾定时触发编排的，这里可以干掉
-                // 需要保存一次手动触发的流水线顶掉旧的使用蓝盾定时触发的流水线编排
-                saveTimerPipeline(
-                    pipeline = pipeline,
-                    event = event,
-                    yaml = yaml,
-                    gitBasicSetting = gitBasicSetting
                 )
             }
 
@@ -250,18 +241,5 @@ class StreamYamlBuild @Autowired constructor(
 
         savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
-    }
-
-    private fun saveTimerPipeline(
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        yaml: ScriptBuildYaml,
-        gitBasicSetting: GitCIBasicSetting
-    ) {
-        // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
-        logger.info("Git request pipeline:$pipeline, model: $model")
-
-        savePipeline(pipeline, event, gitBasicSetting, model)
     }
 }
