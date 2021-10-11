@@ -45,7 +45,8 @@ class AuthPipelineIdService @Autowired constructor(
         val idNumType = resourceCode.matches("-?\\d+(\\.\\d+)?".toRegex()) // 判断是否为纯数字
         return if (idNumType) {
             if (resourceName.isNullOrEmpty()) {
-                val pipelineInfo = client.get(ServiceTXPipelineResource::class).getPipelineInfobyId(resourceCode.toInt()).data
+                val pipelineInfo = client.get(ServiceTXPipelineResource::class)
+                    .getPipelineInfobyId(resourceCode.toInt()).data
                     ?: throw PermissionForbiddenException(
                         message = MessageCodeUtil.getCodeMessage(
                             messageCode = CommonMessageCode.PERMISSION_DENIED,
@@ -57,11 +58,12 @@ class AuthPipelineIdService @Autowired constructor(
             }
         } else {
             val pipelineInfo = client.get(ServicePipelineResource::class)
-                .getPipelineInfoByPipelineId(resourceCode)?.data ?: throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeMessage(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
-                    params = arrayOf(resourceCode))
-            )
+                .getPipelineInfoByPipelineId(resourceCode)?.data
+                ?: throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeMessage(
+                        messageCode = CommonMessageCode.PERMISSION_DENIED,
+                        params = arrayOf(resourceCode))
+                )
             Pair(pipelineInfo.id.toString(), pipelineInfo.pipelineName)
         }
     }

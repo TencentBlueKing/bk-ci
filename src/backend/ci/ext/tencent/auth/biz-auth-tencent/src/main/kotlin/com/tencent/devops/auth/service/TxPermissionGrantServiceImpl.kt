@@ -21,7 +21,10 @@ class TxPermissionGrantServiceImpl @Autowired constructor(
 
     override fun grantInstancePermission(projectId: String, grantInfo: GrantInstanceDTO): Boolean {
         // 如果校验的资源为pipeline,需要兼容传pipelineId的情况
-        val pipelineInfo = authPipelineIdService.getPipelineInfo(grantInfo.resourceType, grantInfo.resourceCode, grantInfo.resourceName)
+        val pipelineInfo = authPipelineIdService.getPipelineInfo(
+            resourceType = grantInfo.resourceType,
+            resourceCode = grantInfo.resourceCode,
+            resourceName = grantInfo.resourceName)
         val newAction = TActionUtils.buildAction(
             AuthPermission.get(grantInfo.permission),
             AuthResourceType.get(grantInfo.resourceType))
