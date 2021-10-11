@@ -51,7 +51,6 @@ import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
@@ -502,8 +501,8 @@ class DockerHostClient @Autowired constructor(
     }
 
     private fun getQpcUniquePath(projectId: String): String? {
-        return if (projectId.startsWith("git_")
-            && dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
+        return if (projectId.startsWith("git_") &&
+            dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
         ) {
             return projectId.removePrefix("git_")
         } else {

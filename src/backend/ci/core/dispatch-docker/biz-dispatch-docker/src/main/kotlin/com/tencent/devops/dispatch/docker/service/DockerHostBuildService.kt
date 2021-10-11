@@ -207,10 +207,12 @@ class DockerHostBuildService @Autowired constructor(
     ) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
         try {
-            pipelineDockerBuildDao.updateStatus(dslContext,
-                record.buildId,
-                record.vmSeqId,
-                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+            pipelineDockerBuildDao.updateStatus(
+                dslContext = dslContext,
+                buildId = record.buildId,
+                vmSeqId = record.vmSeqId,
+                status = if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+            )
 
             // 更新dockerTask表(保留之前逻辑)
             pipelineDockerTaskDao.updateStatus(dslContext,
