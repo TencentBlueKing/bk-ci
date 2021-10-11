@@ -23,7 +23,6 @@
     "core-js": "3.10.0",
     "gulp": "^3.9.1",
     "js-base64": "^2.4.3",
-    "lodash": "^4.17.4",
     "portal-vue": "^1.5.1",
     "sockjs-client": "^1.3.0",
     "stompjs": "^2.3.3",
@@ -41,20 +40,6 @@
   "devDependencies": {
     "add": "^2.0.6",
     "autoprefixer": "^7.1.4",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^10.0.2",
-    "babel-helper-vue-jsx-merge-props": "^2.0.3",
-    "babel-loader": "^7.1.2",
-    "babel-plugin-import-bk-magic-vue": "^2.0.9",
-    "babel-plugin-istanbul": "^4.1.5",
-    "babel-plugin-syntax-dynamic-import": "^6.18.0",
-    "babel-plugin-syntax-jsx": "^6.18.0",
-    "babel-plugin-transform-object-assign": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-plugin-transform-vue-jsx": "^3.5.1",
-    "babel-preset-env": "^1.6.0",
-    "babel-preset-stage-2": "^6.24.1",
     "body-parser": "^1.18.2",
     "cli-plugin-eslint": "^0.1.0",
     "copy-webpack-plugin": "9.0.1",
@@ -101,14 +86,5 @@
     "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
-  },
-  "engines": {
-    "node": ">= 4.0.0",
-    "npm": ">= 3.0.0"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+  }
 }
