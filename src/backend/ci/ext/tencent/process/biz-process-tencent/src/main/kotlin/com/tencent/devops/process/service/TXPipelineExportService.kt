@@ -447,7 +447,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -464,7 +464,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
