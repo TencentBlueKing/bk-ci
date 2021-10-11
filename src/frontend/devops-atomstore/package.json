@@ -6,6 +6,7 @@
     "@blueking/bkcharts": "^2.0.10",
     "clipboard": "^2.0.4",
     "codemirror": "5.61.0",
+    "core-js": "3.10.0",
     "mavon-editor": "2.7.7",
     "moment": "^2.18.1"
   },
@@ -25,7 +26,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-stage-2": "^6.24.1",
     "cli-plugin-eslint": "^0.1.0",
-    "copy-webpack-plugin": "^4.5.1",
+    "copy-webpack-plugin": "9.0.1",
     "cross-env": "^5.1.4",
     "css-loader": "^0.28.11",
     "eslint": "^7.3.1",

@@ -110,12 +110,14 @@ module.exports = (env = {}, argv) => {
             context: __dirname,
             manifest: require('./src/assets/static/manifest.json')
         }),
-        new CopyWebpackPlugin([
-            {
-                from: path.join(__dirname, './src/assets/static'),
-                to: `${dist}/static`
-            }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: path.join(__dirname, './src/assets/static'),
+                    to: `${dist}/static`
+                }
+            ]
+        })
     ]
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]
