@@ -132,7 +132,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         templateIds: Collection<String>,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(
+        return Result(templateFacadeService.listOriginTemplate(
             projectId = null,
             templateType = templateType,
             templateIds = templateIds
