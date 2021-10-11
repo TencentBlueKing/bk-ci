@@ -6,15 +6,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.v3.ApigwAuthResourceV3
+import com.tencent.devops.openapi.api.apigw.v3.ApigwAuthGrantResourceV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwAuthResourceV3Impl @Autowired constructor(
+class ApigwAuthGrantResourceV3Impl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
-) : ApigwAuthResourceV3 {
+) : ApigwAuthGrantResourceV3 {
     override fun grantInstancePermission(
         appCode: String?,
         apigwType: String?,
@@ -32,6 +32,6 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ApigwAuthResourceV3Impl::class.java)
+        val logger = LoggerFactory.getLogger(ApigwAuthGrantResourceV3Impl::class.java)
     }
 }
