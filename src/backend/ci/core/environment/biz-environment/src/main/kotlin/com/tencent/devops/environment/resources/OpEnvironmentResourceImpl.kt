@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.image
+package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.image.op.OpImageInitResource
-import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
-import com.tencent.devops.store.service.image.impl.SampleImageInitService
+import com.tencent.devops.environment.api.OpEnvironmentResource
+import com.tencent.devops.environment.service.NodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpImageInitResourceImpl @Autowired constructor(private val sampleImageInitService: SampleImageInitService) :
-    OpImageInitResource {
+class OpEnvironmentResourceImpl @Autowired constructor(
+    private val nodeService: NodeService
+) : OpEnvironmentResource {
 
-    override fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        return sampleImageInitService.imageInit(imageInitRequest)
+    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
+        return Result(nodeService.refreshGateway(oldToNewMap))
     }
 }
