@@ -22,7 +22,6 @@
     "cookie": "^0.3.1",
     "gulp": "^3.9.1",
     "js-base64": "^2.4.3",
-    "lodash": "^4.17.4",
     "portal-vue": "^1.5.1",
     "sockjs-client": "^1.3.0",
     "stompjs": "^2.3.3",
@@ -40,21 +39,6 @@
   "devDependencies": {
     "add": "^2.0.6",
     "autoprefixer": "^7.1.4",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^10.0.2",
-    "babel-helper-vue-jsx-merge-props": "^2.0.3",
-    "babel-loader": "^7.1.2",
-    "babel-plugin-import-bk-magic-vue": "^2.0.9",
-    "babel-plugin-istanbul": "^4.1.5",
-    "babel-plugin-lodash": "^3.2.11",
-    "babel-plugin-syntax-dynamic-import": "^6.18.0",
-    "babel-plugin-syntax-jsx": "^6.18.0",
-    "babel-plugin-transform-object-assign": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-plugin-transform-vue-jsx": "^3.5.1",
-    "babel-preset-env": "^1.6.0",
-    "babel-preset-stage-2": "^6.24.1",
     "body-parser": "^1.18.2",
     "chalk": "^2.1.0",
     "cheerio": "^1.0.0-rc.2",
@@ -87,7 +71,6 @@
     "http-proxy-middleware": "^0.17.4",
     "inject-loader": "^3.0.1",
     "jquery": "^3.2.1",
-    "lodash-webpack-plugin": "^0.11.4",
     "mini-css-extract-plugin": "^0.5.0",
     "mocha": "^3.5.3",
     "moment": "^2.18.1",
@@ -119,14 +102,5 @@
     "webpack-dev-middleware": "^3.4.0",
     "webpack-dev-server": "^3.1.10",
     "webpack-hot-middleware": "^2.24.3"
-  },
-  "engines": {
-    "node": ">= 4.0.0",
-    "npm": ">= 3.0.0"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+  }
 }
