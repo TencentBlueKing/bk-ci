@@ -14,8 +14,7 @@ class CheckPauseAtomStageCmd @Autowired constructor(
     val pipelineBuildService: PipelineRuntimeService
 ) : StageCmd {
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.stage.controlOption?.finally != true &&
-            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
             !commandContext.buildStatus.isFinish()
     }
 
