@@ -130,19 +130,22 @@ class StreamTimerBuildListener @Autowired constructor(
             gitProjectId = gitProjectId,
             branch = branch
         )
-        if ((timerBranch == null || timerBranch.revision != latestRevision) &&
-            scheduleTriggerService.triggerBuild(this, branch, latestRevision)
+        if ((timerBranch == null || timerBranch.revision != latestRevision)
         ) {
-            streamTimerBranchService.save(
-                StreamTimerBranch(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    gitProjectId = gitProjectId,
-                    branch = branch,
-                    revision = latestRevision
+            if (scheduleTriggerService.triggerBuild(this, branch, latestRevision)) {
+                streamTimerBranchService.save(
+                    StreamTimerBranch(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        gitProjectId = gitProjectId,
+                        branch = branch,
+                        revision = latestRevision
+                    )
                 )
-            )
+            }
             return true
+        } else {
+            logger.info("$pipelineId|branch:$branch|revision:${timerBranch.revision}|revision not change")
         }
         return false
     }
