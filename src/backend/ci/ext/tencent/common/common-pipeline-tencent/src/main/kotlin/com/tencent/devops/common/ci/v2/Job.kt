@@ -55,7 +55,7 @@ data class Job(
 
 data class Container(
     val image: String,
-    val credentials: Credentials?
+    val credentials: String?
 )
 
 data class Container2(
