@@ -55,9 +55,7 @@ import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
@@ -113,6 +111,8 @@ class GitCITriggerService @Autowired constructor(
         }
 
         val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
+
+        // 做一些在接收到请求后做的预处理
 
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         // 完全没创建过得项目不存记录
@@ -202,7 +202,7 @@ class GitCITriggerService @Autowired constructor(
             pipelineDelete.checkAndDeletePipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
         }
         // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
-        if (isDeleteBranch(gitRequestEvent)) {
+        if (gitRequestEvent.isDeleteBranch()) {
             return true
         }
 
@@ -531,12 +531,5 @@ class GitCITriggerService @Autowired constructor(
                 gitProjectId
             }
         }
-    }
-
-    // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
-    private fun isDeleteBranch(requestEvent: GitRequestEvent): Boolean {
-        return requestEvent.objectKind == TGitObjectKind.PUSH.value &&
-            requestEvent.operationKind == TGitPushOperationKind.DELETE.value &&
-            requestEvent.extensionAction == TGitPushActionKind.DELETE_BRANCH.value
     }
 }
