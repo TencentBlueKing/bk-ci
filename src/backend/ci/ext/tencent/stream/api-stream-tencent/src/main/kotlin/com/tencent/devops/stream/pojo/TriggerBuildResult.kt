@@ -45,5 +45,5 @@ data class TriggerBuildResult(
     @ApiModelProperty("触发的构建ID")
     val buildId: String,
     @ApiModelProperty("触发的构建详情页")
-    val buildUrl: String,
+    val buildUrl: String
 )
