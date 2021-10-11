@@ -188,6 +188,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForZSet().range(getFinalKey(key, isDistinguishCluster), start, end)
     }
 
+    fun zrevrange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Set<String>? {
+        return redisTemplate.opsForZSet().reverseRange(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
     fun zremoveRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForZSet().removeRange(getFinalKey(key, isDistinguishCluster), start, end)
     }
