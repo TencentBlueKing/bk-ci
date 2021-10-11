@@ -4,7 +4,7 @@
   "description": "devops-pipeline",
   "author": "",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --progress",
+    "dev": "webpack-dev-server --mode production --progress",
     "dll": "webpack --mode production --config webpack.dll.config.js",
     "public": "npm run dll && webpack --mode production",
     "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -40,11 +40,12 @@
   "devDependencies": {
     "add": "^2.0.6",
     "autoprefixer": "^7.1.4",
+    "babel-loader": "^8.2.2",
     "body-parser": "^1.18.2",
     "cli-plugin-eslint": "^0.1.0",
     "copy-webpack-plugin": "9.0.1",
     "cross-env": "^5.0.5",
-    "css-loader": "^0.28.7",
+    "css-loader": "^6.4.0",
     "cssnano": "^3.10.0",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^12.0.0",
