@@ -169,11 +169,8 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
         return Result(permissionGrantService.grantInstancePermission(
-            userId = grantInstance.createUser,
             projectId = projectCode,
-            resourceType = grantInstance.resourceType,
-            resourceCode = grantInstance.resourceCode,
-            action = grantInstance.permission
+            grantInfo = grantInstance
         ))
     }
 }

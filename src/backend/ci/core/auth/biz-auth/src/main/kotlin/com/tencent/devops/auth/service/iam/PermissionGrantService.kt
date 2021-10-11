@@ -1,11 +1,10 @@
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
+
 interface PermissionGrantService {
     fun grantInstancePermission(
-        userId: String,
-        action: String,
         projectId: String,
-        resourceCode: String,
-        resourceType: String
+        grantInfo: GrantInstanceDTO
     ): Boolean
 }
