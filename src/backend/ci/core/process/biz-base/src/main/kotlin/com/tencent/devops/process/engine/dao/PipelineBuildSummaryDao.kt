@@ -432,7 +432,7 @@ class PipelineBuildSummaryDao {
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    t.field("PIPELINE_NAME")!!.asc()
+                    t.field("PIPELINE_NAME_PINYIN")!!.asc()
                 }
                 PipelineSortType.CREATE_TIME -> {
                     t.field("CREATE_TIME")!!.desc()
@@ -473,6 +473,7 @@ class PipelineBuildSummaryDao {
             T_PIPELINE_INFO.MANUAL_STARTUP,
             T_PIPELINE_INFO.ELEMENT_SKIP,
             T_PIPELINE_INFO.TASK_COUNT,
+            T_PIPELINE_INFO.PIPELINE_NAME_PINYIN,
             T_PIPELINE_SETTING.DESC,
             T_PIPELINE_SETTING.RUN_LOCK_TYPE,
             T_PIPELINE_BUILD_SUMMARY.BUILD_NUM,

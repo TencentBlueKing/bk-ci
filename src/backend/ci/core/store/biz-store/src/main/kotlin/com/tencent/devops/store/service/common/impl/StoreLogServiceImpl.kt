@@ -69,6 +69,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getInitLogs(
+                userId = userId,
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -100,6 +101,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getAfterLogs(
+                userId = userId,
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -135,6 +137,7 @@ class StoreLogServiceImpl @Autowired constructor(
         }
         val queryLogsResult = client.get(ServiceLogResource::class)
             .getMoreLogs(
+                userId = userId,
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,

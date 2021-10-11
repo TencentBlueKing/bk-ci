@@ -94,7 +94,8 @@ enum class CallBackEvent {
     BUILD_TASK_START,
     BUILD_TASK_END,
     BUILD_STAGE_START,
-    BUILD_STAGE_END
+    BUILD_STAGE_END,
+    BUILD_TASK_PAUSE
 }
 
 data class PipelineEvent(

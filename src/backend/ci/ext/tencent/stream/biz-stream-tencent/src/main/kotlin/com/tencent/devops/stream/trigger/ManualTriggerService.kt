@@ -44,9 +44,9 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.v1.YamlBuild
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.service.OauthService
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,15 +56,15 @@ import javax.ws.rs.core.Response
 @Service
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val oauthService: OauthService,
+    private val oauthService: StreamOauthService,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitCIEventService: GitCIEventService,
     private val yamlBuild: YamlBuild,
-    private val yamlBuildV2: YamlBuildV2,
+    private val yamlBuildV2: StreamYamlBuild,
     private val streamYamlService: StreamYamlService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
@@ -90,7 +90,8 @@ class ManualTriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            latestBuildBranch = null
         )
 
         // 流水线未启用在手动触发处直接报错
@@ -118,7 +119,8 @@ class ManualTriggerService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
@@ -190,16 +192,16 @@ class ManualTriggerService @Autowired constructor(
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq
     ) {
-        val token = oauthService.getAndCheckOauthToken(userId)
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitToken = token,
-            forkGitToken = null,
             gitRequestEvent = gitRequestEvent,
             isMr = false,
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
-            pipelineName = buildPipeline.displayName
+            pipelineName = buildPipeline.displayName,
+            event = null,
+            changeSet = null,
+            forkGitProjectId = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(
@@ -218,7 +220,7 @@ class ManualTriggerService @Autowired constructor(
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+        streamBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
         yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,
@@ -260,7 +262,8 @@ class ManualTriggerService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             return null
         }

@@ -208,7 +208,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 events = events,
                 status = status,
                 errorMsg = errorMsg,
-                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
+                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it, formatted = false) },
                 requestBody = requestBody,
                 responseCode = responseCode,
                 responseBody = responseBody,

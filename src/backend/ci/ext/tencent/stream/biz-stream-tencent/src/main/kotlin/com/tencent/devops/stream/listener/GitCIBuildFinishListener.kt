@@ -51,15 +51,14 @@ import com.tencent.devops.stream.pojo.GitRepositoryConf
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.rtxCustom.MessageType
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.QualityService
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.service.StreamQualityService
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -71,6 +70,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -83,20 +83,22 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
 import com.tencent.devops.stream.constant.MQ as StreamMQ
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val qualityService: QualityService,
+    private val streamQualityService: StreamQualityService,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val triggerMessageUtil: StreamTriggerMessageUtils,
+    private val tokenService: StreamGitTokenService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -162,7 +164,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-                val v2GitSetting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+                val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
                 if (gitProjectConf == null && v2GitSetting == null) {
                     throw OperationException("git ci all projectCode not exist")
                 }
@@ -230,7 +232,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             pipelineId = buildFinishEvent.pipelineId,
                             block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
                                 v2GitSetting.enableMrBlock),
-                            reportData = qualityService.getQualityGitMrResult(
+                            reportData = streamQualityService.getQualityGitMrResult(
                                 client = client,
                                 projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
                                 pipelineName = pipeline.displayName,

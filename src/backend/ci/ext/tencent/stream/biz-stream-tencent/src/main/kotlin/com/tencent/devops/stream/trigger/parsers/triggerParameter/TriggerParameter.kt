@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
@@ -51,8 +53,7 @@ class TriggerParameter @Autowired constructor(
     fun saveGitRequestEvent(event: GitEvent, e: String): GitRequestEvent? {
         when (event) {
             is GitPushEvent -> {
-                if (event.total_commits_count <= 0) {
-                    logger.info("Git web hook no commit(${event.total_commits_count})")
+                if (!pushEventFilter(event)) {
                     return null
                 }
                 val gitRequestEvent = GitRequestEventHandle.createPushEvent(event, e)
@@ -73,7 +74,8 @@ class TriggerParameter @Autowired constructor(
             is GitMergeRequestEvent -> {
                 // 目前不支持Mr信息更新的触发
                 if (event.object_attributes.action == "update" &&
-                    event.object_attributes.extension_action != "push-update") {
+                    event.object_attributes.extension_action != "push-update"
+                ) {
                     logger.info("Git web hook is ${event.object_attributes.action} merge request")
                     return null
                 }
@@ -86,5 +88,19 @@ class TriggerParameter @Autowired constructor(
         }
         logger.info("event invalid: $event")
         return null
+    }
+
+    private fun pushEventFilter(event: GitPushEvent): Boolean {
+        // 放开删除分支操作为了流水线删除功能
+        if (event.operation_kind == TGitPushOperationKind.DELETE.value &&
+            event.action_kind == TGitPushActionKind.DELETE_BRANCH.value
+        ) {
+            return true
+        }
+        if (event.total_commits_count <= 0) {
+            logger.info("Git web hook no commit(${event.total_commits_count})")
+            return false
+        }
+        return true
     }
 }

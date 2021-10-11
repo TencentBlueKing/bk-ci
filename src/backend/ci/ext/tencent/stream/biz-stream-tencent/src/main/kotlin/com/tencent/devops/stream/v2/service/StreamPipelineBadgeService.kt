@@ -27,15 +27,17 @@
 
 package com.tencent.devops.stream.v2.service
 
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.common.StreamPipelineBadgeType
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.pojo.v2.badge.StreamPipelineBadgeInfo
+import java.lang.RuntimeException
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
+import org.springframework.beans.factory.annotation.Value
 
 @Service
 class StreamPipelineBadgeService @Autowired constructor(
@@ -43,13 +45,23 @@ class StreamPipelineBadgeService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
-    fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): StreamPipelineBadgeInfo {
+
+    @Value("\${badge.serverUrl:#{null}}")
+    private val badgeServerUrl: String? = null
+
+    fun get(gitProjectId: Long, filePath: String, branch: String?, objectKind: String?): String {
+        if (badgeServerUrl == null) {
+            throw RuntimeException("can't found badge server info")
+        }
         val (pipelineName, type) = getType(gitProjectId, filePath, branch, objectKind)
-        return StreamPipelineBadgeInfo(
-            label = pipelineName,
-            message = type.text,
-            status = type.name
-        )
+
+        val url = "$badgeServerUrl?label=$pipelineName&message=${type.text}&status=${type.name}&logo=${type.logo}"
+        OkhttpUtils.doGet(url).use { resp ->
+            if (!resp.isSuccessful) throw RuntimeException(
+                "get badge error code: ${resp.code()} message: ${resp.message()}"
+            )
+            return resp.body()!!.string()
+        }
     }
 
     private fun getType(
@@ -67,7 +79,7 @@ class StreamPipelineBadgeService @Autowired constructor(
         if (pipeline?.pipelineId.isNullOrBlank()) {
             return Pair(realFilePath, StreamPipelineBadgeType.NOT_FOUND)
         }
-        val buildHistory = gitRequestEventBuildDao.getLastEventByPipelineId(
+        val buildHistory = gitRequestEventBuildDao.getLastBuildEventByPipelineId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             pipelineId = pipeline!!.pipelineId,

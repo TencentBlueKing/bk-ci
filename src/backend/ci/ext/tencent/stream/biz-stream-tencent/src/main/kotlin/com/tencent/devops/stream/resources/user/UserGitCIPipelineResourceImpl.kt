@@ -35,12 +35,12 @@ import com.tencent.devops.stream.api.user.UserGitCIPipelineResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIV2PipelineService
+import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIPipelineResourceImpl @Autowired constructor(
-    private val pipelineV2Service: GitCIV2PipelineService,
+    private val pipelineV2Service: StreamPipelineService,
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCIPipelineResource {
 
@@ -99,13 +99,22 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listPipelineNames(userId: String, projectId: String): Result<List<GitProjectPipeline>> {
+    override fun listPipelineNames(
+        userId: String,
+        projectId: String,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
             pipelineV2Service.getPipelineListWithoutHistory(
                 userId = userId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                keyword = keyword,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

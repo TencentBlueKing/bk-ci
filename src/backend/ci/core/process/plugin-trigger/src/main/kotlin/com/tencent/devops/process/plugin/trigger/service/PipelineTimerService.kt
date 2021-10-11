@@ -66,7 +66,7 @@ open class PipelineTimerService @Autowired constructor(
         crontabExpressions: Set<String>,
         channelCode: ChannelCode
     ): Result<Boolean> {
-        val crontabJson = JsonUtil.toJson(crontabExpressions)
+        val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
         return if (0 < pipelineTimerDao.save(dslContext, projectId, pipelineId, userId, crontabJson, channelCode)) {
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(

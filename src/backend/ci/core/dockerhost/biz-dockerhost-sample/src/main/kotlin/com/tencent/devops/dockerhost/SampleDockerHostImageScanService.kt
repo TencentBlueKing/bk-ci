@@ -11,6 +11,7 @@ class SampleDockerHostImageScanService : DockerHostImageScanService {
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
     ) {

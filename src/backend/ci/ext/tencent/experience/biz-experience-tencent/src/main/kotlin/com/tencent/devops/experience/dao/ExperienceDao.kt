@@ -43,9 +43,10 @@ import java.time.ZoneId
 import javax.ws.rs.NotFoundException
 
 @Repository
+@SuppressWarnings("LongParameterList", "LongMethod")
 class ExperienceDao {
 
-    fun list(dslContext: DSLContext, idSet: Set<Long>): Result<TExperienceRecord> {
+    fun list(dslContext: DSLContext, idSet: Collection<Long>): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(idSet))
@@ -306,7 +307,7 @@ class ExperienceDao {
 
     fun listByIds(
         dslContext: DSLContext,
-        ids: Set<Long>,
+        ids: Collection<Long>,
         platform: String?,
         expireTime: LocalDateTime,
         online: Boolean,

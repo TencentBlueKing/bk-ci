@@ -44,6 +44,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCILogResource {
     override fun getInitLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -56,6 +57,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         checkParam(buildId)
         return Result(
             gitCILogService.getInitLogs(
+                userId = userId,
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -68,6 +70,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -81,6 +84,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         checkParam(buildId)
         return Result(
             gitCILogService.getAfterLogs(
+                userId = userId,
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -106,6 +110,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         checkParam(buildId)
         permissionService.checkGitCIPermission(userId, projectId)
         return gitCILogService.downloadLogs(
+            userId = userId,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId,
