@@ -29,19 +29,18 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.glassfish.jersey.server.ParamException
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 
 @BkExceptionMapper
-class NullPointerExceptionMapper : ExceptionMapper<ParamException> {
+class NullPointerExceptionMapper : ExceptionMapper<NullPointerException> {
     companion object {
         val logger = LoggerFactory.getLogger(NullPointerExceptionMapper::class.java)!!
     }
 
-    override fun toResponse(exception: ParamException): Response {
+    override fun toResponse(exception: NullPointerException): Response {
         logger.warn("Failed with null point exception", exception)
         val status = Response.Status.BAD_REQUEST
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
