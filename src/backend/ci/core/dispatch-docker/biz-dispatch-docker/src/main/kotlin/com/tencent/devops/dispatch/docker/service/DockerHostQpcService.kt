@@ -25,43 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.docker.common.Constants
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    @Deprecated("待废除")
-    val status: Int? = 0,
-    val imageName: String,
-    val containerId: String,
-    @Deprecated("待废除")
-    val wsInHost: Boolean? = true,
-    val poolNo: Int,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    @Deprecated("待废除")
-    val imagePublicFlag: Boolean? = false,
-    @Deprecated("待废除")
-    val imageRDType: String? = "THIRD_PARTY",
-    val containerHashId: String?,
-    val customBuildEnv: Map<String, String>? = null,
-    val buildType: BuildType = BuildType.DOCKER,
-    val qpcUniquePath: String? = null,
-    val dockerResource: DockerResourceOptionsVO = DockerResourceOptionsVO(
-        memoryLimitBytes = 34359738368L,
-        cpuPeriod = 10000,
-        cpuQuota = 160000,
-        blkioDeviceReadBps = 125829120,
-        blkioDeviceWriteBps = 125829120,
-        disk = 100,
-        description = ""
-    )
-)
+@Service
+class DockerHostQpcService @Autowired constructor(
+    private val redisOperation: RedisOperation
+) {
+
+    fun getQpcWhitelist(userId: String): List<String> {
+        val whiteList = mutableListOf<String>()
+
+        val whiteSet = redisOperation.getSetMembers(Constants.QPC_WHITE_LIST_KEY_PREFIX)
+        return if (whiteSet != null) {
+            whiteSet.parallelStream().forEach {
+                whiteList.add(it)
+            }
+
+            whiteList
+        } else {
+            emptyList()
+        }
+    }
+
+    fun addQpcWhitelist(userId: String, gitProjectId: String): Boolean {
+        redisOperation.addSetValue(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+        return true
+    }
+
+    fun deleteQpcWhitelist(userId: String, gitProjectId: String): Boolean {
+        redisOperation.removeSetMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+        return true
+    }
+
+    fun checkQpcWhitelist(gitProjectId: String): Boolean {
+        return redisOperation.isMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(DockerHostQpcService::class.java)
+    }
+}
