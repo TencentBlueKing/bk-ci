@@ -144,8 +144,7 @@ class StreamYamlTrigger @Autowired constructor(
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
-        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml")
-        logger.info("normalize yaml: $normalizedYaml")
+        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
         gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
@@ -189,7 +188,6 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false
             )
-            return true
         }
 
         if (isTiming) {
