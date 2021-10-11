@@ -1,5 +1,4 @@
 const path = require('path')
-const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -7,7 +6,6 @@ const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
-    console.log(env, 'sssss')
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
@@ -56,6 +54,10 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         fix: true,
                         formatter: require('eslint-friendly-formatter')
                     }
+                },
+                {
+                    test: /\.cur$/,
+                    type: 'asset/resource'
                 },
                 {
                     test: /\.(png|jpe?g|gif|svg|webp|woff2?|eot|ttf|otf)(\?.*)?$/,
