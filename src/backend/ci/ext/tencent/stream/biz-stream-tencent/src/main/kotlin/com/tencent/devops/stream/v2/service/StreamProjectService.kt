@@ -27,37 +27,40 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.common.redis.RedisOperation
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
-    private val streamTriggerMessageUtils: StreamTriggerMessageUtils,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val gitRequestEventDao: GitRequestEventDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val streamBasicSettingDao: StreamBasicSettingDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamProjectService::class.java)
+        private const val STREAM_USER_PROJECT_HISTORY_SET = "stream:user:project:history:set"
+        private const val MAX_STREAM_USER_HISTORY_LENGTH = 10
+        private const val MAX_STREAM_USER_HISTORY_DAYS = 90L
     }
 
     fun getProjectList(
@@ -102,18 +105,10 @@ class StreamProjectService @Autowired constructor(
             dslContext = dslContext,
             projectIds = gitProjects.map { it.id!! }.toSet()
         ).associateBy { it.id }
-        val lastBuildMap =
-            gitRequestEventBuildDao.lastBuildByProject(dslContext, projectIdMap.keys).associateBy { it.gitProjectId }
-        val eventMap = gitRequestEventDao.getRequestsById(
-            dslContext = dslContext,
-            requestIds = lastBuildMap.values.map { it.eventId.toInt() }.toSet(),
-            hasEvent = false
-        ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
             // 针对创建流水线异常时，现有代码会创建event记录
-            val ciInfo = if (lastBuildMap[it.id!!]?.pipelineId.isNullOrBlank() ||
-                lastBuildMap[it.id!!]?.buildId.isNullOrBlank()) {
+            val ciInfo = if (project?.lastCiInfo == null) {
                 CIInfo(
                     enableCI = project?.enableCi ?: false,
                     lastBuildId = null,
@@ -122,20 +117,7 @@ class StreamProjectService @Autowired constructor(
                     lastBuildMessage = null
                 )
             } else {
-                CIInfo(
-                    enableCI = project?.enableCi ?: false,
-                    lastBuildMessage = getEventMessage(
-                        event = eventMap[lastBuildMap[it.id!!]?.eventId],
-                        gitProjectId = it.id!!
-                    ),
-                    lastBuildStatus = if (lastBuildMap[it.id!!]?.buildStatus.isNullOrBlank()) {
-                        null
-                    } else {
-                        BuildStatus.valueOf(lastBuildMap[it.id!!]?.buildStatus!!)
-                    },
-                    lastBuildPipelineId = lastBuildMap[it.id!!]?.pipelineId,
-                    lastBuildId = lastBuildMap[it.id!!]?.buildId
-                )
+                JsonUtil.to(project.lastCiInfo, object : TypeReference<CIInfo>() {})
             }
             ProjectCIInfo(
                 id = it.id!!,
@@ -156,10 +138,71 @@ class StreamProjectService @Autowired constructor(
         )
     }
 
-    private fun getEventMessage(event: GitRequestEvent?, gitProjectId: Long): String? {
-        if (event == null) {
+    fun addUserProjectHistory(
+        userId: String,
+        projectId: String
+    ) {
+        val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
+        redisOperation.zadd(key, projectId, LocalDateTime.now().timestamp().toDouble())
+        val size = redisOperation.zsize(key) ?: 0
+        if (size > MAX_STREAM_USER_HISTORY_LENGTH) {
+            // redis zset 是从小到达排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
+            redisOperation.zremoveRange(key, 0, size - MAX_STREAM_USER_HISTORY_LENGTH - 1)
+        }
+    }
+
+    fun getUserProjectHistory(
+        userId: String,
+        size: Long
+    ): List<ProjectCIInfo>? {
+        val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
+        // 先清理3个月前过期数据
+        val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
+        redisOperation.zremoveRangeByScore(key, 0.0, expiredTime.toDouble())
+        val list = redisOperation.zrange(
+            key = key,
+            start = 0,
+            end = if (size - 1 < 0) {
+                0
+            } else {
+                size - 1
+            }
+        )
+        if (list.isNullOrEmpty()) {
             return null
         }
-        return streamTriggerMessageUtils.getEventMessageTitle(event, gitProjectId)
+        // zset 默认从小到大排序，所以取反
+        val gitProjectIds = list.map { it.removePrefix("git_").toLong() }.reversed()
+        val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
+            .associateBy { it.id }
+        val result = mutableListOf<ProjectCIInfo>()
+        gitProjectIds.forEach {
+            val setting = settings[it] ?: return@forEach
+            result.add(
+                ProjectCIInfo(
+                    id = setting.id,
+                    projectCode = setting.projectCode,
+                    public = null,
+                    name = setting.name,
+                    nameWithNamespace = GitCommonUtils.getPathWithNameSpace(setting.gitHttpUrl),
+                    httpsUrlToRepo = setting.gitHttpUrl,
+                    webUrl = setting.homePage,
+                    avatarUrl = setting.gitProjectAvatar,
+                    description = setting.gitProjectDesc,
+                    ciInfo = if (setting.lastCiInfo == null) {
+                        CIInfo(
+                            enableCI = setting.enableCi ?: false,
+                            lastBuildId = null,
+                            lastBuildStatus = null,
+                            lastBuildPipelineId = null,
+                            lastBuildMessage = null
+                        )
+                    } else {
+                        JsonUtil.to(setting.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    }
+                )
+            )
+        }
+        return result
     }
 }

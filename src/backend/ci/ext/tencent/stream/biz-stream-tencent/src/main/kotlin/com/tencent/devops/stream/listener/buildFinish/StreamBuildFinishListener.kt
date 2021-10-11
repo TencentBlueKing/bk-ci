@@ -46,6 +46,8 @@ import org.springframework.stereotype.Service
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.listener.buildFinish.notify.SendNotify
+import com.tencent.devops.stream.pojo.v2.project.CIInfo
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 
 @Service
@@ -57,7 +59,8 @@ class StreamBuildFinishListener @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val sendCommitCheck: SendCommitCheck,
-    private val sendNotify: SendNotify
+    private val sendNotify: SendNotify,
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
 
     companion object {
@@ -135,6 +138,24 @@ class StreamBuildFinishListener @Autowired constructor(
 
             // 推送结束构建消息
             sendCommitCheck.sendCommitCheck(context)
+
+            // 更新最后一次执行状态
+            if (buildEvent.isV2() && v2GitSetting != null) {
+                streamBasicSettingDao.updateSettingLastCiInfo(
+                    dslContext,
+                    v2GitSetting.gitProjectId,
+                    CIInfo(
+                        enableCI = v2GitSetting.enableCi,
+                        lastBuildMessage = triggerMessageUtil.getEventMessageTitle(
+                            requestEvent,
+                            gitProjectId
+                        ),
+                        lastBuildStatus = context.buildStatus,
+                        lastBuildPipelineId = buildFinishEvent.pipelineId,
+                        lastBuildId = buildFinishEvent.buildId
+                    )
+                )
+            }
 
             // 发送通知，去掉v1
             sendNotify.sendNotify(context)

@@ -145,7 +145,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<String?>
 
-    @ApiOperation("获取指定项目详细信息")
+    @ApiOperation("获取指定项目详细信息(简略)")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
