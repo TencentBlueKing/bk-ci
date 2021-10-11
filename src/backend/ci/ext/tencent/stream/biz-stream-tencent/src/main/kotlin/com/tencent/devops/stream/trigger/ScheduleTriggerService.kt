@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
@@ -73,7 +74,7 @@ class ScheduleTriggerService @Autowired constructor(
         streamTimerEvent: StreamTimerBuildEvent,
         buildBranch: String,
         buildCommitId: String
-    ): Boolean {
+    ): BuildId? {
         val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(
             streamTimerEvent,
             buildBranch,
@@ -90,12 +91,12 @@ class ScheduleTriggerService @Autowired constructor(
         // 流水线不存在时删除定时触发任务
         if (existsPipeline == null) {
             streamTimerService.deleteTimer(streamTimerEvent.pipelineId, streamTimerEvent.userId)
-            return false
+            return null
         }
 
         // 流水线未启用在定时什么都不管，不触发不提醒
         if (!existsPipeline.enabled) {
-            return false
+            return null
         }
 
         val buildPipeline = GitProjectPipeline(
@@ -109,20 +110,19 @@ class ScheduleTriggerService @Autowired constructor(
             latestBuildBranch = buildBranch
         )
 
-        handleTrigger(
+        return handleTrigger(
             gitRequestEvent = gitRequestEvent,
             originYaml = streamTimerEvent.originYaml,
             buildPipeline = buildPipeline
         )
-        return true
     }
 
     fun handleTrigger(
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline
-    ) {
-        triggerExceptionService.handle(gitRequestEvent, null, null) {
+    ): BuildId? {
+        return triggerExceptionService.handle(gitRequestEvent, null, null) {
             trigger(gitRequestEvent, originYaml, buildPipeline)
         }
     }
@@ -131,7 +131,7 @@ class ScheduleTriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline
-    ) {
+    ): BuildId? {
         // 如果当前文件没有内容直接不触发
         if (originYaml.isBlank()) {
             logger.warn(
@@ -183,7 +183,7 @@ class ScheduleTriggerService @Autowired constructor(
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
-        yamlBuildV2.gitStartBuild(
+        return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,
             yaml = objects.normalYaml,

@@ -106,25 +106,29 @@ class StreamTimerBuildListener @Autowired constructor(
         gitCIConf: GitCIBasicSetting,
         branch: String,
         token: String
-    ): Boolean {
-        val latestRevisionInfo = scmService.getLatestRevisionRetry(
-            pipelineId = pipelineId,
-            gitToken = token,
-            projectName = GitUtils.getProjectName(gitCIConf.url),
-            url = gitCIConf.url,
-            type = ScmType.CODE_GIT,
-            branchName = branch,
-            userName = userId
-        ) ?: return false
+    ) {
+        try {
+            val latestRevisionInfo = scmService.getLatestRevisionRetry(
+                pipelineId = pipelineId,
+                gitToken = token,
+                projectName = GitUtils.getProjectName(gitCIConf.url),
+                url = gitCIConf.url,
+                type = ScmType.CODE_GIT,
+                branchName = branch,
+                userName = userId
+            ) ?: return
 
-        return if (!always) {
-            branchChangeTimerTrigger(branch = branch, latestRevision = latestRevisionInfo.revision)
-        } else {
-            scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo.revision)
+            if (!always) {
+                branchChangeTimerTrigger(branch = branch, latestRevision = latestRevisionInfo.revision)
+            } else {
+                scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo.revision)
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail| error=${ignored.message}")
         }
     }
 
-    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevision: String): Boolean {
+    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevision: String) {
         val timerBranch = streamTimerBranchService.get(
             pipelineId = pipelineId,
             gitProjectId = gitProjectId,
@@ -132,7 +136,11 @@ class StreamTimerBuildListener @Autowired constructor(
         )
         if ((timerBranch == null || timerBranch.revision != latestRevision)
         ) {
-            if (scheduleTriggerService.triggerBuild(this, branch, latestRevision)) {
+            val buildId = scheduleTriggerService.triggerBuild(this, branch, latestRevision)
+            logger.info(
+                "[$pipelineId]|branch:$branch|revision:$latestRevision|TimerTrigger start| buildId=${buildId?.id}"
+            )
+            if (buildId != null) {
                 streamTimerBranchService.save(
                     StreamTimerBranch(
                         projectId = projectId,
@@ -143,10 +151,8 @@ class StreamTimerBuildListener @Autowired constructor(
                     )
                 )
             }
-            return true
         } else {
             logger.info("$pipelineId|branch:$branch|revision:${timerBranch.revision}|revision not change")
         }
-        return false
     }
 }
