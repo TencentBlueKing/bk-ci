@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
     open val grantServiceImpl: GrantServiceImpl,
     open val iamConfiguration: IamConfiguration
-): PermissionGrantService {
+) : PermissionGrantService {
     override fun grantInstancePermission(
         userId: String,
         action: String,
