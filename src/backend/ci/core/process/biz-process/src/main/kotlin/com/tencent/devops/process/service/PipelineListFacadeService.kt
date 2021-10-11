@@ -911,7 +911,7 @@ class PipelineListFacadeService @Autowired constructor(
                 val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
                     projectId = project_id,
                     channelCode = channelCode,
-                    page = 0,
+                    page = 1,
                     pageSize = 500
                 )
                 if (pipelineBuildSummary.isNotEmpty) {
