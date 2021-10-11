@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskResult
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface EngineBuildSDKApi : WorkerRestApiSDK {
+@ApiModel("DockerHostLoad")
+data class DockerHostLoad(
+    val clusterLoad: Map<String, Load>
+)
 
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
-
-    fun setStarted(retryCount: Int): Result<BuildVariables>
-
-    fun claimTask(retryCount: Int): Result<BuildTask>
-
-    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
-
-    fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
-
-    fun heartbeat(): Result<HeartBeatInfo>
-
-    fun timeout(): Result<Boolean>
-
-    fun getJobContext(): Map<String, String>
-
-    fun getBuildDetailUrl(): String
-}
+@ApiModel("DockerHostLoad")
+data class Load(
+    @ApiModelProperty("构建机已使用量")
+    val usedNum: Int,
+    @ApiModelProperty("构建机CPU负载")
+    val averageCpuLoad: Int,
+    @ApiModelProperty("构建机内存负载")
+    val averageMemLoad: Int,
+    @ApiModelProperty("构建机硬盘负载")
+    val averageDiskLoad: Int,
+    @ApiModelProperty("构建机硬盘IO负载")
+    val averageDiskIOLoad: Int,
+    @ApiModelProperty("集群节点数量")
+    val totalNode: Int,
+    @ApiModelProperty("集群可用节点数量")
+    val enableNode: Int
+)

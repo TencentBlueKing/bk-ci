@@ -45,6 +45,9 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
+import com.tencent.devops.dispatch.docker.pojo.Load
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -77,6 +80,74 @@ class DockerHostBuildService @Autowired constructor(
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
+
+    fun getDockerHostLoad(userId: String): DockerHostLoad {
+        try {
+            return DockerHostLoad(
+                // 页面展示的key和文档对齐
+                clusterLoad = mapOf(
+                    "docker" to getLoad(DockerHostClusterType.COMMON),
+                    "agentless" to getLoad(DockerHostClusterType.AGENT_LESS),
+                    "macos-10.15" to getLoad(DockerHostClusterType.MACOS)
+                )
+            )
+        } catch (e: Exception) {
+            LOG.error("$userId getDockerHostLoad error.", e)
+            throw RuntimeException("getDockerHostLoad error.")
+        }
+    }
+
+    private fun getLoad(clusterType: DockerHostClusterType): Load {
+        val dockerIpList = pipelineDockerIPInfoDao.getDockerIpList(
+            dslContext = dslContext,
+            enable = true,
+            grayEnv = false,
+            clusterName = clusterType
+        )
+
+        if (dockerIpList.isEmpty()) {
+            return Load(
+                averageCpuLoad = 0,
+                averageMemLoad = 0,
+                averageDiskIOLoad = 0,
+                averageDiskLoad = 0,
+                usedNum = 0,
+                enableNode = dockerIpList.size,
+                totalNode = pipelineDockerIPInfoDao.getAllDockerIpCount(
+                    dslContext = dslContext,
+                    grayEnv = false,
+                    clusterName = clusterType
+                )?.toInt() ?: 0
+            )
+        }
+
+        var totalCpu = 0
+        var totalMem = 0
+        var totalDiskIO = 0
+        var totalDisk = 0
+        var totalUsed = 0
+        dockerIpList.forEach {
+            totalCpu += it.cpuLoad
+            totalMem += it.memLoad
+            totalDiskIO += it.diskIoLoad
+            totalDisk += it.diskLoad
+            totalUsed += it.usedNum
+        }
+
+        return Load(
+            averageCpuLoad = totalCpu / dockerIpList.size,
+            averageMemLoad = totalMem / dockerIpList.size,
+            averageDiskIOLoad = totalDiskIO / dockerIpList.size,
+            averageDiskLoad = totalDisk / dockerIpList.size,
+            usedNum = totalUsed / dockerIpList.size,
+            enableNode = dockerIpList.size,
+            totalNode = pipelineDockerIPInfoDao.getAllDockerIpCount(
+                dslContext = dslContext,
+                grayEnv = false,
+                clusterName = clusterType
+            )?.toInt() ?: 0
+        )
+    }
 
     fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
         LOG.info("${event.buildId}|finishDockerBuild|vmSeqId(${event.vmSeqId})|result(${event.buildResult})")
