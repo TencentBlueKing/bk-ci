@@ -38,6 +38,7 @@ import com.tencent.devops.stream.api.user.UserGitCITriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.GitYamlString
 import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2TriggerBuildReq
 import com.tencent.devops.stream.pojo.v2.V2BuildYaml
 import com.tencent.devops.stream.trigger.ManualTriggerService
@@ -66,7 +67,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         userId: String,
         pipelineId: String,
         triggerBuildReq: V2TriggerBuildReq
-    ): Result<Boolean> {
+    ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
