@@ -908,7 +908,12 @@ class PipelineListFacadeService @Autowired constructor(
         try {
             watcher.start("s_s_r_summary")
             projectId.forEach { project_id ->
-                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(project_id, channelCode)
+                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = project_id,
+                    channelCode = channelCode,
+                    page = 0,
+                    pageSize = 500
+                )
                 if (pipelineBuildSummary.isNotEmpty) {
                     pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
                 }
