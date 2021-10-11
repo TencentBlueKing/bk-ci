@@ -3,6 +3,7 @@
     [
       "@babel/preset-env",
       {
+        "modules": "commonjs",
         "debug": false,
         "useBuiltIns": "usage"
       }
