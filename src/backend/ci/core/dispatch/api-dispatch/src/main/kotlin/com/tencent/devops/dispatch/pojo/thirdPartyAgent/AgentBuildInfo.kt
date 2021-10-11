@@ -44,9 +44,9 @@ data class AgentBuildInfo(
     val buildId: String,
     @ApiModelProperty("构建计数")
     val buildNum: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("构建机编排序号")
     val vmSeqId: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("任务名")
     val taskName: String,
     @ApiModelProperty("状态")
     val status: String,

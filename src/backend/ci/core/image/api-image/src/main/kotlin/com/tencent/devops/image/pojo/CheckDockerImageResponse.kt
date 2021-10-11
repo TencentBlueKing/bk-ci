@@ -38,13 +38,13 @@ data class CheckDockerImageResponse(
     val errorCode: Int,
     @ApiModelProperty("错误信息")
     val errorMessage: String? = "",
-    @ApiModelProperty("")
+    @ApiModelProperty("架构")
     val arch: String? = "",
     @ApiModelProperty("作者")
     val author: String? = "",
     @ApiModelProperty("评论")
     val comment: String? = "",
-    @ApiModelProperty("")
+    @ApiModelProperty("创建时间")
     val created: String? = "",
     @ApiModelProperty("docker版本")
     val dockerVersion: String? = "",
@@ -54,13 +54,13 @@ data class CheckDockerImageResponse(
     val os: String? = "",
     @ApiModelProperty("操作系统版本")
     val osVersion: String? = "",
-    @ApiModelProperty("")
+    @ApiModelProperty("父容器")
     val parent: String? = "",
     @ApiModelProperty("大小")
     val size: Long? = 0,
-    @ApiModelProperty("")
+    @ApiModelProperty("仓库标签")
     val repoTags: List<String>? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("image存储属性")
     val repoDigests: List<String>? = null,
     @ApiModelProperty("虚拟大小")
     val virtualSize: Long? = 0

@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 data class GrayTestInfo(
     @ApiModelProperty("id")
     val id: Long,
-    @ApiModelProperty("")
+    @ApiModelProperty("服务器ID")
     val server_id: Long,
     @ApiModelProperty("用户名称")
     val userName: String,

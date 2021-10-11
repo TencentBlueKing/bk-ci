@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 data class FormatLog(
     @ApiModelProperty("日志类型")
     val logType: LogType,
-    @ApiModelProperty("")
+    @ApiModelProperty("处理时间")
     val washTime: String,
     @ApiModelProperty("日志信息map")
     val logMessageMap: Map<String, String>

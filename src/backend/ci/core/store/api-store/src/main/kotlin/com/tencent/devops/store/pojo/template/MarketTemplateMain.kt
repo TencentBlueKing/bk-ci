@@ -37,6 +37,6 @@ data class MarketTemplateMain(
     val key: String,
     @ApiModelProperty("标签")
     val label: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("插件列表")
     val records: List<MarketItem?>
 )

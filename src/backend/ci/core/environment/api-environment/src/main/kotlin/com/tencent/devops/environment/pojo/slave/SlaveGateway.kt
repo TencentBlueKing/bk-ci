@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 data class SlaveGateway(
     @ApiModelProperty("网关地域")
     val zoneName: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("展示名称")
     val showName: String,
     @ApiModelProperty("网关地址")
     val gateway: String

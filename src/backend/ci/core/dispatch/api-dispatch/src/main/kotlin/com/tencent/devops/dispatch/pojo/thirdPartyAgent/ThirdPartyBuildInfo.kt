@@ -36,7 +36,7 @@ data class ThirdPartyBuildInfo(
     val projectId: String,
     @ApiModelProperty("构建id")
     val buildId: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("构建机编排序号")
     val vmSeqId: String,
     @ApiModelProperty("工作空间")
     val workspace: String

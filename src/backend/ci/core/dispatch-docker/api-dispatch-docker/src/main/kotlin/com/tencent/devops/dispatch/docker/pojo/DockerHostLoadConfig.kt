@@ -40,6 +40,6 @@ data class DockerHostLoadConfig(
     val diskLoadThreshold: Int,
     @ApiModelProperty("存储IO负载阈值")
     val diskIOLoadThreshold: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("使用量")
     val usedNum: Int = 50
 )

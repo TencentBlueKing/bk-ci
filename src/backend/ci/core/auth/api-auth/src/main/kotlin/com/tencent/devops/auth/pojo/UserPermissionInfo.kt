@@ -36,8 +36,8 @@ import io.swagger.annotations.ApiModelProperty
 data class UserPermissionInfo(
     @ApiModelProperty("组织id")
     val organizationId: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("组织级别")
     val organizationLevel: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("权限详情")
     val permissionMap: Map<AuthResourceType, List<AuthPermission>>
 )

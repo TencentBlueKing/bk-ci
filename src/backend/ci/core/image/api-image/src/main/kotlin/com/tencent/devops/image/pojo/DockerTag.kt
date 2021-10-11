@@ -40,9 +40,9 @@ data class DockerTag(
     var image: String? = null,
     @ApiModelProperty("创建者")
     var createdBy: String? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("创建时间")
     var created: String? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("修改时间")
     var modified: String? = null,
     @ApiModelProperty("修改者")
     var modifiedBy: String? = null,
@@ -50,7 +50,7 @@ data class DockerTag(
     var desc: String? = "",
     @ApiModelProperty("大小")
     var size: String? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("构件列表")
     var artifactorys: List<String>? = null,
     @ApiModelProperty("是否已关联到store")
     var storeFlag: Boolean? = null

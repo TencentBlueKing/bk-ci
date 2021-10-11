@@ -39,17 +39,17 @@ data class GithubCheckRuns(
     @ApiModelProperty("head sha值")
     val headSha: String,
     @JsonProperty("details_url")
-    @ApiModelProperty("")
+    @ApiModelProperty("详情链接")
     val detailsUrl: String,
     @JsonProperty("external_id")
-    @ApiModelProperty("")
+    @ApiModelProperty("拓展ID")
     val externalId: String,
     @ApiModelProperty("状态")
     val status: String,
     @JsonProperty("started_at")
     @ApiModelProperty("开始于")
     val startedAt: String?,
-    @ApiModelProperty("")
+    @ApiModelProperty("结论")
     val conclusion: String?,
     @JsonProperty("completed_at")
     @ApiModelProperty("完成于")

@@ -46,7 +46,7 @@ data class NewHeartbeatInfo(
     val agentInstallPath: String,
     @ApiModelProperty("启动者")
     val startedUser: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("第三方构建信息列表")
     val taskList: List<ThirdPartyBuildInfo>,
     @ApiModelProperty("构建机id")
     var agentId: Long?,

@@ -44,9 +44,9 @@ data class DockerRepo(
     var name: String? = null,
     @ApiModelProperty("创建者")
     var createdBy: String? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("创建时间")
     var created: String? = null,
-    @ApiModelProperty("")
+    @ApiModelProperty("修改时间")
     var modified: String? = null,
     @ApiModelProperty("修改者")
     var modifiedBy: String? = null,

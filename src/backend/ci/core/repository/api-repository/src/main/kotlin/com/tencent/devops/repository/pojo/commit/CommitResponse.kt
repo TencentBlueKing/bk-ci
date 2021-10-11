@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 data class CommitResponse(
     @ApiModelProperty("名称")
     val name: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("插件ID")
     val elementId: String,
     @ApiModelProperty("记录")
     val records: List<CommitData>

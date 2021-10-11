@@ -45,6 +45,6 @@ data class HeartbeatResponse(
     val envs: Map<String, String>,
     @ApiModelProperty("网关地址")
     val gateway: String? = "",
-    @ApiModelProperty("")
+    @ApiModelProperty("文件网关路径")
     val fileGateway: String? = ""
 )

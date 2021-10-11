@@ -38,7 +38,7 @@ data class ContainerInfo(
     val pipelineId: String,
     @ApiModelProperty("构建序列号")
     val vmSeqId: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("资源池序号")
     val poolNo: Int,
     @ApiModelProperty("状态")
     val status: Int,
@@ -50,7 +50,7 @@ data class ContainerInfo(
     val address: String,
     @ApiModelProperty("容器token")
     val token: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("构建环境")
     val buildEnv: String?,
     @ApiModelProperty("仓库用户名")
     val registryUser: String?,

@@ -17,8 +17,8 @@ data class RepositoryGitCheck(
     val repositoryName: String?,
     @ApiModelProperty("提交id")
     val commitId: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("内容")
     val context: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("来源类型")
     val source: ExecuteSource
 )

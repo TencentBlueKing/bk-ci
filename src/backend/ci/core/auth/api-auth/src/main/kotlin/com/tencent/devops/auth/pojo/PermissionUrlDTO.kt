@@ -35,10 +35,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("")
 data class PermissionUrlDTO(
-    @ApiModelProperty("")
+    @ApiModelProperty("权限类型")
     val actionId: AuthPermission,
-    @ApiModelProperty("")
+    @ApiModelProperty("资源类型")
     val resourceId: AuthResourceType,
-    @ApiModelProperty("")
+    @ApiModelProperty("实例列表")
     val instanceId: List<Instance>?
 )

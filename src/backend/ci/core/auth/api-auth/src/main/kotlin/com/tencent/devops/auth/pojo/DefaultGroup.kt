@@ -7,8 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class DefaultGroup(
     @ApiModelProperty("名称")
     val name: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("展示名称")
     val displayName: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("组编码")
     val code: String
 )

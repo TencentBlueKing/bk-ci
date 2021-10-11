@@ -7,6 +7,6 @@ import io.swagger.annotations.ApiModelProperty
 data class AppManagerInfo(
     @ApiModelProperty("app code")
     val appCode: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("管理员")
     val managerUser: String
 )

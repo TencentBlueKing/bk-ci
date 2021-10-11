@@ -34,8 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class WhiteEntify(
     @ApiModelProperty("id")
     val id: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("管理员id")
     val managerId: Int,
-    @ApiModelProperty("")
+    @ApiModelProperty("用户名")
     val user: String
 )

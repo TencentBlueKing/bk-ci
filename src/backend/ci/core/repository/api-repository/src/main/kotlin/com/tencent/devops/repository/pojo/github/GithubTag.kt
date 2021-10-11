@@ -47,7 +47,7 @@ import io.swagger.annotations.ApiModelProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("获取tag返回模型")
 data class GithubTag(
-    @ApiModelProperty("")
+    @ApiModelProperty("远程引用")
     val ref: String,
     @JsonProperty("node_id")
     @ApiModelProperty("节点id")

@@ -38,8 +38,8 @@ data class ThirdPartyAgentStartInfo(
     val hostIp: String,
     @ApiModelProperty("操作系统")
     val detectOS: String,
-    @ApiModelProperty("")
+    @ApiModelProperty("版本号")
     val version: String?,
-    @ApiModelProperty("")
+    @ApiModelProperty("主版本号")
     val masterVersion: String?
 )
