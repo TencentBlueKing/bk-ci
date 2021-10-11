@@ -1162,10 +1162,10 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+        val pipelineRecords = templatePipelineDao.listByPipelinesId(dslContext, pipelineIds)
         val pipelineTemplateMap = mutableMapOf<String, String>()
         pipelineRecords.forEach {
-            pipelineTemplateMap[it.pipelineId] = it.templateId
+            pipelineTemplateMap[it["pipelineId"] as String] = it["templateId"] as String
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
