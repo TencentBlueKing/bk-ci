@@ -156,6 +156,22 @@ class StreamYamlTrigger @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         gitBasicSettingService.updateProjectInfo(gitProjectInfo)
 
+        if (isTiming) {
+            // 只有定时任务的只注册定时事件
+            logger.warn("Only schedules matched, only save the pipeline, " +
+                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            yamlBuildV2.gitStartBuild(
+                pipeline = gitProjectPipeline,
+                event = gitRequestEvent,
+                yaml = yamlObject,
+                parsedYaml = parsedYaml,
+                originYaml = originYaml,
+                normalizedYaml = normalizedYaml,
+                gitBuildId = null,
+                isTimeTrigger = true
+            )
+        }
+
         if (isTrigger) {
             // 正常匹配仓库操作触发
             logger.info(
@@ -187,22 +203,6 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false
-            )
-        }
-
-        if (isTiming) {
-            // 只有定时任务的只注册定时事件
-            logger.warn("Only schedules matched, only save the pipeline, " +
-                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            yamlBuildV2.gitStartBuild(
-                pipeline = gitProjectPipeline,
-                event = gitRequestEvent,
-                yaml = yamlObject,
-                parsedYaml = parsedYaml,
-                originYaml = originYaml,
-                normalizedYaml = normalizedYaml,
-                gitBuildId = null,
-                isTimeTrigger = true
             )
         }
         return true
