@@ -54,12 +54,14 @@ import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.PreTrigger
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -83,6 +85,7 @@ class GitCITriggerService @Autowired constructor(
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val streamScmService: StreamScmService,
     private val triggerParameter: TriggerParameter,
+    private val preTrigger: PreTrigger,
     private val mergeConflictCheck: MergeConflictCheck,
     private val yamlVersion: YamlVersion,
     private val pipelineDelete: PipelineDelete,
@@ -113,6 +116,9 @@ class GitCITriggerService @Autowired constructor(
         val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
 
         // 做一些在接收到请求后做的预处理
+        if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value) {
+            preTrigger.enableAtomCi(gitRequestEvent, (eventObject as GitPushEvent).repository)
+        }
 
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         // 完全没创建过得项目不存记录
