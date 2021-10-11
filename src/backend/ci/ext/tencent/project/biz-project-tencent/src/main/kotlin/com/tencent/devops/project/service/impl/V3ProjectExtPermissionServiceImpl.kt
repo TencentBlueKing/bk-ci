@@ -182,7 +182,8 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 permission = action,
-                createUser = it
+                createUser = it,
+                resourceName = null
             )
             client.get(ServicePermissionAuthResource::class).grantInstancePermission(
                 userId = userId,

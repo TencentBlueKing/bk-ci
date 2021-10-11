@@ -186,7 +186,8 @@ class TxV3AuthPermissionApi @Autowired constructor(
                 resourceType = resourceType.value,
                 resourceCode = resourceCode,
                 permission = permission.value,
-                createUser = it
+                createUser = it,
+                resourceName = null
             )
             client.get(ServicePermissionAuthResource::class).grantInstancePermission(
                 userId = userId,
