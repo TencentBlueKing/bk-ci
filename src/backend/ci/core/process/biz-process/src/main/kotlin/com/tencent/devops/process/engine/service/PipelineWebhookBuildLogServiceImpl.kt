@@ -36,15 +36,6 @@ import org.springframework.stereotype.Service
 class PipelineWebhookBuildLogServiceImpl : PipelineWebhookBuildLogService {
     override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) = Unit
 
-    override fun listWebhookBuildLog(
-        repoName: String,
-        commitId: String,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLog>? {
-        return null
-    }
-
     override fun listWebhookBuildLogDetail(
         userId: String,
         projectId: String,

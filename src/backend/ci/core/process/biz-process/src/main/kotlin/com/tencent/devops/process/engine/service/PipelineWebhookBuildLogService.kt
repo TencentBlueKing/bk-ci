@@ -39,16 +39,6 @@ interface PipelineWebhookBuildLogService {
     fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
 
     /**
-     * 查询webhook构建日志列表
-     */
-    fun listWebhookBuildLog(
-        repoName: String,
-        commitId: String,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLog>?
-
-    /**
      * 查询webhook构建日志明细
      */
     @Suppress("ALL")
