@@ -168,9 +168,7 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
-                if (!actionType.isStartOrRefresh()) { // 处于暂停的构建，要结束，状态要标志为取消，并且终止
-                    containerContext.buildStatus =
-                        BuildStatusSwitcher.jobStatusMaker.cancel(containerContext.container.status)
+                if (!actionType.isStartOrRefresh()) {
                     needTerminate = true
                 }
             } else if (t.status.isRunning()) { // 当前有运行中任务
@@ -363,17 +361,6 @@ class StartActionTaskContainerCmd(
         containerContext: ContainerContext,
         currentTask: PipelineBuildTask
     ): PipelineBuildTask? {
-        // 终止将直接返回
-        if (isTerminate(containerContext)) {
-            buildLogPrinter.addRedLine(
-                buildId = currentTask.buildId,
-                message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                tag = currentTask.taskId,
-                jobId = currentTask.containerHashId,
-                executeCount = currentTask.executeCount ?: 1
-            )
-            return null
-        }
 
         var toDoTask: PipelineBuildTask? = null
 
@@ -385,9 +372,21 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
                 "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
-            containerContext.event.actionType = ActionType.START
         }
-        containerContext.buildStatus = BuildStatus.PAUSE
+
+        // 终止打印终止原因
+        if (isTerminate(containerContext)) {
+            buildLogPrinter.addRedLine(
+                buildId = currentTask.buildId,
+                message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
+                tag = currentTask.taskId,
+                jobId = currentTask.containerHashId,
+                executeCount = currentTask.executeCount ?: 1
+            )
+            containerContext.buildStatus = BuildStatus.CANCELED
+        } else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+            containerContext.buildStatus = BuildStatus.PAUSE
+        }
 
         return toDoTask
     }
