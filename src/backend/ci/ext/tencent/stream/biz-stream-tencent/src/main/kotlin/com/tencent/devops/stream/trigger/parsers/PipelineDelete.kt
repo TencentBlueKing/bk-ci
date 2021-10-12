@@ -76,7 +76,8 @@ class PipelineDelete @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitCIBasicSetting
+        gitProjectConf: GitCIBasicSetting,
+        gitToken: String
     ) {
         val deleteYamlFiles = when (event) {
             is GitPushEvent -> {
@@ -92,7 +93,7 @@ class PipelineDelete @Autowired constructor(
                 val deleteList = mutableListOf<String>()
                 val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
                     userId = event.user.name,
-                    token = null,
+                    token = gitToken,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     mrId = event.object_attributes.id
                 )
