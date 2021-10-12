@@ -92,7 +92,7 @@ class PipelineDelete @Autowired constructor(
             is GitMergeRequestEvent -> {
                 val deleteList = mutableListOf<String>()
                 val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
-                    userId = event.user.name,
+                    userId = null,
                     token = gitToken,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     mrId = event.object_attributes.id
