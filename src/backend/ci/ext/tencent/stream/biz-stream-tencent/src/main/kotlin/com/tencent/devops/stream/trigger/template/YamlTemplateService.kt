@@ -37,6 +37,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
+import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -111,7 +112,7 @@ class YamlTemplateService @Autowired constructor(
                 throw YamlBlankException(templateDirectory + fileName)
             }
 
-            yamlSchemaCheck.check(content, templateType, false)
+            schemaCheck(templateDirectory + fileName, content, templateType)
 
             return ScriptYmlUtils.formatYaml(content)
         }
@@ -126,7 +127,7 @@ class YamlTemplateService @Autowired constructor(
                 useAccessToken = true
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
 
-            yamlSchemaCheck.check(content, templateType, false)
+            schemaCheck(templateDirectory + fileName, content, templateType)
 
             return ScriptYmlUtils.formatYaml(content)
         } else {
@@ -153,9 +154,17 @@ class YamlTemplateService @Autowired constructor(
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
 
             // 针对模板替换时，如果类型为空就不校验
-            yamlSchemaCheck.check(content, templateType, false)
+            schemaCheck(templateDirectory + fileName, content, templateType)
 
             return ScriptYmlUtils.formatYaml(content)
+        }
+    }
+
+    private fun schemaCheck(file: String, originYaml: String, templateType: TemplateType?) {
+        try {
+            yamlSchemaCheck.check(originYaml, templateType, false)
+        } catch (e: YamlFormatException) {
+            throw YamlFormatException("${templateType?.text} template $file schema error: ${e.message}")
         }
     }
 
