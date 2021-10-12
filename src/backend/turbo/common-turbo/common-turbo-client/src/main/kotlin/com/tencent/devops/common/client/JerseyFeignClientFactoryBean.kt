@@ -24,7 +24,7 @@ import kotlin.reflect.KClass
 @Suppress("EmptyFunctionBlock", "MaxLineLength")
 class JerseyFeignClientFactoryBean(
     private var type: Class<*>,
-    private var applicationContext: ApplicationContext
+    private var tag: String
 ) : FactoryBean<Any>, InitializingBean, ApplicationContextAware {
 
     companion object {
@@ -32,6 +32,7 @@ class JerseyFeignClientFactoryBean(
             """com.tencent.bk.codecc.([a-z]+).api.([a-zA-Z]+)"""
         const val devopsPackagePath =
             """com.tencent.devops.([a-z]+).api.([a-zA-Z]+)"""
+        private var applicationContext: ApplicationContext? = null
     }
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
@@ -44,22 +45,20 @@ class JerseyFeignClientFactoryBean(
 
     private val feignClient = feign.okhttp.OkHttpClient(okHttpClient)
     private val jaxRsContract = JAXRSContract()
-    private val jacksonDecoder = JacksonDecoder(applicationContext.getBean(ObjectMapper::class.java))
-    private val jacksonEncoder = JacksonEncoder(applicationContext.getBean(ObjectMapper::class.java))
+    private val jacksonDecoder = JacksonDecoder(applicationContext!!.getBean(ObjectMapper::class.java))
+    private val jacksonEncoder = JacksonEncoder(applicationContext!!.getBean(ObjectMapper::class.java))
 
-    // todo 从属性文件中读tag值
-    private val tag: String = ""
 
     override fun getObject(): Any? {
         return Feign.builder()
             .client(feignClient)
-            .errorDecoder(applicationContext.getBean(ClientErrorDecoder::class.java))
+            .errorDecoder(applicationContext!!.getBean(ClientErrorDecoder::class.java))
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
             .options(Request.Options(10000L, TimeUnit.MILLISECONDS, 30000, TimeUnit.MILLISECONDS, true))
             .requestInterceptor(SpringContextHolder.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
-            .target(MicroServiceTarget(findServiceName(type.kotlin), type, applicationContext.getBean(ConsulDiscoveryClient::class.java), tag))
+            .target(MicroServiceTarget(findServiceName(type.kotlin), type, applicationContext!!.getBean(ConsulDiscoveryClient::class.java), tag))
     }
 
     override fun getObjectType(): Class<*> {
@@ -70,7 +69,7 @@ class JerseyFeignClientFactoryBean(
     }
 
     override fun setApplicationContext(applicationContext: ApplicationContext) {
-        this.applicationContext = applicationContext
+        Companion.applicationContext = applicationContext
     }
 
     private fun findServiceName(clz: KClass<*>): String {

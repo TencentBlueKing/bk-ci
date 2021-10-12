@@ -4,4 +4,5 @@ object Versions {
     const val bouncyCastleVersion = "1.46"
     const val swaggerVersion = "3.0.0"
     const val guavaVersion = "29.0-jre"
+    const val ciVersion = "1.5.0-RC.2-RELEASE"
 }

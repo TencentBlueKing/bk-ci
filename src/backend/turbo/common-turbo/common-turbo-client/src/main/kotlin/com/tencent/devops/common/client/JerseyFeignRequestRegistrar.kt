@@ -52,8 +52,11 @@ class JerseyFeignRequestRegistrar(
     private fun registerDevopsClient(registry: BeanDefinitionRegistry, annotationMetadata: AnnotationMetadata) {
         val className = annotationMetadata.className
         val definition = BeanDefinitionBuilder.genericBeanDefinition(JerseyFeignClientFactoryBean::class.java)
+        val tag = environment.getProperty("spring.cloud.consul.tags", "turbo")
         definition.addPropertyValue("type", className)
+        definition.addPropertyValue("tag", tag)
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE)
+        definition.setLazyInit(true)
         val beanDefinition = definition.beanDefinition
         val holder = BeanDefinitionHolder(beanDefinition, className, null)
         BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry)
