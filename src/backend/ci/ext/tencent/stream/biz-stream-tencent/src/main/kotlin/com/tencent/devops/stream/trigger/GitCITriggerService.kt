@@ -204,7 +204,7 @@ class GitCITriggerService @Autowired constructor(
                 event = event,
                 path2PipelineExists = path2PipelineExists,
                 gitProjectConf = gitProjectConf,
-                gitToken = gitToken.accessToken
+                gitToken = gitToken
             )
         }
         // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
