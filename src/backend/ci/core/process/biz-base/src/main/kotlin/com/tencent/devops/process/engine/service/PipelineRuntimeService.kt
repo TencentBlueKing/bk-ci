@@ -2124,6 +2124,12 @@ class PipelineRuntimeService @Autowired constructor(
         ) == 1
     }
 
+    fun updateStartTime(
+        buildId: String
+    ): Boolean {
+        return pipelineBuildDao.updateBuildStartTime(dslContext, buildId) == 1
+    }
+
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrEmpty()) {
