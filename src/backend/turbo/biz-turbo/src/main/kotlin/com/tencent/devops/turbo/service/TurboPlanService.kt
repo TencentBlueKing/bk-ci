@@ -273,6 +273,8 @@ class TurboPlanService @Autowired constructor(
                 )
             }
         } catch (e: Exception) {
+            e.printStackTrace()
+            logger.info("submit tbs data fail! error message: ${e.message}")
             throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "同步数据至加速后端失败")
         }
     }

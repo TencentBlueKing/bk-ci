@@ -52,14 +52,4 @@ class UserTurboPlanController @Autowired constructor(
     override fun findTurboPlanIdByProjectIdAndPipelineInfo(projectId: String, pipelineId: String, pipelineElementId: String): Response<TurboMigratedPlanVO?> {
         return Response.success(turboPlanService.findMigratedTurboPlanByPipelineInfo(projectId, pipelineId, pipelineElementId))
     }
-
-    override fun refreshTurboData(turboPlanId: String): Response<Boolean> {
-        turboRecordConsumer.updateTurboDateForRefresh(turboPlanId)
-        return Response.success(true)
-    }
-
-    override fun updateSummaryInfo(projectId: String): Response<Boolean> {
-        turboDataSyncService.refreshSummaryInfo(projectId)
-        return Response.success(true)
-    }
 }

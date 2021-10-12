@@ -160,26 +160,4 @@ interface IUserTurboPlanController {
         @PathVariable("pipelineElementId")
         pipelineElementId: String
     ): Response<TurboMigratedPlanVO?>
-
-    @ApiOperation("更新编译加速数据")
-    @PutMapping(
-        "/refreshData/turboPlanId/{turboPlanId}",
-        produces = [MediaType.APPLICATION_JSON_VALUE]
-    )
-    fun refreshTurboData(
-        @ApiParam(value = "编译加速方案id", required = true)
-        @PathVariable("turboPlanId")
-        turboPlanId: String
-    ): Response<Boolean>
-
-    @ApiOperation("更新编译加速统计数据")
-    @PutMapping(
-        "/refreshSummary/projectId/{projectId}",
-        produces = [MediaType.APPLICATION_JSON_VALUE]
-    )
-    fun updateSummaryInfo(
-        @ApiParam(value = "蓝盾项目id", required = true)
-        @PathVariable("projectId")
-        projectId: String
-    ): Response<Boolean>
 }

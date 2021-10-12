@@ -57,7 +57,7 @@ class MicroServiceTarget<T> constructor(
 
     override fun apply(input: RequestTemplate?): Request {
         if (input!!.url().indexOf("http") != 0) {
-            input.insert(0, url())
+            input.target(url())
         }
         return input.request()
     }

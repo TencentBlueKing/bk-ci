@@ -127,7 +127,7 @@ interface IOpTurboEngineConfigController {
         user: String
     ): Response<Boolean>
 
-    @ApiOperation("更新编译加速模式优先级")
+    @ApiOperation("更新编译加速模式worker信息")
     @PostMapping(
         "/workVersion/engineCode/{engineCode}",
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -143,7 +143,7 @@ interface IOpTurboEngineConfigController {
     ): Response<Boolean>
 
 
-    @ApiOperation("更新编译加速模式优先级")
+    @ApiOperation("更新编译加速模式worker信息")
     @DeleteMapping(
         "/workVersion/engineCode/{engineCode}/paramValue/{paramValue}",
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -159,7 +159,7 @@ interface IOpTurboEngineConfigController {
     ): Response<Boolean>
 
 
-    @ApiOperation("更新编译加速模式优先级")
+    @ApiOperation("更新编译加速模式worker信息")
     @PutMapping(
         "/workVersion/engineCode/{engineCode}/paramValue/{paramValue}",
         produces = [MediaType.APPLICATION_JSON_VALUE],

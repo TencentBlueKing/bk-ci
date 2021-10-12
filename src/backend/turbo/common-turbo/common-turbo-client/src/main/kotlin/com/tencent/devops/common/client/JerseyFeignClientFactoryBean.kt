@@ -57,12 +57,12 @@ class JerseyFeignClientFactoryBean(
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
             .contract(jaxRsContract)
-            .options(Request.Options(10000, 30000))
+            .options(Request.Options(10000L, TimeUnit.MILLISECONDS, 30000, TimeUnit.MILLISECONDS, true))
             .requestInterceptor(SpringContextHolder.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
             .target(MicroServiceTarget(findServiceName(type.kotlin), type, applicationContext.getBean(ConsulDiscoveryClient::class.java), tag))
     }
 
-    override fun getObjectType(): Class<*>? {
+    override fun getObjectType(): Class<*> {
         return this.type
     }
 

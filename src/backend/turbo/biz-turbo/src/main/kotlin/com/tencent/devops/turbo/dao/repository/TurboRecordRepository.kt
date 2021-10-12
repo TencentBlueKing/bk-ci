@@ -17,7 +17,7 @@ interface TurboRecordRepository : MongoRepository<TTurboRecordEntity, String> {
      */
     fun findByEngineCodeAndStatusNotIn(engineCode: String, status: Set<String>): List<TTurboRecordEntity>
 
-    /**R
+    /**
      * 通过项目id查找
      */
     fun findByProjectId(projectId: String): List<TTurboRecordEntity>
