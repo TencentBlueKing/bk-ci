@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage
 
-import com.tencent.devops.process.engine.control.command.Cmd
+import com.tencent.devops.process.command.Cmd
 
 /**
  * Stage命令接口

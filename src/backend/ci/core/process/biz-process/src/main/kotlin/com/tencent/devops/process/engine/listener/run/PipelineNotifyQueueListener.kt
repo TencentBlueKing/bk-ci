@@ -5,6 +5,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.engine.service.PipelineNotifyService
 import com.tencent.devops.process.engine.service.PipelineSubscriptionService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineNotifyQueueListener(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
+    private val pipelineNotifyService: PipelineNotifyService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
@@ -40,7 +42,7 @@ class PipelineNotifyQueueListener(
         if (retryCount < 3) {
             try {
                 with(event) {
-                    pipelineSubscriptionService.onPipelineShutdown(pipelineId = pipelineId,
+                    pipelineNotifyService.onPipelineShutdown(pipelineId = pipelineId,
                         buildId = buildId,
                         projectId = projectId,
                         buildStatus = BuildStatus.parse(status))
