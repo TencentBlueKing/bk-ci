@@ -148,12 +148,11 @@ object ScriptYmlUtils {
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             val realValue = settingMap[matcher.group(1).trim()] ?: continue
-            newValue = newValue!!.replace(matcher.group(), realValue )
+            newValue = newValue!!.replace(matcher.group(), realValue)
         }
         logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
         return newValue
     }
-
 
     fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
         if (value.isNullOrBlank()) {
