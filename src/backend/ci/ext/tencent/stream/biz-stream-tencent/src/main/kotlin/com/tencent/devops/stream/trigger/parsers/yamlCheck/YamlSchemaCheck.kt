@@ -96,6 +96,10 @@ class YamlSchemaCheck @Autowired constructor(
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val yamlJson = yamlFactory.readTree(originYaml)
+        // v1 不走这里的校验逻辑
+        if (yamlJson.checkV1()) {
+            return
+        }
         if (isCiFile) {
             getSchema(CI_SCHEMA).check(yamlJson)
             // 校验schema后有一些特殊的校验
@@ -198,6 +202,10 @@ private fun JsonSchema.check(yaml: JsonNode) {
             throw YamlFormatException(it.toString())
         }
     }
+}
+
+private fun JsonNode.checkV1(): Boolean {
+    return get("version")?.textValue() != "v2.0"
 }
 
 private fun JsonNode.checkVariablesFormat() {
