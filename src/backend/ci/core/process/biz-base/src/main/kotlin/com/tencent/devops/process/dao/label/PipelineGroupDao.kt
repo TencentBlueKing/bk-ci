@@ -92,13 +92,14 @@ class PipelineGroupDao {
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         userId: String
     ): Boolean {
         logger.info("Delete the pipeline group $groupId by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.deleteFrom(this)
-                .where(ID.eq(groupId))
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
@@ -136,11 +137,12 @@ class PipelineGroupDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long
     ): TPipelineGroupRecord? {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(groupId))
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

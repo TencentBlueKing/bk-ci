@@ -38,7 +38,7 @@ class BuildLabelResourceImpl @Autowired constructor(
     private val pipelineLabelService: PipelineLabelService
 ) : BuildLabelResource {
 
-    override fun getLabelInfo(pipelineId: String): Result<PipelineLabelDetail> {
-        return Result(pipelineLabelService.getLabelInfo(pipelineId))
+    override fun getLabelInfo(projectId: String, pipelineId: String): Result<PipelineLabelDetail> {
+        return Result(pipelineLabelService.getLabelInfo(projectId, pipelineId))
     }
 }

@@ -1679,6 +1679,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Int {
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )

@@ -2157,11 +2157,6 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-    // 性能点
-    fun totalRunningBuildCount(): Int {
-        return pipelineBuildDao.countAllByStatus(dslContext, BuildStatus.RUNNING)
-    }
-
     // 获取流水线最后的构建号
     fun getLatestBuildId(projectId: String, pipelineId: String): String? {
         return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)?.buildId

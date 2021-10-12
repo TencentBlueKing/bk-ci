@@ -300,6 +300,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         }
                         pipelineGroupService.updatePipelineLabel(
                             userId = userId,
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             labelIds = labels
                         )
@@ -336,7 +337,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                     }
                     watcher.stop()
                 }
-                pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
+                pipelineGroupService.addPipelineLabel(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    labelIds = model.labels
+                )
 
                 success = true
                 return pipelineId

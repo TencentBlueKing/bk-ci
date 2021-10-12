@@ -31,6 +31,7 @@ import com.tencent.devops.model.process.tables.TPipelineGroup
 import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Result
@@ -46,6 +47,7 @@ class PipelineLabelPipelineDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         labelId: Long,
         userId: String
@@ -54,12 +56,14 @@ class PipelineLabelPipelineDao {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 LABEL_ID,
                 CREATE_TIME,
                 CREATE_USER
             )
                 .values(
+                    projectId,
                     pipelineId,
                     labelId,
                     LocalDateTime.now(),
@@ -71,6 +75,7 @@ class PipelineLabelPipelineDao {
 
     fun batchCreate(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         labelIds: Set<Long>,
         userId: String
@@ -81,12 +86,14 @@ class PipelineLabelPipelineDao {
                 labelIds.map {
                     dslContext.insertInto(
                         this,
+                        PROJECT_ID,
                         PIPELINE_ID,
                         LABEL_ID,
                         CREATE_TIME,
                         CREATE_USER
                     )
                         .values(
+                            projectId,
                             pipelineId,
                             it,
                             LocalDateTime.now(),
@@ -99,72 +106,66 @@ class PipelineLabelPipelineDao {
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         id: Long,
         userId: String
     ) {
         logger.info("Delete pipeline-label $id by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.deleteFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun deleteByPipeline(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         userId: String
     ): Int {
         logger.info("Delete pipeline-label of pipeline $pipelineId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun deleteByLabel(
         dslContext: DSLContext,
+        projectId: String,
         labelId: Long,
         userId: String
     ): Int {
         logger.info("Delete pipeline-label of label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.deleteFrom(this)
-                .where(LABEL_ID.eq(labelId))
+                .where(LABEL_ID.eq(labelId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
     fun listPipelines(
         dslContext: DSLContext,
-        labelId: Long
-    ): Result<TPipelineLabelPipelineRecord> {
-        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            return dslContext.selectFrom(this)
-                .where(LABEL_ID.eq(labelId))
-                .fetch()
-        }
-    }
-
-    fun listPipelines(
-        dslContext: DSLContext,
+        projectId: String,
         labelId: Set<Long>
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(LABEL_ID.`in`(labelId))
+                .where(LABEL_ID.`in`(labelId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }
 
     fun listLabels(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): Result<TPipelineLabelPipelineRecord> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }
@@ -174,12 +175,24 @@ class PipelineLabelPipelineDao {
      */
     fun listPipelinesGroupsAndLabels(
         dslContext: DSLContext,
-        pipelineIds: List<String>
+        pipelineIds: List<String>,
+        projectId: String? = null
     ): Result<Record3<String, String, String>> {
         val labelPipelineTable = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("t1")
         val labelTable = TPipelineLabel.T_PIPELINE_LABEL.`as`("t2")
         val groupTable = TPipelineGroup.T_PIPELINE_GROUP.`as`("t3")
         // 排除标签和分组为空的情况
+        val conditions = mutableListOf<Condition>()
+        conditions.add(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
+        conditions.add(labelTable.NAME.notEqual(""))
+        conditions.add(labelTable.NAME.isNotNull)
+        conditions.add(groupTable.NAME.notEqual(""))
+        conditions.add(groupTable.NAME.isNotNull)
+        conditions.add(labelPipelineTable.PIPELINE_ID.notEqual(""))
+        conditions.add(labelPipelineTable.PIPELINE_ID.isNotNull)
+        if (projectId != null) {
+            conditions.add(groupTable.PROJECT_ID.eq(projectId))
+        }
         return dslContext.select(
             labelPipelineTable.PIPELINE_ID.`as`("PIPELINE_ID"),
             groupTable.NAME.`as`("GROUP_NAME"),
@@ -189,24 +202,8 @@ class PipelineLabelPipelineDao {
             .on(labelPipelineTable.LABEL_ID.eq(labelTable.ID))
             .leftJoin(groupTable)
             .on(labelTable.GROUP_ID.eq(groupTable.ID))
-            .where(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
-            .and(labelTable.NAME.notEqual(""))
-            .and(labelTable.NAME.isNotNull)
-            .and(groupTable.NAME.notEqual(""))
-            .and(groupTable.NAME.isNotNull)
-            .and(labelPipelineTable.PIPELINE_ID.notEqual(""))
-            .and(labelPipelineTable.PIPELINE_ID.isNotNull)
+            .where(conditions)
             .fetch()
-    }
-
-    /**
-     * 获取Pipeline的group与label
-     */
-    fun listPipelineGroupsAndLabels(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): Result<Record3<String, String, String>> {
-        return listPipelinesGroupsAndLabels(dslContext, listOf(pipelineId))
     }
 
     companion object {
