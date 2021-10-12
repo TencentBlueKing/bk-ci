@@ -748,14 +748,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun countAllByStatus(dslContext: DSLContext, status: BuildStatus): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
-                .where(STATUS.eq(status.ordinal))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
     fun getBuildHistoryMaterial(
         dslContext: DSLContext,
         projectId: String,

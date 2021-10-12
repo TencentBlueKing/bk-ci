@@ -41,11 +41,7 @@ class ServiceJfrogResourceImpl @Autowired constructor(
         return Result(jfrogService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
-        return getBuildNoByBuildIdsNew(buildIds)
-    }
-
-    override fun getBuildNoByBuildIdsNew(buildIds: Set<String>): Result<Map<String, String>> {
-        return Result(jfrogService.getBuildNoByByPair(buildIds))
+    override fun getBuildNoByBuildIdsNew(buildIds: Set<String>, projectId: String?): Result<Map<String, String>> {
+        return Result(jfrogService.getBuildNoByByPair(buildIds, projectId))
     }
 }

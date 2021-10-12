@@ -39,7 +39,7 @@ class BuildProcessResourceImpl @Autowired constructor(
     private val client: Client
 ) : BuildProcessResource {
 
-    override fun getUpdateUser(pipelineId: String): Result<String> {
-        return client.get(ServiceOperationResource::class).getUpdateUser(pipelineId)
+    override fun getUpdateUser(projectId: String, pipelineId: String): Result<String> {
+        return client.get(ServiceOperationResource::class).getUpdateUser(projectId, pipelineId)
     }
 }

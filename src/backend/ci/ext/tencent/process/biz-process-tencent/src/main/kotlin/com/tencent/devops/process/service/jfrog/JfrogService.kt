@@ -42,7 +42,7 @@ class JfrogService @Autowired constructor(
         return pipelineListFacadeService.getPipelineNameByIds(projectId, pipelineIds, true)
     }
 
-    fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
-        return pipelineListFacadeService.getBuildNoByByPair(buildIds)
+    fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): Map<String, String> {
+        return pipelineListFacadeService.getBuildNoByByPair(buildIds, projectId)
     }
 }

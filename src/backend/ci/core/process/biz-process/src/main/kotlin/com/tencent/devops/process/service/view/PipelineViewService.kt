@@ -41,7 +41,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.dao.label.PipelineViewLabelDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
@@ -73,7 +72,6 @@ class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineViewDao: PipelineViewDao,
-    private val pipelineViewLabelDao: PipelineViewLabelDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
     private val pipelineGroupService: PipelineGroupService,
@@ -306,7 +304,6 @@ class PipelineViewService @Autowired constructor(
 
         val filters =
             getFilters(
-                viewId = viewRecord.id,
                 filterByName = viewRecord.filterByPipeineName,
                 filterByCreator = viewRecord.filterByCreator,
                 filters = viewRecord.filters
@@ -368,7 +365,6 @@ class PipelineViewService @Autowired constructor(
 
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            pipelineViewLabelDao.detachLabelByView(context, id, userId)
             pipelineViewDao.delete(context, projectId, id)
         }
     }
@@ -392,7 +388,6 @@ class PipelineViewService @Autowired constructor(
         try {
             return dslContext.transactionResult { configuration ->
                 val context = DSL.using(configuration)
-                pipelineViewLabelDao.detachLabelByView(context, id, userId)
                 val result = pipelineViewDao.update(
                     dslContext = context,
                     projectId = projectId,
@@ -439,13 +434,10 @@ class PipelineViewService @Autowired constructor(
     }
 
     private fun getFilters(
-        viewId: Long,
         filterByName: String,
         filterByCreator: String,
         filters: String?
     ): List<PipelineViewFilter> {
-        val labels = pipelineViewLabelDao.getLabels(dslContext, viewId)
-        val labelIds = labels.map { encode(it.labelId) }
 
         val allFilters = mutableListOf<PipelineViewFilter>()
 
@@ -464,19 +456,6 @@ class PipelineViewService @Autowired constructor(
                     userIds = filterByCreator.split(",")
                 )
             )
-        }
-
-        if (labelIds.isNotEmpty()) {
-            val groupToLabelsMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
-            groupToLabelsMap.forEach { (groupId, labelIdList) ->
-                allFilters.add(
-                    PipelineViewFilterByLabel(
-                        condition = Condition.INCLUDE,
-                        groupId = groupId,
-                        labelIds = labelIdList
-                    )
-                )
-            }
         }
 
         return allFilters

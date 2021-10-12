@@ -97,12 +97,12 @@ class WetestTaskAtom @Autowired constructor(
         containerId = task.containerHashId ?: ""
         executeCount = task.executeCount ?: 1
 
-        val pipelineCreateUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.creator
+        val pipelineCreateUser = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.creator
         if (pipelineCreateUser.isNullOrEmpty()) {
             buildLogPrinter.addRedLine(buildId, "获取流水线创建人失败", elementId, task.containerHashId, task.executeCount ?: 1)
             throw RuntimeException("获取流水线创建人失败， pipelineId = （$pipelineId）")
         }
-        val (accessId, accessToken) = CommonUtils.getCredential(pipelineCreateUser!!)
+        val (accessId, accessToken) = CommonUtils.getCredential(pipelineCreateUser)
         this.accessId = accessId
         this.accessToken = accessToken
 

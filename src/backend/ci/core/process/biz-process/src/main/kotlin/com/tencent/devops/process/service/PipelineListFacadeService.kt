@@ -158,7 +158,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
 
         val pipelines = mutableListOf<PipelineWithModel>()
-        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList(), projectId)
         val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
             projectId = projectId,
@@ -474,6 +474,7 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByPipelineCreators: List<PipelineViewFilterByCreator>,
                 filterByPipelineLabels: List<PipelineViewFilterByLabel>
             ) = generatePipelineFilterInfo(
+                projectId = projectId,
                 filterByName = filterByPipelineName,
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels
@@ -485,7 +486,7 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByPipelineCreators = filterByPipelineCreators,
                 filterByLabelInfo = PipelineFilterByLabelInfo(
                     filterByLabels = filterByPipelineLabels,
-                    labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap()
+                    labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap(projectId)
                 )
             )
             pipelineFilterParamList.add(pipelineFilterParam)
@@ -500,7 +501,7 @@ class PipelineListFacadeService @Autowired constructor(
                     filterByPipelineCreators = filters.second,
                     filterByLabelInfo = PipelineFilterByLabelInfo(
                         filterByLabels = filters.third,
-                        labelToPipelineMap = filters.third.generateLabelToPipelineMap()
+                        labelToPipelineMap = filters.third.generateLabelToPipelineMap(projectId)
                     )
                 )
                 pipelineFilterParamList.add(pipelineViewFilterParam)
@@ -687,14 +688,16 @@ class PipelineListFacadeService @Autowired constructor(
         ))
     }
 
-    private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(): Map<String, List<String>>? {
+    private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(
+        projectId: String,
+    ): Map<String, List<String>>? {
         var labelToPipelineMap: Map<String, List<String>>? = null
         if (isNotEmpty()) {
             val labelIds = mutableListOf<String>()
             forEach {
                 labelIds.addAll(it.labelIds)
             }
-            labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(labelIds)
+            labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(projectId, labelIds)
         }
         return labelToPipelineMap
     }
@@ -708,13 +711,21 @@ class PipelineListFacadeService @Autowired constructor(
         val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
         val filters = pipelineViewService.getFilters(view)
 
-        return filterViewPipelines(pipelines, view.logic, filters.first, filters.second, filters.third)
+        return filterViewPipelines(
+            projectId = projectId,
+            pipelines = pipelines,
+            logic = view.logic,
+            filterByPipelineNames = filters.first,
+            filterByPipelineCreators = filters.second,
+            filterByLabels = filters.third
+        )
     }
 
     /**
      * 视图的基础上增加简单过滤
      */
     fun filterViewPipelines(
+        projectId: String,
         pipelines: List<Pipeline>,
         filterByName: String?,
         filterByCreator: String?,
@@ -723,9 +734,10 @@ class PipelineListFacadeService @Autowired constructor(
         logger.info("filter view pipelines $filterByName $filterByCreator $filterByLabels")
 
         val (filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels) = generatePipelineFilterInfo(
-            filterByName,
-            filterByCreator,
-            filterByLabels
+            projectId = projectId,
+            filterByName = filterByName,
+            filterByCreator = filterByCreator,
+            filterByLabels = filterByLabels
         )
 
         if (filterByPipelineNames.isEmpty() && filterByPipelineCreators.isEmpty() && filterByPipelineLabels.isEmpty()) {
@@ -733,15 +745,17 @@ class PipelineListFacadeService @Autowired constructor(
         }
 
         return filterViewPipelines(
-            pipelines,
-            Logic.AND,
-            filterByPipelineNames,
-            filterByPipelineCreators,
-            filterByPipelineLabels
+            projectId = projectId,
+            pipelines = pipelines,
+            logic = Logic.AND,
+            filterByPipelineNames = filterByPipelineNames,
+            filterByPipelineCreators = filterByPipelineCreators,
+            filterByLabels = filterByPipelineLabels
         )
     }
 
     private fun generatePipelineFilterInfo(
+        projectId: String,
         filterByName: String?,
         filterByCreator: String?,
         filterByLabels: String?
@@ -749,20 +763,20 @@ class PipelineListFacadeService @Autowired constructor(
         val filterByPipelineNames = if (filterByName.isNullOrEmpty()) {
             emptyList()
         } else {
-            listOf(PipelineViewFilterByName(Condition.LIKE, filterByName!!))
+            listOf(PipelineViewFilterByName(Condition.LIKE, filterByName))
         }
 
         val filterByPipelineCreators = if (filterByCreator.isNullOrEmpty()) {
             emptyList()
         } else {
-            listOf(PipelineViewFilterByCreator(Condition.INCLUDE, filterByCreator!!.split(",")))
+            listOf(PipelineViewFilterByCreator(Condition.INCLUDE, filterByCreator.split(",")))
         }
 
         val filterByPipelineLabels = if (filterByLabels.isNullOrEmpty()) {
             emptyList()
         } else {
-            val labelIds = filterByLabels!!.split(",")
-            val labelGroupToLabelMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
+            val labelIds = filterByLabels.split(",")
+            val labelGroupToLabelMap = pipelineGroupService.getGroupToLabelsMap(projectId, labelIds)
 
             labelGroupToLabelMap.map {
                 PipelineViewFilterByLabel(Condition.INCLUDE, it.key, it.value)
@@ -775,6 +789,7 @@ class PipelineListFacadeService @Autowired constructor(
      * 视图过滤
      */
     private fun filterViewPipelines(
+        projectId: String,
         pipelines: List<Pipeline>,
         logic: Logic,
         filterByPipelineNames: List<PipelineViewFilterByName>,
@@ -842,7 +857,7 @@ class PipelineListFacadeService @Autowired constructor(
         val labelFilterPipelines = if (filterByLabels.isEmpty()) {
             if (logic == Logic.AND) pipelines else emptyList()
         } else {
-            val labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(labelIds)
+            val labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(projectId, labelIds)
 
             pipelines.filter { pipeline ->
                 val pipelineId = pipeline.pipelineId
@@ -1193,7 +1208,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineRecords.forEach {
             pipelineTemplateMap[it.pipelineId] = it.templateId
         }
-        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList(), projectId)
         pipelines.forEach {
             val templateId = pipelineTemplateMap[it.pipelineId]
             it.instanceFromTemplate = templateId != null

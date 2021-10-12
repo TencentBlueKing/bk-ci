@@ -38,13 +38,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserOperationParamsResourceImpl @Autowired constructor(
     private val service: OperationService
 ) : UserOperationParamsResource {
-    override fun templateList(id: String, pipelineId: String): Result<Page<Any>> {
-        return service.getList(id, pipelineId)
+    override fun templateList(id: String, projectId: String, pipelineId: String): Result<Page<Any>> {
+        return service.getList(id, projectId, pipelineId)
     }
 
-    override fun operationParams(id: String, pipelineId: String): Result<List<Any>> {
+    override fun operationParams(id: String, projectId: String, pipelineId: String): Result<List<Any>> {
         if (id.isEmpty())
             return Result(emptyList())
-        return service.getParam(id, pipelineId)
+        return service.getParam(id, projectId, pipelineId)
     }
 }

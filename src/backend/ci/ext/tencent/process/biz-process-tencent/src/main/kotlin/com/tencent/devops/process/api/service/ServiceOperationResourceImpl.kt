@@ -37,10 +37,10 @@ class ServiceOperationResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : ServiceOperationResource {
 
-    override fun getUpdateUser(pipelineId: String): Result<String> {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+    override fun getUpdateUser(projectId: String, pipelineId: String): Result<String> {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         if (pipelineInfo != null) {
-            return Result(pipelineInfo!!.lastModifyUser)
+            return Result(pipelineInfo.lastModifyUser)
         }
         return Result("")
     }

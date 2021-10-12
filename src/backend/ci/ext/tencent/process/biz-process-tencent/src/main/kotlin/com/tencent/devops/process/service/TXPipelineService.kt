@@ -193,10 +193,11 @@ class TXPipelineService @Autowired constructor(
                     pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
                 val allFilterPipelines =
                     pipelineListFacadeService.filterViewPipelines(
-                        pipelines,
-                        filterByPipelineName,
-                        filterByCreator,
-                        filterByLabels
+                        projectId = projectId,
+                        pipelines = pipelines,
+                        filterByName = filterByPipelineName,
+                        filterByCreator = filterByCreator,
+                        filterByLabels = filterByLabels
                     )
 
                 val hasPipelines = allFilterPipelines.isNotEmpty()
@@ -1080,7 +1081,7 @@ class TXPipelineService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             "流水线已不存在！"
         )

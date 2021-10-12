@@ -25,21 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.builds
+package com.tencent.devops.process.config
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.third.wetest.WetestResponse
-import com.tencent.devops.process.service.wetest.WetestService
-import org.springframework.beans.factory.annotation.Autowired
+import org.jooq.DSLContext
+import org.jooq.SQLDialect
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DefaultConfiguration
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
+import javax.sql.DataSource
+import javax.validation.constraints.NotNull
 
-@RestResource
-class BuildWetestResourceImpl @Autowired constructor(
-    private val wetestService: WetestService
-) : BuildWetestResource {
+@Configuration
+@Import(BkShardingDataSourceConfiguration::class)
+class ProcessJooqConfiguration {
 
-    override fun save(response: WetestResponse, projectId: String, pipelineId: String, buildId: String): Result<Boolean> {
-        wetestService.saveResponse(response, projectId, pipelineId, buildId)
-        return Result(true)
+    @Bean
+    @NotNull
+    fun shardingDslContest(
+        @Qualifier("shardingDataSource")
+        shardingDataSource: DataSource
+    ): DSLContext {
+        val configuration: org.jooq.Configuration = DefaultConfiguration()
+            .set(shardingDataSource)
+            .set(Settings().withRenderSchema(false)
+                .withExecuteLogging(true)
+                .withRenderFormatted(false))
+            .set(SQLDialect.MYSQL)
+        return DSL.using(configuration)
     }
 }

@@ -72,7 +72,7 @@ class MQPipelineDeleteListener @Autowired constructor(
             if (event.clearUpModel) {
                 watcher.start("deleteExt")
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, projectId, pipelineId) // 删除收藏该流水线上所有记录
-                pipelineGroupService.deletePipelineLabel(userId, pipelineId)
+                pipelineGroupService.deletePipelineLabel(userId, projectId, pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId)
             }
             watcher.start("deleteWebhook")

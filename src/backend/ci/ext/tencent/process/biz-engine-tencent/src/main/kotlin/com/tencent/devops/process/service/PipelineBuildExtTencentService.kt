@@ -58,7 +58,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
+        extMap.putAll(pipelineContextService.buildContext(task.projectId, task.buildId, task.containerId, variable))
         return extMap
     }
 

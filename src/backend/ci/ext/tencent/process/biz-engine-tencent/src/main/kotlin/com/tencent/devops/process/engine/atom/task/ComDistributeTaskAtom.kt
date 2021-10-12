@@ -240,7 +240,7 @@ class ComDistributeTaskAtom @Autowired constructor(
             val targetIpList =
                 targetIpsStr.split(",", ";", "\n").filter { StringUtils.isNotBlank(it) }.map { SourceIp(it.trim()) }
                     .toList()
-            val lastModifyUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.lastModifyUser
+            val lastModifyUser = pipelineRepositoryService.getPipelineInfo(task.projectId, pipelineId)?.lastModifyUser
             if (null != lastModifyUser && userId != lastModifyUser) {
                 // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
                 logger.info("userId:$userId, lastModifyUser:$lastModifyUser")

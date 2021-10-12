@@ -28,4 +28,5 @@
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:process:biz-engine-tencent"))
+    api(project(":ext:tencent:process:biz-base-tencent"))
 }

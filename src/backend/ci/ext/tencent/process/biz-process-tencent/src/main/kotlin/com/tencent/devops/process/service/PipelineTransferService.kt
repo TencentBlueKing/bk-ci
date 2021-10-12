@@ -119,7 +119,11 @@ class PipelineTransferService @Autowired constructor(
                     pipelinesPage.records.forEach { pipeline ->
                         if (channel == "ALL" || pipeline.channelCode.name == channel) {
                             val watcher = Watcher("transfer_$projectId")
-                            val model = pipelineRepositoryService.getModel(pipelineId = pipeline.pipelineId, version = pipeline.version) ?: return@forEach
+                            val model = pipelineRepositoryService.getModel(
+                                projectId = projectId,
+                                pipelineId = pipeline.pipelineId,
+                                version = pipeline.version
+                            ) ?: return@forEach
                             val stages = transferStages(
                                 id = pipeline.pipelineId, model = model,
                                 projectId = projectId,
@@ -313,11 +317,24 @@ class PipelineTransferService @Autowired constructor(
                 do {
                     logger.info("RollBackTransfer_START|[$projectId]|userId=$userId|$transferDispatchType")
                     val pipelineIds = transferDispatchType.pipelineIds
-                    val list = pipelineTransferHistoryDao.list(dslContext = dslContext, projectId = projectId, pipelineIds = pipelineIds, offset = offset, limit = limit)
+                    val list = pipelineTransferHistoryDao.list(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineIds = pipelineIds,
+                        offset = offset,
+                        limit = limit
+                    )
                     list.forEach {
                         if (it.log.startsWith("SUCCESS")) {
-                            val sourceModel = pipelineRepositoryService.getModel(pipelineId = it.pipelineId, version = it.sourceVersion) ?: return@forEach
-                            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = it.pipelineId) ?: return@forEach
+                            val sourceModel = pipelineRepositoryService.getModel(
+                                projectId = projectId,
+                                pipelineId = it.pipelineId,
+                                version = it.sourceVersion
+                            ) ?: return@forEach
+                            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                                projectId = projectId,
+                                pipelineId = it.pipelineId
+                            ) ?: return@forEach
                             try {
                                 pipelineRepositoryService.deployPipeline(
                                     model = sourceModel,

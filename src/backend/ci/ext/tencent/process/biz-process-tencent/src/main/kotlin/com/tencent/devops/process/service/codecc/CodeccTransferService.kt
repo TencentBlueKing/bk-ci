@@ -125,8 +125,8 @@ class CodeccTransferService @Autowired constructor(
             return "$pipelineId do not contains new codecc element"
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId)!!
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
         var needUpdate = false
         model.stages.forEach { stage ->

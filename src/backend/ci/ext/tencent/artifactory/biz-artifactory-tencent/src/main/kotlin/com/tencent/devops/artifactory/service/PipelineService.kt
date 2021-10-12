@@ -83,7 +83,7 @@ abstract class PipelineService @Autowired constructor(
         val pipelineId = getPipelineId(path)
         val pipelineName = getPipelineName(projectId, pipelineId)
         val buildIdList = jFrogFileInfoList.map { it.uri.removePrefix("/") }
-        val buildIdToNameMap = getBuildNames(buildIdList.toSet())
+        val buildIdToNameMap = getBuildNames(projectId, buildIdList.toSet())
 
         val fileInfoList = mutableListOf<FileInfo>()
         jFrogFileInfoList.forEach {
@@ -114,7 +114,7 @@ abstract class PipelineService @Autowired constructor(
         val pipelineId = getPipelineId(path)
         val buildId = getBuildId(path)
         val pipelineName = getPipelineName(projectId, pipelineId)
-        val buildName = getBuildName(buildId)
+        val buildName = getBuildName(projectId, buildId)
 
         val fileInfoList = jFrogFileInfoList.map {
             val fullPath = JFrogUtil.compose(path, it.uri, it.folder)
@@ -142,7 +142,7 @@ abstract class PipelineService @Autowired constructor(
             }
             isBuildDir(directory) -> {
                 val buildId = getBuildId(directory)
-                getBuildName(buildId)
+                getBuildName(projectId, buildId)
             }
             else -> {
                 JFrogUtil.getFileName(directory)
@@ -165,7 +165,7 @@ abstract class PipelineService @Autowired constructor(
             // 构建目录
             roadList.size == 3 -> {
                 val buildId = getBuildId(path)
-                getBuildName(buildId)
+                getBuildName(projectId, buildId)
             }
             // 构建目录
             else -> {
@@ -195,7 +195,7 @@ abstract class PipelineService @Autowired constructor(
                 val pipelineId = getPipelineId(path)
                 val pipelineName = getPipelineName(projectId, pipelineId)
                 val buildId = getBuildId(path)
-                val buildName = getBuildName(buildId)
+                val buildName = getBuildName(projectId, buildId)
                 return getFullName(path, pipelineId, pipelineName, buildId, buildName)
             }
         }
@@ -265,20 +265,23 @@ abstract class PipelineService @Autowired constructor(
         }
     }
 
-    fun getBuildName(buildId: String): String {
+    fun getBuildName(projectId: String?, buildId: String): String {
         val startTimestamp = System.currentTimeMillis()
         try {
-            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(setOf(buildId)).data!![buildId]!!
+            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(
+                buildIds = setOf(buildId),
+                projectId = projectId
+            ).data!![buildId]!!
         } finally {
             logger.info("getBuildName [$buildId] cost ${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 
-    fun getBuildNames(buildIds: Set<String>): Map<String, String> {
+    fun getBuildNames(projectId: String?, buildIds: Set<String>): Map<String, String> {
         val startTimestamp = System.currentTimeMillis()
         try {
             if (buildIds.isEmpty()) return emptyMap()
-            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(buildIds).data!!
+            return client.get(ServiceJfrogResource::class).getBuildNoByBuildIdsNew(buildIds, projectId).data!!
         } finally {
             logger.info("getBuildNames [$buildIds] cost ${System.currentTimeMillis() - startTimestamp}ms")
         }

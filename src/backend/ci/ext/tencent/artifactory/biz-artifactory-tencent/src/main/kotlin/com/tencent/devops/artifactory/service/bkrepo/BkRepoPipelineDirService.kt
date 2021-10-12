@@ -123,7 +123,7 @@ class BkRepoPipelineDirService @Autowired constructor(
         val pipelineId = pipelineService.getPipelineId(path)
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
         val buildIdList = fileList.map { pipelineService.getBuildId(it.fullPath) }
-        val buildIdToNameMap = pipelineService.getBuildNames(buildIdList.toSet())
+        val buildIdToNameMap = pipelineService.getBuildNames(projectId, buildIdList.toSet())
 
         val fileInfoList = mutableListOf<FileInfo>()
         fileList.forEach {
@@ -154,7 +154,7 @@ class BkRepoPipelineDirService @Autowired constructor(
         val pipelineId = pipelineService.getPipelineId(path)
         val buildId = pipelineService.getBuildId(path)
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
-        val buildName = pipelineService.getBuildName(buildId)
+        val buildName = pipelineService.getBuildName(projectId, buildId)
 
         val fileInfoList = fileList.map {
             val fullPath = it.fullPath
