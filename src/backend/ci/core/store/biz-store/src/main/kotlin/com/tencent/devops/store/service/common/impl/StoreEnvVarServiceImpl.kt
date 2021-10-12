@@ -249,7 +249,6 @@ class StoreEnvVarServiceImpl @Autowired constructor(
     }
 
     override fun convertEncryptedEnvVar(oldKey: String, newKey: String): Int {
-        logger.info("convertEncryptedEnvVar with oldKey :$oldKey, newKey is :$newKey")
         return storeEnvVarDao.convertEncryptedEnvVar(dslContext, oldKey, newKey)
     }
 }

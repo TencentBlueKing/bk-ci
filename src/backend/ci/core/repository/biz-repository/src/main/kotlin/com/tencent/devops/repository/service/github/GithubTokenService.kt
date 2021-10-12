@@ -75,7 +75,6 @@ class GithubTokenService @Autowired constructor(
     }
 
     fun convertEncryptedGithubToken(): Int {
-        logger.info("convertEncryptedGithubToken with oldKey :$oldKey, newKey is :$newKey")
         if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
             throw OperationException(
                 message = "Convert github access token failed because of config: " +

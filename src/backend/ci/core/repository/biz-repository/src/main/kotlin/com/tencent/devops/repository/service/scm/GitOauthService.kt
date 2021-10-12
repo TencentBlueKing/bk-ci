@@ -264,7 +264,6 @@ class GitOauthService @Autowired constructor(
     }
 
     override fun convertEncryptedGitToken(): Int {
-        logger.info("convertEncryptedToken with oldKey :$oldKey, newKey is :$newKey")
         if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
             throw OperationException(
                 message = "Convert git access token failed because of config: " +

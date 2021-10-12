@@ -262,7 +262,6 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     }
 
     override fun convertEncryptedFieldValue(oldKey: String, newKey: String): Int {
-        logger.info("convertEncryptedFieldValue with oldKey :$oldKey, newKey is :$newKey")
         return sensitiveConfDao.convertEncryptedEnvVar(dslContext, oldKey, newKey)
     }
 }
