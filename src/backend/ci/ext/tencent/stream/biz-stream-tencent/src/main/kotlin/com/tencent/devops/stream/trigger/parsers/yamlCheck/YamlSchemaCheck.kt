@@ -211,16 +211,13 @@ private fun JsonNode.checkVariablesFormat() {
 }
 
 private fun JsonNode.checkCiRequired() {
-    val requireds = listOf("stages", "jobs", "steps", "extends")
-    var flag = false
-    requireds.forEach {
+    val requiredList = listOf("stages", "jobs", "steps", "extends")
+    requiredList.forEach {
         if (get(it) != null) {
-            flag = true
+            return
         }
     }
-    if (flag) {
-        throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
-    }
+    throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
 }
 
 private fun JsonNode.checkExtendsRequired() {
