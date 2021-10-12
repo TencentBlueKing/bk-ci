@@ -79,7 +79,7 @@ class UpdateStateForStageCmdFinally(
             updateStageStatus(commandContext = commandContext)
         }
 
-        // Stage 暂停
+        // Stage 暂停或者 插件暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
                 pipelineStageService.pauseStage(stage)

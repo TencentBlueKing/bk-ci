@@ -168,6 +168,11 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
+                if (!actionType.isStartOrRefresh()) { // 处于暂停的构建，要结束，状态要标志为取消，并且终止
+                    containerContext.buildStatus =
+                        BuildStatusSwitcher.jobStatusMaker.cancel(containerContext.container.status)
+                    needTerminate = true
+                }
             } else if (t.status.isRunning()) { // 当前有运行中任务
                 // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
                 breakFlag = actionType.isStartOrRefresh()
@@ -367,11 +372,24 @@ class StartActionTaskContainerCmd(
                 jobId = currentTask.containerHashId,
                 executeCount = currentTask.executeCount ?: 1
             )
-        } else {
-            containerContext.buildStatus = BuildStatus.PAUSE
+            return null
         }
 
-        return null
+        var toDoTask: PipelineBuildTask? = null
+
+        val pipelineBuildTask = containerContext.containerTasks
+            .filter { it.taskId.startsWith(VMUtils.getStopVmLabel()) } // 找构建环境关机任务
+            .getOrNull(0) // 取第一个关机任务，如果没有返回空
+
+        if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
+            toDoTask = pipelineBuildTask
+            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
+                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            containerContext.event.actionType = ActionType.START
+        }
+        containerContext.buildStatus = BuildStatus.PAUSE
+
+        return toDoTask
     }
 
     fun ElementPostInfo.findPostActionTask(
