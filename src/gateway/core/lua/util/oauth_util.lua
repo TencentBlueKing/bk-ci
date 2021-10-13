@@ -22,12 +22,7 @@ function _M:get_ticket(bk_token)
     local httpc = http.new()
     --- 开始连接
     httpc:set_timeout(3000)
-    httpc:connect(
-        {
-            host = config.oauth.host,
-            port = config.oauth.port
-        }
-    )
+    httpc:connect(config.oauth.ip, config.oauth.port)
 
     --- 组装请求body
     local requestBody = {grant_type = "authorization_code", id_provider = "bk_login", bk_token = bk_token}
