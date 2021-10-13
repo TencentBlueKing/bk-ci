@@ -71,8 +71,8 @@ class StreamTimerService @Autowired constructor(
         streamTimer: StreamTimer
     ): Result<Boolean> {
         with(streamTimer) {
-            checkCrontab(crontabExpressions)
-            val crontabJson = JsonUtil.toJson(crontabExpressions)
+            val newCrontabExpressions = checkAndConvertCrontab(crontabExpressions)
+            val crontabJson = JsonUtil.toJson(newCrontabExpressions)
             return if (0 < streamTimerDao.save(dslContext, streamTimer)) {
                 pipelineEventDispatcher.dispatch(
                     StreamChangeEvent(
@@ -101,7 +101,8 @@ class StreamTimerService @Autowired constructor(
     }
 
     @SuppressWarnings("ThrowsCount")
-    private fun checkCrontab(crontabExpressions: List<String>) {
+    private fun checkAndConvertCrontab(crontabExpressions: List<String>): List<String> {
+        val newCrontabExpressions = mutableSetOf<String>()
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
                 defaultMessage = "定时触发器的定时参数不合法",
@@ -124,7 +125,9 @@ class StreamTimerService @Autowired constructor(
                     params = arrayOf(crontabExpression)
                 )
             }
+            newCrontabExpressions.add(newConvertExpression)
         }
+        return newCrontabExpressions.toList()
     }
 
     private fun convertExpression(expression: String): String {
