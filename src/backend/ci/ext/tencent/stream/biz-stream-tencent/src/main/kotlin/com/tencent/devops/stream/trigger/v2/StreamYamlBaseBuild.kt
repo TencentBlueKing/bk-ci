@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
@@ -66,7 +65,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-abstract class StreamYamlBaseBuild<T> @Autowired constructor(
+class StreamYamlBaseBuild @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
@@ -87,17 +86,6 @@ abstract class StreamYamlBaseBuild<T> @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     private val buildRunningDesc = "Your pipeline「%s」is running."
-
-    abstract fun gitStartBuild(
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        yaml: ScriptBuildYaml,
-        originYaml: String,
-        parsedYaml: String?,
-        normalizedYaml: String,
-        gitBuildId: Long?,
-        isTimeTrigger: Boolean
-    ): BuildId?
 
     fun savePipeline(
         pipeline: GitProjectPipeline,
