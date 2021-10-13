@@ -145,7 +145,10 @@ class StreamBasicSettingService @Autowired constructor(
                 updateTime = null,
                 creatorCenterName = null,
                 creatorDeptName = null,
-                creatorBgName = null
+                creatorBgName = null,
+                gitProjectDesc = projectInfo.description,
+                gitProjectAvatar = projectInfo.avatarUrl,
+                lastCiInfo = null
             )
         )
     }
@@ -221,7 +224,9 @@ class StreamBasicSettingService @Autowired constructor(
             url = projectInfo.gitSshUrl ?: "",
             homePage = projectInfo.homepage ?: "",
             httpUrl = projectInfo.gitHttpsUrl ?: "",
-            sshUrl = projectInfo.gitSshUrl ?: ""
+            sshUrl = projectInfo.gitSshUrl ?: "",
+            desc = projectInfo.description,
+            avatar = projectInfo.avatarUrl
         )
         if (oldData.name != projectInfo.name) {
             try {
