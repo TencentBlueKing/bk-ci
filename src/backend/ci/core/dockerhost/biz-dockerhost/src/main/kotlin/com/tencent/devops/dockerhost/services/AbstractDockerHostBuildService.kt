@@ -229,6 +229,20 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
+    fun getWorkspace(dockerHostBuildInfo: DockerHostBuildInfo): String {
+        with(dockerHostBuildInfo) {
+            return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+        }
+    }
+
+    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
+        return if (poolNo > 1) {
+            "$vmSeqId" + "_$poolNo"
+        } else {
+            vmSeqId.toString()
+        }
+    }
+
     inner class MyPullImageResultCallback internal constructor(
         private val buildId: String,
         private val dockerHostBuildApi: DockerHostBuildResourceApi,

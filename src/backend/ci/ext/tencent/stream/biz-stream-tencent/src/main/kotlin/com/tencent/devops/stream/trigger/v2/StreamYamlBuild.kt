@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
@@ -61,11 +62,13 @@ import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,6 +90,7 @@ class StreamYamlBuild @Autowired constructor(
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val redisOperation: RedisOperation,
     private val modelCreate: ModelCreate,
+    private val streamStorageBean: StreamStorageBean,
     private val streamTimerService: StreamTimerService
 ) : StreamYamlBaseBuild<ScriptBuildYaml>(
     client, kafkaClient, dslContext, gitPipelineResourceDao,
@@ -112,6 +116,8 @@ class StreamYamlBuild @Autowired constructor(
         gitBuildId: Long?,
         isTimeTrigger: Boolean
     ): BuildId? {
+        val start = LocalDateTime.now().timestampmilli()
+
         val triggerLock = GitCITriggerLock(
             redisOperation = redisOperation,
             gitProjectId = event.gitProjectId,
@@ -199,6 +205,7 @@ class StreamYamlBuild @Autowired constructor(
                 )
             )
         } finally {
+            streamStorageBean.buildTime(LocalDateTime.now().timestampmilli() - start)
             triggerLock.unlock()
         }
     }

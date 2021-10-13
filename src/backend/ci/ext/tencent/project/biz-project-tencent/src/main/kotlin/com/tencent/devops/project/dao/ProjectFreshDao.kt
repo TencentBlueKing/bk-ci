@@ -31,6 +31,7 @@ import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.model.project.tables.records.TUserRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -92,6 +93,22 @@ class ProjectFreshDao {
                 .set(DEPT_ID, creatorDeptId)
                 .set(CENTER_ID, creatorCenterId)
                 .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun updateProjectName(
+        dslContext: DSLContext,
+        userId: String,
+        englishName: String,
+        projectName: String
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(UPDATOR, userId)
+                .set(PROJECT_NAME, projectName)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }

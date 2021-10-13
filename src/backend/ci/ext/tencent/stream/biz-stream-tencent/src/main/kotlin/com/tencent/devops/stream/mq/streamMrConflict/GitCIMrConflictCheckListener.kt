@@ -27,10 +27,13 @@
 
 package com.tencent.devops.stream.mq.streamMrConflict
 
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.GitCITriggerService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -47,7 +50,8 @@ constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val gitCITriggerService: GitCITriggerService,
     private val rabbitTemplate: RabbitTemplate,
-    private val triggerExceptionService: TriggerExceptionService
+    private val triggerExceptionService: TriggerExceptionService,
+    private val streamStorageBean: StreamStorageBean
 ) {
 
     @RabbitListener(
@@ -63,6 +67,7 @@ constructor(
         ))]
     )
     fun listenGitCIRequestTriggerEvent(checkEvent: GitCIMrConflictCheckEvent) {
+        val start = LocalDateTime.now().timestampmilli()
 
         val (isFinish, isTrigger) = with(checkEvent) {
             mergeConflictCheck.checkMrConflictByListener(
@@ -98,6 +103,7 @@ constructor(
                     )
                 }
             }
+            streamStorageBean.conflictTime(LocalDateTime.now().timestampmilli() - start)
         }
     }
 
