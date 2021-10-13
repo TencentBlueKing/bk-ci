@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
-import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -98,7 +97,8 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val versionConfigure: VersionConfigure
+    private val versionConfigure: VersionConfigure,
+    private val pipelineInfoExtService: PipelineInfoExtService
 ) {
 
     fun deployPipeline(
@@ -189,6 +189,8 @@ class PipelineRepositoryService constructor(
         val containerSeqId = AtomicInteger(0)
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
+            // #4531 对存量的stage审核数据做兼容处理
+            s.refreshReviewOption(true)
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,
@@ -438,7 +440,7 @@ class PipelineRepositoryService constructor(
                         // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
                         // 而其他渠道的默认没设置则什么通知都设置为不发
                         val notifyTypes = if (channelCode == ChannelCode.BS) {
-                            "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+                            pipelineInfoExtService.failNotifyChannel()
                         } else {
                             ""
                         }
@@ -492,7 +494,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )
@@ -600,7 +602,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                model = JsonUtil.toJson(model),
+                model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
         )
@@ -683,7 +685,7 @@ class PipelineRepositoryService constructor(
                 templatePipelineDao.delete(transactionContext, pipelineId)
             } else {
                 // 删除前改名，防止名称占用
-                val deleteTime = LocalDateTime.now().toString("yyyyMMddHHmm")
+                val deleteTime = LocalDateTime.now().toString("yyMMddHHmmSS")
                 var deleteName = "${record.pipelineName}[$deleteTime]"
                 if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
                     deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)

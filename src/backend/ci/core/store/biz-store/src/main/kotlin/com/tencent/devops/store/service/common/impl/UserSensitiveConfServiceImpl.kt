@@ -28,13 +28,17 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.SensitiveConfDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.SensitiveConfReq
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
@@ -52,7 +56,9 @@ import org.springframework.stereotype.Service
 @RefreshScope
 class UserSensitiveConfServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val sensitiveConfDao: SensitiveConfDao
+    private val redisOperation: RedisOperation,
+    private val sensitiveConfDao: SensitiveConfDao,
+    private val storeMemberDao: StoreMemberDao
 ) : UserSensitiveConfService {
 
     private val logger = LoggerFactory.getLogger(UserSensitiveConfServiceImpl::class.java)
@@ -73,6 +79,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean> {
         logger.info("create: $userId | $storeType | $storeCode | $sensitiveConfReq")
+        checkUserAuthority(userId, storeCode, storeType)
         val fieldName = sensitiveConfReq.fieldName
         if (fieldName.isEmpty()) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -131,6 +138,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean> {
         logger.info("update: $storeType | $storeCode | $id | $sensitiveConfReq")
+        checkUserAuthority(userId, storeCode, storeType)
         val sensitiveConfRecord = sensitiveConfDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -192,7 +200,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         ids: String
     ): Result<Boolean> {
         logger.info("delete: $userId | $storeType | $storeCode | $ids")
-        sensitiveConfDao.batchDelete(dslContext, storeType.type.toByte(), storeCode, ids.split(","))
+        checkUserAuthority(userId, storeCode, storeType)
+        sensitiveConfDao.batchDelete(dslContext = dslContext,
+            storeType = storeType.type.toByte(),
+            storeCode = storeCode,
+            idList = ids.split(","))
         return Result(true)
     }
 
@@ -205,6 +217,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         storeCode: String,
         id: String
     ): Result<SensitiveConfResp?> {
+        checkUserAuthority(userId, storeCode, storeType)
         val record = sensitiveConfDao.getById(dslContext, id)
         return Result(if (null != record) {
             val fieldType = record.fieldType
@@ -234,6 +247,9 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         isDecrypt: Boolean,
         types: String?
     ): Result<List<SensitiveConfResp>?> {
+        if (userId.isNotBlank()) {
+            checkUserAuthority(userId, storeCode, storeType)
+        }
         val filedTypeList = if (!types.isNullOrBlank()) types.split(",") else null
         val records = sensitiveConfDao.list(dslContext, storeType.type.toByte(), storeCode, filedTypeList)
         val sensitiveConfRespList = mutableListOf<SensitiveConfResp>()
@@ -259,5 +275,41 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             )
         }
         return Result(sensitiveConfRespList)
+    }
+
+    override fun checkOperationAuthority(
+        buildId: String,
+        vmSeqId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ) {
+        if (storeType == StoreTypeEnum.ATOM) {
+            val runningAtomCode = redisOperation.get(SensitiveApiUtil.getRunningAtomCodeKey(buildId, vmSeqId))
+            if (runningAtomCode != storeCode) {
+                // build类接口需要校验storeCode是否为正在运行的storeCode，防止越权查询storeCode信息
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PERMISSION_DENIED,
+                    params = arrayOf(storeCode)
+                )
+            }
+        }
+    }
+
+    private fun checkUserAuthority(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte())
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(storeCode)
+            )
+        }
     }
 }

@@ -35,22 +35,24 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("服务-创建模型")
 data class ServiceCreateInfo(
-    @ApiModelProperty("服务名称", required = true)
+    @ApiModelProperty("服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
+    var englishName: String?,
+    @ApiModelProperty("服务名称，中文名, 例如 流水线(Pipeline)", required = true)
     val name: String,
-    @ApiModelProperty("服务类型ID", required = true)
+    @ApiModelProperty("服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
     val serviceTypeId: Long,
-    @ApiModelProperty("是否在页面显示")
+    @ApiModelProperty("是否展示项目列表")
     val showProjectList: Boolean = true,
-    @ApiModelProperty("showNav")
+    @ApiModelProperty("是否在服务导航条上显示")
     val showNav: Boolean = true,
-    @ApiModelProperty("状态（是否默认显示灰色）")
+    @ApiModelProperty("服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
     val status: String = "ok",
 
-    @ApiModelProperty("链接1")
+    @ApiModelProperty("链接1，例如 /pipeline/")
     val link: String?,
-    @ApiModelProperty("链接2")
+    @ApiModelProperty("链接2与链接1保持一样，例如 /pipeline/")
     val linkNew: String?,
-    @ApiModelProperty("注入类型")
+    @ApiModelProperty("注入类型：amd/iframe")
     val injectType: String?,
     @ApiModelProperty("iframeUrl")
     val iframeUrl: String?,

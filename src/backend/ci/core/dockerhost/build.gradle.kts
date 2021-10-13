@@ -26,4 +26,9 @@
  */
 subprojects {
     group = "com.tencent.bk.devops.ci.dockerhost"
+
+    configurations.forEach {
+        it.exclude("org.springframework.cloud", "spring-cloud-starter-config")
+        it.exclude("org.springframework.cloud", "spring-cloud-starter-consul-config")
+    }
 }

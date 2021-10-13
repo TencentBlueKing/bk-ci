@@ -44,7 +44,12 @@ class RepositoryAuthService @Autowired constructor(
     val authTokenApi: AuthTokenApi
 ) {
 
-    fun getRepository(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    fun getRepository(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
@@ -64,6 +69,7 @@ class RepositoryAuthService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, repositoryInfos.count)
     }
 
+    // 此处用户iam无权限跳转回调，已页面拿到的id透传。 此处页面拿到的为hashId
     fun getRepositoryInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
         val repositoryInfos =
@@ -76,8 +82,9 @@ class RepositoryAuthService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         repositoryInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.repositoryId!!.toString()
+            entity.id = it.repositoryHashId
             entity.displayName = it.aliasName
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${repositoryInfos.size.toLong()}")
@@ -114,6 +121,6 @@ class RepositoryAuthService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(RepositoryAuthService::class.java)
     }
 }

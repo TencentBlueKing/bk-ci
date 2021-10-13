@@ -74,7 +74,8 @@ class MarketAtomDao : AtomBaseDao() {
         score: Int?,
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
-        recommendFlag: Boolean?
+        recommendFlag: Boolean?,
+        qualityFlag: Boolean?
     ): Int {
         val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
@@ -92,7 +93,8 @@ class MarketAtomDao : AtomBaseDao() {
             storeType = storeType,
             score = score,
             yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag
+            recommendFlag = recommendFlag,
+            qualityFlag = qualityFlag
         )
         return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
@@ -136,6 +138,7 @@ class MarketAtomDao : AtomBaseDao() {
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -177,7 +180,8 @@ class MarketAtomDao : AtomBaseDao() {
             storeType = storeType,
             score = score,
             yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag
+            recommendFlag = recommendFlag,
+            qualityFlag = qualityFlag
         )
 
         if (null != sortType) {
@@ -227,7 +231,8 @@ class MarketAtomDao : AtomBaseDao() {
         storeType: Byte,
         score: Int?,
         yamlFlag: Boolean?,
-        recommendFlag: Boolean?
+        recommendFlag: Boolean?,
+        qualityFlag: Boolean?
     ) {
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
             val c = TLabel.T_LABEL.`as`("c")
@@ -257,6 +262,9 @@ class MarketAtomDao : AtomBaseDao() {
         }
         if (null != recommendFlag) {
             conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
+        }
+        if (null != qualityFlag) {
+            conditions.add(taf.QUALITY_FLAG.eq(qualityFlag))
         }
     }
 

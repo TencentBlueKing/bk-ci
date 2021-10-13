@@ -28,7 +28,10 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -160,4 +163,31 @@ object TaskUtils {
      * 获取当前构建取消任务ID集合的redis键
      */
     fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
+
+    /**
+     * 获取当前构建插件失败自动重试的redis键
+     */
+    fun getFailRetryTaskRedisKey(buildId: String, taskId: String): String {
+        return "process:task:failRetry:count:$buildId:$taskId"
+    }
+
+    /**
+     * 是否刷新task的时间
+     */
+    fun isRefreshTaskTime(
+        buildId: String,
+        taskId: String,
+        additionalOptions: ElementAdditionalOptions?,
+        executeCount: Int? = null
+    ): Boolean {
+        return if (additionalOptions?.retryWhenFailed == true) {
+            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+            val retryCount = redisOperation.get(
+                getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
+            )?.toInt() ?: 0
+            retryCount < 1 || (executeCount != null && executeCount > 1)
+        } else {
+            true
+        }
+    }
 }

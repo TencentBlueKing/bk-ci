@@ -27,6 +27,18 @@
 
 rootProject.name = "bk-ci-backend"
 
+pluginManagement {
+    val devopsBootVersion: String by settings
+    plugins {
+        id("com.tencent.devops.boot") version devopsBootVersion
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 // Single CI Service
 include(":boot-assembly")
 
@@ -43,6 +55,7 @@ include(":core:common:common-redis")
 include(":core:common:common-kafka")
 include(":core:common:common-scm")
 include(":core:common:common-archive")
+include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
 include(":core:common:common-test")
@@ -92,6 +105,7 @@ include(":core:quality:model-quality")
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
+include(":core:dockerhost:biz-dockerhost-sample")
 include(":core:dockerhost:boot-dockerhost")
 include(":core:dockerhost:plugin-dockerhost-codecc")
 
@@ -193,6 +207,7 @@ include(":core:notify")
 include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
+include(":core:notify:biz-notify-wework")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 

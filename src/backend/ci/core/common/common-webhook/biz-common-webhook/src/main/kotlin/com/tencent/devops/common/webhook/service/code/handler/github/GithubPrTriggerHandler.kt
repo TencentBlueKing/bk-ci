@@ -54,6 +54,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.GITHUB_PR_NUMBER
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -159,5 +161,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             pullRequest.milestone?.due_on ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
             pullRequest.labels.joinToString(",") { it.name }
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = pullRequest.head.ref
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = pullRequest.base.ref
     }
 }

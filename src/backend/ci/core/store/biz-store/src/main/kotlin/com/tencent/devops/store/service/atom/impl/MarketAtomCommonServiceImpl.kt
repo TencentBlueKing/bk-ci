@@ -138,11 +138,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 listOf(dbVersion)
             } else {
                 // 判断版本号是否已存在
-                atomDao.getPipelineAtom(dslContext, atomRecord.atomCode, version)
-                    ?: return MessageCodeUtil.generateResponseDataObject(
+                val atomVersionRecord = atomDao.getPipelineAtom(dslContext, atomRecord.atomCode, version)
+                if (atomVersionRecord != null) {
+                    return MessageCodeUtil.generateResponseDataObject(
                         CommonMessageCode.PARAMETER_IS_EXIST,
                         arrayOf(version)
                     )
+                }
                 storeCommonService.getRequireVersion(
                     reqVersion = version,
                     dbVersion = dbVersion,

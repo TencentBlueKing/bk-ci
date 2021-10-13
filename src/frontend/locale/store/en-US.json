@@ -591,5 +591,14 @@
     "最近修改时间": "Last modified time",
     "最近执行人": "Recent executor",
     "最近执行时间": "Last execution time",
-    "搜索": "Search"
+    "搜索": "Search",
+    "质量红线指标": "Quality",
+    "配置片段：": "Configuration Snippet:",
+    "输出参数：": "Output Parameters:",
+    "参数名": "Parameter Name",
+    "参数说明": "Parameter Description",
+    "质量红线指标：": "Quality:",
+    "指标名": "Quota Name",
+    "值类型": "Value Type",
+    "支持的操作": "Supported Operations"
 }

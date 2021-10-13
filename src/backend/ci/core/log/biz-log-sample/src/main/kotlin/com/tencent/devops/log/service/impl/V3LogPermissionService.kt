@@ -85,6 +85,6 @@ class V3LogPermissionService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(V3LogPermissionService::class.java)
     }
 }

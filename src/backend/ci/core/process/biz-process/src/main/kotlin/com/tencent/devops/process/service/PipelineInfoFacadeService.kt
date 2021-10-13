@@ -46,12 +46,15 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -93,7 +96,9 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
-    private val client: Client
+    private val client: Client,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -710,6 +715,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
+                it.refreshReviewOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
@@ -800,6 +806,19 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineRepositoryService.isPipelineExist(
             projectId = projectId, pipelineName = name, channelCode = channelCode, excludePipelineId = pipelineId
         )
+    }
+
+    fun batchUpdatePipelineNamePinYin(userId: String) {
+        logger.info("$userId batchUpdatePipelineNamePinYin")
+        val redisLock = RedisLock(redisOperation, "process:batchUpdatePipelineNamePinYin", 5 * 60)
+        if (redisLock.tryLock()) {
+            try {
+                pipelineInfoDao.batchUpdatePipelineNamePinYin(dslContext)
+            } finally {
+                redisLock.unlock()
+                logger.info("$userId batchUpdatePipelineNamePinYin finished")
+            }
+        }
     }
 
     companion object {
