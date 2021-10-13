@@ -222,8 +222,6 @@ const optionConfigMixin = {
                 ...(atomValues['retryWhenFailed'] ? ['retryWhenFailed'] : []),
                 ...(atomValues['manualRetry'] ? ['MANUAL_RETRY'] : [])
             ]
-
-            console.log(atomValues)
             return atomValues
         }
     }
