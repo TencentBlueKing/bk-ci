@@ -205,6 +205,7 @@
         "executeCommandPrompt": "Create a working directory for the Agent and run the following installation commands in the directory",
         "installBuildMachineTips": "How to install Agent on Windows",
         "connectedNodes": "Connected Agents",
+        "unableToSpawnNodes": "Unable to spawn nodes?",
         "noConnectedNodes": "No connected Agents",
         "loginMethod": "Login method",
         "checkMails": "Check email for password",
