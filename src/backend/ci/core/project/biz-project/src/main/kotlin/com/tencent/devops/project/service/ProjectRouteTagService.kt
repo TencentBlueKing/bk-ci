@@ -43,6 +43,9 @@ class ProjectRouteTagService @Autowired constructor(
 
     // 判断当前项目流量与当前集群匹配
     fun checkProjectTag(projectId: String): Boolean {
+        if (null == prodTag) {
+            return true
+        }
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
         val routerTag = projectInfo.routerTag
         // 默认集群是不会有routerTag的信息
