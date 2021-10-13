@@ -182,7 +182,7 @@ class ScheduleTriggerService @Autowired constructor(
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitCIBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+        gitCIBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,

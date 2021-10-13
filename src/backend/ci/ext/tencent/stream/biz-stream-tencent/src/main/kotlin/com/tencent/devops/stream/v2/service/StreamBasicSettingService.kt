@@ -216,24 +216,13 @@ class StreamBasicSettingService @Autowired constructor(
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long) {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
-        val oldData = streamBasicSettingDao.getSetting(dslContext, gitProjectId) ?: return
-        streamBasicSettingDao.updateInfoSetting(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            gitProjectName = projectInfo.name,
-            url = projectInfo.gitSshUrl ?: "",
-            homePage = projectInfo.homepage ?: "",
-            httpUrl = projectInfo.gitHttpsUrl ?: "",
-            sshUrl = projectInfo.gitSshUrl ?: "",
-            desc = projectInfo.description,
-            avatar = projectInfo.avatarUrl
-        )
+        updateProjectInfo(userId, projectInfo)
     }
 
-    fun updateProjectInfo(projectInfo: GitCIProjectInfo) {
+    fun updateProjectInfo(userId: String, projectInfo: GitCIProjectInfo) {
         streamBasicSettingDao.updateInfoSetting(
             dslContext = dslContext,
-            gitProjectId = projectInfo.gitProjectId.toLong(),
+            gitProjectId = projectInfo.gitProjectId,
             gitProjectName = projectInfo.name,
             url = projectInfo.gitSshUrl ?: "",
             homePage = projectInfo.homepage ?: "",
@@ -242,11 +231,12 @@ class StreamBasicSettingService @Autowired constructor(
             desc = projectInfo.description,
             avatar = projectInfo.avatarUrl
         )
+        val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
         if (oldData.name != projectInfo.name) {
             try {
                 client.get(ServiceTxProjectResource::class).updateProjectName(
                     userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(gitProjectId),
+                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
                     projectName = projectInfo.name
                 )
             } catch (e: Throwable) {
