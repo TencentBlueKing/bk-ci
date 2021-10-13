@@ -11,6 +11,10 @@ import java.util.concurrent.TimeUnit
 class DevopsFeignClientAutoConfiguration {
 
     @Bean
+    fun clientErrorDecoder() = ClientErrorDecoder()
+
+
+    @Bean
     fun options(): Request.Options {
         return Request.Options(60, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true)
     }

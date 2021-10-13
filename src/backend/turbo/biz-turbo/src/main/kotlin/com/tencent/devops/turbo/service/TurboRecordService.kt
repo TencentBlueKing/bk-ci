@@ -58,7 +58,7 @@ class TurboRecordService @Autowired constructor(
     @Value("\${devops.rootpath}")
     private val devopRootPath: String? = null
 
-    @Value("\${tbs.dashboard}:#{null}")
+    @Value("\${tbs.dashboard:#{null}}")
     private val tbsDashboardUrl: String? = null
 
     /**
