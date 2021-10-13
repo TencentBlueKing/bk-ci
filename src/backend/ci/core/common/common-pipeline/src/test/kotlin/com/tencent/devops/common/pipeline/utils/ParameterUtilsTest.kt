@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import org.junit.Assert
@@ -36,7 +35,6 @@ import org.junit.Test
 class ParameterUtilsTest {
     @Test
     fun parameterSizeCheck() {
-        val objectMapper = ObjectMapper()
         val data1 = mutableMapOf<String, Any>()
         data1["key1"] = "value1"
         val element1 = MarketBuildLessAtomElement(
@@ -47,7 +45,7 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertNotEquals(ParameterUtils.element2Str(element1, objectMapper), null)
+        Assert.assertNotEquals(ParameterUtils.element2Str(element1), null)
 
         val sb = StringBuilder()
         while (sb.length < 65534) {
@@ -62,7 +60,7 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertEquals(ParameterUtils.element2Str(element2, objectMapper), null)
+        Assert.assertEquals(ParameterUtils.element2Str(element2), null)
     }
 
     @Test

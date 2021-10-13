@@ -141,12 +141,13 @@ object JsonUtil {
         }
     }
 
-    fun getObjectMapper() = objectMapper
+    private val unformattedObjectMapper = objectMapper().apply { disable(SerializationFeature.INDENT_OUTPUT) }
+
+    fun getObjectMapper(formatted: Boolean = true) = if (formatted) objectMapper else unformattedObjectMapper
 
     /**
      * 此方法仅在系统初始化时调用，不建议在运行过程中调用
-     * 子模块/类注册最佳时机是在系统初始化时调用，而不是在运行过程中
-     * @param subModules 子模块/类
+     * [subModules]子模块/类注册最佳时机是在系统初始化时调用，而不是在运行过程中
      */
     fun registerModule(vararg subModules: Module) {
         synchronized(jsonModules) {
@@ -158,26 +159,18 @@ object JsonUtil {
         subModules.forEach { subModule ->
             objectMapper.registerModule(subModule)
             skipEmptyObjectMapper.registerModule(subModule)
+            unformattedObjectMapper.registerModule(subModule)
         }
     }
 
     /**
-     * 转成Json
+     * 转成Json, [formatted]默认ture采用格式化方式输出
      */
-    fun toJson(bean: Any): String {
+    fun toJson(bean: Any, formatted: Boolean = true): String {
         if (ReflectUtil.isNativeType(bean) || bean is String) {
             return bean.toString()
         }
-        return getObjectMapper().writeValueAsString(bean)!!
-    }
-
-    fun toUnformattedJson(bean: Any): String {
-        if (ReflectUtil.isNativeType(bean) || bean is String) {
-            return bean.toString()
-        }
-        return ObjectMapper()
-            .apply { setSerializationInclusion(JsonInclude.Include.NON_NULL) }
-            .writeValueAsString(bean)!!
+        return getObjectMapper(formatted).writeValueAsString(bean)!!
     }
 
     /**

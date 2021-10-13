@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.process.pojo.classify
 
-/**
- * 定义引擎命令
- */
-interface Cmd<T : CmdContext> {
+import io.swagger.annotations.ApiModelProperty
 
-    /**
-     * 当前[commandContext]上下文能否满足运行条件
-     */
-    fun canExecute(commandContext: T): Boolean
-
-    /**
-     * 本命令[commandContext]上下文执行核心处理逻辑
-     */
-    fun execute(commandContext: T)
-
-    /**
-     * 执行总入口，将调用[canExecute]判断是否满足再执行[execute]函数，
-     * 并将[chain]链式传递[commandContext]继续执行下去
-     */
-    fun doExecute(commandContext: T, chain: CmdChain<T>) {
-        if (canExecute(commandContext)) {
-            execute(commandContext)
-        }
-        chain.doCommand(commandContext)
-    }
-}
+data class PipelineLabelDetail(
+    @ApiModelProperty("流水线标签信息", required = false)
+    val pipelineLabelInfo: List<PipelineGroupLabels>?
+)

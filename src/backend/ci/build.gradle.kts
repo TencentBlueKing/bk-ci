@@ -23,7 +23,7 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.6.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
     dependencyManagement {
@@ -32,7 +32,7 @@ allprojects {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
-            dependency("org.bouncycastle:bcprov-jdk16:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
@@ -82,6 +82,9 @@ allprojects {
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")
                 entry("poi-ooxml")
+            }
+            dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
+                entry("pinyin-plus")
             }
         }
     }

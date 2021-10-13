@@ -31,6 +31,7 @@ package com.tencent.devops.common.pipeline.enums
  * [statusName] 状态中文名
  * [visible] 是否对用户可见
  */
+@Suppress("TooManyFunctions")
 enum class BuildStatus(val statusName: String, val visible: Boolean) {
     SUCCEED("成功", true), // 0 成功（最终态）
     FAILED("失败", true), // 1 失败（最终态）
@@ -59,6 +60,8 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
     DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
     QUALITY_CHECK_PASS("质量红线检查通过", true), // 25 质量红线检查通过
     UNKNOWN("未知状态", false); // 99
+
+    fun isNeverRun(): Boolean = this == UNEXEC
 
     fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel()
 

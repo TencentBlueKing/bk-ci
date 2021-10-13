@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container
 
-import com.tencent.devops.process.engine.control.command.CmdChain
+import com.tencent.devops.process.command.CmdChain
 
 class ContainerCmdChain(private val commandList: List<ContainerCmd>) : CmdChain<ContainerContext> {
 

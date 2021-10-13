@@ -25,9 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.process.command
 
-enum class CharSetType {
-    UTF_8,
-    GBK
-}
+import com.tencent.devops.common.api.util.Watcher
+
+/**
+ * 命令上下文基础类
+ */
+open class CmdContext(
+    open var cmdFlowSeq: Int,
+    open val executeCount: Int = 1,
+    open val variables: Map<String, String>,
+    open val watcher: Watcher
+)

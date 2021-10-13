@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.process.api.builds
 
-/**
- * 引擎控制命令链
- */
-interface CmdChain<T : CmdContext> {
-    /**
-     * 使用泛型的命令上下文[commandContext]执行命令
-     * [commandContext]具备传递和存储中间数据，由各部件定义
-     */
-    fun doCommand(commandContext: T)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.classify.PipelineLabelDetail
+import com.tencent.devops.process.service.label.PipelineLabelService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class BuildLabelResourceImpl @Autowired constructor(
+    private val pipelineLabelService: PipelineLabelService
+) : BuildLabelResource {
+
+    override fun getLabelInfo(pipelineId: String): Result<PipelineLabelDetail> {
+        return Result(pipelineLabelService.getLabelInfo(pipelineId))
+    }
 }
