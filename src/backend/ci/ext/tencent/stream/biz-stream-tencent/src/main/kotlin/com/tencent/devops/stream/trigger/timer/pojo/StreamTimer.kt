@@ -33,7 +33,7 @@ data class StreamTimer(
     val projectId: String,
     val pipelineId: String,
     val userId: String,
-    val crontabExpressions: List<String>,
+    var crontabExpressions: List<String>,
     val gitProjectId: Long,
     val branchs: List<String>?,
     val always: Boolean,

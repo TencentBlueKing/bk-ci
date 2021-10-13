@@ -73,6 +73,7 @@ class StreamTimerService @Autowired constructor(
         with(streamTimer) {
             val newCrontabExpressions = checkAndConvertCrontab(crontabExpressions)
             val crontabJson = JsonUtil.toJson(newCrontabExpressions)
+            streamTimer.crontabExpressions = newCrontabExpressions
             return if (0 < streamTimerDao.save(dslContext, streamTimer)) {
                 pipelineEventDispatcher.dispatch(
                     StreamChangeEvent(
