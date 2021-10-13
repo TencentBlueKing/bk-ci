@@ -32,10 +32,6 @@
                             <i class="devops-icon icon-plus-circle"></i>
                             <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                         </div>
-                        <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
-                            <i class="devops-icon icon-plus-circle"></i>
-                            <span class="text">{{ $t('editPage.addImage') }}</span>
-                        </div>
                     </template>
                 </selector>
                 <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
@@ -111,6 +107,19 @@
             <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
                 <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
             </form-field>
+
+            <section v-if="buildResourceType === 'DOCKER'">
+                <form-field :label="$t('editPage.performance')" v-show="isShowPerformance">
+                    <devcloud-option
+                        :disabled="!editable"
+                        :value="container.dispatchType.performanceConfigId"
+                        :build-type="buildResourceType"
+                        :handle-change="changeBuildResourceWithoutEnv"
+                        :change-show-performance="changeShowPerformance"
+                    >
+                    </devcloud-option>
+                </form-field>
+            </section>
 
             <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
                 <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
@@ -210,6 +219,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ContainerAppSelector from './ContainerAppSelector'
     import ContainerEnvNode from './ContainerEnvNode'
+    import DevcloudOption from './DevcloudOption'
     import BuildParams from './BuildParams'
     import VersionConfig from './VersionConfig'
     import JobOption from './JobOption'
@@ -227,6 +237,7 @@
             ContainerAppSelector,
             BuildParams,
             VersionConfig,
+            DevcloudOption,
             ContainerEnvNode,
             JobOption,
             JobMutual,
@@ -248,7 +259,8 @@
                 isVersionLoading: false,
                 isLoadingMac: false,
                 xcodeVersionList: [],
-                systemVersionList: []
+                systemVersionList: [],
+                isShowPerformance: false
             }
         },
         computed: {
@@ -570,6 +582,12 @@
                 }, emptyValueObj))
                 this.handleContainerChange('buildEnv', {}) // 清空依赖编译环境
             },
+            changeBuildResourceWithoutEnv (name, value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    [name]: value
+                }))
+            },
             handleContainerChange (name, value) {
                 this.updateContainer({
                     container: this.container,
@@ -632,9 +650,8 @@
                 const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
-            addDockerImage () {
-                const url = `${WEB_URL_PREFIX}/artifactory/${this.projectId}/depot/project-image`
-                window.open(url, '_blank')
+            changeShowPerformance (isShow = false) {
+                this.isShowPerformance = isShow
             }
         }
     }

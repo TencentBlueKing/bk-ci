@@ -40,7 +40,6 @@ import java.io.File
 import java.io.InputStream
 
 @Service
-@Suppress("ALL")
 class FileServiceImpl : FileService {
 
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
@@ -111,6 +110,7 @@ class FileServiceImpl : FileService {
         ipaSignInfo: IpaSignInfo,
         resignId: String?
     ): File {
-        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/$resignId/")
+        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}" +
+            "/${ipaSignInfo.buildId}/$resignId/")
     }
 }

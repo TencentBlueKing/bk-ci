@@ -33,13 +33,13 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
 import org.jooq.DSLContext
 import org.junit.Assert
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
-internal class PipelineRuleServiceTest {
+class PipelineRuleServiceTest {
 
     private val dslContext: DSLContext = mock()
     private val pipelineRuleDao: PipelineRuleDao = mock()
-    private val redisOperation: RedisOperation = mock()
+    private val redisOperation: RedisOperation = RedisOperation(mock())
 
     private val pipelineRuleService = PipelineRuleService(
         dslContext = dslContext,

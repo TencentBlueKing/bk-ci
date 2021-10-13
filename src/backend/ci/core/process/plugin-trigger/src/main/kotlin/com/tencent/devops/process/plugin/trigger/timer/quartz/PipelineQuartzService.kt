@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin.trigger.timer.quartz
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -35,8 +36,9 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.time.DateFormatUtils
+import org.apache.commons.lang3.time.DateFormatUtils
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
@@ -133,7 +135,8 @@ class PipelineJobBean(
     private val schedulerManager: SchedulerManager,
     private val pipelineTimerService: PipelineTimerService,
     private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val gray: Gray,
+    private val client: Client
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -149,6 +152,13 @@ class PipelineJobBean(
         if (null == pipelineTimer) {
             logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
             schedulerManager.deleteJob(comboKey)
+            return
+        }
+
+        val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
+            .checkProjectRouter(pipelineTimer.projectId).data ?: return
+        if (!projectRouterTagCheck) {
+            logger.warn("timePipeline ${pipelineTimer.projectId} router tag is not this cluster")
             return
         }
 

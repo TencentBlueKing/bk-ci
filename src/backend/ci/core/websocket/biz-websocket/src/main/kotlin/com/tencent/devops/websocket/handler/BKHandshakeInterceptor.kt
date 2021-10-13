@@ -46,13 +46,13 @@ class BKHandshakeInterceptor @Autowired constructor(
     val websocketService: WebsocketService
 ) : HandshakeInterceptor {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(BKHandshakeInterceptor::class.java)
     }
 
     override fun afterHandshake(
-        request: ServerHttpRequest?,
-        response: ServerHttpResponse?,
-        wsHandler: WebSocketHandler?,
+        request: ServerHttpRequest,
+        response: ServerHttpResponse,
+        wsHandler: WebSocketHandler,
         exception: Exception?
     ) {
         if (request is ServletServerHttpRequest) {
@@ -72,10 +72,10 @@ class BKHandshakeInterceptor @Autowired constructor(
     }
 
     override fun beforeHandshake(
-        request: ServerHttpRequest?,
-        response: ServerHttpResponse?,
-        wsHandler: WebSocketHandler?,
-        attributes: MutableMap<String, Any>?
+        request: ServerHttpRequest,
+        response: ServerHttpResponse,
+        wsHandler: WebSocketHandler,
+        attributes: MutableMap<String, Any>
     ): Boolean {
         return true
     }

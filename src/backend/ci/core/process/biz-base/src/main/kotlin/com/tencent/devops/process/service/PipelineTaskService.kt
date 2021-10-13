@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
+import com.tencent.devops.process.engine.common.Timeout.CONTAINER_MAX_MILLS
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -179,13 +180,14 @@ class PipelineTaskService @Autowired constructor(
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
             ?: return false
         val retryCount = redisOperation.get(
-            getRedisKey(buildId = taskRecord.buildId, taskId = taskRecord.taskId)
+            TaskUtils.getFailRetryTaskRedisKey(buildId = taskRecord.buildId, taskId = taskRecord.taskId)
         )?.toInt() ?: 0
         val isRry = ControlUtils.retryWhenFailure(taskRecord.additionalOptions, retryCount)
         if (isRry) {
             val nextCount = retryCount + 1
             redisOperation.set(
-                getRedisKey(buildId = taskRecord.buildId, taskId = taskRecord.taskId), nextCount.toString()
+                key = TaskUtils.getFailRetryTaskRedisKey(buildId = taskRecord.buildId, taskId = taskRecord.taskId),
+                value = nextCount.toString()
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
@@ -219,7 +221,7 @@ class PipelineTaskService @Autowired constructor(
 
     fun removeRetryCache(buildId: String, taskId: String) {
         // 清除该原子内的重试记录
-        redisOperation.delete(getRedisKey(buildId = buildId, taskId = taskId))
+        redisOperation.delete(TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId))
     }
 
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
@@ -289,10 +291,6 @@ class PipelineTaskService @Autowired constructor(
         return "devops:failTaskName:redis:key:$buildId:$taskId"
     }
 
-    private fun getRedisKey(buildId: String, taskId: String): String {
-        return "process:task:failRetry:count:$buildId:$taskId"
-    }
-
     private fun findElementMsg(
         model: Model?,
         taskRecord: PipelineBuildTask
@@ -347,7 +345,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.set(
             key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
             value = "true",
-            expiredInSecond = MAX_MINUTES.toLong()
+            expiredInSecond = CONTAINER_MAX_MILLS
         )
     }
 
@@ -418,7 +416,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTaskService::class.java)
         private val expiredInSecond = TimeUnit.DAYS.toMinutes(7L)
         private const val DEFAULT_PAGE_SIZE = 50
     }

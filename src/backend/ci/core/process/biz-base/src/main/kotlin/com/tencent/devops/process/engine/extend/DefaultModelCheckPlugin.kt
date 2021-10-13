@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
@@ -139,12 +140,11 @@ open class DefaultModelCheckPlugin constructor(
                 }
             }
 
-            if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true) {
-                throw ErrorCodeException(
-                    defaultMessage = "手动触发的Stage没有未配置可执行人",
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
-                )
+            // #4531 检查stage审核组配置是否符合要求
+            if (s.stageControlOption?.manualTrigger == true || s.checkIn?.manualTrigger == true) {
+                checkStageReviewers(s)
             }
+
             val atomVersions = mutableSetOf<StoreVersion>()
             val atomInputParamList = mutableListOf<StoreParam>()
             checkElements(
@@ -164,6 +164,29 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             DependOnUtils.checkRepeatedJobId(stage)
+        }
+    }
+
+    private fun checkStageReviewers(stage: Stage) {
+        stage.refreshReviewOption()
+        if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
+            throw ErrorCodeException(
+                defaultMessage = "Stage(${stage.name})准入配置不正确",
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP,
+                params = arrayOf(stage.name ?: stage.id ?: "")
+            )
+        }
+        stage.checkIn?.reviewGroups?.forEach { group ->
+            if (group.reviewers.isEmpty()) throw ErrorCodeException(
+                defaultMessage = "Stage(${stage.name})中审核组(${group.name})未配置审核人",
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
+                params = arrayOf(stage.name!!, group.name)
+            )
+        }
+        stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
+            stage.checkIn?.timeout
+        } else {
+            Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         }
     }
 

@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -69,12 +70,14 @@ import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -326,34 +329,45 @@ open class MarketAtomTask : ITask() {
                 buildEnvs = buildEnvs,
                 postEntryParam = postEntryParam
             )
-            val errorMessage = "Fail to run the plugin"
-            when (AgentEnv.getOS()) {
-                OSType.WINDOWS -> {
-                    BatScriptUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\r\n$atomTarget\r\n",
-                        runtimeVariables = environment,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
+
+            // 运行阶段单独处理执行失败错误
+            try {
+                val errorMessage = "Fail to run the plugin"
+                when (AgentEnv.getOS()) {
+                    OSType.WINDOWS -> {
+                        BatScriptUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\r\n$atomTarget\r\n",
+                            runtimeVariables = environment,
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    OSType.LINUX, OSType.MAC_OS -> {
+                        ShellUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\n$atomTarget\n",
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            buildEnvs = buildEnvs,
+                            runtimeVariables = environment,
+                            systemEnvVariables = systemEnvVariables,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    else -> {
+                    }
                 }
-                OSType.LINUX, OSType.MAC_OS -> {
-                    ShellUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\n$atomTarget\n",
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        buildEnvs = buildEnvs,
-                        runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
-                }
-                else -> {
-                }
+            } catch (t: Throwable) {
+                logger.warn("Market atom execution exit with StackTrace:\n", t)
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "Market atom execution exit with StackTrace: ${t.message}"
+                )
             }
         } catch (e: Throwable) {
             error = e
@@ -367,7 +381,9 @@ open class MarketAtomTask : ITask() {
                         defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
                     }
                 }
-                throw TaskExecuteException(
+                throw if (error is TaskExecuteException) {
+                    error
+                } else TaskExecuteException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorMsg = defaultMessage.toString()
@@ -444,11 +460,11 @@ open class MarketAtomTask : ITask() {
 
         val atomStatus = AtomStatusEnum.getAtomStatus(atomData.atomStatus)
         if (atomStatus == AtomStatusEnum.UNDERCARRIAGED) {
-            LoggerService.addYellowLine(
+            LoggerService.addWarnLine(
                 "[警告]该插件已被下架，有可能无法正常工作！\n[WARNING]The plugin has been removed and may not work properly."
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
-            LoggerService.addYellowLine(
+            LoggerService.addWarnLine(
                 "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
                     "[WARNING]The plugin is in the transition period and may not work properly in the future."
             )
@@ -461,12 +477,12 @@ open class MarketAtomTask : ITask() {
                 val def = inputTemplate[key] as Map<String, Any>
                 val sensitiveFlag = def["isSensitive"]
                 if (sensitiveFlag != null && sensitiveFlag.toString() == "true") {
-                    LoggerService.addYellowLine("input(sensitive): (${def["label"]})$key=******")
+                    LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
                     LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
                 }
             } else {
-                LoggerService.addYellowLine("input(except): $key=$value")
+                LoggerService.addWarnLine("input(except): $key=$value")
             }
         }
         LoggerService.addFoldEndLine("-----")
@@ -566,7 +582,7 @@ open class MarketAtomTask : ITask() {
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
-            LoggerService.addYellowLine("No output")
+            LoggerService.addWarnLine("No output")
         } else {
             success = atomResult.status == "success"
 
@@ -613,6 +629,7 @@ open class MarketAtomTask : ITask() {
                         atomWorkspace = bkWorkspace
                     )
                     ARTIFACT -> env[key] = archiveArtifact(
+                        buildTask = buildTask,
                         varKey = varKey,
                         output = output,
                         atomWorkspace = bkWorkspace,
@@ -633,7 +650,7 @@ open class MarketAtomTask : ITask() {
                         LoggerService.addNormalLine("output(normal): $key=${env[key]}")
                     }
                 } else {
-                    LoggerService.addYellowLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
                 }
             }
             LoggerService.addFoldEndLine("-----")
@@ -689,19 +706,34 @@ open class MarketAtomTask : ITask() {
      */
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
+        buildTask: BuildTask,
         varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
     ): String {
         var oneArtifact = ""
+        val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
+        val customFlag = artifactoryType == ArtifactoryType.CUSTOM_DIR.name
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = if (customFlag) "custom" else "pipeline",
+            path = if (customFlag) "/" else "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+        )
         try {
             val artifacts = output[VALUE] as List<String>
-            val artifactoryType = (output[ARTIFACTORY_TYPE] as? String) ?: ArtifactoryType.PIPELINE.name
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
                 if (artifactoryType == ArtifactoryType.PIPELINE.name) {
-                    ArchiveUtils.archivePipelineFiles(artifact, atomWorkspace, buildVariables)
+                    ArchiveUtils.archivePipelineFiles(
+                        filePath = artifact,
+                        workspace = atomWorkspace,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
                         errorMsg = "$varKey.$PATH cannot be empty",
@@ -709,11 +741,17 @@ open class MarketAtomTask : ITask() {
                         errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
                     val destPath = output[PATH] as String
-                    ArchiveUtils.archiveCustomFiles(artifact, destPath, atomWorkspace, buildVariables)
+                    ArchiveUtils.archiveCustomFiles(
+                        filePath = artifact,
+                        destPath = destPath,
+                        workspace = atomWorkspace,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
                 }
             }
         } catch (e: Exception) {
-            LoggerService.addRedLine("获取输出构件[artifact]值错误：${e.message}")
+            LoggerService.addErrorLine("获取输出构件[artifact]值错误：${e.message}")
             logger.error("获取输出构件[artifact]值错误", e)
         }
         return oneArtifact
@@ -845,7 +883,7 @@ open class MarketAtomTask : ITask() {
             return file
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
-            LoggerService.addRedLine("download plugin execute file fail: ${t.message}")
+            LoggerService.addErrorLine("download plugin execute file fail: ${t.message}")
             throw TaskExecuteException(
                 errorMsg = "download plugin execute file fail",
                 errorType = ErrorType.SYSTEM,

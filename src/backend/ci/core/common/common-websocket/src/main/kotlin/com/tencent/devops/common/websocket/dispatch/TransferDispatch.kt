@@ -38,7 +38,7 @@ class TransferDispatch(
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<TransferPush> {
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(TransferDispatch::class.java)
     }
 
     override fun dispatch(vararg events: TransferPush) {

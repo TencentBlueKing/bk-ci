@@ -58,6 +58,7 @@ object AtomUtils {
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
      */
+    @Suppress("ComplexMethod")
     fun parseContainerMarketAtom(
         container: Container,
         task: PipelineBuildTask,

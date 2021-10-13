@@ -125,7 +125,9 @@
 
             getSelectorDefaultVal ({ valueType, value = '' }) {
                 if (isMultipleParam(valueType)) {
-                    return value && typeof value === 'string' ? value.split(',') : []
+                    const isString = typeof value === 'string'
+                    const isArray = Array.isArray(value)
+                    return isString ? (value.split(',').filter(i => i.trim() !== '')) : (isArray ? value : [])
                 }
                 return value
             },

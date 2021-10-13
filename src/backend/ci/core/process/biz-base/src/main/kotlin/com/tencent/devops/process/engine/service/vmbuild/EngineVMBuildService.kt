@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
@@ -80,7 +79,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount")
+@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -104,6 +103,22 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机报告启动完毕
      */
     fun buildVMStarted(buildId: String, vmSeqId: String, vmName: String, retryCount: Int): BuildVariables {
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
+        try {
+            containerIdLock.lock()
+            return handleStartUpVMBus(buildId, vmSeqId, vmName, retryCount)
+        } finally {
+            containerIdLock.unlock()
+        }
+    }
+
+    @Suppress("ThrowsCount")
+    private fun handleStartUpVMBus(
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        retryCount: Int
+    ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
@@ -111,7 +126,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
-
         var vmId = 1
 
         model!!.stages.forEachIndexed { index, s ->
@@ -121,6 +135,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
+                    val container = pipelineRuntimeService.getContainer(buildId, s.id, vmSeqId)
+                        ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
+                    // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
+                    if (container.status.isFinish()) {
+                        throw OperationException("vmName($vmName) has been shutdown")
+                    }
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(it.startVMStatus).isFinish() || retryCount > 0,
@@ -129,7 +149,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
-                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
@@ -146,7 +166,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         }
                     } else {
                         if (it is NormalContainer) {
-                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                            timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         }
                         emptyList()
                     }
@@ -317,13 +337,23 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+                pipelineEventDispatcher.dispatch(PipelineBuildStatusBroadCastEvent(
+                    source = "TaskPause-${task.containerId}-${task.buildId}",
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    userId = task.starter,
+                    buildId = task.buildId,
+                    taskId = task.taskId,
+                    stageId = task.stageId,
+                    actionType = ActionType.REFRESH
+                ))
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {
@@ -340,7 +370,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
-                    pipelineRuntimeService.claimBuildTask(buildId, task, userId)
+                    pipelineRuntimeService.claimBuildTask(task, userId)
                     taskBuildDetailService.taskStart(buildId, task.taskId)
                     jmxElements.execute(task.taskType)
                 }
@@ -371,7 +401,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
-                        it.key to JsonUtil.toJson(obj)
+                        it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
                         !it.first.startsWith("@type")
                     }.toMap(),
@@ -392,6 +422,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             containerIdLock.lock()
             executeCompleteTaskBus(buildId, result, vmName, vmSeqId)
         } finally {
+            redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
     }
@@ -404,14 +435,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     ) {
         val buildTask = pipelineRuntimeService.getBuildTask(buildId, result.taskId)
         val taskStatus = buildTask?.status
-        if (taskStatus == null || taskStatus.isFinish()) {
-            // 当上报的任务不存在或者状态已经结束，则直接返回
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid or finish")
+        if (taskStatus == null) {
+            // 当上报的任务不存在，则直接返回
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|invalid")
             return
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
-            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|buildInfo is null")
             return // 数据为空是平台异常，正常情况不应该出现
         }
 
@@ -426,6 +457,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
+        }
+        if (taskStatus.isFinish()) {
+            // 当上报的任务状态已经结束，则直接返回
+            LOG.warn("BKSystemErrorMonitor|ENGINE|$buildId|$vmName|${result.taskId}|finish")
+            return
         }
         val errorType = ErrorType.getErrorType(result.errorType)
         val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
@@ -466,8 +502,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
         // 发送度量数据
         sendElementData(buildId = buildId, result = result)
-
-        redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
 
         LOG.info(
             "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +

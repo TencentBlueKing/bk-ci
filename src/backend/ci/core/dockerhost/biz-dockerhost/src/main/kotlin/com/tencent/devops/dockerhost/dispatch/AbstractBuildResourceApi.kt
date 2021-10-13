@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -144,9 +145,9 @@ abstract class AbstractBuildResourceApi constructor(
     }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        if (dockerHostConfig.gatewayHeaderProject != null) {
-            logger.info("Now is ${dockerHostConfig.gatewayHeaderProject} environment, request with the x-devops-project-id header.")
-            return buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to dockerHostConfig.gatewayHeaderProject!!))
+        if (dockerHostConfig.gatewayHeaderTag != null) {
+            logger.info("Now is ${dockerHostConfig.gatewayHeaderTag} environment, request with the AUTH_HEADER_GATEWAY_TAG header.")
+            return buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_GATEWAY_TAG to dockerHostConfig.gatewayHeaderTag!!))
         }
 
         return buildArgs.plus(headers)

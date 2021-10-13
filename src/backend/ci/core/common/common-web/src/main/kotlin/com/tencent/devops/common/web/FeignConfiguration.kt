@@ -59,6 +59,7 @@ class FeignConfiguration {
     @Primary
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
+            requestTemplate.decodeSlash(false)
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -101,6 +102,7 @@ class FeignConfiguration {
     @Bean
     fun gatewayTagRequestInterceptor(): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
+            requestTemplate.decodeSlash(false)
             logger.debug("add X-GATEWAY-TAG $tag")
             if (!requestTemplate.headers().containsKey(AUTH_HEADER_GATEWAY_TAG)) {
                 requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)

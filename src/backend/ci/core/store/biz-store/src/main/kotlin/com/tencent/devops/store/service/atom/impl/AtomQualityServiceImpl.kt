@@ -28,6 +28,8 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityMetadataMarketResource
@@ -44,23 +46,36 @@ import org.springframework.stereotype.Service
  */
 @Service
 class AtomQualityServiceImpl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : AtomQualityService {
 
     private val logger = LoggerFactory.getLogger(AtomQualityServiceImpl::class.java)
 
     override fun updateQualityInApprove(atomCode: String, atomStatus: Byte) {
-        logger.info("update quality atomStatus: $atomStatus")
-        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
-            // 审核通过就刷新基础数据和指标
-            val metadataMap =
-                client.get(ServiceQualityMetadataMarketResource::class).refreshMetadata(atomCode).data ?: mapOf()
-            client.get(ServiceQualityIndicatorMarketResource::class).refreshIndicator(atomCode, metadataMap)
-            client.get(ServiceQualityControlPointMarketResource::class).refreshControlPoint(atomCode)
+        logger.info("update quality atomStatus: $atomCode, $atomStatus")
+
+        val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName + "#" + atomCode
+        val lock = RedisLock(redisOperation, key, 3600L)
+
+        try {
+            if (!lock.tryLock()) {
+                throw IllegalArgumentException("get lock failed and do not do update quality in approve")
+            }
+
+            if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
+                // 审核通过就刷新基础数据和指标
+                val metadataMap =
+                    client.get(ServiceQualityMetadataMarketResource::class).refreshMetadata(atomCode).data ?: mapOf()
+                client.get(ServiceQualityIndicatorMarketResource::class).refreshIndicator(atomCode, metadataMap)
+                client.get(ServiceQualityControlPointMarketResource::class).refreshControlPoint(atomCode)
+            }
+            // 删除测试数据
+            client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
+            client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
+            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+        } finally {
+            lock.unlock()
         }
-        // 删除测试数据
-        client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-        client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-        client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
     }
 }

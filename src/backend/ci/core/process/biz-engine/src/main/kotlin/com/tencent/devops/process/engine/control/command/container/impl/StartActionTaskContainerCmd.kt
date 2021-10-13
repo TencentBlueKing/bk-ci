@@ -51,11 +51,11 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Service
@@ -65,7 +65,6 @@ class StartActionTaskContainerCmd(
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskService: PipelineTaskService,
     private val pipelineContextService: PipelineContextService
 ) : ContainerCmd {
 
@@ -135,7 +134,7 @@ class StartActionTaskContainerCmd(
         val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         if (actionType == ActionType.END && failedEvenCancelFlag) {
             val container = commandContext.container
-            val timeOut = container.controlOption?.jobControlOption?.timeout ?: Timeout.MAX_MINUTES
+            val timeOutMinutes = (container.controlOption?.jobControlOption?.timeout ?: Timeout.MAX_MINUTES) + 0L
             redisOperation.set(
                 key = ContainerUtils.getContainerRunEvenCancelTaskKey(
                     pipelineId = waitToDoTask.pipelineId,
@@ -143,7 +142,7 @@ class StartActionTaskContainerCmd(
                     containerId = waitToDoTask.containerId
                 ),
                 value = waitToDoTask.taskId,
-                expiredInSecond = timeOut * 60L
+                expiredInSecond = TimeUnit.MINUTES.toSeconds(timeOutMinutes)
             )
         }
     }
@@ -169,6 +168,11 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
+                if (!actionType.isStartOrRefresh()) { // 处于暂停的构建，要结束，状态要标志为取消，并且终止
+                    containerContext.buildStatus =
+                        BuildStatusSwitcher.jobStatusMaker.cancel(containerContext.container.status)
+                    needTerminate = true
+                }
             } else if (t.status.isRunning()) { // 当前有运行中任务
                 // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
                 breakFlag = actionType.isStartOrRefresh()
@@ -381,8 +385,6 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
                 "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
-            // 此处多余，待确认后移除
-            pipelineTaskService.pauseBuild(task = currentTask)
             containerContext.event.actionType = ActionType.START
         }
         containerContext.buildStatus = BuildStatus.PAUSE

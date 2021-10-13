@@ -49,7 +49,13 @@ object ArchiveUtils {
     private val api = ApiFactory.create(ArchiveSDKApi::class)
     private const val MAX_FILE_COUNT = 100
 
-    fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
+    fun archiveCustomFiles(
+        filePath: String,
+        destPath: String,
+        workspace: File,
+        buildVariables: BuildVariables,
+        token: String? = null
+    ): Int {
         val fileList = mutableSetOf<String>()
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
@@ -66,12 +72,17 @@ object ArchiveUtils {
             LoggerService.addNormalLine("  $it")
         }
         fileList.forEach {
-            api.uploadCustomize(File(it), destPath, buildVariables)
+            api.uploadCustomize(file = File(it), destPath = destPath, buildVariables = buildVariables, token = token)
         }
         return fileList.size
     }
 
-    fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
+    fun archivePipelineFiles(
+        filePath: String,
+        workspace: File,
+        buildVariables: BuildVariables,
+        token: String? = null
+    ): Int {
         val fileList = mutableSetOf<String>()
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
@@ -88,7 +99,7 @@ object ArchiveUtils {
             LoggerService.addNormalLine("  $it")
         }
         fileList.forEach {
-            api.uploadPipeline(File(it), buildVariables)
+            api.uploadPipeline(file = File(it), buildVariables = buildVariables, token = token)
         }
         return fileList.size
     }
@@ -116,7 +127,7 @@ object ArchiveUtils {
         }
         return fileList.filter {
             if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
-                LoggerService.addYellowLine("${it.canonicalPath} will not upload")
+                LoggerService.addWarnLine("${it.canonicalPath} will not upload")
                 false
             } else {
                 true
@@ -207,8 +218,8 @@ object ArchiveUtils {
         }
     }
 
-    fun archiveLogFile(file: File, destFullPath: String, buildVariables: BuildVariables) {
-        api.uploadLog(file, destFullPath, buildVariables)
+    fun archiveLogFile(file: File, destFullPath: String, buildVariables: BuildVariables, token: String? = null) {
+        api.uploadLog(file = file, destFullPath = destFullPath, buildVariables = buildVariables, token = token)
     }
 
     fun recursiveGetFiles(file: File): List<File> {
