@@ -191,6 +191,7 @@
                         return { name: classify.classifyCode, label: classify.classifyName, count }
                     })
                     this.panels.unshift({ name: 'all', label: this.$t('atomManage.all'), count: this.installAtomList.length })
+                    this.showDetail(this.atomList[0])
                 }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
                     this.isLoading = false
                 })

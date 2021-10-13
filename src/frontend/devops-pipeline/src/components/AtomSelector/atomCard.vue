@@ -46,7 +46,7 @@
             <p class="atom-name">
                 <a class="atom-link">
                     {{ atom.name }}
-                    <span @click.stop="handleGoDocs(atom.docsLink)">
+                    <span style="cursor: pointer;" @click.stop="handleGoDocs(atom.docsLink)">
                         <logo v-if="atom.docsLink" class="jump-icon" name="tiaozhuan" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
                     </span>
                     <span class="fire-num">
@@ -176,10 +176,7 @@
             },
 
             handleGoPipelineAtomManage (name) {
-                const routeData = this.$router.resolve({
-                    path: `/pipeline/${this.projectCode}/list/atomManage/${name}`
-                })
-                window.open(routeData.href, '_blank')
+                window.open(`${WEB_URL_PREFIX}/pipeline/${this.projectCode}/list/atomManage/${name}`, '_blank')
             },
 
             /**
