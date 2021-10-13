@@ -51,6 +51,7 @@ import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.ProjectTxInfoService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,7 +65,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
+    private val projectTxService: ProjectTxInfoService
 ) : ServiceTxProjectResource {
 
     @Value("\${auto.tag:#{null}}")
@@ -358,6 +360,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     override fun bindRelationSystem(projectCode: String, relationId: String): Result<Boolean> {
         projectLocalService.updateRelationId(projectCode, relationId)
         return Result(true)
+    }
+
+    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+        return Result(projectTxService.updateProjectName(userId, projectCode, projectName))
     }
 
     companion object {

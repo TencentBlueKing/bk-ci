@@ -151,8 +151,8 @@ class StreamYamlTrigger @Autowired constructor(
             filePath.removeSuffix(".yml")
         }
 
-        // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+        // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态, 只有url或者名称不对才更新
+        gitBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
 
         streamStorageBean.prepareYamlTime(LocalDateTime.now().timestampmilli() - start)
 
