@@ -60,7 +60,8 @@ import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
-import com.tencent.devops.stream.trigger.parsers.YamlCheck
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -76,7 +77,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val gitBasicSettingService: StreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
-    private val yamlCheck: YamlCheck,
+    private val yamlSchemaCheck: YamlSchemaCheck,
     private val yamlBuildV2: StreamYamlBuild,
     private val tokenService: StreamGitTokenService,
     private val streamStorageBean: StreamStorageBean
@@ -226,7 +227,7 @@ class StreamYamlTrigger @Autowired constructor(
         logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val preTemplateYamlObject = yamlCheck.formatAndCheckYaml(
+        val preTemplateYamlObject = YamlFormat.formatYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
             filePath = filePath,
@@ -247,8 +248,7 @@ class StreamYamlTrigger @Autowired constructor(
 
     override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
         return try {
-            yamlCheck.formatAndCheckYaml(yaml)
-
+            yamlSchemaCheck.check(yaml, null, true)
             Result("OK")
         } catch (e: Exception) {
             logger.error("Check yaml schema failed.", e)

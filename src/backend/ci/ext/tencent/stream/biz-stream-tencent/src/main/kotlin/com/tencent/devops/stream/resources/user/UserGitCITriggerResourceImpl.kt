@@ -29,7 +29,6 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,7 +43,6 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.StreamYamlService
 import com.tencent.devops.stream.trigger.YamlTriggerFactory
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.common.CommonConst
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -118,17 +116,6 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
                 return triggerInterface.checkYamlSchema(userId, yaml.yaml)
             }
         }
-    }
-
-    override fun saveYamlSchema(userId: String, yamlSchema: String): Result<String> {
-        logger.info("User: $userId save yamlSchema: $yamlSchema")
-        redisOperation.set(
-            key = CommonConst.REDIS_STREAM_YAML_SCHEMA,
-            value = JsonUtil.toJson(yamlSchema),
-            expired = false
-        )
-
-        return Result("OK")
     }
 
     override fun getYamlSchema(userId: String): Result<String> {

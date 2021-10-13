@@ -71,6 +71,7 @@ class StreamScmService @Autowired constructor(
     }
 
     // 获取工蜂超级token
+    // 注意，应该优先从 stream gitToken获取token 如非必要，不应该调用这个
     @Throws(ErrorCodeException::class)
     fun getToken(
         gitProjectId: String
