@@ -249,7 +249,7 @@ class StreamPipelineService @Autowired constructor(
             // 构建记录和未构建记录都没得，就去拿默认分支
             if (branch.isNullOrBlank()) {
                 branch = streamScmService.getProjectInfo(
-                    token = streamScmService.getToken(gitProjectId.toString()).accessToken,
+                    token = tokenService.getToken(gitProjectId),
                     gitProjectId = gitProjectId.toString(),
                     useAccessToken = true
                 )?.defaultBranch ?: "master"

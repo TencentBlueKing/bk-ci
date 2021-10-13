@@ -146,7 +146,7 @@ class StreamProjectService @Autowired constructor(
         redisOperation.zadd(key, projectId, LocalDateTime.now().timestamp().toDouble())
         val size = redisOperation.zsize(key) ?: 0
         if (size > MAX_STREAM_USER_HISTORY_LENGTH) {
-            // redis zset 是从小到达排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
+            // redis zset rank 是从小到大排列所以最新的一般在最后面, 从0起前往后删，有几个删几个
             redisOperation.zremoveRange(key, 0, size - MAX_STREAM_USER_HISTORY_LENGTH - 1)
         }
     }
@@ -159,7 +159,7 @@ class StreamProjectService @Autowired constructor(
         // 先清理3个月前过期数据
         val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
         redisOperation.zremoveRangeByScore(key, 0.0, expiredTime.toDouble())
-        val list = redisOperation.zrange(
+        val gitProjectIds = redisOperation.zrevrange(
             key = key,
             start = 0,
             end = if (size - 1 < 0) {
@@ -167,12 +167,12 @@ class StreamProjectService @Autowired constructor(
             } else {
                 size - 1
             }
-        )
-        if (list.isNullOrEmpty()) {
-            return null
+        )?.map { it.removePrefix("git_").toLong() }.let {
+            if (it.isNullOrEmpty()) {
+                return null
+            }
+            it
         }
-        // zset 默认从小到大排序，所以取反
-        val gitProjectIds = list.map { it.removePrefix("git_").toLong() }.reversed()
         val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
             .associateBy { it.id }
         val result = mutableListOf<ProjectCIInfo>()
