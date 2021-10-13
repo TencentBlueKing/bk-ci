@@ -29,7 +29,6 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,15 +43,14 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.StreamYamlService
 import com.tencent.devops.stream.trigger.YamlTriggerFactory
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.common.CommonConst
-import com.tencent.devops.stream.v2.service.GitCIV2PipelineService
+import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCITriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
-    private val gitCIV2PipelineService: GitCIV2PipelineService,
+    private val streamPipelineService: StreamPipelineService,
     private val permissionService: GitCIV2PermissionService,
     private val streamYamlService: StreamYamlService,
     private val yamlTriggerFactory: YamlTriggerFactory,
@@ -120,17 +118,6 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         }
     }
 
-    override fun saveYamlSchema(userId: String, yamlSchema: String): Result<String> {
-        logger.info("User: $userId save yamlSchema: $yamlSchema")
-        redisOperation.set(
-            key = CommonConst.REDIS_STREAM_YAML_SCHEMA,
-            value = JsonUtil.toJson(yamlSchema),
-            expired = false
-        )
-
-        return Result("OK")
-    }
-
     override fun getYamlSchema(userId: String): Result<String> {
         val schema = streamYamlService.getCIBuildYamlSchema()
         logger.info("ci build yaml schema: $schema")
@@ -157,7 +144,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         } else {
             commitId
         }
-        return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
+        return Result(streamPipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 
     private fun checkParam(userId: String) {

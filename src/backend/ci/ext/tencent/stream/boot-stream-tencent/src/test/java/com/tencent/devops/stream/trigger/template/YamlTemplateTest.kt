@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import org.junit.Test
 
@@ -103,20 +103,12 @@ class YamlTemplateTest {
     }
 
     private fun getTestTemplate(
-        token: String?,
-        forkToken: String?,
-        gitProjectId: Long,
-        targetRepo: String?,
-        ref: String?,
-        personalAccessToken: String?,
-        fileName: String,
-        changeSet: Set<String>?,
-        event: GitEvent?
+        param: GetTemplateParam
     ): String {
-        val newPath = if (targetRepo == null) {
-            "templates/$fileName"
+        val newPath = if (param.targetRepo == null) {
+            "templates/${param.fileName}"
         } else {
-            "templates/$targetRepo/templates/$fileName"
+            "templates/${param.targetRepo}/templates/${param.fileName}"
         }
         val classPathResource = ClassPathResource(newPath)
         val inputStream: InputStream = classPathResource.inputStream

@@ -41,11 +41,8 @@ import java.util.concurrent.locks.ReentrantLock
 
 @BindGenerator(description = "默认Docker Bind生成器")
 @Component
-@Suppress("ALL")
 class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
-
-//    private val etcHosts = "/etc/hosts"
 
     private val whiteList = mutableSetOf<String>()
 
@@ -67,9 +64,12 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getGolangPath(), Volume(dockerHostConfig.volumeGolangCache)),
                 Bind(getSbtPath(), Volume(dockerHostConfig.volumeSbtCache)),
                 Bind(getSbt2Path(), Volume(dockerHostConfig.volumeSbt2Cache)),
-                Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache)),
-                Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace))
+                Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache))
             )
+
+            if (qpcUniquePath == null) {
+                binds.add(Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace)))
+            }
 
             if (enableProjectShare(projectId)) {
                 binds.add(Bind(getProjectShareDir(projectId), Volume(dockerHostConfig.volumeProjectShare)))
