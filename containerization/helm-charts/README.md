@@ -194,6 +194,7 @@ $ helm uninstall bkci
 > 如果开启数据持久化，并且没有配置`existingClaim`，将使用[动态卷供应](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/)提供存储，使用`storageClass`定义的存储类。**在删除该声明后，这个卷也会被销毁(用于单节点环境，生产环境不推荐)。**。
 
 ### 服务配置
+*以下host如果使用k8s的service name , 请使用全限定名称 , 如 bkssm-web.default.svc.cluster.local*
 
 |参数|描述|默认值 |
 |---|---|---|

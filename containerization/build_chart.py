@@ -33,7 +33,8 @@ default_value_dict = {
     'bkCiPublicHostIp': '127.0.0.1',
     'bkCiIamCallbackUser': 'bk_iam',
     'bkCiAppCode': 'bk_ci',
-    'bkCiNotifyWeworkSendChannel': 'weworkAgent'
+    'bkCiNotifyWeworkSendChannel': 'weworkAgent',
+    'bkCiInfluxdbDb':'agentMetrix'
 }
 
 if os.path.isfile('./values.json'):
@@ -55,7 +56,7 @@ include_dict = {
     '__BK_CI_RABBITMQ_PASSWORD__': '{{ include "bkci.rabbitmqPassword" . }}',
     '__BK_CI_RABBITMQ_USER__': '{{ include "bkci.rabbitmqUser" . }}',
     '__BK_CI_RABBITMQ_VHOST__': '{{ include "bkci.rabbitmqVhost" . }}',
-    '__BK_CI_INFLUXDB_HOST__': '{{ include "bkci.influxdbHost" . }}',
+    '__BK_CI_INFLUXDB_HOST__': '{{ printf "%s.%s.%s" (include "bkci.influxdbHost" .) .Release.Namespace "svc.cluster.local" | quote}}',
     '__BK_CI_INFLUXDB_PORT__': '{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
@@ -137,6 +138,8 @@ gateway_config_file.flush()
 gateway_config_file.close()
 
 # 上传chart
+if len(sys.argv) < 5:
+    exit(0)
 charts_version = sys.argv[3]
 app_version = sys.argv[4]
 os.system("helm package helm-charts --version " + charts_version + " --app-version "+app_version)
