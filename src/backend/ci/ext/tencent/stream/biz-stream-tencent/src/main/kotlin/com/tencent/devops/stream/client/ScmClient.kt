@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.client
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.stream.pojo.GitRepositoryConf
@@ -56,6 +57,7 @@ class ScmClient @Autowired constructor(
         commitId: String,
         description: String,
         mergeRequestId: Long,
+        pipelineId: String,
         buildId: String,
         userId: String,
         status: GitCICommitCheckState,
@@ -66,7 +68,6 @@ class ScmClient @Autowired constructor(
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
 
         val token = getAccessToken(gitProjectConf.gitProjectId).first
-        val buildNum = getBuildNum(gitProjectConf.projectCode.toString(), buildId)
         val request = CommitCheckRequest(
             projectName = gitProjectConf.gitProjectId.toString(),
             url = gitProjectConf.gitHttpUrl,
@@ -77,7 +78,12 @@ class ScmClient @Autowired constructor(
             region = null,
             commitId = commitId,
             state = status.value,
-            targetUrl = gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
+            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = gitProjectConf.gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            ),
             context = context,
             description = description,
             block = false,
@@ -138,17 +144,6 @@ class ScmClient @Autowired constructor(
         val gitOauthData = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data
             ?: throw RuntimeException("cannot found oauth access token for user($gitProjectId)")
         return gitOauthData.accessToken to null
-    }
-
-    private fun getBuildNum(projectCode: String, buildId: String): String {
-        val buildHistoryList = client.get(ServiceBuildResource::class)
-            .getBatchBuildStatus(projectCode, Collections.singleton(buildId), ChannelCode.GIT).data
-        return if (null == buildHistoryList || buildHistoryList.isEmpty()) {
-            logger.info("Get branch build history list return empty, gitProjectId: $projectCode")
-            ""
-        } else {
-            buildHistoryList[0].buildNum.toString()
-        }
     }
 
     companion object {

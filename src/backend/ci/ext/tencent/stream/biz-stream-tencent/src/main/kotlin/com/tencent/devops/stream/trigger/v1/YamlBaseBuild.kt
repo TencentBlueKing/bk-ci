@@ -176,6 +176,7 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                     commitId = event.commitId,
                     description = event.description ?: "",
                     mergeRequestId = event.mergeRequestId ?: 0L,
+                    pipelineId = pipeline.pipelineId,
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,

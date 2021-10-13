@@ -489,6 +489,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     realReceivers = mutableSetOf(build.userId)
                 }
                 val request = getEmailSendRequest(
+                    gitProjectId = gitProjectId,
                     state = state,
                     receivers = realReceivers,
                     projectName = projectName,
@@ -509,11 +510,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
                 val content = getRtxCustomContent(
+                    gitProjectId = gitProjectId,
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
+                    buildId = build.id,
                     buildNum = buildNum,
                     isMr = isMr,
                     requestId = requestId,
@@ -537,11 +540,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
                 val content = getRtxCustomContent(
+                    gitProjectId = gitProjectId,
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
+                    buildId = build.id,
                     buildNum = buildNum,
                     isMr = isMr,
                     requestId = requestId,
@@ -561,6 +566,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     private fun getEmailSendRequest(
+        gitProjectId: Long,
         state: String,
         receivers: Set<String>,
         projectName: String,
@@ -590,7 +596,12 @@ class GitCIBuildFinishListener @Autowired constructor(
             "totalTime" to DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
             "trigger" to build.userId,
             "commitId" to commitId,
-            "webUrl" to "$gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName"
+            "webUrl" to GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = build.id
+            )
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateEnum.templateCode,
@@ -603,11 +614,13 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     private fun getRtxCustomContent(
+        gitProjectId: Long,
         isSuccess: Boolean,
         projectName: String,
         branchName: String,
         pipelineName: String,
         pipelineId: String,
+        buildId: String,
         buildNum: String,
         isMr: Boolean,
         requestId: String,
@@ -635,8 +648,13 @@ class GitCIBuildFinishListener @Autowired constructor(
             "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
             request +
             costTime +
-            "[View it on  工蜂内网版]" +
-            "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
+            "[View it on Stream]" +
+            GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
     }
 
     private fun sendRtxCustomNotify(
