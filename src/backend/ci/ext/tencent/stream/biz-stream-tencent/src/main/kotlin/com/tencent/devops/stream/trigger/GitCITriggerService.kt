@@ -212,7 +212,13 @@ class GitCITriggerService @Autowired constructor(
 
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         if (event is GitPushEvent || event is GitMergeRequestEvent && !isFork) {
-            pipelineDelete.checkAndDeletePipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+            pipelineDelete.checkAndDeletePipeline(
+                gitRequestEvent = gitRequestEvent,
+                event = event,
+                path2PipelineExists = path2PipelineExists,
+                gitProjectConf = gitProjectConf,
+                gitToken = gitToken
+            )
         }
         // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
         if (gitRequestEvent.isDeleteBranch()) {
