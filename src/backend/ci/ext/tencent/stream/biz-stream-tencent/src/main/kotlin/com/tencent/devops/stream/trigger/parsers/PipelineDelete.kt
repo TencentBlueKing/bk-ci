@@ -38,6 +38,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
+import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -76,7 +77,8 @@ class PipelineDelete @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitCIBasicSetting
+        gitProjectConf: GitCIBasicSetting,
+        gitToken: String
     ) {
         val deleteYamlFiles = when (event) {
             is GitPushEvent -> {
@@ -91,8 +93,8 @@ class PipelineDelete @Autowired constructor(
             is GitMergeRequestEvent -> {
                 val deleteList = mutableListOf<String>()
                 val gitMrChangeInfo = scmService.getMergeRequestChangeInfo(
-                    userId = event.user.name,
-                    token = null,
+                    userId = null,
+                    token = gitToken,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     mrId = event.object_attributes.id
                 )
@@ -108,40 +110,61 @@ class PipelineDelete @Autowired constructor(
             }
         }
 
+        // 直接删除分支
+        if (gitRequestEvent.isDeleteBranch()) {
+            val pipelines = streamPipelineBranchService.getBranchPipelines(
+                gitRequestEvent.gitProjectId,
+                gitRequestEvent.branch
+            )
+            pipelines.forEach {
+                delete(it, gitRequestEvent, null, gitProjectConf)
+            }
+            return
+        }
+
         if (deleteYamlFiles.isNullOrEmpty()) {
             return
         }
 
-        val processClient = client.get(ServicePipelineResource::class)
         deleteYamlFiles.forEach { filePath ->
             val existPipeline = path2PipelineExists[filePath] ?: return@forEach
             val pipelineId = existPipeline.pipelineId
-            // 先删除后查询的过程需要加锁
-            val redisLock = RedisLock(
-                redisOperation,
-                "STREAM_DELETE_PIPELINE_$pipelineId",
-                60L
+            delete(pipelineId, gitRequestEvent, filePath, gitProjectConf)
+        }
+    }
+
+    private fun delete(
+        pipelineId: String,
+        gitRequestEvent: GitRequestEvent,
+        filePath: String?,
+        gitProjectConf: GitCIBasicSetting
+    ) {
+        val processClient = client.get(ServicePipelineResource::class)
+        // 先删除后查询的过程需要加锁
+        val redisLock = RedisLock(
+            redisOperation,
+            "STREAM_DELETE_PIPELINE_$pipelineId",
+            60L
+        )
+        try {
+            redisLock.lock()
+            streamPipelineBranchService.deleteBranch(
+                gitRequestEvent.gitProjectId,
+                pipelineId,
+                gitRequestEvent.branch
             )
-            try {
-                redisLock.lock()
-                streamPipelineBranchService.deleteBranch(
-                    gitRequestEvent.gitProjectId,
-                    pipelineId,
-                    gitRequestEvent.branch
+            if (!streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
+                logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
+                processClient.delete(
+                    gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
+                    channelCode
                 )
-                if (!streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
-                    logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
-                    gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
-                    processClient.delete(
-                        gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
-                        channelCode
-                    )
-                    // 删除相关的构建记录
-                    gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
-                }
-            } finally {
-                redisLock.unlock()
+                // 删除相关的构建记录
+                gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
             }
+        } finally {
+            redisLock.unlock()
         }
     }
 

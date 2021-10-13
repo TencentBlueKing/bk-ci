@@ -27,14 +27,9 @@
 
 package com.tencent.devops.artifactory.mq
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -42,9 +37,7 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ALL")
 class PipelineBuildArtifactoryListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,
-    private val client: Client
+    pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     companion object {
@@ -52,65 +45,56 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
     }
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        logger.info("PipelineBuildArtifactoryListener.run, event: $event")
-        val projectId = event.projectId
-        val buildId = event.buildId
-        val pipelineId = event.pipelineId
-
-        val startTime = System.currentTimeMillis()
-        val artifactList: List<FileInfo> = try {
-            pipelineBuildArtifactoryService.getArtifactList(projectId, pipelineId, buildId)
-        } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
-            emptyList()
-        }
-        logCostCall(startTime, buildId)
-        logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
-
-        try {
-            if (artifactList.isEmpty()) {
-                return
-            }
-
-            val result = client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                artifactoryFileList = artifactList
-            )
-
-            logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
-
-            if (result.isOk() && result.data != null) {
-                pipelineBuildArtifactoryService.synArtifactoryInfo(
-                    userId = event.userId,
-                    artifactList = artifactList,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    buildNum = result.data!!.buildNum ?: 0
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
-            // rollback
-            client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                artifactoryFileList = emptyList()
-            )
-        }
-    }
-
-    fun logCostCall(startTime: Long, buildId: String) {
-        val cost = System.currentTimeMillis() - startTime
-        if (cost > 2000) {
-            logger.warn("$buildId - getArtifactList cost:$cost")
-        } else if (cost > 5000) {
-            logger.error("$buildId - getArtifactList cost:$cost")
-        }
+        return
+//        logger.info("PipelineBuildArtifactoryListener.run, event: $event")
+//        val projectId = event.projectId
+//        val buildId = event.buildId
+//        val pipelineId = event.pipelineId
+//
+//        val startTime = System.currentTimeMillis()
+//        val artifactList: List<FileInfo> = try {
+//            pipelineBuildArtifactoryService.getArtifactList(projectId, pipelineId, buildId)
+//        } catch (ignored: Throwable) {
+//            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
+//            emptyList()
+//        }
+//        logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
+//
+//        try {
+//            if (artifactList.isEmpty()) {
+//                return
+//            }
+//
+//            val result = client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
+//                userId = event.userId,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                artifactoryFileList = artifactList
+//            )
+//
+//            logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
+//
+//            if (result.isOk() && result.data != null) {
+//                pipelineBuildArtifactoryService.synArtifactoryInfo(
+//                    userId = event.userId,
+//                    artifactList = artifactList,
+//                    projectId = projectId,
+//                    pipelineId = pipelineId,
+//                    buildId = buildId,
+//                    buildNum = result.data!!.buildNum ?: 0
+//                )
+//            }
+//        } catch (e: Exception) {
+//            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
+//            // rollback
+//            client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
+//                userId = event.userId,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                artifactoryFileList = emptyList()
+//            )
+//        }
     }
 }

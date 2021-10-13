@@ -51,7 +51,8 @@ class TriggerExceptionService @Autowired constructor(
                         gitRequestEvent = requestEvent,
                         block = false,
                         state = GitCICommitCheckState.FAILURE,
-                        gitCIBasicSetting = basicSetting
+                        gitCIBasicSetting = basicSetting,
+                        description = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
                     )
                 }
             }
@@ -87,7 +88,8 @@ class TriggerExceptionService @Autowired constructor(
                     gitRequestEvent = triggerE.requestEvent,
                     block = triggerE.commitCheck.block,
                     state = triggerE.commitCheck.state,
-                    gitCIBasicSetting = triggerE.basicSetting!!
+                    gitCIBasicSetting = triggerE.basicSetting!!,
+                    description = realReasonDetail
                 )
             }
             return null
@@ -196,11 +198,13 @@ class TriggerExceptionService @Autowired constructor(
                     // todo: 未知的不是stream的错误码
                     Pair("", triggerE.errorMessage ?: "")
                 } else {
-                    Pair(error.name, if (triggerE.errorMessage.isNullOrBlank()) {
-                        error.formatErrorMessage
-                    } else {
-                        triggerE.errorMessage.format(triggerE.messageParams)
-                    })
+                    Pair(
+                        error.name, if (triggerE.errorMessage.isNullOrBlank()) {
+                            error.formatErrorMessage
+                        } else {
+                            triggerE.errorMessage.format(triggerE.messageParams)
+                        }
+                    )
                 }
             }
             else -> Pair("", "")
@@ -211,7 +215,8 @@ class TriggerExceptionService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         block: Boolean,
-        state: GitCICommitCheckState
+        state: GitCICommitCheckState,
+        description: String?
     ) {
         scmClient.pushCommitCheckWithBlock(
             commitId = gitRequestEvent.commitId,
@@ -222,7 +227,7 @@ class TriggerExceptionService @Autowired constructor(
             context = GitCITriggerService.noPipelineBuildEvent,
             gitCIBasicSetting = gitCIBasicSetting,
             jumpRequest = false,
-            description = null
+            description = description
         )
     }
 }
