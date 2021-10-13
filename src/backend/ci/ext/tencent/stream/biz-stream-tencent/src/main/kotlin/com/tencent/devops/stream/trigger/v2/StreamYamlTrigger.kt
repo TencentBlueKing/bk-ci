@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -57,9 +58,11 @@ import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.YamlCheck
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +78,8 @@ class StreamYamlTrigger @Autowired constructor(
     private val triggerMatcher: TriggerMatcher,
     private val yamlCheck: YamlCheck,
     private val yamlBuildV2: StreamYamlBuild,
-    private val tokenService: StreamGitTokenService
+    private val tokenService: StreamGitTokenService,
+    private val streamStorageBean: StreamStorageBean
 ) : YamlTriggerInterface<YamlObjects> {
 
     companion object {
@@ -95,6 +99,8 @@ class StreamYamlTrigger @Autowired constructor(
         changeSet: Set<String>?,
         forkGitProjectId: Long?
     ): Boolean {
+        val start = LocalDateTime.now().timestampmilli()
+
         if (originYaml.isNullOrBlank()) {
             return false
         }
@@ -147,6 +153,8 @@ class StreamYamlTrigger @Autowired constructor(
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         gitBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
+
+        streamStorageBean.prepareYamlTime(LocalDateTime.now().timestampmilli() - start)
 
         if (isTrigger) {
             // 正常匹配仓库操作触发
