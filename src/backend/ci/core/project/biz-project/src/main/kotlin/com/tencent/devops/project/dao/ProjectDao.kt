@@ -248,25 +248,6 @@ class ProjectDao {
         }
     }
 
-    fun updateAppName(dslContext: DSLContext, projectId: String, appName: String): Int {
-        with(TProject.T_PROJECT) {
-            return dslContext.update(this).set(CC_APP_NAME, appName).where(PROJECT_ID.eq(projectId)).execute()
-        }
-    }
-
-    fun batchUpdateAppName(dslContext: DSLContext, projects: Map<String, String>): Int {
-        with(TProject.T_PROJECT) {
-            val sets = ArrayList<UpdateConditionStep<TProjectRecord>>()
-            projects.forEach { (projectId, ccAppName) ->
-                sets.add(dslContext.update(this).set(CC_APP_NAME, ccAppName).where(PROJECT_ID.eq(projectId)))
-            }
-            if (sets.isNotEmpty()) {
-                return dslContext.batch(sets).execute().size
-            }
-            return 0
-        }
-    }
-
     fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
