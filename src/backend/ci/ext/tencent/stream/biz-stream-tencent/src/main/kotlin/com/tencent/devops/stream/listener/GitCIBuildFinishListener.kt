@@ -257,6 +257,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             commitId = commitId,
                             description = description,
                             mergeRequestId = mergeRequestId,
+                            pipelineId = pipelineId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
