@@ -85,8 +85,11 @@ class JobQuotaBusinessService @Autowired constructor(
             vmType = vmType
         )
 
-        LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
-        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+        // 如果配额没有超限，则记录一条running job
+        if (result) {
+            LOG.info("$projectId|$buildId|$vmSeqId|$executeCount|${vmType.name} >>> start add running job.")
+            runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+        }
 
         checkSystemWarn(vmType)
 
@@ -202,7 +205,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
         with(jobStatus) {
             if (runningJobCount >= jobQuota) {
-                buildLogPrinter.addRedLine(
+                buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
                             "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",

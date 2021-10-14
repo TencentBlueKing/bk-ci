@@ -23,21 +23,26 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.process.command
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+/**
+ * 引擎控制命令链
+ */
+interface CmdChain<T : CmdContext> {
 
-@Service
-class BKPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
+    /**
+     * 使用泛型的命令上下文[commandContext]执行命令
+     * [commandContext]具备传递和存储中间数据，由各部件定义
+     */
+    fun doCommand(commandContext: T) {
+        if (commandContext.cmdFlowSeq < 0) { // 校正
+            commandContext.cmdFlowSeq = 0
+        }
+        // 每次调用，都增1，走向下一条命令链
+        nextCommand(commandContext)?.doExecute(commandContext = commandContext, chain = this)
     }
+
+    fun nextCommand(commandContext: T): Cmd<T>?
 }

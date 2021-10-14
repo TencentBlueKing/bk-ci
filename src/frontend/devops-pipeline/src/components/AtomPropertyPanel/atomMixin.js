@@ -177,20 +177,30 @@ const atomMixin = {
             return path
         },
         isHidden (obj, element) {
-            const isHidden = eval(`(${obj.isHidden})`) // eslint-disable-line
+            try {
+                if (typeof obj.isHidden === 'function') {
+                    return obj.isHidden(element)
+                }
+                const isHidden = eval(`(${obj.isHidden})`) // eslint-disable-line
+            
+                if (typeof isHidden === 'function') {
+                    return isHidden(element)
+                }
 
-            if (typeof isHidden === 'function') {
-                return isHidden(element)
+                if (typeof obj.hidden === 'boolean') {
+                    return obj.hidden
+                }
+
+                return typeof isHidden === 'boolean' ? isHidden : false
+            } catch (error) {
+                console.log(element, obj, error)
+                return false
             }
-
-            if (typeof obj.hidden === 'boolean') {
-                return obj.hidden
-            }
-
-            return typeof isHidden === 'boolean' ? isHidden : false
         },
         getPlaceholder (obj, element) {
-            if (obj.getPlaceholder) {
+            if (typeof obj.getPlaceholder === 'function') {
+                return obj.getPlaceholder(element)
+            } else if (typeof obj.getPlaceholder === 'string') {
                 const getPlaceholder = eval(`(${obj.getPlaceholder})`)  // eslint-disable-line
                 if (typeof getPlaceholder === 'function') {
                     return getPlaceholder(element)
@@ -201,7 +211,8 @@ const atomMixin = {
             return obj.placeholder || ''
         },
         getComponentTips (obj, element) {
-            const tips = eval(`(${obj.tips})`) // eslint-disable-line
+            const tips = typeof obj.tips === 'string' ? eval(`(${obj.tips})`) : obj.tips // eslint-disable-line
+            
             if (typeof tips === 'function') {
                 return tips(element, urlJoin, this.handlePath)
             }

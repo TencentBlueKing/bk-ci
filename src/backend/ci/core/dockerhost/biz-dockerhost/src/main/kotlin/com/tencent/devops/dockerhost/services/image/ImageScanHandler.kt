@@ -15,6 +15,7 @@ class ImageScanHandler(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
+                    userName = userName,
                     imageTagSet = imageTagSet,
                     dockerClient = dockerClient
                 )

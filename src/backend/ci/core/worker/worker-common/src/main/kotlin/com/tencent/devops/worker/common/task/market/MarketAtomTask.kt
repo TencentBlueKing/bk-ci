@@ -333,34 +333,45 @@ open class MarketAtomTask : ITask() {
                 buildEnvs = buildEnvs,
                 postEntryParam = postEntryParam
             )
-            val errorMessage = "Fail to run the plugin"
-            when (AgentEnv.getOS()) {
-                OSType.WINDOWS -> {
-                    BatScriptUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\r\n$atomTarget\r\n",
-                        runtimeVariables = environment,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
+
+            // 运行阶段单独处理执行失败错误
+            try {
+                val errorMessage = "Fail to run the plugin"
+                when (AgentEnv.getOS()) {
+                    OSType.WINDOWS -> {
+                        BatScriptUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\r\n$atomTarget\r\n",
+                            runtimeVariables = environment,
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    OSType.LINUX, OSType.MAC_OS -> {
+                        ShellUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\n$atomTarget\n",
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            buildEnvs = buildEnvs,
+                            runtimeVariables = environment,
+                            systemEnvVariables = systemEnvVariables,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    else -> {
+                    }
                 }
-                OSType.LINUX, OSType.MAC_OS -> {
-                    ShellUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\n$atomTarget\n",
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        buildEnvs = buildEnvs,
-                        runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
-                }
-                else -> {
-                }
+            } catch (t: Throwable) {
+                logger.warn("Market atom execution exit with StackTrace:\n", t)
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "Market atom execution exit with StackTrace: ${t.message}"
+                )
             }
         } catch (e: Throwable) {
             error = e
@@ -374,7 +385,9 @@ open class MarketAtomTask : ITask() {
                         defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
                     }
                 }
-                throw TaskExecuteException(
+                throw if (error is TaskExecuteException) {
+                    error
+                } else TaskExecuteException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorMsg = defaultMessage.toString()
@@ -451,11 +464,11 @@ open class MarketAtomTask : ITask() {
 
         val atomStatus = AtomStatusEnum.getAtomStatus(atomData.atomStatus)
         if (atomStatus == AtomStatusEnum.UNDERCARRIAGED) {
-            LoggerService.addYellowLine(
+            LoggerService.addWarnLine(
                 "[警告]该插件已被下架，有可能无法正常工作！\n[WARNING]The plugin has been removed and may not work properly."
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
-            LoggerService.addYellowLine(
+            LoggerService.addWarnLine(
                 "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
                     "[WARNING]The plugin is in the transition period and may not work properly in the future."
             )
@@ -468,12 +481,12 @@ open class MarketAtomTask : ITask() {
                 val def = inputTemplate[key] as Map<String, Any>
                 val sensitiveFlag = def["isSensitive"]
                 if (sensitiveFlag != null && sensitiveFlag.toString() == "true") {
-                    LoggerService.addYellowLine("input(sensitive): (${def["label"]})$key=******")
+                    LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
                     LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
                 }
             } else {
-                LoggerService.addYellowLine("input(except): $key=$value")
+                LoggerService.addWarnLine("input(except): $key=$value")
             }
         }
         LoggerService.addFoldEndLine("-----")
@@ -573,7 +586,7 @@ open class MarketAtomTask : ITask() {
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
-            LoggerService.addYellowLine("No output")
+            LoggerService.addWarnLine("No output")
         } else {
             success = atomResult.status == "success"
 
@@ -641,7 +654,7 @@ open class MarketAtomTask : ITask() {
                         LoggerService.addNormalLine("output(normal): $key=${env[key]}")
                     }
                 } else {
-                    LoggerService.addYellowLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
                 }
             }
             LoggerService.addFoldEndLine("-----")
@@ -742,7 +755,7 @@ open class MarketAtomTask : ITask() {
                 }
             }
         } catch (e: Exception) {
-            LoggerService.addRedLine("获取输出构件[artifact]值错误：${e.message}")
+            LoggerService.addErrorLine("获取输出构件[artifact]值错误：${e.message}")
             logger.error("获取输出构件[artifact]值错误", e)
         }
         return oneArtifact
@@ -874,7 +887,7 @@ open class MarketAtomTask : ITask() {
             return file
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
-            LoggerService.addRedLine("download plugin execute file fail: ${t.message}")
+            LoggerService.addErrorLine("download plugin execute file fail: ${t.message}")
             throw TaskExecuteException(
                 errorMsg = "download plugin execute file fail",
                 errorType = ErrorType.SYSTEM,

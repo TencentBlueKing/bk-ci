@@ -25,7 +25,7 @@
                 type: Function
             },
             canManualStartup: {
-                type: Boolean,
+                type: [Boolean, Number],
                 default: true
             },
             status: {

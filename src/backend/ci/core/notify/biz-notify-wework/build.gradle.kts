@@ -24,23 +24,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.blueking.service.inner
 
-import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
-import com.tencent.devops.notify.service.WeworkService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-@Suppress("ALL")
-class WeworkServiceImpl @Autowired constructor() : WeworkService {
-
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        TODO("Not yet implemented")
-    }
-
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
-        TODO("Not yet implemented")
-    }
+dependencies {
+    implementation(project(":core:notify:api-notify"))
+    implementation(project(":core:notify:biz-notify"))
+    implementation(project(":core:notify:model-notify"))
+    implementation(project(":core:common:common-db"))
+    implementation(project(":core:common:common-notify"))
 }
