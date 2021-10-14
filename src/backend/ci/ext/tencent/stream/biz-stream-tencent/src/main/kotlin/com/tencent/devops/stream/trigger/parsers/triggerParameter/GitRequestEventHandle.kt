@@ -145,7 +145,8 @@ object GitRequestEventHandle {
     fun createScheduleTriggerEvent(
         streamTimerEvent: StreamTimerBuildEvent,
         buildBranch: String,
-        buildCommit: String
+        buildCommit: String,
+        buildCommitMessage: String
     ): GitRequestEvent {
         return GitRequestEvent(
             id = null,
@@ -157,7 +158,7 @@ object GitRequestEventHandle {
             branch = buildBranch,
             targetBranch = null,
             commitId = buildCommit,
-            commitMsg = null,
+            commitMsg = buildCommitMessage,
             commitTimeStamp = getCommitTimeStamp(null),
             userId = streamTimerEvent.userId,
             totalCommitCount = 0,

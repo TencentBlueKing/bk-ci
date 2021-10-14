@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
@@ -71,12 +72,13 @@ class ScheduleTriggerService @Autowired constructor(
     fun triggerBuild(
         streamTimerEvent: StreamTimerBuildEvent,
         buildBranch: String,
-        buildCommitId: String
+        buildCommitInfo: RevisionInfo
     ): BuildId? {
         val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(
             streamTimerEvent,
             buildBranch,
-            buildCommitId
+            buildCommitInfo.revision,
+            buildCommitInfo.updatedMessage
         )
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
@@ -173,7 +175,7 @@ class ScheduleTriggerService @Autowired constructor(
             gitProjectId = gitRequestEvent.gitProjectId,
             branch = gitRequestEvent.branch,
             objectKind = gitRequestEvent.objectKind,
-            commitMsg = null,
+            commitMsg = gitRequestEvent.commitMsg,
             triggerUser = gitRequestEvent.userId,
             sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
             buildStatus = BuildStatus.RUNNING,

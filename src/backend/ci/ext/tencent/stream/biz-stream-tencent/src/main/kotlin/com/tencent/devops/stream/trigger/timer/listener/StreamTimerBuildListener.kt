@@ -35,6 +35,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
@@ -119,16 +120,17 @@ class StreamTimerBuildListener @Autowired constructor(
             ) ?: return
 
             if (!always) {
-                branchChangeTimerTrigger(branch = branch, latestRevision = latestRevisionInfo.revision)
+                branchChangeTimerTrigger(branch = branch, latestRevisionInfo = latestRevisionInfo)
             } else {
-                scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo.revision)
+                scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             }
         } catch (ignored: Throwable) {
             logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail| error=${ignored.message}")
         }
     }
 
-    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevision: String) {
+    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevisionInfo: RevisionInfo) {
+        val latestRevision = latestRevisionInfo.revision
         val timerBranch = streamTimerBranchService.get(
             pipelineId = pipelineId,
             gitProjectId = gitProjectId,
@@ -136,7 +138,7 @@ class StreamTimerBuildListener @Autowired constructor(
         )
         if ((timerBranch == null || timerBranch.revision != latestRevision)
         ) {
-            val buildId = scheduleTriggerService.triggerBuild(this, branch, latestRevision)
+            val buildId = scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             logger.info(
                 "[$pipelineId]|branch:$branch|revision:$latestRevision|TimerTrigger start| buildId=${buildId?.id}"
             )
