@@ -27,10 +27,18 @@
 
 package com.tencent.devops.process.pojo.template
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("")
 data class TemplateOperationMessage constructor(
+    @ApiModelProperty("成功的流水线", required = false)
     val successPipelines: List<String>,
+    @ApiModelProperty("失败的流水线", required = false)
     val failurePipelines: List<String>,
+    @ApiModelProperty("失败信息", required = false)
     val failureMessages: Map<String/*PipelineName*/, String/*Message*/>,
+    @ApiModelProperty("成功的流水线id", required = false)
     val successPipelinesId: List<String>
 ) {
     constructor(
