@@ -55,7 +55,7 @@ class YamlTemplateTest {
     @Test
     fun testUserTemplate() {
         replace("user.yml")
-        replace("steps.yml")
+        replace("steps1.yml")
         replace("jobs.yml")
         replace("stages.yml")
     }
