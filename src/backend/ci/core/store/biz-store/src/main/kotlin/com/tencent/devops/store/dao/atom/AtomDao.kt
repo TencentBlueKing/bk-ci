@@ -498,6 +498,7 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
@@ -517,7 +518,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions =
             queryNormalAtomCondition(
@@ -533,7 +535,8 @@ class AtomDao : AtomBaseDao() {
                 classifyId = classifyId,
                 recommendFlag = recommendFlag,
                 keyword = keyword,
-                fitOsFlag = fitOsFlag
+                fitOsFlag = fitOsFlag,
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
             ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
@@ -554,7 +557,8 @@ class AtomDao : AtomBaseDao() {
                     classifyId = classifyId,
                     recommendFlag = recommendFlag,
                     keyword = keyword,
-                    fitOsFlag = fitOsFlag
+                    fitOsFlag = fitOsFlag,
+                    queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
                 ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(
@@ -657,7 +661,8 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        fitOsFlag: Boolean?
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
     ): Long {
         val ta = TAtom.T_ATOM.`as`("ta")
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
@@ -674,7 +679,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         ) // 默认插件查询条件组装
         val normalAtomConditions = queryNormalAtomCondition(
             ta = ta,
@@ -689,7 +695,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
@@ -709,7 +716,8 @@ class AtomDao : AtomBaseDao() {
                 classifyId = classifyId,
                 recommendFlag = recommendFlag,
                 keyword = keyword,
-                fitOsFlag = fitOsFlag
+                fitOsFlag = fitOsFlag,
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
             ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(ta.ATOM_CODE.notIn(dslContext.select(ta.ATOM_CODE)
@@ -760,7 +768,8 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        fitOsFlag: Boolean?
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -773,7 +782,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
@@ -792,7 +802,8 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        fitOsFlag: Boolean?
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!serviceScope.isNullOrBlank() && !KEY_ALL.equals(serviceScope, true)) {
@@ -800,7 +811,7 @@ class AtomDao : AtomBaseDao() {
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
         if (!jobType.isNullOrBlank()) {
-            if (jobType == JobTypeEnum.AGENT.name) {
+            if (jobType == JobTypeEnum.AGENT.name && queryFitAgentBuildLessAtomFlag != false) {
                 conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             } else {
                 conditions.add(ta.JOB_TYPE.eq(jobType))
@@ -808,8 +819,9 @@ class AtomDao : AtomBaseDao() {
         }
         if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
             if (fitOsFlag == false) {
-                conditions.add(ta.OS.notLike("%$os%")
+                conditions.add((ta.OS.notLike("%$os%")
                     .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
+                    .or(ta.CATEGROY.eq(AtomCategoryEnum.TRIGGER.category.toByte())))
             } else {
                 conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             }
@@ -821,7 +833,11 @@ class AtomDao : AtomBaseDao() {
         if (null != category) conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
         if (!classifyId.isNullOrBlank()) conditions.add(ta.CLASSIFY_ID.eq(classifyId))
         if (null != recommendFlag) {
-            conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
+            if (recommendFlag) {
+                conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag).or(taf.RECOMMEND_FLAG.isNull))
+            } else {
+                conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
+            }
         }
         if (!keyword.isNullOrEmpty()) {
             conditions.add(ta.NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
@@ -844,7 +860,8 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        fitOsFlag: Boolean?
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -857,7 +874,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(false)) // 查普通插件
@@ -882,7 +900,8 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?,
         recommendFlag: Boolean?,
         keyword: String?,
-        fitOsFlag: Boolean?
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -895,7 +914,8 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId,
             recommendFlag = recommendFlag,
             keyword = keyword,
-            fitOsFlag = fitOsFlag
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
         conditions.add(ta.ATOM_STATUS.`in`(listOf(
             AtomStatusEnum.TESTING.status.toByte(),
