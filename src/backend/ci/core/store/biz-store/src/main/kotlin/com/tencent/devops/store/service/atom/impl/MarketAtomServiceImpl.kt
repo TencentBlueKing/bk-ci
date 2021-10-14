@@ -687,7 +687,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         StoreTypeEnum.ATOM
                     ),
                     initProjectCode = projectCode,
-                    labelList = labelList,
+                    labelList = labelList ?: emptyList(),
                     pkgName = atomEnvInfoRecord?.pkgName,
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
