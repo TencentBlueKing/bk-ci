@@ -23,18 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.auth.service
 
-object GitCIPipelineUtils {
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
-
-    fun genGitCIV2BuildUrl(homePage: String, gitProjectId: Long, pipelineId: String, buildId: String) =
-        "$homePage/pipeline/$pipelineId/detail/$buildId/#$gitProjectId"
-
-    fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
+@Service
+class BkPermissionGraderServiceImpl @Autowired constructor(
+    override val iamManagerService: ManagerService
+) : AbsPermissionGradeServiceImpl(iamManagerService) {
+    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+        super.checkGradeManagerUser(userId, projectId)
+    }
 }

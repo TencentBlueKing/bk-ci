@@ -169,15 +169,15 @@ object GitRequestEventHandle {
         )
     }
 
-    private fun getLatestCommit(commitId: String?, commits: List<GitCommit>): GitCommit? {
+    private fun getLatestCommit(commitId: String?, commits: List<GitCommit>?): GitCommit? {
         if (commitId == null) {
-            if (commits.isEmpty()) {
-                return null
+            return if (commits.isNullOrEmpty()) {
+                null
             } else {
-                return commits.last()
+                commits.last()
             }
         }
-        commits.forEach {
+        commits?.forEach {
             if (it.id == commitId) {
                 return it
             }

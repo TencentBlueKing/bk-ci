@@ -26,7 +26,8 @@ object SendRtx {
         gitUrl: String,
         v2GitUrl: String,
         content: String?,
-        messageType: MessageType = MessageType.MARKDOWN
+        messageType: MessageType = MessageType.MARKDOWN,
+        gitProjectId: Long
     ) {
         val realContent = if (content.isNullOrBlank()) {
             getRtxCustomContent(
@@ -41,12 +42,13 @@ object SendRtx {
                 openUser = openUser,
                 buildTime = buildTime,
                 gitUrl = gitUrl,
-                v2GitUrl = v2GitUrl
+                v2GitUrl = v2GitUrl,
+                gitProjectId = gitProjectId
             )
         } else {
             getRtxCustomUserContent(
                 isSuccess = isSuccess,
-                projectName = projectName,
+                gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 build = build,
                 content = content,
@@ -69,7 +71,7 @@ object SendRtx {
     // 为用户的内容增加链接
     private fun getRtxCustomUserContent(
         isSuccess: Boolean,
-        projectName: String,
+        gitProjectId: Long,
         pipelineId: String,
         build: BuildHistory,
         content: String,
@@ -82,7 +84,7 @@ object SendRtx {
         }
         val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
             homePage = v2GitUrl,
-            projectName = projectName,
+            gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = build.id
         )
@@ -101,7 +103,8 @@ object SendRtx {
         openUser: String,
         buildTime: Long?,
         gitUrl: String,
-        v2GitUrl: String
+        v2GitUrl: String,
+        gitProjectId: Long
     ): String {
         val state = if (isSuccess) {
             Triple("✔", "info", "success")
@@ -128,7 +131,7 @@ object SendRtx {
                 "(${
                     GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = v2GitUrl,
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipelineId,
                         buildId = build.id
                     )

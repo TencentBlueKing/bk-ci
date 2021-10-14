@@ -55,7 +55,7 @@ class StreamQualityService {
 
     fun getQualityGitMrResult(
         client: Client,
-        projectName: String,
+        gitProjectId: Long,
         pipelineName: String,
         event: PipelineBuildFinishBroadCastEvent
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
@@ -71,7 +71,7 @@ class StreamQualityService {
                 pipelineName,
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = projectName,
+                    gitProjectId = gitProjectId,
                     pipelineId = pipelineId,
                     buildId = buildId
                 ),

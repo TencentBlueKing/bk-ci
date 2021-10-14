@@ -46,7 +46,6 @@ import com.tencent.devops.stream.pojo.v2.StreamBuildInfo
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -208,7 +207,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     gitCIBasicSetting = gitCIBasicSetting,
                     targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = streamGitConfig.tGitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                        projectName = GitCommonUtils.getRepoName(gitCIBasicSetting.gitHttpUrl, gitCIBasicSetting.name),
+                        gitProjectId = gitCIBasicSetting.gitProjectId,
                         pipelineId = pipeline.pipelineId,
                         buildId = buildId
                     ),

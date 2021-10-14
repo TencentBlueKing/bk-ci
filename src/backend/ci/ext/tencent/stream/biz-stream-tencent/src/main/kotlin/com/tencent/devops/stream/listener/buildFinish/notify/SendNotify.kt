@@ -132,7 +132,8 @@ class SendNotify @Autowired constructor(
                     title = title,
                     content = content,
                     ccs = ccs,
-                    v2GitUrl = config.v2GitUrl!!
+                    v2GitUrl = config.v2GitUrl!!,
+                    gitProjectId = context.requestEvent.gitProjectId
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -160,7 +161,8 @@ class SendNotify @Autowired constructor(
                     buildTime = build.totalTime,
                     gitUrl = config.gitUrl!!,
                     v2GitUrl = config.v2GitUrl!!,
-                    content = content
+                    content = content,
+                    gitProjectId = context.requestEvent.gitProjectId
                 )
             }
             else -> {

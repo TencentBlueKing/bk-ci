@@ -22,7 +22,8 @@ object SendEmail {
         pipelineId: String,
         title: String?,
         content: String?,
-        v2GitUrl: String
+        v2GitUrl: String,
+        gitProjectId: Long
     ): SendNotifyMessageTemplateRequest {
         val isSuccess = state == "success"
         val titleParams = mapOf(
@@ -51,7 +52,7 @@ object SendEmail {
                     commitId = commitId,
                     webUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = v2GitUrl,
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipelineId,
                         buildId = build.id
                     )

@@ -23,21 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.stream.pojo
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class BKPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
-    }
-}
+@ApiModel("手动触发返回结果")
+data class TriggerBuildResult(
+    @ApiModelProperty("工蜂项目ID")
+    val projectId: Long,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String?,
+    @ApiModelProperty("描述")
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null,
+    @ApiModelProperty("触发的构建ID")
+    val buildId: String,
+    @ApiModelProperty("触发的构建详情页")
+    val buildUrl: String
+)

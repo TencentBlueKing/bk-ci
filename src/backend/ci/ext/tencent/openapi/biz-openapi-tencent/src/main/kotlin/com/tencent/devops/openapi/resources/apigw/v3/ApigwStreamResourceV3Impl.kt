@@ -17,6 +17,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -31,7 +32,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         gitProjectId: String,
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
-    ): Result<Boolean> {
+    ): Result<TriggerBuildResult> {
         return client.get(ServiceStreamTriggerResource::class).triggerStartup(
             userId = userId,
             projectId = "git_$gitProjectId",

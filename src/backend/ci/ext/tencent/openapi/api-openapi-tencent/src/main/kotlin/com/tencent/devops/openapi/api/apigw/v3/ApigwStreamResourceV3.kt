@@ -13,6 +13,7 @@ import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -53,7 +54,7 @@ interface ApigwStreamResourceV3 {
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
-    ): Result<Boolean>
+    ): Result<TriggerBuildResult>
 
     @ApiOperation("工蜂project转换为streamProject")
     @GET

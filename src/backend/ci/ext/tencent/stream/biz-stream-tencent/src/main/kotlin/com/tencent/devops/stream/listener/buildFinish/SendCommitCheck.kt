@@ -94,13 +94,13 @@ class SendCommitCheck @Autowired constructor(
                 block = requestEvent.isMr() && !buildStatus.isSuccess() && streamSetting.enableMrBlock,
                 reportData = streamQualityService.getQualityGitMrResult(
                     client = client,
-                    projectName = GitCommonUtils.getRepoName(streamSetting.gitHttpUrl, streamSetting.name),
+                    gitProjectId = streamSetting.gitProjectId,
                     pipelineName = pipeline.displayName,
                     event = buildFinishEvent
                 ),
                 targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = GitCommonUtils.getRepoName(streamSetting.gitHttpUrl, streamSetting.name),
+                    gitProjectId = streamSetting.gitProjectId,
                     pipelineId = pipeline.pipelineId,
                     buildId = buildFinishEvent.buildId
                 )
@@ -131,6 +131,7 @@ class SendCommitCheck @Autowired constructor(
                 commitId = requestEvent.commitId,
                 description = requestEvent.commitMsg ?: "",
                 mergeRequestId = requestEvent.mergeRequestId ?: 0L,
+                pipelineId = pipeline.pipelineId,
                 buildId = buildFinishEvent.buildId,
                 userId = buildFinishEvent.userId,
                 status = getGitCommitCheckState(),
