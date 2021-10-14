@@ -27,6 +27,11 @@
 
 package com.tencent.devops.process.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("远程执行token")
 data class PipelineRemoteToken(
+    @ApiModelProperty("token字符串", required = false)
     val token: String
 )
