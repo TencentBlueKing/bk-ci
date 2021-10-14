@@ -124,7 +124,7 @@ influxdb:
   influxdb:
     initdbScripts: 
       creata_db.sh: |
-        echo "create database agentMetrix" > influx --username $INFLUXDB_ADMIN_USER --password $INFLUXDB_ADMIN_USER_PASSWORD;
+        influx -host 127.0.0.1 -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
