@@ -38,9 +38,8 @@ class JerseyFeignRequestRegistrar(
     override fun registerBeanDefinitions(importingClassMetadata: AnnotationMetadata, registry: BeanDefinitionRegistry) {
         // 定义class扫描器
         val scanner = getScanner()
-        // 指定只扫描标注了Api的接口
-        val annotationTypeFilter = AnnotationTypeFilter(Path::class.java)
-        scanner.addIncludeFilter(annotationTypeFilter)
+        // 指定只扫描标注了Path的接口
+        scanner.addIncludeFilter(AnnotationTypeFilter(Path::class.java))
         // 获取devops包下符合条件的类的定义
         val candidateComponents = scanner.findCandidateComponents(DEVOPS_BASE_PACKAGE)
         for (candicateComponent in candidateComponents) {

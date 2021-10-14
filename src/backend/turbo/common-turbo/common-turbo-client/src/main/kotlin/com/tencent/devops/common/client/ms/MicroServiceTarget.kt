@@ -5,6 +5,7 @@ import feign.Request
 import feign.RequestTemplate
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
 
 class MicroServiceTarget<T> constructor(
@@ -26,16 +27,16 @@ class MicroServiceTarget<T> constructor(
         if (instances.isEmpty()) {
             throw ClientException("找不到任何有效的[$serviceName]服务提供者")
         }
-
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         instances.forEach { serviceInstance ->
             if (serviceInstance.metadata.isEmpty())
                 return@forEach
-            if (serviceInstance.metadata.values.contains(tag)) {
-                // 已经用过的不选择
-                if (!usedInstance.contains(serviceInstance.url())) {
-                    matchTagInstances.add(serviceInstance)
+            if (serviceInstance is ConsulServiceInstance) {
+                if (serviceInstance.tags.contains(tag)) {
+                    if (!usedInstance.contains(serviceInstance.url())) {
+                        matchTagInstances.add(serviceInstance)
+                    }
                 }
             }
         }
