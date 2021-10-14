@@ -229,7 +229,7 @@ func LoadAgentConfig() error {
 	}
 	timeout, err := conf.Int64(ConfigKeyRequestTimeoutSec)
 	if err != nil {
-		timeout = 30
+		timeout = 5
 	}
 
 	GAgentConfig.Gateway = landunGateway
