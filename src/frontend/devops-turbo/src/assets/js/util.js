@@ -1,6 +1,6 @@
 import { bkMessage } from 'bk-magic-vue'
 
-module.exports = {
+export default {
     copy (value, $t) {
         const input = document.createElement('input')
         document.body.appendChild(input)
