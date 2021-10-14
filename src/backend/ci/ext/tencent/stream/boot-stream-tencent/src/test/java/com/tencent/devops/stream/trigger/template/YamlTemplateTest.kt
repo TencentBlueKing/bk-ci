@@ -52,6 +52,14 @@ class YamlTemplateTest {
         replace("extends.yml")
     }
 
+    @Test
+    fun testUserTemplate() {
+        replace("user.yml")
+        replace("steps.yml")
+        replace("jobs.yml")
+        replace("stages.yml")
+    }
+
     private fun replace(testYaml: String) {
         val classPathResource = ClassPathResource(testYaml)
         val inputStream: InputStream = classPathResource.inputStream

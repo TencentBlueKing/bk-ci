@@ -50,6 +50,7 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.stream.trigger.template.pojo.TemplateDeepTreeNode
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -68,21 +69,24 @@ class YamlTemplate(
     // 添加图防止远程库之间循环依赖
     val repoTemplateGraph: TemplateGraph<String>,
 
-    // 来自文件
-    val fileFromPath: String? = null,
     // 当前文件
     var filePath: String,
     // 文件对象
     var yamlObject: PreTemplateScriptBuildYaml?,
     // 当前库信息(发起库没有库信息)
     val repo: Repositories?,
-    // 远程模板类型(用来校验远程打平的模板的格式)
-    val resTemplateType: TemplateType? = null,
 
-    // 每个文件使用的模板个数（不能超过10）
-    val templateNumb: MutableMap<String, Int> = mutableMapOf(),
-    // 嵌套的总模板深度（不能超过5）
-    var templateDeep: Int = 0,
+    // 来自文件
+    private val fileFromPath: String? = null,
+
+    // 远程模板类型(用来校验远程打平的模板的格式)
+    private val resTemplateType: TemplateType? = null,
+
+    private val rootDeepTree: TemplateDeepTreeNode = TemplateDeepTreeNode(
+        path = filePath,
+        parent = null,
+        children = mutableListOf()
+    ),
 
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
@@ -190,22 +194,22 @@ class YamlTemplate(
         }
 
         if (newYamlObject.extends != null) {
-            replaceExtends(newYamlObject.extends!!, preYamlObject)
+            replaceExtends(newYamlObject.extends!!, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.variables != null) {
-            replaceVariables(newYamlObject.variables!!, preYamlObject)
+            replaceVariables(newYamlObject.variables!!, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.stages != null) {
-            replaceStages(newYamlObject.stages!!, preYamlObject)
+            replaceStages(newYamlObject.stages!!, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.jobs != null) {
-            replaceJobs(newYamlObject.jobs!!, preYamlObject)
+            replaceJobs(newYamlObject.jobs!!, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.steps != null) {
-            replaceSteps(newYamlObject.steps!!, preYamlObject)
+            replaceSteps(newYamlObject.steps!!, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.finally != null) {
-            replaceFinally(newYamlObject.finally!!, preYamlObject)
+            replaceFinally(newYamlObject.finally!!, preYamlObject, rootDeepTree)
         }
 
         return preYamlObject
@@ -213,45 +217,49 @@ class YamlTemplate(
 
     private fun replaceExtends(
         extend: Extends,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
-        // extend引用深度增加
-        addAndCheckTemplateDeep()
         val toPath = extend.template
         val parameters = extend.parameters
         // 根据远程模板获取
-        val templateObject = replaceResAndParam(TemplateType.EXTEND, toPath, parameters, filePath)
+        val templateObject = replaceResAndParam(TemplateType.EXTEND, toPath, parameters, filePath, deepTree)
         // 获取extends模板后filePath就为被替换的文件了
         this.filePath = toPath
         // 需要替换模板的的递归替换
         if (templateObject[TemplateType.VARIABLE.content] != null) {
             replaceVariables(
                 transValue(filePath, TemplateType.VARIABLE.text, templateObject[TemplateType.VARIABLE.content]),
-                preYamlObject
+                preYamlObject,
+                deepTree
             )
         }
         if (templateObject[TemplateType.STAGE.content] != null) {
             replaceStages(
                 transValue(filePath, TemplateType.STAGE.text, templateObject[TemplateType.STAGE.content]),
-                preYamlObject
+                preYamlObject,
+                deepTree
             )
         }
         if (templateObject[TemplateType.JOB.content] != null) {
             replaceJobs(
                 transValue(filePath, TemplateType.JOB.text, templateObject[TemplateType.JOB.content]),
-                preYamlObject
+                preYamlObject,
+                deepTree
             )
         }
         if (templateObject[TemplateType.STEP.content] != null) {
             replaceSteps(
                 transValue(filePath, TemplateType.STEP.text, templateObject[TemplateType.STEP.content]),
-                preYamlObject
+                preYamlObject,
+                deepTree
             )
         }
         if (templateObject[TemplateType.FINALLY.content] != null) {
             replaceFinally(
                 transValue(filePath, TemplateType.FINALLY.text, templateObject[TemplateType.FINALLY.content]),
-                preYamlObject
+                preYamlObject,
+                deepTree
             )
         }
         // 将不用替换的直接传入
@@ -267,82 +275,76 @@ class YamlTemplate(
 
     private fun replaceVariables(
         variables: Map<String, Any>,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
-            val newVariable = replaceVariableTemplate(mapOf(key to value), filePath)
+            val newVariable = replaceVariableTemplate(mapOf(key to value), filePath, deepTree)
             if (key == TEMPLATE_KEY) {
                 // 通过取交集判断除template关键字之外的ID是否重复
                 checkDuplicateKey(filePath = filePath, keys = variables.keys, newKeys = newVariable.keys)
             }
             variableMap.putAll(newVariable)
-
-            // 每个参数独立计算模板深度
-            refreshTemplateDeep()
         }
         preYamlObject.variables = variableMap
     }
 
     private fun replaceStages(
         stages: List<Map<String, Any>>,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
         val stageList = mutableListOf<PreStage>()
         stages.forEach { stage ->
-            stageList.addAll(replaceStageTemplate(listOf(stage), filePath))
-            // 每个参数独立计算模板深度
-            refreshTemplateDeep()
+            stageList.addAll(replaceStageTemplate(listOf(stage), filePath, deepTree))
         }
         preYamlObject.stages = stageList
     }
 
     private fun replaceJobs(
         jobs: Map<String, Any>,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
         val jobMap = mutableMapOf<String, PreJob>()
         jobs.forEach { (key, value) ->
             // 检查根文件处job_id重复
-            val newJob = replaceJobTemplate(mapOf(key to value), filePath)
+            val newJob = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
             if (key == TEMPLATE_KEY) {
                 checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
             }
             jobMap.putAll(newJob)
-            // 每个参数独立计算模板深度
-            refreshTemplateDeep()
         }
         preYamlObject.jobs = jobMap
     }
 
     private fun replaceSteps(
         steps: List<Map<String, Any>>,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
         val stepList = mutableListOf<Step>()
         steps.forEach { step ->
-            stepList.addAll(replaceStepTemplate(listOf(step), filePath))
-            // 每个参数独立计算模板深度
-            refreshTemplateDeep()
+            stepList.addAll(replaceStepTemplate(listOf(step), filePath, deepTree))
         }
         preYamlObject.steps = stepList
     }
 
     private fun replaceFinally(
         finally: Map<String, Any>,
-        preYamlObject: PreScriptBuildYaml
+        preYamlObject: PreScriptBuildYaml,
+        deepTree: TemplateDeepTreeNode
     ) {
         // finally: 与jobs: 的结构相同
         val finallyMap = mutableMapOf<String, PreJob>()
         finally.forEach { (key, value) ->
             // 检查根文件处job_id重复
-            val newFinally = replaceJobTemplate(mapOf(key to value), filePath)
+            val newFinally = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
             if (key == TEMPLATE_KEY) {
                 checkDuplicateKey(filePath = filePath, keys = finally.keys, newKeys = newFinally.keys)
             }
             finallyMap.putAll(newFinally)
-            // 每个参数独立计算模板深度
-            refreshTemplateDeep()
         }
         preYamlObject.finally = finallyMap
     }
@@ -381,19 +383,13 @@ class YamlTemplate(
     // 进行模板替换
     private fun replaceVariableTemplate(
         variables: Map<String, Any>,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): Map<String, Variable> {
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
             // 如果是模板文件则进行模板替换
-            // 每一层只进行一次深度统计
-            val deepFlag = false
             if (key == TEMPLATE_KEY) {
-                if (!deepFlag) {
-                    addAndCheckTemplateDeep()
-                }
-                // 每个文件做数量统计
-                addAndCheckTemplateNumb(fromPath)
                 val toPathList = transValue<List<Map<String, Any>>>(fromPath, TemplateType.VARIABLE.text, value)
                 toPathList.forEach { item ->
                     val toPath = item[OBJECT_TEMPLATE_PATH].toString()
@@ -407,13 +403,17 @@ class YamlTemplate(
                         map = item
                     )
                     // 对模板文件进行远程库和参数替换，并实例化
-                    val templateObject = replaceResAndParam(TemplateType.VARIABLE, toPath, parameters, fromPath)
+                    val templateObject = replaceResAndParam(
+                        TemplateType.VARIABLE, toPath, parameters, fromPath,
+                        deepTree
+                    )
                     // 判断实例化后的模板文件中是否引用了模板文件，如果有，则递归替换
                     val newVar = replaceVariableTemplate(
                         variables = transValue(
                             toPath, TemplateType.VARIABLE.text, templateObject[TemplateType.VARIABLE.content]
                         ),
-                        fromPath = toPath
+                        fromPath = toPath,
+                        deepTree = deepTree.add(toPath)
                     )
                     // 检测variable是否存在重复的key
                     checkDuplicateKey(
@@ -438,18 +438,12 @@ class YamlTemplate(
 
     private fun replaceStageTemplate(
         stages: List<Map<String, Any>>,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): List<PreStage> {
         val stageList = mutableListOf<PreStage>()
         stages.forEach { stage ->
-            // 每一层只进行一次深度统计
-            val deepFlag = false
             if (TEMPLATE_KEY in stage.keys) {
-                if (!deepFlag) {
-                    addAndCheckTemplateDeep()
-                }
-                // 每个文件做数量统计
-                addAndCheckTemplateNumb(fromPath)
                 val toPath = stage[TEMPLATE_KEY].toString()
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STAGE)
 
@@ -460,7 +454,7 @@ class YamlTemplate(
                     map = stage
                 )
                 // 对模板文件进行远程库和参数替换，并实例化
-                val templateObject = replaceResAndParam(TemplateType.STAGE, toPath, parameters, fromPath)
+                val templateObject = replaceResAndParam(TemplateType.STAGE, toPath, parameters, fromPath, deepTree)
                 stageList.addAll(
                     replaceStageTemplate(
                         stages = transValue(
@@ -468,11 +462,12 @@ class YamlTemplate(
                             TemplateType.STAGE.text,
                             templateObject[TemplateType.STAGE.content]
                         ),
-                        fromPath = toPath
+                        fromPath = toPath,
+                        deepTree = deepTree.add(toPath)
                     )
                 )
             } else {
-                stageList.add(getStage(fromPath, stage))
+                stageList.add(getStage(fromPath, stage, deepTree))
             }
         }
         return stageList
@@ -480,18 +475,12 @@ class YamlTemplate(
 
     private fun replaceJobTemplate(
         jobs: Map<String, Any>,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): Map<String, PreJob> {
         val jobMap = mutableMapOf<String, PreJob>()
         jobs.forEach { (key, value) ->
-            // 每一层只进行一次深度统计
-            val deepFlag = false
             if (key == TEMPLATE_KEY) {
-                if (!deepFlag) {
-                    addAndCheckTemplateDeep()
-                }
-                // 每个文件做数量统计
-                addAndCheckTemplateNumb(fromPath)
                 val toPathList = transValue<List<Map<String, Any>>>(fromPath, TemplateType.JOB.text, value)
                 toPathList.forEach { item ->
                     val toPath = item[OBJECT_TEMPLATE_PATH].toString()
@@ -505,13 +494,14 @@ class YamlTemplate(
                     )
 
                     // 对模板文件进行远程库和参数替换，并实例化
-                    val templateObject = replaceResAndParam(TemplateType.JOB, toPath, parameters, fromPath)
+                    val templateObject = replaceResAndParam(TemplateType.JOB, toPath, parameters, fromPath, deepTree)
 
                     val newJob = replaceJobTemplate(
                         jobs = transValue(
                             toPath, TemplateType.JOB.text, templateObject[TemplateType.JOB.content]
                         ),
-                        fromPath = toPath
+                        fromPath = toPath,
+                        deepTree = deepTree.add(toPath)
                     )
                     // 检测job是否存在重复的key
                     checkDuplicateKey(
@@ -523,7 +513,7 @@ class YamlTemplate(
                     jobMap.putAll(newJob)
                 }
             } else {
-                jobMap[key] = getJob(fromPath, transValue(fromPath, TemplateType.JOB.text, value))
+                jobMap[key] = getJob(fromPath, transValue(fromPath, TemplateType.JOB.text, value), deepTree)
             }
         }
         return jobMap
@@ -531,19 +521,14 @@ class YamlTemplate(
 
     private fun replaceStepTemplate(
         steps: List<Map<String, Any>>,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): List<Step> {
         val stepList = mutableListOf<Step>()
         steps.forEach { step ->
-            // 每一层只进行一次深度统计
-            val deepFlag = false
             if (TEMPLATE_KEY in step.keys) {
-                if (!deepFlag) {
-                    addAndCheckTemplateDeep()
-                }
-                // 每个文件做数量统计
-                addAndCheckTemplateNumb(fromPath)
                 val toPath = step[TEMPLATE_KEY].toString()
+
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STEP)
 
                 val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
@@ -554,7 +539,7 @@ class YamlTemplate(
                 )
 
                 // 对模板文件进行远程库和参数替换，并实例化
-                val templateObject = replaceResAndParam(TemplateType.STEP, toPath, parameters, fromPath)
+                val templateObject = replaceResAndParam(TemplateType.STEP, toPath, parameters, fromPath, deepTree)
 
                 stepList.addAll(
                     replaceStepTemplate(
@@ -563,7 +548,8 @@ class YamlTemplate(
                             TemplateType.STEP.text,
                             templateObject[TemplateType.STEP.content]
                         ),
-                        fromPath = toPath
+                        fromPath = toPath,
+                        deepTree = deepTree.add(toPath)
                     )
                 )
             } else {
@@ -577,7 +563,8 @@ class YamlTemplate(
     private fun replaceStageCheckTemplate(
         stageName: String,
         check: Map<String, Any>?,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): PreStageCheck? {
         if (check == null) {
             return null
@@ -605,7 +592,8 @@ class YamlTemplate(
                 templateType = TemplateType.GATE,
                 toPath = toPath,
                 parameters = gate.parameters,
-                fromPath = fromPath
+                fromPath = fromPath,
+                deepTree = deepTree
             )
             val gateTemplate = YamlObjects.getObjectFromYaml<GateTemplate>(toPath, YamlUtil.toYaml(templateObject))
             gateList.addAll(
@@ -632,7 +620,8 @@ class YamlTemplate(
         templateType: TemplateType,
         toPath: String,
         parameters: Map<String, Any?>?,
-        fromPath: String
+        fromPath: String,
+        deepTree: TemplateDeepTreeNode
     ): Map<String, Any> {
         // 判断是否为远程库，如果是远程库将其远程库文件打平进行替换
         var newTemplate =
@@ -657,7 +646,8 @@ class YamlTemplate(
                             fromPath,
                             toPath.split(FILE_REPO_SPLIT)[1],
                             templateType = templateType
-                        )
+                        ),
+                        deepTree = deepTree
                     )
                 }
             } else {
@@ -695,7 +685,8 @@ class YamlTemplate(
         templateType: TemplateType,
         toPath: String,
         parameters: Map<String, Any?>?,
-        toRepo: Repositories
+        toRepo: Repositories,
+        deepTree: TemplateDeepTreeNode
     ): String {
         // 判断是否有库之间的循环依赖
         repoTemplateGraph.addEdge(repo?.name ?: filePath, toRepo.name)
@@ -716,7 +707,7 @@ class YamlTemplate(
             changeSet = changeSet,
             repo = toRepo,
             repoTemplateGraph = repoTemplateGraph,
-            templateDeep = templateDeep,
+            rootDeepTree = deepTree,
             resTemplateType = templateType,
             getTemplateMethod = getTemplateMethod,
             event = event
@@ -816,7 +807,7 @@ class YamlTemplate(
     }
 
     // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
-    private fun getJob(fromPath: String, job: Map<String, Any>): PreJob {
+    private fun getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
         return PreJob(
             name = job["name"]?.toString(),
             runsOn = job["runs-on"],
@@ -837,7 +828,7 @@ class YamlTemplate(
                 val steps = transValue<List<Map<String, Any>>>(fromPath, TemplateType.STEP.text, job["steps"])
                 val list = mutableListOf<Step>()
                 steps.forEach {
-                    list.addAll(replaceStepTemplate(listOf(it), filePath))
+                    list.addAll(replaceStepTemplate(listOf(it), filePath, deepTree))
                 }
                 list
             },
@@ -861,7 +852,7 @@ class YamlTemplate(
         )
     }
 
-    private fun getStage(fromPath: String, stage: Map<String, Any>): PreStage {
+    private fun getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
@@ -875,7 +866,7 @@ class YamlTemplate(
                 val map = mutableMapOf<String, PreJob>()
                 jobs.forEach { (key, value) ->
                     // 检查根文件处jobId重复
-                    val newJob = replaceJobTemplate(mapOf(key to value), filePath)
+                    val newJob = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
                     if (key == TEMPLATE_KEY) {
                         checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
                     }
@@ -887,7 +878,8 @@ class YamlTemplate(
                 replaceStageCheckTemplate(
                     stageName = stage["name"]?.toString() ?: "",
                     check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-in"]),
-                    fromPath = filePath
+                    fromPath = filePath,
+                    deepTree = deepTree
                 )
             } else {
                 null
@@ -896,7 +888,8 @@ class YamlTemplate(
                 replaceStageCheckTemplate(
                     stageName = stage["name"]?.toString() ?: "",
                     check = transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-out"]),
-                    fromPath = filePath
+                    fromPath = filePath,
+                    deepTree = deepTree
                 )
             } else {
                 null
@@ -961,28 +954,6 @@ class YamlTemplate(
         )
         setTemplate(path, template)
         return templates[path]!!
-    }
-
-    private fun addAndCheckTemplateNumb(file: String) {
-        if (templateNumb.containsKey(file)) {
-            templateNumb[file] = templateNumb[file]!! + 1
-        } else {
-            templateNumb[file] = 1
-        }
-        if (templateNumb[file]!! > MAX_TEMPLATE_NUMB) {
-            error(TEMPLATE_NUMB_BEYOND.format(file))
-        }
-    }
-
-    private fun addAndCheckTemplateDeep() {
-        templateDeep++
-        if (templateDeep > MAX_TEMPLATE_DEEP) {
-            error(TEMPLATE_DEEP_BEYOND.format(filePath))
-        }
-    }
-
-    private fun refreshTemplateDeep() {
-        templateDeep = 0
     }
 
     private fun setTemplate(path: String, template: String) {
