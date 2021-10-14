@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
@@ -115,7 +116,7 @@ class QualityRuleBuildHisService constructor(
                 }
             }
         }
-        throw IllegalArgumentException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
+        throw OperationException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
             "请修改红线阈值[${requestIndicator.threshold}]")
     }
 
