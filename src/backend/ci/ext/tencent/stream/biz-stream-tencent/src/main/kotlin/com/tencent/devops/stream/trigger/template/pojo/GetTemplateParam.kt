@@ -25,8 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.common
+package com.tencent.devops.stream.trigger.template.pojo
 
-object CommonConst {
-    const val REDIS_STREAM_YAML_SCHEMA = "stream:yaml.schema.v2:json"
-}
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+
+data class GetTemplateParam(
+    val token: String?,
+    val forkToken: String?,
+    val gitProjectId: Long,
+    val targetRepo: String?,
+    val ref: String?,
+    val personalAccessToken: String?,
+    val fileName: String,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
+    val templateType: TemplateType?
+)
