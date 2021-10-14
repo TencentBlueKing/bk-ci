@@ -85,6 +85,7 @@ import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -370,8 +371,18 @@ abstract class ImageReleaseService {
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
             } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    imageDao.getImage(
+                        dslContext = dslContext,
+                        imageCode = imageCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
+                }
                 storeCommonService.getRequireVersion(
-                    reqVersion = version,
+                    reqVersion = reqVersion,
                     dbVersion = dbVersion,
                     releaseType = releaseType
                 )

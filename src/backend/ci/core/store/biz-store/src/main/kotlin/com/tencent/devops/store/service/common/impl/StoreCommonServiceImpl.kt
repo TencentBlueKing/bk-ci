@@ -139,8 +139,8 @@ class StoreCommonServiceImpl @Autowired constructor(
                 if (!reqVersion.isNullOrBlank()) {
                     val reqVersionParts = reqVersion.split(".")
                     requireVersionList = listOf(
-                        "${reqVersionParts[0]}.$secondVersionPart.${thirdVersionPart.toInt() + 1}",
-                        "${reqVersionParts[0]}.${secondVersionPart.toInt() + 1}.0"
+                        "${reqVersionParts[0]}.${reqVersionParts[1]}.${reqVersionParts[2].toInt() + 1}",
+                        "${reqVersionParts[0]}.${reqVersionParts[1].toInt() + 1}.0"
                     )
                 }
             }

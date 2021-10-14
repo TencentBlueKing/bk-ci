@@ -137,16 +137,18 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
             } else {
-                // 判断版本号是否已存在
-                val atomVersionRecord = atomDao.getPipelineAtom(dslContext, atomRecord.atomCode, version)
-                if (atomVersionRecord != null) {
-                    return MessageCodeUtil.generateResponseDataObject(
-                        CommonMessageCode.PARAMETER_IS_EXIST,
-                        arrayOf(version)
-                    )
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    atomDao.getPipelineAtom(
+                        dslContext = dslContext,
+                        atomCode = atomRecord.atomCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
                 }
                 storeCommonService.getRequireVersion(
-                    reqVersion = version,
+                    reqVersion = reqVersion,
                     dbVersion = dbVersion,
                     releaseType = requireReleaseType
                 )
