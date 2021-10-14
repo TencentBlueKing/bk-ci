@@ -157,32 +157,32 @@ func GetAgentIp() string {
 		return defaultIp
 	}
 	for _, nc := range ncs {
-		addresses, err2 := nc.Addrs()
-		if err2 != nil {
-			logs.Warn("can not get addr for [%s]: %s", nc.Name, err2.Error())
+		if nc.HardwareAddr == nil { // #3626 二次确认，需要排除虚拟网卡情况
+			logs.Info("%s have no MAC, skip!", nc.Name)
+			continue
+		}
+		addresses, err := nc.Addrs()
+		if err != nil {
+			logs.Warn("can not get addr for [%s]: %s", nc.Name, err.Error())
 			continue
 		}
 
 		for _, addr := range addresses {
 			ipNet, ok := addr.(*net.IPNet)
-			if ok && ipNet.IP.IsGlobalUnicast() && !ipNet.IP.IsLoopback() && !ipNet.IP.IsLinkLocalUnicast() &&
-				ipNet.IP.To4() != nil {
+			if !ok || // 异常
+				ipNet.IP.IsLoopback() ||
+				ipNet.IP.IsLinkLocalUnicast() || // 链路本地地址（Link-local address）
+				!ipNet.IP.IsGlobalUnicast() ||
+				ipNet.IP.To4() == nil {
+				continue
+			}
 
-				logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
-				// #3626 二次确认，需要排除通信IP是虚拟网卡IP的情况，如果有，则改上报本机第一个有效的IP
-				if ip == ipNet.IP.String() {
-					if nc.HardwareAddr == nil {
-						logs.Warn("%s[%s] have no MAC, skip!", nc.Name, ip)
-						if defaultIp != ip { // 如果下面else if 已经处理过，此处ip将会不同，则直接中断循环并返回
-							return defaultIp
-						}
-						break
-					}
-					return ip // 匹配到该通信IP是真正的网卡IP
-				} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
-					logs.Info("localIp=%s|set defaultIp %s to %s", ip, defaultIp, ipNet.IP.String())
-					defaultIp = ipNet.IP.String()
-				}
+			logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
+			if ip == ipNet.IP.String() {
+				return ip // 匹配到该通信IP是真正的网卡IP
+			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
+				logs.Info("localIp=%s|change defaultIp [%s] to [%s]", ip, defaultIp, ipNet.IP.String())
+				defaultIp = ipNet.IP.String()
 			}
 		}
 	}
