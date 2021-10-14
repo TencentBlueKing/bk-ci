@@ -633,7 +633,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt())
             val version = record["version"] as? String
             val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.name
-            val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, releaseType, version)
+            val showVersion = if (cancelFlag) {
+                version
+            } else {
+                marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
+            }
+            val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, releaseType, showVersion)
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -653,7 +658,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     ) as List<String> else null,
                     summary = record["summary"] as? String,
                     description = record["description"] as? String,
-                    version = record["version"] as? String,
+                    version = version,
                     atomStatus = atomStatus,
                     releaseType = releaseType?.name,
                     versionContent = record["versionContent"] as? String,
