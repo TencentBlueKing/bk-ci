@@ -34,6 +34,8 @@ enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     DEVCLOUD(".devcloud.public"),
     IDC(".idc.public"),
     GITCI(".gitci.public"),
+    STREAM(".stream.docker"),
+    STREAM_DEMOTE(".stream.docker.demote"),
     CODECC(".codecc.scan"),
     MACOS(".macos")
 }
