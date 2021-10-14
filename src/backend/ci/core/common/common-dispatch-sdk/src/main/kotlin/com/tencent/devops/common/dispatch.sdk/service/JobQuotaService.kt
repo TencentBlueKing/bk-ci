@@ -96,8 +96,8 @@ class JobQuotaService constructor(
 
                 return false
             } else {
-                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. delay: $RETRY_DELTA " +
-                        "and retry. retryTime: ${startupEvent.retryTime}")
+                logger.info("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. delay: " +
+                        "$RETRY_DELTA and retry. retryTime: ${startupEvent.retryTime}")
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
