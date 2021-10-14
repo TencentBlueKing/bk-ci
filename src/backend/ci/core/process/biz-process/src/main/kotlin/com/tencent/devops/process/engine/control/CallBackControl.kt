@@ -142,6 +142,8 @@ class CallBackControl @Autowired constructor(
             } else {
                 if (event.actionType == ActionType.START) {
                     CallBackEvent.BUILD_TASK_START
+                } else if (event.actionType == ActionType.REFRESH) {
+                    CallBackEvent.BUILD_TASK_PAUSE
                 } else {
                     CallBackEvent.BUILD_TASK_END
                 }

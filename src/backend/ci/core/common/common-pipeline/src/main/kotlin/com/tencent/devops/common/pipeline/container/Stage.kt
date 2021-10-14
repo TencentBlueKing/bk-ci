@@ -44,8 +44,6 @@ data class Stage(
     var tag: List<String?>? = null,
     @ApiModelProperty("阶段状态", required = false, hidden = true)
     var status: String? = null,
-    @ApiModelProperty("阶段手动审核状态", required = false, hidden = true)
-    var reviewStatus: String? = null,
     @ApiModelProperty("阶段启动时间", required = false, hidden = true)
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, hidden = true)
@@ -77,10 +75,9 @@ data class Stage(
         if (originControlOption.manualTrigger == true) {
             checkIn = StagePauseCheck.convertControlOption(originControlOption)
         }
-        // TODO 在下一次发布中增加抹除旧数据逻辑
-//        stageControlOption?.triggerUsers = null
-//        stageControlOption?.triggered = null
-//        stageControlOption?.reviewParams = null
-//        stageControlOption?.reviewDesc = null
+        stageControlOption?.triggerUsers = null
+        stageControlOption?.triggered = null
+        stageControlOption?.reviewParams = null
+        stageControlOption?.reviewDesc = null
     }
 }

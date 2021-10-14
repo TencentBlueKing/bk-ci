@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -72,7 +73,7 @@ object BatScriptUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         elementId: String? = null,
-        charSetType: String? = null
+        charsetType: String? = null
     ): String {
         try {
             val file = getCommandFile(
@@ -81,7 +82,7 @@ object BatScriptUtil {
                 runtimeVariables = runtimeVariables,
                 dir = dir,
                 workspace = workspace,
-                charSetType = charSetType
+                charsetType = charsetType
             )
             return CommandLineUtils.execute(
                 command = "cmd.exe /C \"${file.canonicalPath}\"",
@@ -91,7 +92,7 @@ object BatScriptUtil {
                 executeErrorMessage = "",
                 buildId = buildId,
                 elementId = elementId,
-                charSetType = charSetType
+                charsetType = charsetType
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
@@ -107,7 +108,7 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         workspace: File = dir,
-        charSetType: String? = null
+        charsetType: String? = null
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -148,13 +149,13 @@ object BatScriptUtil {
                 newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
             ))
 
-//        val charset = when (charSetType?.let { CharSetType.valueOf(it) }) {
-//            CharSetType.UTF_8 -> Charsets.UTF_8
-//            CharSetType.GBK -> Charset.forName(CharSetType.GBK.name)
-//            else -> Charsets.UTF_8
-//        }
+        // #4601 没有指定编码字符集时采用获取系统的默认字符集
+        val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
+            CharsetType.UTF_8 -> Charsets.UTF_8
+            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
 
-        val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)

@@ -93,13 +93,24 @@ class GitUserMessageService @Autowired constructor(
             GitCommonUtils.getGitProjectId(projectId)
         }
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
-        val messageCount = gitUserMessageDao.getMessageCount(
-            dslContext = dslContext,
-            projectId = projectId,
-            userId = userId,
-            messageType = messageType,
-            haveRead = haveRead
-        )
+        // 后台单独做项目级别的信息获取兼容
+        val messageCount = if (projectId != null) {
+            gitUserMessageDao.getMessageCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                userId = null,
+                messageType = messageType,
+                haveRead = haveRead
+            )
+        } else {
+            gitUserMessageDao.getMessageCount(
+                dslContext = dslContext,
+                projectId = "",
+                userId = userId,
+                messageType = messageType,
+                haveRead = haveRead
+            )
+        }
         if (messageCount == 0) {
             return Page(
                 page = page,
@@ -112,15 +123,28 @@ class GitUserMessageService @Autowired constructor(
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageCount")
 
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
-        val messageRecords = gitUserMessageDao.getMessages(
-            dslContext = dslContext,
-            projectId = projectId,
-            userId = userId,
-            messageType = messageType,
-            haveRead = haveRead,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
-        )!!
+        // 后台单独做项目级别的信息获取兼容
+        val messageRecords = if (projectId != null) {
+            gitUserMessageDao.getMessages(
+                dslContext = dslContext,
+                projectId = projectId,
+                userId = null,
+                messageType = messageType,
+                haveRead = haveRead,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )!!
+        } else {
+            gitUserMessageDao.getMessages(
+                dslContext = dslContext,
+                projectId = "",
+                userId = userId,
+                messageType = messageType,
+                haveRead = haveRead,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )!!
+        }
 
         logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
 
@@ -184,14 +208,37 @@ class GitUserMessageService @Autowired constructor(
         userId: String
     ): Boolean {
         websocketService.pushNotifyWebsocket(userId, projectId)
-        return gitUserMessageDao.readAllMessage(dslContext = dslContext, projectId = projectId, userId = userId) >= 0
+        return if (projectId != null) {
+            gitUserMessageDao.readAllMessage(
+                dslContext = dslContext,
+                projectId = projectId,
+                userId = null
+            ) >= 0
+        } else {
+            gitUserMessageDao.readAllMessage(
+                dslContext = dslContext,
+                userId = userId
+            ) >= 0
+        }
     }
 
     fun getNoReadMessageCount(
         projectId: String?,
         userId: String
     ): Int {
-        return gitUserMessageDao.getNoReadCount(dslContext = dslContext, projectId = projectId, userId = userId)
+        return if (projectId != null) {
+            gitUserMessageDao.getNoReadCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                userId = null
+            )
+        } else {
+            gitUserMessageDao.getNoReadCount(
+                dslContext = dslContext,
+                projectId = "",
+                userId = userId
+            )
+        }
     }
 
     private fun getRequestMap(

@@ -34,4 +34,6 @@ object GitCIConstant {
     const val STREAM_CI_FILE_DIR = ".ci"
     // StreamYaml文件后缀
     const val STREAM_FILE_SUFFIX = ".yml"
+    // Stream t_project表中保存的项目名称字段长度
+    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
 }

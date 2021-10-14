@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -56,6 +57,7 @@ class GitCILogService @Autowired constructor(
     private lateinit var gatewayUrl: String
 
     fun getInitLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -67,6 +69,7 @@ class GitCILogService @Autowired constructor(
         logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getInitLogs(
+            userId = userId,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
@@ -78,6 +81,7 @@ class GitCILogService @Autowired constructor(
     }
 
     fun getAfterLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -90,6 +94,7 @@ class GitCILogService @Autowired constructor(
         logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getAfterLogs(
+            userId = userId,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
@@ -102,6 +107,7 @@ class GitCILogService @Autowired constructor(
     }
 
     fun downloadLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -118,7 +124,7 @@ class GitCILogService @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
-        val response = OkhttpUtils.doLongGet(path.toString())
+        val response = OkhttpUtils.doLongGet(path.toString(), mapOf(AUTH_HEADER_USER_ID to userId))
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")

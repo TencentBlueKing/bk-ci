@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.pojo.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,10 +37,12 @@ import io.swagger.annotations.ApiModelProperty
 data class GitRequestEvent(
     @ApiModelProperty("ID")
     var id: Long?,
+    // TODO: 开源版时将不同仓库的事件类型使用统一的Stream Action做映射来判断，存储。
     @ApiModelProperty("事件类型")
     val objectKind: String,
     @ApiModelProperty("操作类型")
     val operationKind: String?,
+    // 对于Push是action对于Mr是extension
     @ApiModelProperty("拓展操作")
     val extensionAction: String?,
     @ApiModelProperty("工蜂项目ID")
@@ -67,5 +71,14 @@ data class GitRequestEvent(
     @ApiModelProperty("描述（已废弃）")
     var description: String?,
     @ApiModelProperty("合并请求标题")
-    var mrTitle: String?
+    var mrTitle: String?,
+    // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
+    @ApiModelProperty("Git事件对象")
+    var gitEvent: GitEvent?
 )
+
+fun GitRequestEvent.isFork(): Boolean {
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+            sourceGitProjectId != null &&
+            sourceGitProjectId != gitProjectId
+}

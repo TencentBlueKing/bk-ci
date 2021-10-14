@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 
 /**
  * {
@@ -77,6 +77,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitPushEvent(
     val operation_kind: String,
+    val action_kind: String,
     val ref: String,
     val before: String,
     val after: String,
@@ -88,6 +89,6 @@ data class GitPushEvent(
     val total_commits_count: Int
 ) : GitEvent() {
     companion object {
-        const val classType = OBJECT_KIND_PUSH
+        const val classType = TGitObjectKind.OBJECT_KIND_PUSH
     }
 }

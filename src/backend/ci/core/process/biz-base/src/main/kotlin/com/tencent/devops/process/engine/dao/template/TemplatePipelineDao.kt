@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.dao.template
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.TPipelineInfo
@@ -42,13 +42,12 @@ import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("ALL")
+@Suppress("Unused", "LongParameterList", "TooManyFunctions")
 @Repository
-class TemplatePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class TemplatePipelineDao {
 
     fun create(
         dslContext: DSLContext,
@@ -116,11 +115,11 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
     ): Boolean {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.selectCount()
+            return (dslContext.selectCount()
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(INSTANCE_TYPE.eq(instanceType))
-                .fetchOne(0, Long::class.java) ?: 0 > 0
+                .fetchOne(0, Long::class.java) ?: 0) > 0
         }
     }
 
@@ -332,11 +331,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 .set(VERSION, templateVersion)
                 .set(VERSION_NAME, versionName)
                 .set(UPDATOR, userId)
-                .set(
-                    BUILD_NO,
-                    if (instance.buildNo == null) null else objectMapper.writeValueAsString(instance.buildNo)
-                )
-                .set(PARAM, objectMapper.writeValueAsString(instance.param))
+                .set(BUILD_NO, instance.buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                .set(PARAM, instance.param?.let { self -> JsonUtil.toJson(self, formatted = false) })
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(instance.pipelineId))
                 .execute()
@@ -374,9 +370,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         // 模板没有软删除，直接查即可
         val t1 = TTemplatePipeline.T_TEMPLATE_PIPELINE.`as`("t1")
         val t2 = TPipelineInfo.T_PIPELINE_INFO.`as`("t2")
-        return dslContext.select(
-            t1.TEMPLATE_ID.countDistinct()
-        ).from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
+        return dslContext.select(DSL.countDistinct(t1.TEMPLATE_ID))
+            .from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
             .where(t2.PROJECT_ID.`in`(projectIds))
             .fetchOne()!!
     }
@@ -389,7 +384,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         srcTemplateIds: Set<String>
     ): Record1<Int> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.select(TEMPLATE_ID.countDistinct()).from(this)
+            return dslContext.select(DSL.countDistinct(TEMPLATE_ID)).from(this)
                 .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()!!
         }
     }

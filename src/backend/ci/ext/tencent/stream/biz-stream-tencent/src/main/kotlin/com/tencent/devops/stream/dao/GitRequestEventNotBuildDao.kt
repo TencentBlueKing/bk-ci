@@ -29,9 +29,13 @@ package com.tencent.devops.stream.dao
 
 import com.tencent.devops.model.stream.tables.TGitRequestEventNotBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.impl.DSL
 
 @Repository
 class GitRequestEventNotBuildDao {
@@ -47,10 +51,12 @@ class GitRequestEventNotBuildDao {
         pipelineId: String?,
         filePath: String?,
         gitProjectId: Long,
-        version: String?
+        version: String?,
+        branch: String?
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
-            val record = dslContext.insertInto(this,
+            val record = dslContext.insertInto(
+                this,
                 EVENT_ID,
                 ORIGIN_YAML,
                 PIPELINE_ID,
@@ -61,7 +67,8 @@ class GitRequestEventNotBuildDao {
                 REASON_DETAIL,
                 GIT_PROJECT_ID,
                 CREATE_TIME,
-                VERSION
+                VERSION,
+                BRANCH
             ).values(
                 eventId,
                 originYaml,
@@ -73,7 +80,8 @@ class GitRequestEventNotBuildDao {
                 reasonDetail,
                 gitProjectId,
                 LocalDateTime.now(),
-                version
+                version,
+                branch
             ).returning(ID)
                 .fetchOne()!!
             return record.id
@@ -150,5 +158,87 @@ class GitRequestEventNotBuildDao {
 
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventNotBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
+    }
+
+    fun deleteByEventId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        eventId: Long
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.deleteFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId)).and(EVENT_ID.eq(eventId))
+                .execute()
+        }
+    }
+
+    fun getCountByProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .count()
+        }
+    }
+
+    fun getIdByProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        handlePageSize: Int
+    ): Result<out Record>? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
+            val baseStep = dslContext.select(ID)
+                .from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+            return baseStep.limit(handlePageSize).fetch()
+        }
+    }
+
+    fun deleteByIds(
+        dslContext: DSLContext,
+        ids: Set<Long>
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.delete(this)
+                .where(ID.`in`(ids)).execute()
+        }
+    }
+
+    fun getLatestBuild(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String?
+    ): TGitRequestEventNotBuildRecord? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            val query = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
+            return query.orderBy(EVENT_ID.desc())
+                .fetchAny()
+        }
+    }
+
+    fun getPipelinesLastBuild(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineIds: Set<String>
+    ): List<TGitRequestEventNotBuildRecord>? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(
+                    ID.`in`(
+                        dslContext.select(DSL.max(ID))
+                            .from(this)
+                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                    )
+                ).fetch()
+        }
     }
 }

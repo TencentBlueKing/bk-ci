@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.io.File

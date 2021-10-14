@@ -29,6 +29,8 @@ package com.tencent.devops.stream.mq.streamMrConflict
 
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.GitCITriggerService
+import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
+import com.tencent.devops.stream.trigger.parsers.MergeConflict
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -42,8 +44,10 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIMrConflictCheckListener @Autowired
 constructor(
+    private val mergeConflict: MergeConflict,
     private val gitCITriggerService: GitCITriggerService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val triggerExceptionService: TriggerExceptionService
 ) {
 
     @RabbitListener(
@@ -60,8 +64,8 @@ constructor(
     )
     fun listenGitCIRequestTriggerEvent(checkEvent: GitCIMrConflictCheckEvent) {
 
-        val result = with(checkEvent) {
-            gitCITriggerService.checkMrConflictByListener(
+        val (isFinish, isTrigger) = with(checkEvent) {
+            mergeConflict.checkMrConflictByListener(
                 token = token,
                 gitProjectConf = gitProjectConf,
                 path2PipelineExists = path2PipelineExists,
@@ -72,11 +76,28 @@ constructor(
             )
         }
         // 未检查完成，继续进入延时队列
-        if (!result && checkEvent.retryTime > 0) {
-            logger.warn("Retry to check gitci mr request conflict " +
-                "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]")
+        if (!isFinish && checkEvent.retryTime > 0) {
+            logger.warn(
+                "Retry to check gitci mr request conflict " +
+                        "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]"
+            )
             checkEvent.retryTime--
             GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
+        } else {
+            if (isTrigger) {
+                triggerExceptionService.handle(
+                    requestEvent = checkEvent.gitRequestEvent,
+                    gitEvent = checkEvent.event,
+                    basicSetting = checkEvent.gitProjectConf
+                ) {
+                    gitCITriggerService.matchAndTriggerPipeline(
+                        gitRequestEvent = checkEvent.gitRequestEvent,
+                        event = checkEvent.event,
+                        path2PipelineExists = checkEvent.path2PipelineExists,
+                        gitProjectConf = checkEvent.gitProjectConf
+                    )
+                }
+            }
         }
     }
 

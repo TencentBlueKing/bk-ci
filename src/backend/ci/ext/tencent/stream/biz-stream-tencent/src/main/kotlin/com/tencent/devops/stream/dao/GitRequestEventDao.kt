@@ -27,11 +27,15 @@
 
 package com.tencent.devops.stream.dao
 
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -120,7 +124,8 @@ class GitRequestEventDao {
                     } else {
                         record.description
                     },
-                    mrTitle = record.mrTitle
+                    mrTitle = record.mrTitle,
+                    gitEvent = null
                 )
             }
         }
@@ -162,7 +167,8 @@ class GitRequestEventDao {
                     } else {
                         record.description
                     },
-                    mrTitle = record.mrTitle
+                    mrTitle = record.mrTitle,
+                    gitEvent = null
                 )
             }
         }
@@ -204,7 +210,8 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }
@@ -221,7 +228,7 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
+                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
                 .orderBy(ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
@@ -249,23 +256,12 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }
             return result
-        }
-    }
-
-    fun getMergeRequestCount(
-        dslContext: DSLContext,
-        gitProjectId: Long
-    ): Long {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.selectCount().from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
-                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -283,24 +279,6 @@ class GitRequestEventDao {
     }
 
     /**
-     * 根据创建时间范围获取主键ID
-     */
-    fun getRequestIdByCreateTime(
-        dslContext: DSLContext,
-        beginTime: LocalDateTime = LocalDateTime.MIN,
-        endTime: LocalDateTime = LocalDateTime.MAX,
-        endId: Long = Long.MAX_VALUE,
-        limit: Int = 1000
-    ): List<Long> {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.select(ID).from(this)
-                .where(CREATE_TIME.gt(beginTime).and(CREATE_TIME.lt(endTime)).and(ID.lt(endId)))
-                .orderBy(ID.desc())
-                .limit(limit).fetch(ID)
-        }
-    }
-
-    /**
      * 根据ID删除
      */
     fun deleteByIds(
@@ -310,6 +288,16 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.delete(this)
                 .where(ID.`in`(ids)).execute()
+        }
+    }
+
+    fun deleteById(
+        dslContext: DSLContext,
+        id: Long
+    ): Int {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.delete(this)
+                .where(ID.eq(id)).execute()
         }
     }
 
@@ -354,11 +342,59 @@ class GitRequestEventDao {
                         } else {
                             it.description
                         },
-                        mrTitle = it.mrTitle
+                        mrTitle = it.mrTitle,
+                        gitEvent = null
                     )
                 )
             }
             return result
+        }
+    }
+
+    fun getMinByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): Long {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.select(DSL.min(ID))
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getEventsByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        minId: Long,
+        limit: Long
+    ): Result<out Record>? {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
+            conditions.add(ID.ge(minId))
+            return dslContext.select(ID).from(this)
+                .where(conditions)
+                .orderBy(ID.asc())
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun getClearDeleteEventIdList(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        eventIdList: List<Long>,
+        gapDays: Long
+    ): Result<out Record>? {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.select(ID).from(this)
+                .where(
+                    GIT_PROJECT_ID.eq(gitProjectId)
+                        .and(CREATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
+                        .and(ID.`in`(eventIdList))
+                )
+                .fetch()
         }
     }
 }

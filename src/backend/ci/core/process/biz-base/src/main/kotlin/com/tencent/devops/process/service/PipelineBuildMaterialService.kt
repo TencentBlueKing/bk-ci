@@ -60,7 +60,7 @@ class PipelineBuildMaterialService @Autowired constructor(
                 newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
             }
 
-            val materials = JsonUtil.toJson(newPipelineBuildMaterials)
+            val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
             logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
             pipelineBuildDao.updateBuildMaterial(dslContext, buildId, materials)
         }

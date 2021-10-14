@@ -46,9 +46,9 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -64,7 +64,9 @@ open class ScriptTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
-//        val charSetType = taskParams["charSetType"] ?: CharSetType.UTF_8.name
+
+        // #4601 如果task.json没有指定字符集选项则保持为空
+        val charsetType = taskParams["charsetType"]
 
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
@@ -102,7 +104,7 @@ open class ScriptTask : ITask() {
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charSetType = null
+                charsetType = charsetType
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)

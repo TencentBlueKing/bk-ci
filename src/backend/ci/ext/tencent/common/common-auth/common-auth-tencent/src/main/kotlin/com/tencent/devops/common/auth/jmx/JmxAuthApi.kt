@@ -56,7 +56,7 @@ class JmxAuthApi @Autowired constructor(private val mBeanExporter: MBeanExporter
                     bean = AuthApiPerformanceBean()
                     val name = "com.tencent.devops.common:auth=authApiPerformance,name=$api"
                     logger.info("Register auth $api api performance mbean")
-                    mBeanExporter.registerManagedResource(bean, ObjectName(name))
+                    mBeanExporter.registerManagedResource(bean!!, ObjectName(name))
                     apis[api] = bean!!
                 }
             }

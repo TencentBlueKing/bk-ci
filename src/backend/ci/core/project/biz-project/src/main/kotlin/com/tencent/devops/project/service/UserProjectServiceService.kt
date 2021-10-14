@@ -28,10 +28,10 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.OPPServiceVO
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
+import com.tencent.devops.project.pojo.service.ServiceUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 
 /**
@@ -66,12 +66,7 @@ interface UserProjectServiceService {
     /**
      * 更新服务信息
      */
-    fun updateService(userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Result<Boolean>
-
-    /**
-     * 批量跟新服务URL信息
-     */
-    fun updateServiceUrls(userId: String, serviceUpdateUrls: List<ServiceUpdateUrls>): Result<Int>
+    fun updateService(userId: String, serviceUpdateInfo: ServiceUpdateInfo): Result<Boolean>
 
     /**
      * 读取指定服务的信息

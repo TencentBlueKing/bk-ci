@@ -128,6 +128,7 @@ start_ci__springboot (){
   java_pid=$!
   echo "$java_pid" > "$pid_file" || return 24
   echo "java pid is $java_pid."
+  [ "$MS_NAME" = "turbo" ] && return 0
   # 此处阻塞.
   if ! wait_springboot_up "$java_pid" "$API_PORT"; then
     echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"

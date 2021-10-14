@@ -87,7 +87,18 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val destPath = if (null == filePath) {
             "${getBasePath()}${fileSeparator}file$fileSeparator$${DefaultPathUtils.randomFileName()}"
         } else {
-            if (filePath.startsWith(getBasePath())) "$filePath" else "${getBasePath()}$fileSeparator$filePath"
+            // #5176 修正未对上传类型来决定存放路径的问题，统一在此生成归档路径，而不是由外部指定会存在内部路径泄露风险
+            if (fileType != null && !projectId.isNullOrBlank()) {
+                generateDestPath(
+                    fileType = fileType,
+                    projectId = projectId,
+                    customFilePath = filePath,
+                    pipelineId = props?.get("pipelineId"),
+                    buildId = props?.get("buildId")
+                )
+            } else {
+                "${getBasePath()}$fileSeparator$filePath"
+            }
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
