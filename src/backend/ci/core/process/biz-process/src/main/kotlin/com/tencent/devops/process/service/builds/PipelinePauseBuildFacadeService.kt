@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.service.builds
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -59,7 +59,6 @@ class PipelinePauseBuildFacadeService(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val objectMapper: ObjectMapper,
     private val pipelineTaskPauseService: PipelineTaskPauseService
 ) {
     companion object {
@@ -122,7 +121,6 @@ class PipelinePauseBuildFacadeService(
                 element = element,
                 buildId = buildId,
                 taskId = taskId,
-                userId = userId,
                 taskRecord = taskRecord
             )
         }
@@ -147,7 +145,6 @@ class PipelinePauseBuildFacadeService(
         newElement: Element?,
         buildId: String,
         taskId: String,
-        userId: String,
         oldTask: PipelineBuildTask
     ): Boolean {
         var isDiff = false
@@ -193,11 +190,10 @@ class PipelinePauseBuildFacadeService(
         element: Element,
         buildId: String,
         taskId: String,
-        userId: String,
         taskRecord: PipelineBuildTask
     ) {
-        val newElementStr = ParameterUtils.element2Str(element, objectMapper)
-        if (newElementStr.isNullOrEmpty()) {
+        val newElementStr = ParameterUtils.element2Str(element)
+        if (newElementStr.isNullOrBlank()) {
             logger.warn("executePauseAtom element is too long")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
@@ -209,7 +205,6 @@ class PipelinePauseBuildFacadeService(
         val isDiff = findDiffValue(
             buildId = buildId,
             taskId = taskId,
-            userId = userId,
             newElement = element,
             oldTask = taskRecord
         )
@@ -218,8 +213,8 @@ class PipelinePauseBuildFacadeService(
             pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
                 buildId = buildId,
                 taskId = taskId,
-                newValue = newElementStr!!,
-                defaultValue = objectMapper.writeValueAsString(taskRecord.taskParams)
+                newValue = newElementStr,
+                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
             ))
         }
     }

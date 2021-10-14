@@ -34,6 +34,8 @@ enum class ExperiencePublicType(
 
     FROM_EXTERNAL_URL(2),
 
+    BANNER_URL(3),
+
     ;
 
     companion object {

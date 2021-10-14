@@ -47,7 +47,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     CI_YAML_NEED_MERGE_OR_REBASE(
         "The YAML is modified. " +
             "Please execute either REBASE or MERGE to update your YAML from remote target branch.",
-        "The YAML is modified. " +
+        "The YAML %s is modified. " +
             "Please execute either REBASE or MERGE to update your YAML from remote target branch."
     ),
     CI_MERGE_CHECKING(
