@@ -35,7 +35,7 @@ enum class ReleaseTypeEnum(val releaseType: Int) {
     CANCEL_RE_RELEASE(4), // 取消发布后重新发布
     HIS_VERSION_UPGRADE(5); // 历史大版本下的小版本更新
 
-    fun isDefaultShow(): Boolean = this == COMPATIBILITY_UPGRADE || this == COMPATIBILITY_UPGRADE
+    fun isDefaultShow(): Boolean = this == COMPATIBILITY_UPGRADE || this == COMPATIBILITY_FIX
 
     companion object {
 

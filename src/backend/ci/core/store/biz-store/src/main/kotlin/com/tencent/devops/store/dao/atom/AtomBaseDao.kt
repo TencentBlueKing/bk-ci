@@ -86,28 +86,28 @@ abstract class AtomBaseDao {
 
     fun getMaxVersionAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
-            val firstVersion = JooqUtils.subStr(
-                str = VERSION,
-                delim = ".",
-                count = 1
-            ).`as`("firstVersion")
-            val secondVersion = JooqUtils.subStr(
-                str = JooqUtils.subStr(
-                    str = VERSION,
-                    delim = ".",
-                    count = -2
-                ),
-                delim = ".",
-                count = 1
-            ).`as`("secondVersion")
-            val thirdVersion = JooqUtils.subStr(
-                str = VERSION,
-                delim = ".",
-                count = -1
-            ).`as`("thirdVersion")
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+                .orderBy(
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = JooqUtils.subStr(
+                            str = VERSION,
+                            delim = ".",
+                            count = -2
+                        ),
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = -1
+                    ).plus(0).desc())
                 .limit(1)
                 .fetchOne()
         }
