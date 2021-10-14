@@ -30,12 +30,17 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
-import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.OR
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
+import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -46,6 +51,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -70,6 +76,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -116,54 +123,79 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeBuildInfoDao: StoreBuildInfoDao
+
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
+
     @Autowired
     lateinit var marketAtomClassifyDao: MarketAtomClassifyDao
+
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
     @Autowired
     lateinit var atomApproveRelDao: AtomApproveRelDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
+
     @Autowired
     lateinit var atomLabelService: AtomLabelService
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var storeUserService: StoreUserService
+
     @Autowired
     lateinit var atomMemberService: AtomMemberServiceImpl
+
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var marketAtomEnvService: MarketAtomEnvService
+
     @Autowired
     lateinit var storeDailyStatisticService: StoreDailyStatisticService
+
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var client: Client
 
@@ -172,7 +204,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         private val executor = Executors.newFixedThreadPool(30)
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "LongParameterList", "LongMethod")
     private fun doList(
         userId: String,
         userDeptList: List<Int>,
@@ -183,10 +215,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
@@ -200,7 +234,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 score = score,
                 rdType = rdType,
                 yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag
+                recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag
             )
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
@@ -211,6 +246,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
                 sortType = sortType,
                 desc = desc,
                 page = page,
@@ -246,6 +282,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
+                var logoUrl = it["LOGO_URL"] as? String
+                if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
+                    logoUrl = RegexUtils.trimProtocol(logoUrl)
+                }
                 results.add(
                     MarketItem(
                         id = it["ID"] as String,
@@ -255,7 +295,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = AtomTypeEnum.getAtomType((it["ATOM_TYPE"] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                         category = AtomCategoryEnum.getAtomCategory((it["CATEGROY"] as Byte).toInt()),
-                        logoUrl = it["LOGO_URL"] as? String,
+                        logoUrl = logoUrl,
                         publisher = it["PUBLISHER"] as String,
                         os = if (!StringUtils.isEmpty(it["OS"])) JsonUtil.getObjectMapper().readValue(
                             it["OS"] as String,
@@ -303,7 +343,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
@@ -322,10 +363,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
+                qualityFlag = null,
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
@@ -340,10 +383,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
+                qualityFlag = null,
                 sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = urlProtocolTrim
             )
         )
 
@@ -368,10 +413,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = null,
                         yamlFlag = null,
                         recommendFlag = null,
+                        qualityFlag = null,
                         sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
-                        pageSize = pageSize
+                        pageSize = pageSize,
+                        urlProtocolTrim = urlProtocolTrim
                     )
                 )
             }
@@ -401,9 +448,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        urlProtocolTrim: Boolean
     ): MarketAtomResp {
         logger.info("[list]enter")
 
@@ -422,9 +471,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             sortType = sortType,
             yamlFlag = yamlFlag,
             recommendFlag = recommendFlag,
+            qualityFlag = qualityFlag,
             desc = true,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            urlProtocolTrim = urlProtocolTrim
         ).get()
     }
 
@@ -880,14 +931,48 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
+        val atomList = marketAtomDao.getLatestAtomListByCodes(
+            dslContext = dslContext,
+            atomCodes = getRelyAtom.thirdPartyElementList.map { it.atomCode }
+        )
+        val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
+        val result = mutableMapOf<String, Map<String, Any>>()
+        logger.info("getAtomsRely atomList : $atomList")
+        atomList.forEach lit@{
+            if (it == null) return@lit
+            var value = it
+            val atom = getMap[it.atomCode]
+            if (atom?.contains("*") == true &&
+                !it.version.startsWith(atom.replace("*", ""))) {
+                value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
+            }
+            val itemMap = mutableMapOf<String, Any>()
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+            if (null != props["input"]) {
+                val input = props["input"] as Map<String, Any>
+                input.forEach { inputIt ->
+                    val paramKey = inputIt.key
+                    val paramValueMap = inputIt.value as Map<String, Any>
+                    val rely = paramValueMap["rely"]
+                    if (rely != null) {
+                        itemMap[paramKey] = rely
+                    }
+                }
+            }
+            result[it.atomCode] = itemMap
+        }
+        return result
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
         val sb = StringBuilder()
-            if (defaultShowFlag != null && defaultShowFlag) {
-                sb.append("h2. ${atom.name}\r\n")
-                    .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
-            }
-            sb.append("- taskType: marketBuild@latest\r\n")
+        if (defaultShowFlag != null && defaultShowFlag) {
+            sb.append("h2. ${atom.name}\r\n")
+                .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
+        }
+        sb.append("- taskType: marketBuild@latest\r\n")
             .append("  displayName: ${atom.name}\r\n")
             .append("  inputs:\r\n")
             .append("    atomCode: ${atom.atomCode}\r\n")
@@ -995,14 +1080,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val label = paramValueMap["label"]
                 val text = paramValueMap["text"]
                 val desc = paramValueMap["desc"]
-                val description = if (label?.toString().isNullOrBlank()) {
-                    if (text?.toString().isNullOrBlank()) {
-                        desc.toString()
-                    } else {
-                        text.toString()
-                    }
-                } else {
+                val description = if (!label?.toString().isNullOrBlank()) {
                     label.toString()
+                } else if (!text?.toString().isNullOrBlank()) {
+                    text.toString()
+                } else if (!desc?.toString().isNullOrBlank()) {
+                    desc.toString()
+                } else {
+                    MessageCodeUtil.getCodeLanMessage(NO_LABEL)
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
@@ -1034,7 +1119,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         defaultName = defaultName
                     )
                     sb.append("\r\n")
-                    sb.append("      $paramKey: ")
+                    sb.append("    $paramKey:\r\n")
                     sb.append("        - string\r\n")
                     sb.append("        - string\r\n")
                 } else {
@@ -1123,18 +1208,71 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-        val options = paramValueMap["options"] ?: return
-        try {
-            options as List<Map<String, String>>
+        val rely = paramValueMap["rely"]
+        if (null != rely) {
+            parseRely(builder, rely as Map<String, Any>)
+        }
+        val options = paramValueMap["options"]
+        if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
+            parseOptions(builder, options as List<Map<String, Any>>)
+        }
+        val list = paramValueMap["list"]
+        if (null != list) {
+            builder.append(", $optionsName:")
+            parseList(builder, list as List<Map<String, Any>>)
+        }
+    }
+
+    private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
+        val dang = MessageCodeUtil.getCodeLanMessage(DANG)
+        val and = MessageCodeUtil.getCodeLanMessage(AND)
+        val or = MessageCodeUtil.getCodeLanMessage(OR)
+        val timeToSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+        try {
+            if (null != rely["expression"]) {
+                val expression = rely["expression"] as List<Map<String, Any>>
+                builder.append(", $dang")
+                val link = if (rely["operation"] == "AND") and else or
+                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                    builder.append(value)
+                    if (index < expression.size - 1) {
+                        builder.append(link)
+                    }
+                }
+                builder.append(timeToSelect)
+            }
+        } catch (e: Exception) {
+            println("load atom input[rely] with error: ${e.message}")
+        }
+    }
+
+    private fun parseOptions(builder: StringBuilder, options: List<Map<String, Any>>) {
+        try {
             options.forEachIndexed { index, map ->
                 if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
         } catch (e: Exception) {
-            logger.error("load atom input[$paramKey] with error: ${e.message}")
+            println("load atom input[options] with error: ${e.message}")
+        }
+    }
+
+    private fun parseList(builder: StringBuilder, list: List<Map<String, Any>>) {
+        try {
+            list.forEachIndexed { index, map ->
+                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                    null ?: return
+                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                    null ?: return
+                if (index == list.size - 1) builder.append(" $key[$value]")
+                else builder.append(" $key[$value] |")
+            }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[list] with error: ${e.message} ")
         }
     }
 }

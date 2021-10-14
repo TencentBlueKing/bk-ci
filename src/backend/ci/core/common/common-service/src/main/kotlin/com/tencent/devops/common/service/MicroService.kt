@@ -28,11 +28,9 @@
 package com.tencent.devops.common.service
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration
-
 /**
  *
  * Powered By Tencent
  */
-@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class)])
+@SpringBootApplication
 annotation class MicroService

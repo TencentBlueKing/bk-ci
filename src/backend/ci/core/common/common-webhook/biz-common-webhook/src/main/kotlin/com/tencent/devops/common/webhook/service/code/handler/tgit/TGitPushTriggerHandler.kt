@@ -29,15 +29,17 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.service.code.filter.PathPrefixFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
@@ -124,13 +126,22 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
                 eventPaths.addAll(commit.removed ?: listOf())
                 eventPaths.addAll(commit.modified ?: listOf())
             }
-            val pathPrefixFilter = PathPrefixFilter(
-                pipelineId = pipelineId,
-                triggerOnPath = eventPaths.toList(),
-                includedPaths = convert(includePaths),
-                excludedPaths = convert(excludePaths)
+            val commitMessageFilter = CommitMessageFilter(
+                includeCommitMsg,
+                excludeCommitMsg,
+                commits.first().message,
+                pipelineId
             )
-            return listOf(skipCiFilter, pathPrefixFilter)
+            val pathFilter = PathFilterFactory.newPathFilter(
+                PathFilterConfig(
+                    pathFilterType = pathFilterType,
+                    pipelineId = pipelineId,
+                    triggerOnPath = eventPaths.toList(),
+                    includedPaths = convert(includePaths),
+                    excludedPaths = convert(excludePaths)
+                )
+            )
+            return listOf(skipCiFilter, pathFilter, commitMessageFilter)
         }
     }
 

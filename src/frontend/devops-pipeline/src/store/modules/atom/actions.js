@@ -69,7 +69,6 @@ import {
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
-    TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
     SET_EDIT_FROM
@@ -93,8 +92,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams })
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams, id, suggest }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams, id, suggest })
     },
     async fetchStageTagList ({ commit }) {
         try {
@@ -119,9 +118,6 @@ export default {
     },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
-    },
-    toggleReviewDialog ({ commit }, { isShow, reviewInfo }) {
-        commit(TOGGLE_REVIEW_DIALOG, { isShow, reviewInfo })
     },
     toggleStageReviewPanel: actionCreator(TOGGLE_STAGE_REVIEW_PANEL),
     addStoreAtom ({ commit, state }) {
@@ -485,6 +481,10 @@ export default {
         })
     },
 
+    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+        return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
+    },
+
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
     },
@@ -509,5 +509,23 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    download (_, { url, name }) {
+        return fetch(url, { credentials: 'include' }).then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.blob()
+            } else {
+                return res.json().then((result) => Promise.reject(result))
+            }
+        }).then((blob) => {
+            const a = document.createElement('a')
+            const url = window.URL || window.webkitURL || window.moxURL
+            a.href = url.createObjectURL(blob)
+            if (name) a.download = name
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        })
     }
 }

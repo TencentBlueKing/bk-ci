@@ -1,8 +1,11 @@
 #!/bin/bash
 # bk-ci 启用或禁用https.
 set -eu
-
-#trap 'echo "出错了.";' ERR
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
 
 ci_env_default="bin/default/ci.env"
 ci_env_03="bin/03-userdef/ci.env"
@@ -66,6 +69,7 @@ target_schema="$1"
 
 ci_schema_vars="BK_HTTP_SCHEMA BK_CI_PUBLIC_URL BK_CI_PAAS_LOGIN_URL"
 
+source "$CTRL_DIR/load_env.sh"
 echo "配置 ci-gateway 为 $target_schema."
 tip_file_exist "$ci_env_default"
 tip_file_exist "$ci_env_03"
@@ -73,10 +77,14 @@ if grep -q ^BK_CI_PAAS_DIALOG_LOGIN_URL "$ci_env_default"; then
   ci_schema_vars="$ci_schema_vars BK_CI_PAAS_DIALOG_LOGIN_URL"
 fi
 echo "修改env03文件: $ci_env_03"
+if grep -q "[$]BK_PAAS_PUBLIC_URL" "$ci_env_03"; then
+  echo "检查到 \$BK_PAAS_PUBLIC_URL 变量引用, 自动替换."
+  sed -ri "s@[$]BK_PAAS_PUBLIC_URL@$BK_PAAS_PUBLIC_URL@" "$ci_env_03"  # 替换默认设置的变量引用.
+fi
 patt_ci_schema_vars="^(${ci_schema_vars// /|})="
 grep -E "$patt_ci_schema_vars" "$ci_env_03"
 if [ "$target_schema" = https ]; then
-  echo "启用https后, 原 HTTP 入口依旧存在, 无需回退. "
+  echo "启用https后, 原 HTTP 入口依旧存在, 一般无需回退."
   sed -ri "/$patt_ci_schema_vars/{s@\<http\>@https@;s@:80/@:443/@;}" "$ci_env_03"
 else
   echo "禁用https后, 如果因浏览器缓存HTTP重定向到https入口, 请清空浏览器站点数据."
@@ -99,12 +107,14 @@ if [ "$target_schema" = https ]; then
   tip_file_exist "$bk_cert_source"
   tip_file_exist "$bk_certkey_source"
   # 基于 BK_CI_FQDN 生成证书主体检查模式. 允许通配符.
+  echo "检查证书域名"
   patt_cert_subject="$(sed -r \
     -e 's/^([^.]+)(.*)/(Subject: .*CN=|DNS:)([*]|\1)\2/' \
     -e 's/[.]/[.]/g' <<< "$BK_CI_FQDN")"
   # 需要精确匹配: -w.
   openssl x509 -text -noout -in "$bk_cert_source" | grep -wE "$patt_cert_subject" || {
-    echo "证书可能有误, 证书文件 $bk_cert_source 中未能匹配到 '$patt_cert_subject' ."
+    echo "证书可能有误, 证书文件 $bk_cert_source 中未能匹配到 '$patt_cert_subject'. 证书支持包含的名称如下:"
+    openssl x509 -text -noout -in "$bk_cert_source" | grep -E "^ *(Subject|DNS):"
     exit 1
   }
   echo "同步并安装证书"
@@ -119,26 +129,29 @@ fi
 echo "修改 ci-gateway 模板"
 nginx_ci_conf="$BK_CI_SRC_DIR/support-files/templates/gateway#core#devops.server.conf"
 tip_file_exist "$nginx_ci_conf"
+patt_ssl_config_commented='/^ *# *### ssl config begin ###/,/^ *# *### ssl config end ###/'
+patt_ssl_config_nocomment='/^ *### ssl config begin ###/,/^ *### ssl config end ###/'
 if [ "$target_schema" = https ]; then
-  sed -i '/^#  ### ssl config begin ###/,/^#  ### ssl config end ###/s/^#//' "$nginx_ci_conf"
+  sed -ri "${patt_ssl_config_commented:-^#####}s/^( *)#/\\1/" "$nginx_ci_conf"  # 移除注释
   nginx_ci_ssl="$BK_CI_SRC_DIR/support-files/templates/gateway#core#devops.ssl"
   sed -e "s@^ssl_certificate .*@ssl_certificate $ci_gateway_cert;@" \
       -e "s@^ssl_certificate_key .*@ssl_certificate_key $ci_gateway_certkey;@" \
       support-files/templates/nginx/bk.ssl > "$nginx_ci_ssl"
+  echo "检查修改结果."
+  sed -n "${patt_ssl_config_nocomment:-^#####}p" "$nginx_ci_conf" | grep "^ *listen .* ssl;"
 else
-  sed -i '/^  ### ssl config begin ###/,/^  ### ssl config end ###/s/^/#/' "$nginx_ci_conf"
+  sed -i "${patt_ssl_config_nocomment:-^#####}s/^/#/" "$nginx_ci_conf"
+  echo "检查修改结果."
+  sed -n "${patt_ssl_config_commented:-^#####}p" "$nginx_ci_conf" | grep "^ *# *listen .* ssl;"
 fi
-sed -n '/### ssl config begin ###/,/### ssl config end ###/p' "$nginx_ci_conf"
 
-echo "安装 ci-gateway"
+echo "重新配置 ci-gateway"
 ./bkcli sync common
 ./bkcli sync ci
-pcmd -m ci_gateway 'cd $CTRL_DIR; export LAN_IP ${!BK_CI_*}; ./bin/install_ci.sh -e ./bin/04-final/ci.env -p "$BK_HOME" -m gateway 2>&1;'
+pcmd -m ci_gateway 'source ${CTRL_DIR:-/data/install}/load_env.sh; export LAN_IP ${!BK_CI_*}; ${BK_PKG_SRC_PATH:-/data/src}/ci/scripts/bk-ci-setup.sh gateway'
 
-echo "检查配置文件"
-pcmd -m ci_gateway 'cd /usr/local/openresty/nginx; ./sbin/nginx -t;'
 echo "reload 或 启动服务"
-pcmd -m ci_gateway 'cd /usr/local/openresty/nginx; ./sbin/nginx -s reload || ./sbin/nginx;'
+pcmd -m ci_gateway 'systemctl reload bk-ci-gateway || systemctl start bk-ci-gateway'
 
 if [ "$target_schema" = https ]; then
   echo "测试全部 ci_gateway 节点是否能访问本机的 https 服务."
@@ -156,6 +169,6 @@ if [ "$target_schema" = https ]; then
 fi
 
 echo "刷新 PaaS 工作台的注册信息."
-$CTRL_DIR/bin/bk-ci-reg-paas-app.sh
+$BK_CI_SRC_DIR/scripts/bk-ci-reg-paas-app.sh
 
 echo "配置 $target_schema 成功. 请检查更新其他env文件中相应的变量."

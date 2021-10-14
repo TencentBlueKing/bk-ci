@@ -43,13 +43,16 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
+import com.tencent.devops.dispatch.docker.dao.DockerResourceOptionsDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
+import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
@@ -72,11 +75,13 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val dockerResourceOptionsDao: DockerResourceOptionsDao,
     private val dockerHostUtils: DockerHostUtils,
     private val client: Client,
     private val dslContext: DSLContext,
     private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostProxyService: DockerHostProxyService,
+    private val dockerHostQpcService: DockerHostQpcService,
     private val redisUtils: RedisUtils
 ) {
 
@@ -128,8 +133,8 @@ class DockerHostClient @Autowired constructor(
         LOG.info("${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
             "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
             "|${dispatchType.credentialProject}")
-        var userName: String? = null
-        var password: String? = null
+        var userName = dispatchType.imageRepositoryUserName
+        var password = dispatchType.imageRepositoryPassword
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
                 val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
@@ -170,14 +175,17 @@ class DockerHostClient @Autowired constructor(
                 ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
             },
             containerHashId = dispatchMessage.containerHashId,
-            customBuildEnv = dispatchMessage.customBuildEnv
+            customBuildEnv = dispatchMessage.customBuildEnv,
+            dockerResource = getDockerResource(dispatchType),
+            qpcUniquePath = getQpcUniquePath(dispatchMessage.projectId)
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
             dslContext = dslContext,
             pipelineId = dispatchMessage.pipelineId,
             vmSeq = dispatchMessage.vmSeqId,
-            dockerIp = dockerIp
+            dockerIp = dockerIp,
+            dockerResourceOptionsId = dispatchType.performanceConfigId
         )
 
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
@@ -488,6 +496,57 @@ class DockerHostClient @Autowired constructor(
                 errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
                 errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
                 errorMsg = "Start build Docker VM failed, msg: $errorMessage."
+            )
+        }
+    }
+
+    private fun getQpcUniquePath(projectId: String): String? {
+        return if (projectId.startsWith("git_") &&
+            dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
+        ) {
+            return projectId.removePrefix("git_")
+        } else {
+            null
+        }
+    }
+
+    private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {
+        if (dockerDispatchType.performanceConfigId != 0) {
+            val dockerResourceOptionRecord = dockerResourceOptionsDao.get(
+                dslContext = dslContext,
+                id = dockerDispatchType.performanceConfigId.toLong()
+            )
+
+            if (dockerResourceOptionRecord != null) {
+                return DockerResourceOptionsVO(
+                    memoryLimitBytes = dockerResourceOptionRecord.memoryLimitBytes,
+                    cpuPeriod = dockerResourceOptionRecord.cpuPeriod,
+                    cpuQuota = dockerResourceOptionRecord.cpuQuota,
+                    blkioDeviceReadBps = dockerResourceOptionRecord.blkioDeviceReadBps,
+                    blkioDeviceWriteBps = dockerResourceOptionRecord.blkioDeviceWriteBps,
+                    disk = dockerResourceOptionRecord.disk,
+                    description = ""
+                )
+            } else {
+                return DockerResourceOptionsVO(
+                    memoryLimitBytes = defaultImageConfig.memory,
+                    cpuPeriod = defaultImageConfig.cpuPeriod,
+                    cpuQuota = defaultImageConfig.cpuQuota,
+                    blkioDeviceReadBps = defaultImageConfig.blkioDeviceReadBps,
+                    blkioDeviceWriteBps = defaultImageConfig.blkioDeviceWriteBps,
+                    disk = 100,
+                    description = ""
+                )
+            }
+        } else {
+            return DockerResourceOptionsVO(
+                memoryLimitBytes = defaultImageConfig.memory,
+                cpuPeriod = defaultImageConfig.cpuPeriod,
+                cpuQuota = defaultImageConfig.cpuQuota,
+                blkioDeviceReadBps = defaultImageConfig.blkioDeviceReadBps,
+                blkioDeviceWriteBps = defaultImageConfig.blkioDeviceWriteBps,
+                disk = 100,
+                description = ""
             )
         }
     }

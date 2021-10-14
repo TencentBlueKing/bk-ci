@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dockerhost.resources
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
@@ -43,7 +42,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
-import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -146,8 +145,11 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        logger.warn("Stop the container, containerId: ${dockerHostBuildInfo.containerId}")
-        dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+        ThreadPoolUtils.getInstance().run {
+            logger.info("Start stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+            dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+            logger.info("Stop the container success, containerId: ${dockerHostBuildInfo.containerId}")
+        }
 
         return Result(true)
     }
@@ -161,23 +163,23 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     private fun checkReq(request: HttpServletRequest) {
-        var ip = request.getHeader("x-forwarded-for")
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.getHeader("Proxy-Client-IP")
-        }
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.getHeader("WL-Proxy-Client-IP")
-        }
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.remoteAddr
-        }
-        if (ip != null && (CommonUtils.getInnerIP() == ip || ip.startsWith("172.32"))) { // 只允许从本机调用
-            logger.info("Request from $ip")
-        } else {
-            logger.info("Request from $ip")
-            logger.info("Local ip :${CommonUtils.getInnerIP()}")
-            throw PermissionForbiddenException("不允许的操作！")
-        }
+//        var ip = request.getHeader("x-forwarded-for")
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.getHeader("Proxy-Client-IP")
+//        }
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.getHeader("WL-Proxy-Client-IP")
+//        }
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.remoteAddr
+//        }
+//        if (ip != null && (CommonUtils.getInnerIP() == ip || ip.startsWith("172.32"))) { // 只允许从本机调用
+//            logger.info("Request from $ip")
+//        } else {
+//            logger.info("Request from $ip")
+//            logger.info("Local ip :${CommonUtils.getInnerIP()}")
+//            throw PermissionForbiddenException("不允许的操作！")
+//        }
     }
 
     override fun checkImage(

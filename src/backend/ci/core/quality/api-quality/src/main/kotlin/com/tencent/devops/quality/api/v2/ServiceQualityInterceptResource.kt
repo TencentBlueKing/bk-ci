@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

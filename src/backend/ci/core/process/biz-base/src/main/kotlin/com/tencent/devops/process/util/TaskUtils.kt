@@ -28,8 +28,12 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
 object TaskUtils {
@@ -43,6 +47,12 @@ object TaskUtils {
         BuildStatus.REVIEW_ABORT,
         BuildStatus.QUALITY_CHECK_FAIL,
         BuildStatus.EXEC_TIMEOUT
+    )
+
+    val customConditionList = listOf(
+        RunCondition.CUSTOM_VARIABLE_MATCH,
+        RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        RunCondition.CUSTOM_CONDITION_MATCH
     )
 
     private val failToRunBuildStatusList = listOf(
@@ -70,23 +80,63 @@ object TaskUtils {
         if (postInfo == null) {
             return parentTask to postExecuteFlag
         }
-
         val runCondition = additionalOptions.runCondition
-        val conditionFlag = if (isContainerFailed) { // 当前容器有失败的任务
-            runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+        parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
+        val conditionFlag = if (runCondition == RunCondition.PARENT_TASK_CANCELED_OR_TIMEOUT) {
+            // 判断父任务是否是取消或者超时状态
+            parentTask?.status == BuildStatus.CANCELED || parentTask?.status == BuildStatus.EXEC_TIMEOUT
+        } else if (runCondition == RunCondition.PARENT_TASK_FINISH) {
+            parentTask?.status?.isFinish() ?: false
+        } else if (runCondition == RunCondition.PRE_TASK_SUCCESS ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        ) {
+            getPreTaskExecuteFlag(taskList, runCondition)
         } else {
-            // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
-            runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+            if (isContainerFailed) { // 当前容器有失败的任务
+                runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+            } else {
+                // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
+                runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+            }
         }
-
         if (conditionFlag) {
-            parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
             // 父任务必须是执行过的, 并且在指定的状态下和控制条件
             if (parentTask != null && parentTask.status in realExecuteBuildStatusList) {
                 postExecuteFlag = true
             }
         }
         return parentTask to postExecuteFlag
+    }
+
+    private fun getPreTaskExecuteFlag(taskList: List<PipelineBuildTask>, runCondition: RunCondition): Boolean {
+        var flag = true
+        val taskSize = taskList.size - 1
+        for (i in 0..taskSize) {
+            val tmpTask = taskList[i]
+            // 只需判断post任务之前的任务状态
+            if (tmpTask.additionalOptions?.elementPostInfo != null) {
+                return flag
+            }
+            val breakFlag = when (runCondition) {
+                RunCondition.PRE_TASK_SUCCESS -> {
+                    // 当前插件前面的插件存在失败的情况则返回true
+                    !tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
+                        !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)
+                }
+                RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+                    // 当前插件前面的插件存在取消的情况则返回true
+                    tmpTask.status == BuildStatus.CANCELED
+                }
+                else -> {
+                    false
+                }
+            }
+            if (breakFlag) {
+                flag = false
+                break
+            }
+        }
+        return flag
     }
 
     /**
@@ -108,4 +158,36 @@ object TaskUtils {
      * 判断[task]是否为启动构建环境的任务，是返回true
      */
     fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
+
+    /**
+     * 获取当前构建取消任务ID集合的redis键
+     */
+    fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
+
+    /**
+     * 获取当前构建插件失败自动重试的redis键
+     */
+    fun getFailRetryTaskRedisKey(buildId: String, taskId: String): String {
+        return "process:task:failRetry:count:$buildId:$taskId"
+    }
+
+    /**
+     * 是否刷新task的时间
+     */
+    fun isRefreshTaskTime(
+        buildId: String,
+        taskId: String,
+        additionalOptions: ElementAdditionalOptions?,
+        executeCount: Int? = null
+    ): Boolean {
+        return if (additionalOptions?.retryWhenFailed == true) {
+            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+            val retryCount = redisOperation.get(
+                getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
+            )?.toInt() ?: 0
+            retryCount < 1 || (executeCount != null && executeCount > 1)
+        } else {
+            true
+        }
+    }
 }

@@ -34,7 +34,6 @@ import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
-import org.slf4j.LoggerFactory
 import java.io.File
 
 interface ICommand {
@@ -50,23 +49,19 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
-        elementId: String? = null
+        elementId: String? = null,
+        charsetType: String? = null
     )
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
+            override fun getReplacement(key: String): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
-                    logger.warn("环境变量($key)不存在", e.message)
-                    CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
-                            "\${{$key}}"
-                        } else {
-                            "\${$key}"
-                        }
+                } catch (ignore: Exception) {
+                    CredentialUtils.getCredentialContextValue(key)
                 }
             }
         }, mapOf(
@@ -74,9 +69,5 @@ interface ICommand {
             CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
             JOB_OS_CONTEXT to AgentEnv.getOS().name
         ))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ICommand::class.java)
     }
 }

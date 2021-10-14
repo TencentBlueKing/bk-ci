@@ -30,13 +30,14 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -45,7 +46,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Client) :
+class ApigwPipelineResourceV3Impl @Autowired constructor(
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
+) :
     ApigwPipelineResourceV3 {
     override fun status(
         appCode: String?,
@@ -74,7 +78,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipeline = pipeline,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -92,7 +96,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -110,7 +114,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             pipelineId = pipelineId,
             modelAndSetting = modelAndSetting,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -126,7 +130,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             modelAndSetting = modelAndSetting,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -142,7 +146,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }
@@ -159,7 +163,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineIds = pipelineIds,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -175,7 +179,22 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun copy(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: PipelineCopy
+    ): Result<PipelineId> {
+        logger.info("copy pipelines by user, userId:$userId")
+        return client.get(ServicePipelineResource::class).copy(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipeline = pipeline
         )
     }
 
@@ -193,7 +212,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }

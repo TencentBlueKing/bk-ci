@@ -2,7 +2,7 @@
     <div class="version-sideslider-container">
         <div class="pipeline-latest" @click="showVersionSideslider = true">{{latestPipelineVersionInfo}}</div>
         <bk-sideslider
-            width="580"
+            :width="580"
             :title="$t('template.versionList')"
             :is-show.sync="showVersionSideslider"
             :quick-close="true"
@@ -72,7 +72,7 @@
             },
             // 最新的流水线版本信息
             latestPipelineVersionInfo () {
-                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(this.currentPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
+                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${this.currentPipeline.deploymentTime}` : this.$t('pipelinesEdit')
             }
         },
         methods: {

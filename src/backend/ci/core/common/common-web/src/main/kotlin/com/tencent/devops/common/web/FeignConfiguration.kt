@@ -28,27 +28,38 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 @Configuration
 class FeignConfiguration {
 
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
+    private val logger = LoggerFactory.getLogger(FeignConfiguration::class.java)
+
     /**
      * feign调用拦截器
      */
     @Bean
+    @Primary
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
+            requestTemplate.decodeSlash(false)
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -84,6 +95,17 @@ class FeignConfiguration {
             // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
             if (!ConsulContent.getConsulContent().isNullOrEmpty()) {
                 requestTemplate.header(ConsulConstants.HEAD_CONSUL_TAG, ConsulContent.getConsulContent())
+            }
+        }
+    }
+
+    @Bean
+    fun gatewayTagRequestInterceptor(): RequestInterceptor {
+        return RequestInterceptor { requestTemplate ->
+            requestTemplate.decodeSlash(false)
+            logger.debug("add X-GATEWAY-TAG $tag")
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_GATEWAY_TAG)) {
+                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
             }
         }
     }

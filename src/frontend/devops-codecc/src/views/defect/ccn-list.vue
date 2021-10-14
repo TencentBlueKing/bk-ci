@@ -129,7 +129,7 @@
                                     </bk-select>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-if="isSearchDropdown || lineAverageOpt >= 6">
+                            <!-- <div class="cc-col" v-if="isSearchDropdown || lineAverageOpt >= 6">
                                 <bk-form-item :label="$t('函数类型')">
                                     <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
                                         <bk-checkbox :value="1">{{$t('新函数')}}(<em class="count">{{newDefectCount}}</em>)</bk-checkbox>
@@ -145,7 +145,7 @@
                                         </bk-popover>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </div>
+                            </div> -->
                             <div class="cc-col-2" v-if="isSearchDropdown || lineAverageOpt >= 7">
                                 <bk-form-item :label="$t('风险级别')">
                                     <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
@@ -598,12 +598,6 @@
                     </bk-button>
                 </div>
             </bk-dialog>
-            <new-analyse
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse"
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible">
-            </new-analyse>
             <bk-dialog
                 v-model="operateDialogVisiable"
                 width="605"
@@ -642,7 +636,6 @@
     import { getClosest, toggleClass, formatDiff } from '@/common/util'
     import util from '@/mixins/defect-list'
     import CodeMirror from '@/common/codemirror'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import { format } from 'date-fns'
     // eslint-disable-next-line
@@ -650,7 +643,6 @@
 
     export default {
         components: {
-            newAnalyse,
             Empty
         },
         mixins: [util],
@@ -1555,7 +1547,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
                 }

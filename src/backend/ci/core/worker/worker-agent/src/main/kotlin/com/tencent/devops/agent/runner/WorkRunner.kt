@@ -58,7 +58,7 @@ object WorkRunner {
 
             val startFile = getStartFile()
             if (!startFile.isNullOrBlank()) {
-                val file = File(startFile!!)
+                val file = File(startFile)
                 if (file.exists()) {
                     logger.info("The file ${file.absolutePath} will be deleted when exit")
                     file.deleteOnExit()
@@ -75,16 +75,13 @@ object WorkRunner {
 
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                                return if (doubleCurlyBraces) {
-                                    variables[key] ?: "\${{$key}}"
-                                } else {
-                                    variables[key] ?: "\${$key}"
-                                }
-                            }
+                            override fun getReplacement(key: String): String? = variables[key]
                         }, mapOf(
                             WORKSPACE_CONTEXT to workspace,
                             JOB_OS_CONTEXT to AgentEnv.getOS().name)
@@ -106,7 +103,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
-            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+            LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }

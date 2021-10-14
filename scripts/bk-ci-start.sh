@@ -59,7 +59,7 @@ start_ci__openresty (){
 
 check_port_listen (){
   local patt_port_listen port=$1
-  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%X 0+:0+ 0A " "$port"
+  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%04X 0+:0+ 0A " "$port"
   if cat /proc/net/tcp /proc/net/tcp6 | grep -E "$patt_port_listen"; then
     echo "ERROR: port $port is LISTENed by others."
     return 19
@@ -128,6 +128,7 @@ start_ci__springboot (){
   java_pid=$!
   echo "$java_pid" > "$pid_file" || return 24
   echo "java pid is $java_pid."
+  [ "$MS_NAME" = "turbo" ] && return 0
   # 此处阻塞.
   if ! wait_springboot_up "$java_pid" "$API_PORT"; then
     echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"

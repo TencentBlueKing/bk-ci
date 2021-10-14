@@ -29,9 +29,12 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
@@ -49,7 +52,7 @@ class AuthGroupService @Autowired constructor(
         userId: String,
         projectCode: String,
         groupInfo: GroupDTO
-    ): Result<Boolean> {
+    ): Int {
         logger.info("createGroup |$userId|$projectCode||$groupInfo")
         val groupRecord = groupDao.getGroup(
             dslContext = dslContext,
@@ -70,9 +73,7 @@ class AuthGroupService @Autowired constructor(
             displayName = groupInfo.displayName,
             user = userId
         )
-        groupDao.createGroup(dslContext, groupCreateInfo)
-
-        return Result(true)
+        return groupDao.createGroup(dslContext, groupCreateInfo)
     }
 
     fun batchCreate(
@@ -108,8 +109,50 @@ class AuthGroupService @Autowired constructor(
         return Result(true)
     }
 
+    fun updateGroupName(userId: String, groupId: Int, groupInfo: ProjectRoleDTO): Int {
+        val groupEntity = groupDao.getGroupById(dslContext, groupId)
+            ?: throw ParamBlankException("group $groupId not exist")
+
+        if (DefaultGroupType.contains(groupEntity.groupCode)) {
+            throw ParamBlankException(AuthMessageCode.DEFAULT_GROUP_UPDATE_NAME_ERROR)
+        }
+
+        return groupDao.update(
+            dslContext,
+            groupEntity.id,
+            groupInfo.name,
+            groupInfo.displayName ?: groupInfo.name,
+            userId
+        )
+    }
+
     fun getGroupCode(groupId: Int): TAuthGroupInfoRecord? {
         return groupDao.getGroupById(dslContext, groupId)
+    }
+
+    fun getGroupByName(projectCode: String, groupName: String): TAuthGroupInfoRecord? {
+        return groupDao.getGroupByName(dslContext, projectCode, groupName)
+    }
+
+    fun getGroupByCode(projectCode: String, groupCode: String): TAuthGroupInfoRecord? {
+        return groupDao.getGroup(dslContext, projectCode, groupCode)
+    }
+
+    fun bindRelationId(id: Int, relationId: String): Int {
+        return groupDao.updateRelationId(dslContext, id, relationId)
+    }
+
+    fun getRelationId(roleId: Int): String? {
+        val groupInfo = groupDao.getRelationId(dslContext, roleId) ?: return null
+        return groupInfo.relationId!!
+    }
+
+    fun deleteGroup(id: Int, softDelete: Boolean? = true) {
+        if (softDelete!!) {
+            groupDao.softDelete(dslContext, id)
+        } else {
+            groupDao.deleteRole(dslContext, id)
+        }
     }
 
     companion object {

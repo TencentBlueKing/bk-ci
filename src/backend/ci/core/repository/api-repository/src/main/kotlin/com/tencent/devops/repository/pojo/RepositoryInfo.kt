@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("代码库模型-基本信息")
 data class RepositoryInfo(
+    @ApiModelProperty("仓库ID", required = false)
+    val repositoryId: Long?,
     @ApiModelProperty("仓库哈希ID", required = false)
     val repositoryHashId: String?,
     @ApiModelProperty("仓库别名", required = true)
@@ -42,5 +44,7 @@ data class RepositoryInfo(
     @ApiModelProperty("类型", required = true)
     val type: ScmType,
     @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long
+    val updatedTime: Long,
+    @ApiModelProperty("创建人", required = false)
+    val createUser: String? = null
 )

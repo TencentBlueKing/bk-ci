@@ -64,7 +64,6 @@ import {
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
-    TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
     SET_EDIT_FROM
@@ -79,15 +78,11 @@ import {
 import { hashID } from '@/utils/util'
 
 export default {
-    [TOGGLE_STAGE_REVIEW_PANEL]: (state, { isShow, editingElementPos = null }) => {
+    [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
-            showStageReviewPanel: isShow,
+            showStageReviewPanel,
             editingElementPos
         })
-    },
-    [TOGGLE_REVIEW_DIALOG]: (state, { isShow: showReviewDialog, reviewInfo }) => {
-        Vue.set(state, 'showReviewDialog', showReviewDialog)
-        Vue.set(state, 'reviewInfo', reviewInfo)
     },
     [SET_DEFAULT_STAGE_TAG]: (state, defaultStageTags) => {
         Vue.set(state, 'defaultStageTags', defaultStageTags)
@@ -323,6 +318,8 @@ export default {
             name: insertStageIsFinally === true ? 'Final' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
             containers: [],
+            checkIn: { timeout: 24 },
+            checkOut: { timeout: 24 },
             finally: insertStageIsFinally === true || undefined
         })
         return state

@@ -48,5 +48,5 @@ data class EndPageQueryLogs(
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)
-    var status: LogStatus = LogStatus.SUCCEED
+    var status: Int = LogStatus.SUCCEED.status
 )

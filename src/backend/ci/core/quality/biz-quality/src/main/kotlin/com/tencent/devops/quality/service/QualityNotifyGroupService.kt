@@ -46,6 +46,7 @@ import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
 import com.tencent.devops.quality.pojo.GroupUsers
 import com.tencent.devops.quality.pojo.ProjectGroupAndUsers
+import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -164,8 +165,16 @@ class QualityNotifyGroupService @Autowired constructor(
         return GroupUsers(innerUsers, outerUsers)
     }
 
-    fun serviceGetUsers(groupIdList: Collection<Long>): GroupUsers {
-        val result = qualityNotifyGroupDao.list(dslContext, groupIdList)
+    fun serviceGetUsers(groupIdList: List<String>): GroupUsers {
+        val queryGroupIdList = mutableListOf<Long>()
+
+        groupIdList.forEach {
+            if (NumberUtils.isDigits(it)) {
+                queryGroupIdList.add(it.toLong())
+            }
+        }
+
+        val result = qualityNotifyGroupDao.list(dslContext, queryGroupIdList)
         val innerUsersSet = mutableSetOf<String>()
         val outerUsersSet = mutableSetOf<String>()
 

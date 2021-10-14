@@ -81,7 +81,7 @@ install_ci__common (){
   id -u "$MS_USER" &>/dev/null || \
     useradd -m -c "BlueKing CE User" --shell /bin/bash "$MS_USER"
 
-  os_pkg_install jq
+  [ -x /usr/bin/jq ] || os_pkg_install jq  # 如果已有jq则无需安装.
   local d
   for d in /etc/blueking/env "$BK_CI_HOME" "$BK_CI_LOGS_DIR" "${BK_CI_DATA_DIR%/?*}"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 755 -d "$d"
@@ -105,6 +105,9 @@ install_ci__ms_common (){
     echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
     rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
   done
+  echo "change mode for agent-package dir."
+  find "$BK_CI_HOME/agent-package/" -type d -exec chmod -c a+rx {} \;
+  find "$BK_CI_HOME/agent-package/" -type f -exec chmod -c a+r {} \;
   # 保持微服务部分子目录的强一致性.
   rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
 }

@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dockerhost.common.Constants
-import com.tencent.devops.dockerhost.common.EnvEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -47,10 +47,6 @@ abstract class AbstractBuildResourceApi constructor(
     private val dockerHostConfig: DockerHostConfig
 ) {
     companion object {
-        const val GRAY_PROJECT = "grayproject"
-        const val AUTO_PROJECT = "autoproject"
-        const val GITCI_PROJECT = "gitciproject"
-
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
@@ -149,23 +145,12 @@ abstract class AbstractBuildResourceApi constructor(
     }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        return when (dockerHostConfig.landunEnv ?: EnvEnum.PROD_ENV.value) {
-            EnvEnum.GRAY_ENV.value -> {
-                logger.info("Now is gray environment, request with the x-devops-project-id header.")
-                buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
-            }
-            EnvEnum.AUTO_ENV.value -> {
-                logger.info("Now is auto environment, request with the x-devops-project-id header.")
-                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
-            }
-            EnvEnum.GITCI_PROD_ENV.value -> {
-                logger.info("Now is gitci environment, request with the x-devops-project-id header.")
-                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to GITCI_PROJECT))
-            }
-            else -> {
-                buildArgs.plus(headers)
-            }
+        if (dockerHostConfig.gatewayHeaderTag != null) {
+            logger.info("Now is ${dockerHostConfig.gatewayHeaderTag} environment, request with the AUTH_HEADER_GATEWAY_TAG header.")
+            return buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_GATEWAY_TAG to dockerHostConfig.gatewayHeaderTag!!))
         }
+
+        return buildArgs.plus(headers)
     }
 
     fun getUrlPrefix(): String {

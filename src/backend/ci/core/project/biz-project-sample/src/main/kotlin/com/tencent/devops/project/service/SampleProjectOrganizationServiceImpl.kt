@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
-    override fun getDeptInfo(userId: String, id: Int): DeptInfo {
+    override fun getDeptInfo(userId: String?, id: Int): DeptInfo {
         return DeptInfo(
             typeId = "0",
             leaderId = "0",

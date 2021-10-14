@@ -122,6 +122,9 @@ class PipelineListFacadeService @Autowired constructor(
                 PipelineSortType.UPDATE_TIME -> {
                     b.deploymentTime.compareTo(a.deploymentTime)
                 }
+                PipelineSortType.LAST_EXEC_TIME -> {
+                    b.deploymentTime.compareTo(a.latestBuildStartTime ?: 0)
+                }
             }
         })
     }
@@ -905,7 +908,12 @@ class PipelineListFacadeService @Autowired constructor(
         try {
             watcher.start("s_s_r_summary")
             projectId.forEach { project_id ->
-                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(project_id, channelCode)
+                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = project_id,
+                    channelCode = channelCode,
+                    page = 1,
+                    pageSize = 500
+                )
                 if (pipelineBuildSummary.isNotEmpty) {
                     pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
                 }
@@ -974,14 +982,18 @@ class PipelineListFacadeService @Autowired constructor(
         return buildInfo != null && buildInfo.status.isRunning()
     }
 
-    fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {
+    fun getPipelineStatus(
+        userId: String,
+        projectId: String,
+        pipelines: Set<String>,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): List<Pipeline> {
         val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
-        val channelCode = ChannelCode.BS
         try {
             watcher.start("s_r_summary")
             val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
                 projectId = projectId,
-                channelCode = channelCode,
+                channelCode = channelCode ?: ChannelCode.BS,
                 pipelineIds = pipelines
             )
             watcher.start("perm_r_perm")
@@ -1001,9 +1013,14 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     // 获取单条流水线的运行状态
-    fun getSinglePipelineStatus(userId: String, projectId: String, pipeline: String): Pipeline? {
+    fun getSinglePipelineStatus(
+        userId: String,
+        projectId: String,
+        pipeline: String,
+        channelCode: ChannelCode?
+    ): Pipeline? {
         val pipelines = setOf(pipeline)
-        val pipelineList = getPipelineStatus(userId, projectId, pipelines)
+        val pipelineList = getPipelineStatus(userId, projectId, pipelines, channelCode)
         return if (pipelineList.isEmpty()) {
             null
         } else {
@@ -1046,7 +1063,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineDesc = it.pipelineDesc,
                     taskCount = it.taskCount,
                     isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
+                    id = it.id
                 )
             }
         } finally {
@@ -1149,10 +1167,10 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+        val pipelineRecords = templatePipelineDao.listByPipelinesId(dslContext, pipelineIds)
         val pipelineTemplateMap = mutableMapOf<String, String>()
         pipelineRecords.forEach {
-            pipelineTemplateMap[it.pipelineId] = it.templateId
+            pipelineTemplateMap[it["pipelineId"] as String] = it["templateId"] as String
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
@@ -1422,7 +1440,7 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
     }
 
-    fun getPipelineId(
+    fun getProjectPipelineId(
         projectCode: String
     ): List<PipelineIdInfo> {
         val pipelineIdInfos = pipelineInfoDao.listByProject(dslContext, projectCode)
@@ -1431,5 +1449,61 @@ class PipelineListFacadeService @Autowired constructor(
             idInfos.add(PipelineIdInfo(it.get("pipelineId") as String, it.get("id") as Long))
         }
         return idInfos
+    }
+
+    fun getPipelineId(
+        projectId: String,
+        pipelineId: String
+    ): PipelineIdInfo? {
+        val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId) ?: return null
+        return PipelineIdInfo(
+            id = pipelineInfo.id,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun getByPipelineIds(
+        pipelineIds: Set<String>
+    ): List<SimplePipeline> {
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            pipelineIds = pipelineIds,
+            projectId = null
+        )
+        return pipelineInfos.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id,
+                createUser = it.creator
+            )
+        }
+    }
+
+    fun getByAutoIds(
+        ids: List<Int>
+    ): List<SimplePipeline> {
+        val pipelines = pipelineInfoDao.getPieplineByAutoId(
+            dslContext = dslContext,
+            ids = ids
+        )
+        return pipelines.map {
+            SimplePipeline(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = false,
+                id = it.id,
+                createUser = it.creator
+            )
+        }
     }
 }

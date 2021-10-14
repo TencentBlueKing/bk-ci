@@ -34,15 +34,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -107,6 +108,23 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
+
+    @ApiOperation("复制流水线编排")
+    @POST
+    @Path("/{projectId}/{pipelineId}/copy")
+    fun copy(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线COPY", required = true)
+        pipeline: PipelineCopy
+    ): Result<PipelineId>
 
     @ApiOperation("导入新流水线, 包含流水线编排和设置")
     @POST
@@ -296,7 +314,10 @@ interface ServicePipelineResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("channel", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Pipeline?>
 
     @ApiOperation("获取流水线完整状态")
@@ -431,4 +452,34 @@ interface ServicePipelineResource {
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<PipelineIdInfo>>
+
+    @ApiOperation("获取项目下流水线Id")
+    @PUT
+    @Path("/projects/{projectCode}/pipelines/{pipelineId}/id")
+    fun getPipelineId(
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineIdInfo?>
+
+    @ApiOperation("根据流水线id获取流水线信息")
+    @GET
+    @Path("/pipelines/{pipelineId}")
+    fun getPipelineInfoByPipelineId(
+        @ApiParam("流水线id列表", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<SimplePipeline?>?
+
+    @ApiOperation("刷新所有流水线名拼音")
+    @PUT
+    @Path("/batch/pipeline/pinyin")
+    fun batchUpdatePipelineNamePinYin(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }

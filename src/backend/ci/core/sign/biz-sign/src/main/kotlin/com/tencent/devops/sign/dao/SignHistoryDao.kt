@@ -35,9 +35,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-@Suppress("ALL")
 class SignHistoryDao {
 
+    @Suppress("LongParameterList")
     fun initHistory(
         dslContext: DSLContext,
         resignId: String,

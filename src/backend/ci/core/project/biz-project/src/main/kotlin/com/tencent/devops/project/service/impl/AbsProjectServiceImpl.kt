@@ -374,7 +374,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
 
-            val projects = projectPermissionService.getUserProjects(userId)
+//            val projects = projectPermissionService.getUserProjects(userId)
+            val projects = getProjectFromAuth(userId, null)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
@@ -448,6 +449,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByChannel(dslContext, limit, offset, projectChannelCode).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            logger.info("list count$count")
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
     }
