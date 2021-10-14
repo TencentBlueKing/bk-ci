@@ -14,7 +14,6 @@ import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.sendCommitCheck
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamQualityService
 import org.slf4j.LoggerFactory

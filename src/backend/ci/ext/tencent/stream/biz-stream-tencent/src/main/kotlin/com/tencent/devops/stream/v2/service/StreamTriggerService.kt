@@ -36,7 +36,6 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
