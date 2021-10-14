@@ -284,7 +284,7 @@ class TriggerMatcher @Autowired constructor(
     private fun isIgnorePathMatch(pathIgnoreList: List<String>?, event: GitEvent): Boolean {
         if (pathIgnoreList != null && pathIgnoreList.isNotEmpty()) {
             logger.info("Exclude path set ($pathIgnoreList)")
-            (event as GitPushEvent).commits.forEach { commit ->
+            (event as GitPushEvent).commits?.forEach { commit ->
                 commit.added?.forEach { path ->
                     pathIgnoreList.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
@@ -343,12 +343,12 @@ class TriggerMatcher @Autowired constructor(
         if (pathList != null && pathList.isNotEmpty()) {
             logger.info("Include path set($pathList)")
             run outside@{
-                var commits = listOf<GitCommit>()
+                var commits: List<GitCommit>? = null
                 if (event is GitPushEvent) {
                     commits = event.commits
                 }
 
-                commits.forEach { commit ->
+                commits?.forEach { commit ->
                     commit.added?.forEach { path ->
                         pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
