@@ -65,5 +65,5 @@ data class StreamBuildEvent(
 )
 
 fun StreamBuildEvent.isV2(): Boolean {
-    return version.isNullOrBlank() && version == "v2.0"
+    return !version.isNullOrBlank() && version == "v2.0"
 }
