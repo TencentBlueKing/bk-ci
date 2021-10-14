@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -78,6 +79,35 @@ abstract class AtomBaseDao {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getMaxVersionAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            val firstVersion = JooqUtils.subStr(
+                str = VERSION,
+                delim = ".",
+                count = 1
+            ).`as`("firstVersion")
+            val secondVersion = JooqUtils.subStr(
+                str = JooqUtils.subStr(
+                    str = VERSION,
+                    delim = ".",
+                    count = -2
+                ),
+                delim = ".",
+                count = 1
+            ).`as`("secondVersion")
+            val thirdVersion = JooqUtils.subStr(
+                str = VERSION,
+                delim = ".",
+                count = -1
+            ).`as`("thirdVersion")
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
                 .limit(1)
                 .fetchOne()
         }
