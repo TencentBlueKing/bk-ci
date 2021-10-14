@@ -80,12 +80,13 @@ class JobQuotaService constructor(
             }
 
             if (!checkResult && startupEvent.retryTime > RETRY_TIME) {
-                logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. Send event to demoteQueue.")
+                logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Job quota excess. " +
+                        "Send event to demoteQueue.")
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值并已延迟等待${retryTime}次，" +
-                            "将放入降级队列执行.",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值, " +
+                            "并已延迟等待${retryTime}次，将放入降级队列执行.",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
