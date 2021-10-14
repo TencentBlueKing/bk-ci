@@ -30,4 +30,4 @@ steps:
   - template: codecc.yml@stream-ci-template
     parameters:
       id: 9
-  - template: steps.yml
+  - template: steps1.yml
