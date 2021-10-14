@@ -86,8 +86,22 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
-        logger.info("On start up - ($dispatchMessage)")
+        logger.info("On startup - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
 
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        logger.info("On startup demote - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
+
+    override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        logger.info("On shutdown - ($event)")
+
+        dockerHostBuildService.finishDockerBuild(event)
+    }
+
+    private fun startup(dispatchMessage: DispatchMessage) {
         val dockerDispatch = dispatchMessage.dispatchType as DockerDispatchType
         buildLogPrinter.addLine(
             buildId = dispatchMessage.buildId,
@@ -212,15 +226,5 @@ class DockerVMListener @Autowired constructor(
                 message = errMsgTriple.third
             )
         }
-    }
-
-    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        logger.info("On shutdown - ($event)")
-
-        dockerHostBuildService.finishDockerBuild(event)
     }
 }
