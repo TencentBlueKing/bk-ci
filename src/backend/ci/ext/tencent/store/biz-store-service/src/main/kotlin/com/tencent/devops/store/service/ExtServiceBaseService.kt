@@ -122,6 +122,7 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -333,8 +334,18 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
             } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    extServiceDao.getExtService(
+                        dslContext = dslContext,
+                        serviceCode = serviceCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
+                }
                 storeCommonService.getRequireVersion(
-                    reqVersion = version,
+                    reqVersion = reqVersion,
                     dbVersion = dbVersion,
                     releaseType = releaseType!!
                 )
