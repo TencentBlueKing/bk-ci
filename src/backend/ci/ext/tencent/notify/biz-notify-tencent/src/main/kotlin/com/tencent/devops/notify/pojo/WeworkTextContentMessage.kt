@@ -24,29 +24,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.dao
 
-import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
-import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+package com.tencent.devops.notify.pojo
 
-@Repository
-class CommonNotifyMessageTemplateDao {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("企业微信机器人消息内容")
+data class WeworkTextContentMessage(
     /**
-     * 根据模板代码和模板名称获取公共消息模板
+     * 文本内容，最长不超过2048个字节，必须是utf8编码
      */
-    fun getCommonNotifyMessageTemplateByCode(
-        dslContext: DSLContext,
-        templateCode: String
-    ): TCommonNotifyMessageTemplateRecord? {
-        with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(TEMPLATE_CODE.eq(templateCode))
-            val baseStep = dslContext.selectFrom(this)
-                .where(conditions)
-            return baseStep.fetchOne()
-        }
-    }
-}
+    @ApiModelProperty("文本内容")
+    val content: String,
+
+    /**
+     * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
+     */
+    @JsonProperty("mentioned_list")
+    @ApiModelProperty("userid的列表")
+    val mentionedList: Set<String>?,
+
+    /**
+     * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
+     */
+    @JsonProperty("mentioned_mobile_list")
+    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人")
+    val mentionedMobileList: Set<String>?
+)
