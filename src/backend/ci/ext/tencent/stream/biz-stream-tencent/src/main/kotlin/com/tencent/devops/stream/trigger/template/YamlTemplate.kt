@@ -48,6 +48,7 @@ import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
@@ -85,15 +86,7 @@ class YamlTemplate(
 
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
-        token: String?,
-        forkGitToken: String?,
-        gitProjectId: Long,
-        targetRepo: String?,
-        ref: String?,
-        personalAccessToken: String?,
-        fileName: String,
-        changeSet: Set<String>?,
-        event: GitEvent?
+        param: GetTemplateParam
     ) -> String
 
 ) {
@@ -169,7 +162,7 @@ class YamlTemplate(
             val template = parseTemplateParameters(
                 fromPath = fileFromPath ?: "",
                 path = filePath,
-                template = getTemplate(filePath),
+                template = getTemplate(filePath, templateType = resTemplateType),
                 parameters = parameters
             )
             // 将根文件也保存在模板库中方便取出
@@ -182,7 +175,7 @@ class YamlTemplate(
 
         // 针对远程库打平替换时格式无法被校验到
         if (resTemplateType != null) {
-            YamlObjects.checkTemplate(filePath, getTemplate(filePath), resTemplateType)
+            YamlObjects.checkTemplate(filePath, getTemplate(filePath, resTemplateType), resTemplateType)
         }
 
         val preYamlObject = with(newYamlObject!!) {
@@ -650,8 +643,10 @@ class YamlTemplate(
                         path = toPath.split(FILE_REPO_SPLIT).first(),
                         repo = checkAndGetRepo(
                             fromPath,
-                            toPath.split(FILE_REPO_SPLIT)[1]
-                        )
+                            toPath.split(FILE_REPO_SPLIT)[1],
+                            templateType = templateType
+                        ),
+                        templateType = templateType
                     )
                 } else {
                     replaceResTemplateFile(
@@ -660,12 +655,13 @@ class YamlTemplate(
                         parameters = parameters,
                         toRepo = checkAndGetRepo(
                             fromPath,
-                            toPath.split(FILE_REPO_SPLIT)[1]
+                            toPath.split(FILE_REPO_SPLIT)[1],
+                            templateType = templateType
                         )
                     )
                 }
             } else {
-                getTemplate(toPath)
+                getTemplate(toPath, templateType = templateType)
             }
         // 检查模板格式
         YamlObjects.checkTemplate(toPath, newTemplate, templateType)
@@ -681,9 +677,11 @@ class YamlTemplate(
     }
 
     // 校验当前模板的远程库信息，每个文件只可以使用当前文件下引用的远程库
-    private fun checkAndGetRepo(fromPath: String, repoName: String): Repositories {
+    private fun checkAndGetRepo(fromPath: String, repoName: String, templateType: TemplateType): Repositories {
         val repos =
-            YamlObjects.getObjectFromYaml<NoReplaceTemplate>(fromPath, getTemplate(fromPath)).resources?.repositories
+            YamlObjects.getObjectFromYaml<NoReplaceTemplate>(
+                fromPath, getTemplate(fromPath, templateType = templateType)
+            ).resources?.repositories
         repos?.forEach {
             if (it.name == repoName) {
                 return it
@@ -907,32 +905,38 @@ class YamlTemplate(
     }
 
     // 从模板库中获得数据，如果有直接取出，没有则根据保存的库信息从远程仓库拉取，再没有则报错
-    private fun getTemplate(path: String): String {
+    private fun getTemplate(path: String, templateType: TemplateType?): String {
         if (!templates.keys.contains(path)) {
 //             没有库信息说明是触发库
             val template = if (repo == null) {
                 getTemplateMethod(
-                    triggerToken,
-                    forkGitToken,
-                    triggerProjectId,
-                    null,
-                    triggerRef,
-                    null,
-                    path,
-                    changeSet,
-                    event
+                    GetTemplateParam(
+                        token = triggerToken,
+                        forkToken = forkGitToken,
+                        gitProjectId = triggerProjectId,
+                        targetRepo = null,
+                        ref = triggerRef,
+                        personalAccessToken = null,
+                        fileName = path,
+                        changeSet = changeSet,
+                        event = event,
+                        templateType = templateType
+                    )
                 )
             } else {
                 getTemplateMethod(
-                    null,
-                    null,
-                    sourceProjectId,
-                    repo.repository,
-                    repo.ref,
-                    repo.credentials?.personalAccessToken,
-                    path,
-                    null,
-                    null
+                    GetTemplateParam(
+                        token = null,
+                        forkToken = null,
+                        gitProjectId = sourceProjectId,
+                        targetRepo = repo.repository,
+                        ref = repo.ref,
+                        personalAccessToken = repo.credentials?.personalAccessToken,
+                        fileName = path,
+                        changeSet = null,
+                        event = null,
+                        templateType = templateType
+                    )
                 )
             }
             setTemplate(path, template)
@@ -940,17 +944,20 @@ class YamlTemplate(
         return templates[path]!!
     }
 
-    private fun getTemplate(path: String, repo: Repositories): String {
+    private fun getTemplate(path: String, repo: Repositories, templateType: TemplateType): String {
         val template = getTemplateMethod(
-            null,
-            null,
-            sourceProjectId,
-            repo.repository,
-            repo.ref,
-            repo.credentials?.personalAccessToken,
-            path,
-            changeSet,
-            null
+            GetTemplateParam(
+                token = null,
+                forkToken = null,
+                gitProjectId = sourceProjectId,
+                targetRepo = repo.repository,
+                ref = repo.ref,
+                personalAccessToken = repo.credentials?.personalAccessToken,
+                fileName = path,
+                changeSet = changeSet,
+                event = null,
+                templateType = templateType
+            )
         )
         setTemplate(path, template)
         return templates[path]!!

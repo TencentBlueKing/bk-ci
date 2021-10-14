@@ -61,5 +61,11 @@ data class GitCIProjectInfo(
     val pathWithNamespace: String?,
     @ApiModelProperty("项目的默认分支")
     @JsonProperty("default_branch")
-    val defaultBranch: String?
+    val defaultBranch: String?,
+    @ApiModelProperty("项目的描述信息")
+    @JsonProperty("description")
+    val description: String?,
+    @ApiModelProperty("项目的头像信息")
+    @JsonProperty("avatar_url")
+    val avatarUrl: String?
 )

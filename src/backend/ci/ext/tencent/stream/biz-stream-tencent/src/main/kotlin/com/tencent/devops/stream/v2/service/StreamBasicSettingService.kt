@@ -37,6 +37,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.utils.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -144,7 +145,10 @@ class StreamBasicSettingService @Autowired constructor(
                 updateTime = null,
                 creatorCenterName = null,
                 creatorDeptName = null,
-                creatorBgName = null
+                creatorBgName = null,
+                gitProjectDesc = projectInfo.description,
+                gitProjectAvatar = projectInfo.avatarUrl,
+                lastCiInfo = null
             )
         )
     }
@@ -155,16 +159,14 @@ class StreamBasicSettingService @Autowired constructor(
         if (gitRepoConf?.projectCode == null) {
 
             // 根据url截取group + project的完整路径名称
-            var gitProjectName = if (setting?.gitHttpUrl != null) {
-                GitUtils.getDomainAndRepoName(setting?.gitHttpUrl).second
-            } else {
-                setting.name
-            }
+            var gitProjectName = GitUtils.getDomainAndRepoName(setting.gitHttpUrl).second
 
             // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
-            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
-                gitProjectName = gitProjectName.substring(gitProjectName.length -
-                    GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+            if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                gitProjectName = gitProjectName.substring(
+                    gitProjectName.length -
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                )
             }
             val projectResult =
                 client.get(ServiceTxProjectResource::class).createGitCIProject(
@@ -181,8 +183,7 @@ class StreamBasicSettingService @Autowired constructor(
             setting.creatorCenterName = projectInfo.centerName
             streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
-            val projectResult =
-                client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
+            val projectResult = client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
             if (projectResult.isNotOk()) {
                 logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
                 return false
@@ -212,17 +213,32 @@ class StreamBasicSettingService @Autowired constructor(
         return count
     }
 
-    fun refreshSetting(gitProjectId: Long) {
-        val projectInfo = requestGitProjectInfo(gitProjectId)
-        if (projectInfo != null) streamBasicSettingDao.updateInfoSetting(
+    // 更新时同步更新蓝盾项目名称
+    fun refreshSetting(userId: String, gitProjectId: Long) {
+        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
+        val oldData = streamBasicSettingDao.getSetting(dslContext, gitProjectId) ?: return
+        streamBasicSettingDao.updateInfoSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             gitProjectName = projectInfo.name,
             url = projectInfo.gitSshUrl ?: "",
             homePage = projectInfo.homepage ?: "",
             httpUrl = projectInfo.gitHttpsUrl ?: "",
-            sshUrl = projectInfo.gitSshUrl ?: ""
+            sshUrl = projectInfo.gitSshUrl ?: "",
+            desc = projectInfo.description,
+            avatar = projectInfo.avatarUrl
         )
+        if (oldData.name != projectInfo.name) {
+            try {
+                client.get(ServiceTxProjectResource::class).updateProjectName(
+                    userId = userId,
+                    projectCode = GitCommonUtils.getCiProjectId(gitProjectId),
+                    projectName = projectInfo.name
+                )
+            } catch (e: Throwable) {
+                logger.error("update bkci project name error :${e.message}")
+            }
+        }
     }
 
     fun getMaxId(

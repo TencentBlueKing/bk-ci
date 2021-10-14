@@ -54,17 +54,19 @@ import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
+import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
+import com.tencent.devops.stream.trigger.parsers.PreTrigger
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -79,17 +81,20 @@ class GitCITriggerService @Autowired constructor(
     private val scmClient: ScmClient,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
+    private val streamStorageBean: StreamStorageBean,
     private val gitCISettingDao: StreamBasicSettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val rabbitTemplate: RabbitTemplate,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val streamScmService: StreamScmService,
     private val triggerParameter: TriggerParameter,
+    private val preTrigger: PreTrigger,
     private val mergeConflictCheck: MergeConflictCheck,
     private val yamlVersion: YamlVersion,
     private val pipelineDelete: PipelineDelete,
     private val triggerExceptionService: TriggerExceptionService,
-    private val tokenService: StreamGitTokenService
+    private val tokenService: StreamGitTokenService,
+    private val yamlSchemaCheck: YamlSchemaCheck
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -103,8 +108,8 @@ class GitCITriggerService @Autowired constructor(
     }
 
     fun externalCodeGitBuild(event: String): Boolean? {
+        val start = LocalDateTime.now().timestampmilli()
         logger.info("Trigger code git build($event)")
-
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
         } catch (e: Exception) {
@@ -114,12 +119,19 @@ class GitCITriggerService @Autowired constructor(
 
         val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
 
+        // 做一些在接收到请求后做的预处理
+        if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value) {
+            preTrigger.enableAtomCi(gitRequestEvent, (eventObject as GitPushEvent).repository)
+        }
+
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         // 完全没创建过得项目不存记录
         if (null == gitCIBasicSetting) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
             return null
         }
+
+        streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
         return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
             checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
@@ -162,7 +174,8 @@ class GitCITriggerService @Autowired constructor(
         ) {
             return false
         }
-        logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}ms to match trigger pipeline")
+
+        streamStorageBean.pipelineAndConflictTime(LocalDateTime.now().timestampmilli() - start)
 
         return matchAndTriggerPipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
     }
@@ -174,6 +187,8 @@ class GitCITriggerService @Autowired constructor(
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
+        val start = LocalDateTime.now().timestampmilli()
+
         val mrEvent = event is GitMergeRequestEvent
         val isMerged = if (mrEvent) {
             val e = event as GitMergeRequestEvent
@@ -199,10 +214,16 @@ class GitCITriggerService @Autowired constructor(
 
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         if (event is GitPushEvent || event is GitMergeRequestEvent && !isFork) {
-            pipelineDelete.checkAndDeletePipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+            pipelineDelete.checkAndDeletePipeline(
+                gitRequestEvent = gitRequestEvent,
+                event = event,
+                path2PipelineExists = path2PipelineExists,
+                gitProjectConf = gitProjectConf,
+                gitToken = gitToken
+            )
         }
         // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
-        if (isDeleteBranch(gitRequestEvent)) {
+        if (gitRequestEvent.isDeleteBranch()) {
             return true
         }
 
@@ -222,11 +243,13 @@ class GitCITriggerService @Autowired constructor(
             yamlPathList.add(ciFileName)
         }
 
-        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
-            "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
-            "commitTime:${gitRequestEvent.commitTimeStamp}, " +
-            "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
-            "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}")
+        logger.info(
+            "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
+                    "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
+                    "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+                    "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
+                    "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
+        )
 
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
@@ -268,6 +291,8 @@ class GitCITriggerService @Autowired constructor(
         } else {
             emptySet()
         }
+
+        streamStorageBean.yamlListCheckTime(LocalDateTime.now().timestampmilli() - start)
 
         yamlPathList.forEach { filePath ->
 
@@ -347,6 +372,8 @@ class GitCITriggerService @Autowired constructor(
         gitProjectConf: GitCIBasicSetting,
         forkGitProjectId: Long?
     ) {
+        val start = LocalDateTime.now().timestampmilli()
+
         val filePath = buildPipeline.filePath
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
@@ -395,6 +422,16 @@ class GitCITriggerService @Autowired constructor(
                 useAccessToken = true
             )
         }
+
+        yamlSchemaCheck.check(
+            StreamTriggerContext(
+                gitEvent = event,
+                requestEvent = gitRequestEvent,
+                streamSetting = gitProjectConf,
+                pipeline = buildPipeline,
+                originYaml = originYaml
+            ), templateType = null, isCiFile = true
+        )
 
         // 为已存在的流水线设置名称
         buildPipeline.displayName = displayName
@@ -451,6 +488,7 @@ class GitCITriggerService @Autowired constructor(
                 forkGitProjectId = forkGitProjectId
             )
         }
+        streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
     }
 
     private fun dispatchStreamTrigger(event: StreamTriggerEvent) {
@@ -465,8 +503,10 @@ class GitCITriggerService @Autowired constructor(
         block: Boolean,
         state: GitCICommitCheckState
     ) {
-        logger.info("CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
-            "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}")
+        logger.info(
+            "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
+                    "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
+        )
         if (gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
@@ -531,12 +571,5 @@ class GitCITriggerService @Autowired constructor(
                 gitProjectId
             }
         }
-    }
-
-    // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
-    private fun isDeleteBranch(requestEvent: GitRequestEvent): Boolean {
-        return requestEvent.objectKind == TGitObjectKind.PUSH.value &&
-            requestEvent.operationKind == TGitPushOperationKind.DELETE.value &&
-            requestEvent.extensionAction == TGitPushActionKind.DELETE_BRANCH.value
     }
 }
