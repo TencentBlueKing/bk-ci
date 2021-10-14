@@ -25,8 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v2.common
+package com.tencent.devops.stream.pojo
 
-object CommonConst {
-    const val REDIS_STREAM_YAML_SCHEMA = "stream:yaml.schema.v2:json"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("手动触发返回结果")
+data class TriggerBuildResult(
+    @ApiModelProperty("工蜂项目ID")
+    val projectId: Long,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String?,
+    @ApiModelProperty("描述")
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null,
+    @ApiModelProperty("触发的构建ID")
+    val buildId: String,
+    @ApiModelProperty("触发的构建详情页")
+    val buildUrl: String
+)

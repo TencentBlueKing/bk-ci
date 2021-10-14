@@ -27,10 +27,13 @@
 
 package com.tencent.devops.stream.v2.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -71,27 +74,36 @@ class StreamBasicSettingDao {
                         ENABLE_USER_ID,
                         CREATOR_BG_NAME,
                         CREATOR_DEPT_NAME,
-                        CREATOR_CENTER_NAME
-                    )
-                        .values(
-                            conf.gitProjectId,
-                            conf.name,
-                            conf.url,
-                            conf.homepage,
-                            conf.gitHttpUrl,
-                            conf.gitSshUrl,
-                            conf.enableCi,
-                            conf.buildPushedBranches,
-                            conf.buildPushedPullRequest,
-                            LocalDateTime.now(),
-                            LocalDateTime.now(),
-                            projectCode,
-                            conf.enableMrBlock,
-                            conf.enableUserId,
-                            conf.creatorBgName,
-                            conf.creatorDeptName,
-                            conf.creatorCenterName
-                        ).execute()
+                        CREATOR_CENTER_NAME,
+                        GIT_PROJECT_DESC,
+                        GIT_PROJECT_AVATAR,
+                        LAST_CI_INFO
+                    ).values(
+                        conf.gitProjectId,
+                        conf.name,
+                        conf.url,
+                        conf.homepage,
+                        conf.gitHttpUrl,
+                        conf.gitSshUrl,
+                        conf.enableCi,
+                        conf.buildPushedBranches,
+                        conf.buildPushedPullRequest,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        projectCode,
+                        conf.enableMrBlock,
+                        conf.enableUserId,
+                        conf.creatorBgName,
+                        conf.creatorDeptName,
+                        conf.creatorCenterName,
+                        conf.gitProjectDesc,
+                        conf.gitProjectAvatar,
+                        if (conf.lastCiInfo == null) {
+                            null
+                        } else {
+                            JsonUtil.toJson(conf.lastCiInfo!!)
+                        }
+                    ).execute()
                 } else {
                     context.update(this)
                         .set(ENABLE_CI, conf.enableCi)
@@ -118,16 +130,37 @@ class StreamBasicSettingDao {
         url: String,
         sshUrl: String,
         httpUrl: String,
-        homePage: String
+        homePage: String,
+        desc: String?,
+        avatar: String?
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
-            dslContext.update(this)
+            val dsl = dslContext.update(this)
                 .set(NAME, gitProjectName)
                 .set(URL, url)
                 .set(HOME_PAGE, homePage)
                 .set(GIT_HTTP_URL, httpUrl)
                 .set(GIT_SSH_URL, sshUrl)
                 .set(UPDATE_TIME, LocalDateTime.now())
+            if (desc != null) {
+                dsl.set(GIT_PROJECT_DESC, desc)
+            }
+            if (avatar != null) {
+                dsl.set(GIT_PROJECT_AVATAR, avatar)
+            }
+            dsl.where(ID.eq(gitProjectId))
+                .execute()
+        }
+    }
+
+    fun updateSettingLastCiInfo(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        ciInfo: CIInfo
+    ) {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            dslContext.update(this)
+                .set(LAST_CI_INFO, JsonUtil.toJson(ciInfo))
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -177,7 +210,11 @@ class StreamBasicSettingDao {
         }
     }
 
-    fun getSetting(dslContext: DSLContext, gitProjectId: Long): GitCIBasicSetting? {
+    fun getSetting(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        hasLastInfo: Boolean = false
+    ): GitCIBasicSetting? {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val conf = dslContext.selectFrom(this)
                 .where(ID.eq(gitProjectId))
@@ -202,7 +239,14 @@ class StreamBasicSettingDao {
                     enableUserId = conf.enableUserId,
                     creatorBgName = conf.creatorBgName,
                     creatorDeptName = conf.creatorDeptName,
-                    creatorCenterName = conf.creatorCenterName
+                    creatorCenterName = conf.creatorCenterName,
+                    gitProjectDesc = conf.gitProjectDesc,
+                    gitProjectAvatar = conf.gitProjectAvatar,
+                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    } else {
+                        null
+                    }
                 )
             }
         }

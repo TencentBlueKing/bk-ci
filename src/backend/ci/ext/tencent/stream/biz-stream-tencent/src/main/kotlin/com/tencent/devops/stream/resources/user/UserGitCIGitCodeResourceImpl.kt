@@ -44,6 +44,7 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.stream.v2.service.StreamProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,19 +52,28 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamProjectService: StreamProjectService
 ) : UserGitCIGitCodeResource {
 
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
-        return Result(
-            streamScmService.getProjectInfo(
-                token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
-                gitProjectId = gitProjectId,
-                useAccessToken = true
+        val projectInfo = streamScmService.getProjectInfo(
+            token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
+            gitProjectId = gitProjectId,
+            useAccessToken = true
+        ) ?: return Result(null)
+        // 增加用户访问记录
+        streamProjectService.addUserProjectHistory(
+            userId = userId,
+            projectId = GitCommonUtils.getCiProjectId(
+                projectInfo.gitProjectId.toLong()
             )
+        )
+        return Result(
+            projectInfo
         )
     }
 

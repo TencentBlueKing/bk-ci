@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.parsers
+package com.tencent.devops.stream.trigger.parsers.yamlCheck
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
@@ -42,30 +40,27 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
-import com.tencent.devops.stream.v2.common.CommonConst
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class YamlCheck @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
-    }
+object YamlFormat {
+
+    private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
-    fun formatAndCheckYaml(
+    fun formatYaml(
         originYaml: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String,
         isMr: Boolean
     ): PreTemplateScriptBuildYaml {
         return try {
-            formatAndCheckYaml(originYaml)
+            YamlUtil.getObjectMapper().readValue(
+                ScriptYmlUtils.formatYaml(originYaml),
+                PreTemplateScriptBuildYaml::class.java
+            )
         } catch (e: Throwable) {
             logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
@@ -97,38 +92,5 @@ class YamlCheck @Autowired constructor(
                 )
             )
         }
-    }
-
-    @Throws(
-        JsonProcessingException::class,
-        RuntimeException::class,
-        IOException::class,
-        Exception::class,
-        YamlFormatException::class
-    )
-    fun formatAndCheckYaml(originYaml: String): PreTemplateScriptBuildYaml {
-        val formatYamlStr = ScriptYmlUtils.formatYaml(originYaml)
-        val yamlJsonStr = ScriptYmlUtils.convertYamlToJson(formatYamlStr)
-
-        val gitciYamlSchema = redisOperation.get(CommonConst.REDIS_STREAM_YAML_SCHEMA)
-            ?: throw RuntimeException("Check Schema is null.")
-
-        val (schemaPassed, errorMessage) = ScriptYmlUtils.validate(
-            schema = gitciYamlSchema,
-            yamlJson = yamlJsonStr
-        )
-
-        // 先做总体的schema校验
-        if (!schemaPassed) {
-            logger.warn("Check yaml schema failed. $errorMessage")
-            throw YamlFormatException(errorMessage)
-        }
-
-        val preTemplateYamlObject =
-            YamlUtil.getObjectMapper().readValue(formatYamlStr, PreTemplateScriptBuildYaml::class.java)
-        // 检查Yaml语法的格式问题
-        ScriptYmlUtils.checkYaml(preTemplateYamlObject, originYaml)
-
-        return preTemplateYamlObject
     }
 }

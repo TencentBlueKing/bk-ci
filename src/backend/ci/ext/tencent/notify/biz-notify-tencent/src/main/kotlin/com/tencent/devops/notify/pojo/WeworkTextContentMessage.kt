@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.notify.pojo
 
-/**
- * 定义引擎命令
- */
-interface Cmd<T : CmdContext> {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("企业微信机器人消息内容")
+data class WeworkTextContentMessage(
+    /**
+     * 文本内容，最长不超过2048个字节，必须是utf8编码
+     */
+    @ApiModelProperty("文本内容")
+    val content: String,
 
     /**
-     * 当前[commandContext]上下文能否满足运行条件
+     * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
      */
-    fun canExecute(commandContext: T): Boolean
+    @JsonProperty("mentioned_list")
+    @ApiModelProperty("userid的列表")
+    val mentionedList: Set<String>?,
 
     /**
-     * 本命令[commandContext]上下文执行核心处理逻辑
+     * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
      */
-    fun execute(commandContext: T)
-
-    /**
-     * 执行总入口，将调用[canExecute]判断是否满足再执行[execute]函数，
-     * 并将[chain]链式传递[commandContext]继续执行下去
-     */
-    fun doExecute(commandContext: T, chain: CmdChain<T>) {
-        if (canExecute(commandContext)) {
-            execute(commandContext)
-        }
-        chain.doCommand(commandContext)
-    }
-}
+    @JsonProperty("mentioned_mobile_list")
+    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人")
+    val mentionedMobileList: Set<String>?
+)

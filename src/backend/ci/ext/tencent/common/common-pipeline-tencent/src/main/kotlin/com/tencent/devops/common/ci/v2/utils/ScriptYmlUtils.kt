@@ -138,6 +138,7 @@ object ScriptYmlUtils {
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
+
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -146,11 +147,10 @@ object ScriptYmlUtils {
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
-            val realValue = settingMap[matcher.group(1).trim()]
-            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
-            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
+            val realValue = settingMap[matcher.group(1).trim()] ?: continue
+            newValue = newValue!!.replace(matcher.group(), realValue)
         }
-
+        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
         return newValue
     }
 
@@ -683,10 +683,8 @@ object ScriptYmlUtils {
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
-        val schemaNode =
-            jsonNodeFromString(schema)
-        val jsonNode =
-            jsonNodeFromString(yamlJson)
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()

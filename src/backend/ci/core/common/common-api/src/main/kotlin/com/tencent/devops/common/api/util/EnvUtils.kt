@@ -160,7 +160,8 @@ object EnvUtils {
             } else if (c == '}') {
                 val value = data[token.toString()] ?: contextMap?.get(token.toString())
                 if (value != null) {
-                    if (depth > 0 && value.startsWith("\${")) {
+                    // 去掉value.startsWith("\${")是考虑以xxx_${{xxx}}前缀的情况
+                    if (depth > 0) {
                         newValue.append(
                             parseWithSingleCurlyBraces(
                                 command = value,
@@ -210,7 +211,8 @@ object EnvUtils {
                 val tokenStr = token.toString().trim()
                 val value = data[tokenStr] ?: contextMap?.get(tokenStr)
                 if (value != null) {
-                    if (depth > 0 && value.startsWith("\${{")) {
+                    // 去掉value.startsWith是考虑xxx_${{xxx}}前缀的情况
+                    if (depth > 0) {
                         newValue.append(parseWithDoubleCurlyBraces(value, data, escape, contextMap, depth - 1))
                     } else {
                         newValue.append(value)

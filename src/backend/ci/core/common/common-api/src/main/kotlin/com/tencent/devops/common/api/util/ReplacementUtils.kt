@@ -145,7 +145,8 @@ object ReplacementUtils {
                 if (tokenValue == null) {
                     tokenValue = "\${$token}"
                 } else {
-                    if (depth > 0 && tokenValue.startsWith("\${")) {
+                    // 去掉tokenValue.startsWith("\${")是考虑存在XXX_${{xxxx}}这种有前缀的情况
+                    if (depth > 0) {
                         tokenValue = parseTemplate(tokenValue, replacement, contextMap, depth - 1)
                     }
                 }
@@ -188,7 +189,8 @@ object ReplacementUtils {
                 if (tokenValue == null) {
                     tokenValue = "\${{$token}}"
                 } else {
-                    if (depth > 0 && tokenValue.startsWith("\${")) {
+                    // 去掉tokenValue.startsWith是考虑有xxx_${{xxx}前缀的情况
+                    if (depth > 0) {
                         tokenValue = parseWithDoubleCurlyBraces(tokenValue, replacement, contextMap, depth - 1)
                     }
                 }
