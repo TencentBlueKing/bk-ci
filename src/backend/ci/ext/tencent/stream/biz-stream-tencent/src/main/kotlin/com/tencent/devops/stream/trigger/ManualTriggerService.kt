@@ -186,7 +186,7 @@ class ManualTriggerService @Autowired constructor(
                 buildId = result.id,
                 buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = buildPipeline.gitProjectId.toString(),
+                    gitProjectId = buildPipeline.gitProjectId,
                     pipelineId = pipelineId,
                     buildId = result.id
                 )
@@ -212,7 +212,7 @@ class ManualTriggerService @Autowired constructor(
                 buildId = result.id,
                 buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = buildPipeline.gitProjectId.toString(),
+                    gitProjectId = buildPipeline.gitProjectId,
                     pipelineId = pipelineId,
                     buildId = result.id
                 )
