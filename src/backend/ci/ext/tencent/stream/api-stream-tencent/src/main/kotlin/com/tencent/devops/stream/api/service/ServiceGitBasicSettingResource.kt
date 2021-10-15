@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -77,6 +79,17 @@ interface ServiceGitBasicSettingResource {
         @PathParam("projectId")
         projectId: String
     ): Result<GitCIBasicSetting?>
+
+    @ApiOperation("校验用户的工蜂项目权限")
+    @GET
+    @Path("/validate")
+    fun validateGitProject(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工蜂项目URL", required = true)
+        request: GitUserValidateRequest
+    ): Result<GitUserValidateResult>
 
     @ApiOperation("保存Stream配置")
     @POST
