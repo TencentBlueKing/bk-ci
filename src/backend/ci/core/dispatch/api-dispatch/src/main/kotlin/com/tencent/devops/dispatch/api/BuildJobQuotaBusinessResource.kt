@@ -25,47 +25,60 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
-    private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun checkAndAddRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        containerId: String,
-        containerHashId: String?
-    ): Result<Boolean> {
-        val result = jobQuotaBusinessService.checkAndAddRunningJob(
-            projectId = projectId,
-            vmType = vmType,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount,
-            containerId = containerId,
-            containerHashId = containerHashId
-        )
-        return Result(result)
-    }
+@Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
+@Path("/build/quotas/running")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildJobQuotaBusinessResource {
 
-    override fun removeRunningJob(
+    @ApiOperation("上报一个Agent启动")
+    @POST
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    fun addRunningAgent(
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
         projectId: String,
+        @ApiParam(value = "buildId", required = true)
+        @PathParam("buildId")
         buildId: String,
+        @ApiParam(value = "vmSeqId", required = true)
+        @PathParam("vmSeqId")
         vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
         executeCount: Int
-    ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId, executeCount)
-        return Result(true)
-    }
+    ): Result<Boolean>
+
+    @ApiOperation("上报一个Agent结束")
+    @DELETE
+    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    fun removeRunningAgent(
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "buildId", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam(value = "vmSeqId", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int
+    ): Result<Boolean>
 }
