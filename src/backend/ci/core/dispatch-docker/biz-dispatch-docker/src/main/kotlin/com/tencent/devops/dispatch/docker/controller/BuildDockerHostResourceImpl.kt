@@ -38,7 +38,10 @@ import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
+import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 
 @RestResource@Suppress("ALL")
 class BuildDockerHostResourceImpl @Autowired constructor(
@@ -54,6 +57,15 @@ class BuildDockerHostResourceImpl @Autowired constructor(
 
     override fun getResourceConfig(pipelineId: String, vmSeqId: String): Result<DockerResourceOptionsVO> {
         return Result(dockerResourceOptionsService.getDockerResourceConfig(pipelineId, vmSeqId))
+    }
+
+    override fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int
+    ): Result<List<String>> {
+        return Result(dockerHostBuildService.getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo))
     }
 
     override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
