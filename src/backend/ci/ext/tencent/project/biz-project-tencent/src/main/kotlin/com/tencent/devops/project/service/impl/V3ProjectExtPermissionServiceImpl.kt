@@ -30,12 +30,16 @@ package com.tencent.devops.project.service.impl
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.api.ServiceRoleResource
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -156,6 +160,38 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             members = memberList,
             checkGradeManager = checkManager
         )
+        return true
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean {
+        logger.info("grantInstancePermission $userId|$projectId|$action|$resourceType|$resourceCode|$userList")
+        // 此处做保护,防止用户一次加太多用户
+        if (userList.size > TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE) {
+            logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
+            throw ParamBlankException("授权用户数越界:${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
+        }
+        userList.forEach {
+            val grantInstanceDTO = GrantInstanceDTO(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                permission = action,
+                createUser = it,
+                resourceName = null
+            )
+            client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+                userId = userId,
+                projectCode = projectId,
+                token = tokenService.getSystemToken(null)!!,
+                grantInstance = grantInstanceDTO
+            ).data ?: false
+        }
         return true
     }
 

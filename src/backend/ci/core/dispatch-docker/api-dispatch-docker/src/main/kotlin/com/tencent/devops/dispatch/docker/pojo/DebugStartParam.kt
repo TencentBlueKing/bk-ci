@@ -42,15 +42,19 @@ data class DebugStartParam(
     @ApiModelProperty("vmSeqId", required = true)
     val vmSeqId: String,
     @ApiModelProperty("imageType为BKSTORE时的镜像编码", required = false)
-    val imageCode: String?,
+    val imageCode: String? = null,
     @ApiModelProperty("imageType为BKSTORE时的镜像版本", required = false)
-    val imageVersion: String?,
+    val imageVersion: String? = null,
     @ApiModelProperty("镜像名称", required = false)
-    val imageName: String?,
+    val imageName: String? = null,
     @ApiModelProperty("环境变量", required = true)
     val buildEnv: Map<String, String>?,
-    @ApiModelProperty("镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = true)
-    val imageType: String?,
-    @ApiModelProperty("镜像仓库凭证ID", required = true)
-    val credentialId: String?
+    @ApiModelProperty("镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
+    val imageType: String? = null,
+    @ApiModelProperty("镜像仓库凭证ID", required = false)
+    val credentialId: String? = null,
+    @ApiModelProperty("启动命令", required = false)
+    val cmd: String? = "/bin/sh",
+    @ApiModelProperty("镜像信息", required = false)
+    val containerPool: String? = null
 )

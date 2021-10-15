@@ -151,7 +151,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
     private fun isExcludePathMatch(trigger: Trigger): Boolean {
         if (trigger.paths?.exclude != null && trigger.paths!!.exclude!!.isNotEmpty()) {
             logger.info("Exclude path set ($trigger.paths.exclude)")
-            (event as GitPushEvent).commits.forEach { commit ->
+            (event as GitPushEvent).commits?.forEach { commit ->
                 commit.added?.forEach { path ->
                     trigger.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
@@ -186,7 +186,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         if (trigger.paths?.include != null && trigger.paths!!.include!!.isNotEmpty()) {
             logger.info("Include path set(${trigger.paths!!.include})")
             run outside@{
-                (event as GitPushEvent).commits.forEach { commit ->
+                (event as GitPushEvent).commits?.forEach { commit ->
                     commit.added?.forEach { path ->
                         trigger.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {

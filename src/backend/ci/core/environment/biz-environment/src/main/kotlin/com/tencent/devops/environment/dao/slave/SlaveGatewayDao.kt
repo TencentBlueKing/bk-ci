@@ -30,6 +30,7 @@ package com.tencent.devops.environment.dao.slave
 import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
 import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
 import org.jooq.DSLContext
+import org.jooq.UpdateSetMoreStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -38,6 +39,25 @@ class SlaveGatewayDao {
     fun list(dslContext: DSLContext): List<TEnvironmentSlaveGatewayRecord> {
         with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
             return dslContext.selectFrom(this).fetch()
+        }
+    }
+
+    fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentSlaveGatewayRecord>>()
+                val transactionContext = org.jooq.impl.DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    oldToNewMap.forEach nextOne@{ (old, new) ->
+                        if (!record.gateway.contains(old)) return@nextOne
+                        val update = transactionContext.update(this)
+                            .set(GATEWAY, record.gateway.replace(old, new))
+                        update.where(ID.eq(record.id))
+                        updates.add(update)
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
         }
     }
 }
