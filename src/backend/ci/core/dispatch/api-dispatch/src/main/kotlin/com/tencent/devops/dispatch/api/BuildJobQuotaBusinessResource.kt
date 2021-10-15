@@ -27,12 +27,17 @@
 
 package com.tencent.devops.dispatch.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -48,16 +53,19 @@ interface BuildJobQuotaBusinessResource {
 
     @ApiOperation("上报一个Agent启动")
     @POST
-    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    @Path("/agent/start")
     fun addRunningAgent(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
+        @ApiParam(value = "构建job序号", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
         @ApiParam(value = "executeCount", required = true)
         @QueryParam("executeCount")
@@ -66,16 +74,19 @@ interface BuildJobQuotaBusinessResource {
 
     @ApiOperation("上报一个Agent结束")
     @DELETE
-    @Path("/agent/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    @Path("/agent/shutdown")
     fun removeRunningAgent(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
+        @ApiParam(value = "构建job序号", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
         @ApiParam(value = "executeCount", required = true)
         @QueryParam("executeCount")

@@ -61,11 +61,12 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
 
     override fun removeRunningJob(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId, executeCount)
+        jobQuotaBusinessService.deleteRunningJob(projectId, pipelineId, buildId, vmSeqId, executeCount)
         return Result(true)
     }
 }
