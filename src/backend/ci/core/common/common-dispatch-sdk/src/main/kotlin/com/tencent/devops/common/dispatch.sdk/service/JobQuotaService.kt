@@ -92,7 +92,10 @@ class JobQuotaService constructor(
                     executeCount = executeCount ?: 1
                 )
 
-                dispatchService.redispatch(startupEvent.copy(routeKeySuffix = demoteQueueRouteKeySuffix))
+                dispatchService.redispatch(startupEvent.copy(
+                    routeKeySuffix = demoteQueueRouteKeySuffix,
+                    delayMills = 0
+                ))
 
                 return false
             } else {
