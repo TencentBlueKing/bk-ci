@@ -76,11 +76,14 @@ interface ServiceJobQuotaBusinessResource {
 
     @ApiOperation("上报一个JOB结束")
     @DELETE
-    @Path("/job/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    @Path("/job/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun removeRunningJob(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam(value = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,

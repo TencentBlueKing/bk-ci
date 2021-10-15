@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.pojo
 
 data class JobQuotaHistory(
     val projectId: String,
+    val pipelineId: String,
     val buildId: String,
     val vmSeqId: String,
     val executeCount: Int,
