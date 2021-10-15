@@ -29,43 +29,32 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.api.BuildJobQuotaBusinessResource
 import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
+@RestResource@Suppress("ALL")
+class BuildJobQuotaBusinessResourceImpl @Autowired constructor(
     private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun checkAndAddRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        containerId: String,
-        containerHashId: String?
-    ): Result<Boolean> {
-        val result = jobQuotaBusinessService.checkAndAddRunningJob(
-            projectId = projectId,
-            vmType = vmType,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount,
-            containerId = containerId,
-            containerHashId = containerHashId
-        )
-        return Result(result)
-    }
+) : BuildJobQuotaBusinessResource {
 
-    override fun removeRunningJob(
+    override fun addRunningAgent(
         projectId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId, executeCount)
+        jobQuotaBusinessService.updateAgentStartTime(projectId, buildId, vmSeqId, executeCount)
+        return Result(true)
+    }
+
+    override fun removeRunningAgent(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): Result<Boolean> {
+        jobQuotaBusinessService.updateRunningTime(projectId, buildId, vmSeqId, executeCount)
         return Result(true)
     }
 }
