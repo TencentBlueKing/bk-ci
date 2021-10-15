@@ -78,6 +78,7 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
             recommendFlag = recommendFlag,
             keyword = keyword,
             queryProjectAtomFlag = queryProjectAtomFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
             page = page,
             pageSize = pageSize
