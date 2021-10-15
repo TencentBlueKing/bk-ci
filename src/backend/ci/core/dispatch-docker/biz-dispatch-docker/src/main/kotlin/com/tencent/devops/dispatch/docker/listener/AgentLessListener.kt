@@ -110,6 +110,7 @@ class AgentLessListener @Autowired constructor(
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
             jobQuotaService.removeRunningJob(
                 projectId = pipelineBuildLessDockerAgentShutdownEvent.projectId,
+                pipelineId = pipelineBuildLessDockerAgentShutdownEvent.pipelineId,
                 buildId = pipelineBuildLessDockerAgentShutdownEvent.buildId,
                 vmSeqId = pipelineBuildLessDockerAgentShutdownEvent.vmSeqId,
                 executeCount = pipelineBuildLessDockerAgentShutdownEvent.executeCount

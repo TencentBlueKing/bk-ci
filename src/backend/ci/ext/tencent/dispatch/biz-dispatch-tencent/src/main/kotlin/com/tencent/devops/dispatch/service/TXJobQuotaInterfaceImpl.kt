@@ -25,48 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
-    private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun checkAndAddRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        containerId: String,
-        containerHashId: String?
-    ): Result<Boolean> {
-        val result = jobQuotaBusinessService.checkAndAddRunningJob(
-            projectId = projectId,
-            vmType = vmType,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount,
-            containerId = containerId,
-            containerHashId = containerHashId
-        )
-        return Result(result)
-    }
-
-    override fun removeRunningJob(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int
-    ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, pipelineId, buildId, vmSeqId, executeCount)
-        return Result(true)
+@Service
+class TXJobQuotaInterfaceImpl @Autowired constructor(
+    private val kafkaClient: KafkaClient
+) : JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
+        kafkaClient.send(KafkaTopic.JOB_QUOTA_HISYORY_TOPIC, JsonUtil.toJson(jobQuotaHistory))
     }
 }

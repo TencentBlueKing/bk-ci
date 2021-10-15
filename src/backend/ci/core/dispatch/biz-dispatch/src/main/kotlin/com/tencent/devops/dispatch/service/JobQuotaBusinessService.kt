@@ -101,12 +101,13 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun deleteRunningJob(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ) {
         LOG.info("$projectId|$buildId|$vmSeqId|$executeCount >>> update agent startTime.")
-        jobAgentFinish(projectId, buildId, vmSeqId, executeCount)
+        jobAgentFinish(projectId, pipelineId, buildId, vmSeqId, executeCount)
     }
 
     /**
@@ -114,6 +115,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun updateAgentStartTime(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
@@ -127,12 +129,13 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun updateRunningTime(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ) {
         LOG.info("$projectId|$buildId|$vmSeqId|$executeCount >>> update agent running time.")
-        jobAgentFinish(projectId, buildId, vmSeqId, executeCount)
+        jobAgentFinish(projectId, pipelineId, buildId, vmSeqId, executeCount)
     }
 
     private fun getProjectRunningJobStatus(projectId: String, vmType: JobQuotaVmType): JobQuotaStatus {
@@ -264,6 +267,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun jobAgentFinish(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
@@ -293,6 +297,7 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobQuotaInterface.saveJobQuotaHistory(
                         JobQuotaHistory(
                             projectId = projectId,
+                            pipelineId = pipelineId,
                             buildId = buildId,
                             vmSeqId = vmSeqId,
                             executeCount = executeCount,

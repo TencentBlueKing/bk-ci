@@ -142,12 +142,19 @@ class JobQuotaService constructor(
         }
     }
 
-    fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?, executeCount: Int?) {
+    fun removeRunningJob(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String?,
+        executeCount: Int?
+    ) {
         if (jobQuotaEnable) {
             logger.info("Remove running job to dispatch:[$projectId|$buildId|$vmSeqId]")
             try {
                 client.get(ServiceJobQuotaBusinessResource::class).removeRunningJob(
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId ?: "1",
                     executeCount = executeCount ?: 1
