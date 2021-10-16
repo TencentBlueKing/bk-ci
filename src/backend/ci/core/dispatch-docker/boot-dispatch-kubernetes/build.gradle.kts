@@ -26,11 +26,10 @@
  */
 
 dependencies {
-    api(project(":core:dispatch-docker:biz-dispatch-docker-sample"))
+    api(project(":core:dispatch-docker:biz-dispatch-kubernetes"))
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))
-    api(project(":core:dispatch-docker:biz-dispatch-kubernetes"))
 }
 
 

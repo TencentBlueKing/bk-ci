@@ -185,6 +185,8 @@ include(":core:dispatch-docker:biz-dispatch-docker")
 include(":core:dispatch-docker:biz-dispatch-docker-sample")
 include(":core:dispatch-docker:boot-dispatch-docker")
 include(":core:dispatch-docker:model-dispatch-docker")
+include(":core:dispatch-docker:biz-dispatch-kubernetes")
+include(":core:dispatch-docker:boot-dispatch-kubernetes")
 
 include(":core:plugin")
 include(":core:plugin:api-plugin")

@@ -60,6 +60,7 @@ allprojects {
             dependency("org.elasticsearch:elasticsearch:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
+            dependency("io.kubernetes:client-java:${Versions.K8sClient}")
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")

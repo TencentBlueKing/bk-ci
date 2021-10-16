@@ -1,0 +1,15 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: dispatch-kubernetes${service-suffix}
+    desc: DevOps Dispatch Kubernetes Service
+    version: 4.0.0
+    packageName: com.tencent.devops.dispatch.kubernetes
+
+server:
+  port: 21951
+
+# kubernetes-dispatch集群配置
+kubernetes:
+  nameSpace: bkci-kube-client
