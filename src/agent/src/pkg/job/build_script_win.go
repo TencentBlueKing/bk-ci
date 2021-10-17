@@ -40,7 +40,7 @@ import (
 )
 
 
-func writeStartBuildAgentScriptBat(buildInfo *api.ThirdPartyBuildInfo) (string, error) {
+func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, error) {
 	scriptFile := fmt.Sprintf(
 		"%s/devops_agent_start_%s_%s_%s.bat",
 		systemutil.GetWorkDir(),
