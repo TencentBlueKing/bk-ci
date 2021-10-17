@@ -1,3 +1,5 @@
+// +build linux darwin
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
