@@ -27,68 +27,65 @@
 
 package com.tencent.devops.dispatch.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
-@Path("/service/quotas/running")
+@Path("/build/quotas/running")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceJobQuotaBusinessResource {
+interface BuildJobQuotaBusinessResource {
 
-    @ApiOperation("上报一个JOB启动")
+    @ApiOperation("上报一个Agent启动")
     @POST
-    @Path("/job/projects/{projectId}/vmTypes/{vmType}/builds/{buildId}/vmSeqs/{vmSeqId}")
-    fun checkAndAddRunningJob(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
+    @Path("/agent/start")
+    fun addRunningAgent(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "vmType", required = true)
-        @PathParam("vmType")
-        vmType: JobQuotaVmType,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
+        @ApiParam(value = "构建job序号", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
         @ApiParam(value = "executeCount", required = true)
         @QueryParam("executeCount")
-        executeCount: Int,
-        @ApiParam(value = "containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String,
-        @ApiParam(value = "containerHashId", required = false)
-        @QueryParam("containerHashId")
-        containerHashId: String?
+        executeCount: Int
     ): Result<Boolean>
 
-    @ApiOperation("上报一个JOB结束")
+    @ApiOperation("上报一个Agent结束")
     @DELETE
-    @Path("/job/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmSeqs/{vmSeqId}")
-    fun removeRunningJob(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
+    @Path("/agent/shutdown")
+    fun removeRunningAgent(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "pipelineId", required = true)
-        @PathParam("pipelineId")
+        @ApiParam(value = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam(value = "vmSeqId", required = false)
-        @PathParam("vmSeqId")
+        @ApiParam(value = "构建job序号", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
         @ApiParam(value = "executeCount", required = true)
         @QueryParam("executeCount")

@@ -525,21 +525,36 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
                 logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.RTX}|template=${request.templateCode}")
             } else {
-                val rtxTplRecord =
+//                val rtxTplRecord =
+//                    notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
+//                        dslContext = dslContext,
+//                        commonTemplateId = commonNotifyMessageTemplateRecord.id
+//                    )!!
+//                // 替换标题里的动态参数
+//                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
+//                // 替换内容里的动态参数
+//                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
+//                sendRtxNotifyMessage(
+//                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+//                    sendNotifyMessageTemplateRequest = request,
+//                    title = title,
+//                    body = body,
+//                    sender = rtxTplRecord.sender
+//                )
+                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
+                val weworkTplRecord =
                     notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                         dslContext = dslContext,
                         commonTemplateId = commonNotifyMessageTemplateRecord.id
                     )!!
-                // 替换标题里的动态参数
-                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
-                sendRtxNotifyMessage(
+                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                logger.info("send wework msg: $body ${weworkTplRecord.sender}")
+                sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    title = title,
                     body = body,
-                    sender = rtxTplRecord.sender
+                    sender = weworkTplRecord.sender
                 )
             }
         }

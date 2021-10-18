@@ -25,48 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
-    private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun checkAndAddRunningJob(
-        projectId: String,
-        vmType: JobQuotaVmType,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        containerId: String,
-        containerHashId: String?
-    ): Result<Boolean> {
-        val result = jobQuotaBusinessService.checkAndAddRunningJob(
-            projectId = projectId,
-            vmType = vmType,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount,
-            containerId = containerId,
-            containerHashId = containerHashId
-        )
-        return Result(result)
-    }
-
-    override fun removeRunningJob(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int
-    ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, pipelineId, buildId, vmSeqId, executeCount)
-        return Result(true)
-    }
-}
+@ApiModel("项目的JOB配额")
+data class RunningJobVO(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("构建机类型", required = true)
+    val vmType: JobQuotaVmType,
+    @ApiModelProperty("项目最大并发JOB数， 默认50", required = false)
+    val runningJobMax: Int,
+    @ApiModelProperty("项目单JOB最大执行时间，默认8小时", required = false)
+    val runningTimeJobMax: Int,
+    @ApiModelProperty("项目所有JOB最大执行时间，默认40小时/月", required = false)
+    val runningTimeProjectMax: Int,
+//    @ApiModelProperty("工蜂CI最大并发JOB数量，默认10个", required = false)
+//    val runningJobMaxGitCi: Int,
+//    @ApiModelProperty("工蜂CI单JOB最大执行时间，默认8小时", required = false)
+//    val runningTimeJobMaxGitCi: Int,
+//    @ApiModelProperty("工蜂CI所有JOB单项目最大执行时间，默认40小时/月", required = false)
+//    val runningTimeJobMaxProjectGitCi: Int,
+    @ApiModelProperty("创建时间", required = false)
+    val createdTime: Long?,
+    @ApiModelProperty("修改时间", required = false)
+    val updatedTime: Long?,
+    @ApiModelProperty("操作人", required = false)
+    val operator: String?
+)

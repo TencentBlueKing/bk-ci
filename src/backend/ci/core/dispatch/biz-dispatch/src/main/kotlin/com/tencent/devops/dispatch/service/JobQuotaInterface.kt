@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,23 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:process:api-process"))
-    api(project(":core:project:api-project"))
-    api(project(":core:dispatch:api-dispatch"))
-    api(project(":core:dispatch:model-dispatch"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:monitoring:api-monitoring"))
-    api(project(":core:log:api-log"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:common:common-kafka"))
-    api("com.vmware:vijava")
-    api("org.json:json")
-    api("org.apache.commons:commons-exec")
+package com.tencent.devops.dispatch.service
+
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+
+interface JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
 }

@@ -25,48 +25,61 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.worker.common.api.quota
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-@RestResource
-class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
-    private val jobQuotaBusinessService: JobQuotaBusinessService
-) : ServiceJobQuotaBusinessResource {
-    override fun checkAndAddRunningJob(
+class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
+
+    override fun removeRunningAgent(
         projectId: String,
-        vmType: JobQuotaVmType,
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        containerId: String,
-        containerHashId: String?
+        retryCount: Int
     ): Result<Boolean> {
-        val result = jobQuotaBusinessService.checkAndAddRunningJob(
-            projectId = projectId,
-            vmType = vmType,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount,
-            containerId = containerId,
-            containerHashId = containerHashId
-        )
-        return Result(result)
+        try {
+            val path = "/ms/dispatch/api/build/quotas/running/agent/shutdown?executeCount=$executeCount"
+            val request = buildDelete(path)
+            val errorMessage = "Quota上报agent运行结束状态失败"
+            val responseContent = request(
+                request = request,
+                connectTimeoutInSec = 5L,
+                errorMessage = errorMessage,
+                readTimeoutInSec = 30L,
+                writeTimeoutInSec = 30L
+            )
+            return objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.error("Quota remove running agent failed.", e)
+            return Result(false)
+        }
     }
 
-    override fun removeRunningJob(
+    override fun addRunningAgent(
         projectId: String,
-        pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        executeCount: Int
+        executeCount: Int,
+        retryCount: Int
     ): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, pipelineId, buildId, vmSeqId, executeCount)
-        return Result(true)
+        try {
+            val path = "/ms/dispatch/api/build/quotas/running/agent/start?executeCount=$executeCount"
+            val request = buildPost(path)
+            val errorMessage = "Quota上报agent开始运行失败"
+            val responseContent = request(
+                request = request,
+                connectTimeoutInSec = 5L,
+                errorMessage = errorMessage,
+                readTimeoutInSec = 30L,
+                writeTimeoutInSec = 30L
+            )
+            return objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.error("Quota add running agent failed.", e)
+            return Result(false)
+        }
     }
 }
