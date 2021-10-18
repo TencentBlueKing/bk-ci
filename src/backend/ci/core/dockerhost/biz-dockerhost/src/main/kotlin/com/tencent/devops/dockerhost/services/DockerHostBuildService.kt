@@ -210,7 +210,14 @@ class DockerHostBuildService(
                 .withBinds(binds)
                 .withNetworkMode("bridge")
 
-            mountOverlayfs(dockerBuildInfo, hostConfig)
+            // 挂载构建缓存
+            mountOverlayfs(
+                pipelineId = dockerBuildInfo.pipelineId,
+                vmSeqId = dockerBuildInfo.vmSeqId,
+                poolNo = dockerBuildInfo.poolNo,
+                qpcUniquePath = dockerBuildInfo.qpcUniquePath,
+                hostConfig = hostConfig
+            )
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
@@ -435,7 +442,13 @@ class DockerHostBuildService(
                     .withPortBindings(portBindings)
             }
 
-            mountOverlayfs(dockerBuildInfo, hostConfig)
+            mountOverlayfs(
+                pipelineId = dockerBuildInfo.pipelineId,
+                vmSeqId = dockerBuildInfo.vmSeqId,
+                poolNo = dockerBuildInfo.poolNo,
+                qpcUniquePath = qpcUniquePath,
+                hostConfig = hostConfig
+            )
             val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withEnv(env)
