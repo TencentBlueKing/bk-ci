@@ -268,19 +268,21 @@ class QualityRuleBuildHisService constructor(
                 val ruleResult = if (pass) RuleInterceptResult.INTERCEPT_PASS.name
                             else RuleInterceptResult.INTERCEPT.name
                 logger.info("rule $ruleBuildId update status: $ruleResult, $pass")
-                count = updateStatus(ruleBuildId, ruleResult)
-                qualityRuleBuildHisOperationDao.create(dslContext, userId, ruleBuildId, it.stageId)
-                checkReview(userId, it)
+
+                if (checkReview(userId, it, pass)) {
+                    count = updateStatus(ruleBuildId, ruleResult)
+                    qualityRuleBuildHisOperationDao.create(dslContext, userId, ruleBuildId, it.stageId)
+                }
             }
         }
         return count > 0
     }
 
-    fun checkReview(userId: String, record: TQualityRuleBuildHisRecord) {
+    fun checkReview(userId: String, record: TQualityRuleBuildHisRecord, pass: Boolean): Boolean {
         val stageRules = qualityRuleBuildHisDao.listStageRules(dslContext, record.buildId, record.stageId)
         var passFlag = false
         var stageFinish = false
-        stageRules.map {
+        stageRules.filter { it.id != record.id }.map {
             if (it.status != null) {
                 if (it.status == RuleInterceptResult.INTERCEPT.name ||
                     it.status == RuleInterceptResult.INTERCEPT_PASS.name
@@ -295,7 +297,7 @@ class QualityRuleBuildHisService constructor(
 
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
-            stageRules.map{
+            stageRules.filter { it.id != record.id }.map{
                 if (it.status != null) {
                     if (it.status == RuleInterceptResult.INTERCEPT_PASS.name) {
                         passFlag = true
@@ -306,8 +308,9 @@ class QualityRuleBuildHisService constructor(
                 }
             }
             logger.info("passFlag is $passFlag. start to send stageRequest")
-            val ruleHistory = historyDao.listByRuleId(dslContext, record.projectId, record.id, 0, 1)
-            client.get(ServiceBuildResource::class).qualityTriggerStage(
+            val ruleHistory = historyDao.list(dslContext, record.projectId, record.pipelineId, null, null,
+                null, null, null, null)
+            return client.get(ServiceBuildResource::class).qualityTriggerStage(
                 userId = userId,
                 projectId = record.projectId,
                 pipelineId = record.pipelineId,
@@ -315,10 +318,11 @@ class QualityRuleBuildHisService constructor(
                 stageId = record.stageId,
                 qualityRequest = StageQualityRequest(
                     position = record.rulePos,
-                    pass = passFlag,
-                    checkTimes = ruleHistory.last()?.checkTimes ?: 1
+                    pass = passFlag && pass,
+                    checkTimes = ruleHistory.first()?.checkTimes ?: 1
                 )
-            )
+            ).data ?: false
         }
+        return true
     }
 }
