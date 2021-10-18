@@ -390,9 +390,12 @@ class PipelineStageService @Autowired constructor(
     fun qualityTriggerStage(
         userId: String,
         buildStage: PipelineBuildStage,
-        qualityRequest: StageQualityRequest
+        qualityRequest: StageQualityRequest,
+        inOrOut: Boolean
     ) {
         with(buildStage) {
+            logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
+                "inOrOut=$inOrOut|request=$qualityRequest")
             val (source, actionType) = if (qualityRequest.pass) {
                 Pair(BS_QUALITY_PASS_STAGE, ActionType.REFRESH)
             } else {

@@ -70,6 +70,8 @@ class CheckPauseReviewStageCmd(
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
 
+            LOG.info("ENGINE|${event.buildId}|${event.stageId}|STAGE_CHECK_IN_START|event=$event")
+
             // #5019 只用第一次进入时做准入质量红线检查，如果是审核后的检查则跳过红线
             if (stage.checkIn?.ruleIds?.isNotEmpty() == true && event.source != BS_MANUAL_START_STAGE) {
                 val checkStatus = pipelineStageService.checkStageQuality(

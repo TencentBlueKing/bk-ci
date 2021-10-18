@@ -894,12 +894,12 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
-        val check = when (qualityRequest.position) {
+        val (check, inOrOut) = when (qualityRequest.position) {
             ControlPointPosition.BEFORE_POSITION -> {
-                buildStage.checkIn
+                Pair(buildStage.checkIn, true)
             }
             ControlPointPosition.AFTER_POSITION -> {
-                buildStage.checkOut
+                Pair(buildStage.checkOut, false)
             }
             else -> {
                 throw ErrorCodeException(
@@ -919,7 +919,8 @@ class PipelineBuildFacadeService(
         pipelineStageService.qualityTriggerStage(
             userId = userId,
             buildStage = buildStage,
-            qualityRequest = qualityRequest
+            qualityRequest = qualityRequest,
+            inOrOut = inOrOut
         )
     }
 
