@@ -48,5 +48,5 @@ data class GitUserValidateResult(
     @ApiModelProperty("蓝盾项目ID")
     val projectId: String,
     @ApiModelProperty("是否开启CI功能")
-    val enableCi: Boolean,
+    val enableCi: Boolean
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

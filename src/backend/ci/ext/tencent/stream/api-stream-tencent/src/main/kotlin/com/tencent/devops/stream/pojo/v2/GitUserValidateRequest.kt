@@ -29,8 +29,6 @@ package com.tencent.devops.stream.pojo.v2
 
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.pojo.Repository
-import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
