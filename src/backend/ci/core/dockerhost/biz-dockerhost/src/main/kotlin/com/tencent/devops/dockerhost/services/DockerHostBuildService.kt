@@ -31,15 +31,11 @@ import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.Capability
-import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.Statistics
-import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
@@ -73,7 +69,6 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
