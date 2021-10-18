@@ -143,7 +143,7 @@ type WTS_SESSION_INFO struct {
 }
 
 const (
-    CREATE_UNICODE_ENVIRONMENT uint16 = 0x00000400
+    CREATE_UNICODE_ENVIRONMENT uint32 = 0x00000400
     CREATE_NO_WINDOW                  = 0x08000000
     CREATE_NEW_CONSOLE                = 0x00000010
 )
@@ -329,7 +329,7 @@ func StartProcessAsCurrentUser(cmdLine, workDir string, envMap map[string]string
     }
 
 
-    creationFlags := CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE
+    creationFlags := CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW //  | CREATE_NEW_CONSOLE
     startupInfo.ShowWindow = SW_SHOW
     startupInfo.Desktop = windows.StringToUTF16Ptr("winsta0\\default")
 
