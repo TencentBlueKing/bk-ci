@@ -40,21 +40,23 @@ class BuildJobQuotaBusinessResourceImpl @Autowired constructor(
 
     override fun addRunningAgent(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ): Result<Boolean> {
-        jobQuotaBusinessService.updateAgentStartTime(projectId, buildId, vmSeqId, executeCount)
+        jobQuotaBusinessService.updateAgentStartTime(projectId, pipelineId, buildId, vmSeqId, executeCount)
         return Result(true)
     }
 
     override fun removeRunningAgent(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         vmSeqId: String,
         executeCount: Int
     ): Result<Boolean> {
-        jobQuotaBusinessService.updateRunningTime(projectId, buildId, vmSeqId, executeCount)
+        jobQuotaBusinessService.updateRunningTime(projectId, pipelineId, buildId, vmSeqId, executeCount)
         return Result(true)
     }
 }
