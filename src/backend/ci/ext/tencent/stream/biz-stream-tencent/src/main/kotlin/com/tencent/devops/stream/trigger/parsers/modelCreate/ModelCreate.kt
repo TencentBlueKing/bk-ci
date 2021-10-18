@@ -134,17 +134,20 @@ class ModelCreate @Autowired constructor(
             params = params
         )
 
-        val stageId = VMUtils.genStageId(0)
+        // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
+        var stageIndex = 1
+        val stageId = VMUtils.genStageId(stageIndex++)
         val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
         stageList.add(stage1)
 
         // 其他的stage
-        yaml.stages.forEachIndexed { stageIndex, stage ->
+        yaml.stages.forEach { stage ->
             stageList.add(modelStage.createStage(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1,
+                // stream的stage标号从1开始，后续都加1
+                stageIndex = stageIndex++,
                 resources = yaml.resource,
                 pipeline = pipeline
             ))
@@ -165,6 +168,7 @@ class ModelCreate @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
+                    stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
                     pipeline = pipeline

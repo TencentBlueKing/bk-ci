@@ -581,7 +581,7 @@ class YamlBuildV2 @Autowired constructor(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                // stream的stage标号从0开始，后续都加1
+                // stream的stage标号从1开始，后续都加1
                 stageIndex = stageIndex++,
                 resources = yaml.resource,
                 pipeline = pipeline
