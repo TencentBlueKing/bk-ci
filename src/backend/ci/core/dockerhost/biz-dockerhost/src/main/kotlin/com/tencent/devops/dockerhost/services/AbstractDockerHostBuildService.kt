@@ -235,16 +235,24 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    fun getWorkspace(dockerHostBuildInfo: DockerHostBuildInfo): String {
-        with(dockerHostBuildInfo) {
-            return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
-        }
+    private fun getWorkspace(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int
+    ): String {
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
-        if (dockerBuildInfo.qpcUniquePath != null && dockerBuildInfo.qpcUniquePath!!.isNotBlank()) {
-            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
-            val workDir = "${getWorkspace(dockerBuildInfo)}work"
+    fun mountOverlayfs(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        qpcUniquePath: String?,
+        hostConfig: HostConfig
+    ) {
+        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}upper"
+            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}work"
             if (!File(upperDir).exists()) {
                 File(upperDir).mkdirs()
             }
@@ -252,19 +260,21 @@ abstract class AbstractDockerHostBuildService constructor(
                 File(workDir).mkdirs()
             }
 
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
 
             val mount = Mount().withType(MountType.VOLUME)
                 .withTarget(dockerHostConfig.volumeWorkspace)
                 .withVolumeOptions(
                     VolumeOptions().withDriverConfig(
                         Driver().withName("local").withOptions(
-                    mapOf(
-                        "type" to "overlay",
-                        "device" to "overlay",
-                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                            mapOf(
+                                "type" to "overlay",
+                                "device" to "overlay",
+                                "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                            )
+                        )
                     )
-                )))
+                )
 
             hostConfig.withMounts(listOf(mount))
         }
