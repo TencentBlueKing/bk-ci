@@ -289,7 +289,7 @@ interface ApigwStreamResourceV3 {
         gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
 
-    @ApiOperation("校验用户的工蜂项目权限")
+    @ApiOperation("校验改用户工蜂的stream项目信息与权限")
     @GET
     @Path("/validate")
     fun validateGitProject(
