@@ -25,10 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:dispatch:biz-dispatch"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-bcs"))
+package com.tencent.devops.dispatch.service
+
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class TXJobQuotaInterfaceImpl @Autowired constructor(
+    private val kafkaClient: KafkaClient
+) : JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
+        kafkaClient.send(KafkaTopic.JOB_QUOTA_HISYORY_TOPIC, JsonUtil.toJson(jobQuotaHistory))
+    }
 }

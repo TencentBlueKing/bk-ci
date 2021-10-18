@@ -48,9 +48,6 @@ class JobQuotaService constructor(
         private const val RETRY_DELTA = 60 * 1000
     }
 
-    @Value("\${dispatch.jobQuota.systemAlertReceiver:#{null}}")
-    private val alertReceiver: String? = null
-
     @Value("\${dispatch.jobQuota.enable:false}")
     private val jobQuotaEnable: Boolean = false
 
