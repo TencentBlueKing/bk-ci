@@ -81,7 +81,7 @@ interface ServiceGitBasicSettingResource {
     ): Result<GitCIBasicSetting?>
 
     @ApiOperation("校验用户的工蜂项目权限")
-    @GET
+    @POST
     @Path("/validate")
     fun validateGitProject(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

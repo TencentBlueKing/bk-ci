@@ -290,7 +290,7 @@ interface ApigwStreamResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("校验改用户工蜂的stream项目信息与权限")
-    @GET
+    @POST
     @Path("/validate")
     fun validateGitProject(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
