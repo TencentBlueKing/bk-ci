@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.pojo.v2
 
 import com.tencent.devops.stream.pojo.Repository
-import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -47,5 +46,7 @@ data class GitUserValidateResult(
     @ApiModelProperty("gitSshUrl")
     override val gitSshUrl: String,
     @ApiModelProperty("蓝盾项目ID")
-    val projectId: String
+    val projectId: String,
+    @ApiModelProperty("是否开启CI功能")
+    val enableCi: Boolean,
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

@@ -101,14 +101,21 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = projectInfo.gitProjectId.toLong()
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
         permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.EDIT)
+        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw CustomException(
+                status = Response.Status.NOT_FOUND,
+                message = "工蜂项目未注册，请检查链接"
+            )
+        logger.info("STREAM|validateGitProjectSetting|setting=$setting")
         return Result(GitUserValidateResult(
             gitProjectId = gitProjectId,
-            name = projectInfo.name,
-            url = projectInfo.avatarUrl ?: projectInfo.gitHttpUrl,
-            homepage = projectInfo.homepage ?: projectInfo.gitHttpUrl,
-            gitHttpUrl = projectInfo.gitHttpUrl,
-            gitSshUrl = projectInfo.gitSshUrl ?: "",
-            projectId = projectCode
+            name = setting.name,
+            url = setting.url,
+            homepage = setting.homepage,
+            gitHttpUrl = setting.gitHttpUrl,
+            gitSshUrl = setting.gitSshUrl,
+            projectId = projectCode,
+            enableCi = setting.enableCi
         ))
     }
 
