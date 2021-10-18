@@ -58,12 +58,7 @@
                         2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
                     </div>
                 </div>
-                <div class="handler-prompt-node">
-                    <p>{{ $t('environment.nodeInfo.connectedNodes') }}</p>
-                    <a
-                        @click="goToSpawnNodesDesc">
-                        {{ $t('environment.nodeInfo.unableToSpawnNodes') }}</a>
-                </div>
+                <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
                 <div class="construct-card-item connection-node-card">
                     <p class="no-connection-node" v-if="connectNodeDetail.status === 'UN_IMPORT'">
                         {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span class="refresh-detail" @click="requetConstructNode">{{ $t('environment.clickToRefresh') }}</span>
@@ -108,7 +103,6 @@
 <script>
     import emptyTips from '@/components/devops/emptyTips'
     import { copyText } from '@/utils/util'
-    const IWIKI_DOCS_URL = '__IWIKI_DOCS_URL__'
 
     export default {
         components: {
@@ -142,9 +136,6 @@
                         message: this.$t('environment.successfullyCopyed')
                     })
                 }
-            },
-            goToSpawnNodesDesc () {
-                window.open(`${IWIKI_DOCS_URL}/p/1083624634`, '_blank')
             }
         }
     }
@@ -179,15 +170,6 @@
         .handler-prompt {
             margin-top: 24px;
             text-align: left;
-        }
-        .handler-prompt-node {
-            display: flex;
-            margin-top: 24px;
-            a {
-                cursor: pointer;
-                color: $primaryColor;
-                margin-left: 10px;
-            }
         }
 
         .construct-card-item {
