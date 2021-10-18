@@ -71,14 +71,14 @@
                 </span>
                 <div v-else style="padding-bottom: 10px;"></div>
             </template>
-            <span
+            <div
                 v-if="!isRecommend && (atom.os && atom.os.length > 0)"
                 class="allow-os-list"
                 v-bk-tooltips="{ content: osTips(atom.os), zIndex: 99999 }">
                 <template>
                     <i v-for="(os, osIndex) in atom.os" :key="osIndex" style="margin-right: 3px;" :class="`os-tag devops-icon icon-${os.toLowerCase()}`" />
                 </template>
-            </span>
+            </div>
             <p class="atom-update-time" v-if="atom.publisher">{{ atom.publisher }} {{ $t('editPage.update') }} {{ formatDiff(atom.updateTime) }}</p>
             <span class="atom-active" v-if="atomCode === atom.atomCode">
                 <i class="devops-icon icon-check-1" />

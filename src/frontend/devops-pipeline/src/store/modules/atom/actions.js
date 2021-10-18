@@ -330,11 +330,14 @@ export default {
         // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来,jobType不传
         // 无编译环境不用传fitOsFlag这个参数，jobType传AGENT
         let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+        let queryFitAgentBuildLessAtomFlag
+      
         const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
         if (fitOsFlag === false) {
             jobType = undefined
         }
         if (!recommendFlag && jobType === 'AGENT_LESS') {
+            queryFitAgentBuildLessAtomFlag = false
             jobType = 'AGENT'
         }
 
@@ -374,6 +377,7 @@ export default {
                     os,
                     queryProjectAtomFlag,
                     jobType,
+                    queryFitAgentBuildLessAtomFlag,
                     fitOsFlag,
                     recommendFlag,
                     page,
@@ -447,11 +451,14 @@ export default {
         // 在有编译环境下fitOsFlag传false就代表会把不符合当前job的插件查出来,jobType不传
         // 无编译环境不用传fitOsFlag这个参数，jobType传AGENT
         let jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(os) ? 'AGENT' : 'AGENT_LESS'
+        let queryFitAgentBuildLessAtomFlag
+
         const fitOsFlag = (jobType === 'AGENT' && !recommendFlag) ? false : undefined
         if (fitOsFlag === false) {
             jobType = undefined
         }
         if (!recommendFlag && jobType === 'AGENT_LESS') {
+            queryFitAgentBuildLessAtomFlag = false
             jobType = 'AGENT'
         }
 
@@ -498,6 +505,7 @@ export default {
                     os,
                     queryProjectAtomFlag,
                     jobType,
+                    queryFitAgentBuildLessAtomFlag,
                     fitOsFlag,
                     page,
                     pageSize,

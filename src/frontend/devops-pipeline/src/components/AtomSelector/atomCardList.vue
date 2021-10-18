@@ -766,6 +766,7 @@
                     right: 65px;
                     top: 4px;
                     opacity: 0;
+                    width: 60px;
                 }
                 .atom-update-time {
                     display: flex;
