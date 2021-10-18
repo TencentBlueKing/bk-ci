@@ -32,14 +32,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_STREAM"], description = "OPEN-API-构建资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/stream/gitProjects/{gitProjectId}")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/stream/gitProjects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwStreamResourceV3 {
 
     @ApiOperation("人工TriggerBuild启动构建")
     @POST
-    @Path("/pipelines/{pipelineId}/startup")
+    @Path("/{gitProjectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -62,7 +62,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("工蜂project转换为streamProject")
     @GET
-    @Path("/projectName/transfer")
+    @Path("/{gitProjectId}/projectName/transfer")
     fun getStreamProject(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -80,7 +80,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("项目下所有Stream流水线概览")
     @GET
-    @Path("/pipelines/list")
+    @Path("/{gitProjectId}/pipelines/list")
     fun getPipelineList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -107,7 +107,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("获取指定Stream流水线信息")
     @GET
-    @Path("/pipelines/{pipelineId}/info")
+    @Path("/{gitProjectId}/pipelines/{pipelineId}/info")
     fun getPipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -131,7 +131,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("开启或关闭Stream流水线")
     @POST
-    @Path("/pipelines/{pipelineId}/enable")
+    @Path("/{gitProjectId}/pipelines/{pipelineId}/enable")
     fun enablePipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -155,7 +155,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("获取Stream流水线列表")
     @GET
-    @Path("/pipelines/listInfo")
+    @Path("/{gitProjectId}/pipelines/listInfo")
     fun listPipelineNames(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -173,7 +173,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("查看项目下的指定构建详情")
     @GET
-    @Path("/builds/detail")
+    @Path("/{gitProjectId}/builds/detail")
     fun getLatestBuildDetail(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -197,7 +197,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("可选条件检索Stream构建历史")
     @GET
-    @Path("/builds/history")
+    @Path("/{gitProjectId}/builds/history")
     fun getHistoryBuildList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -233,7 +233,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("开启，关闭，初始化呢工蜂CI")
     @POST
-    @Path("/enable")
+    @Path("/{gitProjectId}/enable")
     fun enableGitCI(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -253,7 +253,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("查询工蜂CI项目配置")
     @GET
-    @Path("/settings/get")
+    @Path("/{gitProjectId}/settings/get")
     fun getGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -271,7 +271,7 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("保存工蜂CI配置")
     @POST
-    @Path("/settings/save")
+    @Path("/{gitProjectId}/settings/save")
     fun saveGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
