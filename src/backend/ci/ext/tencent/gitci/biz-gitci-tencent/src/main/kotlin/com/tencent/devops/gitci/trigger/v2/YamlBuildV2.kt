@@ -695,7 +695,7 @@ class YamlBuildV2 @Autowired constructor(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        stageIndex: Int = 0,
+        stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
         pipeline: GitProjectPipeline
@@ -733,7 +733,7 @@ class YamlBuildV2 @Autowired constructor(
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
-                stageId
+                VMUtils.genStageId(stageIndex - 1)
             },
             tag = stage.label,
             fastKill = stage.fastKill,
