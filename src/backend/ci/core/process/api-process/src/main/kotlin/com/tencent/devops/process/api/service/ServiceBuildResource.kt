@@ -553,7 +553,7 @@ interface ServiceBuildResource {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("手动触发启动阶段")
+    @ApiOperation("质量红线忽略触发启动阶段")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/qualityTrigger")
     fun qualityTriggerStage(

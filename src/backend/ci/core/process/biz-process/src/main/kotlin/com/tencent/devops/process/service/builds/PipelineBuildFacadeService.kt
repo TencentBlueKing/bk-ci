@@ -916,14 +916,6 @@ class PipelineBuildFacadeService(
             defaultMessage = "Stage($stageId)未处于质量红线审核状态",
             params = arrayOf(stageId)
         )
-        if (check.ruleKeepers?.contains(userId) != true) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                defaultMessage = "用户($userId)不在Stage($stageId)当前红线的把关人名单中",
-                params = arrayOf(stageId)
-            )
-        }
         pipelineStageService.qualityTriggerStage(
             userId = userId,
             buildStage = buildStage,
