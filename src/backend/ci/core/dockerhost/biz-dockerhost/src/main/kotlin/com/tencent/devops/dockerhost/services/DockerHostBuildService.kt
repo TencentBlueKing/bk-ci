@@ -251,33 +251,6 @@ class DockerHostBuildService(
         }
     }
 
-    private fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
-        if (dockerBuildInfo.qpcUniquePath != null) {
-            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
-            val workDir = "${getWorkspace(dockerBuildInfo)}work"
-            if (!File(upperDir).exists()) {
-                File(upperDir).mkdirs()
-            }
-            if (!File(workDir).exists()) {
-                File(workDir).mkdirs()
-            }
-
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
-
-            val mount = Mount().withType(MountType.VOLUME)
-                .withTarget(dockerHostConfig.volumeWorkspace)
-                .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withOptions(
-                    mapOf(
-                        "type" to "overlay",
-                        "device" to "overlay",
-                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                    )
-                )))
-
-            hostConfig.withMounts(listOf(mount))
-        }
-    }
-
     private fun waitAgentUp(dockerBuildInfo: DockerHostBuildInfo, containerId: String) {
         var exitCode = 0L
         try {

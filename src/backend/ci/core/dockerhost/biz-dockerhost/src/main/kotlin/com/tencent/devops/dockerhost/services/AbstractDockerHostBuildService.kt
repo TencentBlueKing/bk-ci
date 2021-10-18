@@ -32,7 +32,12 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
+import com.github.dockerjava.api.model.Driver
+import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Mount
+import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.PullResponseItem
+import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
@@ -47,6 +52,7 @@ import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
+import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -232,6 +238,35 @@ abstract class AbstractDockerHostBuildService constructor(
     fun getWorkspace(dockerHostBuildInfo: DockerHostBuildInfo): String {
         with(dockerHostBuildInfo) {
             return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+        }
+    }
+
+    fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
+        if (dockerBuildInfo.qpcUniquePath != null && dockerBuildInfo.qpcUniquePath!!.isNotBlank()) {
+            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
+            val workDir = "${getWorkspace(dockerBuildInfo)}work"
+            if (!File(upperDir).exists()) {
+                File(upperDir).mkdirs()
+            }
+            if (!File(workDir).exists()) {
+                File(workDir).mkdirs()
+            }
+
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
+
+            val mount = Mount().withType(MountType.VOLUME)
+                .withTarget(dockerHostConfig.volumeWorkspace)
+                .withVolumeOptions(
+                    VolumeOptions().withDriverConfig(
+                        Driver().withName("local").withOptions(
+                    mapOf(
+                        "type" to "overlay",
+                        "device" to "overlay",
+                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                    )
+                )))
+
+            hostConfig.withMounts(listOf(mount))
         }
     }
 
