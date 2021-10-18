@@ -97,9 +97,19 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
                 status = Response.Status.NOT_FOUND,
                 message = "工蜂项目无法找到，请检查链接"
             )
-        val projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId.toLong())
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
+        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
         permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.EDIT)
+        return Result(GitUserValidateResult(
+            gitProjectId = gitProjectId,
+            name = projectInfo.name,
+            url = projectInfo.avatarUrl ?: projectInfo.gitHttpUrl,
+            homepage = projectInfo.homepage ?: projectInfo.gitHttpUrl,
+            gitHttpUrl = projectInfo.gitHttpUrl,
+            gitSshUrl = projectInfo.gitSshUrl ?: "",
+            projectId = projectCode
+        ))
     }
 
     override fun saveGitCIConf(
