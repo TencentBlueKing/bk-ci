@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.pojo.v2
 
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -38,6 +37,4 @@ data class GitUserValidateRequest(
     val urlType: RepoAuthType,
     @ApiModelProperty("工蜂项目url")
     val url: String
-) {
-    fun getGitProjectName() = GitUtils.getProjectName(url)
-}
+)

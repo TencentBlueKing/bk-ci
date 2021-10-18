@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -89,7 +90,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         request: GitUserValidateRequest
     ): Result<GitUserValidateResult> {
         logger.info("STREAM|validateGitProject|request=$request")
-        val projectName = request.getGitProjectName()
+        val projectName = GitUtils.getProjectName(request.url)
         // 直接请求新的token，如果不是合法的项目在获取时直接报错
         val token = streamScmService.getToken(projectName).accessToken
         val projectInfo = streamScmService.getProjectInfo(projectName, token, true)
