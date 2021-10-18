@@ -59,7 +59,7 @@ import java.io.File
 class DockerHostDebugService(
     private val dockerHostConfig: DockerHostConfig,
     private val alertApi: AlertApi,
-    dockerHostBuildApi: DockerHostBuildResourceApi
+    private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
@@ -165,6 +165,27 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
+            val hostConfig = HostConfig().withBinds(binds).withNetworkMode("bridge")
+
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = containerInfo.projectId,
+                buildId = containerInfo.pipelineId,
+                vmSeqId = containerInfo.vmSeqId,
+                poolNo = containerInfo.poolNo
+            )?.data
+
+            var qpcUniquePath = ""
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                qpcUniquePath = qpcGitProjectList.first()
+            }
+            mountOverlayfs(
+                pipelineId = containerInfo.pipelineId,
+                vmSeqId = containerInfo.vmSeqId.toInt(),
+                poolNo = containerInfo.poolNo,
+                qpcUniquePath = qpcUniquePath,
+                hostConfig = hostConfig
+            )
+
             // 脚本解析器类型
             val cmd = if (containerInfo.token.isEmpty()) {
                 "/bin/sh"
@@ -191,7 +212,7 @@ class DockerHostDebugService(
                     )
                 )
                 .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .withHostConfig(hostConfig)
                 .exec()
 
             logger.info("Created container $container")
