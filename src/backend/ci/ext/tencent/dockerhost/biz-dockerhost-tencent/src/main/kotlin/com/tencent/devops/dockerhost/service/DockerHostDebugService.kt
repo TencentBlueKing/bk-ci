@@ -36,17 +36,17 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
-import com.github.dockerjava.okhttp.OkDockerHttpClient
-import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
-import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
+import com.tencent.devops.dockerhost.services.AbstractDockerHostBuildService
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
@@ -59,8 +59,8 @@ import java.io.File
 class DockerHostDebugService(
     private val dockerHostConfig: DockerHostConfig,
     private val alertApi: AlertApi,
-    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi
-) {
+    dockerHostBuildApi: DockerHostBuildResourceApi
+) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
     private val TURBO_PATH = "/data/bkdevops/apps/turbo/1.0"
@@ -75,65 +75,20 @@ class DockerHostDebugService(
 
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
-/*    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
-    private val alertApi: AlertApi =
-        AlertApi(dockerHostConfig.grayEnv)*/
-
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerConfig(dockerHostConfig.dockerConfig)
             .withApiVersion(dockerHostConfig.apiVersion)
             .build()
 
-    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(300000)
-        .build()
+    override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        TODO("Not yet implemented")
+    }
 
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
-
-    fun startDebug(): ContainerInfo? {
-        val result = dockerHostDebugResourceApi.startDebug(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun endDebug(): ContainerInfo? {
-        val result = dockerHostDebugResourceApi.endDebug(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = dockerHostDebugResourceApi.reportDebugContainerId(pipelineId, vmSeqId, containerId)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("reportDebugContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean? = false, msg: String? = ""): Boolean {
-        val result = dockerHostDebugResourceApi.rollbackDebug(pipelineId, vmSeqId, shutdown, msg)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("rollbackDebug return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
 
     fun createContainer(containerInfo: ContainerInfo): String {
         try {
