@@ -38,12 +38,9 @@ import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.PathParam
-import javax.ws.rs.QueryParam
 
-@RestResource@Suppress("ALL")
+@RestResource
 class BuildDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dispatchDockerService: DispatchDockerService,
