@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -145,5 +146,9 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag
             ?: false))
+    }
+
+    override fun getAtomOutput(userId: String, atomCode: String): Result<List<AtomOutput>> {
+        return Result(marketAtomService.getAtomOutput(atomCode))
     }
 }
