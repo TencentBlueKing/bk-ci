@@ -894,13 +894,6 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
-
-        if (buildStage.status.name != BuildStatus.REVIEWING.name) throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
-            defaultMessage = "Stage($stageId)未处于质量红线审核状态",
-            params = arrayOf(stageId)
-        )
         val check = when (qualityRequest.position) {
             ControlPointPosition.BEFORE_POSITION -> {
                 buildStage.checkIn
@@ -917,7 +910,13 @@ class PipelineBuildFacadeService(
                 )
             }
         }
-        if (check?.ruleKeepers?.contains(userId) != true) {
+        if (check?.status != BuildStatus.REVIEWING.name) throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
+            defaultMessage = "Stage($stageId)未处于质量红线审核状态",
+            params = arrayOf(stageId)
+        )
+        if (check.ruleKeepers?.contains(userId) != true) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
