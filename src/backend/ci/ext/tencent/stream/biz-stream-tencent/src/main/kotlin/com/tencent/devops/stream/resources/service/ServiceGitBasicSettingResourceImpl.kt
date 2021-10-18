@@ -93,11 +93,14 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val projectName = GitUtils.getProjectName(request.url)
         // 直接请求新的token，如果不是合法的项目在获取时直接报错
         val token = streamScmService.getToken(projectName).accessToken
-        val projectInfo = streamScmService.getProjectInfo(projectName, token, true)
-            ?: throw CustomException(
-                status = Response.Status.NOT_FOUND,
-                message = "工蜂项目无法找到，请检查链接"
-            )
+        val projectInfo = streamScmService.getProjectInfo(
+            gitProjectId = projectName,
+            token = token,
+            useAccessToken = true
+        ) ?: throw CustomException(
+            status = Response.Status.NOT_FOUND,
+            message = "工蜂项目无法找到，请检查链接"
+        )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
         val gitProjectId = projectInfo.gitProjectId.toLong()
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
