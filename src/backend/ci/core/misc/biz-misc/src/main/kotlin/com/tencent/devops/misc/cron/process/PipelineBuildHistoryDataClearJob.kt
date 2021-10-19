@@ -287,12 +287,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         projectDataClearConfig: ProjectDataClearConfig
     ) {
         // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中X个月前的构建记录
-/*        cleanBuildHistoryData(
+        cleanBuildHistoryData(
             pipelineId = pipelineId,
             projectId = projectId,
             isCompletelyDelete = false,
             maxStartTime = projectDataClearConfig.maxStartTime
-        )*/
+        )
         // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
         val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(projectId, pipelineId)
         val maxKeepNum = projectDataClearConfig.maxKeepNum
