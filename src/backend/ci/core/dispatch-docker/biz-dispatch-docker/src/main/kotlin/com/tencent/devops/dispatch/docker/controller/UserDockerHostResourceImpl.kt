@@ -200,19 +200,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String
     ): Result<ContainerInfo>? {
-        checkParam(userId, projectId, pipelineId, vmSeqId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("BuildId参数非法")
-        }
-        if (!bkAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = AuthPermission.VIEW)) {
-            throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)详情")
-        }
+        checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         return dockerHostBuildService.getContainerInfo(buildId, vmSeqId.toInt())
     }
