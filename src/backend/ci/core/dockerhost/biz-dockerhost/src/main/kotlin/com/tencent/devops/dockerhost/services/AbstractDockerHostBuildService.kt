@@ -261,6 +261,9 @@ abstract class AbstractDockerHostBuildService constructor(
             }
 
             val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
+            if (!File(lowerDir).exists()) {
+                File(lowerDir).mkdirs()
+            }
 
             val mount = Mount().withType(MountType.VOLUME)
                 .withTarget(dockerHostConfig.volumeWorkspace)
