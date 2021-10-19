@@ -61,7 +61,7 @@ data class LinkItem(
 )
 
 data class CreateChatItem(
-    val name:String,
+    val name: String,
     @JsonProperty("userlist")
-    val userList:List<String>
+    val userList: List<String>
 )
