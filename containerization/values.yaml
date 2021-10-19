@@ -995,9 +995,9 @@ angetless:
 turbo:
   enabled: false
   image:
-    registry: mirrors.tencent.com
-    repository: ruitaoyuan/turbo-backend
-    tag: 0.0.14
+    registry: mirrors.tencent.com/bkce
+    repository: bkci-turbo
+    tag: 0.0.12
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
