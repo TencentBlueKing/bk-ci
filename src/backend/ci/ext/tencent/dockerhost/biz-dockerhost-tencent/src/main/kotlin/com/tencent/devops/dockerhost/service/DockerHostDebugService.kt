@@ -81,11 +81,11 @@ class DockerHostDebugService(
             .build()
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
-        TODO("Not yet implemented")
+        return ""
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
-        TODO("Not yet implemented")
+
     }
 
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
@@ -166,23 +166,12 @@ class DockerHostDebugService(
             }
 
             val hostConfig = HostConfig().withBinds(binds).withNetworkMode("bridge")
-
-            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
-                projectId = containerInfo.projectId,
-                buildId = containerInfo.pipelineId,
-                vmSeqId = containerInfo.vmSeqId,
-                poolNo = containerInfo.poolNo
-            )?.data
-
-            var qpcUniquePath = ""
-            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
-                qpcUniquePath = qpcGitProjectList.first()
-            }
             mountOverlayfs(
+                projectId = containerInfo.projectId,
                 pipelineId = containerInfo.pipelineId,
+                buildId = containerInfo.pipelineId,
                 vmSeqId = containerInfo.vmSeqId.toInt(),
                 poolNo = containerInfo.poolNo,
-                qpcUniquePath = qpcUniquePath,
                 hostConfig = hostConfig
             )
 
