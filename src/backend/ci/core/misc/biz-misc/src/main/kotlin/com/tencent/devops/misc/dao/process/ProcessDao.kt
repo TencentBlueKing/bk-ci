@@ -39,7 +39,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
-import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -158,7 +157,7 @@ class ProcessDao {
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
             val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime, geTimeFlag)
-            return dslContext.select(DSL.max(BUILD_NUM))
+            return dslContext.selectCount()
                 .from(this)
                 .where(conditions)
                 .fetchOne(0, Long::class.java)!!
@@ -206,7 +205,7 @@ class ProcessDao {
             } else {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
-            return baseStep.fetch()
+            return baseStep.orderBy(BUILD_ID).fetch()
         }
     }
 
