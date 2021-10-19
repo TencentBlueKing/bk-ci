@@ -34,8 +34,6 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
-import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageCmdChain
 import com.tencent.devops.process.engine.control.command.stage.StageContext

@@ -64,7 +64,7 @@ class QualityRuleBuildHisService constructor(
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
     private val dslContext: DSLContext,
-    private val client: Client,
+    private val client: Client
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)

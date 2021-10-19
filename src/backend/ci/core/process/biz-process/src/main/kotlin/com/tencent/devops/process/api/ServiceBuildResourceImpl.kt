@@ -520,7 +520,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        qualityRequest: StageQualityRequest,
+        qualityRequest: StageQualityRequest
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")

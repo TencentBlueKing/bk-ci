@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 class QualityRuleBuildHisOperationService constructor(
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
-    private val dslContext: DSLContext,
+    private val dslContext: DSLContext
 ) {
     fun listQualityRuleBuildOpt(ruleBuildIds: Collection<Long>): List<QualityRuleBuildHisOpt>{
         val ruleBuildHisOpts = qualityRuleBuildHisOperationDao.list(dslContext, ruleBuildIds)

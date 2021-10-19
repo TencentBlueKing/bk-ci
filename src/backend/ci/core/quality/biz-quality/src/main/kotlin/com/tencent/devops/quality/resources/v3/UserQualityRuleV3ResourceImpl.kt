@@ -16,5 +16,4 @@ class UserQualityRuleV3ResourceImpl @Autowired constructor(
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         return Result(qualityRuleBuildHisService.updateStatusService(userId, ruleId, pass))
     }
-
 }

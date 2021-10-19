@@ -3,7 +3,6 @@ package com.tencent.devops.quality.api.v3
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -30,5 +29,4 @@ interface UserQualityRuleResource {
         @QueryParam("pass")
         pass: Boolean
     ): Result<Boolean>
-
 }

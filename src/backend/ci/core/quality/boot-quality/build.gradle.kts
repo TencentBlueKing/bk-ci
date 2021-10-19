@@ -33,4 +33,3 @@ dependencies {
     api(project(":core:quality:biz-quality-sample"))
 }
 
-

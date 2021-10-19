@@ -2,7 +2,6 @@ package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHisOperation
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisOperationRecord
-import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
