@@ -166,6 +166,17 @@ class TXPipelineExportService @Autowired constructor(
             defaultMessage = "流水线已不存在，请检查"
         )
 
+        // 将所有插件ID按编排顺序刷新
+        var stepCount = 1
+        baseModel.stages.forEach { s ->
+            s.containers.forEach { c ->
+                c.elements.forEach { e ->
+                    e.id = "step_$stepCount"
+                    stepCount++
+                }
+            }
+        }
+
         //过滤出enable == false 的stage/job/step
         val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
         val enableStages: MutableList<Stage> = mutableListOf()
@@ -189,7 +200,6 @@ class TXPipelineExportService @Autowired constructor(
             }
             enableStages.add(stageIt.copy(containers = filterContainer))
         }
-
         val model = baseModel.copy(stages = enableStages)
         val yamlSb = getYamlStringBuilder(
             projectId = projectId,
@@ -197,17 +207,6 @@ class TXPipelineExportService @Autowired constructor(
             model = model,
             isGitCI = isGitCI
         )
-
-        // 将所有插件ID按编排顺序刷新
-        var stepCount = 1
-        model.stages.forEach { s ->
-            s.containers.forEach { c ->
-                c.elements.forEach { e ->
-                    e.id = "step_$stepCount"
-                    stepCount++
-                }
-            }
-        }
 
         val pipelineGroupsMap = mutableMapOf<String, String>()
         pipelineGroupService.getGroups(userId, projectId).forEach {
