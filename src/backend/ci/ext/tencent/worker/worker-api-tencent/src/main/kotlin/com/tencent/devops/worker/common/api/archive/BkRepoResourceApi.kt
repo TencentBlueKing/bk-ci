@@ -361,31 +361,26 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
             val buildId = buildVariables.buildId
             val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            val headers = mapOf(BKREPO_UID to userId)
             if (!pipelineName.isNullOrBlank()) {
-                val headers = mapOf(
-                    BKREPO_UID to userId,
-                    "metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)
-                )
                 val pipelineNameRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
                     RequestBody.create(
                         MediaType.parse("application/json; charset=utf-8"),
-                        JsonUtil.toJson(headers)
-                    )
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                    ),
+                    headers
                 )
                 request(pipelineNameRequest, "set pipeline displayName failed")
             }
             if (!buildNum.isNullOrBlank()) {
-                val headers = mapOf(
-                    BKREPO_UID to userId,
-                    "metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)
-                )
                 val buildNumRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId/$buildId",
                     RequestBody.create(
                         MediaType.parse("application/json; charset=utf-8"),
-                        JsonUtil.toJson(headers)
-                    )
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                    ),
+                    headers
                 )
                 request(buildNumRequest, "set build displayName failed")
             }
