@@ -62,6 +62,7 @@ mysql:
       character-set-server=UTF8
       collation-server=utf8_general_ci
       max_connections=2000
+      default-time-zone='+08:00'
       [client]
       port=3306
       socket=/opt/bitnami/mysql/tmp/mysql.sock
