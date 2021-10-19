@@ -139,10 +139,10 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     return router
 }
 
-function updateHeaderConfig (meta: RouteMeta) {
+function updateHeaderConfig (routeMeta: RouteMeta) {
     return {
-        showProjectList: meta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof meta.showProjectList === 'undefined'),
-        showNav: meta.showNav || (window.currentPage && window.currentPage.show_nav && typeof meta.showNav === 'undefined')
+        showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
+        showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')
     }
 }
 

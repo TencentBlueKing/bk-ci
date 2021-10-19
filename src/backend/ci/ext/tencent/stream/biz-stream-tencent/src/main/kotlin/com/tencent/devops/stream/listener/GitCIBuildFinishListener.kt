@@ -57,8 +57,8 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.QualityService
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.service.StreamQualityService
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -70,6 +70,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -83,20 +84,22 @@ import org.springframework.stereotype.Service
 import java.util.Date
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.stream.pojo.v2.project.CIInfo
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val qualityService: QualityService,
+    private val streamQualityService: StreamQualityService,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val triggerMessageUtil: StreamTriggerMessageUtils,
+    private val tokenService: StreamGitTokenService
 ) {
 
     @Value("\${rtx.corpid:#{null}}")
@@ -136,8 +139,10 @@ class GitCIBuildFinishListener @Autowired constructor(
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
                 val pipelineId = record["PIPELINE_ID"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , " +
-                    "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
+                logger.info(
+                    "listenPipelineBuildFinishBroadCastEvent , " +
+                            "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent"
+                )
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
@@ -162,7 +167,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-                val v2GitSetting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+                val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
                 if (gitProjectConf == null && v2GitSetting == null) {
                     throw OperationException("git ci all projectCode not exist")
                 }
@@ -194,17 +199,21 @@ class GitCIBuildFinishListener @Autowired constructor(
                     }
                 }
 
+                // gitRequestEvent中存的为mriid不是mrid
+                val gitEvent = if (isV2) {
+                    try {
+                        objectMapper.readValue<GitEvent>(record["EVENT"] as String)
+                    } catch (e: Throwable) {
+                        logger.error("push commit check get mergeId error ${e.message}")
+                        null
+                    }
+                } else {
+                    null
+                }
+
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != TGitObjectKind.MANUAL.value) {
                     if (isV2) {
-                        // gitRequestEvent中存的为mriid不是mrid
-                        val gitEvent = try {
-                            objectMapper.readValue<GitEvent>(record["EVENT"] as String)
-                        } catch (e: Throwable) {
-                            logger.error("push commit check get mergeId error ${e.message}")
-                            null
-                        }
-
                         gitCheckService.pushCommitCheck(
                             commitId = commitId,
                             description = triggerMessageUtil.getCommitCheckDesc(
@@ -229,16 +238,16 @@ class GitCIBuildFinishListener @Autowired constructor(
                             gitCIBasicSetting = v2GitSetting!!,
                             pipelineId = buildFinishEvent.pipelineId,
                             block = (objectKind == TGitObjectKind.MERGE_REQUEST.value && !buildStatus.isSuccess() &&
-                                v2GitSetting.enableMrBlock),
-                            reportData = qualityService.getQualityGitMrResult(
+                                    v2GitSetting.enableMrBlock),
+                            reportData = streamQualityService.getQualityGitMrResult(
                                 client = client,
-                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                gitProjectId = v2GitSetting.gitProjectId,
                                 pipelineName = pipeline.displayName,
                                 event = buildFinishEvent
                             ),
                             targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                                 homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                                projectName = GitCommonUtils.getRepoName(v2GitSetting.gitHttpUrl, v2GitSetting.name),
+                                gitProjectId = v2GitSetting.gitProjectId,
                                 pipelineId = pipelineId,
                                 buildId = buildFinishEvent.buildId
                             )
@@ -248,6 +257,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             commitId = commitId,
                             description = description,
                             mergeRequestId = mergeRequestId,
+                            pipelineId = pipelineId,
                             buildId = buildFinishEvent.buildId,
                             userId = buildFinishEvent.userId,
                             status = state,
@@ -255,6 +265,38 @@ class GitCIBuildFinishListener @Autowired constructor(
                             gitProjectConf = gitProjectConf!!
                         )
                     }
+                }
+
+                // 更新最后一次执行状态
+                // TODO: 更新定时触发时这里也要更新
+                if (isV2 && v2GitSetting != null) {
+                    streamBasicSettingDao.updateSettingLastCiInfo(
+                        dslContext,
+                        v2GitSetting.gitProjectId,
+                        CIInfo(
+                            enableCI = v2GitSetting.enableCi,
+                            lastBuildMessage = if (objectKind == TGitObjectKind.MANUAL.value) {
+                                triggerMessageUtil.getEventMessageTitle(
+                                    null,
+                                    gitProjectId,
+                                    objectKind,
+                                    event.branch,
+                                    event.triggerUser
+                                )
+                            } else {
+                                triggerMessageUtil.getEventMessageTitle(
+                                    gitEvent,
+                                    gitProjectId,
+                                    objectKind,
+                                    null,
+                                    null
+                                )
+                            },
+                            lastBuildStatus = buildStatus,
+                            lastBuildPipelineId = buildFinishEvent.pipelineId,
+                            lastBuildId = buildFinishEvent.buildId
+                        )
+                    )
                 }
 
                 // 发送通知兼容v1的老数据
@@ -489,6 +531,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     realReceivers = mutableSetOf(build.userId)
                 }
                 val request = getEmailSendRequest(
+                    gitProjectId = gitProjectId,
                     state = state,
                     receivers = realReceivers,
                     projectName = projectName,
@@ -509,11 +552,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
                 val content = getRtxCustomContent(
+                    gitProjectId = gitProjectId,
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
+                    buildId = build.id,
                     buildNum = buildNum,
                     isMr = isMr,
                     requestId = requestId,
@@ -537,11 +582,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
                 val content = getRtxCustomContent(
+                    gitProjectId = gitProjectId,
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
+                    buildId = build.id,
                     buildNum = buildNum,
                     isMr = isMr,
                     requestId = requestId,
@@ -561,6 +608,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     private fun getEmailSendRequest(
+        gitProjectId: Long,
         state: String,
         receivers: Set<String>,
         projectName: String,
@@ -590,7 +638,12 @@ class GitCIBuildFinishListener @Autowired constructor(
             "totalTime" to DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
             "trigger" to build.userId,
             "commitId" to commitId,
-            "webUrl" to "$gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName"
+            "webUrl" to GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = build.id
+            )
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateEnum.templateCode,
@@ -603,11 +656,13 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     private fun getRtxCustomContent(
+        gitProjectId: Long,
         isSuccess: Boolean,
         projectName: String,
         branchName: String,
         pipelineName: String,
         pipelineId: String,
+        buildId: String,
         buildNum: String,
         isMr: Boolean,
         requestId: String,
@@ -621,11 +676,11 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                    "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                    "pushed by $openUser \n"
+                        "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
@@ -635,8 +690,13 @@ class GitCIBuildFinishListener @Autowired constructor(
             "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
             request +
             costTime +
-            "[View it on  工蜂内网版]" +
-            "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
+            "[View it on Stream]" +
+            GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
     }
 
     private fun sendRtxCustomNotify(
@@ -699,6 +759,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val request = getEmailSendRequestV2(
                     state = state,
                     receivers = realReceivers,
+                    gitProjectId = gitProjectId,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
@@ -717,6 +778,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val newContent = if (content.isNullOrBlank()) {
                     getRtxCustomContentV2(
                         isSuccess = state == "success",
+                        gitProjectId = gitProjectId,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName,
@@ -730,7 +792,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 } else {
                     getRtxCustomContentV2(
                         isSuccess = state == "success",
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipeline.pipelineId,
                         build = build,
                         content = content
@@ -765,6 +827,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         state: String,
         receivers: Set<String>,
         ccs: MutableSet<String>?,
+        gitProjectId: Long,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -801,7 +864,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     commitId = commitId,
                     webUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                         homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                        projectName = projectName,
+                        gitProjectId = gitProjectId,
                         pipelineId = pipelineId,
                         buildId = build.id
                     )
@@ -823,7 +886,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     // 为用户的内容增加链接
     private fun getRtxCustomContentV2(
         isSuccess: Boolean,
-        projectName: String,
+        gitProjectId: Long,
         pipelineId: String,
         build: BuildHistory,
         content: String
@@ -835,7 +898,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
             homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-            projectName = projectName,
+            gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = build.id
         )
@@ -844,6 +907,7 @@ class GitCIBuildFinishListener @Autowired constructor(
 
     private fun getRtxCustomContentV2(
         isSuccess: Boolean,
+        gitProjectId: Long,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -861,11 +925,11 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                    "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                    "pushed by $openUser \n"
+                        "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
@@ -879,7 +943,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             "(${
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    projectName = projectName,
+                    gitProjectId = gitProjectId,
                     pipelineId = pipelineId,
                     buildId = build.id
                 )

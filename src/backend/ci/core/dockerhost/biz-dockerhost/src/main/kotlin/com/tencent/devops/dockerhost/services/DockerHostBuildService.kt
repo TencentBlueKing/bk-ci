@@ -31,11 +31,15 @@ import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.Capability
+import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Mount
+import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.Statistics
+import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
@@ -69,13 +73,13 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Suppress("ALL")
 @Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
@@ -195,21 +199,24 @@ class DockerHostBuildService(
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val hostConfig = HostConfig()
+                .withCapAdd(Capability.SYS_PTRACE)
+                .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+                .withBinds(binds)
+                .withNetworkMode("bridge")
+
+            mountOverlayfs(dockerBuildInfo, hostConfig)
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig()
-                    .withCapAdd(Capability.SYS_PTRACE)
-                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
-                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
-/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
-                    .withBinds(binds)
-                    .withNetworkMode("bridge"))
+                .withHostConfig(hostConfig)
                 .exec()
 
             logger.info("Created container $container")
@@ -241,6 +248,33 @@ class DockerHostBuildService(
                     message = "[${dockerBuildInfo.buildId}]|Create container failed"
                 )
             }
+        }
+    }
+
+    private fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
+        if (dockerBuildInfo.qpcUniquePath != null) {
+            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
+            val workDir = "${getWorkspace(dockerBuildInfo)}work"
+            if (!File(upperDir).exists()) {
+                File(upperDir).mkdirs()
+            }
+            if (!File(workDir).exists()) {
+                File(workDir).mkdirs()
+            }
+
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
+
+            val mount = Mount().withType(MountType.VOLUME)
+                .withTarget(dockerHostConfig.volumeWorkspace)
+                .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withOptions(
+                    mapOf(
+                        "type" to "overlay",
+                        "device" to "overlay",
+                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                    )
+                )))
+
+            hostConfig.withMounts(listOf(mount))
         }
     }
 

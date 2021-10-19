@@ -28,18 +28,19 @@
 package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIProjectResource
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
-import com.tencent.devops.stream.v2.service.GitCIProjectService
+import com.tencent.devops.stream.v2.service.StreamProjectService
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIProjectResourceImpl @Autowired constructor(
-    private val gitCIProjectService: GitCIProjectService
+    private val streamProjectService: StreamProjectService
 ) : UserGitCIProjectResource {
     override fun getProjects(
         userId: String,
@@ -50,7 +51,7 @@ class UserGitCIProjectResourceImpl @Autowired constructor(
         orderBy: GitCodeProjectsOrder?,
         sort: GitCodeBranchesSort?
     ): Pagination<ProjectCIInfo> {
-        return gitCIProjectService.getProjectList(
+        return streamProjectService.getProjectList(
             userId = userId,
             type = type,
             search = search,
@@ -59,5 +60,9 @@ class UserGitCIProjectResourceImpl @Autowired constructor(
             orderBy = orderBy,
             sort = sort
         )
+    }
+
+    override fun getProjectsHistory(userId: String, size: Long?): Result<List<ProjectCIInfo>> {
+        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
     }
 }
