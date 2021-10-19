@@ -56,7 +56,6 @@ import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -141,7 +140,7 @@ object ModelParameters {
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
-                GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
+                GitUtils.getProjectName(gitBasicSetting.gitHttpUrl)
             }
         }
 
