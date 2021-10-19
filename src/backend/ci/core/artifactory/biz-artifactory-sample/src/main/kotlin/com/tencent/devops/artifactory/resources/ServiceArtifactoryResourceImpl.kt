@@ -133,6 +133,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByAnd(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -142,6 +143,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -163,7 +165,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+    override fun searchCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): Result<List<String>> {
         TODO("not implemented")
     }
 

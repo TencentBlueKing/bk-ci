@@ -32,5 +32,5 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 @Suppress("ALL")
 interface PipelineBuildArtifactoryService {
 
-    fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo>
+    fun getArtifactList(userId: String, projectId: String, pipelineId: String, buildId: String): List<FileInfo>
 }
