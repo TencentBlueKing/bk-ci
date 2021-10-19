@@ -47,6 +47,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
@@ -159,11 +160,37 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             defaultMessage = "流水线已不存在，请检查"
         )
+
+        //过滤出enable == false 的stage/job/step
+        val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
+        val enableStages: MutableList<Stage> = mutableListOf()
+        filterStage.forEach { stageIt ->
+            val filterContainer = stageIt.containers.filter { fit ->
+                when (fit) {
+                    is NormalContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is VMBuildContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is TriggerContainer -> true
+                    else -> true
+                }
+            }
+            filterContainer.forEach { elementIt ->
+                elementIt.elements = elementIt.elements.filter { fit ->
+                    fit.additionalOptions?.enable != false
+                }
+            }
+            enableStages.add(stageIt.copy(containers = filterContainer))
+        }
+
+        val model = baseModel.copy(stages = enableStages)
         val yamlSb = getYamlStringBuilder(
             projectId = projectId,
             pipelineId = pipelineId,
