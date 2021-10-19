@@ -178,13 +178,13 @@ class DockerHostDebugService(
             if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
                 qpcUniquePath = qpcGitProjectList.first()
             }
-/*            mountOverlayfs(
+            mountOverlayfs(
                 pipelineId = containerInfo.pipelineId,
                 vmSeqId = containerInfo.vmSeqId.toInt(),
                 poolNo = containerInfo.poolNo,
                 qpcUniquePath = qpcUniquePath,
                 hostConfig = hostConfig
-            )*/
+            )
 
             // 脚本解析器类型
             val cmd = if (containerInfo.token.isEmpty()) {
