@@ -94,7 +94,11 @@ class ModelContainer @Autowired constructor(
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
-            buildEnv = null,
+            buildEnv = if (job.runsOn.selfHosted == false) {
+                job.runsOn.needs
+            } else {
+                null
+            },
             customBuildEnv = job.env,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
