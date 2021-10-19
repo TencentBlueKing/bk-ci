@@ -94,8 +94,8 @@ data class RunsOn(
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
-    @JsonProperty("nfs-mount")
-    val nfsMount: Map<String, String>? = null
+    @JsonProperty("needs")
+    val needs: Map<String, String>? = null
 )
 
 enum class JobRunsOnType(val type: String) {

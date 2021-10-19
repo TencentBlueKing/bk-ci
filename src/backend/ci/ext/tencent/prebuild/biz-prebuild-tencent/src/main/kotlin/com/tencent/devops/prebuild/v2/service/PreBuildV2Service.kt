@@ -259,7 +259,7 @@ class PreBuildV2Service @Autowired constructor(
                 val buildEnv = if (JobRunsOnType.DOCKER.type == job.runsOn.poolName ||
                     JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
                 ) {
-                    job.runsOn.nfsMount
+                    job.runsOn.needs
                 } else {
                     null
                 }
