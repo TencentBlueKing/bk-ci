@@ -127,7 +127,6 @@ class UpdateStateForStageCmdFinally(
                 }
                 BS_QUALITY_ABORT_STAGE -> {
                     qualityCheckOutFailed(commandContext)
-                    return finishBuild(commandContext = commandContext)
                 }
                 else -> {
                     val checkStatus = pipelineStageService.checkStageQuality(
@@ -147,7 +146,6 @@ class UpdateStateForStageCmdFinally(
                         }
                         else -> {
                             qualityCheckOutFailed(commandContext)
-                            return finishBuild(commandContext = commandContext)
                         }
                     }
                 }
