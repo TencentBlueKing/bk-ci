@@ -407,7 +407,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 totalHandleNum = totalHandleNum,
                 handlePageSize = DEFAULT_PAGE_SIZE,
                 isCompletelyDelete = false,
-                maxStartTime = maxStartTime
+                maxStartTime = maxStartTime,
+                geTimeFlag = true
             )
             if (!pipelineHistoryBuildIdList.isNullOrEmpty()) {
                 // 分库路由需要同步T_PIPELINE_BUILD_DETAIL的项目信息（同步完后再删除该逻辑）
