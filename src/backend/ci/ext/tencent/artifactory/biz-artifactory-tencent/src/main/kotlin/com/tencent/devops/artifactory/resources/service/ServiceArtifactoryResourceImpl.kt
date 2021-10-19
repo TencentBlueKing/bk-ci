@@ -234,20 +234,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         fileInfo: FileInfo,
         dataFrom: Int
     ): Result<Long> {
-        checkInfoParam(buildId, pipelineId, fileInfo)
-        val id = artifactoryInfoService.createInfo(
-            buildId = buildId,
-            pipelineId = pipelineId,
-            projectId = projectId,
-            buildNum = buildNum,
-            fileInfo = fileInfo,
-            dataFrom = dataFrom
-        )
-        return Result(id)
+        return Result(0)
     }
 
     override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
-        return Result(artifactoryInfoService.batchCreateArtifactoryInfo(infoList))
+        return Result(0)
     }
 
     private fun checkInfoParam(buildId: String, pipelineId: String, fileInfo: FileInfo) {

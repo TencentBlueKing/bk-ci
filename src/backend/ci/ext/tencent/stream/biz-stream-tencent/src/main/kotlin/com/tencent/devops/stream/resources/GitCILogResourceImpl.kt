@@ -41,6 +41,7 @@ class GitCILogResourceImpl @Autowired constructor(
     private val gitCILogService: GitCILogService
 ) : GitCILogResource {
     override fun getInitLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -51,6 +52,7 @@ class GitCILogResourceImpl @Autowired constructor(
     ): Result<QueryLogs> {
         checkParam(buildId, gitProjectId)
         return Result(gitCILogService.getInitLogs(
+            userId = userId,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -62,6 +64,7 @@ class GitCILogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -73,6 +76,7 @@ class GitCILogResourceImpl @Autowired constructor(
     ): Result<QueryLogs> {
         checkParam(buildId, gitProjectId)
         return Result(gitCILogService.getAfterLogs(
+            userId = userId,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -85,6 +89,7 @@ class GitCILogResourceImpl @Autowired constructor(
     }
 
     override fun downloadLogs(
+        userId: String,
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
@@ -94,6 +99,7 @@ class GitCILogResourceImpl @Autowired constructor(
     ): Response {
         checkParam(buildId, gitProjectId)
         return gitCILogService.downloadLogs(
+            userId = userId,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId,

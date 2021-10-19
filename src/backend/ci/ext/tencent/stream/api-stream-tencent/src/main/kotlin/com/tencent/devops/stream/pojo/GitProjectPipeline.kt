@@ -45,5 +45,11 @@ data class GitProjectPipeline(
     @ApiModelProperty("创建人", required = false)
     val creator: String?,
     @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitCIBuildHistory?
+    val latestBuildInfo: GitCIBuildHistory?,
+    @ApiModelProperty("自己一次构建分支", required = false)
+    val latestBuildBranch: String?
 )
+
+fun GitProjectPipeline.isExist(): Boolean {
+    return pipelineId.isNotBlank()
+}

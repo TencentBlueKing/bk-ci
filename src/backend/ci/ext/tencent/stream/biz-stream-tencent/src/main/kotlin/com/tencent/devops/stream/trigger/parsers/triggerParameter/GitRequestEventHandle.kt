@@ -47,7 +47,7 @@ object GitRequestEventHandle {
             id = null,
             objectKind = TGitObjectKind.PUSH.value,
             operationKind = gitPushEvent.operation_kind,
-            extensionAction = null,
+            extensionAction = gitPushEvent.action_kind,
             gitProjectId = gitPushEvent.project_id,
             sourceGitProjectId = null,
             branch = gitPushEvent.ref.removePrefix("refs/heads/"),
@@ -95,7 +95,7 @@ object GitRequestEventHandle {
     }
 
     fun createTagPushEvent(gitTagPushEvent: GitTagPushEvent, e: String): GitRequestEvent {
-        val latestCommit = getLatestCommit(gitTagPushEvent.after, gitTagPushEvent.commits)
+        val latestCommit = getLatestCommit(null, gitTagPushEvent.commits)
         return GitRequestEvent(
             id = null,
             objectKind = TGitObjectKind.TAG_PUSH.value,
@@ -141,8 +141,15 @@ object GitRequestEventHandle {
         )
     }
 
-    private fun getLatestCommit(commitId: String, commits: List<GitCommit>): GitCommit? {
-        commits.forEach {
+    private fun getLatestCommit(commitId: String?, commits: List<GitCommit>?): GitCommit? {
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
+            } else {
+                commits.last()
+            }
+        }
+        commits?.forEach {
             if (it.id == commitId) {
                 return it
             }

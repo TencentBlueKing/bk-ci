@@ -71,7 +71,7 @@ class GitWebHookMatcherTest {
         CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
         val gitScmService: GitScmService = mock()
         CodeWebhookHandlerRegistrar.register(TGitMrTriggerHandler(gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitReviewTriggerHandler())
+        CodeWebhookHandlerRegistrar.register(TGitReviewTriggerHandler(gitScmService))
     }
 
     @Test

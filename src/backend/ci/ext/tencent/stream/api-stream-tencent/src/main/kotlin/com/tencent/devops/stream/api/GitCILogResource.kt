@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogs
 import io.swagger.annotations.Api
@@ -34,6 +36,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -51,6 +54,9 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
@@ -78,6 +84,9 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
@@ -109,6 +118,9 @@ interface GitCILogResource {
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,

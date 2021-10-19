@@ -817,7 +817,6 @@
         "confirmMsg": " If leave, the data of new edition will be lost",
         "confirmTitle": "Confirm exit",
         "operateSuc": "Operate successfully",
-        "addImage": " Add custom build mirroring",
         "publicResTips": " The build cluster provided by Blue Shield saves you from worrying the short supply of resources and security issue",
         "seeMore": "View more",
         "docker": {

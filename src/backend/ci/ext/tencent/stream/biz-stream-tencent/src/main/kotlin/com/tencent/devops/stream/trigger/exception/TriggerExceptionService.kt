@@ -51,7 +51,8 @@ class TriggerExceptionService @Autowired constructor(
                     gitRequestEvent = requestEvent,
                     block = false,
                     state = GitCICommitCheckState.FAILURE,
-                    gitCIBasicSetting = basicSetting
+                    gitCIBasicSetting = basicSetting,
+                    description = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
                 )
             }
             gitCIEventService.saveTriggerNotBuildEvent(
@@ -59,7 +60,8 @@ class TriggerExceptionService @Autowired constructor(
                 eventId = requestEvent.id!!,
                 reason = TriggerReason.UNKNOWN_ERROR.name,
                 reasonDetail = TriggerReason.UNKNOWN_ERROR.detail.format(e.message),
-                gitProjectId = requestEvent.gitProjectId
+                gitProjectId = requestEvent.gitProjectId,
+                branch = requestEvent.branch
             )
             return null
         }
@@ -75,7 +77,8 @@ class TriggerExceptionService @Autowired constructor(
                 eventId = gitRequestEvent.id!!,
                 reason = realReason,
                 reasonDetail = realReasonDetail,
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch
             )
             if (triggerE.commitCheck != null) {
                 // 没有yaml前只有无流水线commitCheck
@@ -83,7 +86,8 @@ class TriggerExceptionService @Autowired constructor(
                     gitRequestEvent = triggerE.requestEvent,
                     block = triggerE.commitCheck.block,
                     state = triggerE.commitCheck.state,
-                    gitCIBasicSetting = triggerE.basicSetting!!
+                    gitCIBasicSetting = triggerE.basicSetting!!,
+                    description = realReasonDetail
                 )
             }
             return null
@@ -106,7 +110,8 @@ class TriggerExceptionService @Autowired constructor(
                     gitProjectId = requestEvent.gitProjectId,
                     sendCommitCheck = commitCheck != null,
                     commitCheckBlock = commitCheck?.block ?: false,
-                    version = version
+                    version = version,
+                    branch = requestEvent.branch
                 )
             }
             return null
@@ -206,7 +211,8 @@ class TriggerExceptionService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         block: Boolean,
-        state: GitCICommitCheckState
+        state: GitCICommitCheckState,
+        description: String?
     ) {
         scmClient.pushCommitCheckWithBlock(
             commitId = gitRequestEvent.commitId,
@@ -217,7 +223,7 @@ class TriggerExceptionService @Autowired constructor(
             context = GitCITriggerService.noPipelineBuildEvent,
             gitCIBasicSetting = gitCIBasicSetting,
             jumpRequest = false,
-            description = null
+            description = description
         )
     }
 }

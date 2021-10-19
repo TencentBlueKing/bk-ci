@@ -39,7 +39,7 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -53,7 +53,7 @@ import javax.ws.rs.core.Response
 class GitCIRequestService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
@@ -69,7 +69,7 @@ class GitCIRequestService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get request list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
 
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)

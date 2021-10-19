@@ -114,7 +114,7 @@ class Builder(private val argument: Argument) {
                 readLog(logFile, processExited)
                 return@submit true
             } catch (e: Exception) {
-                LoggerService.addRedLine(e.message ?: "")
+                LoggerService.addErrorLine(e.message ?: "")
                 return@submit false
             } finally {
                 LoggerService.addNormalLine("")

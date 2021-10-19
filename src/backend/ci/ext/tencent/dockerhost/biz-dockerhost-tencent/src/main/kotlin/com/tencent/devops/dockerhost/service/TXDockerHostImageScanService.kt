@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 @Component
@@ -29,6 +30,7 @@ class TXDockerHostImageScanService(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
     ) {
@@ -53,22 +55,28 @@ class TXDockerHostImageScanService(
                     val inputStream = longDockerClient.saveImageCmd(it.substringBeforeLast(":"))
                         .withTag(it.substringAfterLast(":"))
                         .exec()
-                    val imageSavedPath = "$dockerSavedPath/${it.substringBeforeLast(":")}.tar"
+
+                    val uniqueImageCode = toHexStr(MessageDigest.getInstance("SHA-1")
+                        .digest(it.toByteArray()))
+                    val imageSavedPath = "$dockerSavedPath/$uniqueImageCode.tar"
                     val targetSavedImagesFile = File(imageSavedPath)
                     FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
 
-                    val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
-                            "-T $projectId -b $buildId -n sawyersong"
-                    val scanResult = ShellUtil.executeEnhance(script)
-                    logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
-
-                    logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
-                            "image name and tag: $it")
                     try {
-                        longDockerClient.removeImageCmd(it).exec()
-                        logger.info("[$buildId]|[$vmSeqId] Remove local image success")
+                        logger.info("[$buildId]|[$vmSeqId] start scan dockeriamge, imageSavedPath: $imageSavedPath")
+                        val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
+                                "-T $projectId -b $buildId -n $userName"
+                        val scanResult = ShellUtil.executeEnhance(script)
+                        logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
+
+                        logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
+                                "image name and tag: $it")
                     } catch (e: Throwable) {
-                        logger.error("[$buildId]|[$vmSeqId] Docker remove image failed, msg: ${e.message}")
+                        logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
+                    } finally {
+                        longDockerClient.removeImageCmd(it).exec()
+                        File(imageSavedPath).delete()
+                        logger.info("[$buildId]|[$vmSeqId] Remove local image success")
                     }
                 }
             } catch (e: Exception) {
@@ -82,6 +90,17 @@ class TXDockerHostImageScanService(
             }
         }
     }
+
+    fun toHexStr(byteArray: ByteArray) =
+        with(StringBuilder()) {
+            byteArray.forEach {
+                val hex = it.toInt() and (0xFF)
+                val hexStr = Integer.toHexString(hex)
+                if (hexStr.length == 1) append("0").append(hexStr)
+                else append(hexStr)
+            }
+            toString()
+        }
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXDockerHostImageScanService::class.java)

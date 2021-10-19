@@ -77,6 +77,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitPushEvent(
     val operation_kind: String,
+    val action_kind: String,
     val ref: String,
     val before: String,
     val after: String,
@@ -84,7 +85,7 @@ data class GitPushEvent(
     val checkout_sha: String?,
     val project_id: Long,
     val repository: GitCommitRepository,
-    val commits: List<GitCommit>,
+    val commits: List<GitCommit>?,
     val total_commits_count: Int
 ) : GitEvent() {
     companion object {

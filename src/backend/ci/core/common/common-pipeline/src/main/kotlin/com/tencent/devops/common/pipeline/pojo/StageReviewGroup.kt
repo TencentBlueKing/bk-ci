@@ -36,7 +36,7 @@ data class StageReviewGroup(
     @ApiModelProperty("审核组ID(后台生成)", required = false)
     var id: String? = null,
     @ApiModelProperty("审核组名称", required = true)
-    val name: String = "default",
+    val name: String = "Flow 1",
     @ApiModelProperty("审核人员", required = true)
     var reviewers: List<String> = listOf(),
     @ApiModelProperty("审核结果（枚举）", required = false)

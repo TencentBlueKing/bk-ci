@@ -79,7 +79,7 @@ class UpdateStateForStageCmdFinally(
             updateStageStatus(commandContext = commandContext)
         }
 
-        // Stage 暂停
+        // Stage 暂停或者 插件暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
                 pipelineStageService.pauseStage(stage)
@@ -128,6 +128,21 @@ class UpdateStateForStageCmdFinally(
             }
         } else {
             nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
+        }
+
+        // #5019 在结束阶段做stage准出判断
+        if (stage.checkOut?.ruleIds?.isNotEmpty() == true) {
+            if (pipelineStageService.checkQualityPassed(event, stage, commandContext.variables, false)) {
+                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_IN_PASSED|${event.stageId}")
+                commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_PASS.name
+                pipelineStageService.checkQualityPassStage(userId = event.userId, buildStage = commandContext.stage)
+            } else {
+                commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_FAIL.name
+                commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
+                commandContext.latestSummary = "s(${stage.stageId}) failed with QUALITY_CHECK_OUT"
+                pipelineStageService.checkQualityFailStage(userId = event.userId, buildStage = commandContext.stage)
+                return finishBuild(commandContext = commandContext)
+            }
         }
 
         if (nextStage != null) {

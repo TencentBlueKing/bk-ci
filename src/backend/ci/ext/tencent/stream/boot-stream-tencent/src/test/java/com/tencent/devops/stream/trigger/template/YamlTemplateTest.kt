@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import org.junit.Test
 
@@ -51,6 +52,14 @@ class YamlTemplateTest {
         replace("extends.yml")
     }
 
+    @Test
+    fun testUserTemplate() {
+        replace("user.yml")
+        replace("stepss.yml")
+        replace("jobs.yml")
+        replace("stages.yml")
+    }
+
     private fun replace(testYaml: String) {
         val classPathResource = ClassPathResource(testYaml)
         val inputStream: InputStream = classPathResource.inputStream
@@ -66,16 +75,19 @@ class YamlTemplateTest {
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         val preScriptBuildYaml = YamlTemplate(
-        yamlObject = preTemplateYamlObject,
-        filePath = testYaml,
-        triggerUserId = "ruotiantang",
-        triggerProjectId = 580280,
-        triggerToken = "",
-        triggerRef = "master",
-        repo = null,
-        repoTemplateGraph = TemplateGraph(),
-        sourceProjectId = 580280,
-        getTemplateMethod = ::getTestTemplate
+            yamlObject = preTemplateYamlObject,
+            filePath = testYaml,
+            triggerUserId = "ruotiantang",
+            triggerProjectId = 580280,
+            triggerToken = "",
+            triggerRef = "master",
+            repo = null,
+            repoTemplateGraph = TemplateGraph(),
+            sourceProjectId = 580280,
+            getTemplateMethod = ::getTestTemplate,
+            changeSet = null,
+            event = null,
+            forkGitToken = null
         ).replace()
         val aa = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         println(JsonUtil.toJson(aa))
@@ -99,17 +111,12 @@ class YamlTemplateTest {
     }
 
     private fun getTestTemplate(
-        token: String?,
-        gitProjectId: Long,
-        targetRepo: String?,
-        ref: String,
-        personalAccessToken: String?,
-        fileName: String
+        param: GetTemplateParam
     ): String {
-        val newPath = if (targetRepo == null) {
-            "templates/$fileName"
+        val newPath = if (param.targetRepo == null) {
+            "templates/${param.fileName}"
         } else {
-            "templates/$targetRepo/templates/$fileName"
+            "templates/${param.targetRepo}/templates/${param.fileName}"
         }
         val classPathResource = ClassPathResource(newPath)
         val inputStream: InputStream = classPathResource.inputStream

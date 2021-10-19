@@ -46,7 +46,6 @@ import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,23 +66,24 @@ class YamlTrigger @Autowired constructor(
 ) : YamlTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
-        filePath: String
+        filePath: String,
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): Boolean {
         val yamlObject = prepareCIBuildYaml(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName
+            pipelineName = gitProjectPipeline.displayName,
+            event = null,
+            changeSet = null,
+            forkGitProjectId = forkGitProjectId
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -138,7 +138,8 @@ class YamlTrigger @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
         }
 
@@ -155,14 +156,15 @@ class YamlTrigger @Autowired constructor(
     }
 
     override fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?
+        pipelineName: String?,
+        event: GitEvent?,
+        changeSet: Set<String>?,
+        forkGitProjectId: Long?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {
@@ -187,7 +189,8 @@ class YamlTrigger @Autowired constructor(
                 // V1不发送通知
                 sendCommitCheck = false,
                 commitCheckBlock = false,
-                version = null
+                version = null,
+                branch = gitRequestEvent.branch
             )
             return null
         }

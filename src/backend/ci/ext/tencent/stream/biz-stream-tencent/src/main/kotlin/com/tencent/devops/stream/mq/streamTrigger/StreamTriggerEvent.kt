@@ -37,6 +37,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
+    // TODO 为了保证消息生产消费兼容，下次发布再去掉event的token字段
     val gitToken: GitToken,
     val forkGitToken: GitToken?,
     val gitRequestEvent: GitRequestEvent,
@@ -44,5 +45,7 @@ data class StreamTriggerEvent(
     val event: GitEvent,
     val originYaml: String?,
     val filePath: String,
-    val gitCIBasicSetting: GitCIBasicSetting
+    val gitCIBasicSetting: GitCIBasicSetting,
+    val changeSet: Set<String>? = null,
+    val forkGitProjectId: Long? = null
 )

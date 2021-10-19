@@ -25,6 +25,18 @@ stages:
   - name: "root_stage_id_1"
     id: root_stage_id_1
     if: [ envs.BK_CI_EVENT == 'push' || varivable.approve ]
+    check-in:
+      reviews:
+        flows:
+          - name: 审批组1
+            reviewers: [ "${{ci.actor}}" ]
+          - name: 审批组2
+            reviewers: ${{ci.actor}}
+      gates:
+        - template: epc_checks.yml
+          parameters:
+            receivers:
+              - ruotiantang
     jobs:
       root_job_id_1:
         name: root_job_id_1

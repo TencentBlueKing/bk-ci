@@ -27,18 +27,30 @@
 
 package com.tencent.devops.process.pojo.template
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /**
  * deng
  * 2019-01-08
  * 模板实例化的流水线
  */
+@ApiModel("")
 data class TemplatePipeline(
+    @ApiModelProperty("模板id", required = false)
     val templateId: String,
+    @ApiModelProperty("版本名称", required = false)
     val versionName: String,
+    @ApiModelProperty("版本", required = false)
     val version: Long,
+    @ApiModelProperty("流水线id", required = false)
     val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = false)
     val pipelineName: String,
+    @ApiModelProperty("更新时间", required = false)
     val updateTime: Long,
+    @ApiModelProperty("是否有编辑权限", required = false)
     val hasPermission: Boolean,
+    @ApiModelProperty("流水线模板状态", required = false)
     val status: TemplatePipelineStatus
 )
