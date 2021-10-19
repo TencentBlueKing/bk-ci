@@ -920,7 +920,8 @@ class PipelineBuildFacadeService(
             userId = userId,
             buildStage = buildStage,
             qualityRequest = qualityRequest,
-            inOrOut = inOrOut
+            inOrOut = inOrOut,
+            check = check
         )
     }
 

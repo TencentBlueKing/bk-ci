@@ -122,9 +122,6 @@ class StageControl @Autowired constructor(
             variables = variables,
             executeCount = executeCount
         )
-        // #5246 如果是准出的相关时间直接跳到stage结束步骤
-        if (source == BS_QUALITY_ABORT_STAGE) stageContext.cmdFlowState = CmdFlowState.FINALLY
-
         watcher.stop()
 
         val commandList = listOf<StageCmd>(

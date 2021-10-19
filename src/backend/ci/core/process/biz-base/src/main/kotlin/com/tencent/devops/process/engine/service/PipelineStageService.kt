@@ -391,14 +391,23 @@ class PipelineStageService @Autowired constructor(
         userId: String,
         buildStage: PipelineBuildStage,
         qualityRequest: StageQualityRequest,
-        inOrOut: Boolean
+        inOrOut: Boolean,
+        check: StagePauseCheck
     ) {
         with(buildStage) {
             logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
                 "inOrOut=$inOrOut|request=$qualityRequest")
+            val stageNextStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.SUCCEED
+            pipelineBuildStageDao.updateStatus(
+                dslContext = dslContext, buildId = buildId, stageId = stageId,
+                buildStatus = stageNextStatus, controlOption = controlOption,
+                checkIn = checkIn, checkOut = checkOut
+            )
             val (source, actionType) = if (qualityRequest.pass) {
+                check.status = BuildStatus.QUALITY_CHECK_PASS.name
                 Pair(BS_QUALITY_PASS_STAGE, ActionType.REFRESH)
             } else {
+                check.status = BuildStatus.QUALITY_CHECK_FAIL.name
                 Pair(BS_QUALITY_ABORT_STAGE, ActionType.END)
             }
             pipelineEventDispatcher.dispatch(
