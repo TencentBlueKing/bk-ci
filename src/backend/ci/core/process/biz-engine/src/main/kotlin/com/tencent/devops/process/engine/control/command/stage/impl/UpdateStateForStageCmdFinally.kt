@@ -119,19 +119,6 @@ class UpdateStateForStageCmdFinally(
             commandContext.fastKill ||
             event.source == BS_STAGE_CANCELED_END_SOURCE
 
-        if (gotoFinal) {
-            nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
-            if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
-
-                LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
-                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
-
-                return finishBuild(commandContext = commandContext)
-            }
-        } else {
-            nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
-        }
-
         // #5019 在结束阶段做stage准出判断
         if (stage.checkOut?.ruleIds?.isNotEmpty() == true) {
             when (event.source) {
@@ -167,6 +154,19 @@ class UpdateStateForStageCmdFinally(
             }
         }
 
+        if (gotoFinal) {
+            nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
+            if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
+
+                LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
+                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
+
+                return finishBuild(commandContext = commandContext)
+            }
+        } else {
+            nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
+        }
+
         if (nextStage != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
@@ -189,7 +189,6 @@ class UpdateStateForStageCmdFinally(
         commandContext.stage.checkOut?.status = BuildStatus.REVIEWING.name
         pipelineStageService.checkQualityReviewingStage(commandContext.event.userId, commandContext.stage, false)
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_IN"
-        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     private fun qualityCheckOutFailed(commandContext: StageContext) {
