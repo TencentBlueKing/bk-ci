@@ -13,7 +13,7 @@ class QualityRuleBuildHisOperationService constructor(
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val dslContext: DSLContext
 ) {
-    fun listQualityRuleBuildOpt(ruleBuildIds: Collection<Long>): List<QualityRuleBuildHisOpt>{
+    fun listQualityRuleBuildOpt(ruleBuildIds: Collection<Long>): List<QualityRuleBuildHisOpt> {
         val ruleBuildHisOpts = qualityRuleBuildHisOperationDao.list(dslContext, ruleBuildIds)
         return ruleBuildHisOpts.map {
             val ruleBuildHisOpt = QualityRuleBuildHisOpt(
