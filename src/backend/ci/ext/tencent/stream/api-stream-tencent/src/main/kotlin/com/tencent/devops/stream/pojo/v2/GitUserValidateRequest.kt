@@ -33,8 +33,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("蓝盾工蜂项目用户校验请求")
 data class GitUserValidateRequest(
-    @ApiModelProperty("工蜂项目名")
-    val urlType: RepoAuthType,
     @ApiModelProperty("工蜂项目url")
     val url: String
 )
