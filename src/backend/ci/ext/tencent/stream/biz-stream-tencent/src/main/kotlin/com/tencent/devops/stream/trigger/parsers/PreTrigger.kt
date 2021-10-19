@@ -46,6 +46,7 @@ class PreTrigger @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTrigger::class.java)
+        private const val DEVELOPER = 30
     }
 
     // 开启研发商店插件的ci
@@ -64,14 +65,22 @@ class PreTrigger @Autowired constructor(
                 }
             }
 
+            val token = scmService.getToken(gitProjectId.toString()).accessToken
             val giProjectInfo = scmService.getProjectInfoRetry(
-                token = scmService.getToken(gitProjectId.toString()).accessToken,
+                token = token,
                 gitProjectId = gitProjectId.toString(),
                 useAccessToken = true
             )
+            // 因为用户是 devops 所以需要修改
+            val realUser = getRealUser(this, token)
+            if (realUser.isNullOrBlank()) {
+                logger.warn("create from store atom get project members error: no develop user")
+                return
+            }
+
             try {
                 gitBasicSettingService.initGitCIConf(
-                    userId = userId,
+                    userId = realUser,
                     projectId = GitCommonUtils.getCiProjectId(gitProjectId),
                     gitProjectId = gitProjectId,
                     enabled = true,
@@ -81,6 +90,30 @@ class PreTrigger @Autowired constructor(
                 logger.error("create from store atom error: ${e.message}")
             }
         }
+    }
+
+    private fun getRealUser(requestEvent: GitRequestEvent, token: String): String? {
+        val projectMember = scmService.getProjectMembersRetry(
+            token = token,
+            gitProjectId = requestEvent.gitProjectId.toString(),
+            page = 1,
+            pageSize = 20,
+            search = null
+        )
+        if (projectMember.isNullOrEmpty()) {
+            logger.warn("create from store atom get project members error")
+            return null
+        }
+        var realUser: String? = null
+        run breaking@{
+            projectMember.forEach { member ->
+                if (member.accessLevel >= DEVELOPER) {
+                    realUser = member.username
+                    return@breaking
+                }
+            }
+        }
+        return realUser
     }
 
     private fun GitRequestEvent.isCreate(repository: GitCommitRepository): Boolean {
