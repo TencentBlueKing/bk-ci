@@ -363,7 +363,7 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String? = null,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean? = false,

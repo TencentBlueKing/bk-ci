@@ -38,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
-@Suppress("ALL")
 @Service
 class SyncPipelineProjectIdService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -120,7 +119,11 @@ class SyncPipelineProjectIdService @Autowired constructor(
             // 更新流水线Webhook队列表的projectId
             pipelineWebhookQueueRecords?.forEach { pipelineWebhookQueue ->
                 val pipelineId = pipelineWebhookQueue.pipelineId
-                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+                val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    delete = null
+                )
                 if (pipelineInfo != null) {
                     syncPipelineProjectIdDao.updatePipelineWebhookQueueProject(
                         dslContext = dslContext,
@@ -170,7 +173,11 @@ class SyncPipelineProjectIdService @Autowired constructor(
             // 更新流水线标签关联关系表的projectId
             pipelineLabelPipelineRecords?.forEach { pipelineLabelPipeline ->
                 val pipelineId = pipelineLabelPipeline.pipelineId
-                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+                val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    delete = null
+                )
                 if (pipelineInfo != null) {
                     syncPipelineProjectIdDao.updatePipelineLabelPipelineProject(
                         dslContext = dslContext,
