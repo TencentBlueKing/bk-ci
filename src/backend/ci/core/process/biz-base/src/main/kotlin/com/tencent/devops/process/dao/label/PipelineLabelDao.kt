@@ -43,6 +43,7 @@ class PipelineLabelDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         name: String,
         userId: String
@@ -52,6 +53,7 @@ class PipelineLabelDao {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 GROUP_ID,
                 NAME,
                 CREATE_TIME,
@@ -60,6 +62,7 @@ class PipelineLabelDao {
                 UPDATE_USER
             )
                 .values(
+                    projectId,
                     groupId,
                     name,
                     now,
