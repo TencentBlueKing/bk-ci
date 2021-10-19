@@ -89,8 +89,6 @@ spec:
             - name: quartz-config
               mountPath: /data/workspace/quartz.properties
               subPath: quartz.properties
-            - name: storage
-              mountPath: {{ .Values.persistence.mountPath }}
       volumes:
         - name: quartz-config
           configMap:
@@ -98,11 +96,4 @@ spec:
             items:
               - key: quartz.properties
                 path: quartz.properties
-        - name: storage
-          {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
 {{- end }}
