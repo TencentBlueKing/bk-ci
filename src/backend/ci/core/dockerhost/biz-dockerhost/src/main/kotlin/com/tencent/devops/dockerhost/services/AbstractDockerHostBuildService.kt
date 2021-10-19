@@ -244,6 +244,29 @@ abstract class AbstractDockerHostBuildService constructor(
     }
 
     fun mountOverlayfs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        hostConfig: HostConfig
+    ) {
+        val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId.toString(),
+            poolNo = poolNo
+        )?.data
+
+        var qpcUniquePath = ""
+        if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+            qpcUniquePath = qpcGitProjectList.first()
+        }
+
+        mountOverlayfs(pipelineId, vmSeqId, poolNo, qpcUniquePath, hostConfig)
+    }
+
+    fun mountOverlayfs(
         pipelineId: String,
         vmSeqId: Int,
         poolNo: Int,
@@ -253,14 +276,16 @@ abstract class AbstractDockerHostBuildService constructor(
         if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}upper"
             val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}work"
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
+
             if (!File(upperDir).exists()) {
                 File(upperDir).mkdirs()
             }
+
             if (!File(workDir).exists()) {
                 File(workDir).mkdirs()
             }
 
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
             if (!File(lowerDir).exists()) {
                 File(lowerDir).mkdirs()
             }
