@@ -40,12 +40,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
 class PipelineResDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -56,13 +57,14 @@ class PipelineResDao {
             val modelString = JsonUtil.toJson(model, formatted = false)
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
             )
-                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
+                .values(projectId, pipelineId, version, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)

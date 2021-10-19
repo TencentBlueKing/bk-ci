@@ -25,12 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.misc.pojo.process
 
-data class PipelinePauseValue(
-    val projectId: String,
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("构建详情")
+data class PipelineBuildDetail(
+    @ApiModelProperty("构建Id", required = true)
     val buildId: String,
-    val taskId: String,
-    val defaultValue: String,
-    val newValue: String
+    @ApiModelProperty("流水线模型信息", required = true)
+    val modelInfo: Map<String, Any>
 )
