@@ -150,6 +150,17 @@ class PipelineLabelDao {
         }
     }
 
+    fun getById(
+        dslContext: DSLContext,
+        id: Long
+    ): TPipelineLabelRecord? {
+        with(TPipelineLabel.T_PIPELINE_LABEL) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchAny()
+        }
+    }
+
     fun getByIds(
         dslContext: DSLContext,
         ids: Set<Long>

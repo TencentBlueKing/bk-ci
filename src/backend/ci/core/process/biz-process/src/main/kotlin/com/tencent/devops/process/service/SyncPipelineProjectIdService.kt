@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.dao.SyncPipelineProjectIdDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
+import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
@@ -38,12 +39,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
+@Suppress("LongParameterList")
 @Service
 class SyncPipelineProjectIdService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineGroupDao: PipelineGroupDao,
+    private val pipelineLabelDao: PipelineLabelDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val syncPipelineProjectIdDao: SyncPipelineProjectIdDao
 ) {
@@ -172,17 +175,14 @@ class SyncPipelineProjectIdService @Autowired constructor(
             )
             // 更新流水线标签关联关系表的projectId
             pipelineLabelPipelineRecords?.forEach { pipelineLabelPipeline ->
-                val pipelineId = pipelineLabelPipeline.pipelineId
-                val pipelineInfo = pipelineInfoDao.getPipelineInfo(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    delete = null
-                )
-                if (pipelineInfo != null) {
+                val labelId = pipelineLabelPipeline.labelId
+                val pipelineLabel = pipelineLabelDao.getById(dslContext, labelId) ?: return@forEach
+                val groupInfo = pipelineGroupDao.get(dslContext, pipelineLabel.groupId)
+                if (groupInfo != null) {
                     syncPipelineProjectIdDao.updatePipelineLabelPipelineProject(
                         dslContext = dslContext,
-                        pipelineId = pipelineId,
-                        projectId = pipelineInfo.projectId
+                        pipelineId = pipelineLabelPipeline.pipelineId,
+                        projectId = groupInfo.projectId
                     )
                 }
             }
