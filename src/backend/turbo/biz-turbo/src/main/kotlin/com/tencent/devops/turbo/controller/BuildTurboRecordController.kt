@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 class BuildTurboRecordController @Autowired constructor(
     private val turboRecordService: TurboRecordService
 ) : IBuildTurboRecordController {
-    override fun updateRecordStatusForPlugin(buildId: String, user: String): Response<Boolean> {
-        turboRecordService.processAfterPluginFinish(buildId, user)
-        return Response.success(true)
+    override fun updateRecordStatusForPlugin(buildId: String, user: String): Response<String?> {
+        return Response.success(turboRecordService.processAfterPluginFinish(buildId, user))
     }
 }

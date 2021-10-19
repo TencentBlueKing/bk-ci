@@ -30,5 +30,5 @@ interface IBuildTurboRecordController {
         @ApiParam(value = "用户信息", required = true)
         @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
         user: String
-    ): Response<Boolean>
+    ): Response<String?>
 }

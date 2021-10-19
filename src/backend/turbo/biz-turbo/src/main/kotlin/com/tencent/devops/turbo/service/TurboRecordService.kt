@@ -398,16 +398,20 @@ class TurboRecordService @Autowired constructor(
     /**
      * 插件扫描完成后调用后端接口，
      */
-    fun processAfterPluginFinish(buildId: String, user: String) {
-        /**
-         * 发送延时队列，如果该记录没有同步至平台，则将状态更新至失败
-         */
-        rabbitTemplate.convertAndSend(
-            EXCHANGE_TURBO_PLUGIN, ROUTE_TURBO_PLUGIN_DATA, TurboRecordPluginUpdateDto(buildId, user)
-        ) { message ->
-            message.messageProperties.delay = 90 * 1000
-            message
+    fun processAfterPluginFinish(buildId: String, user: String) : String?{
+        val turboRecordEntity = turboRecordRepository.findByBuildId(buildId)
+        if (null != turboRecordEntity) {
+            /**
+             * 发送延时队列，如果该记录没有同步至平台，则将状态更新至失败
+             */
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_TURBO_PLUGIN, ROUTE_TURBO_PLUGIN_DATA, TurboRecordPluginUpdateDto(buildId, user)
+            ) { message ->
+                message.messageProperties.delay = 90 * 1000
+                message
+            }
         }
+        return turboRecordEntity?.id
     }
 
     /**

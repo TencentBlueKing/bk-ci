@@ -26,4 +26,9 @@ interface TurboRecordRepository : MongoRepository<TTurboRecordEntity, String> {
      * 通过构建id记录查询
      */
     fun existsByBuildId(buildId: String): Boolean
+
+    /**
+     * 通过构建id查找
+     */
+    fun findByBuildId(buildId: String): TTurboRecordEntity?
 }
