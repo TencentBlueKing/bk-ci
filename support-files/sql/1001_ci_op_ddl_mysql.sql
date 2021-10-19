@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS  `dept_info` (
   `UPDATE_TIME` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_bd8ig9ecbopp3592f9fcpb99p` (`dept_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='';
 
 --
 -- Table structure for table `project_info`
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS  `project_info` (
   `use_bk` bit(1) DEFAULT NULL COMMENT '是否用蓝鲸',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_bvtnw8dekf2y9gbxt7thib8vj` (`project_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='';
 
 --
 -- Table structure for table `role`
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS  `t_user_token` (
   `refresh_Token` varchar(255) DEFAULT NULL COMMENT '刷新token',
   `user_Type` varchar(255) DEFAULT NULL COMMENT '用户类型',
   PRIMARY KEY (`user_Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='';
 
 --
 -- Table structure for table `url_action`
