@@ -177,7 +177,7 @@ class TXPipelineExportService @Autowired constructor(
             }
         }
 
-        //过滤出enable == false 的stage/job/step
+        // 过滤出enable == false 的stage/job/step
         val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
         val enableStages: MutableList<Stage> = mutableListOf()
         filterStage.forEach { stageIt ->
