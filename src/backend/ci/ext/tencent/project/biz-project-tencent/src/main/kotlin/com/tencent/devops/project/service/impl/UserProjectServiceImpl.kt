@@ -135,16 +135,12 @@ class UserProjectServiceImpl @Autowired constructor(
                 s?.forEach { it ->
                     val status = it.status
                     val favor = favorServices.contains(it.id)
-//                    var newWindow = false
-//                    var newWindowUrl = ""
                     val (newWindow, newWindowUrl) = getNewWindow(
                         it,
                         request,
                         bkToken,
                         userId
                     )
-//                    newWindow = pair.first
-//                    newWindowUrl = pair.second
                     services.add(
                         ServiceVO(
                             id = it.id,
@@ -194,8 +190,8 @@ class UserProjectServiceImpl @Autowired constructor(
         bkToken: String?,
         userId: String
     ): Pair<Boolean, String> {
-        var newWindow = false
-        var newWindowUrl = ""
+        var newWindow = tServiceRecord.newWindow
+        var newWindowUrl = tServiceRecord.newWindowurl
         if (tServiceRecord.name.contains("容器服务") &&
             tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
             request != null &&
