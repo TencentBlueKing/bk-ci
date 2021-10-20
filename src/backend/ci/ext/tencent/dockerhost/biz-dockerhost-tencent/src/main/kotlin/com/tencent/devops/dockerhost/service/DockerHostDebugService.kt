@@ -84,8 +84,7 @@ class DockerHostDebugService(
         return ""
     }
 
-    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
-    }
+    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {}
 
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
