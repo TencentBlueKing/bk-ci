@@ -25,12 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.api.op
 
-data class PipelinePauseValue(
-    val projectId: String,
-    val buildId: String,
-    val taskId: String,
-    val defaultValue: String,
-    val newValue: String
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.SyncPipelineProjectIdService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpSyncPipelineProjectIdResourceImpl @Autowired constructor(
+    private val syncPipelineProjectIdService: SyncPipelineProjectIdService
+) : OpSyncPipelineProjectIdResource {
+
+    override fun asyncUpdateProjectId(): Result<Boolean> {
+        return Result(syncPipelineProjectIdService.asyncUpdateProjectId())
+    }
+}

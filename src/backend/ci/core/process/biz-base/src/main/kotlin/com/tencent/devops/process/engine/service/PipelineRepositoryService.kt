@@ -414,6 +414,7 @@ class PipelineRepositoryService constructor(
             model.latestVersion = 1
             pipelineResDao.create(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
                 version = 1,
@@ -421,6 +422,7 @@ class PipelineRepositoryService constructor(
             )
             pipelineResVersionDao.create(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
                 version = 1,
@@ -537,6 +539,7 @@ class PipelineRepositoryService constructor(
             model.latestVersion = version
             pipelineResDao.create(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
                 version = version,
@@ -544,6 +547,7 @@ class PipelineRepositoryService constructor(
             )
             pipelineResVersionDao.create(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
                 version = version,
@@ -564,6 +568,7 @@ class PipelineRepositoryService constructor(
                 if (!lastVersionModelStr.isNullOrEmpty()) {
                     pipelineResVersionDao.create(
                         dslContext = transactionContext,
+                        projectId = projectId,
                         pipelineId = pipelineId,
                         creator = userId,
                         version = version - 1,
