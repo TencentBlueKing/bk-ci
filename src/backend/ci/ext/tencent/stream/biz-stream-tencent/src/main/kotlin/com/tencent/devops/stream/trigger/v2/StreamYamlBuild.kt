@@ -205,8 +205,8 @@ class StreamYamlBuild @Autowired constructor(
         desc = "",
         stages = listOf(
             Stage(
-                id = VMUtils.genStageId(0),
-                name = VMUtils.genStageId(0),
+                id = VMUtils.genStageId(1),
+                name = VMUtils.genStageId(1),
                 containers = listOf(
                     TriggerContainer(
                         id = "0",
