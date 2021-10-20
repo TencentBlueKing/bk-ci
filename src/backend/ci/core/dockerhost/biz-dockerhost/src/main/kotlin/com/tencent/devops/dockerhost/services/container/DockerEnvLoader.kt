@@ -25,33 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.container
 
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
 import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 
-@EnvGenerator(description = "Docker用到的Codecc环境变量生成器")
-@Component
-class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerEnvGenerator {
+object DockerEnvLoader {
 
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(
-                key = ENV_LOG_SAVE_MODE,
-                value = if ("codecc_build" == dockerHostConfig.dockerhostMode &&
-                    (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) {
-                    "LOCAL"
-                } else {
-                    "UPLOAD"
+    private val logger: Logger = LoggerFactory.getLogger(DockerEnvLoader::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadEnv(dockerHostBuildInfo: ContainerHandlerContext): List<String> {
+
+        val envList = mutableListOf<String>()
+        try {
+            val generators: List<DockerEnvGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(EnvGenerator::class.java) as List<DockerEnvGenerator>
+            generators.forEach { generator ->
+                generator.generateEnv(dockerHostBuildInfo).forEach {
+                    envList.add("${it.key}=${it.value}")
                 }
-            )
-        )
+            }
+        } catch (notFound: BeansException) {
+            logger.warn("[${dockerHostBuildInfo.buildId}]|not found env generator| ex=$notFound")
+        } catch (ignored: Throwable) {
+            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadEnv_fail|", ignored)
+        }
+
+        return envList
     }
 }

@@ -27,13 +27,16 @@
 
 package com.tencent.devops.dockerhost.services.container
 
+import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.HostConfig
+import com.tencent.devops.dockerhost.common.DockerExitCodeEnum
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.Handler
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
@@ -42,62 +45,50 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class ContainerRunHandler(
+class ContainerAgentUpHandler(
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) : Handler<ContainerHandlerContext>(dockerHostConfig, dockerHostBuildApi) {
     override fun handlerRequest(handlerContext: ContainerHandlerContext) {
         with(handlerContext) {
+            var exitCode = 0L
             try {
-                val containerName =
-                    "dispatch-$buildId-$vmSeqId-${RandomUtil.randomString()}"
-                val hostConfig = HostConfig()
-                    .withCapAdd(Capability.SYS_PTRACE)
-                    .withMemory(dockerResource.memoryLimitBytes)
-                    .withMemorySwap(dockerResource.memoryLimitBytes)
-                    .withCpuQuota(dockerResource.cpuQuota.toLong())
-                    .withCpuPeriod(dockerResource.cpuPeriod.toLong())
-                    .withBinds(DockerBindLoader.loadBinds(this))
-                    .withMounts(DockerMountLoader.loadMounts(this))
-                    .withNetworkMode("bridge")
-
-                val container = httpLongDockerCli.createContainerCmd(formatImageName)
-                    .withName(containerName)
-                    .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                    .withEnv(DockerEnvLoader.loadEnv(this))
-                    .withHostConfig(hostConfig)
-                    .exec()
-
-                logger.info("Created container $container")
-                httpLongDockerCli.startContainerCmd(container.id).exec()
-
-                containerId = container.id
-            } catch (er: Throwable) {
-                logger.error(er.toString())
-                logger.error(er.message)
-                log(
-                    buildId = buildId,
-                    red = true,
-                    message = "启动构建环境失败，错误信息:${er.message}",
-                    tag = VMUtils.genStartVMTaskId(vmSeqId.toString()),
-                    containerHashId = containerHashId
-                )
-                if (er is NotFoundException) {
-                    throw ContainerException(
-                        errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
-                        message = "构建镜像不存在"
-                    )
-                } else {
-                    throw ContainerException(
-                        errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
-                        message = "$buildId|$vmSeqId Create container failed"
-                    )
+                // 等待5s，看agent是否正常启动
+                Thread.sleep(5000)
+                val containerState = getContainerState(containerId)
+                logger.info("containerState: $containerState")
+                if (containerState != null) {
+                    exitCode = containerState.exitCodeLong ?: 0L
                 }
+            } catch (e: Exception) {
+                logger.error("$buildId|$vmSeqId waitAgentUp failed. containerId: $containerId", e)
+            }
+
+            if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
+                val errorCodeEnum = DockerExitCodeEnum.getValue(exitCode)!!.errorCodeEnum
+                logger.error("$buildId|$vmSeqId waitAgentUp failed. " +
+                        "${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
+                throw ContainerException(
+                    errorCodeEnum = errorCodeEnum,
+                    message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
+                )
             }
         }
     }
 
+    fun getContainerState(containerId: String): InspectContainerResponse.ContainerState? {
+        try {
+            logger.info("Get containerState: $containerId start.")
+            val inspectContainerResponse = httpDockerCli.inspectContainerCmd(containerId).exec() ?: return null
+            logger.info("Get containerState: $containerId state: ${inspectContainerResponse.state}")
+            return inspectContainerResponse.state
+        } catch (e: Exception) {
+            logger.error("check container: $containerId state failed, return ", e)
+            return null
+        }
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(ContainerRunHandler::class.java)
+        private val logger = LoggerFactory.getLogger(ContainerAgentUpHandler::class.java)
     }
 }

@@ -25,33 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.container
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.github.dockerjava.api.model.Bind
 
-@EnvGenerator(description = "Docker用到的Codecc环境变量生成器")
-@Component
-class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerEnvGenerator {
+/**
+ * Docker HostConf生成器
+ */
+interface DockerBindGenerator {
 
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(
-                key = ENV_LOG_SAVE_MODE,
-                value = if ("codecc_build" == dockerHostConfig.dockerhostMode &&
-                    (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) {
-                    "LOCAL"
-                } else {
-                    "UPLOAD"
-                }
-            )
-        )
-    }
+    fun generateBinds(dockerHostBuildInfo: ContainerHandlerContext): List<Bind>
 }

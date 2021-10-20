@@ -48,7 +48,7 @@ class ContainerPullImageHandler(
     override fun handlerRequest(handlerContext: ContainerHandlerContext) {
         with(handlerContext) {
             formatImageName = CommonUtils.normalizeImageName(originImageName)
-            val taskId = VMUtils.genStartVMTaskId(vmSeqId)
+            val taskId = VMUtils.genStartVMTaskId(vmSeqId.toString())
 
             try {
                 LocalImageCache.saveOrUpdate(formatImageName)

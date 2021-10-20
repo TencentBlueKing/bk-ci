@@ -194,7 +194,6 @@ abstract class Handler<T : HandlerContext> constructor(
         }
     }
 
-
     inner class MyPullImageResultCallback internal constructor(
         private val buildId: String,
         private val dockerHostBuildApi: DockerHostBuildResourceApi,

@@ -25,33 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.container
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.github.dockerjava.api.model.Mount
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dockerhost.services.container.annotation.MountGenerator
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 
-@EnvGenerator(description = "Docker用到的Codecc环境变量生成器")
-@Component
-class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerEnvGenerator {
+object DockerMountLoader {
 
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(
-                key = ENV_LOG_SAVE_MODE,
-                value = if ("codecc_build" == dockerHostConfig.dockerhostMode &&
-                    (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) {
-                    "LOCAL"
-                } else {
-                    "UPLOAD"
-                }
-            )
-        )
+    private val logger: Logger = LoggerFactory.getLogger(DockerMountLoader::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadMounts(handlerContext: ContainerHandlerContext): List<Mount> {
+
+        val mountList = mutableListOf<Mount>()
+        try {
+            val generators: List<DockerMountGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(MountGenerator::class.java) as List<DockerMountGenerator>
+            generators.forEach { generator ->
+                mountList.addAll(generator.generateMounts(handlerContext))
+            }
+        } catch (notFound: BeansException) {
+            logger.warn("${handlerContext.buildId}|${handlerContext.vmSeqId} not found mount generator.", notFound)
+        } catch (ignored: Throwable) {
+            logger.error("${handlerContext.buildId}|${handlerContext.vmSeqId} load mounts failed.", ignored)
+        }
+
+        return mountList
     }
 }

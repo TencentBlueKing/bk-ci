@@ -6,6 +6,8 @@ import com.tencent.devops.dockerhost.services.HandlerContext
 
 data class ContainerHandlerContext(
     val originImageName: String,
+    val agentId: String,
+    val secretKey: String,
     val registryUser: String?,
     val registryPwd: String?,
     val imageType: String?,
