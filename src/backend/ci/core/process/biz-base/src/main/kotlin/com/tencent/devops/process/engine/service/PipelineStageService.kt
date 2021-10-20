@@ -154,12 +154,11 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun checkQualityReviewingStage(userId: String, buildStage: PipelineBuildStage, inOrOut: Boolean) {
+    fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
                 buildId = buildId, stageId = stageId,
                 controlOption = controlOption!!,
-                buildStatus = BuildStatus.RUNNING,
                 checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
@@ -167,30 +166,8 @@ class PipelineStageService @Autowired constructor(
                 pipelineBuildStageDao.updateStatus(
                     dslContext = context, buildId = buildId,
                     stageId = stageId, controlOption = controlOption!!,
-                    buildStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.RUNNING,
-                    checkIn = checkIn, checkOut = checkOut
-                )
-                pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
-                )
-            }
-        }
-    }
-
-    fun checkQualityFailStage(userId: String, buildStage: PipelineBuildStage) {
-        with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
-                buildStatus = BuildStatus.FAILED,
-                checkIn = checkIn, checkOut = checkOut
-            )
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId,
-                    stageId = stageId, controlOption = controlOption!!,
-                    buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                    // #5246 所有质量红线检查都不影响stage原构建状态
+                    buildStatus = buildStage.status,
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(
@@ -199,36 +176,7 @@ class PipelineStageService @Autowired constructor(
             }
             pipelineEventDispatcher.dispatch(
                 PipelineBuildWebSocketPushEvent(
-                    source = "checkQualityFailStage", projectId = projectId, pipelineId = pipelineId,
-                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                )
-            )
-        }
-    }
-
-    fun checkQualityPassStage(userId: String, buildStage: PipelineBuildStage) {
-        with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
-                buildStatus = BuildStatus.RUNNING,
-                checkIn = checkIn, checkOut = checkOut
-            )
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId,
-                    stageId = stageId, controlOption = controlOption!!,
-                    buildStatus = BuildStatus.QUALITY_CHECK_PASS,
-                    checkIn = checkIn, checkOut = checkOut
-                )
-                pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
-                )
-            }
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildWebSocketPushEvent(
-                    source = "checkQualityPassStage", projectId = projectId, pipelineId = pipelineId,
+                    source = "refreshCheckStageStatus", projectId = projectId, pipelineId = pipelineId,
                     userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
                 )
             )
