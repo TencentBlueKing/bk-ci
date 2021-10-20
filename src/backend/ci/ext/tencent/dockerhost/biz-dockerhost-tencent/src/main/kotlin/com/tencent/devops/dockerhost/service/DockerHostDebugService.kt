@@ -165,13 +165,19 @@ class DockerHostDebugService(
             }
 
             val tailPath = getTailPath(containerInfo)
-            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/", volumeMavenRepo),
-                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/", volumeNpmPrefix),
-                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/", volumeNpmCache),
-                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/", volumeCcache),
+            val binds = mutableListOf(
+                    Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeMavenRepo),
+                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeNpmPrefix),
+                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeNpmCache),
+                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeCcache),
                     Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
                     Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache))
+                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeGradleCache))
 
             if (qpcUniquePath.isBlank()) {
                 binds.add(Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
