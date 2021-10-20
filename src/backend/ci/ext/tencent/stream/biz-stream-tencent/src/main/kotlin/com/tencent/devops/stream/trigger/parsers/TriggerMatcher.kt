@@ -119,6 +119,10 @@ class TriggerMatcher @Autowired constructor(
         if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
             when (eventType) {
                 CodeEventType.PUSH -> {
+                    // 获取push提交之间的修改文件
+                    val changeFileList = streamScmService.getCommitChangeFileListRetry(
+
+                    ).ifEmpty { return true }
                     if (isPushMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
                 }
                 CodeEventType.TAG_PUSH -> {
@@ -417,8 +421,10 @@ class TriggerMatcher @Autowired constructor(
                     mrChangeFiles.forEach { changeFilePath ->
                         pathList.forEach { includePath ->
                             if (isPathMatch(changeFilePath, includePath)) {
-                                logger.info("The include path($includePath) " +
-                                    "include the git mr update one($changeFilePath)")
+                                logger.info(
+                                    "The include path($includePath) " +
+                                            "include the git mr update one($changeFilePath)"
+                                )
                                 mrPathIncluded = true
                                 return@outside
                             }

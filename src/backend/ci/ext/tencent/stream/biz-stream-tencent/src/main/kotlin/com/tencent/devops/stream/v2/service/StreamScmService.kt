@@ -40,6 +40,7 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIMrInfo
@@ -190,8 +191,10 @@ class StreamScmService @Autowired constructor(
             )
             return result.data
         } catch (e: RemoteServiceException) {
-            logger.warn("getProjectInfo RemoteServiceException|" +
-                "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
+            logger.warn(
+                "getProjectInfo RemoteServiceException|" +
+                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+            )
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
                     error(
@@ -259,10 +262,13 @@ class StreamScmService @Autowired constructor(
                 gitCICreateFile = gitCICreateFile
             ).data!!
         } catch (e: RemoteServiceException) {
-            logger.warn("createNewFile RemoteServiceException|" +
-                "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}")
+            logger.warn(
+                "createNewFile RemoteServiceException|" +
+                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+            )
             if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
-                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status) {
+                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status
+            ) {
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
@@ -482,6 +488,37 @@ class StreamScmService @Autowired constructor(
                     path = filePath,
                     token = gitToken,
                     ref = getTriggerBranch(gitRequestEvent.branch)
+                ).data ?: emptyList()
+            }
+        )
+    }
+
+    fun getCommitChangeFileListRetry(
+        token: String?,
+        userId: String?,
+        gitProjectId: Long,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        return retryFun(
+            log = "getCommitChangeFileListRetry from: $from to: $to error",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).getCommitChangeFileList(
+                    token = if (userId == null) {
+                        token!!
+                    } else {
+                        getOauthToken(userId, true, gitProjectId)
+                    },
+                    gitProjectId = gitProjectId.toString(),
+                    from = from,
+                    to = to,
+                    straight = straight,
+                    page = page,
+                    pageSize = pageSize
                 ).data ?: emptyList()
             }
         )
