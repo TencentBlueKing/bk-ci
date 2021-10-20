@@ -133,7 +133,6 @@ class BkShardingDataSourceConfiguration {
     }
 
     @Bean
-    @Primary
     fun shardingDataSource(): DataSource {
         val shardingRuleConfig = ShardingRuleConfiguration()
         // 设置表的路由规则
