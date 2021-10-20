@@ -47,6 +47,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.TableField
@@ -171,9 +172,9 @@ class PipelineBuildSummaryDao {
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag
         )
-        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines)
-            .where(conditions).asTable("t")
-        return dslContext.selectCount().from(t).fetchOne(0, Long::class.java)!!
+        return getPipelineInfoBuildSummaryCountBaseQuery(dslContext, favorPipelines, authPipelines)
+            .where(conditions)
+            .fetchOne(0, Long::class.java)!!
     }
 
     fun listPipelineInfoBuildSummary(
@@ -425,22 +426,20 @@ class PipelineBuildSummaryDao {
         pageSize: Int? = null,
         offsetNum: Int? = 0
     ): Result<out Record> {
-        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines)
-            .where(conditions).asTable("t")
-        val baseStep = dslContext.select().from(t)
+        val baseStep = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    t.field("PIPELINE_NAME_PINYIN")!!.asc()
+                    T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.asc()
                 }
                 PipelineSortType.CREATE_TIME -> {
-                    t.field("CREATE_TIME")!!.desc()
+                    T_PIPELINE_INFO.CREATE_TIME.desc()
                 }
                 PipelineSortType.UPDATE_TIME -> {
-                    t.field("UPDATE_TIME")!!.desc()
+                    T_PIPELINE_INFO.UPDATE_TIME.desc()
                 }
                 PipelineSortType.LAST_EXEC_TIME -> {
-                    t.field("LATEST_START_TIME")!!.desc()
+                    T_PIPELINE_BUILD_SUMMARY.LATEST_START_TIME.desc()
                 }
             }
             baseStep.orderBy(sortTypeField)
@@ -489,6 +488,19 @@ class PipelineBuildSummaryDao {
             T_PIPELINE_BUILD_SUMMARY.LATEST_TASK_NAME,
             T_PIPELINE_BUILD_SUMMARY.LATEST_STATUS
         )
+            .from(T_PIPELINE_INFO)
+            .innerJoin(T_PIPELINE_SETTING)
+            .on(T_PIPELINE_INFO.PIPELINE_ID.eq(T_PIPELINE_SETTING.PIPELINE_ID))
+            .innerJoin(T_PIPELINE_BUILD_SUMMARY)
+            .on(T_PIPELINE_SETTING.PIPELINE_ID.eq(T_PIPELINE_BUILD_SUMMARY.PIPELINE_ID))
+    }
+
+    fun getPipelineInfoBuildSummaryCountBaseQuery(
+        dslContext: DSLContext,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList()
+    ): SelectOnConditionStep<Record1<Int>> {
+        return dslContext.selectCount()
             .from(T_PIPELINE_INFO)
             .innerJoin(
                 T_PIPELINE_SETTING
