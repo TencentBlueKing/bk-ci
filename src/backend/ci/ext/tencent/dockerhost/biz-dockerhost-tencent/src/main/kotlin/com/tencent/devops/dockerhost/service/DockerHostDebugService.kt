@@ -152,6 +152,18 @@ class DockerHostDebugService(
             }
             logger.info("envList is: $envList; PATH is $PATH")
 
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = containerInfo.projectId,
+                buildId = containerInfo.pipelineId,
+                vmSeqId = containerInfo.vmSeqId,
+                poolNo = containerInfo.poolNo
+            )?.data
+
+            var qpcUniquePath = ""
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                qpcUniquePath = qpcGitProjectList.first()
+            }
+
             val tailPath = getTailPath(containerInfo)
             val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/", volumeMavenRepo),
                     Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/", volumeNpmPrefix),
@@ -159,19 +171,22 @@ class DockerHostDebugService(
                     Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/", volumeCcache),
                     Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
                     Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache),
-                    Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
+                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache))
+
+            if (qpcUniquePath.isBlank()) {
+                binds.add(Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
+            }
+
             if (enableProjectShare(containerInfo.projectId)) {
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
             val hostConfig = HostConfig().withBinds(binds).withNetworkMode("bridge")
             mountOverlayfs(
-                projectId = containerInfo.projectId,
                 pipelineId = containerInfo.pipelineId,
-                buildId = containerInfo.pipelineId,
                 vmSeqId = containerInfo.vmSeqId.toInt(),
                 poolNo = containerInfo.poolNo,
+                qpcUniquePath = qpcUniquePath,
                 hostConfig = hostConfig
             )
 
