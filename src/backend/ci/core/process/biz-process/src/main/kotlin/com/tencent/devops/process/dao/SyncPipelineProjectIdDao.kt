@@ -128,7 +128,7 @@ class SyncPipelineProjectIdDao {
     fun updatePipelinePauseValueProject(
         dslContext: DSLContext,
         buildId: String,
-        projectId: String,
+        projectId: String
     ) {
         with(TPipelinePauseValue.T_PIPELINE_PAUSE_VALUE) {
             dslContext.update(this)

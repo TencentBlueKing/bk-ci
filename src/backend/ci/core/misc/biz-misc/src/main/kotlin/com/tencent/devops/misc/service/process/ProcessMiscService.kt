@@ -156,7 +156,7 @@ class ProcessMiscService @Autowired constructor(
     fun updatePipelineBuildDetailProject(
         buildId: String,
         projectId: String,
-        model: String? = null,
+        model: String? = null
     ) {
         processDao.updatePipelineBuildDetailProject(dslContext, buildId, projectId, model)
     }
