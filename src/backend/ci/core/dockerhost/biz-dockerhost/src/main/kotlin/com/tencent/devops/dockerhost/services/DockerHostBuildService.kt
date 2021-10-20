@@ -344,6 +344,18 @@ class DockerHostBuildService(
                 )
             }
 
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                poolNo = dockerRunParam.poolNo!!.toInt()
+            )?.data
+
+            var qpcUniquePath = ""
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                qpcUniquePath = qpcGitProjectList.first()
+            }
+
             val dockerBuildInfo = DockerHostBuildInfo(
                 projectId = projectId,
                 agentId = "",
@@ -361,7 +373,8 @@ class DockerHostBuildService(
                 imageType = ImageType.THIRD.type,
                 imagePublicFlag = false,
                 imageRDType = null,
-                containerHashId = ""
+                containerHashId = "",
+                qpcUniquePath = qpcUniquePath
             )
             // docker run
             val env = mutableListOf<String>()
@@ -424,14 +437,7 @@ class DockerHostBuildService(
                     .withPortBindings(portBindings)
             }
 
-            mountOverlayfs(
-                projectId = dockerBuildInfo.projectId,
-                pipelineId = dockerBuildInfo.pipelineId,
-                buildId = dockerBuildInfo.buildId,
-                vmSeqId = dockerBuildInfo.vmSeqId,
-                poolNo = dockerBuildInfo.poolNo,
-                hostConfig = hostConfig
-            )
+            mountOverlayfs(pipelineId, vmSeqId.toInt(), dockerRunParam.poolNo!!.toInt(), qpcUniquePath, hostConfig)
             val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withEnv(env)
