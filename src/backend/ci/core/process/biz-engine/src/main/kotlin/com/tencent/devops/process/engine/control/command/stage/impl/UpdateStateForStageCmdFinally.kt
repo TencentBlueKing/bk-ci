@@ -156,7 +156,7 @@ class UpdateStateForStageCmdFinally(
     ): Boolean {
 
         // #5246 只在stage运行成功并配置了红线规则时做准出判断
-        if (stage.checkOut?.ruleIds?.isNotEmpty() == true && commandContext.buildStatus.isSuccess()) {
+        if (stage.checkOut?.ruleIds?.isNotEmpty() != true || !commandContext.buildStatus.isSuccess()) {
             return false
         }
 
