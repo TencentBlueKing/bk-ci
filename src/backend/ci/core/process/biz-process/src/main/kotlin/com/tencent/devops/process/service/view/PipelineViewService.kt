@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -74,17 +73,26 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelineGroupService: PipelineGroupService,
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        pipelineViewLastViewDao.save(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            viewId = viewId
-        )
+        val record = pipelineViewLastViewDao.get(dslContext, userId, projectId)
+        if (record == null) {
+            pipelineViewLastViewDao.save(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
+        } else {
+            pipelineViewLastViewDao.update(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                viewId = viewId
+            )
+        }
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
