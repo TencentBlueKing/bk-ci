@@ -24,7 +24,7 @@ BEGIN
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_SERVICE'
-                        AND COLUMN_NAME = 'newWindow') THEN
+                        AND COLUMN_NAME = 'new_window') THEN
         ALTER TABLE T_SERVICE
             ADD COLUMN `new_window` bit(1) DEFAULT FALSE COMMENT '是否打开新标签页';
     END IF;
@@ -33,7 +33,7 @@ BEGIN
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_SERVICE'
-                        AND COLUMN_NAME = 'newWindowUrl') THEN
+                        AND COLUMN_NAME = 'new_windowUrl') THEN
         ALTER TABLE T_SERVICE
             ADD COLUMN `new_windowUrl` varchar(200) DEFAULT '' COMMENT '新标签页地址';
     END IF;
