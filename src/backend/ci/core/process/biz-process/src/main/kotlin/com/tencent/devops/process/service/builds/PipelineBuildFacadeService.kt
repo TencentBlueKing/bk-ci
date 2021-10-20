@@ -87,6 +87,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
+import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -104,6 +105,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -861,6 +863,66 @@ class PipelineBuildFacadeService(
         } finally {
             runLock.unlock()
         }
+    }
+
+    fun qualityTriggerStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        qualityRequest: StageQualityRequest
+    ) {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
+            )
+        if (buildInfo.pipelineId != pipelineId) {
+            logger.warn("[$buildId]|qualityTriggerStage error|input=$pipelineId|pipeline=${buildInfo.pipelineId}")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
+
+        val buildStage = pipelineStageService.getStage(buildId, stageId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
+                defaultMessage = "构建Stage${stageId}不存在",
+                params = arrayOf(stageId)
+            )
+        val (check, inOrOut) = when (qualityRequest.position) {
+            ControlPointPosition.BEFORE_POSITION -> {
+                Pair(buildStage.checkIn, true)
+            }
+            ControlPointPosition.AFTER_POSITION -> {
+                Pair(buildStage.checkOut, false)
+            }
+            else -> {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.FORBIDDEN.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND,
+                    defaultMessage = "Stage($stageId)的准入准出标识(${qualityRequest.position})不正确",
+                    params = arrayOf(stageId, qualityRequest.position)
+                )
+            }
+        }
+        if (check?.status != BuildStatus.REVIEWING.name) throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
+            defaultMessage = "Stage($stageId)未处于质量红线审核状态",
+            params = arrayOf(stageId)
+        )
+        pipelineStageService.qualityTriggerStage(
+            userId = userId,
+            buildStage = buildStage,
+            qualityRequest = qualityRequest,
+            inOrOut = inOrOut,
+            check = check
+        )
     }
 
     fun goToReview(
