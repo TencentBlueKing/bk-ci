@@ -118,7 +118,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             homepage = setting.homepage,
             gitHttpUrl = setting.gitHttpUrl,
             gitSshUrl = setting.gitSshUrl,
-            projectId = projectCode,
+            projectCode = projectCode,
+            projectName = projectInfo.nameWithNamespace,
             enableCi = setting.enableCi
         ))
     }

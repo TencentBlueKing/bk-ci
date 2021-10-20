@@ -46,7 +46,9 @@ data class GitUserValidateResult(
     @ApiModelProperty("gitSshUrl")
     override val gitSshUrl: String,
     @ApiModelProperty("蓝盾项目ID")
-    val projectId: String,
+    val projectCode: String,
+    @ApiModelProperty("蓝盾项目名")
+    val projectName: String,
     @ApiModelProperty("是否开启CI功能")
     val enableCi: Boolean
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
