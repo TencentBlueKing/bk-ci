@@ -46,6 +46,7 @@ class PipelineLabelPipelineDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         labelId: Long,
         userId: String
@@ -54,12 +55,14 @@ class PipelineLabelPipelineDao {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 LABEL_ID,
                 CREATE_TIME,
                 CREATE_USER
             )
                 .values(
+                    projectId,
                     pipelineId,
                     labelId,
                     LocalDateTime.now(),
@@ -71,6 +74,7 @@ class PipelineLabelPipelineDao {
 
     fun batchCreate(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         labelIds: Set<Long>,
         userId: String
@@ -81,12 +85,14 @@ class PipelineLabelPipelineDao {
                 labelIds.map {
                     dslContext.insertInto(
                         this,
+                        PROJECT_ID,
                         PIPELINE_ID,
                         LABEL_ID,
                         CREATE_TIME,
                         CREATE_USER
                     )
                         .values(
+                            projectId,
                             pipelineId,
                             it,
                             LocalDateTime.now(),
