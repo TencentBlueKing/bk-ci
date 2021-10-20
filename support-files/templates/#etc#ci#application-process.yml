@@ -77,3 +77,7 @@ scm:
     tGit:
       hookSecret: 
       enableHookSecret: false
+
+# 用户名是否包含域信息
+user:
+  domain: true
