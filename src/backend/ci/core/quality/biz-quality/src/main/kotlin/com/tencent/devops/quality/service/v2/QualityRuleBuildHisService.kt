@@ -283,28 +283,22 @@ class QualityRuleBuildHisService constructor(
         var passFlag = false
         var stageFinish = false
         stageRules.filter { it.id != record.id }.map {
-            if (it.status != null) {
-                if (it.status == RuleInterceptResult.INTERCEPT.name ||
-                    it.status == RuleInterceptResult.INTERCEPT_PASS.name
-                ) {
-                    stageFinish = true
-                } else {
-                    stageFinish = false
-                    return@map
-                }
+            if (it?.status != RuleInterceptResult.WAIT.name) {
+                stageFinish = true
+            } else {
+                stageFinish = false
+                return@map
             }
         }
 
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
-                if (it.status != null) {
-                    if (it.status == RuleInterceptResult.INTERCEPT_PASS.name) {
-                        passFlag = true
-                    } else {
-                        passFlag = false
-                        return@map
-                    }
+                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name || it?.status == null) {
+                    passFlag = true
+                } else {
+                    passFlag = false
+                    return@map
                 }
             }
             logger.info("passFlag is $passFlag. start to send stageRequest")
