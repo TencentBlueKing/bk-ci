@@ -45,6 +45,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
 
     override fun initialize(parameters: BkField?) = Unit
 
+    @SuppressWarnings("ReturnCount")
     override fun isValid(paramValue: Any?, constraintValidatorContext: ConstraintValidatorContext): Boolean {
         val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
         val attributes = constraintDescriptor.attributes
@@ -56,7 +57,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
             flag = true
         }
         if (required && flag) {
-            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_IS_NULL, message, arrayOf(""))
+            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_IS_EMPTY, message)
             setErrorMessage(constraintValidatorContext, message)
             return false
         }
