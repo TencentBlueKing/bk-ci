@@ -39,7 +39,7 @@ data class Pipeline(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
-    val pipelineName: String,
+    var pipelineName: String,
     @ApiModelProperty("流水线描述", required = false)
     val pipelineDesc: String?,
     @ApiModelProperty("流水线任务数量", required = true)
@@ -60,7 +60,7 @@ data class Pipeline(
     val latestBuildNum: Int?,
     @ApiModelProperty("最后构建任务名称", required = false)
     val latestBuildTaskName: String?,
-    @ApiModelProperty("最后任务预计执行时间（秒）", required = false)
+    @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
     @ApiModelProperty("最后构建实例ID", required = false)
     val latestBuildId: String?,
@@ -82,6 +82,8 @@ data class Pipeline(
     val latestBuildUserId: String = "",
     @ApiModelProperty("是否从模板中实例化出来的", required = false)
     var instanceFromTemplate: Boolean? = null,
+    @ApiModelProperty("模板ID", required = false)
+    var templateId: String? = null,
     @ApiModelProperty("流水线创建人", required = false)
     val creator: String,
     @ApiModelProperty("流水线分组和标签", required = false)

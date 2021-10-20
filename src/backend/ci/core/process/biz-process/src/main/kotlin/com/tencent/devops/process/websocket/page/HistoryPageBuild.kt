@@ -30,7 +30,15 @@ package com.tencent.devops.process.websocket.page
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
-class HistoryPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/history"
+abstract class HistoryPageBuild : IPath {
+
+    override fun buildPage(buildPageInfo: BuildPageInfo): String {
+        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/history"
+        if (!extHistoryPage(buildPageInfo).isNullOrEmpty()) {
+            return extHistoryPage(buildPageInfo)!!
+        }
+        return defaultPage
+    }
+
+    abstract fun extHistoryPage(buildPageInfo: BuildPageInfo): String?
 }

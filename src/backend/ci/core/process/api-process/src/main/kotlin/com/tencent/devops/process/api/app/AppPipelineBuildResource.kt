@@ -33,13 +33,12 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -114,7 +113,7 @@ interface AppPipelineBuildResource {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试流水线")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
@@ -136,27 +135,11 @@ interface AppPipelineBuildResource {
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false
     ): Result<BuildId>
-
-    @ApiOperation("获取构建详情")
-    @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
-    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
-    fun getBuildDetail(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<AppModelDetail>
 
     @ApiOperation("质量红线人工审核")
     @POST

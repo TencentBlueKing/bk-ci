@@ -34,12 +34,16 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Paths
@@ -87,9 +91,23 @@ class ReportArchiveTask : ITask() {
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
+            val token = RepoServiceFactory.getInstance().getRepoToken(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
+                repoName = "report",
+                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                type = TokenType.UPLOAD,
+                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+            )
             allFileList.forEach {
                 val relativePath = fileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
-                api.uploadReport(it, elementId, relativePath, buildVariables)
+                api.uploadReport(
+                    file = it,
+                    taskId = elementId,
+                    relativePath = relativePath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
             }
             LoggerService.addNormalLine("上传自定义产出物成功，共产生了${allFileList.size}个文件")
         } else {

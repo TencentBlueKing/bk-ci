@@ -108,7 +108,8 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -120,7 +121,8 @@ class UserBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId,
-            failedContainer = failedContainer
+            failedContainer = failedContainer,
+            skipFailedTask = skipFailedTask
         )))
     }
 
@@ -406,7 +408,7 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String,
-        element: Element,
+        element: Element?,
         isContinue: Boolean,
         stageId: String,
         containerId: String

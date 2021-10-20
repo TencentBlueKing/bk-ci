@@ -121,7 +121,7 @@ interface UserBuildResource {
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("重试流水线")
+    @ApiOperation("重试流水线-重试或者跳过失败插件")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
@@ -138,12 +138,15 @@ interface UserBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的插件任务ID", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
-        failedContainer: Boolean? = false
+        failedContainer: Boolean? = false,
+        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @QueryParam("skip")
+        skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
@@ -502,8 +505,8 @@ interface UserBuildResource {
         @ApiParam("任务ID", required = true)
         @PathParam("taskId")
         taskId: String,
-        @ApiParam("待执行插件元素", required = true)
-        element: Element,
+        @ApiParam("待执行插件元素", required = false)
+        element: Element?,
         @ApiParam("执行类型, true 继续, false 停止", required = true)
         @QueryParam("isContinue")
         isContinue: Boolean,

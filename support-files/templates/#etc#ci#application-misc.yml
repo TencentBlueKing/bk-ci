@@ -46,7 +46,7 @@ server:
 build:
   data:
     clear:
-      switch: false
+      switch: true
       maxEveryProjectHandleNum: 5
       monthRange: -1
       maxKeepNum: 10000  
@@ -54,3 +54,5 @@ build:
       codeccMaxKeepNum: 14
       otherMonthRange: -1
       otherMaxKeepNum: 500
+      clearChannelCodes: "BS,PREBUILD,CI,CODECC"
+      maxThreadHandleProjectNum: 5

@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -48,6 +49,18 @@ class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeS
         val buildStatusOrd = pipelineInfo["LATEST_STATUS"] as Int?
         val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
         val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
+
+        val pipelineBuildStatus = if (buildStatusOrd != null) {
+            val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+            if (tmpStatus.isFinish()) {
+                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+            } else {
+                tmpStatus
+            }
+        } else {
+            null
+        }
+
         // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
         return PipelineStatus(
             taskCount = pipelineInfo["TASK_COUNT"] as Int,
@@ -60,15 +73,7 @@ class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeS
             latestBuildId = pipelineInfo["LATEST_BUILD_ID"] as String,
             latestBuildNum = pipelineInfo["BUILD_NUM"] as Int,
             latestBuildStartTime = (pipelineInfo["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-            latestBuildStatus = if (buildStatusOrd != null) {
-                if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
-                    BuildStatus.FAILED
-                } else {
-                    BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-                }
-            } else {
-                null
-            },
+            latestBuildStatus = pipelineBuildStatus,
             latestBuildTaskName = pipelineInfo["LATEST_TASK_NAME"] as String?,
             lock = PipelineRunLockType.checkLock(pipelineInfo["RUN_LOCK_TYPE"] as Int?),
             runningBuildCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0

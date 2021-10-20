@@ -34,21 +34,22 @@ import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
+import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -60,6 +61,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -219,7 +221,12 @@ class GithubService @Autowired constructor(
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
             logger.info("github content url: $url")
-            if (!it.isSuccessful) throw RuntimeException("get github file fail")
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = it.body()!!.toString()
+                )
+            }
             return it.body()!!.string()
         }
     }
@@ -290,7 +297,7 @@ class GithubService @Autowired constructor(
 
     // TODO:脱敏
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubService::class.java)
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
         private const val GITHUB_API_URL = "https://api.github.com"

@@ -113,7 +113,7 @@ object RepositoryUtils {
                     repoHashId = null
                 )
             }
-            else -> throw RuntimeException("Unknown repository type")
+            else -> throw IllegalArgumentException("Unknown repository type")
         }
     }
 }

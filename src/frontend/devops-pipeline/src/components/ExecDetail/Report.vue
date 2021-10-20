@@ -75,7 +75,7 @@
                     taskId: this.taskId
                 }
                 this.isLoading = true
-                this.$store.dispatch('soda/requestReportList', postData).then((res) => {
+                this.$store.dispatch('common/requestReportList', postData).then((res) => {
                     const thirdReports = []
                     const innerReports = [];
                     (res || []).forEach((item) => {

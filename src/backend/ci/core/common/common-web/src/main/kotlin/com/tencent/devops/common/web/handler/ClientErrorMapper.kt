@@ -54,6 +54,6 @@ class ClientErrorMapper : ExceptionMapper<ClientErrorException> {
             MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
         }
         return Response.status(exception.response.status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.response.status, message)).build()
+            .entity(Result(status = exception.response.status, message = message, data = exception.message)).build()
     }
 }

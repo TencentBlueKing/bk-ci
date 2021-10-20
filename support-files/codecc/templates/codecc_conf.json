@@ -1,6 +1,6 @@
 {
   "codecc_task": {
-    "gateway": "${BK_CODECC_PUBLIC_URL}",
+    "gateway": "${BK_CODECC_PRIVATE_URL}",
     "resource": "codecc_task",
     "path": "/ms/task/api/open/task/callback/",
     "system": "codecc",

@@ -32,27 +32,37 @@ dependencies {
     testImplementation("junit:junit")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
+    implementation(project(":core:common:common-auth:common-auth-mock"))
+    implementation(project(":core:common:common-auth:common-auth-blueking"))
+    implementation(project(":core:common:common-auth:common-auth-v3"))
+    implementation(project(":core:common:common-archive"))
+
     implementation(project(":core:artifactory:biz-artifactory-store"))
     implementation(project(":core:artifactory:biz-artifactory-sample"))
+    implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
-    implementation(project(":core:dispatch-docker:biz-dispatch-docker"))
+    implementation(project(":core:dispatch-docker:biz-dispatch-docker-sample"))
     implementation(project(":core:environment:biz-environment-sample"))
     implementation(project(":core:image:biz-image"))
-    implementation(project(":core:log:biz-log"))
-    implementation(project(":core:misc:biz-misc"))
+    implementation(project(":core:log:biz-log-sample"))
+    implementation(project(":core:misc:biz-misc-sample"))
     implementation(project(":core:notify:biz-notify-blueking"))
+    implementation(project(":core:notify:biz-notify-wework"))
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
+    implementation(project(":core:process:plugin-load"))
+    implementation(project(":core:process:plugin-trigger"))
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process-sample"))
     implementation(project(":core:project:biz-project-sample"))
-    implementation(project(":core:quality:biz-quality"))
+    implementation(project(":core:quality:biz-quality-sample"))
     implementation(project(":core:repository:biz-repository-sample"))
     implementation(project(":core:store:biz-store-sample"))
+    implementation(project(":core:store:biz-store-image-sample"))
     implementation(project(":core:ticket:biz-ticket-sample"))
-    implementation(project(":core:websocket:biz-websocket"))
+    implementation(project(":core:websocket:biz-websocket-blueking"))
 }
 
-plugins {
-   `task-spring-boot-package`
+configurations.all {
+    exclude(group = "javax.ws.rs", module = "jsr311-api")
 }

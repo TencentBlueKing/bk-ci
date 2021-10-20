@@ -1,7 +1,7 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled, 'editing': isEditPage }"
     >
         <template v-if="containerIndex > 0">
             <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
@@ -12,7 +12,7 @@
             <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         </template>
 
-        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
+        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [containerCls]: true }" @click.stop="showContainerPanel">
             <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
@@ -98,6 +98,16 @@
 
                 'getAllContainers'
             ]),
+            isEditPage () {
+                return this.$route.name === 'pipelinesEdit' || this.$route.name === 'templateEdit'
+            },
+            containerCls () {
+                if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
+                    return 'DISABLED'
+                }
+                
+                return this.container && this.container.status ? this.container.status : ''
+            },
             showCheckedToatal () {
                 const { isTriggerContainer, container, $route } = this
                 return $route.path.indexOf('preview') > 0 && !isTriggerContainer(container)

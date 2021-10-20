@@ -28,7 +28,8 @@
 package com.tencent.devops.process.engine.control
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
@@ -52,12 +54,20 @@ import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import okhttp3.MediaType
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 /**
  *  步骤控制器
@@ -116,72 +126,91 @@ class CallBackControl @Autowired constructor(
 
         val callBackEvent =
             if (event.taskId.isNullOrBlank()) {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_START
+                if (event.stageId.isNullOrBlank()) {
+                    if (event.actionType == ActionType.START) {
+                        CallBackEvent.BUILD_START
+                    } else {
+                        CallBackEvent.BUILD_END
+                    }
                 } else {
-                    CallBackEvent.BUILD_END
+                    if (event.actionType == ActionType.START) {
+                        CallBackEvent.BUILD_STAGE_START
+                    } else {
+                        CallBackEvent.BUILD_STAGE_END
+                    }
                 }
             } else {
                 if (event.actionType == ActionType.START) {
                     CallBackEvent.BUILD_TASK_START
+                } else if (event.actionType == ActionType.REFRESH) {
+                    CallBackEvent.BUILD_TASK_PAUSE
                 } else {
                     CallBackEvent.BUILD_TASK_END
                 }
             }
 
-        logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|callback build event")
+        logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
         val list = projectPipelineCallBackService.listProjectCallBack(
             projectId = projectId,
             events = callBackEvent.name
         )
         if (list.isEmpty()) {
-            logger.info("[$buildId]|[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
-        val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
 
-        val stages = parseModel(modelDetail.model)
+        val modelDetail = pipelineBuildDetailService.get(buildId = event.buildId, refreshStatus = false) ?: return
 
         val buildEvent = BuildEvent(
-            buildId = buildId,
+            buildId = event.buildId,
             pipelineId = modelDetail.pipelineId,
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,
-            model = SimpleModel(stages),
-            projectId = projectId,
-            trigger = modelDetail.trigger
+            model = SimpleModel(parseModel(modelDetail.model)),
+            projectId = event.projectId,
+            trigger = modelDetail.trigger,
+            stageId = event.stageId,
+            taskId = event.taskId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
 
     private fun <T> sendToCallBack(callBackData: CallBackData<T>, list: List<ProjectPipelineCallBack>) {
-
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
-        executors.submit {
-            list.forEach {
-                try {
-                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
-                    if (it.callBackUrl.isBlank()) {
-                        logger.warn("[${it.projectId}]| call back url is empty!")
-                        return@forEach
-                    }
-                    send(callBack = it, requestBody = requestBody, executeCount = 1)
-                } catch (e: Exception) {
-                    logger.error("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback error", e)
+
+        list.forEach {
+            val uniqueId = when (val data = callBackData.data) {
+                is PipelineEvent -> {
+                    data.pipelineId
                 }
+                is BuildEvent -> {
+                    data.buildId
+                }
+                else -> ""
+            }
+            val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")
+            try {
+                logger.info("${it.projectId}|${it.callBackUrl}|$uniqueId|${it.events}|send to callback")
+                if (it.callBackUrl.isBlank()) {
+                    logger.warn("[${it.projectId}]| call back url is empty!")
+                    return@forEach
+                }
+                send(uniqueId = uniqueId, callBack = it, requestBody = requestBody)
+            } catch (e: Exception) {
+                logger.error("BKSystemErrorMonitor|${it.projectId}|${it.callBackUrl}|${it.events}|${e.message}", e)
+            } finally {
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher, warnThreshold = 2000)
             }
         }
     }
 
-    private fun send(callBack: ProjectPipelineCallBack, requestBody: String, executeCount: Int = 1) {
-        if (executeCount > 3) {
-            logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| retry fail!")
-            return
-        }
+    private fun send(uniqueId: String, callBack: ProjectPipelineCallBack, requestBody: String) {
+
+        val startTime = System.currentTimeMillis()
         val request = Request.Builder()
             .url(callBack.callBackUrl)
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
@@ -189,36 +218,19 @@ class CallBackControl @Autowired constructor(
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
-        val startTime = System.currentTimeMillis()
-        var responseCode: Int? = null
-        var responseBody: String? = null
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
-            OkhttpUtils.doHttp(request).use { response ->
-                if (response.code() != 200) {
-                    logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
-
-                    Thread.sleep(executeCount * executeCount * 1000L)
-                    send(callBack, requestBody, executeCount + 1)
-                } else {
-                    logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
-                }
-                responseCode = response.code()
-                responseBody = response.body()?.string()
-                errorMsg = response.message()
-            }
+            callbackClient.newCall(request).execute()
         } catch (e: Exception) {
-            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}", e)
+            logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
+                "url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
             saveHistory(
                 callBack = callBack,
-                requestHeaders = request.headers().names().map { CallBackHeader(it, value = request.header(it) ?: "") },
-                requestBody = requestBody,
-                responseCode = responseCode,
-                responseBody = responseBody,
+                requestHeaders = listOf(CallBackHeader(name = "X-DEVOPS-WEBHOOK-UNIQUE-ID", value = uniqueId)),
                 status = status.name,
                 errorMsg = errorMsg,
                 startTime = startTime,
@@ -230,9 +242,6 @@ class CallBackControl @Autowired constructor(
     private fun saveHistory(
         callBack: ProjectPipelineCallBack,
         requestHeaders: List<CallBackHeader>,
-        requestBody: String,
-        responseCode: Int?,
-        responseBody: String?,
         status: String,
         errorMsg: String?,
         startTime: Long,
@@ -246,9 +255,9 @@ class CallBackControl @Autowired constructor(
                 status = status,
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders,
-                requestBody = requestBody,
-                responseCode = responseCode,
-                responseBody = responseBody,
+                requestBody = "",
+                responseCode = 0,
+                responseBody = "",
                 startTime = startTime,
                 endTime = endTime
             ))
@@ -257,11 +266,12 @@ class CallBackControl @Autowired constructor(
         }
     }
 
-    private fun parseModel(model: Model): List<SimpleStage> {
+    internal fun parseModel(model: Model): List<SimpleStage> {
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
             val jobs = mutableListOf<SimpleJob>()
             val stage = SimpleStage(stageName = "Stage-${pos + 1}", status = "", jobs = jobs)
+            stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 
             val triple = parseJob(s, jobs)
@@ -269,7 +279,7 @@ class CallBackControl @Autowired constructor(
             val stageEndTimeMills = triple.second
             val stageStatus = triple.third
 
-            if (stageStartTimeMills > 0) {
+            if (stage.startTime == 0L && stageStartTimeMills > 0) {
                 stage.startTime = stageStartTimeMills
             }
 
@@ -283,12 +293,11 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun parseJob(s: Stage, jobs: MutableList<SimpleJob>): Triple<Long, Long, BuildStatus> {
-        var stageStartTimeMills = 0L
-        var stageEndTimeMills = -1L
+        var stageStartTimeMills = Long.MAX_VALUE
+        var stageEndTimeMills = 1L
         var stageStatus = BuildStatus.QUEUE
         s.containers.forEach { c ->
             val jobStatus = BuildStatus.parse(c.status)
-            val tasks = mutableListOf<SimpleTask>()
             val jobStartTimeMills = c.startEpoch ?: 0L
             val jobEndTimeMills = if (jobStatus.isFinish()) {
                 jobStartTimeMills + (c.elementElapsed ?: 0) + (c.systemElapsed ?: 0)
@@ -316,11 +325,9 @@ class CallBackControl @Autowired constructor(
                     status = jobStatus.name,
                     startTime = jobStartTimeMills,
                     endTime = jobEndTimeMills,
-                    tasks = tasks
+                    tasks = parseTask(c)
                 )
             )
-
-            parseTask(c, tasks)
         }
 
         if (stageEndTimeMills > 0 && !stageStatus.isFinish()) {
@@ -329,7 +336,8 @@ class CallBackControl @Autowired constructor(
         return Triple(stageStartTimeMills, stageEndTimeMills, stageStatus)
     }
 
-    private fun parseTask(c: Container, tasks: MutableList<SimpleTask>) {
+    private fun parseTask(c: Container): MutableList<SimpleTask> {
+        val tasks = mutableListOf<SimpleTask>()
         c.elements.forEach { e ->
             val taskStartTimeMills = e.startEpoch ?: 0
             val taskStatus = BuildStatus.parse(e.status)
@@ -349,6 +357,7 @@ class CallBackControl @Autowired constructor(
                 )
             )
         }
+        return tasks
     }
 
     private val executors = Executors.newFixedThreadPool(8)
@@ -356,5 +365,38 @@ class CallBackControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+
+        private fun anySslSocketFactory(): SSLSocketFactory {
+            try {
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, trustAnyCerts, java.security.SecureRandom())
+                return sslContext.socketFactory
+            } catch (ignored: Exception) {
+                throw RemoteServiceException(ignored.message!!)
+            }
+        }
+
+        private val trustAnyCerts = arrayOf<TrustManager>(object : X509TrustManager {
+
+            @Throws(CertificateException::class)
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+            @Throws(CertificateException::class)
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        })
+
+        private const val connectTimeout = 3L
+        private const val readTimeout = 3L
+        private const val writeTimeout = 3L
+
+        private val callbackClient = OkHttpClient.Builder()
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(anySslSocketFactory(), trustAnyCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
     }
 }

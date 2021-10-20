@@ -23,6 +23,7 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.auth.api
@@ -140,7 +141,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return if (resourceType == AuthResourceType.PROJECT) {
             AuthUtils.getProjects(expression)
         } else {
-            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
+            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType.value)
             if (!instancesList.contains("*")) {
                 instancesList.toList()
             } else {
@@ -204,6 +205,6 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(BluekingV3AuthPermissionApi::class.java)
     }
 }

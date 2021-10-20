@@ -193,7 +193,7 @@
                                     </bk-checkbox-group>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 9 || isSearchDropdown">
+                            <!-- <div class="cc-col" v-show="lineAverageOpt >= 9 || isSearchDropdown">
                                 <bk-form-item :label="$t('时期')">
                                     <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
                                         <bk-checkbox
@@ -212,7 +212,7 @@
                                         </bk-popover>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </div>
+                            </div> -->
                         </container>
                     </bk-form>
 
@@ -604,12 +604,6 @@
                     <bk-button @click="changeHandlerVisiable = false">{{$t('取消')}}</bk-button>
                 </template>
             </bk-dialog>
-            <new-analyse
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible"
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse">
-            </new-analyse>
         </section>
         <div class="coverity-list" v-else>
             <div class="main-container large boder-none">
@@ -633,7 +627,6 @@
     import defectCache from '@/mixins/defect-cache'
     import CodeMirror from '@/common/codemirror'
     import Record from '@/components/operate-record/index'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import DatePicker from '@/components/date-picker/index'
     import { format } from 'date-fns'
@@ -642,7 +635,6 @@
     export default {
         components: {
             Record,
-            newAnalyse,
             Empty,
             DatePicker
         },
@@ -1444,7 +1436,7 @@
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
-                data.newAuthor = data.targetAuthor
+                data.newAuthor = data.targetAuthor.split(',')
                 const dispatchUrl = data.changeAuthorType === 3 ? 'defect/authorEdit' : 'defect/batchEdit'
                 this.authorEditDialogVisiable = false
                 this.tableLoading = true

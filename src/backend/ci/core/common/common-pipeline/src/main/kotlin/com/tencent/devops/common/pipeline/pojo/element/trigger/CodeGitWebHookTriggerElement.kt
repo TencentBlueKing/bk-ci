@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -47,6 +48,8 @@ data class CodeGitWebHookTriggerElement(
     val branchName: String?,
     @ApiModelProperty("excludeBranch", required = false)
     val excludeBranchName: String?,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("includePaths", required = false)
     val includePaths: String?,
     @ApiModelProperty("excludePaths", required = false)
@@ -70,7 +73,11 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("includeSourceBranchName", required = false)
     val includeSourceBranchName: String? = null,
     @ApiModelProperty("webhook队列", required = false)
-    val webhookQueue: Boolean? = false
+    val webhookQueue: Boolean? = false,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("是否启用回写")
+    val enableCheck: Boolean? = true
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

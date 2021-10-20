@@ -94,14 +94,15 @@ class GithubOAuthService @Autowired constructor(
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code()}) and response($data)")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取Github access_token失败")
+                throw CustomException(Response.Status.fromStatusCode(response.code())
+                    ?: Response.Status.BAD_REQUEST, "获取Github access_token失败: $data")
             }
             return objectMapper.readValue(data)
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(GithubOAuthService::class.java)
         private const val RANDOM_ALPHA_NUM = 8
         private const val GITHUB_URL = "https://github.com"
     }

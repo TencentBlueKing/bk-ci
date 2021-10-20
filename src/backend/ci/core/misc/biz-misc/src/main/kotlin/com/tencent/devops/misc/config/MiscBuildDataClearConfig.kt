@@ -58,4 +58,10 @@ class MiscBuildDataClearConfig {
 
     @Value("\${build.data.clear.otherMaxKeepNum:500}")
     val otherMaxKeepNum: Int = 500
+
+    @Value("\${build.data.clear.clearChannelCodes:BS}")
+    val clearChannelCodes: String = "BS"
+
+    @Value("\${build.data.clear.maxThreadHandleProjectNum:5}")
+    val maxThreadHandleProjectNum: Int = 5
 }

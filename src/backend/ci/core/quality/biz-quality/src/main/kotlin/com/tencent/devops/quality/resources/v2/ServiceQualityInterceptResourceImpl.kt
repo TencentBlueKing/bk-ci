@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.service.v2.QualityHistoryService
 import org.springframework.beans.factory.annotation.Autowired
 

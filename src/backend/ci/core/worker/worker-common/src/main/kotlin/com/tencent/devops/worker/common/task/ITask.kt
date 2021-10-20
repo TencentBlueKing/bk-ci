@@ -35,6 +35,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
 
+@Suppress("NestedBlockDepth")
 abstract class ITask {
 
     private val environment = HashMap<String, String>()
@@ -51,27 +52,13 @@ abstract class ITask {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
-                val variables = buildVariables.variables.toMutableMap()
-                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
-                    variables[it.key!!] = it.value ?: ""
+                val variables = buildTask.buildVariable?.toMutableMap()
+                if (variables != null) {
+                    additionalOptions.customEnv!!.forEach {
+                        if (!it.key.isNullOrBlank()) variables[it.key!!] = it.value ?: ""
+                    }
+                    return execute(buildTask.copy(buildVariable = variables), buildVariables, workspace)
                 }
-                return execute(
-                    buildTask,
-                    BuildVariables(
-                        buildId = buildVariables.buildId,
-                        vmSeqId = buildVariables.vmSeqId,
-                        vmName = buildVariables.vmName,
-                        projectId = buildVariables.projectId,
-                        pipelineId = buildVariables.pipelineId,
-                        variables = variables,
-                        buildEnvs = buildVariables.buildEnvs,
-                        containerId = buildVariables.containerId,
-                        containerHashId = buildVariables.containerHashId,
-                        variablesWithType = buildVariables.variablesWithType,
-                        timeoutMills = buildVariables.timeoutMills
-                    ),
-                    workspace
-                )
             }
         }
         execute(buildTask, buildVariables, workspace)

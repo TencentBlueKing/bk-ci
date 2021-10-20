@@ -29,18 +29,17 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import java.io.File
 
 object WorkspaceUtils {
 
-    fun getLandun() =
-        File(".")
+    fun getLandun() = File(".")
 
-    fun getWorkspace() =
-        File(getLandun(), "workspace")
+    fun getWorkspace() = File(getLandun(), "workspace")
 
-    fun getAgentJar() =
-        File(getLandun(), "worker-agent.jar")
+    fun getAgentJar() = File(getLandun(), "worker-agent.jar")
 
     fun getAgentInstallScript(): File {
         val os = getOS()
@@ -80,9 +79,35 @@ object WorkspaceUtils {
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace)
+            File(workspace) // .normalize() 会导致在windows机器下填写 ./ 时，File.exists() 会返回false，表示文件夹不存在
         } else {
-            File(getWorkspace(), "$pipelineId/src")
+            File(getWorkspace(), "$pipelineId/src").normalize()
         }
     }
+
+    fun getPipelineLogDir(pipelineId: String): File {
+        return createTempDir("DEVOPS_BUILD_LOGS_${pipelineId}_", null)
+    }
+
+    fun getBuildLogProperty(
+        pipelineLogDir: File,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int,
+        logStorageMode: LogStorageMode
+    ): TaskBuildLogProperty {
+        val childPath = getBuildLogChildPath(pipelineId, buildId, elementId, executeCount)
+        val logFile = File(pipelineLogDir, childPath)
+        logFile.parentFile.mkdirs()
+        logFile.createNewFile()
+        return TaskBuildLogProperty(elementId, childPath, logFile, logStorageMode)
+    }
+
+    private fun getBuildLogChildPath(
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int
+    ) = "/$pipelineId/$buildId/$elementId/$executeCount.log"
 }

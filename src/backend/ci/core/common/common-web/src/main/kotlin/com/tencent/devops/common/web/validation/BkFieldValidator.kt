@@ -27,8 +27,13 @@
 
 package com.tencent.devops.common.web.validation
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.MAX_LENGTH
+import com.tencent.devops.common.api.constant.MESSAGE
+import com.tencent.devops.common.api.constant.MIN_LENGTH
 import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.constant.REQUIRED
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
@@ -40,20 +45,57 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
 
     override fun initialize(parameters: BkField?) = Unit
 
+    @SuppressWarnings("ReturnCount")
     override fun isValid(paramValue: Any?, constraintValidatorContext: ConstraintValidatorContext): Boolean {
         val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
         val attributes = constraintDescriptor.attributes
         val required = attributes[REQUIRED] as Boolean
-        // 判断参数是否可以为空
+        var message = attributes[MESSAGE] as String // 获取接口参数校验的默认错误描述
+        // 1、判断参数是否可以为空
         var flag = false
         if (paramValue == null || (paramValue is String && paramValue.isBlank())) {
             flag = true
         }
         if (required && flag) {
+            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_IS_EMPTY, message)
+            setErrorMessage(constraintValidatorContext, message)
+            return false
+        }
+        // 2、判断参数的长度是否符合规范
+        val paramValueStr = paramValue.toString()
+        val minLength = attributes[MIN_LENGTH] as Int
+        if (minLength > 0 && paramValueStr.length < minLength) {
+            message = MessageCodeUtil.getCodeLanMessage(
+                messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_SHORT,
+                defaultMessage = message,
+                params = arrayOf(minLength.toString())
+            )
+            setErrorMessage(constraintValidatorContext, message)
+            return false
+        }
+        val maxLength = attributes[MAX_LENGTH] as Int
+        if (maxLength > 0 && paramValueStr.length > maxLength) {
+            message = MessageCodeUtil.getCodeLanMessage(
+                messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
+                defaultMessage = message,
+                params = arrayOf(maxLength.toString())
+            )
+            setErrorMessage(constraintValidatorContext, message)
             return false
         }
         val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
-        // 判断参数值是否满足配置的正则表达式规范
-        return !(!flag && !Pattern.matches(patternStyle.style, paramValue.toString()))
+        // 3、判断参数值是否满足配置的正则表达式规范
+        if (!flag && !Pattern.matches(patternStyle.style, paramValueStr)) {
+            message = MessageCodeUtil.getCodeLanMessage(patternStyle.name, message)
+            setErrorMessage(constraintValidatorContext, message)
+            return false
+        }
+        return true
+    }
+
+    private fun setErrorMessage(constraintValidatorContext: ConstraintValidatorContext, message: String) {
+        // 设置错误信息
+        constraintValidatorContext.disableDefaultConstraintViolation()
+        constraintValidatorContext.buildConstraintViolationWithTemplate(message).addConstraintViolation()
     }
 }

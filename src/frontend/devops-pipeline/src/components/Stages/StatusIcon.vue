@@ -7,7 +7,7 @@
                 class="devops-icon icon-hourglass" />
         </transition>
         <transition name="slide-top">
-            <i v-if="status === 'WAITING'" class="devops-icon icon-clock" />
+            <i v-if="status === 'WAITING' || status === 'UNEXEC'" class="devops-icon icon-clock" />
         </transition>
         <transition name="slide-down">
             <i v-if="status === 'CANCELED' || status === 'TERMINATE'" class="devops-icon warning icon-exclamation-circle-shape" />

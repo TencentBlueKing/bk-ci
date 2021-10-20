@@ -30,7 +30,6 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
@@ -39,7 +38,8 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
 @Suppress("ALL")
@@ -73,7 +73,7 @@ object QualityUtils {
                 val indicatorElementName = indicator?.elementType ?: ""
                 val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                 val resultList = resultMap[elementCnName] ?: mutableListOf()
-                val actualValue = if (indicatorElementName == LinuxPaasCodeCCScriptElement.classType) {
+                val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
                     getActualValue(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -118,9 +118,12 @@ object QualityUtils {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/" +
-                "codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
+            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            val fillDetailUrl = detailValue.replace("##projectId##", projectId)
+                .replace("##taskId##", taskId.toString())
+                .replace("##buildId##", buildId)
+                .replace("##detail##", detail)
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}$fillDetailUrl'>$value</a>"
         }
     }
 }

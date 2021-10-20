@@ -76,10 +76,12 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -153,7 +155,8 @@ class TemplateFacadeService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val pipelineInfoExtService: PipelineInfoExtService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -178,11 +181,18 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 storeFlag = false
             )
 
-            pipelineSettingDao.insertNewSetting(context, projectId, templateId, template.name, true)
+            pipelineSettingDao.insertNewSetting(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = templateId,
+                pipelineName = template.name,
+                isTemplate = true,
+                failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+            )
             logger.info("Get the template version $version")
         }
 
@@ -233,11 +243,12 @@ class TemplateFacadeService @Autowired constructor(
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
                 pipelineSettingDao.insertNewSetting(
-                    context,
-                    projectId,
-                    newTemplateId,
-                    copyTemplateReq.templateName,
-                    true
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = newTemplateId,
+                    pipelineName = copyTemplateReq.templateName,
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                 )
             }
 
@@ -297,7 +308,8 @@ class TemplateFacadeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = templateId,
                     pipelineName = saveAsTemplateReq.templateName,
-                    isTemplate = true
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                 )
             }
 
@@ -313,10 +325,10 @@ class TemplateFacadeService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val instanceSize = templatePipelineDao.countByTemplates(
+            val instanceSize = templatePipelineDao.countByVersionFeat(
                 dslContext = context,
-                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                templateIds = setOf(templateId)
+                templateId = templateId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
             )
             if (instanceSize > 0) {
                 throw ErrorCodeException(
@@ -335,7 +347,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL,
                     defaultMessage = "已安装到其他项目下使用，不能删除")
             }
-
+            templatePipelineDao.deleteByTemplateId(context, templateId)
             templateDao.delete(context, templateId)
             pipelineSettingDao.delete(context, templateId)
             if (template.type == TemplateType.CONSTRAINT.name) {
@@ -367,7 +379,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
                     defaultMessage = "模板还存在实例，不允许删除")
             }
-            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
+            templatePipelineDao.deleteByVersion(dslContext = dslContext, templateId = templateId, version = version)
             templateDao.delete(dslContext, templateId, setOf(version)) == 1
         }
     }
@@ -388,7 +400,11 @@ class TemplateFacadeService @Autowired constructor(
                 logger.warn("There are $instanceSize pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
             }
-            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
+            templatePipelineDao.deleteByVersionName(
+                dslContext = dslContext,
+                templateId = templateId,
+                versionName = versionName
+            )
             templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName)
         }
         return true
@@ -417,7 +433,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = template.name,
                 versionName = versionName,
                 userId = userId,
-                template = objectMapper.writeValueAsString(template),
+                template = JsonUtil.toJson(template, formatted = false),
                 type = latestTemplate.type,
                 category = latestTemplate.category,
                 logoUrl = latestTemplate.logoUrl,
@@ -579,7 +595,8 @@ class TemplateFacadeService @Autowired constructor(
                     templatePipelineDao.listPipeline(
                         dslContext = context,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                        templateIds = setOf(templateId)
+                        templateIds = setOf(templateId),
+                        deleteFlag = false
                     )
 
                 val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
@@ -852,6 +869,83 @@ class TemplateFacadeService @Autowired constructor(
             pageSize = pageSize,
             templates = result
         )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun listOriginTemplate(
+        projectId: String?,
+        templateType: TemplateType?,
+        templateIds: Collection<String>?,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): OptionalTemplateList {
+        val result = mutableMapOf<String, OptionalTemplate>()
+        val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
+        val templates = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = true,
+            templateType = templateType,
+            templateIdList = templateIds,
+            storeFlag = null,
+            page = page,
+            pageSize = pageSize
+        )
+        if (templates == null || templates.isEmpty()) {
+            // 如果查询模板列表为空，则不再执行后续逻辑
+            return OptionalTemplateList(
+                count = templateCount,
+                page = page,
+                pageSize = pageSize,
+                templates = result
+            )
+        } else {
+            val templateIdList = mutableSetOf<String>()
+            val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+
+            val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+            templates.forEach { record ->
+                val templateId = record["templateId"] as String
+                val type = record["templateType"] as String
+
+                val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
+                    val srcTemplateId = record["srcTemplateId"] as String
+                    srcTemplates?.get(srcTemplateId)
+                } else {
+                    record
+                }
+
+                if (templateRecord != null) {
+                    val modelStr = templateRecord["template"] as String
+                    val version = templateRecord["version"] as Long
+
+                    val model: Model = objectMapper.readValue(modelStr)
+                    val setting = settings[templateId]
+                    val logoUrl = record["logoUrl"] as? String
+                    val categoryStr = record["category"] as? String
+                    val key = templateId
+                    result[key] = OptionalTemplate(
+                        name = setting?.name ?: model.name,
+                        templateId = templateId,
+                        projectId = templateRecord["projectId"] as String,
+                        version = version,
+                        versionName = templateRecord["versionName"] as String,
+                        templateType = type,
+                        templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
+                        logoUrl = logoUrl ?: "",
+                        category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                            .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                        stages = model.stages
+                    )
+                }
+            }
+            return OptionalTemplateList(
+                count = templateCount,
+                page = page,
+                pageSize = pageSize,
+                templates = result
+            )
+        }
     }
 
     fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
@@ -1252,7 +1346,8 @@ class TemplateFacadeService @Autowired constructor(
                             dslContext = context,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            pipelineName = pipelineName
+                            pipelineName = pipelineName,
+                            failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
                         )
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
@@ -1350,6 +1445,40 @@ class TemplateFacadeService @Autowired constructor(
                 )
             }
         }
+
+        // #4673,流水线更新应该单独一个事务,不然在发送完流水线更新MQ消息时,如果MQ的消费者查询流水线最新model,可能会查不到
+        val templateModel: Model = objectMapper.readValue(templateContent)
+        val labels = if (useTemplateSettings) {
+            templateModel.labels
+        } else {
+            val tmpLabels = ArrayList<String>()
+            pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateInstanceUpdate.pipelineId
+            ).forEach { group ->
+                tmpLabels.addAll(group.labels)
+            }
+            tmpLabels
+        }
+        val instanceModel = getInstanceModel(
+            pipelineId = templateInstanceUpdate.pipelineId,
+            templateModel = templateModel,
+            pipelineName = templateInstanceUpdate.pipelineName,
+            buildNo = templateInstanceUpdate.buildNo,
+            param = templateInstanceUpdate.param,
+            labels = labels
+        )
+        instanceModel.templateId = templateId
+        pipelineInfoFacadeService.editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = templateInstanceUpdate.pipelineId,
+            model = instanceModel,
+            channelCode = ChannelCode.BS,
+            checkPermission = true,
+            checkTemplate = false
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(
@@ -1358,38 +1487,6 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = versionName,
                 userId = userId,
                 instance = templateInstanceUpdate
-            )
-            val templateModel: Model = objectMapper.readValue(templateContent)
-            val labels = if (useTemplateSettings) {
-                templateModel.labels
-            } else {
-                val tmpLabels = ArrayList<String>()
-                pipelineGroupService.getGroups(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = templateInstanceUpdate.pipelineId
-                ).forEach { group ->
-                    tmpLabels.addAll(group.labels)
-                }
-                tmpLabels
-            }
-            val instanceModel = getInstanceModel(
-                pipelineId = templateInstanceUpdate.pipelineId,
-                templateModel = templateModel,
-                pipelineName = templateInstanceUpdate.pipelineName,
-                buildNo = templateInstanceUpdate.buildNo,
-                param = templateInstanceUpdate.param,
-                labels = labels
-            )
-            instanceModel.templateId = templateId
-            pipelineInfoFacadeService.editPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = templateInstanceUpdate.pipelineId,
-                model = instanceModel,
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                checkTemplate = false
             )
 
             if (useTemplateSettings) {
@@ -1476,6 +1573,7 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 templateInstanceItemDao.createTemplateInstanceItem(
                     dslContext = context,
+                    projectId = projectId,
                     baseId = baseId,
                     instances = instances,
                     status = TemplateInstanceItemStatus.INIT.name,
@@ -1625,6 +1723,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Int {
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
@@ -1895,7 +1994,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun updateModelParam(model: Model) {
-        val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
+        val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) }
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id
@@ -1949,7 +2048,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("the userId is:$userId,addMarketTemplateRequest is:$addMarketTemplateRequest")
         val templateCode = addMarketTemplateRequest.templateCode
         val publicFlag = addMarketTemplateRequest.publicFlag // 是否为公共模板
-        val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>())
+        val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>(), false)
         val projectCodeList = addMarketTemplateRequest.projectCodeList
         // 校验安装的模板是否合法
         if (!publicFlag && redisOperation.get("checkInstallTemplateModelSwitch")?.toBoolean() != false) {
@@ -1963,66 +2062,50 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()
-        if (publicFlag) {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                projectCodeList.forEach {
-                    val templateId = UUIDUtil.generate()
-                    templateDao.createTemplate(
-                        dslContext = context,
-                        projectId = it,
-                        templateId = templateId,
-                        templateName = addMarketTemplateRequest.templateName,
-                        versionName = "init",
-                        userId = userId,
-                        template = null,
-                        type = TemplateType.CONSTRAINT.name,
-                        category = category,
-                        logoUrl = addMarketTemplateRequest.logoUrl,
-                        srcTemplateId = templateCode,
-                        storeFlag = true,
-                        weight = 0
-                    )
-                    pipelineSettingDao.insertNewSetting(
-                        dslContext = context,
-                        projectId = it,
-                        pipelineId = templateId,
-                        pipelineName = addMarketTemplateRequest.templateName,
-                        isTemplate = true
-                    )
-                    projectTemplateMap[it] = templateId
-                }
-            }
+        val versionName = if (publicFlag) {
+            "init"
         } else {
-            val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                projectCodeList.forEach {
-                    val templateId = UUIDUtil.generate()
-                    templateDao.createTemplate(
-                        dslContext = context,
-                        projectId = it,
-                        templateId = templateId,
-                        templateName = addMarketTemplateRequest.templateName,
-                        versionName = customizeTemplateRecord.versionName,
-                        userId = userId,
-                        template = null,
-                        type = TemplateType.CONSTRAINT.name,
-                        category = category,
-                        logoUrl = addMarketTemplateRequest.logoUrl,
-                        srcTemplateId = templateCode,
-                        storeFlag = true,
-                        weight = 0
-                    )
-                    pipelineSettingDao.insertNewSetting(
-                        dslContext = context,
-                        projectId = it,
-                        pipelineId = templateId,
-                        pipelineName = addMarketTemplateRequest.templateName,
-                        isTemplate = true
-                    )
-                    projectTemplateMap[it] = templateId
+            templateDao.getLatestTemplate(dslContext, templateCode).versionName
+        }
+        val templateName = addMarketTemplateRequest.templateName
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            projectCodeList.forEach {
+                // 判断模板名称是否已经关联过
+                val pipelineSettingRecord = pipelineSettingDao.getSetting(
+                    dslContext = context,
+                    projectId = it,
+                    name = templateName,
+                    isTemplate = true
+                )
+                if (pipelineSettingRecord.size > 0) {
+                    return@forEach
                 }
+                val templateId = UUIDUtil.generate()
+                templateDao.createTemplate(
+                    dslContext = context,
+                    projectId = it,
+                    templateId = templateId,
+                    templateName = templateName,
+                    versionName = versionName,
+                    userId = userId,
+                    template = null,
+                    type = TemplateType.CONSTRAINT.name,
+                    category = category,
+                    logoUrl = addMarketTemplateRequest.logoUrl,
+                    srcTemplateId = templateCode,
+                    storeFlag = true,
+                    weight = 0
+                )
+                pipelineSettingDao.insertNewSetting(
+                    dslContext = context,
+                    projectId = it,
+                    pipelineId = templateId,
+                    pipelineName = templateName,
+                    isTemplate = true,
+                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
+                )
+                projectTemplateMap[it] = templateId
             }
         }
         return com.tencent.devops.common.api.pojo.Result(projectTemplateMap)
@@ -2034,16 +2117,16 @@ class TemplateFacadeService @Autowired constructor(
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         logger.info("the userId is:$userId,updateMarketTemplateReference Request is:$updateMarketTemplateRequest")
         val templateCode = updateMarketTemplateRequest.templateCode
-        val category = JsonUtil.toJson(updateMarketTemplateRequest.categoryCodeList ?: listOf<String>())
+        val category = JsonUtil.toJson(updateMarketTemplateRequest.categoryCodeList ?: listOf<String>(), false)
         val referenceList = templateDao.listTemplateReference(dslContext, templateCode).map { it["ID"] as String }
         if (referenceList.isNotEmpty()) {
             pipelineSettingDao.updateSettingName(dslContext, referenceList, updateMarketTemplateRequest.templateName)
             templateDao.updateTemplateReference(
-                dslContext,
-                templateCode,
-                updateMarketTemplateRequest.templateName,
-                category,
-                updateMarketTemplateRequest.logoUrl
+                dslContext = dslContext,
+                srcTemplateId = templateCode,
+                name = updateMarketTemplateRequest.templateName,
+                category = category,
+                logoUrl = updateMarketTemplateRequest.logoUrl
             )
         }
         return com.tencent.devops.common.api.pojo.Result(true)
@@ -2070,6 +2153,21 @@ class TemplateFacadeService @Autowired constructor(
             logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
             pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
         }
+    }
+
+    fun getTemplateIdByTemplateCode(templateCode: String, projectIds: List<String>): List<PipelineTemplateInfo> {
+        val templateInfos = templateDao.listTemplateReferenceByProjects(dslContext, templateCode, projectIds)
+        val templateList = mutableListOf<PipelineTemplateInfo>()
+        templateInfos.forEach {
+            templateList.add(PipelineTemplateInfo(
+                projectId = it.projectId,
+                templateId = it.id,
+                templateName = it.templateName,
+                versionName = it.versionName,
+                srcTemplateId = it.srcTemplateId
+            ))
+        }
+        return templateList
     }
 
     companion object {

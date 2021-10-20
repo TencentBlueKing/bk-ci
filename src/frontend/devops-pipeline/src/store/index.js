@@ -25,7 +25,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import ajax from '../utils/ajax'
 import pipelines from './modules/pipelines/'
-import soda from './modules/soda/'
+import common from './modules/common/'
 import atom from './modules/atom'
 
 import {
@@ -38,7 +38,7 @@ export default new Vuex.Store({
     modules: {
         atom,
         pipelines,
-        soda
+        common
     },
     // 公共 store
     state: {

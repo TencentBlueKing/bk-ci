@@ -38,7 +38,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

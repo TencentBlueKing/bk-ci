@@ -28,7 +28,6 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
@@ -79,7 +78,7 @@ class RevertUpdateTask constructor(
     override fun preUpdate() {
         if (workspace.exists()) {
             if (!File(workspace, ".svn").exists()) {
-                LoggerService.addNormalLine(Ansi().fgYellow().a(".svn file is not exist").reset().toString())
+                LoggerService.addWarnLine(".svn file is not exist")
                 return
             }
             val client = SvnUtils.getClientManager(svnUrl, username, privateKey, passPhrase).wcClient
@@ -87,13 +86,13 @@ class RevertUpdateTask constructor(
                 LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
                 SvnUtil.deleteWcLockAndCleanup(client, workspace)
             } catch (t: Throwable) {
-                LoggerService.addYellowLine("Fail to cleanup the workspace because of ${t.message}")
+                LoggerService.addWarnLine("Fail to cleanup the workspace because of ${t.message}")
             }
             try {
                 LoggerService.addNormalLine("Revert the workspace(${workspace.path})")
                 client.doRevert(arrayOf<File>(workspace.canonicalFile), SVNDepth.INFINITY, null)
             } catch (t: Throwable) {
-                LoggerService.addYellowLine("Fail to revert the workspace because of ${t.message}")
+                LoggerService.addWarnLine("Fail to revert the workspace because of ${t.message}")
             }
         }
     }

@@ -49,6 +49,8 @@ import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
@@ -76,7 +78,8 @@ import kotlin.math.min
 @Service
 class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
+    private val taskBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
@@ -117,7 +120,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         val variables = buildVariableService.getAllVariable(buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
-        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        val model = taskBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
         model!!.stages.forEachIndexed { index, s ->
@@ -156,7 +159,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         }
                         emptyList()
                     }
-                    pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
                     buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
@@ -179,7 +181,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
                         variablesWithType = variablesWithType,
-                        timeoutMills = timeoutMills!!
+                        timeoutMills = timeoutMills!!,
+                        containerType = it.getClassType()
                     )
                 }
                 vmId++
@@ -236,10 +239,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
                 )
-                pipelineBuildDetailService.updateStartVMStatus(
+                containerBuildDetailService.containerStarted(
                     buildId = buildId,
-                    containerId = startUpVMTask.containerId,
-                    buildStatus = buildStatus
+                    containerId = vmSeqId.toInt(),
+                    containerBuildStatus = buildStatus
                 )
             }
         }
@@ -438,7 +441,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|userId=$userId|[${task.taskId}-${task.taskName}]")
         return when {
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
@@ -463,8 +466,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 buildVariable.putAll(allVariable)
 
                 // 认领任务
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId)
-                pipelineBuildDetailService.taskStart(buildId, task.taskId)
+                pipelineRuntimeService.claimBuildTask(task, userId)
+                taskBuildDetailService.taskStart(buildId, task.taskId)
                 jmxElements.execute(task.taskType)
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStatusBroadCastEvent(
@@ -482,7 +485,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
-                        it.key to JsonUtil.toJson(obj)
+                        it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
                         !it.first.startsWith("@type")
                     }.toMap(),
@@ -532,7 +535,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        pipelineBuildDetailService.pipelineTaskEnd(
+        taskBuildDetailService.taskEnd(
             buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
         )

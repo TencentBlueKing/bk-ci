@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -42,7 +43,6 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
@@ -63,6 +63,21 @@ class BuildVariableService @Autowired constructor(
             if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
         } catch (ignored: Exception) {
             1
+        }
+    }
+
+    /**
+     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串
+     */
+    fun replaceTemplate(buildId: String, template: String?): String {
+        return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val templateValByType = pipelineBuildVarDao.getVarsWithType(
+                dslContext = commonDslContext,
+                buildId = buildId,
+                key = word
+            )
+            if (templateValByType.isNotEmpty()) templateValByType[0].value.toString() else null
         }
     }
 
@@ -151,9 +166,9 @@ class BuildVariableService @Autowired constructor(
     ) {
         val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
         watch.start("replaceOldByNewVar")
-        val varMaps = variables.map {
+        val varMaps = variables.associate {
             it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
-        }.toMap().toMutableMap()
+        }.toMutableMap()
         PipelineVarUtil.replaceOldByNewVar(varMaps)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
@@ -161,7 +176,8 @@ class BuildVariableService @Autowired constructor(
             pipelineBuildParameters.add(BuildParameters(
                 key = key,
                 value = valueAndType.first,
-                valueType = valueAndType.second
+                valueType = valueAndType.second,
+                readOnly = getReadOnly(key, variables)
             ))
         }
 
@@ -202,5 +218,14 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
+        variables.forEach {
+            if (key == it.key) {
+                return it.readOnly
+            }
+        }
+        return false
     }
 }

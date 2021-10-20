@@ -104,7 +104,7 @@ data class MarketImageItem constructor(
     val updateTime: Long,
 
     @ApiModelProperty("是否已安装", required = true)
-    var isInstalled: Boolean?
+    var installedFlag: Boolean?
 ) {
     constructor(instance: MarketImageItem) : this(
         instance.id,
@@ -129,6 +129,6 @@ data class MarketImageItem constructor(
         instance.modifier,
         instance.createTime,
         instance.updateTime,
-        instance.isInstalled
+        instance.installedFlag
     )
 }

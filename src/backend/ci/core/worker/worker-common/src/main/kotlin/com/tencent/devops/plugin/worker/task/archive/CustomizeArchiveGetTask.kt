@@ -37,9 +37,12 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLDecoder
 
@@ -83,11 +86,21 @@ class CustomizeArchiveGetTask : ITask() {
                     File(destPath, decodeUrl)
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo! [${file.name}")
+                val token = RepoServiceFactory.getInstance().getRepoToken(
+                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                    projectId = buildVariables.projectId,
+                    repoName = "custom",
+                    path = fileUrl,
+                    type = TokenType.DOWNLOAD,
+                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+                )
                 archiveGetResourceApi.downloadCustomizeFile(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
                     uri = fileUrl,
-                    destPath = file
+                    destPath = file,
+                    isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType),
+                    token = token
                 )
                 count++
             }

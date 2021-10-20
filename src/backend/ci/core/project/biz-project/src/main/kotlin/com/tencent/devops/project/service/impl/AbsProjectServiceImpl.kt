@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
@@ -73,8 +74,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
-import java.util.ArrayList
 import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -155,89 +156,79 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
 
-        // 随机生成首字母图片
-        val logoFile = drawFile(projectCreateInfo.englishName)
+        val userDeptDetail = getDeptInfo(userId)
+        var projectId = defaultProjectId
         try {
-            // 保存Logo文件
-            val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
-            val userDeptDetail = getDeptInfo(userId)
-            var projectId = defaultProjectId
-            try {
-                if (createExtInfo.needAuth!!) {
-                    // 注册项目到权限中心
-                    projectId = projectPermissionService.createResources(
-                        userId = userId,
-                        accessToken = accessToken,
-                        resourceRegisterInfo = ResourceRegisterInfo(
-                            resourceCode = projectCreateInfo.englishName,
-                            resourceName = projectCreateInfo.projectName
-                        ),
-                        userDeptDetail = userDeptDetail
-                    )
-                }
-            } catch (e: PermissionForbiddenException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
-            }
-            if (projectId.isNullOrEmpty()) {
-                projectId = UUIDUtil.generate()
-            }
-
-            try {
-                dslContext.transaction { configuration ->
-                    val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-                    val context = DSL.using(configuration)
-                    projectDao.create(
-                        dslContext = context,
-                        userId = userId,
-                        logoAddress = logoAddress,
-                        projectCreateInfo = projectInfo,
-                        userDeptDetail = userDeptDetail,
-                        projectId = projectId!!,
-                        channelCode = projectChannel
-                    )
-
-                    try {
-                        createExtProjectInfo(
-                            userId = userId,
-                            projectId = projectId!!,
-                            accessToken = accessToken,
-                            projectCreateInfo = projectInfo,
-                            createExtInfo = createExtInfo
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
-                        projectDao.delete(dslContext, projectId!!)
-                        throw e
-                    }
-                    if (projectInfo.secrecy) {
-                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
-                    }
-                }
-            } catch (e: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectCreateInfo", e)
-                if (createExtInfo.needAuth!!) {
-                    deleteAuth(projectId!!, accessToken)
-                }
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-            } catch (ignored: Throwable) {
-                logger.warn(
-                    "Fail to create the project ($projectCreateInfo)",
-                    ignored
+            if (createExtInfo.needAuth!!) {
+                // 注册项目到权限中心
+                projectId = projectPermissionService.createResources(
+                    userId = userId,
+                    accessToken = accessToken,
+                    resourceRegisterInfo = ResourceRegisterInfo(
+                        resourceCode = projectCreateInfo.englishName,
+                        resourceName = projectCreateInfo.projectName
+                    ),
+                    userDeptDetail = userDeptDetail
                 )
-                if (createExtInfo.needAuth!!) {
-                    deleteAuth(projectId!!, accessToken)
-                }
-                throw ignored
             }
-            return projectId!!
-        } finally {
-            if (logoFile.exists()) {
-                logoFile.delete()
-            }
+        } catch (e: PermissionForbiddenException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
+        if (projectId.isNullOrEmpty()) {
+            projectId = UUIDUtil.generate()
+        }
+
+        try {
+            dslContext.transaction { configuration ->
+                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+                val context = DSL.using(configuration)
+                projectDao.create(
+                    dslContext = context,
+                    userId = userId,
+                    logoAddress = "",
+                    projectCreateInfo = projectInfo,
+                    userDeptDetail = userDeptDetail,
+                    projectId = projectId,
+                    channelCode = projectChannel
+                )
+
+                try {
+                    createExtProjectInfo(
+                        userId = userId,
+                        projectId = projectId,
+                        accessToken = accessToken,
+                        projectCreateInfo = projectInfo,
+                        createExtInfo = createExtInfo
+                    )
+                } catch (e: Exception) {
+                    logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
+                    projectDao.delete(dslContext, projectId)
+                    throw e
+                }
+                if (projectInfo.secrecy) {
+                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
+                }
+            }
+        } catch (e: DuplicateKeyException) {
+            logger.warn("Duplicate project $projectCreateInfo", e)
+            if (createExtInfo.needAuth) {
+                deleteAuth(projectId, accessToken)
+            }
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "Fail to create the project ($projectCreateInfo)",
+                ignored
+            )
+            if (createExtInfo.needAuth) {
+                deleteAuth(projectId, accessToken)
+            }
+            throw ignored
+        }
+        return projectId
     }
 
     // 内部版独立实现
@@ -273,7 +264,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(
                         dslContext = dslContext,
                         englishName = englishName
-                    )?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
+                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -383,7 +374,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
 
-            val projects = projectPermissionService.getUserProjects(userId)
+//            val projects = projectPermissionService.getUserProjects(userId)
+            val projects = getProjectFromAuth(userId, null)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
@@ -457,6 +449,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByChannel(dslContext, limit, offset, projectChannelCode).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            logger.info("list count$count")
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
     }
@@ -536,7 +548,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST)
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
@@ -630,6 +642,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectIds
     }
 
+    override fun relationIamProject(projectCode: String, relationId: String): Boolean {
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val currentRelationId = projectInfo.relationId
+        if (!currentRelationId.isNullOrEmpty()) {
+            throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
+        }
+        val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+        return updateCount > 0
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -642,7 +664,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         createExtInfo: ProjectCreateExtInfo
     )
 
-    abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
+    abstract fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String
 
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
@@ -652,7 +674,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun drawFile(projectCode: String): File
 
-    abstract fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo
+    abstract fun organizationMarkUp(
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail
+    ): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 

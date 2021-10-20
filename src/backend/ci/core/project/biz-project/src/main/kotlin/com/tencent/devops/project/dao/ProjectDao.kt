@@ -127,6 +127,18 @@ class ProjectDao {
         }
     }
 
+    fun listByChannel(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int,
+        channelCode: ProjectChannelCode
+    ): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this).where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
+                .limit(limit).offset(offset).fetch()
+        }
+    }
+
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
             dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
@@ -421,6 +433,12 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun updateProjectId(dslContext: DSLContext, projectId: String, projectCode: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this).set(PROJECT_ID, projectId).where(ENGLISH_NAME.eq(projectCode)).execute()
         }
     }
 
@@ -746,6 +764,14 @@ class ProjectDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun updateRelationByCode(dslContext: DSLContext, projectCode: String, relationId: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
         }
     }
 

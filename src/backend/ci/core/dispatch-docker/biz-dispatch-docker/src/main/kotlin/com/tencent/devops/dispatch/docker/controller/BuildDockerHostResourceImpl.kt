@@ -32,70 +32,37 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
 class BuildDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostDebugService: DockerHostDebugService,
-    private val dispatchDockerService: DispatchDockerService
+    private val dispatchDockerService: DispatchDockerService,
+    private val dockerResourceOptionsService: DockerResourceOptionsService
 ) : BuildDockerHostResource {
-
-    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        return dockerHostBuildService.getHost(hostTag)
-    }
-/*
-    override fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
-        return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
-    }
-
-    override fun reportContainerId(
-        buildId: String,
-        vmSeqId: Int,
-        containerId: String,
-        hostTag: String?
-    ): Result<Boolean>? {
-        return dockerHostBuildService.reportContainerId(buildId, vmSeqId, containerId, hostTag)
-    }
-
-    override fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        return dockerHostBuildService.startBuild(hostTag)
-    }
-
-    override fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        return dockerHostBuildService.endBuild(hostTag)
-    }
-
-    override fun startDebug(hostTag: String): Result<ContainerInfo>? {
-        return dockerHostDebugService.startDebug(hostTag)
-    }
-
-    override fun endDebug(hostTag: String): Result<ContainerInfo>? {
-        return dockerHostDebugService.endDebug(hostTag)
-    }
-
-    override fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
-        return dockerHostDebugService.reportContainerId(pipelineId, vmSeqId, containerId)
-    }
-
-    override fun rollbackDebug(
-        pipelineId: String,
-        vmSeqId: String,
-        shutdown: Boolean?,
-        message: String?
-    ): Result<Boolean>? {
-        return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
-    }*/
 
     override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
         AlertUtils.doAlert(level, title, message)
         return Result(0, "success")
+    }
+
+    override fun getResourceConfig(pipelineId: String, vmSeqId: String): Result<DockerResourceOptionsVO> {
+        return Result(dockerResourceOptionsService.getDockerResourceConfig(pipelineId, vmSeqId))
+    }
+
+    override fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int
+    ): Result<List<String>> {
+        return Result(dockerHostBuildService.getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo))
     }
 
     override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {

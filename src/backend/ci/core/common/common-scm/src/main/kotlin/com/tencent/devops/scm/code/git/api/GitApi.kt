@@ -74,62 +74,37 @@ open class GitApi {
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    /**
-     * @param full 是否全部获取分支,默认全量拉
-     */
     fun listBranches(
         host: String,
         token: String,
         projectName: String,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
-        var page = 1
-        val result = mutableListOf<GitBranch>()
-        while (true) {
-            var searchReq = "page=$page&per_page=100"
-            if (!search.isNullOrBlank()) {
-                searchReq = "$searchReq&search=$search"
-            }
-            val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
-            page++
-            val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
-            result.addAll(pageResult)
-            if (pageResult.size < 100 || !full) {
-                if (result.size >= BRANCH_LIMIT) {
-                    logger.error("there are ${result.size} branches in project $projectName")
-                }
-                return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
-            }
+        var searchReq = "page=1&per_page=100"
+        if (!search.isNullOrBlank()) {
+            searchReq = "$searchReq&search=$search"
         }
+        val request =
+            get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
+        val result = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
+        return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
 
     fun listTags(
         host: String,
         token: String,
         projectName: String,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): List<String> {
-        var page = 1
-        val result = mutableListOf<GitTag>()
-        while (true) {
-            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
-            if (!search.isNullOrBlank()) {
-                searchReq = "$searchReq&search=$search"
-            }
-            val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
-            page++
-            val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
-            result.addAll(pageResult)
-            if (pageResult.size < 100 || !full) {
-                if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
-                return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
-            }
+        var searchReq = "page=1&per_page=100&order_by=updated&sort=desc"
+        if (!search.isNullOrBlank()) {
+            searchReq = "$searchReq&search=$search"
         }
+        val request =
+            get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
+        val result: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
+        return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
 
     fun getBranch(host: String, token: String, projectName: String, branchName: String): GitBranch {
@@ -335,22 +310,10 @@ open class GitApi {
     }
 
     private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
-        var page = 1
-        val result = mutableListOf<GitHook>()
         try {
-            while (true) {
-                val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "page=$page&per_page=100")
-                page++
-                val pageResult: List<GitHook> =
-                    JsonUtil.getObjectMapper().readValue(getBody(OPERATION_LIST_WEBHOOK, request))
-                result.addAll(pageResult)
-                if (pageResult.size < 100) {
-                    if (result.size >= HOOK_LIMIT) {
-                        logger.error("there are ${result.size} hooks in project $projectName")
-                    }
-                    return result.sortedBy { it.createdAt }.reversed()
-                }
-            }
+            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
+            val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(getBody(OPERATION_LIST_WEBHOOK, request))
+            return result.sortedBy { it.createdAt }.reversed()
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
                 throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")
