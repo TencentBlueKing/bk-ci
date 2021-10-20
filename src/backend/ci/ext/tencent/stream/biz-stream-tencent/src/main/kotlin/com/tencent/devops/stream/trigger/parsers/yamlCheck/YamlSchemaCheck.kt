@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.parsers.yamlCheck
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
@@ -97,7 +98,7 @@ class YamlSchemaCheck @Autowired constructor(
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         // 解析锚点
-        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml)))
+        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
         // v1 不走这里的校验逻辑
         if (yamlJson.checkV1()) {
             return
@@ -204,6 +205,15 @@ private fun JsonSchema.check(yaml: JsonNode) {
             throw YamlFormatException(it.toString())
         }
     }
+}
+
+// Yaml规则下会将on当成true在消除锚点时会将On替换为true
+private fun JsonNode.replaceOn(): JsonNode {
+    val realOn = get("true") ?: return this
+    val node = this as ObjectNode
+    node.set<JsonNode>("on", realOn)
+    node.remove("true")
+    return this
 }
 
 private fun JsonNode.checkV1(): Boolean {
