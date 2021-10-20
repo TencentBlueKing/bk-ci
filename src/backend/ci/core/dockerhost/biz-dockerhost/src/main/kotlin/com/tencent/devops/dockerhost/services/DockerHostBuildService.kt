@@ -31,15 +31,11 @@ import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.Capability
-import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.Statistics
-import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
@@ -73,7 +69,6 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
@@ -210,7 +205,14 @@ class DockerHostBuildService(
                 .withBinds(binds)
                 .withNetworkMode("bridge")
 
-            mountOverlayfs(dockerBuildInfo, hostConfig)
+            // 挂载构建缓存
+            mountOverlayfs(
+                pipelineId = dockerBuildInfo.pipelineId,
+                vmSeqId = dockerBuildInfo.vmSeqId,
+                poolNo = dockerBuildInfo.poolNo,
+                qpcUniquePath = dockerBuildInfo.qpcUniquePath,
+                hostConfig = hostConfig
+            )
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
@@ -248,33 +250,6 @@ class DockerHostBuildService(
                     message = "[${dockerBuildInfo.buildId}]|Create container failed"
                 )
             }
-        }
-    }
-
-    private fun mountOverlayfs(dockerBuildInfo: DockerHostBuildInfo, hostConfig: HostConfig) {
-        if (dockerBuildInfo.qpcUniquePath != null) {
-            val upperDir = "${getWorkspace(dockerBuildInfo)}upper"
-            val workDir = "${getWorkspace(dockerBuildInfo)}work"
-            if (!File(upperDir).exists()) {
-                File(upperDir).mkdirs()
-            }
-            if (!File(workDir).exists()) {
-                File(workDir).mkdirs()
-            }
-
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/${dockerBuildInfo.qpcUniquePath}"
-
-            val mount = Mount().withType(MountType.VOLUME)
-                .withTarget(dockerHostConfig.volumeWorkspace)
-                .withVolumeOptions(VolumeOptions().withDriverConfig(Driver().withName("local").withOptions(
-                    mapOf(
-                        "type" to "overlay",
-                        "device" to "overlay",
-                        "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                    )
-                )))
-
-            hostConfig.withMounts(listOf(mount))
         }
     }
 
@@ -449,6 +424,14 @@ class DockerHostBuildService(
                     .withPortBindings(portBindings)
             }
 
+            mountOverlayfs(
+                projectId = dockerBuildInfo.projectId,
+                pipelineId = dockerBuildInfo.pipelineId,
+                buildId = dockerBuildInfo.buildId,
+                vmSeqId = dockerBuildInfo.vmSeqId,
+                poolNo = dockerBuildInfo.poolNo,
+                hostConfig = hostConfig
+            )
             val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withEnv(env)
