@@ -207,10 +207,12 @@ class ModelCreate @Autowired constructor(
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
-                            event.userId, PipelineLabelCreate(
-                            groupId = pipelineGroup.id,
-                            name = it
-                        )
+                            userId = event.userId,
+                            projectId = gitBasicSetting.projectCode!!,
+                            pipelineLabel = PipelineLabelCreate(
+                                groupId = pipelineGroup.id,
+                                name = it
+                            )
                         )
                     }
                 }
