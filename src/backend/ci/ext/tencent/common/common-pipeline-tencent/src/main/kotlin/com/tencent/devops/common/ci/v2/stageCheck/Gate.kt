@@ -12,5 +12,5 @@ data class Gate(
     @JsonProperty("notify-on-fail")
     val notifyOnFail: List<GateNotices>,
     @JsonProperty("continue-on-fail")
-    val continueOnFail: ContinueOnFail
+    val continueOnFail: ContinueOnFail?
 )

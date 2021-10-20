@@ -468,7 +468,7 @@ class YamlBuildV2 @Autowired constructor(
                     templateRange = null,
                     gatewayId = null,
                     opList = opList,
-                    gateKeepers = gate.continueOnFail.gatekeepers,
+                    gateKeepers = gate.continueOnFail?.gatekeepers,
                     stageId = stageId
                 )
             )

@@ -263,7 +263,7 @@ class ModelStage @Autowired constructor(
                     gatewayId = null,
                     opList = opList,
                     stageId = stageId,
-                    gateKeepers = gate.continueOnFail.gatekeepers
+                    gateKeepers = gate.continueOnFail?.gatekeepers
                 )
             )
         }
