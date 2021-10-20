@@ -56,6 +56,8 @@ class BkShardingDataSourceConfiguration {
 
     companion object {
         private const val PROJECT_ID_FIELD = "PROJECT_ID"
+        private const val FIRST_DATA_SOURCE_NAME = "ds_0"
+        private const val SECOND_DATA_SOURCE_NAME = "ds_1"
     }
 
     @Value("\${spring.datasource.processMaster1.url}")
@@ -69,17 +71,6 @@ class BkShardingDataSourceConfiguration {
     @Value("\${spring.datasource.processMaster1.leakDetectionThreshold:#{0}}")
     val processMasterDatasourceLeakDetectionThreshold1: Long = 0
 
-    @Value("\${spring.datasource.processSlave1.url}")
-    val processSlaveDatasourceUrl1: String = ""
-    @Value("\${spring.datasource.processSlave1.username}")
-    val processSlaveDatasourceUsername1: String = ""
-    @Value("\${spring.datasource.processSlave1.password}")
-    val processSlaveDatasourcePassword1: String = ""
-    @Value("\${spring.datasource.processSlave1.initSql:#{null}}")
-    val processSlaveDatasourceInitSql1: String? = null
-    @Value("\${spring.datasource.processSlave1.leakDetectionThreshold:#{0}}")
-    val processSlaveDatasourceLeakDetectionThreshold1: Long = 0
-
     @Value("\${spring.datasource.processMaster2.url}")
     val processDatasourceUrl2: String = ""
     @Value("\${spring.datasource.processMaster2.username}")
@@ -91,17 +82,6 @@ class BkShardingDataSourceConfiguration {
     @Value("\${spring.datasource.processMaster2.leakDetectionThreshold:#{0}}")
     val processDatasourceLeakDetectionThreshold2: Long = 0
 
-    @Value("\${spring.datasource.processSlave2.url}")
-    val processSlaveDatasourceUrl2: String = ""
-    @Value("\${spring.datasource.processSlave2.username}")
-    val processSlaveDatasourceUsername2: String = ""
-    @Value("\${spring.datasource.processSlave2.password}")
-    val processSlaveDatasourcePassword2: String = ""
-    @Value("\${spring.datasource.processSlave2.initSql:#{null}}")
-    val processSlaveDatasourceInitSql2: String? = null
-    @Value("\${spring.datasource.processSlave2.leakDetectionThreshold:#{0}}")
-    val processSlaveDatasourceLeakDetectionThreshold2: Long = 0
-
     @Value("\${sharding.projectStrategy.tableConfig:#{null}}")
     private val shardingProjectStrategyTableConfig: String? = null
     @Value("\${sharding.broadcastStrategy.tableConfig:#{null}}")
@@ -111,37 +91,21 @@ class BkShardingDataSourceConfiguration {
 
     private fun dataSourceMap(): Map<String, DataSource> {
         val dataSourceMap: MutableMap<String, DataSource> = mutableMapOf()
-        dataSourceMap["m1"] = createHikariDataSource(
-            datasourcePoolName = "m1",
+        dataSourceMap[FIRST_DATA_SOURCE_NAME] = createHikariDataSource(
+            datasourcePoolName = FIRST_DATA_SOURCE_NAME,
             datasourceUrl = processMasterDatasourceUrl1,
             datasourceUsername = processMasterDatasourceUsername1,
             datasourcePassword = processMasterDatasourcePassword1,
             datasourceInitSql = processMasterDatasourceInitSql1,
             datasouceLeakDetectionThreshold = processMasterDatasourceLeakDetectionThreshold1
         )
-        dataSourceMap["s1"] = createHikariDataSource(
-            datasourcePoolName = "s1",
-            datasourceUrl = processSlaveDatasourceUrl1,
-            datasourceUsername = processSlaveDatasourceUsername1,
-            datasourcePassword = processSlaveDatasourcePassword1,
-            datasourceInitSql = processSlaveDatasourceInitSql1,
-            datasouceLeakDetectionThreshold = processSlaveDatasourceLeakDetectionThreshold1
-        )
-        dataSourceMap["m2"] = createHikariDataSource(
-            datasourcePoolName = "m2",
+        dataSourceMap[SECOND_DATA_SOURCE_NAME] = createHikariDataSource(
+            datasourcePoolName = SECOND_DATA_SOURCE_NAME,
             datasourceUrl = processDatasourceUrl2,
             datasourceUsername = processDatasourceUsername2,
             datasourcePassword = processDatasourcePassword2,
             datasourceInitSql = processDatasourceInitSql2,
             datasouceLeakDetectionThreshold = processDatasourceLeakDetectionThreshold2
-        )
-        dataSourceMap["s2"] = createHikariDataSource(
-            datasourcePoolName = "s2",
-            datasourceUrl = processSlaveDatasourceUrl2,
-            datasourceUsername = processSlaveDatasourceUsername2,
-            datasourcePassword = processSlaveDatasourcePassword2,
-            datasourceInitSql = processSlaveDatasourceInitSql2,
-            datasouceLeakDetectionThreshold = processSlaveDatasourceLeakDetectionThreshold2
         )
         return dataSourceMap
     }
@@ -183,7 +147,7 @@ class BkShardingDataSourceConfiguration {
         val specifyDataSourceStrategyTableNames = shardingSpecifyDataSourceStrategyTableConfig?.split(",")
         if (!specifyDataSourceStrategyTableNames.isNullOrEmpty()) {
             specifyDataSourceStrategyTableNames.forEach { specifyDataSourceStrategyTableName ->
-                tableRuleConfigs.add(getTableRuleConfiguration(specifyDataSourceStrategyTableName, "ds_0"))
+                tableRuleConfigs.add(getTableRuleConfiguration(specifyDataSourceStrategyTableName, FIRST_DATA_SOURCE_NAME))
             }
         }
         // 设置广播表
@@ -194,20 +158,12 @@ class BkShardingDataSourceConfiguration {
                 broadcastTables.add(broadcastStrategyTableName)
             }
         }
-        // 配置读写分离
-        val masterSlaveRuleConfig0 = MasterSlaveRuleConfiguration(
-            "ds_0", "m1", listOf("s1")
-        )
-        val masterSlaveRuleConfig1 = MasterSlaveRuleConfiguration(
-            "ds_1", "m2", listOf("s2")
-        )
-        shardingRuleConfig.masterSlaveRuleConfigs = listOf(masterSlaveRuleConfig0, masterSlaveRuleConfig1)
         shardingRuleConfig.defaultTableShardingStrategyConfig = NoneShardingStrategyConfiguration()
         shardingRuleConfig.defaultDatabaseShardingStrategyConfig =
             StandardShardingStrategyConfiguration(PROJECT_ID_FIELD, BkProcessDatabaseShardingAlgorithm())
         val properties = Properties()
         // 是否打印SQL解析和改写日志
-        properties.setProperty("sql.show", "false")
+        properties.setProperty("sql.show", "true")
         return ShardingDataSourceFactory.createDataSource(dataSourceMap(), shardingRuleConfig, properties)
     }
 
