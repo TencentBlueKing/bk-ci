@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -50,20 +48,15 @@ class BkProcessDatabaseShardingAlgorithm : PreciseShardingAlgorithm<String> {
             val client = SpringContextUtil.getBean(Client::class.java)
             val ruleObj = client.get(ServiceShardingRoutingRuleResource::class)
                 .getShardingRoutingRuleByName(routingName).data
-                ?: throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(routingName)
-                )
-            routingRule = ruleObj.routingRule
-            // 将路由规则信息放入本地缓存
-            BkShardingRoutingCacheUtil.put(routingName, routingRule)
+            if (ruleObj != null) {
+                routingRule = ruleObj.routingRule
+                // 将路由规则信息放入本地缓存
+                BkShardingRoutingCacheUtil.put(routingName, routingRule)
+            }
         }
-        if (!availableTargetNames.contains(routingRule)) {
-            // 路由规则非法则抛出错误提示
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(routingName)
-            )
+        if (routingRule == null || !availableTargetNames.contains(routingRule)) {
+           // 没有配置路由规则则路由到ds_0
+            return "ds_0"
         }
         return routingRule
     }

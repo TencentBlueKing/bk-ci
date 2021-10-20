@@ -56,7 +56,7 @@ class BkShardingDataSourceConfiguration {
 
     companion object {
         private const val PROJECT_ID_FIELD = "PROJECT_ID"
-        private const val DEFAULT_DATA_SOURCE_NAME = "process_ds_0"
+        private const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
     }
 
     @Value("\${spring.datasource.url:#{null}}")

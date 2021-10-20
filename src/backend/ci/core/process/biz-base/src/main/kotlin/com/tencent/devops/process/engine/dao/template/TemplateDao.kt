@@ -37,6 +37,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -346,30 +347,40 @@ class TemplateDao {
         storeFlag: Boolean?
     ): Int {
         with(TTemplate.T_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            if (projectId != null) {
-                if (includePublicFlag != null && includePublicFlag) {
-                    conditions.add(PROJECT_ID.eq(projectId).or(TYPE.eq(TemplateType.PUBLIC.name)))
-                } else {
-                    conditions.add(PROJECT_ID.eq(projectId))
-                }
-            }
-            if (templateType != null) {
-                conditions.add(TYPE.eq(templateType.name))
-            }
-            if (templateName != null) {
-                conditions.add(TEMPLATE_NAME.eq(templateName))
-            }
-            if (storeFlag != null) {
-                conditions.add(STORE_FLAG.eq(storeFlag))
-            }
-
-            return dslContext
-                .select(ID.countDistinct())
+            val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
+            normalConditions.add(PROJECT_ID.eq(projectId))
+            var count = dslContext.select(DSL.countDistinct(ID))
                 .from(this)
-                .where(conditions)
+                .where(normalConditions)
                 .fetchOne(0, Int::class.java)!!
+            if (includePublicFlag != null && includePublicFlag) {
+                val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
+                publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
+                count += dslContext.select(DSL.count(ID))
+                    .from(this)
+                    .where(publicConditions)
+                    .fetchOne(0, Int::class.java)!!
+            }
+            return count
         }
+    }
+
+    private fun TTemplate.countTemplateBaseCondition(
+        templateType: TemplateType?,
+        templateName: String?,
+        storeFlag: Boolean?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        if (templateType != null) {
+            conditions.add(TYPE.eq(templateType.name))
+        }
+        if (templateName != null) {
+            conditions.add(TEMPLATE_NAME.eq(templateName))
+        }
+        if (storeFlag != null) {
+            conditions.add(STORE_FLAG.eq(storeFlag))
+        }
+        return conditions
     }
 
     fun listTemplate(
