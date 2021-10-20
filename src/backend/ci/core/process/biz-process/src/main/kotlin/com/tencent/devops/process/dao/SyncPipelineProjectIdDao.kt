@@ -190,7 +190,7 @@ class SyncPipelineProjectIdDao {
     fun updateTemplateInstanceItemProject(
         dslContext: DSLContext,
         baseId: String,
-        projectId: String,
+        projectId: String
     ) {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
             dslContext.update(this)
