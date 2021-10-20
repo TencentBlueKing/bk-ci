@@ -282,12 +282,18 @@ class QualityRuleBuildHisService constructor(
         val stageRules = qualityRuleBuildHisDao.listStageRules(dslContext, record.buildId, record.stageId)
         var passFlag = false
         var stageFinish = false
-        stageRules.filter { it.id != record.id }.map {
-            if (it?.status != RuleInterceptResult.WAIT.name) {
-                stageFinish = true
-            } else {
-                stageFinish = false
-                return@map
+
+        if (stageRules.size == 1) {
+            stageFinish = true
+            passFlag = true
+        } else {
+            stageRules.filter { it.id != record.id }.map {
+                if (it?.status != RuleInterceptResult.WAIT.name) {
+                    stageFinish = true
+                } else {
+                    stageFinish = false
+                    return@map
+                }
             }
         }
 
