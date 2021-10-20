@@ -87,7 +87,7 @@ class TXPipelineExportServiceTest {
             result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\"," +
                 "\"key3\":\"abcedf\${{ variables.haha }}hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn" +
                 "\${{ steps.stepId.outputs.aaaa }}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
-                "\${{ steps.stepId.outputs.aaaa }}\",\"\${key}\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
+                "\${{ steps.stepId.outputs.aaaa }}\",\"\${{key}}\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
                 "\${{ steps.stepId.outputs.aaaa }}\"}"
         )
     }
