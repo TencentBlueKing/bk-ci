@@ -31,33 +31,33 @@ class NotifySendCmd @Autowired constructor(
         var templateCode = ""
         var notifyType = mutableSetOf<String>()
         var settingDetailFlag = false
+        var sendMsg = false
 
         when {
             buildStatus.isFailure() -> {
                 settingDetailFlag = setting.failSubscription.detailFlag
                 templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 notifyType = setting.failSubscription.types.map { it.name }.toMutableSet()
-            }
-            buildStatus.isCancel() -> {
-                settingDetailFlag = setting.failSubscription.detailFlag
-                templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                notifyType = setting.failSubscription.types.map { it.name }.toMutableSet()
+                sendMsg = true
             }
             buildStatus.isSuccess() -> {
                 settingDetailFlag = setting.successSubscription.detailFlag
                 templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
                 notifyType = setting.successSubscription.types.map { it.name }.toMutableSet()
+                sendMsg = true
             }
             else -> Result<Any>(0)
         }
 
-        sendNotifyByTemplate(
-            templateCode = templateCode,
-            receivers = commandContextBuild.receivers,
-            notifyType = notifyType,
-            titleParams = commandContextBuild.notifyValue,
-            bodyParams = commandContextBuild.notifyValue
-        )
+        if (sendMsg) {
+            sendNotifyByTemplate(
+                templateCode = templateCode,
+                receivers = commandContextBuild.receivers,
+                notifyType = notifyType,
+                titleParams = commandContextBuild.notifyValue,
+                bodyParams = commandContextBuild.notifyValue
+            )
+        }
     }
 
     private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean): String {
