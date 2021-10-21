@@ -90,6 +90,7 @@ enum class ErrorCodeEnum(
     ),
     CLEAR_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129019, "clear token from git error %s"),
     GET_GIT_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129020, "获取仓库成员失败"),
+    GET_GIT_LATEST_REVISION_ERROR(ErrorType.THIRD_PARTY, 2129021, "获取分支最新commit信息失败"),
     GET_COMMIT_CHANGE_FILE_LIST_ERROR(ErrorType.THIRD_PARTY, 2129022, "获取提交差异文件列表失败");
 
     companion object {

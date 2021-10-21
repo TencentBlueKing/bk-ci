@@ -72,39 +72,6 @@ class UpdateCcNodeStatus @Autowired constructor(
         }
     }
 
-    @Scheduled(cron = "0 0 7 * * ?")
-    fun runUpdateCcNodeStatus() {
-        logger.info("runUpdateCcNodeStatus")
-        val lock = RedisLock(redisOperation, lockKey = CC_LOCK_KEY, expiredTimeInSeconds = 3600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            logger.info("updateCcNodeStatus")
-            val allCcNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CC)
-
-            if (allCcNodes.isEmpty()) {
-                return
-            }
-
-            // 分页处理
-            val pageSize = 100
-            val totalCount = allCcNodes.size
-            val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
-            for (page in 0 until totalPage) {
-                val from = pageSize * page
-                val end = from + min(pageSize, totalCount - from)
-                val nodes = allCcNodes.subList(from, end)
-                updateCcStatus(nodes)
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("update server node status failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
-
     private fun updateCmdbNodeStatus() {
         logger.info("updateCmdbNodeStatus")
         val allCmdbNodes = nodeDao.listAllNodesByType(dslContext, NodeType.CMDB)
@@ -137,20 +104,5 @@ class UpdateCcNodeStatus @Autowired constructor(
             }
         }
         nodeDao.batchUpdateNode(dslContext, nodes)
-    }
-
-    private fun updateCcStatus(allCcNodes: List<TNodeRecord>) {
-        val rawCcNodes = esbAgentClient.getCcNodeByIps("devops", allCcNodes.map { it.nodeIp })
-        val ipToNodeMap = rawCcNodes.associateBy { it.ip }
-
-        allCcNodes.forEach {
-            if (ipToNodeMap.containsKey(it.nodeIp)) {
-                val ccNode = ipToNodeMap.getValue(it.nodeIp)
-                it.operator = ccNode.operator
-                it.bakOperator = ccNode.bakOperator
-                it.osName = ccNode.osName
-            }
-        }
-        nodeDao.batchUpdateNode(dslContext, allCcNodes)
     }
 }

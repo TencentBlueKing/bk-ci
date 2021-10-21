@@ -59,6 +59,7 @@ import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
@@ -73,6 +74,7 @@ import org.springframework.stereotype.Component
 class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamScmService: StreamScmService,
+    private val streamGitTokenService: StreamGitTokenService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: StreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
@@ -106,11 +108,18 @@ class StreamYamlTrigger @Autowired constructor(
             return false
         }
 
+        val gitProjectInfo = streamScmService.getProjectInfoRetry(
+            token = streamGitTokenService.getToken(gitRequestEvent.gitProjectId),
+            gitProjectId = gitRequestEvent.gitProjectId.toString(),
+            useAccessToken = true
+        )
+
         val (isTrigger, isTiming) = triggerMatcher.isMatch(
             event = event,
             gitRequestEvent = gitRequestEvent,
             pipeline = gitProjectPipeline,
-            originYaml = originYaml
+            originYaml = originYaml,
+            gitProjectInfo = gitProjectInfo
         )
 
         if (!isTrigger && !isTiming) {
@@ -142,8 +151,7 @@ class StreamYamlTrigger @Autowired constructor(
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
-        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml")
-        logger.info("normalize yaml: $normalizedYaml")
+        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
         gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
@@ -152,8 +160,27 @@ class StreamYamlTrigger @Autowired constructor(
             filePath.removeSuffix(".yml")
         }
 
-        // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态, 只有url或者名称不对才更新
-        gitBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
+        // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
+        gitBasicSettingService.updateProjectInfo(gitRequestEvent.userId, gitProjectInfo)
+
+        if (isTiming) {
+            // 只有定时任务的只注册定时事件
+            logger.warn(
+                "Only schedules matched, only save the pipeline, " +
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+            )
+            yamlBuildV2.gitStartBuild(
+                pipeline = gitProjectPipeline,
+                event = gitRequestEvent,
+                yaml = yamlObject,
+                parsedYaml = parsedYaml,
+                originYaml = originYaml,
+                normalizedYaml = normalizedYaml,
+                gitBuildId = null,
+                isTimeTrigger = true,
+                onlySavePipeline = false
+            )
+        }
 
         streamStorageBean.prepareYamlTime(LocalDateTime.now().timestampmilli() - start)
 
@@ -163,6 +190,7 @@ class StreamYamlTrigger @Autowired constructor(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
+            // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -185,17 +213,12 @@ class StreamYamlTrigger @Autowired constructor(
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitBuildId = gitBuildId
+                gitBuildId = gitBuildId,
+                isTimeTrigger = false,
+                onlySavePipeline = false
             )
-            return true
-        }
-
-        if (isTiming) {
-            // 只有定时任务的保存任务
-            logger.warn(
-                "Only schedules matched, only save the pipeline, " +
-                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
-            )
+        } else {
+            // 没有触发只有定时任务的需要保存一下蓝盾流水线
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
                 event = gitRequestEvent,
@@ -203,7 +226,9 @@ class StreamYamlTrigger @Autowired constructor(
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitBuildId = null
+                gitBuildId = null,
+                isTimeTrigger = false,
+                onlySavePipeline = true
             )
         }
         return true
@@ -225,8 +250,6 @@ class StreamYamlTrigger @Autowired constructor(
             return null
         }
         logger.info("input yamlStr: $originYaml")
-        val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
-                gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         val preTemplateYamlObject = YamlFormat.formatYaml(
             originYaml = originYaml,
             gitRequestEvent = gitRequestEvent,
@@ -234,7 +257,7 @@ class StreamYamlTrigger @Autowired constructor(
             isMr = isMr
         )
         return replaceYamlTemplate(
-            isFork = isFork,
+            isFork = gitRequestEvent.isFork(),
             isMr = isMr,
             forkGitProjectId = forkGitProjectId,
             preTemplateYamlObject = preTemplateYamlObject,

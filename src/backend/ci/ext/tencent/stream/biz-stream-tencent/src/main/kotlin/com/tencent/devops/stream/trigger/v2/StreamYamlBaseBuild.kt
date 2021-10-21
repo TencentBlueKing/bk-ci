@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
@@ -51,8 +50,6 @@ import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -67,7 +64,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-abstract class StreamYamlBaseBuild<T> @Autowired constructor(
+class StreamYamlBaseBuild @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
@@ -88,16 +85,6 @@ abstract class StreamYamlBaseBuild<T> @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     private val buildRunningDesc = "Your pipeline「%s」is running."
-
-    abstract fun gitStartBuild(
-        pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
-        yaml: ScriptBuildYaml,
-        originYaml: String,
-        parsedYaml: String?,
-        normalizedYaml: String,
-        gitBuildId: Long?
-    ): BuildId?
 
     fun savePipeline(
         pipeline: GitProjectPipeline,
@@ -181,9 +168,14 @@ abstract class StreamYamlBaseBuild<T> @Autowired constructor(
         try {
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-            buildId =
-                startupPipelineBuild(processClient, model, event, gitCIBasicSetting, pipeline.pipelineId,
-                    pipeline.displayName)
+            buildId = startupPipelineBuild(
+                processClient = processClient,
+                model = model,
+                event = event,
+                gitCIBasicSetting = gitCIBasicSetting,
+                pipelineId = pipeline.pipelineId,
+                pipelineName = pipeline.displayName
+            )
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
@@ -298,20 +290,5 @@ abstract class StreamYamlBaseBuild<T> @Autowired constructor(
             return true
         }
         return false
-    }
-
-    fun installMarketAtom(gitCIBasicSetting: GitCIBasicSetting, userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(gitCIBasicSetting.projectCode!!)
-        try {
-            client.get(ServiceMarketAtomResource::class).installAtom(
-                userId = userId,
-                channelCode = channelCode,
-                installAtomReq = InstallAtomReq(projectCodes, atomCode)
-            )
-        } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
-            // 可能之前安装过，继续执行不退出
-        }
     }
 }

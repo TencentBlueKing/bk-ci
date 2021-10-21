@@ -116,6 +116,7 @@ class VmOperateTaskGenerator {
             executeCount = executeCount,
             starter = userId,
             approver = null,
+            subProjectId = null,
             subBuildId = null,
             additionalOptions = additionalOptions,
             atomCode = atomCode
@@ -176,6 +177,7 @@ class VmOperateTaskGenerator {
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
+                subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
                 atomCode = "$SHUTDOWN_VM_TASK_ATOM-END"
@@ -208,6 +210,7 @@ class VmOperateTaskGenerator {
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
+                subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
                 atomCode = "$SHUTDOWN_VM_TASK_ATOM-FINISH"

@@ -32,8 +32,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
@@ -49,6 +50,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +61,8 @@ import java.util.regex.Pattern
 @Suppress("ComplexMethod", "NestedBlockDepth", "ComplexCondition")
 @Component
 class TriggerMatcher @Autowired constructor(
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val streamTimerService: StreamTimerService
 ) {
 
     companion object {
@@ -72,7 +75,8 @@ class TriggerMatcher @Autowired constructor(
         event: GitEvent,
         gitRequestEvent: GitRequestEvent,
         pipeline: GitProjectPipeline,
-        originYaml: String
+        originYaml: String,
+        gitProjectInfo: GitCIProjectInfo
     ): Pair<Boolean, Boolean> {
         val newYaml = try {
             // 触发器需要将 on: 转为 TriggerOn:
@@ -102,7 +106,9 @@ class TriggerMatcher @Autowired constructor(
         return isMatch(
             triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
             event = event,
-            gitRequestEvent = gitRequestEvent
+            gitRequestEvent = gitRequestEvent,
+            gitProjectInfo = gitProjectInfo,
+            pipeline = pipeline
         )
     }
 
@@ -110,40 +116,45 @@ class TriggerMatcher @Autowired constructor(
     private fun isMatch(
         triggerOn: TriggerOn,
         event: GitEvent,
-        gitRequestEvent: GitRequestEvent
+        gitRequestEvent: GitRequestEvent,
+        gitProjectInfo: GitCIProjectInfo,
+        pipeline: GitProjectPipeline
     ): Pair<Boolean, Boolean> {
         val eventBranch = getBranch(event)
         val eventTag = getTag(event)
         val eventType = getEventType(event)
 
-        if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
-            when (eventType) {
-                CodeEventType.PUSH -> {
-                    if (isPushMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
-                }
-                CodeEventType.TAG_PUSH -> {
-                    if (isTagPushMatch(triggerOn, eventTag, event)) return Pair(first = true, second = false)
-                }
-                CodeEventType.MERGE_REQUEST -> {
-                    if (
-                        isMrMatch(
-                            triggerOn = triggerOn,
-                            eventBranch = eventBranch,
-                            event = event,
-                            gitRequestEvent = gitRequestEvent
-                        )
-                    ) return Pair(first = true, second = false)
-                }
-                else -> {
-                    return Pair(first = false, second = false)
-                }
+        // 判断是否是默认分支上的push，来判断是否注册定时任务
+        val isTime = if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value &&
+            gitRequestEvent.branch == gitProjectInfo.defaultBranch
+        ) {
+            isSchedulesMatch(triggerOn, eventBranch, gitRequestEvent, pipeline)
+        } else {
+            false
+        }
+
+        val isTrigger = when (eventType) {
+            TGitObjectKind.PUSH -> {
+                isPushMatch(triggerOn, eventBranch, event)
             }
-        } else if (triggerOn.schedules != null) {
-            if (isSchedulesMatch(triggerOn, eventBranch)) return Pair(first = false, second = true)
+            TGitObjectKind.TAG_PUSH -> {
+                isTagPushMatch(triggerOn, eventTag, event)
+            }
+            TGitObjectKind.MERGE_REQUEST -> {
+                isMrMatch(
+                    triggerOn = triggerOn,
+                    eventBranch = eventBranch,
+                    event = event,
+                    gitRequestEvent = gitRequestEvent
+                )
+            }
+            else -> {
+                false
+            }
         }
 
         logger.info("The triggerOn doesn't match the git event($event)")
-        return Pair(first = false, second = false)
+        return Pair(first = isTrigger, second = isTime)
     }
 
     private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String, event: GitEvent): Boolean {
@@ -259,11 +270,28 @@ class TriggerMatcher @Autowired constructor(
         return false
     }
 
-    private fun isSchedulesMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
-        // TODO 需要进一步迭代定时任务的检查与分支匹配检测
-        if (triggerOn.schedules == null || triggerOn.schedules?.cron.isNullOrBlank()) {
-            logger.info("The schedules cron is invalid($eventBranch)")
-            return false
+    // 判断是否注册定时任务来看是修改还是删除
+    private fun isSchedulesMatch(
+        triggerOn: TriggerOn,
+        eventBranch: String,
+        gitRequestEvent: GitRequestEvent,
+        pipeline: GitProjectPipeline
+    ): Boolean {
+        if (triggerOn.schedules == null) {
+            // 新流水线没有定时任务就没注册过定时任务
+            if (pipeline.pipelineId.isBlank()) {
+                return false
+            } else {
+                // 不是新流水线的可能注册过了要删除
+                streamTimerService.get(pipeline.pipelineId) ?: return false
+                streamTimerService.deleteTimer(pipeline.pipelineId, gitRequestEvent.userId)
+                return false
+            }
+        } else {
+            if (triggerOn.schedules?.cron.isNullOrBlank()) {
+                logger.info("The schedules cron is invalid($eventBranch)")
+                return false
+            }
         }
         return true
     }
@@ -539,12 +567,12 @@ class TriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun getEventType(event: GitEvent): CodeEventType {
+    private fun getEventType(event: GitEvent): TGitObjectKind {
         return when (event) {
-            is GitPushEvent -> CodeEventType.PUSH
-            is GitTagPushEvent -> CodeEventType.TAG_PUSH
-            is GitMergeRequestEvent -> CodeEventType.MERGE_REQUEST
-            else -> CodeEventType.PUSH
+            is GitPushEvent -> TGitObjectKind.PUSH
+            is GitTagPushEvent -> TGitObjectKind.TAG_PUSH
+            is GitMergeRequestEvent -> TGitObjectKind.MERGE_REQUEST
+            else -> TGitObjectKind.PUSH
         }
     }
 

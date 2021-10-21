@@ -72,8 +72,7 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
-            pipelineV2Service.getPipelineListById(
-                userId = userId,
+            pipelineV2Service.getPipelineById(
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId
             )

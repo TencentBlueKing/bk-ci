@@ -59,6 +59,7 @@ class TemplateService @Autowired constructor(
      */
     fun createRelationBtwTemplate(
         userId: String,
+        projectId: String,
         templateId: String,
         pipelineId: String,
         instanceType: String,
@@ -92,6 +93,7 @@ class TemplateService @Autowired constructor(
 
         templatePipelineDao.create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             instanceType = instanceType,
             rootTemplateId = rootTemplateId,

@@ -46,7 +46,7 @@ server:
 build:
   data:
     clear:
-      switch: false
+      switch: true
       maxEveryProjectHandleNum: 5
       monthRange: -1
       maxKeepNum: 10000  
