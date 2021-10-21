@@ -150,6 +150,7 @@ subprojects {
         ktlint
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+        all*.exclude group: "org.springframework.cloud", module: "spring-cloud-config-client"
         def job = /^biz-codeccjob.*/
         if (!(project.name ==~ job) && project.name != "boot-codeccjob") {
             all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-websocket"

@@ -1,0 +1,91 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-common
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: common
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        version: 4.0.0
+      redis:
+        host: {{ include "codecc.redis.host" . }}
+        password: {{ include "codecc.redis.password" . }}
+        port: {{ include "codecc.redis.port" . }}
+        jedis:
+          pool:
+            max-active: 16
+            max-wait: -1
+            max-idle: 16
+            min-idle: 0
+        connect-timeout: 5000
+        client-type: jedis
+      rabbitmq:
+        virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+        username: {{ include "codecc.rabbitmq.username" . }}
+        password: {{ include "codecc.rabbitmq.password" . }}
+        addresses: {{ include "codecc.rabbitmq.host" . }}
+        listener:
+          simple:
+            concurrency: 2
+            acknowledge-mode: auto
+      cloud:
+        consul:
+          discovery:
+            tags: {{ .Values.config.BK_CODECC_CONSUL_DISCOVERY_TAG }}
+        kubernetes:
+          discovery:
+            enabled: true
+    metrics:
+      servo:
+        enabled: false
+    http:
+      encoding:
+        charset: UTF-8
+        enabled: true
+        force: true
+    endpoints:
+      metrics:
+        filter:
+          enabled: false
+    server:
+      servlet-path: /
+      undertow:
+        worker-threads: 100
+    management:
+      security:
+        enabled: false
+      context-path: /management
+    bkci:
+      public:
+        url: {{ .Values.config.BK_CI_PUBLIC_URL }}
+      private:
+        url: {{ .Values.config.BK_CI_PRIVATE_URL }}
+    codecc:
+      public:
+        url: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+      private:
+        url: {{ .Values.config.BK_CODECC_PRIVATE_URL }}
+    auth:
+      idProvider: {{ .Values.config.BK_CI_AUTH_PROVIDER }}
+      grantType: rization_code
+      principalType: user
+      envName: prod
+      url: {{ .Values.config.BK_IAM_PRIVATE_URL }}
+      appCode: {{ .Values.config.BK_CODECC_APP_CODE }}
+      appSecret: {{ .Values.config.BK_CODECC_APP_TOKEN }}
+      bkloginUrl: {{ .Values.config.BK_PAAS_PRIVATE_URL }}/login/api/v2
+      iamCallBackUser: {{ .Values.config.BK_CI_IAM_CALLBACK_USER }}
+    esb:
+      code: {{ .Values.config.BK_CODECC_APP_CODE }}
+      secret: {{ .Values.config.BK_CODECC_APP_TOKEN }}
+    bk:
+      paas:
+        host: {{ .Values.config.BK_PAAS_PRIVATE_URL }}

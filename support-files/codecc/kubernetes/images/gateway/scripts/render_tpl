@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+# 用途： 渲染蓝鲸的 __VAR_NUM__ 占位符的模板，通过环境变量自动替换它
+
+# 安全模式
+set -euo pipefail 
+
+# 通用脚本框架变量
+PROGRAM=$(basename "$0")
+VERSION=1.0
+EXITCODE=0
+
+# 本脚本默认的全局变量
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+BK_INSTALL_PATH=
+MODULE=
+BK_ENV_FILE=${BK_ENV_FILE:-$SELF_DIR/load_env.sh}
+BK_EXTRA_ENV_FILE=
+DRY_RUN=0
+CHECK=
+UNDEFINED_SUB=
+declare -a EXTRA_ENV=()
+
+usage () {
+    cat <<EOF
+用法: 
+    $PROGRAM -p /data/bkee -m open_paas [OPTIONS]... 模板路径
+
+            [ -p, --prefix      [必选] "指定蓝鲸的安装根目录，模块和模板名都是相对这个根目录的。" ]
+            [ -m, --module      [必选] "指定渲染的配置文件属于什么模块，为了自动创建到对应目录下" ]
+            [ -E, --extra-env   [可选] "-E key1=value1 用于指定额外的环境变量值" ]
+            [ -e, --env-file    [可选] "指定加载的蓝鲸环境变量文件，将会覆盖\$BK_ENV_FILE的值，优先级最高" ]
+            [ -f, --extra-env-file    [可选] "加载完\$BK_ENV_FILE后，额外加载它，但它比-E的优先级低" ]
+            [ -c, --check       [可选] "检查配置渲染，是否有占位符没有对应的环境变量替换" ]
+            [ -u, --undefined   [可选] "对于环境变量中未定义等价的占位符，仍然替换，替换结果为空字符串，默认不替换" ]
+            [ -n, --dry-run     [可选] "将替换后的模板内容输出到标准输出" ]
+
+            [ -h, --help        [可选] 查看脚本帮助 ]
+            [ -v, --version     [可选] 查看脚本版本号 ]
+EOF
+}
+
+usage_and_exit () {
+    usage
+    exit "$1"
+}
+
+log () {
+    echo "$@"
+}
+
+error () {
+    echo "$@" 1>&2
+    usage_and_exit 1
+}
+
+warning () {
+    echo "$@" 1>&2
+    EXITCODE=$((EXITCODE + 1))
+}
+
+version () {
+    echo "$PROGRAM version $VERSION"
+}
+
+target_file_path () {
+    local module=$1
+    local tpl_file=${2##*/}
+    local _target_file
+
+    if [ "${tpl_file:0:1}" != "#" ]; then
+        _target_file=$BK_INSTALL_PATH/$module/${tpl_file//#//}
+    else
+        _target_file=$BK_INSTALL_PATH/${tpl_file//#//}
+    fi
+
+    echo "${_target_file%.tpl}"
+}
+
+# 解析命令行参数，长短混合模式
+(( $# == 0 )) && usage_and_exit 1
+while (( $# > 0 )); do 
+    case "$1" in
+        -n | --dry-run )
+            DRY_RUN=1
+            ;;
+        -c | --check )
+            CHECK=1
+            ;;
+	    -u | --undefined )
+	        UNDEFINED_SUB=1
+            ;;
+        -p | --prefix )
+            shift
+            BK_INSTALL_PATH=$1
+            ;;
+        -m | --module )
+            shift
+            MODULE=$1
+            ;;
+        -e | --env-file )
+            shift
+            BK_ENV_FILE="$1"
+            ;;
+        -f | --extra-env-file)
+            shift
+            BK_EXTRA_ENV_FILE="$1"
+            ;;
+        -E | --extra-env )
+            shift
+            EXTRA_ENV+=("$1")
+            ;;
+        --help | -h | '-?' )
+            usage_and_exit 0
+            ;;
+        --version | -v | -V )
+            version 
+            exit 0
+            ;;
+        -*)
+            error "不可识别的参数: $1"
+            ;;
+        *) 
+            break
+            ;;
+    esac
+    shift
+done
+
+# 校验必须变量
+if [[ $DRY_RUN -eq 0 ]]; then
+    # 如果是要渲染模板到文件系统，那么需要提供prefix和module
+    if [[ -z $BK_INSTALL_PATH ]]; then
+        warning "必须指定 -p, --prefix 参数。"
+    fi
+    if ! [[ -d $BK_INSTALL_PATH ]]; then
+        warning "$BK_INSTALL_PATH 目录不存在。"
+    fi
+    if [[ -z $MODULE ]]; then
+        warning "必须指定 -m, --module 参数。"
+    fi
+fi
+if ! [[ -r $BK_ENV_FILE ]]; then
+    warning "$BK_ENV_FILE 文件不可读"
+fi
+if [[ -n "$BK_EXTRA_ENV_FILE" && ! -r "$BK_EXTRA_ENV_FILE" ]]; then
+    warning "-f 指定了$BK_EXTRA_ENV_FILE，但是它不可读取"
+fi
+
+if (( EXITCODE > 0 )); then
+    usage_and_exit "$EXITCODE"
+fi
+
+# 加载 BK_ENV_FILE 这个变量指向的文件里的变量为环境变量，作用范围是本脚本。
+if [[ -r "$BK_ENV_FILE" ]]; then
+    set -o allexport
+    source "$BK_ENV_FILE"
+fi
+if [[ -r "$BK_EXTRA_ENV_FILE" ]]; then
+    set -o allexport
+    source "$BK_EXTRA_ENV_FILE"
+fi
+set +o allexport
+
+# 替换模板用的sed文件，执行退出时自动清理掉
+trap 'rm -f $sed_script' EXIT TERM
+sed_script=$(mktemp /tmp/XXXXXX.sed)
+
+# 载入额外变量
+if (( ${#EXTRA_ENV[@]} >= 1 )); then
+    set -o allexport
+    . <(printf "%s\n" "${EXTRA_ENV[@]}")
+    set +o allexport
+fi
+
+# 有占位符才行
+place_holders=( $(cat "$@" 2>/dev/null | grep -Po '__[A-Z][A-Z0-9]+(_[A-Z0-9]+){0,9}__' | sort -u) )
+
+set +u
+for p in "${place_holders[@]}"
+do
+    k=$(echo "$p" | sed 's/^__//; s/__$//;')
+    if ! v=$(printenv "$k");  then 
+        echo "UNDEFINED PLACE_HOLDER: $p" >&2 
+        # 除非打开了(-u), 否则UNDEFINED的占位符不会进入sed脚本
+        if [[ $UNDEFINED_SUB -eq 1 ]]; then
+            echo "s|$p|$v|g" >> "$sed_script"
+	    fi
+    else
+        echo "s|$p|$v|g" >> "$sed_script"
+    fi
+    # 打印变量取值
+    if [[ $CHECK -eq 1 ]]; then
+        echo "$k=$v" >&2
+    fi
+done
+set -u
+unset p k v
+
+# 指定 -c 参数，则只检查模板替换是否有空的占位符
+[[ $CHECK -eq 1 ]] && exit 0
+
+for file in "$@"; do
+    # 是否真正替换变量到目标路径
+    if [[ $DRY_RUN -eq 0 ]]; then
+        target_file=$(target_file_path "$MODULE" $file)
+        echo "render $file -> $target_file"
+        mkdir -p "${target_file%/*}"
+        sed -f "$sed_script" $file > "$target_file"
+    else
+        sed -f "$sed_script" $file
+    fi
+done

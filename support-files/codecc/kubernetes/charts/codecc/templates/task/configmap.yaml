@@ -1,0 +1,53 @@
+{{- if .Values.task.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-task
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: task
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        name: task
+        desc: Task Service
+        packageName: com.tencent.bk.codecc.task
+      data:
+        mongodb:
+          uri: {{ include "codecc.task.mongodbUri" . }}
+    time:
+      analysis:
+        maxhour: {{ .Values.config.BK_CODECC_TASK_ANALYSIS_MAX_HOUR }}
+    devops:
+      imageName: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_NAME }}
+      retry:
+        attempt: 7
+        interval: 1000
+      dispatch:
+        imageName: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_NAME }}
+        buildType: {{ .Values.config.BK_CODECC_PIPELINE_BUILD_TYPE }}
+        imageVersion: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_TAG }}
+    aes:
+      encryptor:
+        password: {{ .Values.config.BK_CODECC_TASK_ENCRYPTOR_KEY }}
+    pipeline:
+      atomCode:
+        codecc: {{ .Values.config.BK_CODECC_PIPELINE_ATOM_CODE }}
+        codeccVersion: {{ .Values.config.BK_CODECC_PIPELINE_ATOM_VERSION }}
+        git: git
+      imageType: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_TYPE }}
+      scmType:
+        svn:
+          old: {{ .Values.config.BK_CODECC_PIPELINE_SCM_IS_OLD_SVN }}
+        github:
+          old: {{ .Values.config.BK_CODECC_PIPELINE_SCM_IS_OLD_GITHUB }}
+    {{- if keys $.Values.task.config }}
+      {{- toYaml .Values.task.config | nindent 4 }}
+    {{- end}}
+{{- end }}
