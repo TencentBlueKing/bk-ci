@@ -528,7 +528,6 @@ class PipelineRepositoryService constructor(
                 pipelineDesc = null,
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
-                buildNo = buildNo,
                 taskCount = taskCount,
                 latestVersion = model.latestVersion
             )
