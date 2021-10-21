@@ -87,9 +87,9 @@ class ExternalWechatWorkResourceImpl @Autowired constructor(
         nonce: String,
         echoStr: String,
         reqData: String?,
-    ): Result<String> {
+    ): String {
         val sMsg = weworkRobotService.robotVerifyURL(signature, timestamp, nonce, echoStr)
         logger.info(sMsg)
-        return Result(data = sMsg)
+        return sMsg
     }
 }

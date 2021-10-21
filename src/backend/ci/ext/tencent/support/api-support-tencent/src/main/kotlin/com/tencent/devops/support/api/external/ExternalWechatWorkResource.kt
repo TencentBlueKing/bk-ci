@@ -125,5 +125,5 @@ interface ExternalWechatWorkResource {
         echoStr: String,
         @ApiParam(value = "回调密文", required = false)
         reqData: String?
-    ): Result<String>
+    ): String
 }
