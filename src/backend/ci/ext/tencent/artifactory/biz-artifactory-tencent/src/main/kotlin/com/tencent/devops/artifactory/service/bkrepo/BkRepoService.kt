@@ -516,8 +516,12 @@ class BkRepoService @Autowired constructor(
         throw OperationException("not supported")
     }
 
-    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
-        logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): List<String> {
+        logger.info("listCustomFiles, userId: $userId, projectId: $projectId, condition: $condition")
         var pathNamePairs = mutableListOf<Pair<String, String>>()
         if (!condition.glob.isNullOrEmpty()) {
             condition.glob!!.split(",").map { globItem ->
@@ -532,7 +536,7 @@ class BkRepoService @Autowired constructor(
             }
         }
         val fileList = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
-            userId = "",
+            userId = userId,
             projectId = projectId,
             repoNames = listOf(RepoUtils.CUSTOM_REPO),
             pathNamePairs = pathNamePairs,
