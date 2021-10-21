@@ -39,6 +39,7 @@ class QualityRuleBuildHisOperationDao @Autowired constructor (
         return with(TQualityRuleBuildHisOperation.T_QUALITY_RULE_BUILD_HIS_OPERATION) {
             dslContext.selectFrom(this)
                 .where(RULE_ID.`in`(ruleIds))
+                .orderBy(GATE_OPT_TIME.desc())
                 .fetch()
         }
     }
