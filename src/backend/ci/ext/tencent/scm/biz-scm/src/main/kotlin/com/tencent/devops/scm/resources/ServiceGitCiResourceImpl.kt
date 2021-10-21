@@ -176,7 +176,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         gitProjectId: String,
         page: Int,
         pageSize: Int,
-        query: String?
+        search: String?
     ): Result<List<GitMember>> {
         return Result(
             gitCiService.getGitCIAllMembers(
@@ -184,7 +184,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
-                query = query
+                query = search
             )
         )
     }
