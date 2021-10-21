@@ -107,7 +107,7 @@ class BkRepoService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
-            bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException("文件不存在")
 
         return RepoUtils.toFileDetail(fileDetail)
