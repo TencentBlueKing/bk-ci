@@ -1132,12 +1132,11 @@ class PipelineRuntimeService @Autowired constructor(
                     variables = buildVariables
                 )
 
-                if (!context.stageRetry && context.actionType.isRetry() && context.retryStartTaskId.isNullOrEmpty()) {
-                    // 完整重试,重置启动时间
-                    updateStartTime(buildId)
-                }
-
                 if (buildHistoryRecord != null) {
+                    if (!context.stageRetry && context.actionType.isRetry() && context.retryStartTaskId.isNullOrEmpty()) {
+                        // 完整重试,重置启动时间
+                        buildHistoryRecord.startTime = LocalDateTime.now()
+                    }
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
@@ -2128,12 +2127,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ) == 1
-    }
-
-    fun updateStartTime(
-        buildId: String
-    ): Boolean {
-        return pipelineBuildDao.updateBuildStartTime(dslContext, buildId) == 1
     }
 
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
