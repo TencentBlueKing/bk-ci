@@ -80,6 +80,17 @@ class WechatWorkCallbackService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(WechatWorkCallbackService::class.java)
 
+    fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
+        logger.info("signature:$signature")
+        logger.info("timestamp:$timestamp")
+        logger.info("nonce:$nonce")
+        logger.info("reqData:$reqData")
+        val callbackElement = wechatWorkService.getCallbackInfo(signature, timestamp, nonce, reqData)
+        logger.info("chitId:${callbackElement.chatId}")
+
+        return true
+    }
+
     fun callbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
 
         logger.info("signature:$signature")

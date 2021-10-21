@@ -65,20 +65,32 @@ class ExternalWechatWorkResourceImpl @Autowired constructor(private val wechatWo
     ): Result<Boolean> {
 
         val xmlDocument = wechatWorkCallbackService.callbackPost(signature, timestamp, nonce, reqData)
-//        val document = WechatWorkUtil.getXml(encryptData)
-//        var rootElement = document.rootElement
-//        var toUserNameElement = rootElement.elementIterator("ToUserName").next() as Element
-//        var toUserName = toUserNameElement.text
-//        var serviceIdElement = rootElement.elementIterator("ServiceId").next() as Element
-//        var serviceId = serviceIdElement.text
-//        var agentTypeElement = rootElement.elementIterator("AgentType").next() as Element
-//        var agentType = agentTypeElement.text
-//        var encryptElement = rootElement.elementIterator("Encrypt").next() as Element
-//        var encrypt = encryptElement.text
-//        logger.info(signature)
-//        logger.info(timestamp.toString())
-//        logger.info(nonce)
-//        logger.info(encryptData)
         return Result(data = xmlDocument)
+    }
+
+    override fun robotCallback(
+        signature: String,
+        timestamp: Long,
+        nonce: String,
+        reqData: String?,
+    ): Result<Boolean> {
+        return Result(wechatWorkCallbackService.robotCallbackPost(signature, timestamp, nonce, reqData))
+    }
+
+    override fun robotCallback(
+        signature: String,
+        timestamp: Long,
+        nonce: String,
+        echoStr: String,
+        reqData: String?,
+    ): Result<String> {
+        val sMsg = wechatWorkCallbackService.callbackGet(signature, timestamp, nonce, echoStr)
+        logger.info(sMsg)
+        logger.info(signature)
+        logger.info(timestamp.toString())
+        logger.info(nonce)
+        logger.info(echoStr)
+        logger.info(reqData)
+        return Result(data = sMsg)
     }
 }
