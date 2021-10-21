@@ -28,12 +28,16 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthTokenRefreshRequest(
     @JsonProperty("env_name")
+    @ApiModelProperty(name = "env_name")
     val envName: String,
     @JsonProperty("app_code")
+    @ApiModelProperty(name = "app_code")
     val appCode: String,
     @JsonProperty("refresh_token")
+    @ApiModelProperty(name = "refresh_token")
     val refreshToken: String
 )

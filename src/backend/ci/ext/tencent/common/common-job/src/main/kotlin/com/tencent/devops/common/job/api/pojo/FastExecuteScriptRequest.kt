@@ -28,12 +28,14 @@
 package com.tencent.devops.common.job.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class FastExecuteScriptRequest(
     val userId: String,
     val scriptContent: String,
     val scriptTimeout: Long,
     val scriptParam: String? = null,
+    @ApiModelProperty(name = "isParamSensive")
     @JsonProperty("isParamSensive")
     val paramSensive: Int,
     val scriptType: Int,

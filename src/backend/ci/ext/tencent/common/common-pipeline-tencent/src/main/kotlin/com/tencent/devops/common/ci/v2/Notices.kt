@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model Stream 通知类型基类
@@ -52,8 +53,10 @@ class GitNotices(
     val title: String?,
     val content: String?,
     val ccs: Set<String>?,
+    @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String?,
+    @ApiModelProperty(name = "chat-id")
     @JsonProperty("chat-id")
     val chatId: Set<String>?
 ) : Notices(type, receivers)

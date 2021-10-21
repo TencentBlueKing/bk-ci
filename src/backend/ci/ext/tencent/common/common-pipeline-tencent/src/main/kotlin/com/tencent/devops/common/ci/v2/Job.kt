@@ -28,6 +28,7 @@
 package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -37,18 +38,23 @@ data class Job(
     val id: String? = "",
     val name: String?,
     @JsonProperty("runs-on")
+    @ApiModelProperty(name = "runs-on")
     val runsOn: RunsOn = RunsOn(),
     // val container: Container?,
     val services: List<Service>? = null,
+    @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
+    @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,
     val env: Map<String, String>? = emptyMap(),
+    @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = false,
     val strategy: Strategy? = null,
+    @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
 )
@@ -79,21 +85,27 @@ data class ServiceWith(
 )
 data class Strategy(
     val matrix: Any?,
+    @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
+    @ApiModelProperty(name = "max-parallel")
     @JsonProperty("max-parallel")
     val maxParallel: String?
 )
 
 data class RunsOn(
+    @ApiModelProperty(name = "self-hosted")
     @JsonProperty("self-hosted")
     val selfHosted: Boolean? = false,
+    @ApiModelProperty(name = "pool-name")
     @JsonProperty("pool-name")
     val poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
+    @ApiModelProperty(name = "agent-selector")
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
+    @ApiModelProperty(name = "nfs-mount")
     @JsonProperty("nfs-mount")
     val nfsMount: Map<String, String>? = null
 )
