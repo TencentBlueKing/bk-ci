@@ -247,7 +247,8 @@ object Runner {
             exception.stackTrace.forEach {
                 with(it) {
                     defaultMessage.append(
-                        "\n    at $className.$methodName($fileName:$lineNumber)")
+                        "\n    at $className.$methodName($fileName:$lineNumber)"
+                    )
                 }
             }
             message = exception.message ?: defaultMessage.toString()
@@ -331,7 +332,7 @@ object Runner {
                 }
             }
             logger.info("${v.key}: ${v.value}")
-            if (PipelineVarUtil.fetchReverseVarName(v.key) != null){
+            if (PipelineVarUtil.fetchReverseVarName(v.key) != null) {
                 return@forEach
             }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
