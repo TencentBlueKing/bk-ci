@@ -16,7 +16,7 @@ class WeworkRobotService @Autowired constructor(
     private val weweorkRobotConfiguration: WeworkRobotCustomConfig,
 ) {
     private val rototWxcpt =
-        WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, null)
+        WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, "")
 
     /*
     * 验证geturl
@@ -31,6 +31,7 @@ class WeworkRobotService @Autowired constructor(
             verifyResult = rototWxcpt.VerifyURL(signature, timestamp.toString(), nonce, echoStr)
             logger.info("verifyResult:$verifyResult")
         } catch (e: Exception) {
+            logger.warn("robotVerifyURL: $e")
             // 验证URL，错误原因请查看异常
             e.printStackTrace()
         }
