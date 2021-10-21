@@ -72,7 +72,7 @@ import io.swagger.annotations.ApiModelProperty
 * */
 
 @ApiModel("git mr信息")
-data class  GitCIMrInfo(
+data class GitCIMrInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
     @ApiModelProperty(name = "target_project_id")
