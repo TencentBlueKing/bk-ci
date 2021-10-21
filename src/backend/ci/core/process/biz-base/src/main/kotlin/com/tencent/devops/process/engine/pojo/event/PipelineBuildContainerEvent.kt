@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
+package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
