@@ -236,7 +236,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
-        buildStartupParamService.deletePipelineBuildParam(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
@@ -1765,6 +1764,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 buildStatus = status,
                 executeTime = executeTime,
+                buildParameters = JsonUtil.toJson(buildParameters, formatted = false),
                 recommendVersion = recommendVersion,
                 remark = remark,
                 errorInfoList = errorInfoList
@@ -1807,6 +1807,16 @@ class PipelineRuntimeService @Autowired constructor(
         } else return null
 
         return "$majorVersion.$minorVersion.$fixVersion"
+    }
+
+    fun initBuildParameters(buildId: String) {
+        val buildParameters: List<BuildParameters> = try {
+            getBuildParametersFromStartup(buildId)
+        } catch (ignore: Throwable) {
+            logger.warn("BKSystemErrorMonitor|$buildId|getBuildParameters exception:", ignore)
+            mutableListOf()
+        }
+        pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters, false))
     }
 
     fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
