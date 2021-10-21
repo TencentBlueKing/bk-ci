@@ -76,7 +76,9 @@ class PipelineInfoDao {
                 CREATOR,
                 LAST_MODIFY_USER,
                 MANUAL_STARTUP,
-                ELEMENT_SKIP, TASK_COUNT
+                ELEMENT_SKIP,
+                TASK_COUNT,
+                PIPELINE_NAME_PINYIN
             )
                 .values(
                     pipelineId,
@@ -89,7 +91,8 @@ class PipelineInfoDao {
                     channelCode.name, userId, userId,
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
-                    taskCount
+                    taskCount,
+                    nameToPinyin(pipelineName)
                 )
                 .execute()
         }
@@ -120,6 +123,7 @@ class PipelineInfoDao {
 
             if (!pipelineName.isNullOrBlank()) {
                 update.set(PIPELINE_NAME, pipelineName)
+                update.set(PIPELINE_NAME_PINYIN, nameToPinyin(pipelineName))
             }
             if (!pipelineDesc.isNullOrBlank()) {
                 update.set(PIPELINE_DESC, pipelineDesc)
@@ -363,7 +367,7 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String? = null,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean? = false,
@@ -604,7 +608,7 @@ class PipelineInfoDao {
     }
 
     private fun nameToPinyin(pipelineName: String): String {
-        // 数据库字段长度1300
-        return PinyinUtil.toPinyin(pipelineName).take(1300)
+        val fieldLength = T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.dataType.length()
+        return PinyinUtil.toPinyin(pipelineName).take(fieldLength)
     }
 }

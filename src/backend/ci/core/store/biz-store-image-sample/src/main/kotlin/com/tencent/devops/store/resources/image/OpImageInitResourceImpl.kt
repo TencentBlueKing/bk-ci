@@ -30,6 +30,7 @@ package com.tencent.devops.store.resources.image
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.op.OpImageInitResource
+import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
 import com.tencent.devops.store.service.image.impl.SampleImageInitService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpImageInitResourceImpl @Autowired constructor(private val sampleImageInitService: SampleImageInitService) :
     OpImageInitResource {
 
-    override fun imageInit(): Result<Boolean> {
-        return sampleImageInitService.imageInit()
+    override fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
+        return sampleImageInitService.imageInit(imageInitRequest)
     }
 }

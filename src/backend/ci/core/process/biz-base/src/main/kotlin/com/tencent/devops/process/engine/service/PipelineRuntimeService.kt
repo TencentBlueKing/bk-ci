@@ -930,6 +930,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = context.userId,
                                 approver = null,
+                                subProjectId = null,
                                 subBuildId = null,
                                 atomCode = atomElement.getAtomCode()
                             )
@@ -1205,6 +1206,7 @@ class PipelineRuntimeService @Autowired constructor(
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
                         dslContext = transactionContext,
+                        projectId = pipelineInfo.projectId,
                         buildId = buildId,
                         startUser = context.userId,
                         startType = context.startType,
@@ -1311,7 +1313,7 @@ class PipelineRuntimeService @Autowired constructor(
     ): Pair<TPipelineBuildTaskRecord, Element>? {
         lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
             val additionalOptionsStr = buildTaskRecord.additionalOptions
-            if (additionalOptionsStr.isNotEmpty() && additionalOptionsStr != "null") {
+            if (!additionalOptionsStr.isNullOrBlank() && additionalOptionsStr != "null") {
                 val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
                 val elementPostInfo = additionalOptions.elementPostInfo
                 if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
@@ -1859,12 +1861,18 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
 
-    fun updateTaskSubBuildId(buildId: String, taskId: String, subBuildId: String) {
+    fun updateTaskSubBuildId(
+        buildId: String,
+        taskId: String,
+        subBuildId: String,
+        subProjectId: String
+    ) {
         pipelineBuildTaskDao.updateSubBuildId(
             dslContext = dslContext,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId
+            subBuildId = subBuildId,
+            subProjectId = subProjectId
         )
     }
 

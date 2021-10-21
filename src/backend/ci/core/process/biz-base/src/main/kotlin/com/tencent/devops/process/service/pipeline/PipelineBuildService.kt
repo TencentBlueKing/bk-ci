@@ -166,7 +166,8 @@ class PipelineBuildService(
             pipelineRuntimeService.updateTaskSubBuildId(
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId
+                subBuildId = subBuildId,
+                subProjectId = readyToBuildPipelineInfo.projectId
             )
             return subBuildId
         } finally {

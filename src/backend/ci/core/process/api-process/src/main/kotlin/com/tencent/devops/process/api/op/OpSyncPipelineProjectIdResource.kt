@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-/**
- * 命令上下文基础类
- */
-open class CmdContext(
-    open var cmdFlowSeq: Int,
-    open val executeCount: Int = 1,
-    open val variables: Map<String, String>,
-    open val watcher: Watcher
-)
+@Api(tags = ["OP_PIPELINE_DATAS"], description = "OP-流水线-数据")
+@Path("/op/pipeline/datas")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpSyncPipelineProjectIdResource {
+
+    @ApiOperation("更新数据库表projectId")
+    @PUT
+    @Path("/projectId/async/update")
+    fun asyncUpdateProjectId(): Result<Boolean>
+}

@@ -27,9 +27,17 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("第三方构建信息")
 data class ThirdPartyBuildInfo(
+    @ApiModelProperty("项目id")
     val projectId: String,
+    @ApiModelProperty("构建id")
     val buildId: String,
+    @ApiModelProperty("构建机编排序号")
     val vmSeqId: String,
+    @ApiModelProperty("工作空间")
     val workspace: String
 )

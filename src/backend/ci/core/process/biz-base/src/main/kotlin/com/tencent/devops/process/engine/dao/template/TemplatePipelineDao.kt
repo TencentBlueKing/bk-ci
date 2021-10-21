@@ -38,6 +38,7 @@ import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -50,6 +51,7 @@ class TemplatePipelineDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         instanceType: String,
         rootTemplateId: String,
@@ -64,6 +66,7 @@ class TemplatePipelineDao {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 INSTANCE_TYPE,
                 ROOT_TEMPLATE_ID,
@@ -78,6 +81,7 @@ class TemplatePipelineDao {
                 PARAM
             )
                 .values(
+                    projectId,
                     pipelineId,
                     instanceType,
                     rootTemplateId,
@@ -129,6 +133,21 @@ class TemplatePipelineDao {
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .and(INSTANCE_TYPE.eq(instanceType))
+                .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
+                .fetch()
+        }
+    }
+
+    fun listByPipelinesId(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
+    ): Result<out Record> {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.select(PIPELINE_ID.`as`("pipelineId"), TEMPLATE_ID.`as`("templateId"))
+                .from(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
                 .and(INSTANCE_TYPE.eq(instanceType))
                 .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
