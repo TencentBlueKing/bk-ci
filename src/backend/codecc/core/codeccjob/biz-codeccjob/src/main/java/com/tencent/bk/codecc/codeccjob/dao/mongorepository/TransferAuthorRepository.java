@@ -39,5 +39,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TransferAuthorRepository extends MongoRepository<TransferAuthorEntity, String>
 {
-    TransferAuthorEntity findByTaskId(long taskId);
+    TransferAuthorEntity findFirstByTaskId(long taskId);
 }

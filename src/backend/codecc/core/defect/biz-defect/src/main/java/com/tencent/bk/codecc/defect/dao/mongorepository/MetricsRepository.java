@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MetricsRepository extends MongoRepository<MetricsEntity, String> {
-    MetricsEntity findByTaskIdAndBuildId(Long taskId, String buildId);
+    MetricsEntity findFirstByTaskIdAndBuildId(Long taskId, String buildId);
 }

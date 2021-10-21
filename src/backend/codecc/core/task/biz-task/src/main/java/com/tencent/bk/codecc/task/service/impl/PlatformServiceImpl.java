@@ -35,7 +35,7 @@ import com.tencent.bk.codecc.task.service.PlatformService;
 import com.tencent.bk.codecc.task.vo.PlatformVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -79,7 +79,7 @@ public class PlatformServiceImpl implements PlatformService
     @Override
     public String getPlatformIp(long taskId, String toolName)
     {
-        ToolConfigInfoEntity toolEntity = toolRepository.findPlatformIpByTaskIdAndToolName(taskId, toolName);
+        ToolConfigInfoEntity toolEntity = toolRepository.findPlatformIpFirstByTaskIdAndToolName(taskId, toolName);
 
         if (toolEntity == null)
         {
@@ -94,7 +94,7 @@ public class PlatformServiceImpl implements PlatformService
     @Override
     public PlatformVO getPlatformByToolNameAndIp(String toolName, String ip)
     {
-        PlatformInfoEntity platformEntity = platformInfoRepository.findByToolNameAndIp(toolName, ip);
+        PlatformInfoEntity platformEntity = platformInfoRepository.findFirstByToolNameAndIp(toolName, ip);
 
         if (platformEntity != null)
         {

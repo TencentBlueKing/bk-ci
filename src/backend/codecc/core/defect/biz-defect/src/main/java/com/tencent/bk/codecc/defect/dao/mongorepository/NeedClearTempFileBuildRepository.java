@@ -20,7 +20,7 @@ public interface NeedClearTempFileBuildRepository extends MongoRepository<NeedCl
      * @param buildId
      * @return
      */
-    NeedClearTempFileBuildEntity findByToolNameAndBuildId(String toolName, String buildId);
+    NeedClearTempFileBuildEntity findFirstByToolNameAndBuildId(String toolName, String buildId);
 
     /**
      * 根据任务ID和工具名称查询
