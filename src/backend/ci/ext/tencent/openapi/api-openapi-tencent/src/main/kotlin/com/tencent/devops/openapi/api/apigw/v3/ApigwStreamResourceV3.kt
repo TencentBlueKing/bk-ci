@@ -298,5 +298,5 @@ interface ApigwStreamResourceV3 {
         userId: String,
         @ApiParam(value = "工蜂项目URL", required = true)
         request: GitUserValidateRequest
-    ): Result<GitUserValidateResult>
+    ): Result<GitUserValidateResult?>
 }

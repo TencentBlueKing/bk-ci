@@ -199,7 +199,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun validateGitProject(userId: String, request: GitUserValidateRequest): Result<GitUserValidateResult> {
+    override fun validateGitProject(userId: String, request: GitUserValidateRequest): Result<GitUserValidateResult?> {
         return client.get(ServiceGitBasicSettingResource::class).validateGitProject(
             userId = userId,
             request = request

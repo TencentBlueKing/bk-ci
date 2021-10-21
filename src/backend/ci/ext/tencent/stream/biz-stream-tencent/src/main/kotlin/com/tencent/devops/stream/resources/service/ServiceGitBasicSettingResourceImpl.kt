@@ -88,27 +88,47 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     override fun validateGitProject(
         userId: String,
         request: GitUserValidateRequest
-    ): Result<GitUserValidateResult> {
+    ): Result<GitUserValidateResult?> {
         logger.info("STREAM|validateGitProject|request=$request")
-        val projectName = GitUtils.getProjectName(request.url)
+        val projectName = try {
+            GitUtils.getProjectName(request.url)
+        } catch (t: Throwable) {
+            return Result(
+                status = Response.Status.BAD_REQUEST.statusCode,
+                message = t.message,
+                data = null
+            )
+        }
         // 直接请求新的token，如果不是合法的项目在获取时直接报错
-        val token = streamScmService.getToken(projectName).accessToken
+        val token = try {
+            streamScmService.getToken(projectName).accessToken
+        } catch (t: Throwable) {
+            return Result(
+                status = Response.Status.BAD_REQUEST.statusCode,
+                message = t.message,
+                data = null
+            )
+        }
         val projectInfo = streamScmService.getProjectInfo(
             gitProjectId = projectName,
             token = token,
             useAccessToken = true
-        ) ?: throw CustomException(
-            status = Response.Status.NOT_FOUND,
-            message = "工蜂项目无法找到，请检查链接"
+        ) ?: return Result(
+            status = Response.Status.NOT_FOUND.statusCode,
+            message = "工蜂项目信息不存在，请检查链接",
+            data = null
         )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
         val gitProjectId = projectInfo.gitProjectId.toLong()
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
-        permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.EDIT)
+
+        permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.USE)
+
         val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
-            ?: throw CustomException(
-                status = Response.Status.NOT_FOUND,
-                message = "工蜂项目未注册，请检查链接"
+            ?: return Result(
+                status = Response.Status.NOT_FOUND.statusCode,
+                message = "工蜂项目未开启Stream，请前往仓库的CI/CD进行配置",
+                data = null
             )
         logger.info("STREAM|validateGitProjectSetting|setting=$setting")
         return Result(GitUserValidateResult(
