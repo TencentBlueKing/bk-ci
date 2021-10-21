@@ -279,6 +279,7 @@ class PipelineBuildService(
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
+                startParams = startParams,
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule
@@ -287,7 +288,7 @@ class PipelineBuildService(
             // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
             if (startParams.isNotEmpty()) {
                 val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-                buildStartupParamService.addParam(
+                buildStartupParamService.updateBuildParameters(
                     projectId = readyToBuildPipelineInfo.projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
@@ -296,8 +297,6 @@ class PipelineBuildService(
                     }, formatted = false)
                 )
             }
-            // 构建过程中可获取构建启动参数 #2800
-            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
             if (acquire) {
