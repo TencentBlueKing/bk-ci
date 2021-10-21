@@ -11,7 +11,7 @@ import com.tencent.bk.codecc.defect.pojo.FileMD5TotalModel
 import com.tencent.bk.codecc.task.vo.TaskDetailVO
 import com.tencent.codecc.common.db.CommonEntity
 import com.tencent.devops.common.api.exception.CodeCCException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.codecc.util.JsonUtil
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.script.CommandLineUtils
@@ -117,31 +117,35 @@ abstract class AbstractDefectTracingClass<T : CommonEntity>(
             }
         }.forEach { (t, u) ->
 
-            var inputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_input_data.json"
-            inputFileName = scmJsonComponent.index(inputFileName, ScmJsonComponent.AGGREGATE)
-            logger.info("aggregate inputFileName : $inputFileName")
-            val inputFile = File(inputFileName)
+            val inputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_input_data.json"
+            val inputFilePath = scmJsonComponent.index(inputFileName, ScmJsonComponent.AGGREGATE)
+            logger.info("aggregate inputFileName : $inputFilePath")
+            val inputFile = File(inputFilePath)
 
-            var outputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_output_data.json"
-            outputFileName = scmJsonComponent.index(outputFileName, ScmJsonComponent.AGGREGATE)
-            logger.info("aggregate outputFileName : $outputFileName")
-            val outputFile = File(outputFileName)
+            val outputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_output_data.json"
+            val outputFilePath = scmJsonComponent.index(outputFileName, ScmJsonComponent.AGGREGATE)
+            logger.info("aggregate outputFileName : $outputFilePath")
+            val outputFile = File(outputFilePath)
 
 //             val resultHandler = DefaultExecuteResultHandler()
 //             resultHandlerMap[outputFileName] = resultHandler
             try {
                 // 写入输入数据
                 if (!inputFile.exists()) {
+                    inputFile.parentFile.mkdirs()
                     inputFile.createNewFile()
                 }
                 if (outputFile.exists()) {
                     outputFile.delete()
                 }
                 inputFile.writeText(JsonUtil.getObjectMapper().writeValueAsString(u))
+                scmJsonComponent.upload(inputFilePath, inputFileName, ScmJsonComponent.AGGREGATE)
                 try {
                     val aggregateFileName = AggregateDispatchFileName(
                         inputFileName = inputFileName,
-                        outputFileName = outputFileName
+                        inputFilePath = inputFilePath,
+                        outputFileName = outputFileName,
+                        outputFilePath = outputFilePath
                     )
                     val asyncRabbitTemplate =
                         SpringContextUtil.getBean(AsyncRabbitTemplate::class.java, "opensourceAsyncRabbitTamplte")
@@ -191,10 +195,10 @@ abstract class AbstractDefectTracingClass<T : CommonEntity>(
             }
         }.forEach { (t, u) ->
 
-            var inputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_input_data.json"
-            inputFileName = scmJsonComponent.index(inputFileName, ScmJsonComponent.AGGREGATE)
-            logger.info("aggregate inputFileName : $inputFileName")
-            val inputFile = File(inputFileName)
+            val inputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_input_data.json"
+            val inputFilePath = scmJsonComponent.index(inputFileName, ScmJsonComponent.AGGREGATE)
+            logger.info("aggregate inputFileName : $inputFilePath")
+            val inputFile = File(inputFilePath)
 
             var outputFileName = "${streamName}_${toolName}_${buildId}_${t}_aggregate_output_data.json"
             outputFileName = scmJsonComponent.index(outputFileName, ScmJsonComponent.AGGREGATE)
@@ -206,16 +210,18 @@ abstract class AbstractDefectTracingClass<T : CommonEntity>(
             try {
                 // 写入输入数据
                 if (!inputFile.exists()) {
+                    inputFile.parentFile.mkdirs()
                     inputFile.createNewFile()
                 }
                 if (outputFile.exists()) {
                     outputFile.delete()
                 }
                 inputFile.writeText(JsonUtil.getObjectMapper().writeValueAsString(u))
+                scmJsonComponent.upload(inputFilePath, inputFileName, ScmJsonComponent.AGGREGATE)
                 try {
 
                     asyncExecuteUnixCommand(
-                        "./pp-cluster --input $inputFileName --output $outputFileName --pretty",
+                        "./pp-cluster --input $inputFilePath --output $outputFileName --pretty",
                         File("/opt"), resultHandler
                     )
                 } catch (e: Exception) {

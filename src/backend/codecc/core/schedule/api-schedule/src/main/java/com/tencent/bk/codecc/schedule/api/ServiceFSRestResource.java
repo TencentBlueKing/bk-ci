@@ -75,4 +75,12 @@ public interface ServiceFSRestResource
             @ApiParam(value = "类型", required = true)
             @PathParam("type")
                     String type);
+
+    @ApiOperation("获取索引信息")
+    @Path("/fileindex/updateUploadInfo")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    Result<FileIndexVO> updateUploadInfo(
+            FileIndexVO fileIndexVO);
 }

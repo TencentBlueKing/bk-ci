@@ -119,7 +119,7 @@ public class MongoPageHelper
         }
 
         beginTime = System.currentTimeMillis();
-        final List<T> entityList = mongoTemplate.find(query.addCriteria(criteria).with(new Sort(sortList)), entityClass);
+        final List<T> entityList = mongoTemplate.find(query.addCriteria(criteria).with(Sort.by(sortList)), entityClass);
         log.info("page query get record cost: {}", System.currentTimeMillis() - beginTime);
         final Page<R> pageResult = new Page<>(total, pageNum, pageSize, pages, entityList.stream().map(mapper).collect(Collectors.toList()));
         return pageResult;

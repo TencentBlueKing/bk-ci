@@ -19,9 +19,8 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,14 +68,14 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
         Long taskId = analyzeConfigInfoVO.getTaskId();
         String toolName = analyzeConfigInfoVO.getMultiToolType();
         String buildId = analyzeConfigInfoVO.getBuildId();
-        ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+        ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
         if (null == toolBuildInfoEntity)
         {
             return analyzeConfigInfoVO;
         }
 
         // 加入上次扫描的仓库列表
-        CodeRepoInfoEntity codeRepoInfoEntity = codeRepoRepository.findByTaskIdAndBuildId(taskId, toolBuildInfoEntity.getDefectBaseBuildId());
+        CodeRepoInfoEntity codeRepoInfoEntity = codeRepoRepository.findFirstByTaskIdAndBuildId(taskId, toolBuildInfoEntity.getDefectBaseBuildId());
         Set<String> lastRepoWhiteList = Sets.newHashSet();
         Set<String> lastRepoIds = Sets.newHashSet();
         Set<String> lastRepoUrls = Sets.newHashSet();
@@ -139,7 +138,7 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
         }
 
         scanType = analyzeConfigInfoVO.getScanType() == null ? scanType : analyzeConfigInfoVO.getScanType();
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, analyzeConfigInfoVO.getBuildId());
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, analyzeConfigInfoVO.getBuildId());
         if (toolBuildStackEntity == null)
         {
             // 保存构建运行时栈表
