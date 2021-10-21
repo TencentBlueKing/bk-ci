@@ -109,8 +109,8 @@ class PipelineQuartzService @Autowired constructor(
                 comboKey, crontab,
                 jobBeanClass
             )
-        } catch (e: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", e)
+        } catch (ignore: Exception) {
+            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
         }
     }
 
@@ -210,7 +210,7 @@ class PipelineJobBean(
             }
         } finally {
             watcher.stop()
-            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 1000)
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
         }
     }
 }
