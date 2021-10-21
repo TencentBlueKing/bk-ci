@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.resources.service
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
