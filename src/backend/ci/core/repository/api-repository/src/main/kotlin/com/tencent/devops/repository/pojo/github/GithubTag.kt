@@ -50,11 +50,11 @@ data class GithubTag(
     @ApiModelProperty("远程引用")
     val ref: String,
     @JsonProperty("node_id")
-    @ApiModelProperty("节点id", name = "node_id")
+    @ApiModelProperty("节点id")
     val nodeId: String,
     @ApiModelProperty("url地址")
     val url: String,
-    @ApiModelProperty("tag数据", name = "object")
+    @ApiModelProperty("tag数据")
     @JsonProperty("object")
     val tagObject: GithubObject?
 )

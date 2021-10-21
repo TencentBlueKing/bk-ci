@@ -33,19 +33,19 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("git项目信息")
 data class GitProjectInfo(
-    @ApiModelProperty("项目ID", name = "id")
+    @ApiModelProperty("项目ID")
     @JsonProperty("id")
     val id: Int,
-    @ApiModelProperty("项目名称", name = "name")
+    @ApiModelProperty("项目名称")
     @JsonProperty("name")
     val name: String,
-    @ApiModelProperty("命名空间名称", name = "name_with_namespace")
+    @ApiModelProperty("命名空间名称")
     @JsonProperty("name_with_namespace")
     val namespaceName: String,
-    @ApiModelProperty("可见范围", name = "visibility_level")
+    @ApiModelProperty("可见范围")
     @JsonProperty("visibility_level")
     val visibilityLevel: Int?,
-    @ApiModelProperty("仓库地址", required = true, name = "http_url_to_repo")
+    @ApiModelProperty("仓库地址", required = true)
     @JsonProperty("http_url_to_repo")
     val repositoryUrl: String
 )

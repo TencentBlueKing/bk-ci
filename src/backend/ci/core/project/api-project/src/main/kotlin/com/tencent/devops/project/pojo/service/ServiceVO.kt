@@ -39,38 +39,38 @@ data class ServiceVO(
     val name: String,
     @ApiModelProperty("链接")
     val link: String,
-    @ApiModelProperty("新链接", name = "link_new")
+    @ApiModelProperty("新链接")
     @JsonProperty("link_new")
     val linkNew: String,
     @ApiModelProperty("状态")
     val status: String,
-    @ApiModelProperty("注入类型", name = "inject_type")
+    @ApiModelProperty("注入类型")
     @JsonProperty("inject_type")
     val injectType: String,
-    @ApiModelProperty("框架URL", name = "iframe_url")
+    @ApiModelProperty("框架URL")
     @JsonProperty("iframe_url")
     val iframeUrl: String,
     @ApiModelProperty("grayIframeUrl")
     val grayIframeUrl: String?,
-    @ApiModelProperty("cssURL", name = "css_url")
+    @ApiModelProperty("cssURL")
     @JsonProperty("css_url")
     val cssUrl: String,
-    @ApiModelProperty("jsURL", name = "js_url")
+    @ApiModelProperty("jsURL")
     @JsonProperty("js_url")
     val jsUrl: String,
-    @ApiModelProperty("grayCssURL", name = "gray_css_url")
+    @ApiModelProperty("grayCssURL")
     @JsonProperty("gray_css_url")
     val grayCssUrl: String,
-    @ApiModelProperty("grayJsURL", name = "gray_js_url")
+    @ApiModelProperty("grayJsURL")
     @JsonProperty("gray_js_url")
     val grayJsUrl: String,
-    @ApiModelProperty("显示项目列表", name = "show_project_list")
+    @ApiModelProperty("显示项目列表")
     @JsonProperty("show_project_list")
     val showProjectList: Boolean,
-    @ApiModelProperty("显示导航", name = "show_nav")
+    @ApiModelProperty("显示导航")
     @JsonProperty("show_nav")
     val showNav: Boolean,
-    @ApiModelProperty("项目ID类型", name = "project_id_type")
+    @ApiModelProperty("项目ID类型")
     @JsonProperty("project_id_type")
     val projectIdType: String,
     @ApiModelProperty("是否收藏")

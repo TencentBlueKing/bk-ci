@@ -33,16 +33,16 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Token模型")
 data class GitToken(
-    @ApiModelProperty("鉴权token", name = "access_token")
+    @ApiModelProperty("鉴权token")
     @JsonProperty("access_token")
     var accessToken: String = "",
-    @ApiModelProperty("刷新token", name = "refresh_token")
+    @ApiModelProperty("刷新token")
     @JsonProperty("refresh_token")
     var refreshToken: String = "",
-    @ApiModelProperty("token类型", name = "token_type")
+    @ApiModelProperty("token类型")
     @JsonProperty("token_type")
     val tokenType: String = "",
-    @ApiModelProperty("过期时间", name = "expires_in")
+    @ApiModelProperty("过期时间")
     @JsonProperty("expires_in")
     val expiresIn: Long = 0L,
     @ApiModelProperty("创建时间")

@@ -33,13 +33,13 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("WeTest云设备信息")
 data class WetestCloud(
-    @ApiModelProperty(name = "id")
+    @ApiModelProperty("id")
     @JsonProperty("id")
     val id: Int,
-    @ApiModelProperty(name = "name")
+    @ApiModelProperty("name")
     @JsonProperty("name")
     val name: String,
-    @ApiModelProperty(name = "devices")
+    @ApiModelProperty("devices")
     @JsonProperty("devices")
     val devices: List<WetestDevice>
 )

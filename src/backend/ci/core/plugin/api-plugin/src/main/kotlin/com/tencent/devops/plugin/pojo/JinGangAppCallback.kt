@@ -45,13 +45,13 @@ data class JinGangAppCallback(
     val elementId: String,
     @ApiModelProperty("该次扫描文件md5")
     val md5: String,
-    @ApiModelProperty("结果html地址", name = "scan_url")
+    @ApiModelProperty("结果html地址")
     @JsonProperty("scan_url")
     val scanUrl: String,
-    @ApiModelProperty("结果xml下载地址", name = "scan_xml")
+    @ApiModelProperty("结果xml下载地址")
     @JsonProperty("scan_xml")
     val scanXml: String,
-    @ApiModelProperty("上传人", name = "responseuser")
+    @ApiModelProperty("上传人")
     @JsonProperty("responseuser")
     val responseUser: String
 

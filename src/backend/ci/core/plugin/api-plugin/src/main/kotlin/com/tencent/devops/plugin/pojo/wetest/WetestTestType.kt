@@ -33,13 +33,13 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("WeTest云设备信息")
 data class WetestTestType(
-    @ApiModelProperty(name = "testtype")
+    @ApiModelProperty("testtype")
     @JsonProperty("testtype")
     val testType: String,
-    @ApiModelProperty(name = "testname")
+    @ApiModelProperty("testname")
     @JsonProperty("testname")
     val testName: String,
-    @ApiModelProperty(name = "frametype")
+    @ApiModelProperty("frametype")
     @JsonProperty("frametype")
     val frametype: List<String>?
 )

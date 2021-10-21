@@ -28,7 +28,6 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
 
 /**
  * {
@@ -47,25 +46,18 @@ import io.swagger.annotations.ApiModelProperty
 }
  */
 data class DeptInfo(
-    @ApiModelProperty(name = "TypeId")
     @JsonProperty("TypeId")
     val typeId: String,
-    @ApiModelProperty(name = "LeaderId")
     @JsonProperty("LeaderId")
     val leaderId: String,
-    @ApiModelProperty(name = "Name")
     @JsonProperty("Name")
     val name: String,
-    @ApiModelProperty(name = "Level")
     @JsonProperty("Level")
     val level: String,
-    @ApiModelProperty(name = "Enabled")
     @JsonProperty("Enabled")
     val enabled: String,
-    @ApiModelProperty(name = "ParentId")
     @JsonProperty("ParentId")
     val parentId: String,
-    @ApiModelProperty(name = "ID")
     @JsonProperty("ID")
     val id: String
 
