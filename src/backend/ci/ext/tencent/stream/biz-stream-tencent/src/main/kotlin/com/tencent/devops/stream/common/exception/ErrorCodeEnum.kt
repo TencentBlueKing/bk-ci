@@ -70,8 +70,6 @@ enum class ErrorCodeEnum(
         errorCode = 21290015,
         formatErrorMessage = "Create new pipeline failed. User [%s] is not authorized to commit file to branch [%s]."
     ),
-
-    //    GET_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129010, "获取项目成员失败"),
     //    GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
     GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
     GET_GIT_FILE_INFO_ERROR(ErrorType.THIRD_PARTY, 2129013, "获取仓库文件信息失败"),
@@ -90,7 +88,8 @@ enum class ErrorCodeEnum(
         errorCode = 2129018,
         formatErrorMessage = "manual trigger third party error: [%s]"
     ),
-    CLEAR_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129019, "clear token from git error %s"), ;
+    CLEAR_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129019, "clear token from git error %s"),
+    GET_GIT_PROJECT_MEMBERS_ERROR(ErrorType.THIRD_PARTY, 2129020, "获取仓库成员失败");
 
     companion object {
 

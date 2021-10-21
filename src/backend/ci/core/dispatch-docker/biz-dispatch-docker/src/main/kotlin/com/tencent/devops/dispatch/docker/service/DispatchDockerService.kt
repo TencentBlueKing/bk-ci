@@ -151,7 +151,7 @@ class DispatchDockerService @Autowired constructor(
     }
 
     fun updateDockerIpLoad(userId: String, dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
-        logger.info("$userId update Docker IP status enable: $dockerIp, dockerIpInfoVO: $dockerIpInfoVO")
+        // logger.info("$userId update Docker IP status enable: $dockerIp, dockerIpInfoVO: $dockerIpInfoVO")
         pipelineDockerIPInfoDao.updateDockerIpLoad(
             dslContext = dslContext,
             dockerIp = dockerIp,
