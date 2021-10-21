@@ -1133,7 +1133,9 @@ class PipelineRuntimeService @Autowired constructor(
                 )
 
                 if (buildHistoryRecord != null) {
-                    if (!context.stageRetry && context.actionType.isRetry() && context.retryStartTaskId.isNullOrEmpty()) {
+                    if (!context.stageRetry
+                        && context.actionType.isRetry()
+                        && context.retryStartTaskId.isNullOrEmpty()) {
                         // 完整重试,重置启动时间
                         buildHistoryRecord.startTime = LocalDateTime.now()
                     }
