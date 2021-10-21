@@ -119,10 +119,6 @@ class TriggerMatcher @Autowired constructor(
         if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
             when (eventType) {
                 CodeEventType.PUSH -> {
-                    // 获取push提交之间的修改文件
-                    val changeFileList = streamScmService.getCommitChangeFileListRetry(
-
-                    ).ifEmpty { return true }
                     if (isPushMatch(triggerOn, eventBranch, event)) return Pair(first = true, second = false)
                 }
                 CodeEventType.TAG_PUSH -> {
@@ -255,7 +251,8 @@ class TriggerMatcher @Autowired constructor(
         if (targetBranchMatch &&
             isMrIncludePathMatch(triggerOn.mr!!.paths, event, gitRequestEvent) &&
             isUserMatch(triggerOn.mr!!.users, event) &&
-            isMrActionMatch(triggerOn.mr!!.action, event)) {
+            isMrActionMatch(triggerOn.mr!!.action, event)
+        ) {
             return true
         }
 
