@@ -25,41 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
+package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * Container事件
- *
- * @version 1.0
- */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_CONTAINER)
-data class PipelineBuildContainerEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerType: String,
-    val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    val reason: String? = null,
-    @Deprecated(message = "errorCode=com.tencent.devop.common.api.pojo.ErrorCode.USER_JOB_OUTTIME_LIMIT")
-    val timeout: Boolean? = false,
+@ApiModel("企业微信机器人消息")
+data class WeworkRobotSingleTextMessage(
     /**
-     * 0 表示 没有错误
+     * 会话id，支持最多传100个，用‘|’分隔。可能是群聊会话，也可能是单聊会话或者小黑板会话，通过消息回调获得，也可以是userid。
+     * 特殊的，当chatid为“@all_group”时，表示对所有群和小黑板广播，为“@all_subscriber”时表示对订阅范围内员工广播单聊消息，为“@all”时，
+     * 表示对所有群、所有订阅范围内员工和所有小黑板广播。不填则默认为“@all_group”
      */
-    var errorCode: Int = 0,
+    @ApiModelProperty("会话id")
+    val chatid: String?,
     /**
-     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
+     * 小黑板帖子id，有且只有chatid指定了一个小黑板的时候生效
      */
-    var errorTypeName: String? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    @ApiModelProperty("会话id", name = "post_id")
+    @JsonProperty("post_id")
+    val postId: String?,
+    @ApiModelProperty("消息类型")
+    val msgtype: String = "text",
+    @ApiModelProperty("文本内容")
+    val text: WeworkTextContentMessage,
+    /**
+     * 该消息只有指定的群成员或小黑板成员可见（其他成员不可见），有且只有chatid指定了一个群或一个小黑板的时候生效，多个userid用‘|’分隔
+     */
+    @ApiModelProperty("会话id", name = "visible_to_user")
+    @JsonProperty("visible_to_user")
+    val visibleToUser: String?
+)

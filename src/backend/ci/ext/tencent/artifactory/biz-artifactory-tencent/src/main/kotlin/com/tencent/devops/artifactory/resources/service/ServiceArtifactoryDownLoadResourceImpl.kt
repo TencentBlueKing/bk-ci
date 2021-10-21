@@ -45,8 +45,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
 
     override fun getThirdPartyDownloadUrl(
         projectId: String,
-        pipelineId: String,
-        buildId: String,
+        pipelineId: String?,
+        buildId: String?,
         userId: String?,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -59,17 +59,17 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         checkParam(projectId, path)
         return Result(
             bkRepoDownloadService.getThirdPartyDownloadUrl(
-                projectId,
-                pipelineId,
-                buildId,
-                artifactoryType,
-                path,
-                ttl,
-                crossProjectId,
-                crossPipineId,
-                crossBuildNo,
-                region,
-                userId
+                projectId = projectId,
+                pipelineId = pipelineId ?: "",
+                buildId = buildId ?: "",
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = ttl,
+                crossProjectId = crossProjectId,
+                crossPipineId = crossPipineId,
+                crossBuildNo = crossBuildNo,
+                region = region,
+                userId = userId
             )
         )
     }
