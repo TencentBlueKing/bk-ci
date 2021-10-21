@@ -22,9 +22,14 @@ class WeworkRobotService @Autowired constructor(
     * 验证geturl
     * */
     fun robotVerifyURL(signature: String, timestamp: Long, nonce: String, echoStr: String?): String {
+        logger.info("signature:$signature")
+        logger.info("timestamp:${timestamp}")
+        logger.info("nonce:$nonce")
+        logger.info("echoStr:$echoStr")
         var verifyResult = ""
         try {
             verifyResult = rototWxcpt.VerifyURL(signature, timestamp.toString(), nonce, echoStr)
+            logger.info("verifyResult:$verifyResult")
         } catch (e: Exception) {
             // 验证URL，错误原因请查看异常
             e.printStackTrace()
