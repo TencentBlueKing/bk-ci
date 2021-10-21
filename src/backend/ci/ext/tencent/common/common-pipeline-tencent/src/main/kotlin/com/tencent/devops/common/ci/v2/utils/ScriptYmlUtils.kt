@@ -97,6 +97,7 @@ object ScriptYmlUtils {
      * 1、解决锚点
      * 2、yml string层面的格式化填充
      */
+    // TODO: 删除GitCi微服务后需要修改这里，锚点替换在schema检查已经做了
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
