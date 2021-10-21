@@ -70,5 +70,7 @@ class WechatWorkAutoConfiguration {
 
     @Bean
     @Primary
-    fun wechatWorkService(wechatWorkConfiguration: WechatWorkConfiguration) = WechatWorkService(wechatWorkConfiguration)
+    fun wechatWorkService(
+        wechatWorkConfiguration: WechatWorkConfiguration
+    ) = WechatWorkService(wechatWorkConfiguration)
 }
