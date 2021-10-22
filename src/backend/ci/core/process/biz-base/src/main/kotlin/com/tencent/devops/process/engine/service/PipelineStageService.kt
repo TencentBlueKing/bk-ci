@@ -54,6 +54,7 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
@@ -433,6 +434,9 @@ class PipelineStageService @Autowired constructor(
         } else {
             Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
         }
+        // #5246 检查红线时填充预置上下文
+        val buildContext = variables.toMutableMap()
+        PipelineVarUtil.fillContextVarMap(buildContext, variables)
         return try {
             val request = BuildCheckParamsV3(
                 projectId = event.projectId,
@@ -442,7 +446,7 @@ class PipelineStageService @Autowired constructor(
                 templateId = null,
                 interceptName = null,
                 ruleBuildIds = check?.ruleIds!!.toSet(),
-                runtimeVariable = variables
+                runtimeVariable = buildContext
             )
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
                 "inOrOut=$inOrOut|request=$request|ruleIds=${check.ruleIds}")
