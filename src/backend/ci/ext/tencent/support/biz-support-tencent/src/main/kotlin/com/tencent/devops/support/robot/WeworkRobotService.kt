@@ -10,6 +10,9 @@ import org.dom4j.Element
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.xml.sax.InputSource
+import java.io.StringReader
+import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
 class WeworkRobotService @Autowired constructor(
@@ -43,8 +46,8 @@ class WeworkRobotService @Autowired constructor(
         logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
         logger.info("reqData:$reqData")
-        val callbackElement = getCallbackInfo(signature, timestamp, nonce, reqData)
-        logger.info("chitId:${callbackElement.chatId}")
+        val chatId = getCallbackInfo(signature, timestamp, nonce, reqData)
+        logger.info("chitId:$chatId")
 
         return true
     }
@@ -52,27 +55,33 @@ class WeworkRobotService @Autowired constructor(
     /*
   * 获取密文的CallbackInfo对象
   * */
-    fun getCallbackInfo(signature: String, timestamp: Long, nonce: String, reqData: String?): CallbackElement {
+    fun getCallbackInfo(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
         val document = getDecrypeDocument(signature, timestamp, nonce, reqData)
+        logger.info("document:${document.toString()}")
         val rootElement = document.rootElement
-        val toUserName = (rootElement.elementIterator("ToUserName").next() as Element).text
-        val serviceId = (rootElement.elementIterator("ServiceId").next() as Element).text
-        val agentType = (rootElement.elementIterator("AgentType").next() as Element).text
-        val msgElement = rootElement.elementIterator("Msg").next() as Element
-        val msgType = MsgType.valueOf((msgElement.elementIterator("MsgType").next() as Element).text)
-        val fromElement = msgElement.elementIterator("From").next() as Element
-        val fromType = FromType.valueOf((fromElement.elementIterator("Type").next() as Element).text)
-        val chatId = (fromElement.elementIterator("Id").next() as Element).text
-        return CallbackElement(
-            toUserName,
-            serviceId,
-            agentType,
-            chatId,
-            msgType,
-            fromType,
-            msgElement,
-            fromElement
-        )
+        val context = (rootElement.elementIterator("Content").next() as Element).text
+        logger.info("context: $context")
+
+        return (rootElement.elementIterator("ChatId").next() as Element).text
+
+//        val toUserName = (rootElement.elementIterator("UserId").next() as Element).text
+//        val serviceId = (rootElement.elementIterator("ServiceId").next() as Element).text
+//        val agentType = (rootElement.elementIterator("AgentType").next() as Element).text
+//        val msgElement = rootElement.elementIterator("Msg").next() as Element
+//        val msgType = MsgType.valueOf((msgElement.elementIterator("MsgType").next() as Element).text)
+//        val fromElement = msgElement.elementIterator("From").next() as Element
+//        val fromType = FromType.valueOf((fromElement.elementIterator("Type").next() as Element).text)
+//        val chatId = (fromElement.elementIterator("Id").next() as Element).text
+//        return CallbackElement(
+//            toUserName,
+//            serviceId,
+//            agentType,
+//            chatId,
+//            msgType,
+//            fromType,
+//            msgElement,
+//            fromElement
+//        )
     }
 
     /*
@@ -82,6 +91,12 @@ class WeworkRobotService @Autowired constructor(
         val xmlString = getDecrypeMsg(signature, timestamp, nonce, reqData)
         logger.info("xmlString:$xmlString")
         return DocumentHelper.parseText(xmlString)
+//        // For example:
+//        val dbf = DocumentBuilderFactory.newInstance()
+//        val db = dbf.newDocumentBuilder()
+//        val sr = StringReader(xmlString)
+//        val `is` = InputSource(sr)
+//        return db.parse(`is`)!!
     }
 
      /*
