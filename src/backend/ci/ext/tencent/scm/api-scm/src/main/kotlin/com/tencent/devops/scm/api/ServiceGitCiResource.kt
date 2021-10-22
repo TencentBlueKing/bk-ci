@@ -292,16 +292,16 @@ interface ServiceGitCiResource {
         @QueryParam("from")
         from: String,
         @ApiParam(value = "新commit")
-        @QueryParam("from")
+        @QueryParam("to")
         to: String,
         @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
         @QueryParam("straight")
         straight: Boolean? = false,
         @ApiParam(value = "页码")
-        @QueryParam("straight")
+        @QueryParam("page")
         page: Int,
         @ApiParam(value = "每页大小")
-        @QueryParam("straight")
-        pageSize: Int
+        @QueryParam("pageSize")
+        pageSize: Int,
     ): Result<List<ChangeFileInfo>>
 }
