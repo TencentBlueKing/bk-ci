@@ -121,7 +121,6 @@ class PreBuildV2Service @Autowired constructor(
 
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject)
         val model = getPipelineModel(userId, preProjectId, startUpReq, scriptBuildYaml, agentId)
-        logger.warn("model info v2: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 
@@ -589,7 +588,7 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         val projectId = getUserProjectId(userId)
-        logger.info("prebuild v2 $projectId,runsOn: ${JsonUtil.toJson(job.runsOn)}")
+        logger.info("prebuild v2 $projectId, runsOn: ${JsonUtil.toJson(job.runsOn)}")
 
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {
