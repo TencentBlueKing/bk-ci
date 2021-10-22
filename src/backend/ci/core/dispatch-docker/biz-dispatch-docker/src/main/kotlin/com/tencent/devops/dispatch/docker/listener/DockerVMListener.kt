@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -69,11 +70,15 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun getShutdownQueue(): String {
-        return ".docker.vm"
+        return DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix
     }
 
     override fun getStartupQueue(): String {
-        return ".docker.vm"
+        return DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix
+    }
+
+    override fun getStartupDemoteQueue(): String {
+        return DispatchRouteKeySuffix.DOCKER_VM_DEMOTE.routeKeySuffix
     }
 
     override fun getVmType(): JobQuotaVmType? {
@@ -81,8 +86,22 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
-        logger.info("On start up - ($dispatchMessage)")
+        logger.info("On startup - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
 
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        logger.info("On startup demote - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
+
+    override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        logger.info("On shutdown - ($event)")
+
+        dockerHostBuildService.finishDockerBuild(event)
+    }
+
+    private fun startup(dispatchMessage: DispatchMessage) {
         val dockerDispatch = dispatchMessage.dispatchType as DockerDispatchType
         buildLogPrinter.addLine(
             buildId = dispatchMessage.buildId,
@@ -207,11 +226,5 @@ class DockerVMListener @Autowired constructor(
                 message = errMsgTriple.third
             )
         }
-    }
-
-    override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        logger.info("On shutdown - ($event)")
-
-        dockerHostBuildService.finishDockerBuild(event)
     }
 }

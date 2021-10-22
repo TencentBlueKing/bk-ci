@@ -28,12 +28,16 @@
 package com.tencent.devops.worker.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkRepoFile(
     @JsonProperty("fullPath")
+    @ApiModelProperty(name = "fullPath")
     val fullPath: String,
     @JsonProperty("size")
+    @ApiModelProperty(name = "size")
     val size: Long,
     @JsonProperty("folder")
+    @ApiModelProperty(name = "folder")
     val folder: Boolean
 )

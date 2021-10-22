@@ -31,5 +31,6 @@ enum class IfType {
     SUCCESS,
     FAILURE,
     CANCELLED,
-    ALWAYS
+    ALWAYS,
+    ALWAYS_UNLESS_CANCELLED
 }

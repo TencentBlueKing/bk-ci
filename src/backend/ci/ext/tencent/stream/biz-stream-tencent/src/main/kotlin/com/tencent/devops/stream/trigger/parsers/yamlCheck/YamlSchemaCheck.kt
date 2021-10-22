@@ -28,13 +28,13 @@
 package com.tencent.devops.stream.trigger.parsers.yamlCheck
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.common.exception.CommitCheck
@@ -54,6 +54,7 @@ import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import org.yaml.snakeyaml.Yaml
 
 @Component
 class YamlSchemaCheck @Autowired constructor(
@@ -76,9 +77,10 @@ class YamlSchemaCheck @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(YamlSchemaCheck::class.java)
 
-    private val yamlFactory = ObjectMapper(YAMLFactory())
+    private val yaml = Yaml()
+
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(yamlFactory)
+        .objectMapper(YamlUtil.getObjectMapper())
         .build()
 
     private val schemaMap = mutableMapOf<String, JsonSchema>()
@@ -95,7 +97,8 @@ class YamlSchemaCheck @Autowired constructor(
     }
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
-        val yamlJson = yamlFactory.readTree(originYaml)
+        // 解析锚点
+        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
         // v1 不走这里的校验逻辑
         if (yamlJson.checkV1()) {
             return
@@ -202,6 +205,15 @@ private fun JsonSchema.check(yaml: JsonNode) {
             throw YamlFormatException(it.toString())
         }
     }
+}
+
+// Yaml规则下会将on当成true在消除锚点时会将On替换为true
+private fun JsonNode.replaceOn(): JsonNode {
+    val realOn = get("true") ?: return this
+    val node = this as ObjectNode
+    node.set<JsonNode>("on", realOn)
+    node.remove("true")
+    return this
 }
 
 private fun JsonNode.checkV1(): Boolean {
