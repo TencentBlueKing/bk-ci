@@ -119,7 +119,6 @@ class PreBuildService @Autowired constructor(
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
-        logger.warn("model info v1: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 
