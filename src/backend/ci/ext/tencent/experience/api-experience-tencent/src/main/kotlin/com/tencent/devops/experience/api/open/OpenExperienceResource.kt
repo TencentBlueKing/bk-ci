@@ -61,19 +61,4 @@ interface OpenExperienceResource {
         @QueryParam("userId")
         userId: String
     ): Response
-
-    @ApiOperation("通过bundleId获取公开体验跳转信息")
-    @Path("/jumpInfo")
-    @GET
-    fun jumpInfo(
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("bundleId", required = true)
-        @QueryParam("bundleIdentifier")
-        bundleIdentifier: String,
-        @ApiParam("平台", required = true)
-        @QueryParam("platform")
-        platform: String
-    ): Result<ExperienceJumpInfo>
 }

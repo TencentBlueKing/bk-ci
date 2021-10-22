@@ -38,21 +38,6 @@ class OpenExperienceResourceImpl @Autowired constructor(
         return Result(experienceOuterService.outerAuth(token))
     }
 
-    override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
-        if (platform != "ANDROID" && platform != "IOS") {
-            throw ErrorCodeException(
-                statusCode = 403,
-                defaultMessage = "平台错误",
-                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
-            )
-        }
-
-        experiencePublicDao.getByBundleId(dslContext)
-        //android : bkdevopsapp://bkdevopsapp/app/experience/expDetail/{experienceHashId}
-        //ios : bkdevopsapp://app/experience/expDetail/{experienceHashId}
-        return Result(ExperienceJumpInfo("test", experienceDownloadService.getQrCodeUrl("test")))
-    }
-
     override fun appStoreRedirect(id: String, userId: String): Response {
         return experienceAppService.appStoreRedirect(id, userId)
     }

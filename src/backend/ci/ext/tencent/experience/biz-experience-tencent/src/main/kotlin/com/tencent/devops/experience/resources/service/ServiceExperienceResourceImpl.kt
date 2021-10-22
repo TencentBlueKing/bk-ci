@@ -27,22 +27,33 @@
 
 package com.tencent.devops.experience.resources.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.service.ExperienceBaseService
+import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
+import org.jooq.DSLContext
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
-    private val experienceBaseService: ExperienceBaseService
+    private val experienceBaseService: ExperienceBaseService,
+    private val experienceDownloadService: ExperienceDownloadService,
+    private val experiencePublicDao: ExperiencePublicDao,
+    private val dslContext: DSLContext
 ) : ServiceExperienceResource {
 
     override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
@@ -70,6 +81,51 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
+        if (platform != "ANDROID" && platform != "IOS") {
+            logger.warn("platform is illegal , {}", platform)
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "平台错误",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val experiencePublicRecord = experiencePublicDao.getByBundleId(
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform
+        )
+
+        if (null == experiencePublicRecord) {
+            logger.warn(
+                "can not found record , projectId:{} , bundleIdentifier:{} , platform:{}",
+                projectId,
+                bundleIdentifier,
+                platform
+            )
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "未找到对应的体验",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val scheme = if (platform == "ANDROID") {
+            "bkdevopsapp://bkdevopsapp/app/experience/expDetail/${experiencePublicRecord.recordId}"
+        } else {
+            "bkdevopsapp://app/experience/expDetail/${experiencePublicRecord.recordId}"
+        }
+
+        return Result(
+            ExperienceJumpInfo(
+                scheme,
+                experienceDownloadService.getQrCodeUrl(HashUtil.encodeLongId(experiencePublicRecord.recordId))
+            )
+        )
+    }
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -77,5 +133,9 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(ServiceExperienceResourceImpl::class.java)
     }
 }
