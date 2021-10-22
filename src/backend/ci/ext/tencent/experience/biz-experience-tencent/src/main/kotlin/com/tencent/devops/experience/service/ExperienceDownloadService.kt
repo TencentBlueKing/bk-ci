@@ -50,10 +50,12 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceCount
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
+import com.tencent.devops.experience.resources.service.ServiceExperienceResourceImpl
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -376,6 +378,57 @@ class ExperienceDownloadService @Autowired constructor(
                 Pagination(hasNext, experiences)
             }
         }
+    }
+
+    fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): ExperienceJumpInfo {
+        if (platform != "ANDROID" && platform != "IOS") {
+            logger.warn("platform is illegal , {}", platform)
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "平台错误",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val experiencePublicRecord = experiencePublicDao.getByBundleId(
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform
+        )
+
+        if (null == experiencePublicRecord) {
+            logger.warn(
+                "can not found record , projectId:{} , bundleIdentifier:{} , platform:{}",
+                projectId,
+                bundleIdentifier,
+                platform
+            )
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "未找到对应的体验",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val scheme = if (platform == "ANDROID") {
+            "bkdevopsapp://bkdevopsapp/app/experience/expDetail/${experiencePublicRecord.recordId}"
+        } else {
+            "bkdevopsapp://app/experience/expDetail/${experiencePublicRecord.recordId}"
+        }
+
+        val shortUrlRequest = CreateShortUrlRequest(
+            getExternalDownloadUrl(
+                "third_app",
+                experiencePublicRecord.recordId,
+                false,
+                10 * 60
+            ).url, 10 * 60 * 2
+        )
+        return ExperienceJumpInfo(
+            scheme,
+            client.get(ServiceShortUrlResource::class).createShortUrl(shortUrlRequest).data!!
+        )
     }
 
     private fun addUserDownloadTime(
