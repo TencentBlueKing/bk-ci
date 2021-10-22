@@ -589,7 +589,7 @@ class PreBuildV2Service @Autowired constructor(
         }
 
         val projectId = getUserProjectId(userId)
-        logger.info("prebuild v2 ${projectId},runsOn: ${JsonUtil.toJson(job.runsOn)}")
+        logger.info("prebuild v2 $projectId,runsOn: ${JsonUtil.toJson(job.runsOn)}")
 
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {
