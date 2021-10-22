@@ -124,7 +124,8 @@ class ServiceExperienceResourceImpl @Autowired constructor(
                 experienceDownloadService.getExternalDownloadUrl(
                     "third_app",
                     experiencePublicRecord.recordId,
-                    false
+                    false,
+                    10 * 60
                 ).url
             )
         )

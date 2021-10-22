@@ -139,7 +139,12 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+    fun getExternalDownloadUrl(
+        userId: String,
+        experienceId: Long,
+        isOuter: Boolean = false,
+        ttl: Int? = null
+    ): DownloadUrl {
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
@@ -168,11 +173,19 @@ class ExperienceDownloadService @Autowired constructor(
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
+            val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
+                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
-                .externalUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
+                .externalUrl(
+                    projectId,
+                    artifactoryType,
+                    experienceRecord.creator,
+                    path,
+                    ttl ?: (24 * 3600),
+                    false
+                ).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
