@@ -560,7 +560,8 @@ class PreBuildV2Service @Autowired constructor(
     private fun getDispatchType(
         job: Job,
         startUpReq: StartUpReq,
-        agentInfo: ThirdPartyAgentStaticInfo
+        agentInfo: ThirdPartyAgentStaticInfo,
+        userId: String
     ): DispatchType {
         if (job.runsOn.poolName == JobRunsOnType.LOCAL.type) {
             return ThirdPartyAgentIDDispatchType(
@@ -587,7 +588,8 @@ class PreBuildV2Service @Autowired constructor(
             )
         }
 
-        logger.info("prebuild v2 runsOn: ${JsonUtil.toJson(job.runsOn)}")
+        val projectId = getUserProjectId(userId)
+        logger.info("prebuild v2 ${projectId},runsOn: ${JsonUtil.toJson(job.runsOn)}")
 
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {
