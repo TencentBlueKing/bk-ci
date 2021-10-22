@@ -1,52 +1,342 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.common.exception.CommitCheck
+import com.tencent.devops.stream.common.exception.TriggerBaseException
+import com.tencent.devops.stream.common.exception.TriggerException
+import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.isMr
+import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
+import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.v2.service.StreamScmService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-class TriggerMatcher(
-    val event: GitEvent,
-    val gitRequestEvent: GitRequestEvent,
-    val pipeline: GitProjectPipeline,
-    val triggerOn: TriggerOn,
-    val changeList: List<String>
+@Component
+class TriggerMatcher @Autowired constructor(
+    private val streamScmService: StreamScmService,
+    private val streamTimerService: StreamTimerService
 ) {
 
-    fun match(): TriggerResult{
-        when(event){
-            is GitPushEvent ->{
+    companion object {
+        private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
+    }
 
+    @Throws(TriggerBaseException::class)
+    fun isMatch(
+        context: StreamTriggerContext,
+        gitProjectInfo: GitCIProjectInfo
+    ): TriggerResult {
+        val newYaml = try {
+            // 触发器需要将 on: 转为 TriggerOn:
+            val realYaml = ScriptYmlUtils.formatYaml(context.originYaml)
+            YamlUtil.getObjectMapper().readValue(realYaml, object : TypeReference<NoReplaceTemplate>() {})
+        } catch (e: Throwable) {
+            when (e) {
+                is JsonProcessingException, is TypeCastException -> {
+                    TriggerException.triggerError(
+                        request = context.requestEvent,
+                        event = context.gitEvent,
+                        pipeline = context.pipeline,
+                        reason = TriggerReason.CI_YAML_INVALID,
+                        reasonParams = listOf(e.message ?: ""),
+                        yamls = Yamls(context.originYaml, null, null),
+                        commitCheck = CommitCheck(
+                            block = context.requestEvent.isMr(),
+                            state = GitCICommitCheckState.FAILURE
+                        )
+                    )
+                }
+                else -> {
+                    throw e
+                }
             }
-            is GitMergeRequestEvent ->{
+        }
 
+        return match(
+            context = context,
+            gitProjectInfo = gitProjectInfo,
+            triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
+            changeSet = getChangeSet(context)
+        )
+    }
+
+    fun match(
+        context: StreamTriggerContext,
+        gitProjectInfo: GitCIProjectInfo,
+        triggerOn: TriggerOn,
+        changeSet: Set<String>?
+    ): TriggerResult {
+        val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
+
+        val gitRequestEvent = context.requestEvent
+
+        // 判断是否是默认分支上的push，来判断是否注册定时任务
+        val isTime = if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value &&
+            gitRequestEvent.branch == gitProjectInfo.defaultBranch
+        ) {
+            isSchedulesMatch(triggerOn, targetBranch, gitRequestEvent, context.pipeline)
+        } else {
+            false
+        }
+
+        val isTrigger = when (context.gitEvent) {
+            is GitPushEvent -> {
+                isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId)
             }
-            is GitTagPushEvent ->{
+            is GitMergeRequestEvent -> {
+                isMrMatch(
+                    triggerOn = triggerOn,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    changeSet = changeSet,
+                    userId = gitRequestEvent.userId,
+                    event = context.gitEvent
+                )
+            }
+            is GitTagPushEvent -> {
+                isTagPushMatch(triggerOn, getTag(context.gitEvent), gitRequestEvent.userId)
+            }
+            else -> {
+                false
+            }
+        }
 
+        return TriggerResult(isTrigger, isTime)
+    }
+
+    // 判断是否注册定时任务来看是修改还是删除
+    private fun isSchedulesMatch(
+        triggerOn: TriggerOn,
+        eventBranch: String,
+        gitRequestEvent: GitRequestEvent,
+        pipeline: GitProjectPipeline
+    ): Boolean {
+        if (triggerOn.schedules == null) {
+            // 新流水线没有定时任务就没注册过定时任务
+            if (pipeline.pipelineId.isBlank()) {
+                return false
+            } else {
+                // 不是新流水线的可能注册过了要删除
+                streamTimerService.get(pipeline.pipelineId) ?: return false
+                streamTimerService.deleteTimer(pipeline.pipelineId, gitRequestEvent.userId)
+                return false
+            }
+        } else {
+            if (triggerOn.schedules?.cron.isNullOrBlank()) {
+                logger.info("The schedules cron is invalid($eventBranch)")
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun isPushMatch(
+        triggerOn: TriggerOn,
+        eventBranch: String,
+        changeSet: Set<String>?,
+        userId: String
+    ): Boolean {
+        // 如果没有配置push，默认未匹配
+        if (triggerOn.push == null) {
+            return false
+        }
+
+        val pushRule = triggerOn.push!!
+        // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
+        if (BranchMatchUtils.isIgnoreBranchMatch(pushRule.branchesIgnore, eventBranch)) {
+            return false
+        }
+
+        // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
+        if (PathMatchUtils.isIgnorePathMatch(pushRule.pathsIgnore, changeSet)) {
+            return false
+        }
+
+        // 3、check userIgnore,满足屏蔽条件直接返回不匹配
+        if (UserMatchUtils.isIgnoreUserMatch(pushRule.usersIgnore, userId)) {
+            return false
+        }
+
+        // include
+        if (BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch) &&
+            PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) &&
+            UserMatchUtils.isUserMatch(pushRule.users, userId)
+        ) {
+            logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
+            return true
+        }
+        return false
+    }
+
+    private fun isMrMatch(
+        triggerOn: TriggerOn,
+        sourceBranch: String,
+        targetBranch: String,
+        changeSet: Set<String>?,
+        userId: String,
+        event: GitMergeRequestEvent
+    ): Boolean {
+        if (triggerOn.mr == null) {
+            return false
+        }
+
+        val mrRule = triggerOn.mr!!
+        // 1、check sourceBranchIgnore，满足屏蔽条件直接返回不匹配
+        if (BranchMatchUtils.isIgnoreBranchMatch(mrRule.sourceBranchesIgnore, sourceBranch)) {
+            return false
+        }
+
+        // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
+        if (PathMatchUtils.isIgnorePathMatch(mrRule.pathsIgnore, changeSet)) {
+            return false
+        }
+
+        // 3、check userIgnore,满足屏蔽条件直接返回不匹配
+        if (UserMatchUtils.isIgnoreUserMatch(mrRule.usersIgnore, userId)) {
+            return false
+        }
+
+        // include
+        if (BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch) &&
+            PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet) &&
+            UserMatchUtils.isUserMatch(mrRule.users, userId) &&
+            isMrActionMatch(mrRule.action, event)
+        ) {
+            return true
+        }
+        return false
+    }
+
+    private fun isTagPushMatch(
+        triggerOn: TriggerOn,
+        eventTag: String,
+        userId: String
+    ): Boolean {
+        if (triggerOn.tag == null) {
+            return false
+        }
+
+        val tagRule = triggerOn.tag!!
+        // ignore
+        if (BranchMatchUtils.isIgnoreBranchMatch(tagRule.tagsIgnore, eventTag)) {
+            return false
+        }
+
+        if (UserMatchUtils.isIgnoreUserMatch(tagRule.usersIgnore, userId)) {
+            return false
+        }
+
+        // include
+        if (BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag) &&
+            UserMatchUtils.isUserMatch(tagRule.users, userId)
+        ) {
+            logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
+            return true
+        }
+        return false
+    }
+
+    private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
+        return when (context.gitEvent) {
+            is GitPushEvent -> {
+                getCommitChangeSet(context)
+            }
+            is GitMergeRequestEvent -> {
+                context.mrChangeSet
+            }
+            else -> {
+                null
             }
         }
     }
 
-    private fun getBranch(): String {
+    private fun getCommitChangeSet(context: StreamTriggerContext): Set<String> {
+        val resultList = mutableSetOf<String>()
+        val gitEvent = context.gitEvent as GitPushEvent
+        for (i in 1..10) {
+            val result = streamScmService.getCommitChangeFileListRetry(
+                token = null,
+                userId = context.streamSetting.enableUserId,
+                gitProjectId = context.streamSetting.gitProjectId,
+                from = gitEvent.before,
+                to = gitEvent.after,
+                straight = null,
+                page = i,
+                pageSize = 100
+            )
+            resultList.addAll(result.map {
+                if (it.deletedFile) {
+                    it.oldPath
+                } else {
+                    it.newPath
+                }
+            }
+            )
+            if (result.size < 100) {
+                break
+            }
+        }
+        return resultList
+    }
+
+    private fun isMrActionMatch(actionList: List<String>?, event: GitMergeRequestEvent): Boolean {
+        val realActionList = if (actionList.isNullOrEmpty()) {
+            // 缺省时使用默认值
+            listOf(
+                StreamMrEventAction.OPEN.value,
+                StreamMrEventAction.REOPEN.value,
+                StreamMrEventAction.PUSH_UPDATE.value
+            )
+        } else {
+            actionList
+        }
+
+        val mrAction = StreamMrEventAction.getActionValue(event) ?: false
+        realActionList.forEach {
+            if (it == mrAction) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    // 返回源分支和目标分支
+    private fun getBranch(event: GitEvent): Pair<String, String> {
         return when (event) {
-            is GitPushEvent -> event.ref.removePrefix("refs/heads/")
-            is GitTagPushEvent -> event.ref.removePrefix("refs/heads/")
-            is GitMergeRequestEvent -> event.object_attributes.target_branch
-            else -> ""
+            is GitPushEvent -> {
+                Pair(event.ref.removePrefix("refs/heads/"), event.ref.removePrefix("refs/heads/"))
+            }
+            is GitMergeRequestEvent -> {
+                Pair(
+                    event.object_attributes.source_branch.removePrefix("refs/heads/"),
+                    event.object_attributes.target_branch.removePrefix("refs/heads/")
+                )
+            }
+            else -> Pair("", "")
         }
     }
 
-    private fun getTag(): String {
-        return when (event) {
-            is GitPushEvent -> event.ref.removePrefix("refs/tags/")
-            is GitTagPushEvent -> event.ref.removePrefix("refs/tags/")
-            is GitMergeRequestEvent -> event.object_attributes.target_branch
-            else -> ""
-        }
-    }
+    private fun getTag(event: GitTagPushEvent) = event.ref.removePrefix("refs/tags/")
 }
-

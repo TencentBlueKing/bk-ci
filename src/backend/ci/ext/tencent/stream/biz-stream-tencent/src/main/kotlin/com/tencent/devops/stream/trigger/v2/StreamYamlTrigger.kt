@@ -44,7 +44,6 @@ import com.tencent.devops.stream.common.exception.TriggerException.Companion.tri
 import com.tencent.devops.stream.common.exception.YamlBlankException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -59,8 +58,10 @@ import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.pojo.getForkGitProjectId
 import com.tencent.devops.stream.pojo.isFork
-import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
+import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -94,19 +95,12 @@ class StreamYamlTrigger @Autowired constructor(
     }
 
     override fun triggerBuild(
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
+        context: StreamTriggerContext
     ): Boolean {
         val start = LocalDateTime.now().timestampmilli()
 
-        if (originYaml.isNullOrBlank()) {
-            return false
-        }
+        // TODO: 暂时先全部展开，后续函数全替换为上下文参数即可去掉
+        val (event, gitRequestEvent, _, gitProjectPipeline, originYaml, mrChangeSet) = context
 
         val gitProjectInfo = streamScmService.getProjectInfoRetry(
             token = streamGitTokenService.getToken(gitRequestEvent.gitProjectId),
@@ -115,10 +109,7 @@ class StreamYamlTrigger @Autowired constructor(
         )
 
         val (isTrigger, isTiming) = triggerMatcher.isMatch(
-            event = event,
-            gitRequestEvent = gitRequestEvent,
-            pipeline = gitProjectPipeline,
-            originYaml = originYaml,
+            context = context,
             gitProjectInfo = gitProjectInfo
         )
 
@@ -141,12 +132,12 @@ class StreamYamlTrigger @Autowired constructor(
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
-            filePath = filePath,
+            filePath = gitProjectPipeline.filePath,
             pipelineId = gitProjectPipeline.pipelineId,
             pipelineName = gitProjectPipeline.displayName,
             event = event,
-            changeSet = changeSet,
-            forkGitProjectId = forkGitProjectId
+            changeSet = mrChangeSet,
+            forkGitProjectId = gitRequestEvent.getForkGitProjectId()
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -157,7 +148,7 @@ class StreamYamlTrigger @Autowired constructor(
         gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
             yamlObject.name!!
         } else {
-            filePath.removeSuffix(".yml")
+            gitProjectPipeline.filePath.removeSuffix(".yml")
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
