@@ -121,7 +121,11 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(
             ExperienceJumpInfo(
                 scheme,
-                experienceDownloadService.getQrCodeUrl(HashUtil.encodeLongId(experiencePublicRecord.recordId))
+                experienceDownloadService.getExternalDownloadUrl(
+                    "third_app",
+                    experiencePublicRecord.recordId,
+                    false
+                ).url
             )
         )
     }
