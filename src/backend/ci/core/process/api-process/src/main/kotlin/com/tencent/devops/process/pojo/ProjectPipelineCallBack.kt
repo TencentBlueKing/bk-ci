@@ -28,12 +28,18 @@
 package com.tencent.devops.process.pojo
 
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目的流水线回调配置")
 data class ProjectPipelineCallBack(
+    @ApiModelProperty("流水线id", required = false)
     val id: Long? = null,
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("回调url地址", required = false)
     val callBackUrl: String,
+    @ApiModelProperty("事件", required = false)
     val events: String,
+    @ApiModelProperty("密钥", required = false)
     val secretToken: String?
 )

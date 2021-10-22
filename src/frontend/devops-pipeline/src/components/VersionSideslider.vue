@@ -2,7 +2,7 @@
     <div class="version-sideslider-container">
         <div class="pipeline-latest" @click="showVersionSideslider = true">{{latestPipelineVersionInfo}}</div>
         <bk-sideslider
-            width="580"
+            :width="580"
             :title="$t('template.versionList')"
             :is-show.sync="showVersionSideslider"
             :quick-close="true"

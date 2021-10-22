@@ -45,4 +45,13 @@ interface ProjectExtPermissionService {
         roleName: String?,
         checkManager: Boolean
     ): Boolean
+
+    fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean
 }

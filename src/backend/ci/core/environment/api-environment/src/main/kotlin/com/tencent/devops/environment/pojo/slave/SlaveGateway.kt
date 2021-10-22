@@ -27,8 +27,15 @@
 
 package com.tencent.devops.environment.pojo.slave
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("网关模型")
 data class SlaveGateway(
+    @ApiModelProperty("网关地域")
     val zoneName: String,
+    @ApiModelProperty("展示名称")
     val showName: String,
+    @ApiModelProperty("网关地址")
     val gateway: String
 )

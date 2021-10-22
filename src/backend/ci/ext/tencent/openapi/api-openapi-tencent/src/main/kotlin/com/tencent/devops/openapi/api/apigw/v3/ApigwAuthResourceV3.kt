@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwAuthResourceV3 {
     @ApiOperation("添加用户组")
     @POST
-    @Path("/{projectCode}/group/brach")
+    @Path("/{projectId}/group/brach")
     fun batchCreateGroup(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -38,8 +38,8 @@ interface ApigwAuthResourceV3 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("用户组信息", required = true)
         groupInfos: List<GroupDTO>
     ): Result<Boolean>

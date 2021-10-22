@@ -28,30 +28,29 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
-import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
-@Path("/service/jobs/running")
+@Path("/service/quotas/running")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceJobQuotaBusinessResource {
 
     @ApiOperation("上报一个JOB启动")
     @POST
-    @Path("/job/{projectId}/{vmType}/{buildId}/{vmSeqId}")
-    fun addRunningJob(
+    @Path("/job/projects/{projectId}/vmTypes/{vmType}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    fun checkAndAddRunningJob(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -63,63 +62,36 @@ interface ServiceJobQuotaBusinessResource {
         buildId: String,
         @ApiParam(value = "vmSeqId", required = true)
         @PathParam("vmSeqId")
-        vmSeqId: String
+        vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int,
+        @ApiParam(value = "containerId", required = true)
+        @QueryParam("containerId")
+        containerId: String,
+        @ApiParam(value = "containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?
     ): Result<Boolean>
 
     @ApiOperation("上报一个JOB结束")
     @DELETE
-    @Path("/job/{projectId}/{buildId}/{vmSeqId}")
+    @Path("/job/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun removeRunningJob(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam(value = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
         @ApiParam(value = "vmSeqId", required = false)
         @PathParam("vmSeqId")
-        vmSeqId: String?
+        vmSeqId: String,
+        @ApiParam(value = "executeCount", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int
     ): Result<Boolean>
-
-    @ApiOperation("上报一个Agent启动")
-    @POST
-    @Path("/agent/{projectId}/{buildId}/{vmSeqId}")
-    fun addRunningAgent(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
-        vmSeqId: String
-    ): Result<Boolean>
-
-    @ApiOperation("上报一个Agent结束")
-    @DELETE
-    @Path("/agent/{projectId}/{buildId}/{vmSeqId}")
-    fun removeRunningAgent(
-        @ApiParam(value = "projectId", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "buildId", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam(value = "vmSeqId", required = true)
-        @PathParam("vmSeqId")
-        vmSeqId: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取项目下正在执行的JOB配额状态")
-    @GET
-    @Path("/count/{projectId}/{vmType}")
-    fun getRunningJobCount(
-        @ApiParam(value = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "构建机类型", required = true)
-        @PathParam("vmType")
-        vmType: JobQuotaVmType
-    ): Result<JobQuotaStatus>
 }

@@ -405,6 +405,7 @@
                     confirmFn: async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
+                                projectId: this.projectId,
                                 groupId: this.tagGroupList[groupIndex].id
                             }).then(res => {
                                 theme = res ? 'success' : 'error'
@@ -436,6 +437,7 @@
                     title: '确认删除该标签?',
                     confirmFn: () => {
                         this.REQUEST('deleteTag', {
+                            projectId: this.projectId,
                             labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
                         })
                     }
@@ -552,7 +554,10 @@
                         }
                         this.isAddTagEnter = true
                     }
-                    this.REQUEST(path, params, () => {
+                    this.REQUEST(path, {
+                        ...params,
+                        projectId: this.projectId
+                    }, () => {
                         this.reset(groupIndex, tagIndex)
                     })
                     return false

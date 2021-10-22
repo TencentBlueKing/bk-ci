@@ -27,9 +27,17 @@
 
 package com.tencent.devops.process.pojo.template
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("模板实例模型")
 data class TemplateInstances(
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("模型id", required = false)
     val templateId: String,
+    @ApiModelProperty("实例列表", required = false)
     val instances: List<TemplatePipeline>,
+    @ApiModelProperty("最新版本", required = false)
     val latestVersion: TemplateVersion
 )

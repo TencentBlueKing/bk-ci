@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -39,14 +40,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class TagRule(
     val tags: List<String>? = null,
 
+    @ApiModelProperty(name = "tags-ignore")
     @JsonProperty("tags-ignore")
     val tagsIgnore: List<String>? = null,
 
+    @ApiModelProperty(name = "from-branches")
     @JsonProperty("from-branches")
     val fromBranches: List<String>? = null,
 
     val users: List<String>? = null,
 
+    @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
 )

@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.plugin.api.BuildNodeResource
 import com.tencent.devops.plugin.service.JobService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,5 +47,16 @@ class BuildNodeResourceImpl @Autowired constructor(
 ) : BuildNodeResource {
     override fun listRawByHashIds(projectId: String, pipelineId: String, buildId: String, nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
         return jobService.listRawNodesByHashIds(projectId, buildId, nodeHashIds)
+    }
+
+    override fun listUsableServerNodes(projectId: String, buildId: String): Result<List<NodeWithPermission>> {
+        return jobService.listUsableServerNodes(projectId, buildId)
+    }
+
+    override fun listUsableServerNodesByLastUpdateUser(
+        projectId: String,
+        pipelineId: String
+    ): Result<List<NodeWithPermission>> {
+        return jobService.listUsableServerNodesByLastUpdateUser(projectId, pipelineId)
     }
 }

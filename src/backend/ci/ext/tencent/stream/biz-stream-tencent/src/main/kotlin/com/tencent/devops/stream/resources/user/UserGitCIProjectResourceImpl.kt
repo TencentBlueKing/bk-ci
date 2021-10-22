@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIProjectResource
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
@@ -59,5 +60,9 @@ class UserGitCIProjectResourceImpl @Autowired constructor(
             orderBy = orderBy,
             sort = sort
         )
+    }
+
+    override fun getProjectsHistory(userId: String, size: Long?): Result<List<ProjectCIInfo>> {
+        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
     }
 }

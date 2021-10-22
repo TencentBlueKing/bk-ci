@@ -5,7 +5,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -45,6 +49,39 @@ class StreamTriggerMessageUtils @Autowired constructor(
             }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+            }
+        }
+        return messageTitle
+    }
+
+    // TODO: 更新定时触发时这里也要更新
+    fun getEventMessageTitle(
+        event: GitEvent?,
+        gitProjectId: Long,
+        objectKind: String,
+        branch: String?,
+        userId: String?
+    ): String {
+        val messageTitle = if (event != null) {
+            when (event) {
+                is GitMergeRequestEvent -> {
+                    getEventMessageTitle(GitRequestEventHandle.createMergeEvent(event, ""), gitProjectId)
+                }
+                is GitTagPushEvent -> {
+                    getEventMessageTitle(GitRequestEventHandle.createTagPushEvent(event, ""), gitProjectId)
+                }
+                is GitPushEvent -> {
+                    getEventMessageTitle(GitRequestEventHandle.createPushEvent(event, ""), gitProjectId)
+                }
+                else -> {
+                    ""
+                }
+            }
+        } else {
+            if (objectKind == TGitObjectKind.MANUAL.value) {
+                "[$branch] Manual Triggered by $userId"
+            } else {
+                ""
             }
         }
         return messageTitle

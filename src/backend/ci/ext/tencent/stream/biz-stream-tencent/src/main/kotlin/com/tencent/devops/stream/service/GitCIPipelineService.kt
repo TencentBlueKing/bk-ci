@@ -188,4 +188,23 @@ class GitCIPipelineService @Autowired constructor(
             enabled = enabled
         ) == 1
     }
+
+    fun getPipelineByFile(
+        gitProjectId: Long,
+        filePath: String
+    ): GitProjectPipeline? {
+        val record = pipelineResourceDao.getPipelineByFile(dslContext, gitProjectId, filePath) ?: return null
+        with(record) {
+            return GitProjectPipeline(
+                gitProjectId = gitProjectId,
+                displayName = displayName,
+                pipelineId = pipelineId,
+                filePath = filePath,
+                enabled = enabled,
+                creator = creator,
+                latestBuildInfo = null,
+                latestBuildBranch = null
+            )
+        }
+    }
 }

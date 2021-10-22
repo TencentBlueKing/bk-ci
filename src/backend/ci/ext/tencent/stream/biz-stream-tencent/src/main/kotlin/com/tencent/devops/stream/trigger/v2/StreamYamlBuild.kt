@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
@@ -60,9 +61,12 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,8 +87,10 @@ class StreamYamlBuild @Autowired constructor(
     triggerMessageUtil: StreamTriggerMessageUtils,
     private val dslContext: DSLContext,
     private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val pipelineService: GitCIPipelineService,
     private val redisOperation: RedisOperation,
-    private val modelCreate: ModelCreate
+    private val modelCreate: ModelCreate,
+    private val streamStorageBean: StreamStorageBean
 ) : StreamYamlBaseBuild<ScriptBuildYaml>(
     client, kafkaClient, dslContext, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitCIEventSaveService, websocketService, streamPipelineBranchService,
@@ -107,18 +113,25 @@ class StreamYamlBuild @Autowired constructor(
         normalizedYaml: String,
         gitBuildId: Long?
     ): BuildId? {
+        val start = LocalDateTime.now().timestampmilli()
+        // pipelineId可能为blank所以使用filePath为key
         val triggerLock = GitCITriggerLock(
             redisOperation = redisOperation,
             gitProjectId = event.gitProjectId,
-            pipelineId = pipeline.pipelineId
+            filePath = pipeline.filePath
         )
         try {
             triggerLock.lock()
             val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
+            // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
+            val realPipeline = pipelineService.getPipelineByFile(
+                event.gitProjectId,
+                pipeline.filePath
+            ) ?: pipeline
             // 优先创建流水线为了绑定红线
-            if (pipeline.pipelineId.isBlank()) {
+            if (realPipeline.pipelineId.isBlank()) {
                 savePipeline(
-                    pipeline = pipeline,
+                    pipeline = realPipeline,
                     event = event,
                     gitCIBasicSetting = gitBasicSetting,
                     model = creatTriggerModel(gitBasicSetting)
@@ -127,7 +140,7 @@ class StreamYamlBuild @Autowired constructor(
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             return if (gitBuildId != null) {
                 startBuildPipeline(
-                    pipeline = pipeline,
+                    pipeline = realPipeline,
                     event = event,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
@@ -135,7 +148,7 @@ class StreamYamlBuild @Autowired constructor(
                 )
             } else {
                 savePipelineModel(
-                    pipeline = pipeline,
+                    pipeline = realPipeline,
                     event = event,
                     yaml = yaml,
                     gitBasicSetting = gitBasicSetting
@@ -181,6 +194,7 @@ class StreamYamlBuild @Autowired constructor(
                 )
             )
         } finally {
+            streamStorageBean.buildTime(LocalDateTime.now().timestampmilli() - start)
             triggerLock.unlock()
         }
     }

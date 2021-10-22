@@ -66,11 +66,15 @@ dependencies {
 //    api("org.apache.poi:poi-ooxml"
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("com.github.ben-manes.caffeine:caffeine")
-    api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
+    api(group = "javax.websocket", name = "javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("com.vmware:vijava")
     api("org.json:json")
-    api(group = "org.apache.ant", name = "ant", version = "1.10.5")
+    api(group = "org.apache.ant", name = "ant")
+
+    // jsonschema
+    api("com.networknt:json-schema-validator")
+
     testImplementation(project(":core:common:common-test"))
 }

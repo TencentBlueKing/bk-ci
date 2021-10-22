@@ -71,6 +71,7 @@ class StreamScmService @Autowired constructor(
     }
 
     // 获取工蜂超级token
+    // 注意，应该优先从 stream gitToken获取token 如非必要，不应该调用这个
     @Throws(ErrorCodeException::class)
     fun getToken(
         gitProjectId: String
@@ -297,6 +298,27 @@ class StreamScmService @Autowired constructor(
             pageSize = pageSize ?: 20,
             search = search
         ).data
+    }
+
+    fun getProjectMembersAllRetry(
+        token: String,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GitMember>? {
+        return retryFun(
+            log = "getProjectMembersRetry: [$gitProjectId|$page|$pageSize|$search]",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_PROJECT_MEMBERS_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                    gitProjectId = gitProjectId,
+                    page = page ?: 1,
+                    pageSize = pageSize ?: 20,
+                    search = search
+                ).data
+            }
+        )
     }
 
     fun getProjectBranchesRetry(

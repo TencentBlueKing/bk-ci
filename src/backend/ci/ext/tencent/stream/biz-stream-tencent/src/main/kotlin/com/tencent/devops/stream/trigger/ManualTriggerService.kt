@@ -29,22 +29,26 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.v1.YamlBuild
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
@@ -52,6 +56,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Value
 
 @Service
 class ManualTriggerService @Autowired constructor(
@@ -68,11 +73,15 @@ class ManualTriggerService @Autowired constructor(
     private val streamYamlService: StreamYamlService,
     private val triggerExceptionService: TriggerExceptionService
 ) {
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
     companion object {
         private val logger = LoggerFactory.getLogger(ManualTriggerService::class.java)
     }
 
-    fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
+    fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
         val gitRequestEvent = GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
@@ -137,7 +146,11 @@ class ManualTriggerService @Autowired constructor(
                     filePath = existsPipeline.filePath,
                     pipelineId = existsPipeline.pipelineId,
                     pipelineName = existsPipeline.displayName
-                ) ?: return false
+                ) ?: throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = TriggerReason.CI_YAML_INVALID.name +
+                        "(${TriggerReason.CI_YAML_INVALID.detail.format("prepare error")})"
+                )
 
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
@@ -154,22 +167,56 @@ class ManualTriggerService @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 version = null
             )
-            yamlBuild.gitStartBuild(
+            val result = yamlBuild.gitStartBuild(
                 pipeline = buildPipeline,
                 event = gitRequestEvent,
                 yaml = yamlObject,
                 gitBuildId = gitBuildId
+            ) ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = TriggerReason.PIPELINE_RUN_ERROR.name +
+                    "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
             )
-            return true
+            return TriggerBuildResult(
+                projectId = triggerBuildReq.gitProjectId,
+                branch = triggerBuildReq.branch,
+                customCommitMsg = triggerBuildReq.customCommitMsg,
+                description = triggerBuildReq.description,
+                commitId = triggerBuildReq.commitId,
+                buildId = result.id,
+                buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    gitProjectId = buildPipeline.gitProjectId,
+                    pipelineId = pipelineId,
+                    buildId = result.id
+                )
+            )
         } else {
-            handleTrigger(
+            val result = handleTrigger(
                 userId = userId,
                 gitRequestEvent = gitRequestEvent,
                 originYaml = originYaml,
                 buildPipeline = buildPipeline,
                 triggerBuildReq = triggerBuildReq
+            ) ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = TriggerReason.PIPELINE_RUN_ERROR.name +
+                    "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
             )
-            return true
+            return TriggerBuildResult(
+                projectId = triggerBuildReq.gitProjectId,
+                branch = triggerBuildReq.branch,
+                customCommitMsg = triggerBuildReq.customCommitMsg,
+                description = triggerBuildReq.description,
+                commitId = triggerBuildReq.commitId,
+                buildId = result.id,
+                buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    gitProjectId = buildPipeline.gitProjectId,
+                    pipelineId = pipelineId,
+                    buildId = result.id
+                )
+            )
         }
     }
 
@@ -179,10 +226,12 @@ class ManualTriggerService @Autowired constructor(
         originYaml: String,
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq
-    ) {
+    ): BuildId? {
+        var buildId: BuildId? = null
         triggerExceptionService.handleManualTrigger {
-            trigger(userId, gitRequestEvent, originYaml, buildPipeline, triggerBuildReq)
+            buildId = trigger(userId, gitRequestEvent, originYaml, buildPipeline, triggerBuildReq)
         }
+        return buildId
     }
 
     private fun trigger(
@@ -191,7 +240,7 @@ class ManualTriggerService @Autowired constructor(
         originYaml: String,
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq
-    ) {
+    ): BuildId? {
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
             gitRequestEvent = gitRequestEvent,
             isMr = false,
@@ -220,8 +269,8 @@ class ManualTriggerService @Autowired constructor(
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        streamBasicSettingService.refreshSetting(gitRequestEvent.gitProjectId)
-        yamlBuildV2.gitStartBuild(
+        streamBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
+        return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,
             yaml = objects.normalYaml,
