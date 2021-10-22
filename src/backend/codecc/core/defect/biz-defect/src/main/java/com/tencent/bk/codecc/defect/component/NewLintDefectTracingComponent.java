@@ -238,7 +238,7 @@ public class NewLintDefectTracingComponent extends AbstractDefectTracingComponen
 
             log.info("save defect trace result: taskId:{}, toolName:{}, buildId:{}, defectCount:{}", taskId, toolName,
                     buildEntity.getBuildId(), upsertDefectList.size());
-            lintDefectV2Repository.save(upsertDefectList);
+            lintDefectV2Repository.saveAll(upsertDefectList);
         }
         log.info("end saveDefectFile, cost:{}, taskId:{}, toolName:{}, buildId:{}",
                 System.currentTimeMillis() - beginTime, taskId, toolName, buildEntity.getBuildId());

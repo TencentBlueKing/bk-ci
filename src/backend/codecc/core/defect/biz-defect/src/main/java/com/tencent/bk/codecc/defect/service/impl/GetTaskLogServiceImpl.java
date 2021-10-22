@@ -67,7 +67,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -128,7 +128,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         int pageNum = queryTaskLogVO.getPage() - 1;
         pageNum = Math.max(pageNum, 0);
         int pageSize = queryTaskLogVO.getPageSize() <= 0 ? 10 : queryTaskLogVO.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize);
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
 
         // 查询分析记录
         List<TaskLogEntity> taskLogEntities = taskLogRepository.findByTaskIdAndToolName(queryTaskLogVO.getTaskId(), queryTaskLogVO.getToolName());

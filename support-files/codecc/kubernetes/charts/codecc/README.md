@@ -173,11 +173,11 @@ $ helm uninstall codecc
 
 
 ### 公共配置项
-
+***配置是需要加入前缀config.  如："config.BK_CODECC_CONSUL_DISCOVERY_TAG"
 |参数|描述|默认值 |
 |---|---|---|
 |`BK_CODECC_CONSUL_DISCOVERY_TAG`|服务发现时的标签|codecc|
-|`BK_CI_PUBLIC_URL`|CI的公开地址|devops.example.com|
+|`bkCiPublicUrl`|CI的公开地址|devops.example.com|
 |`BK_CI_PRIVATE_URL`|CI的集群内地址|devops.example.com|
 |`BK_CODECC_PUBLIC_URL`|codecc为集群外访问提供的URL|codecc.example.com|
 |`BK_CODECC_PRIVATE_URL`|codecc为集群内访问提供的URL|codecc.example.com|
@@ -196,14 +196,17 @@ $ helm uninstall codecc
 |`BK_CODECC_PIPELINE_IMAGE_TYPE`||THIRD|
 |`BK_CODECC_PIPELINE_SCM_IS_OLD_SVN`||true|
 |`BK_CODECC_PIPELINE_SCM_IS_OLD_GITHUB`||true|
-|`BK_CODECC_TASK_ANALYSIS_MAX_HOUR`|7|
+|`BK_CODECC_TASK_ANALYSIS_MAX_HOUR`|最大的分析时长|7|
+
+
 
 
 ### task服务配置
 
 |参数|描述|默认值 |
 |---|---|---|
-| `task.enabled`       | 是否部署task     | `true`     
+| `task.enabled`       | 是否部署task     | `true`
+
 
 ### defect服务配置
 

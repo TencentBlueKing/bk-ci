@@ -22,10 +22,14 @@ data:
         mongodb:
           uri: {{ include "codecc.defect.mongodbUri" . }}
     devopsGateway:
-      idchost: {{ .Values.config.BK_CI_PUBLIC_URL }}
+      idchost: {{ .Values.config.bkCiPublicUrl }}
     codecc:
       gateway:
-        host: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+        host: {{ .Values.config.bkCodeccPublicUrl }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-asyncreport
     {{- if keys $.Values.asyncreport.config }}
       {{- toYaml .Values.asyncreport.config | nindent 4 }}
     {{- end}}

@@ -64,39 +64,39 @@ spec:
             - name: BK_CODECC_SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}-
             - name: BK_CODECC_HOST
-              value: http://{{ .Values.config.BK_CODECC_PUBLIC_URL }}
+              value: http://{{ .Values.config.bkCodeccPublicUrl }}
             - name: BK_CI_PUBLIC_URL
-              value: http://{{ .Values.config.BK_CI_PUBLIC_URL }}
+              value: http://{{ .Values.config.bkCiPublicUrl }}
             - name: BK_CODECC_GATEWAY_DNS_ADDR
               value: {{ .Values.gateway.dnsServer }}
             - name: BK_CODECC_CONSUL_IP
               value: "127.0.0.1"
             - name: BK_CODECC_CONSUL_DOMAIN
               value: "bkdevops"
-            - name: BK_CODECC_CONSUL_DISCOVERY_TAG
+            - name: bkCodeccConsulDiscoveryTag
               value: "dev"
             - name: BK_CI_ENV
-              value: {{ .Values.config.BK_CI_ENV }}
+              value: {{ .Values.config.bkCiEnv }}
             - name: BK_HTTP_SCHEMA
-              value: {{ .Values.config.BK_HTTP_SCHEMA }}
+              value: {{ .Values.config.bkHttpSchema }}
             - name: BK_PAAS_FQDN
-              value: {{ .Values.config.BK_PAAS_FQDN }}
+              value: {{ .Values.config.bkPaasFqdn }}
             - name: BK_CODECC_PAAS_LOGIN_URL
-              value: {{ .Values.config.BK_CODECC_PAAS_LOGIN_URL }}
+              value: {{ .Values.config.bkCodeccPaasLoginUrl }}
             - name: BK_CODECC_GATEWAY_CORS_ALLOW_LIST
-              value: {{ .Values.config.BK_CODECC_GATEWAY_CORS_ALLOW_LIST }}
+              value: {{ .Values.config.bkCodeccGatewayCorsAllowList }}
             - name: BK_CI_IAM_ENV
-              value: {{ .Values.config.BK_CI_IAM_ENV }}
+              value: {{ .Values.config.bkCiIamEnv }}
             - name: BK_SSM_HOST
-              value: {{ .Values.config.BK_SSM_HOST }}
+              value: {{ .Values.config.bkSsmHost }}
             - name: BK_CI_APP_CODE
-              value: {{ .Values.config.BK_CI_APP_CODE }}
+              value: {{ .Values.config.bkCiAppCode }}
             - name: BK_CI_APP_TOKEN
-              value: {{ .Values.config.BK_CI_APP_TOKEN }}
+              value: {{ .Values.config.bkCiAppToken }}
             - name: BK_CODECC_AUTH_PROVIDER
-              value: {{ .Values.config.BK_CI_AUTH_PROVIDER }}
+              value: {{ .Values.config.bkCiAuthProvider }}
             - name: BK_CODECC_GATEWAY_REGION_NAME
-              value: {{ .Values.config.BK_CODECC_GATEWAY_REGION_NAME }}
+              value: {{ .Values.config.bkCodeccGatewayRegionName }}
           ports:
             - name: http
               containerPort: 80

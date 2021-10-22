@@ -25,6 +25,7 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.ToolIntegratedStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -162,8 +163,8 @@ public class CheckerDetailDao {
 
         if (CollectionUtils.isNotEmpty(selectedCheckerKey)) {
             //添加字段
-            AddFieldOperation addField = new AddFieldOperation(new BasicDBObject("checkerSetSelected",
-                    new BasicDBObject("$in", new Object[]{"$checker_key", selectedCheckerKey})));
+            AddFieldOperation addField = new AddFieldOperation(new Document("checkerSetSelected",
+                    new Document("$in", new Object[]{"$checker_key", selectedCheckerKey})));
 
             if (null != pageNum || null != pageSize || null != sortType || null != sortField) {
                 Integer queryPageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1;
@@ -249,9 +250,9 @@ public class CheckerDetailDao {
             criteria.orOperator(orCriteriaList.toArray(new Criteria[0]));
         }
 
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("checker_version", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         query.addCriteria(criteria);
         List<CheckerDetailEntity> checkerList = mongoTemplate.find(query, CheckerDetailEntity.class);

@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ include "common.names.fullname" . }}-quartz
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: quartz
+    app.kubernetes.io/name: quartz
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -19,5 +19,6 @@ spec:
       targetPort: http
       protocol: TCP
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: quartz
+    app.kubernetes.io/name: quartz
+    app.kubernetes.io/component: microservice
 {{- end }}

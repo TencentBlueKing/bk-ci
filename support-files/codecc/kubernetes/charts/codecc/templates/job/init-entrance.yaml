@@ -28,8 +28,8 @@ spec:
           command: ['/bin/sh','-c','/data/workspace/init-entrance.sh']
           env:
             - name: BK_CODECC_URL
-              value: http://{{ .Values.config.BK_CODECC_PUBLIC_URL }}/codecc
+              value: http://{{ .Values.config.bkCodeccPublicUrl }}/codecc
             - name: BK_CI_PROJECT_INNER_URL
-              value: {{ .Values.config.BK_CI_PROJECT_INNER_URL }}
+              value: {{ .Values.config.bkCiProjectInnerUrl }}
       restartPolicy: OnFailure
 {{- end }}

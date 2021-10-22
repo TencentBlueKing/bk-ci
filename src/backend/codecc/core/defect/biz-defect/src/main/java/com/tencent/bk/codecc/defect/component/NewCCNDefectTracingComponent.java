@@ -212,7 +212,7 @@ public class NewCCNDefectTracingComponent extends AbstractDefectTracingComponent
 
             log.info("save defect trace result: taskId:{}, toolName:{}, buildId:{}, defectCount:{}", taskId, toolName,
                     buildEntity.getBuildId(), upsertDefectList.size());
-            ccnDefectRepository.save(upsertDefectList);
+            ccnDefectRepository.saveAll(upsertDefectList);
         }
         log.info("end saveDefectFile, cost:{}, taskId:{}, toolName:{}, buildId:{}",
                 System.currentTimeMillis() - beginTime, taskId, toolName, buildEntity.getBuildId());

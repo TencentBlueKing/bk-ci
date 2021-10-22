@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
 import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.StandardClusterStatisticModel;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -49,11 +50,11 @@ public class StandardClusterStatisticDao {
      */
     public List<StandardClusterStatisticModel> batchFindByTaskIdAndBuildId(Collection<Long> taskIds,
             Collection<String> buildIds) {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("build_id", true);
         fieldsObj.put("average_thousand_defect", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         query.addCriteria(Criteria.where("task_id").in(taskIds).and("build_id").in(buildIds));
 

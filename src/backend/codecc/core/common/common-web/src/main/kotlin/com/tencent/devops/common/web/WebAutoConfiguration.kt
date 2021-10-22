@@ -26,10 +26,8 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.util.JsonUtil
-import feign.RequestInterceptor
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -43,8 +41,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import org.springframework.core.env.Environment
 
 @Configuration
 @PropertySource("classpath:/common-web.properties")
@@ -53,6 +50,10 @@ import org.springframework.web.context.request.ServletRequestAttributes
 @AutoConfigureBefore(JerseyAutoConfiguration::class)
 @EnableConfigurationProperties(SwaggerProperties::class)
 class WebAutoConfiguration @Autowired constructor(private val profile: com.tencent.devops.common.service.Profile) {
+
+    companion object{
+        private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
+    }
 
     @Bean
     @Profile("prod")
@@ -66,53 +67,10 @@ class WebAutoConfiguration @Autowired constructor(private val profile: com.tence
     @Primary
     fun objectMapper() = JsonUtil.getObjectMapper()
 
-
-    /*@Bean("jasyptStringEncryptor")
-    @Primary
-    fun stringEncryptor(@Value("\${enc.key:J1wp7pgZ3jfj}") key: String) = DefaultEncryptor(key)*/
-
-//    @Bean("jasyptStringEncryptor")
-//    @Primary
-//    fun stringEncryptor() = DefaultEncryptor(jasyptPasswd)
-
     @Bean
     fun versionInfoResource() = VersionInfoResource()
 
     @Bean
-    fun jmxAutoConfiguration() = JmxAutoConfiguration()
+    fun jmxAutoConfiguration(@Autowired environment : Environment) = JmxAutoConfiguration(environment)
 
-    private val languageHeaderName = "Accept-Language"
-    /**
-     * feign调用拦截器
-     */
-    @Bean(name = ["normalRequestInterceptor"])
-    fun requestInterceptor(): RequestInterceptor {
-        return RequestInterceptor { requestTemplate ->
-            val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-                    ?: return@RequestInterceptor
-            val request = attributes.request
-            val languageHeaderValue = request.getHeader(languageHeaderName)
-            if (!languageHeaderValue.isNullOrBlank())
-                requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
-        }
-    }
-
-
-    @Bean(name = ["devopsRequestInterceptor"])
-    fun bsRequestInterceptor(): RequestInterceptor {
-        return RequestInterceptor { requestTemplate ->
-            val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-                    ?: return@RequestInterceptor
-            val request = attributes.request
-            val bkTicket = request.getHeader(AUTH_HEADER_DEVOPS_BK_TICKET)
-            val userName = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
-            if(!bkTicket.isNullOrBlank()){
-                requestTemplate.header(AUTH_HEADER_DEVOPS_BK_TICKET, bkTicket)
-            }
-            if(!userName.isNullOrBlank()){
-                requestTemplate.header(AUTH_HEADER_DEVOPS_USER_ID, userName)
-            }
-
-        }
-    }
 }

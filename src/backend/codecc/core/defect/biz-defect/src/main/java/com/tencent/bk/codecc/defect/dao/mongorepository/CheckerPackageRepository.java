@@ -55,6 +55,6 @@ public interface CheckerPackageRepository extends MongoRepository<CheckerPackage
      * @param pkgKind
      * @return
      */
-    CheckerPackageEntity findByToolNameAndPkgId(String toolName, String pkgKind);
+    CheckerPackageEntity findFirstByToolNameAndPkgId(String toolName, String pkgKind);
 
 }

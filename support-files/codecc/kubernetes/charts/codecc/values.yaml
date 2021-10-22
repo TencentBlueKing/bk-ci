@@ -30,6 +30,23 @@ serviceAccount:
   ##
   name:
 
+
+
+# metrics采集配置
+bkMonitorConfig:
+  enabled: false
+
+
+## 日志采集配置
+bkLogConfig:
+  enabled: false
+  service:
+    dataId: 1
+  gatewayAccess:
+    dataId: 1
+  gatewayError:
+    dataId: 1
+
 ## ingress配置
 ingress:
   enabled: true
@@ -151,7 +168,7 @@ init:
     image:
       registry: mirrors.tencent.com
       repository: bkce/codecc/codecc-mongo-init
-      tag: 1.1.6
+      tag: 1.1.40
       pullPolicy: IfNotPresent
       pullSecrets: []
   entrance:
@@ -159,57 +176,92 @@ init:
     image:
       registry: mirrors.tencent.com
       repository: bkce/codecc/codecc-entrance-init
-      tag: 1.1.6
+      tag: 1.1.40
       pullPolicy: IfNotPresent
       pullSecrets: []    
-
+  storage:
+    enabled: true
+    image:
+      registry: mirrors.tencent.com
+      repository: bkce/codecc/codecc-storage-init
+      tag: 1.1.40
+      pullPolicy: IfNotPresent
+      pullSecrets: [] 
 common:
   ## 部署区域，可不填
   region:
-  ## jvm启动选项, 如-Xms1024M -Xmx1024M
-  jvmOption: ""
   ## SpringBoot active profile
   springProfile: dev
   ## pod volume 挂载路径
   mountPath: /data/storage
 
 config:
-  BK_CODECC_CONSUL_DISCOVERY_TAG: codecc
-  BK_CI_PUBLIC_URL: devops.paasv3-test.woa.com
-  BK_CI_PRIVATE_URL: devops.paasv3-test.woa.com
-  BK_CODECC_PUBLIC_URL: codecc.paasv3-test.woa.com
-  BK_CODECC_PRIVATE_URL: codecc.paasv3-test.woa.com
-  BK_CI_PROJECT_INNER_URL: devops.paasv3-test.woa.com/project
-  BK_CI_AUTH_PROVIDER: sample
-  BK_IAM_PRIVATE_URL: ""
-  BK_CODECC_APP_CODE: bk_codecc
-  BK_CODECC_APP_TOKEN: ""
-  BK_PAAS_PRIVATE_URL: pass.example.com
-  BK_CI_IAM_CALLBACK_USER: ""
-  BK_CODECC_PIPELINE_IMAGE_NAME: bkci/ci
-  BK_CODECC_PIPELINE_BUILD_TYPE: ""
-  BK_CODECC_PIPELINE_IMAGE_TAG: latest
-  BK_CODECC_TASK_ENCRYPTOR_KEY: yOB62XpuhiyWM
-  BK_CODECC_PIPELINE_ATOM_CODE: CodeCCCheckAtom
-  BK_CODECC_PIPELINE_ATOM_VERSION: 1.*
-  BK_CODECC_PIPELINE_IMAGE_TYPE: THIRD
-  BK_CODECC_PIPELINE_SCM_IS_OLD_SVN: true
-  BK_CODECC_PIPELINE_SCM_IS_OLD_GITHUB: true
-  BK_CODECC_TASK_ANALYSIS_MAX_HOUR: 7
-  BK_CI_ENV: dev
-  BK_HTTP_SCHEMA: http
-  BK_PAAS_FQDN: ""
-  BK_PAAS_HTTPS_PORT: 80
-  BK_CODECC_PAAS_LOGIN_URL: ""
-  BK_CODECC_GATEWAY_CORS_ALLOW_LIST: ""
-  BK_CI_IAM_ENV: staging
-  BK_SSM_HOST: ""
-  BK_SSM_PORT: 80
-  BK_CI_GATEWAY_SSM_TOKEN_URL: /oauth/token
-  BK_CI_APP_CODE: workbench
-  BK_CI_APP_TOKEN: ""
-  BK_CODECC_GATEWAY_REGION_NAME: ""
-  BK_CODECC_FILE_DATA_PATH: /data/woskspace
+  bkCodeccConsulDiscoveryTag: codecc
+  bkCiPublicUrl: devops.paasv3-test.woa.com
+  bkCiPublicSchema: http
+  bkCiPrivateUrl: devops.paasv3-test.woa.com
+  bkCodeccPublicUrl: codecc.paasv3-test.woa.com
+  bkCodeccPrivateUrl: codecc.paasv3-test.woa.com
+  bkCiProjectInnerUrl: devops.paasv3-test.woa.com/project
+  ## 权限校验相关参数 sample 跳过权限
+  bkCiAuthProvider: sample
+  bkIamPrivateUrl: ""
+  bkCodeccAppCode: bk_codecc
+  bkCodeccAppToken: ""
+  bkPaasPrivateUrl: pass.example.com
+  bkCiIamCallbackUser: ""
+  ## 公共构建环境相关参数 - 用于创建流水线
+  bkCodeccPipelineImageName: bkci/ci
+  bkCodeccPipelineBuildType: KUBERNETES
+  bkCodeccPipelineImageTag: latest
+  bkCodeccTaskEncryptorKey: abcde
+  bkCodeccPipelineAtomCode: CodeCCCheckAtom
+  bkCodeccPipelineAtomVersion: 1.*
+  bkGitPipelineAtomCode: git
+  bkGitPipelineAtomVersion: 1.*
+  bkGithubPipelineAtomCode: PullFromGithub
+  bkGithubPipelineAtomVersion: 1.*
+  bkSvnPipelineAtomCode: svnCodeRepo
+  bkSvnPipelineAtomVersion: 1.*
+  bkCodeccPipelineImageType: THIRD
+  bkCodeccPipelineScmIsOldSvn: true
+  bkCodeccPipelineScmIsOldGithub: true
+  ## CodeCC 任务分析的超时时间
+  bkCodeccTaskAnalysisMaxHour: 7
+  ## 网关相关参数
+  bkCiEnv: dev
+  bkHttpSchema: http
+  bkPaasFqdn: ""
+  bkPaasHttpsPort: 80
+  bkCodeccPaasLoginUrl: ""
+  bkCodeccGatewayCorsAllowList: ""
+  bkCiIamEnv: staging
+  bkSsmHost: ""
+  bkSsmPort: 80
+  bkCiGatewaySsmTokenUrl: /oauth/token
+  bkCiAppCode: workbench
+  bkCiAppToken: ""
+  bkCodeccGatewayRegionName: ""
+  ## 存储先关参数
+  bkCodeccFileDataPath: /data/workspace/nfs
+  bkCodeccNfsServer: ""
+  bkCodeccNfsServerPath: /data/workspace/nfs
+  bkCodeccStorageType: nfs
+  bkCodeccStorageExpired: 0
+  bkCodeccStorageBkrepoAdminUsername: bkrepo_admin
+  bkCodeccStorageBkrepoAdminPassword: password
+  bkCodeccStorageBkrepoUsername: codecc
+  bkCodeccStorageBkrepoPassword: codecc
+  bkCodeccStorageBkrepoProject: codecc
+  bkCodeccStorageBkrepoRepo: repo
+  bkCodeccStorageBkrepoHost: ""
+  bkCodeccStorageBkrepoSchema: http
+  bkCodeccLogCollectEnable: false
+  bkCodeccServiceLogDataId: ""
+  bkCodeccGatewayLogDataId: ""
+  bkCodeccMonitorEnable: false
+
+
 
 
 ## 网关配置
@@ -231,14 +283,18 @@ gateway:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-gateway
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
   hostAliases: []
   resources:
-    limits: {}
-    requests: {}
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -261,17 +317,25 @@ gateway:
 
 task:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-task
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -297,17 +361,25 @@ task:
 
 defect:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-defect
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -334,17 +406,25 @@ defect:
 
 report:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-report
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -371,17 +451,25 @@ report:
 
 asyncreport:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-asyncreport
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -407,17 +495,25 @@ asyncreport:
 
 codeccjob:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-codeccjob
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -443,17 +539,25 @@ codeccjob:
 
 quartz:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-quartz
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -480,17 +584,25 @@ quartz:
 
 schedule:
   enabled: true
+  env:
+    JVM_XMS: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    JVM_XMX: 1024m  
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-schedule
-    tag: 1.1.6
+    tag: 1.1.40
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
   hostAliases: [ ]
   resources:
-    limits: { }
-    requests: { }
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
   containerSecurityContext:
     enabled: false
     runAsUser: 1001

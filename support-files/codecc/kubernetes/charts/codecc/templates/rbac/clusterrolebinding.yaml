@@ -16,6 +16,6 @@ roleRef:
   name: {{ include "common.names.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    namespace: default
+    namespace: {{ .Release.Namespace }}
     name: {{ include "codecc.serviceAccountName" . }}
-{{- end -}}
+{{- end -}} 

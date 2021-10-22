@@ -71,7 +71,7 @@ public class CLOCDefectCommitConsumer extends AbstractDefectCommitConsumer {
 
         // 判断本次是增量还是全量扫描
         ToolBuildStackEntity toolBuildStackEntity =
-                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         boolean isFullScan = toolBuildStackEntity == null || toolBuildStackEntity.isFullScan();
 
         // 读取原生（未经压缩）告警文件

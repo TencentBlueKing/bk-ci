@@ -16,7 +16,7 @@ metadata:
     {{- end }}
 spec:
   rules:
-    - host: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+    - host: {{ .Values.config.bkCodeccPublicUrl }}
       http:
         paths:
           - path: /
@@ -24,7 +24,7 @@ spec:
             pathType: Prefix
             {{- end }}
             backend: {{- include "common.ingress.backend" (dict "serviceName" (printf "%s-gateway"  (include "common.names.fullname" .)) "servicePort" "http" "context" $) | nindent 14 }}
-    - host: docker.{{ .Values.config.BK_CODECC_PUBLIC_URL }}
+    - host: docker.{{ .Values.config.bkCodeccPublicUrl }}
       http:
         paths:
           - path: /
@@ -32,7 +32,7 @@ spec:
             pathType: Prefix
             {{- end }}
             backend: {{- include "common.ingress.backend" (dict "serviceName" (printf "%s-gateway"  (include "common.names.fullname" .)) "servicePort" "http" "context" $) | nindent 14 }}
-    - host: helm.{{ .Values.config.BK_CODECC_PUBLIC_URL }}
+    - host: helm.{{ .Values.config.bkCodeccPublicUrl }}
       http:
         paths:
           - path: /

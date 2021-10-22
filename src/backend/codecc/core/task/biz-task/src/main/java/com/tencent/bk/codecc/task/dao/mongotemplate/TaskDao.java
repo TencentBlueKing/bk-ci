@@ -31,11 +31,13 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.devops.common.constant.ComConstants;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import jersey.repackaged.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -88,7 +90,7 @@ public class TaskDao
         update.set("status", status);
         update.set("updated_date", System.currentTimeMillis());
         update.set("updated_by", userName);
-        return mongoTemplate.updateMulti(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateMulti(query, update, TaskInfoEntity.class).getModifiedCount() > 0;
     }
 
 
@@ -113,7 +115,7 @@ public class TaskDao
         update.set("updated_date", System.currentTimeMillis());
         update.set("updated_by", userName);
         Query query = new Query(Criteria.where("task_id").is(pathInput.getTaskId()));
-        return mongoTemplate.updateMulti(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateMulti(query, update, TaskInfoEntity.class).getModifiedCount() > 0;
     }
 
 
@@ -137,7 +139,7 @@ public class TaskDao
         update.set("updated_date", System.currentTimeMillis());
         Query query = new Query();
         query.addCriteria(Criteria.where("task_id").is(taskInfoEntity.getTaskId()));
-        return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).getModifiedCount() > 0;
     }
 
     /**
@@ -232,9 +234,9 @@ public class TaskDao
      */
     public List<TaskInfoEntity> queryDeptId(Integer bgId, String createFrom)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("dept_id", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         if (bgId != null)
         {
@@ -261,7 +263,7 @@ public class TaskDao
     public List<TaskInfoEntity> queryTaskInfoEntityList(Integer status, Integer bgId, Collection<Integer> deptIds,
                                                         Collection<Long> taskIds, Collection<String> createFrom, String userId)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("execute_time", false);
         fieldsObj.put("execute_date", false);
         fieldsObj.put("timer_expression", false);
@@ -272,7 +274,7 @@ public class TaskDao
         fieldsObj.put("compile_plat", false);
         fieldsObj.put("run_plat", false);
 
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         // 任务状态筛选
         if (status != null)
         {
@@ -322,7 +324,7 @@ public class TaskDao
         update.set("dept_id", taskInfoEntity.getDeptId());
         update.set("center_id", taskInfoEntity.getCenterId());
 
-        return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).getModifiedCount() > 0;
     }
 
     /**
@@ -338,7 +340,7 @@ public class TaskDao
         }
 
         Criteria criteria;
-        List<String> fields = Lists.newArrayList(customParam.keySet());
+        List<String> fields = new ArrayList<>(customParam.keySet());
         if (customParam.get(fields.get(0)) instanceof Collection) {
             criteria = Criteria.where(fields.get(0)).in(customParam.get(fields.get(0)));
         } else {
@@ -355,7 +357,7 @@ public class TaskDao
                     }
                 });
 
-        fields = Lists.newArrayList(nCustomParam.keySet());
+        fields = new ArrayList<>(nCustomParam.keySet());
         fields.forEach(field -> {
             if (nCustomParam.get(field) instanceof Collection) {
                 criteria.and(field).nin(nCustomParam.get(field));
@@ -444,7 +446,7 @@ public class TaskDao
         Query query = new Query(Criteria.where("task_id").is(taskId));
         Update update = new Update();
         update.set("white_paths", pathList);
-        return mongoTemplate.upsert(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.upsert(query, update, TaskInfoEntity.class).getModifiedCount() > 0;
     }
 
     public List<TaskInfoEntity> findByCodeccNameCn(String projectId, String nameCn, Long offset, Long limit) {

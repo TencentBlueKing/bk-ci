@@ -38,7 +38,7 @@ import com.tencent.devops.log.api.ServiceLogResource
 import okhttp3.Request
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
@@ -67,7 +67,7 @@ class LogServiceImpl @Autowired constructor(
         tag: String?
     ): QueryLogRepVO? {
         val result = client.getDevopsService(ServiceLogResource::class.java)
-                .getInitLogs(projectId, pipelineId, buildId, false, queryKeywords, tag, null, 1)
+                .getInitLogs(projectId, pipelineId, buildId, false,  tag, null, 1)
         if (result.isNotOk() || null == result.data) {
             logger.error(
                 "get log info fail! bs project id: {}, bs pipeline id: {}, build id: {}",
@@ -78,7 +78,9 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        BeanUtils.copyProperties(result.data, queryLogs)
+        if(result.data != null){
+            BeanUtils.copyProperties(result.data!!, queryLogs)
+        }
         return queryLogs
     }
 
@@ -98,7 +100,7 @@ class LogServiceImpl @Autowired constructor(
     ): QueryLogRepVO {
         val result = client.getDevopsService(ServiceLogResource::class.java)
             .getMoreLogs(
-                projectId, pipelineId, buildId, num ?: 100, fromStart
+                projectId, pipelineId, buildId, false, num ?: 100, fromStart
                     ?: true, start, end, tag, null, executeCount ?: 1
             )
         if (result.isNotOk() || null == result.data) {
@@ -111,7 +113,9 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        BeanUtils.copyProperties(result.data, queryLogs)
+        if(result.data != null){
+            BeanUtils.copyProperties(result.data!!, queryLogs)
+        }
         queryLogs.status = QueryLogRepVO.LogStatus.SUCCEED.value
         return queryLogs
     }
@@ -143,7 +147,7 @@ class LogServiceImpl @Autowired constructor(
         }
 
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val resp = attributes!!.response
+        val resp = attributes!!.response ?: return
         resp.setHeader("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
         resp.setHeader("Cache-Control", "no-cache")
         resp.contentType = "application/octet-stream; charset=UTF-8"
@@ -163,7 +167,7 @@ class LogServiceImpl @Autowired constructor(
         executeCount: Int?
     ): QueryLogRepVO {
         val result = client.getDevopsService(ServiceLogResource::class.java)
-            .getAfterLogs(projectId, pipelineId, buildId, start, false, queryKeywords, tag, null, executeCount ?: 1)
+            .getAfterLogs(projectId, pipelineId, buildId, start, false, tag, null, executeCount ?: 1)
         if (result.isNotOk() || null == result.data) {
             logger.error(
                 "get more log info fail! bs project id: {}, bs pipeline id: {}, build id: {}",
@@ -174,7 +178,9 @@ class LogServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         val queryLogs = QueryLogRepVO()
-        BeanUtils.copyProperties(result.data, queryLogs)
+        if(result.data != null){
+            BeanUtils.copyProperties(result.data!!, queryLogs)
+        }
         queryLogs.status = QueryLogRepVO.LogStatus.SUCCEED.value
         return queryLogs
     }

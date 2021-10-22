@@ -4,7 +4,8 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-schedule
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: schedule
+    app.kubernetes.io/name: schedule
+    app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -14,12 +15,14 @@ metadata:
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: schedule
+      app.kubernetes.io/name: schedule
+      app.kubernetes.io/component: microservice
   replicas: {{ default 1 .Values.schedule.replicaCount }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: schedule
+        app.kubernetes.io/name: schedule
+        app.kubernetes.io/component: microservice
         {{- if .Values.schedule.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.schedule.podLabels "context" $) | nindent 8 }}
         {{- end }}
@@ -49,6 +52,39 @@ spec:
       {{- if .Values.schedule.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.schedule.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: storage
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.init.storage.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.init.storage.image.pullPolicy }}
+          env:
+            - name: BK_CODECC_STORAGE_TYPE
+              value: {{ .Values.config.bkCodeccStorageType }}
+            - name: BK_CODECC_FILE_DATA_PATH
+              value: {{ .Values.config.bkCodeccFileDataPath }}
+            - name: BK_CODECC_STORAGE_BKREPO_ADMIN_USERNAME
+              value: {{ .Values.config.bkCodeccStorageBkrepoAdminUsername }}
+            - name: BK_CODECC_STORAGE_BKREPO_ADMIN_PASSWORD
+              value: {{ .Values.config.bkCodeccStorageBkrepoAdminPassword }}
+            - name: BK_CODECC_STORAGE_BKREPO_USERNAME
+              value: {{ .Values.config.bkCodeccStorageBkrepoUsername }}
+            - name: BK_CODECC_STORAGE_BKREPO_PASSWORD
+              value: {{ .Values.config.bkCodeccStorageBkrepoPassword }}
+            - name: BK_CODECC_STORAGE_BKREPO_PROJECT
+              value: {{ .Values.config.bkCodeccStorageBkrepoRepo }}
+            - name: BK_CODECC_STORAGE_BKREPO_REPO
+              value: {{ .Values.config.bkCodeccStorageBkrepoHost }}
+            - name: BK_CODECC_STORAGE_BKREPO_HOST
+              value: {{ .Values.config.bkCodeccStorageBkrepoSchema }}
+            - name: BK_CODECC_STORAGE_BKREPO_SCHEMA
+              value: {{ .Values.config.bkCodeccLogCollectEnable }}
+          volumeMounts:
+            {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+            - name: nfs-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{ else }}
+            - name: shared-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{- end }}
       containers:
         - name: schedule
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.schedule.image "global" .Values.global) }}
@@ -60,8 +96,10 @@ spec:
           resources: {{- toYaml .Values.schedule.resources | nindent 12 }}
           {{- end }}
           env:
-            - name: CODECC_JVM_OPTION
-              value: {{ .Values.common.jvmOption }}
+            - name: JVM_XMS
+              value: {{ .Values.schedule.env.JVM_XMS }}
+            - name: JVM_XMX
+              value: {{ .Values.schedule.env.JVM_XMX }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: SERVER_FULLNAME
@@ -95,6 +133,13 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: {{ .Values.common.mountPath }}
+            {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+            - name: nfs-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{ else }}
+            - name: shared-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{- end }}
       volumes:
         - name: storage
           {{- if .Values.persistence.enabled }}
@@ -103,4 +148,13 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+        - name: nfs-data
+          nfs:
+            server: {{ .Values.config.bkCodeccNfsServer }}
+            path: {{ .Values.config.bkCodeccNfsServerPath }}
+        {{ else }}
+        - name: shared-data
+          emptyDir: {}
+        {{- end }}
 {{- end }}

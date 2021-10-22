@@ -23,30 +23,39 @@ data:
           uri: {{ include "codecc.task.mongodbUri" . }}
     time:
       analysis:
-        maxhour: {{ .Values.config.BK_CODECC_TASK_ANALYSIS_MAX_HOUR }}
+        maxhour: {{ .Values.config.bkCodeccTaskAnalysisMaxHour }}
     devops:
-      imageName: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_NAME }}
+      imageName: {{ .Values.config.bkCodeccPipelineImageName }}
       retry:
         attempt: 7
         interval: 1000
       dispatch:
-        imageName: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_NAME }}
-        buildType: {{ .Values.config.BK_CODECC_PIPELINE_BUILD_TYPE }}
-        imageVersion: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_TAG }}
+        imageName: {{ .Values.config.bkCodeccPipelineImageName }}
+        buildType: {{ .Values.config.bkCodeccPipelineBuildType }}
+        imageVersion: {{ .Values.config.bkCodeccPipelineImageTag }}
     aes:
       encryptor:
-        password: {{ .Values.config.BK_CODECC_TASK_ENCRYPTOR_KEY }}
+        password: {{ .Values.config.bkCodeccTaskEncryptorKey }}
     pipeline:
       atomCode:
-        codecc: {{ .Values.config.BK_CODECC_PIPELINE_ATOM_CODE }}
-        codeccVersion: {{ .Values.config.BK_CODECC_PIPELINE_ATOM_VERSION }}
-        git: git
-      imageType: {{ .Values.config.BK_CODECC_PIPELINE_IMAGE_TYPE }}
+        codecc: {{ .Values.config.bkCodeccPipelineAtomCode }}
+        codeccVersion: {{ .Values.config.bkCodeccPipelineAtomVersion }}
+        git: {{ .Values.config.bkGitPipelineAtomCode }}
+        gitVersion: {{ .Values.config.bkGitPipelineAtomVersion }}
+        github: {{ .Values.config.bkGithubPipelineAtomCode }}
+        githubVersion: {{ .Values.config.bkGithubPipelineAtomVersion }}
+        svn: {{ .Values.config.bkSvnPipelineAtomCode }}
+        svnVersion: {{ .Values.config.bkSvnPipelineAtomVersion }}
+      imageType: {{ .Values.config.bkCodeccPipelineImageType }}
       scmType:
         svn:
-          old: {{ .Values.config.BK_CODECC_PIPELINE_SCM_IS_OLD_SVN }}
+          old: {{ .Values.config.bkCodeccPipelineScmIsOldSvn }}
         github:
-          old: {{ .Values.config.BK_CODECC_PIPELINE_SCM_IS_OLD_GITHUB }}
+          old: {{ .Values.config.bkCodeccPipelineScmIsOldGithub }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-task    
     {{- if keys $.Values.task.config }}
       {{- toYaml .Values.task.config | nindent 4 }}
     {{- end}}

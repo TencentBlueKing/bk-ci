@@ -23,13 +23,17 @@ data:
           uri: {{ include "codecc.defect.mongodbUri" . }}
     codecc:
       gateway:
-        host: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+        host: {{ .Values.config.bkCodeccPublicUrl }}
       file:
         data:
-          path: {{ .Values.config.BK_CODECC_FILE_DATA_PATH }}
+          path: {{ .Values.config.bkCodeccFileDataPath }}
     result:
       log:
         path: /data/woskspace/logs
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-schedule
     {{- if keys $.Values.schedule.config }}
       {{- toYaml .Values.schedule.config | nindent 4 }}
     {{- end}}

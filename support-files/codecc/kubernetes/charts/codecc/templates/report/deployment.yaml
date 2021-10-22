@@ -4,7 +4,8 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-report
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: report
+    app.kubernetes.io/name: report
+    app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -14,12 +15,14 @@ metadata:
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: report
+      app.kubernetes.io/name: report
+      app.kubernetes.io/component: microservice
   replicas: {{ default 1 .Values.report.replicaCount }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: report
+        app.kubernetes.io/name: report
+        app.kubernetes.io/component: microservice
         {{- if .Values.report.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.report.podLabels "context" $) | nindent 8 }}
         {{- end }}
@@ -60,8 +63,10 @@ spec:
           resources: {{- toYaml .Values.report.resources | nindent 12 }}
           {{- end }}
           env:
-            - name: CODECC_JVM_OPTION
-              value: {{ .Values.common.jvmOption }}
+            - name: JVM_XMS
+              value: {{ .Values.report.env.JVM_XMS }}
+            - name: JVM_XMX
+              value: {{ .Values.report.env.JVM_XMX }}
             - name: SERVER_FULLNAME
               value: {{ include "common.names.fullname" . }}-report
             - name: SERVICE_PREFIX
@@ -76,7 +81,7 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /api/actuator/health/liveness
+              path: /actuator/health/liveness
               port: http
             initialDelaySeconds: 120
             periodSeconds: 15
@@ -85,7 +90,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /api/actuator/health/readiness
+              path: /actuator/health/readiness
               port: http
             initialDelaySeconds: 60
             periodSeconds: 15
@@ -95,6 +100,10 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: {{ .Values.common.mountPath }}
+            {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+            - name: nfs-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{- end }}
       volumes:
         - name: storage
           {{- if .Values.persistence.enabled }}
@@ -103,4 +112,10 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+        - name: nfs-data
+          nfs:
+            server: {{ .Values.config.bkCodeccNfsServer }}
+            path: {{ .Values.config.bkCodeccNfsServerPath }}
+        {{- end }}
 {{- end }}

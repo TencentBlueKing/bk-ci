@@ -22,10 +22,14 @@ data:
         mongodb:
           uri: {{ include "codecc.defect.mongodbUri" . }}
     devopsGateway:
-      idchost: {{ .Values.config.BK_CI_PUBLIC_URL }}
+      idchost: {{ .Values.config.bkCiPublicUrl }}
     codecc:
       gateway:
-        host: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+        host: {{ .Values.config.bkCodeccPublicUrl }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-defect
     {{- if keys $.Values.defect.config }}
       {{- toYaml .Values.defect.config | nindent 4 }}
     {{- end}}

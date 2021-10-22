@@ -32,6 +32,16 @@ data:
         username: {{ include "codecc.rabbitmq.username" . }}
         password: {{ include "codecc.rabbitmq.password" . }}
         addresses: {{ include "codecc.rabbitmq.host" . }}
+        core:
+          virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+          username: {{ include "codecc.rabbitmq.username" . }}
+          password: {{ include "codecc.rabbitmq.password" . }}
+          addresses: {{ include "codecc.rabbitmq.host" . }}
+        extend:
+          virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+          username: {{ include "codecc.rabbitmq.username" . }}
+          password: {{ include "codecc.rabbitmq.password" . }}
+          addresses: {{ include "codecc.rabbitmq.host" . }}
         listener:
           simple:
             concurrency: 2
@@ -39,7 +49,7 @@ data:
       cloud:
         consul:
           discovery:
-            tags: {{ .Values.config.BK_CODECC_CONSUL_DISCOVERY_TAG }}
+            tags: {{ .Values.config.bkCodeccConsulDiscoveryTag }}
         kubernetes:
           discovery:
             enabled: true
@@ -60,32 +70,57 @@ data:
       undertow:
         worker-threads: 100
     management:
+      server:
+        context-path: /management
+      endpoints:
+        web:
+          exposure:
+            include: prometheus,health
+        metrics:
+          distribution:
+            sla:
+              http:
+                server:
+                  requests: 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s,5s
       security:
         enabled: false
-      context-path: /management
     bkci:
       public:
-        url: {{ .Values.config.BK_CI_PUBLIC_URL }}
+        url: {{ .Values.config.bkCiPublicUrl }}
+        schema: {{ .Values.config.bkCiPublicSchema }}
       private:
-        url: {{ .Values.config.BK_CI_PRIVATE_URL }}
+        url: {{ .Values.config.bkCiPrivateUrl }}
     codecc:
       public:
-        url: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+        url: {{ .Values.config.bkCodeccPublicUrl }}
       private:
-        url: {{ .Values.config.BK_CODECC_PRIVATE_URL }}
+        url: {{ .Values.config.bkCodeccPrivateUrl }}
     auth:
-      idProvider: {{ .Values.config.BK_CI_AUTH_PROVIDER }}
+      idProvider: {{ .Values.config.bkCiAuthProvider }}
       grantType: rization_code
       principalType: user
       envName: prod
-      url: {{ .Values.config.BK_IAM_PRIVATE_URL }}
-      appCode: {{ .Values.config.BK_CODECC_APP_CODE }}
-      appSecret: {{ .Values.config.BK_CODECC_APP_TOKEN }}
-      bkloginUrl: {{ .Values.config.BK_PAAS_PRIVATE_URL }}/login/api/v2
-      iamCallBackUser: {{ .Values.config.BK_CI_IAM_CALLBACK_USER }}
+      url: {{ .Values.config.bkIamPrivateUrl }}
+      appCode: {{ .Values.config.bkCodeccAppCode }}
+      appSecret: {{ .Values.config.bkCodeccAppToken }}
+      bkloginUrl: {{ .Values.config.bkPaasPrivateUrl }}/login/api/v2
+      iamCallBackUser: {{ .Values.config.bkCiIamCallbackUser }}
     esb:
-      code: {{ .Values.config.BK_CODECC_APP_CODE }}
-      secret: {{ .Values.config.BK_CODECC_APP_TOKEN }}
+      code: {{ .Values.config.bkCodeccAppCode }}
+      secret: {{ .Values.config.bkCodeccAppToken }}
     bk:
       paas:
-        host: {{ .Values.config.BK_PAAS_PRIVATE_URL }}
+        host: {{ .Values.config.bkPaasPrivateUrl }}
+    storage:
+      type: {{ .Values.config.bkCodeccStorageType }}
+      expires: {{ .Values.config.bkCodeccStorageExpired }}
+      {{- if eq .Values.config.bkCodeccStorageType "bkrepo" }}
+      bkrepo:
+        username: {{ .Values.config.bkCodeccStorageBkrepoUsername }}
+        password: {{ .Values.config.bkCodeccStorageBkrepoPassword }}
+        project: {{ .Values.config.bkCodeccStorageBkrepoRepo }}
+        repo: {{ .Values.config.bkCodeccStorageBkrepoHost }}
+        host: {{ .Values.config.bkCodeccStorageBkrepoSchema }}
+        schema: {{ .Values.config.bkCodeccLogCollectEnable }}
+      {{- end }}
+

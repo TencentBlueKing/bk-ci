@@ -122,7 +122,7 @@ class ActiveStatisticService @Autowired constructor(
 
             // 记录工具分析耗时
             val voBuildId = uploadTaskLogStepVO.pipelineBuildId
-            val lastTaskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(voTaskId, voToolName, voBuildId)
+            val lastTaskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(voTaskId, voToolName, voBuildId)
             val elapseTime = uploadTaskLogStepVO.endTime - lastTaskLogEntity.startTime
 
             // 记录每天累计耗时

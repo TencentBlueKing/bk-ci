@@ -175,8 +175,7 @@ class PipelineScmServiceImpl @Autowired constructor(
             mapOf()
         } else codeRepoInfoEntities.associate {
             it.taskId to if (it.repoList.isEmpty()) setOf() else it.repoList.map { codeRepoEntity ->
-                with(codeRepoEntity)
-                {
+                with(codeRepoEntity) {
                     CodeRepoVO(repoId, revision, branch, repoMap[repoId], null)
                 }
             }.toSet()

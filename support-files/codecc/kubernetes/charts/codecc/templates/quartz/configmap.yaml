@@ -23,7 +23,11 @@ data:
           uri: {{ include "codecc.quartz.mongodbUri" . }}
     codecc:
       gateway:
-        host: {{ .Values.config.BK_CODECC_PUBLIC_URL }}
+        host: {{ .Values.config.bkCodeccPublicUrl }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-quartz
     {{- if keys $.Values.quartz.config }}
       {{- toYaml .Values.quartz.config | nindent 4 }}
     {{- end}}

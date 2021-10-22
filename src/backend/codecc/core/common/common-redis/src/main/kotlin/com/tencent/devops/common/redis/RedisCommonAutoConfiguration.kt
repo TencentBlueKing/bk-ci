@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.redis
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.serializer.GenericToStringSerializer
@@ -44,26 +46,25 @@ import java.net.UnknownHostException
 @AutoConfigureBefore(RedisAutoConfiguration::class)
 class RedisCommonAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(name = ["redisTemplate"])
+
+    @Bean("redisTemplate")
     @Throws(UnknownHostException::class)
-    fun redisTemplate(
-            redisConnectionFactory: RedisConnectionFactory): RedisTemplate<Any, Any> {
-        val template = RedisTemplate<Any, Any>()
-        template.connectionFactory = redisConnectionFactory
-        template.defaultSerializer = GenericToStringSerializer<String>(String::class.java)
-        template.keySerializer = GenericToStringSerializer<String>(String::class.java)
-        template.valueSerializer = GenericToStringSerializer<String>(String::class.java)
-        return template
+    fun redisTemplate(@Autowired jedisConnectionFactory: JedisConnectionFactory): RedisTemplate<String, String> {
+        val redisTemplate = RedisTemplate<String, String>()
+        redisTemplate.setConnectionFactory(jedisConnectionFactory)
+        redisTemplate.setDefaultSerializer(GenericToStringSerializer(String::class.java))
+        redisTemplate.keySerializer = GenericToStringSerializer(String::class.java)
+        GenericToStringSerializer(String::class.java).also { redisTemplate.valueSerializer = it }
+        return redisTemplate
     }
+
 
     @Bean
     @ConditionalOnMissingBean
     @Throws(UnknownHostException::class)
-    fun stringRedisTemplate(
-            redisConnectionFactory: RedisConnectionFactory): StringRedisTemplate {
+    fun stringRedisTemplate(@Autowired jedisConnectionFactory: JedisConnectionFactory): StringRedisTemplate {
         val template = StringRedisTemplate()
-        template.connectionFactory = redisConnectionFactory
+        template.setConnectionFactory(jedisConnectionFactory)
         return template
     }
 }

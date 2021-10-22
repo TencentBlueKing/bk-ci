@@ -3,6 +3,10 @@
 mkdir -p $CODECC_LOGS_DIR
 chmod 777 $CODECC_LOGS_DIR
 
+XMS=${JVM_XMS:-"512m"}
+XMX=${JVM_XMX:-"1024m"}
+CODECC_JVM_OPTION="-Xms${XMS} -Xmx${XMX}"
+
 java -server \
      -Dsun.jnu.encoding=UTF-8 \
      -Dfile.encoding=UTF-8 \
@@ -17,6 +21,6 @@ java -server \
      -Dserver.fullname=$SERVER_FULLNAME \
      -Dserver.prefix=$SERVICE_PREFIX \
      -Dserver.common.name=$SERVER_COMMON_NAME \
-     -Dlogging.file.path=$CODECC_LOGS_DIR \
+     -Dservice.log.dir=$CODECC_LOGS_DIR/ \
      $CODECC_JVM_OPTION \
      -jar /data/workspace/app.jar

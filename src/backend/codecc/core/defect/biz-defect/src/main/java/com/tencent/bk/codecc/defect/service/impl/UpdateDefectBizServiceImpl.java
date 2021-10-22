@@ -102,7 +102,7 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService {
         String buildId = updateDefectVO.getBuildId();
         Map<String, Integer> checkerCountMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(defectList)) {
-            TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            TaskLogEntity taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
             String buildNum = taskLogEntity.getBuildNum();
 
             TaskDetailVO taskDetailVO = thirdPartySystemCaller.getTaskInfoWithoutToolsByTaskId(taskId);

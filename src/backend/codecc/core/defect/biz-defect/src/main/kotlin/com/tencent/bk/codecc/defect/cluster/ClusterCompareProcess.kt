@@ -46,6 +46,7 @@ object ClusterCompareProcess {
         val startTime = System.currentTimeMillis()
         //1.读取输入文件内容
         val inputFileName = aggregateDispatchModel.inputFileName
+
         val inputFile = File(inputFileName)
         var inputDefects =
             JsonUtil.to(inputFile.readText(), object : TypeReference<List<AggregateDefectInputModel>>() {})
