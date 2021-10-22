@@ -587,6 +587,8 @@ class PreBuildV2Service @Autowired constructor(
             )
         }
 
+        logger.info("prebuild v2 runsOn: ${JsonUtil.toJson(job.runsOn)}")
+
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {
                 PoolType.DockerOnDevCloud.toDispatchType(containerPool)
