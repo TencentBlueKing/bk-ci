@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -43,6 +44,7 @@ import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.HistoryDao
@@ -247,6 +249,19 @@ class QualityRuleBuildHisService constructor(
     fun updateStatus(ruleBuildId: Long, status: String): Int {
         val count = qualityRuleBuildHisDao.updateStatus(ruleBuildId, status)
         logger.info("finish to update rule his status: $count, $ruleBuildId, $status")
+        return count
+    }
+
+    fun convertGateKeepers(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3): Int {
+        var count = 0
+        ruleList.forEach { it ->
+            val gateKeepers = (it.gateKeepers?: listOf()).map { user ->
+                EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
+            }
+            count = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
+                gateKeepers?.joinToString(","))
+            logger.info("QUALITY|CONVERTGATEKEEPERS|$gateKeepers|COUNT|$count")
+        }
         return count
     }
 

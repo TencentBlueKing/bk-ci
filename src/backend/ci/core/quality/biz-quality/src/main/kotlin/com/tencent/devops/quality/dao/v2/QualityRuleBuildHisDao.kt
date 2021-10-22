@@ -134,4 +134,13 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 .fetch()
         }
     }
+
+    fun updateGateKeepers(ruleBuildId: Long, gateKeepers: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(GATE_KEEPERS, gateKeepers)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
 }
