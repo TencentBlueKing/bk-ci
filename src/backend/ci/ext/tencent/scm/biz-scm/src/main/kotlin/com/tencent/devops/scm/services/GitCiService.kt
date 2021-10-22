@@ -379,7 +379,7 @@ class GitCiService {
     ): List<ChangeFileInfo> {
         val newPage = if (page == 0) 1 else page
         val newPageSize = if (pageSize > 10000) 10000 else pageSize
-        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files?access_token=$token"
+        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list?access_token=$token"
             .addParams(
                 mapOf(
                     "from" to from,
