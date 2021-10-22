@@ -284,7 +284,7 @@ class PreBuildV2Service @Autowired constructor(
                     dockerBuildVersion = null,
                     tstackAgentId = null,
                     jobControlOption = getJobControlOption(job, finalStage),
-                    dispatchType = getDispatchType(job, startUpReq, agentInfo)
+                    dispatchType = getDispatchType(job, startUpReq, agentInfo, userId)
                 )
                 containerList.add(vmContainer)
             }
