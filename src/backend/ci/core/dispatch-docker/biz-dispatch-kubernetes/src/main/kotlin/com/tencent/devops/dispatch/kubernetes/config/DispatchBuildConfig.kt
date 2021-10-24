@@ -25,41 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.config
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    KUBERNETES("kubernetes"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    ALL("所有类型");
+@Component
+class DispatchBuildConfig {
 
-    companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
+    @Value("\${dispatch.build.deployment.cpu}")
+    var deploymentCpu: Int = 32
 
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
-        }
-    }
+    @Value("\${dispatch.build.deployment.memory}")
+    var deploymentMemory: String = "65535M"
+
+    @Value("\${dispatch.build.deployment.disk}")
+    var deploymentDisk: String = "500G"
+
+    @Value("\${dispatch.build.container.registry.host}")
+    val registryHost: String? = null
+
+    @Value("\${dispatch.build.container.registry.userName}")
+    val registryUser: String? = null
+
+    @Value("\${dispatch.build.container.registry.password}")
+    val registryPwd: String? = null
+
+    @Value("\${dispatch.build.label}")
+    val label: String? = null
+
+    @Value("\${dispatch.build.entrypoint}")
+    val entrypoint: String = "dispatch_kubernetes_init"
 }

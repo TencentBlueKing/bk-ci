@@ -24,27 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
-import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+package com.tencent.devops.dispatch.kubernetes.pojo.resp
 
-@Service
-class DispatchKubernetesService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(DispatchKubernetesService::class.java)
-    }
-
-    fun list(userId: String, page: Int?, pageSize: Int?): DockerIpListPage<DockerIpInfoVO> {
-        return DockerIpListPage(
-            count = 0,
-            page = 0,
-            pageSize = 0,
-            totalPages = 0,
-            records = emptyList()
-        )
-    }
-}
+data class CreatContainerResult(
+    val taskId: String,
+    val createName: String
+)

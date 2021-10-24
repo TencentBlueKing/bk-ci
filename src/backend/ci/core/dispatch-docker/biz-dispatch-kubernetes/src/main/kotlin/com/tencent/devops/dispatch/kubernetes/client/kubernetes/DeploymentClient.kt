@@ -24,12 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.dispatch.kubernetes.client.kubernetes
 
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
+import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
+import io.kubernetes.client.custom.Quantity
 import io.kubernetes.client.openapi.apis.AppsV1Api
 import io.kubernetes.client.openapi.apis.CoreApi
 import io.kubernetes.client.openapi.apis.CoreV1Api
+import io.kubernetes.client.openapi.models.V1Container
+import io.kubernetes.client.openapi.models.V1Deployment
+import io.kubernetes.client.openapi.models.V1DeploymentSpec
+import io.kubernetes.client.openapi.models.V1LabelSelector
+import io.kubernetes.client.openapi.models.V1ObjectMeta
+import io.kubernetes.client.openapi.models.V1PodSpec
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec
+import io.kubernetes.client.openapi.models.V1ResourceRequirements
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -38,9 +50,55 @@ class DeploymentClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig
 ) {
 
-    fun list(){
-//        AppsV1Api().listNamespacedDeployment(
-//
-//        )
+    fun create(
+        buildContainer: BuildContainer,
+        containerName: String
+    ) {
+        val deployment =
+            with(buildContainer) {
+                V1Deployment()
+                    .apiVersion("apps/v1")
+                    .kind("Deployment")
+                    .metadata(
+                        V1ObjectMeta()
+                            .name(name)
+                            .namespace(k8sConfig.nameSpace)
+                            .labels(mapOf("container-name" to containerName))
+                    )
+                    .spec(
+                        V1DeploymentSpec()
+                            .replicas(1)
+                            .selector(
+                                V1LabelSelector()
+                                    .matchLabels(mapOf("container-name" to containerName))
+                            )
+                            .template(
+                                V1PodTemplateSpec()
+                                    .metadata(
+                                        V1ObjectMeta()
+                                            .labels(mutableMapOf("container-name" to containerName)
+                                            )
+                                    )
+                                    .spec(
+                                        V1PodSpec()
+                                            .containers(listOf(
+                                                V1Container()
+                                                    .name(image.split(":")[0])
+                                                    .resources(
+                                                        V1ResourceRequirements()
+                                                            .limits(mapOf(
+                                                                "cpu" to Quantity(cpu.toString()),
+                                                                "memory" to Quantity(memory),
+                                                                "ephemeral-storage" to Quantity(disk)
+                                                            ))
+                                                    )
+                                                    .image(image)
+                                            ))
+                                    )
+                            )
+            }
+        AppsV1Api().createNamespacedDeploymentWithHttpInfo(
+            k8sConfig.nameSpace, deployment, null, null, null
+        )
     }
 }

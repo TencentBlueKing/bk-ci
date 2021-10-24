@@ -25,41 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+data class Pool(
+    val container: String?,
+    val credential: Credential?,
+    val performanceConfigId: String? = "0",
+    val third: Boolean? = true
+)
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    KUBERNETES("kubernetes"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    ALL("所有类型");
-
-    companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
-
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
-        }
-    }
-}
+data class Credential(
+    val user: String,
+    val password: String
+)

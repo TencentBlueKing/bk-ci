@@ -25,41 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.dispatch.kubernetes.dao.BuildHisDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    KUBERNETES("kubernetes"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    ALL("所有类型");
+@Service
+class BuildHisService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val buildHisDao: BuildHisDao
+) {
 
-    companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
-
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
-        }
+    fun recordBuildHisAndGatewayCheck(
+        poolNo: Int,
+        lastIdleContainer: String?,
+        dispatchMessage: DispatchMessage,
+        cpu: ThreadLocal<Int>,
+        memory: ThreadLocal<String>,
+        disk: ThreadLocal<String>
+    ) {
+        buildHisDao.create(
+            dslContext = dslContext,
+            pipelineId = dispatchMessage.pipelineId,
+            buildId = dispatchMessage.buildId,
+            vmSeqId = dispatchMessage.vmSeqId,
+            poolNo = poolNo.toString(),
+            secretKey = dispatchMessage.secretKey,
+            containerName = lastIdleContainer ?: "",
+            cpu = cpu.get(),
+            memory = memory.get(),
+            disk = disk.get(),
+            executeCount = dispatchMessage.executeCount ?: 1
+        )
     }
 }

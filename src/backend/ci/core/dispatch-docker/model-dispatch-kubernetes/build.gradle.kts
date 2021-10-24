@@ -25,11 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-docker:biz-dispatch-docker-sample"))
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
+plugins {
+    `task-gen-jooq`
 }
-
-

@@ -25,41 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.client.kubernetes
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
+import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
+import io.kubernetes.client.openapi.ApiResponse
+import io.kubernetes.client.openapi.apis.CoreV1Api
+import io.kubernetes.client.openapi.models.V1PodList
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    KUBERNETES("kubernetes"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    ALL("所有类型");
+@Component
+class PodsClient @Autowired constructor(
+    private val k8sConfig: KubernetesClientConfig,
+    private val dispatchBuildConfig: DispatchBuildConfig
+) {
 
-    companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
-
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
-        }
+    fun list(
+        name: String
+    ): ApiResponse<V1PodList> {
+        return CoreV1Api().listNamespacedPodWithHttpInfo(
+            k8sConfig.nameSpace,
+            "true",
+            null,
+            null,
+            null,
+            mapOf(dispatchBuildConfig.label!! to name).toLabelSelector(),
+            null, null, null, null, null
+        )
     }
 }
