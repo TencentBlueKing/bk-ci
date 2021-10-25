@@ -48,8 +48,8 @@ class SystemContainerBindGenerator @Autowired constructor(private val dockerHost
 
     private val whiteListLocker = ReentrantLock()
 
-    override fun generateBinds(dockerHostBuildInfo: ContainerHandlerContext): List<Bind> {
-        with(dockerHostBuildInfo) {
+    override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
+        with(handlerContext) {
 
             val binds = mutableListOf(
                 Bind(getMavenRepoPath(), Volume(dockerHostConfig.volumeMavenRepo)),

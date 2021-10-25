@@ -92,6 +92,8 @@ class ContainerPullImageHandler(
                     containerHashId = containerHashId
                 )
             }
+
+            nextHandler?.handlerRequest(this)
         }
     }
 

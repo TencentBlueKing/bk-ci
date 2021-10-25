@@ -36,5 +36,5 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
  */
 interface DockerMountGenerator {
 
-    fun generateMounts(dockerHostBuildInfo: ContainerHandlerContext): List<Mount>
+    fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount>
 }

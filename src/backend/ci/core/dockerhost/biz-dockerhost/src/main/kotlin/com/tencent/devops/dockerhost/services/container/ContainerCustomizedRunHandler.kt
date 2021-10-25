@@ -153,6 +153,8 @@ class ContainerCustomizedRunHandler(
                     }
                 }
             }
+
+            nextHandler?.handlerRequest(this)
         }
     }
 

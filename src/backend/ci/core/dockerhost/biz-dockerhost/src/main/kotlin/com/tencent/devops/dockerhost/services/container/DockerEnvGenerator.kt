@@ -35,5 +35,5 @@ import com.tencent.devops.dockerhost.pojo.Env
  */
 interface DockerEnvGenerator {
 
-    fun generateEnv(dockerHostBuildInfo: ContainerHandlerContext): List<Env>
+    fun generateEnv(handlerContext: ContainerHandlerContext): List<Env>
 }

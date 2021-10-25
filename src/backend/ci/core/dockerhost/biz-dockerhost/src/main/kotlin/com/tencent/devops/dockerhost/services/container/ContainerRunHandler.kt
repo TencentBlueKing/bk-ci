@@ -98,6 +98,8 @@ class ContainerRunHandler(
                     )
                 }
             }
+
+            nextHandler?.handlerRequest(this)
         }
     }
 

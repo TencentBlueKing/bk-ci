@@ -34,5 +34,5 @@ import com.github.dockerjava.api.model.Bind
  */
 interface DockerBindGenerator {
 
-    fun generateBinds(dockerHostBuildInfo: ContainerHandlerContext): List<Bind>
+    fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind>
 }
