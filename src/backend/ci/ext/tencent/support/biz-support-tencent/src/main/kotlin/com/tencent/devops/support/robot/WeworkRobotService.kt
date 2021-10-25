@@ -1,22 +1,21 @@
 package com.tencent.devops.support.robot
 
+import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
-import com.tencent.devops.common.wechatwork.model.CallbackElement
-import com.tencent.devops.common.wechatwork.model.enums.FromType
-import com.tencent.devops.common.wechatwork.model.enums.MsgType
-import org.dom4j.Document
-import org.dom4j.DocumentHelper
-import org.dom4j.Element
+import com.tencent.devops.support.robot.pojo.RobotCallback
+import com.tencent.devops.support.robot.pojo.RobotSendMsg
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
 class WeworkRobotService @Autowired constructor(
-    private val weweorkRobotConfiguration: WeworkRobotCustomConfig,
+    private val weweorkRobotConfiguration: WeworkRobotCustomConfig
 ) {
     private val rototWxcpt =
         WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, "")
@@ -46,57 +45,57 @@ class WeworkRobotService @Autowired constructor(
         logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
         logger.info("reqData:$reqData")
-        val chatId = getCallbackInfo(signature, timestamp, nonce, reqData)
-        logger.info("chitId:$chatId")
+        val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
+        logger.info("chitId:${robotCallBack.chatId}")
 
+        val robotSendMsg = RobotSendMsg(
+            MsgType = WeworkTextType.text.name,
+            Text = "本群ID='${robotCallBack.chatId}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。",
+            Content = "本群ID='${robotCallBack.chatId}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。",
+            MentionedList = robotCallBack.chatId
+        )
+        val sendMsg = encryptMsg(robotSendMsg, timestamp, nonce)
+        logger.info("sendMsg: $sendMsg")
         return true
     }
 
     /*
   * 获取密文的CallbackInfo对象
   * */
-    fun getCallbackInfo(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
+    fun getCallbackInfo(signature: String, timestamp: Long, nonce: String, reqData: String?): RobotCallback {
         val document = getDecrypeDocument(signature, timestamp, nonce, reqData)
-        logger.info("document:${document.toString()}")
-        val rootElement = document.rootElement
-        val context = (rootElement.elementIterator("Content").next() as Element).text
-        logger.info("context: $context")
-
-        return (rootElement.elementIterator("ChatId").next() as Element).text
-
-//        val toUserName = (rootElement.elementIterator("UserId").next() as Element).text
-//        val serviceId = (rootElement.elementIterator("ServiceId").next() as Element).text
-//        val agentType = (rootElement.elementIterator("AgentType").next() as Element).text
-//        val msgElement = rootElement.elementIterator("Msg").next() as Element
-//        val msgType = MsgType.valueOf((msgElement.elementIterator("MsgType").next() as Element).text)
-//        val fromElement = msgElement.elementIterator("From").next() as Element
-//        val fromType = FromType.valueOf((fromElement.elementIterator("Type").next() as Element).text)
-//        val chatId = (fromElement.elementIterator("Id").next() as Element).text
-//        return CallbackElement(
-//            toUserName,
-//            serviceId,
-//            agentType,
-//            chatId,
-//            msgType,
-//            fromType,
-//            msgElement,
-//            fromElement
-//        )
+        val root = document!!.documentElement
+        val chitId = root.getElementsByTagName("ChatId")
+        val webhookUrl = root.getElementsByTagName("WebhookUrl")
+        val getChatInfoUrl = root.getElementsByTagName("GetChatInfoUrl")
+        val msgId = root.getElementsByTagName("MsgId")
+        val msgType = root.getElementsByTagName("MsgType")
+        val content = root.getElementsByTagName("Content")
+        val userName = root.getElementsByTagName("Name")
+        val userId = root.getElementsByTagName("Alias")
+        return RobotCallback(
+            chatId = chitId.item(0).textContent,
+            webhookUrl = webhookUrl.item(0).textContent,
+            getChatInfoUrl = getChatInfoUrl.item(0).textContent,
+            msgType = msgType.item(0).textContent,
+            msgId = msgId.item(0).textContent,
+            content = content.item(0).textContent,
+            name = userName.item(0).textContent,
+            userId = userId.item(0).textContent
+        )
     }
 
     /*
     * 获取密文的Document对象
     * */
-    fun getDecrypeDocument(signature: String, timestamp: Long, nonce: String, reqData: String?): Document {
+    fun getDecrypeDocument(signature: String, timestamp: Long, nonce: String, reqData: String?): Document? {
         val xmlString = getDecrypeMsg(signature, timestamp, nonce, reqData)
         logger.info("xmlString:$xmlString")
-        return DocumentHelper.parseText(xmlString)
-//        // For example:
-//        val dbf = DocumentBuilderFactory.newInstance()
-//        val db = dbf.newDocumentBuilder()
-//        val sr = StringReader(xmlString)
-//        val `is` = InputSource(sr)
-//        return db.parse(`is`)!!
+        val dbf = DocumentBuilderFactory.newInstance()
+        val db = dbf.newDocumentBuilder()
+        val sr = StringReader(xmlString)
+        val `is` = InputSource(sr)
+        return db.parse(`is`)
     }
 
      /*
@@ -112,6 +111,21 @@ class WeworkRobotService @Autowired constructor(
         }
         return xmlString
     }
+
+    /*
+    * 获取密文的xml字符串
+    * */
+    fun encryptMsg(robotSendMsg: RobotSendMsg, timestamp: Long, nonce: String): String {
+        var xmlString = ""
+        try {
+            xmlString = rototWxcpt.EncryptMsg(robotSendMsg.toJsonString(), timestamp.toString(), nonce)
+        } catch (e: Exception) {
+            // 转换失败，错误原因请查看异常
+            e.printStackTrace()
+        }
+        return xmlString
+    }
+
 
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotService::class.java)
