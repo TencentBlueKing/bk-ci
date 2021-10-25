@@ -179,14 +179,14 @@ class TriggerMatcher @Autowired constructor(
         }
 
         // include
-        if (BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch) &&
-            PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) &&
-            UserMatchUtils.isUserMatch(pushRule.users, userId)
+        if (!BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch) ||
+            !PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) ||
+            !UserMatchUtils.isUserMatch(pushRule.users, userId)
         ) {
-            logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
-            return true
+            return false
         }
-        return false
+        logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
+        return true
     }
 
     private fun isMrMatch(
@@ -218,14 +218,14 @@ class TriggerMatcher @Autowired constructor(
         }
 
         // include
-        if (BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch) &&
-            PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet) &&
-            UserMatchUtils.isUserMatch(mrRule.users, userId) &&
-            isMrActionMatch(mrRule.action, event)
+        if (!BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch) ||
+            !PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet) ||
+            !UserMatchUtils.isUserMatch(mrRule.users, userId) ||
+            !isMrActionMatch(mrRule.action, event)
         ) {
-            return true
+            return false
         }
-        return false
+        return true
     }
 
     private fun isTagPushMatch(
@@ -248,13 +248,13 @@ class TriggerMatcher @Autowired constructor(
         }
 
         // include
-        if (BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag) &&
-            UserMatchUtils.isUserMatch(tagRule.users, userId)
+        if (!BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag) ||
+            !UserMatchUtils.isUserMatch(tagRule.users, userId)
         ) {
-            logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
-            return true
+            return false
         }
-        return false
+        logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
+        return true
     }
 
     private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
