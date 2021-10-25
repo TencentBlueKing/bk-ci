@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
+@Suppress("NestedBlockDepth")
 @Component
 class SendCommitCheck @Autowired constructor(
     private val objectMapper: ObjectMapper,
