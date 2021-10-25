@@ -66,6 +66,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
+@Suppress("ComplexMethod")
 object ModelParameters {
 
     fun createPipelineParams(
