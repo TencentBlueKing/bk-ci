@@ -44,10 +44,16 @@ class TencentPipelineBuildArtifactoryService constructor(
         private val logger = LoggerFactory.getLogger(TencentPipelineBuildArtifactoryService::class.java)!!
     }
 
-    override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
+    override fun getArtifactList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<FileInfo> {
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoList.addAll(
             bkRepoSearchService.serviceSearchFileAndProperty(
+                userId = userId,
                 projectId = projectId,
                 searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
                 customized = null,
