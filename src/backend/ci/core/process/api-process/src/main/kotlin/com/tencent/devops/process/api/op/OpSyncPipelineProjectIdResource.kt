@@ -25,28 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service.job
+package com.tencent.devops.process.api.op
 
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-/**
- * deng
- * 2019-01-14
- */
-@Service
-class SyncCCAppNameJobService @Autowired constructor(private val synProjectService: SynProjectService) {
+@Api(tags = ["OP_PIPELINE_DATAS"], description = "OP-流水线-数据")
+@Path("/op/pipeline/datas")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpSyncPipelineProjectIdResource {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(SyncCCAppNameJobService::class.java)
-    }
-
-    @Scheduled(cron = "0 0 4 * * ?") // 每天早上4点执行一次
-    fun syncCCName() {
-        logger.info("Start to sync project cc name")
-        val count = synProjectService.syncCCAppName()
-        logger.info("Success to sync $count cc names")
-    }
+    @ApiOperation("更新数据库表projectId")
+    @PUT
+    @Path("/projectId/async/update")
+    fun asyncUpdateProjectId(): Result<Boolean>
 }

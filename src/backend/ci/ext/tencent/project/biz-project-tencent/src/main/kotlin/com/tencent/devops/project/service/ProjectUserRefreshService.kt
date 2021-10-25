@@ -137,7 +137,7 @@ class ProjectUserRefreshService @Autowired constructor(
             groupName = tofDeptInfo.groupName,
             bgId = tofDeptInfo.bgId.toInt(),
             bgName = tofDeptInfo.bgName,
-            centerId = tofDeptInfo.deptId.toInt(),
+            centerId = tofDeptInfo.centerId.toInt(),
             centerName = tofDeptInfo.deptName,
             deptId = tofDeptInfo.deptId.toInt(),
             deptName = tofDeptInfo.deptName,

@@ -61,7 +61,7 @@ data class PaasCCProjectForUpdate(
     val cc_app_name: String?,
     @ApiModelProperty("容器类型， 1 - k8s; 2 - mesos")
     val kind: Int?,
-    @ApiModelProperty("保密性")
+    @ApiModelProperty("保密性", name = "is_secrecy")
     @JsonProperty("is_secrecy")
     val secrecy: Boolean
 )

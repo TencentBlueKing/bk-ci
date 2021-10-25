@@ -67,7 +67,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache))
             )
 
-            if (qpcUniquePath == null) {
+            if (qpcUniquePath.isNullOrBlank()) {
                 binds.add(Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace)))
             }
 
