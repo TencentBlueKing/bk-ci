@@ -277,7 +277,7 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         projectId: String,
         platform: String,
-        bundleIdentifier: String,
+        bundleIdentifier: String
     ): TExperiencePublicRecord? {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.selectFrom(this)
