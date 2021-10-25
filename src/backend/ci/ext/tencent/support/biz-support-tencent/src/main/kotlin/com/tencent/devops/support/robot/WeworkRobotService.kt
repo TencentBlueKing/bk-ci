@@ -40,7 +40,7 @@ class WeworkRobotService @Autowired constructor(
         return verifyResult
     }
 
-    fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
+    fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
         logger.info("signature:$signature")
         logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
@@ -56,7 +56,7 @@ class WeworkRobotService @Autowired constructor(
         )
         val sendMsg = encryptMsg(robotSendMsg, timestamp, nonce)
         logger.info("sendMsg: $sendMsg")
-        return true
+        return sendMsg
     }
 
     /*
