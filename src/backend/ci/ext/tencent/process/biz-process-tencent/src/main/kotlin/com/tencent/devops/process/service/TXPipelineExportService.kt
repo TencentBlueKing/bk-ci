@@ -1243,9 +1243,9 @@ class TXPipelineExportService @Autowired constructor(
                 repositoryUrl
             }
 
-            //branchName应该转换成refName
+            // branchName应该转换成refName
             val branchName = inputMap.remove("branchName")
-            if (branchName != null){
+            if (branchName != null) {
                 inputMap["refName"] = branchName
             }
 
