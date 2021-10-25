@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 @BindGenerator(description = "默认Docker Bind生成器")
 @Component
-class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+class SystemContainerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
 
     private val whiteList = mutableSetOf<String>()

@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component
 
 @EnvGenerator(description = "默认Docker环境变量生成器")
 @Component
-class SystemDockerEnvGenerator @Autowired constructor(
+class SystemContainerEnvGenerator @Autowired constructor(
     val commonConfig: CommonConfig,
     val dockerHostConfig: DockerHostConfig
 ) : DockerEnvGenerator {

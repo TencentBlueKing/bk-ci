@@ -41,7 +41,7 @@ import java.io.File
 
 @MountGenerator(description = "默认Docker Mount生成器")
 @Component
-class SystemDockerMountGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+class SystemContainerMountGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerMountGenerator {
 
     override fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount> {
