@@ -944,7 +944,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             var value = it
             val atom = getMap[it.atomCode]
             if (atom?.contains("*") == true &&
-                !it.version.startsWith(atom.replace("*", ""))) {
+                !it.version.startsWith(atom.replace("*", ""))
+            ) {
                 value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
             }
             val itemMap = mutableMapOf<String, Any>()
@@ -1012,7 +1013,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
                 if ((type == "selector" && multiple) ||
-                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
+                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
+                ) {
                     sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {
@@ -1104,45 +1106,50 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val optionsName = MessageCodeUtil.getCodeLanMessage(OPTIONS)
                 val multipleName = MessageCodeUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
                 val singleName = MessageCodeUtil.getCodeLanMessage(SINGLE_SELECTOR)
-                if ((type == "selector" && multiple) ||
-                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
-                    addParamComment(
-                        builder = sb,
-                        description = description,
-                        paramKey = paramKey,
-                        required = required,
-                        optionsName = optionsName,
-                        selectorTypeName = multipleName,
-                        paramValueMap = paramValueMap,
-                        requiredName = requiredName,
-                        defaultValue = defaultValue,
-                        defaultName = defaultName
-                    )
-                    sb.append("\r\n")
-                    sb.append("    $paramKey:\r\n")
-                    sb.append("        - string\r\n")
-                    sb.append("        - string\r\n")
-                } else {
-                    addParamComment(
-                        builder = sb,
-                        description = description,
-                        paramKey = paramKey,
-                        required = required,
-                        optionsName = optionsName,
-                        selectorTypeName = singleName,
-                        paramValueMap = paramValueMap,
-                        requiredName = requiredName,
-                        defaultValue = defaultValue,
-                        defaultName = defaultName
-                    )
-                    sb.append("\r\n")
-                    sb.append("    $paramKey: ")
-                    if (type == "atom-checkbox") {
-                        sb.append("boolean")
+                try {
+                    if ((type == "selector" && multiple) ||
+                        type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
+                    ) {
+                        addParamComment(
+                            builder = sb,
+                            description = description,
+                            paramKey = paramKey,
+                            required = required,
+                            optionsName = optionsName,
+                            selectorTypeName = multipleName,
+                            paramValueMap = paramValueMap,
+                            requiredName = requiredName,
+                            defaultValue = defaultValue,
+                            defaultName = defaultName
+                        )
+                        sb.append("\r\n")
+                        sb.append("    $paramKey:\r\n")
+                        sb.append("        - string\r\n")
+                        sb.append("        - string\r\n")
                     } else {
-                        sb.append("string")
+                        addParamComment(
+                            builder = sb,
+                            description = description,
+                            paramKey = paramKey,
+                            required = required,
+                            optionsName = optionsName,
+                            selectorTypeName = singleName,
+                            paramValueMap = paramValueMap,
+                            requiredName = requiredName,
+                            defaultValue = defaultValue,
+                            defaultName = defaultName
+                        )
+                        sb.append("\r\n")
+                        sb.append("    $paramKey: ")
+                        if (type == "atom-checkbox") {
+                            sb.append("boolean")
+                        } else {
+                            sb.append("string")
+                        }
+                        sb.append("\r\n")
                     }
-                    sb.append("\r\n")
+                } catch (ignored: Throwable) {
+                    sb.insert(0, "# 参数[$paramKey] 的$ignored ,请检查task.json配置格式是否正确 \n")
                 }
             }
         }
@@ -1210,18 +1217,30 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         val rely = paramValueMap["rely"]
         if (null != rely) {
-            parseRely(builder, rely as Map<String, Any>)
+            try {
+                parseRely(builder, rely as Map<String, Any>)
+            } catch (e: Exception) {
+                throw Exception("rely 配置解析错误")
+            }
         }
         val options = paramValueMap["options"]
         if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
-            parseOptions(builder, options as List<Map<String, Any>>)
+            try {
+                parseOptions(builder, options as List<Map<String, Any>>)
+            } catch (e: Exception) {
+                throw Exception("options 配置解析错误")
+            }
         }
         val list = paramValueMap["list"]
         if (null != list) {
             builder.append(", $optionsName:")
-            parseList(builder, list as List<Map<String, Any>>)
+            try {
+                parseList(builder, list as List<Map<String, Any>>)
+            } catch (e: Exception) {
+                throw Exception("list 配置解析错误")
+            }
         }
     }
 
