@@ -19,7 +19,8 @@ interface StreamFinishContext {
 
 // 获取commit checkState
 fun StreamFinishContext.getGitCommitCheckState(): GitCICommitCheckState {
-    return if (buildStatus.isSuccess()) {
+    // stage审核的状态专门判断为成功
+    return if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
         GitCICommitCheckState.SUCCESS
     } else {
         GitCICommitCheckState.FAILURE

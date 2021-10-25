@@ -181,12 +181,14 @@ class SendNotify @Autowired constructor(
         if (ifField.isNullOrBlank()) {
             return true
         }
+        // stage审核的状态专门判断为成功
+        val success = buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS
         return when (ifField) {
             IfType.SUCCESS.name -> {
-                return buildStatus.isSuccess()
+                return success
             }
             IfType.FAILURE.name -> {
-                return buildStatus.isFailure()
+                return !success
             }
             IfType.CANCELLED.name -> {
                 return buildStatus.isCancel()
