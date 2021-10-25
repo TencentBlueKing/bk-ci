@@ -32,7 +32,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.services.container.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerEnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
@@ -46,7 +46,7 @@ import com.tencent.devops.dockerhost.utils.ENV_KEY_PROJECT_ID
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@EnvGenerator(description = "默认Docker环境变量生成器")
+@ContainerEnvGenerator(description = "默认Docker环境变量生成器")
 @Component
 class SystemContainerEnvGenerator @Autowired constructor(
     val commonConfig: CommonConfig,

@@ -30,7 +30,7 @@ package com.tencent.devops.dockerhost.services.container.annotation
 /**
  * DockerBind生成器注解，标示生成器
  */
-annotation class BindGenerator(
+annotation class ContainerBindGenerator(
     /**
      * 生成器说明
      */

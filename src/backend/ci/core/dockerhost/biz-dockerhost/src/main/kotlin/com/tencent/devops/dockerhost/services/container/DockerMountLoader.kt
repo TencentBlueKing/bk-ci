@@ -29,7 +29,7 @@ package com.tencent.devops.dockerhost.services.container
 
 import com.github.dockerjava.api.model.Mount
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dockerhost.services.container.annotation.MountGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerMountGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
@@ -44,7 +44,7 @@ object DockerMountLoader {
         val mountList = mutableListOf<Mount>()
         try {
             val generators: List<DockerMountGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(MountGenerator::class.java) as List<DockerMountGenerator>
+                SpringContextUtil.getBeansWithAnnotation(ContainerMountGenerator::class.java) as List<DockerMountGenerator>
             generators.forEach { generator ->
                 mountList.addAll(generator.generateMounts(handlerContext))
             }

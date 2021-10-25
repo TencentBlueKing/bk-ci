@@ -30,7 +30,7 @@ package com.tencent.devops.dockerhost.docker.impl
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
 import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
 import org.springframework.beans.factory.annotation.Autowired

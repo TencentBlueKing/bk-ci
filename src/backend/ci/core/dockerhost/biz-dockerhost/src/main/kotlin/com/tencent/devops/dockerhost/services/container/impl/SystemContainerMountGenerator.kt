@@ -34,12 +34,12 @@ import com.github.dockerjava.api.model.VolumeOptions
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.container.DockerMountGenerator
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
-import com.tencent.devops.dockerhost.services.container.annotation.MountGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerMountGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.io.File
 
-@MountGenerator(description = "默认Docker Mount生成器")
+@ContainerMountGenerator(description = "默认Docker Mount生成器")
 @Component
 class SystemContainerMountGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerMountGenerator {

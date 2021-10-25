@@ -28,8 +28,7 @@
 package com.tencent.devops.dockerhost.services.container
 
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerEnvGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
@@ -44,7 +43,7 @@ object DockerEnvLoader {
         val envList = mutableListOf<String>()
         try {
             val generators: List<DockerEnvGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(EnvGenerator::class.java) as List<DockerEnvGenerator>
+                SpringContextUtil.getBeansWithAnnotation(ContainerEnvGenerator::class.java) as List<DockerEnvGenerator>
             generators.forEach { generator ->
                 generator.generateEnv(dockerHostBuildInfo).forEach {
                     envList.add("${it.key}=${it.value}")

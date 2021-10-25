@@ -33,13 +33,13 @@ import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.DockerBindGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.BindGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerBindGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
-@BindGenerator(description = "默认Docker Bind生成器")
+@ContainerBindGenerator(description = "默认Docker Bind生成器")
 @Component
 class SystemContainerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {

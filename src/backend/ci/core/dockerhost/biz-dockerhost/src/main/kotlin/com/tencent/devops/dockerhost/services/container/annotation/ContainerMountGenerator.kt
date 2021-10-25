@@ -28,9 +28,9 @@
 package com.tencent.devops.dockerhost.services.container.annotation
 
 /**
- * Docker环境变量生成器注解，标示生成器
+ * Docker Mount生成器注解，标示生成器
  */
-annotation class EnvGenerator(
+annotation class ContainerMountGenerator(
     /**
      * 生成器说明
      */

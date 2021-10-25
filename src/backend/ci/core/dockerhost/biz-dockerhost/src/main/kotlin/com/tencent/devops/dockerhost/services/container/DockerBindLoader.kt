@@ -29,8 +29,7 @@ package com.tencent.devops.dockerhost.services.container
 
 import com.github.dockerjava.api.model.Bind
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.services.container.annotation.BindGenerator
+import com.tencent.devops.dockerhost.services.container.annotation.ContainerBindGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
@@ -45,7 +44,7 @@ object DockerBindLoader {
         val bindList = mutableListOf<Bind>()
         try {
             val generators: List<DockerBindGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(BindGenerator::class.java) as List<DockerBindGenerator>
+                SpringContextUtil.getBeansWithAnnotation(ContainerBindGenerator::class.java) as List<DockerBindGenerator>
             generators.forEach { generator ->
                 bindList.addAll(generator.generateBinds(containerInfo))
             }
