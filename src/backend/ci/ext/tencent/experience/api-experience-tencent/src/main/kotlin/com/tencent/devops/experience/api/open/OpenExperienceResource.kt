@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import io.swagger.annotations.Api
