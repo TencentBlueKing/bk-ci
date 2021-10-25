@@ -105,8 +105,6 @@ data class RunsOn(
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
-    @ApiModelProperty(name = "needs")
-    @JsonProperty("needs")
     val needs: Map<String, String>? = null
 )
 
