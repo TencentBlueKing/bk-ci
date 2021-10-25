@@ -255,7 +255,7 @@ class QualityRuleBuildHisService constructor(
     fun convertGateKeepers(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3): Int {
         var count = 0
         ruleList.forEach { it ->
-            val gateKeepers = (it.gateKeepers?: listOf()).map { user ->
+            val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
             }
             count = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
