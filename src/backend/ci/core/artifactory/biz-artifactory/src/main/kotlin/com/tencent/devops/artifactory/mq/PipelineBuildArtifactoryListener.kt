@@ -53,12 +53,13 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
         logger.info("PipelineBuildArtifactoryListener.run, event: $event")
+        val userId = event.userId
         val projectId = event.projectId
         val buildId = event.buildId
         val pipelineId = event.pipelineId
 
         val artifactList: List<FileInfo> = try {
-            pipelineBuildArtifactoryService.getArtifactList(projectId, pipelineId, buildId)
+            pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
         } catch (ignored: Throwable) {
             logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
             emptyList()
@@ -71,7 +72,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
             }
 
             val result = client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -83,7 +84,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
             logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
             // rollback
             client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

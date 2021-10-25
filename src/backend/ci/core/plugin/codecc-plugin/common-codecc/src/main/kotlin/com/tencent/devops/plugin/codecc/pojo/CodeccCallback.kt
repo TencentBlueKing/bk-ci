@@ -29,17 +29,23 @@ package com.tencent.devops.plugin.codecc.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("codecc回调")
 data class CodeccCallback(
+    @ApiModelProperty(name = "bs_project_id")
     @JsonProperty("bs_project_id")
     val projectId: String = "",
+    @ApiModelProperty(name = "bs_pipeline_id")
     @JsonProperty("bs_pipeline_id")
     val pipelineId: String = "",
+    @ApiModelProperty(name = "task_id")
     @JsonProperty("task_id")
     val taskId: String = "",
+    @ApiModelProperty(name = "bs_build_id")
     @JsonProperty("bs_build_id")
     val buildId: String = "",
+    @ApiModelProperty(name = "tool_snapshot_list")
     @JsonProperty("tool_snapshot_list")
     val toolSnapshotList: List<Map<String, Any>> = listOf()
 )

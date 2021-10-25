@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -46,6 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
 class PipelineInfoDao {
 
@@ -109,7 +109,6 @@ class PipelineInfoDao {
         pipelineDesc: String? = null,
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
-        buildNo: BuildNo? = null,
         taskCount: Int = 0,
         latestVersion: Int = 0
     ): Int {
@@ -305,7 +304,7 @@ class PipelineInfoDao {
     /**
      * 查找updateTime之前被删除的流水线
      */
-    @Suppress("unused")
+    @Suppress("ComplexCondition", "unused")
     fun listDeletePipelineBefore(
         dslContext: DSLContext,
         updateTime: LocalDateTime,
@@ -583,6 +582,7 @@ class PipelineInfoDao {
         }
     }
 
+    @Suppress("MagicNumber")
     fun batchUpdatePipelineNamePinYin(dslContext: DSLContext) {
         val limit = 1000
         var offset = 0
