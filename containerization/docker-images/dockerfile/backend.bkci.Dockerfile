@@ -8,7 +8,8 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     yum install mysql -y && \
     wget "https://github.com/stubenhuang/jre/raw/main/linux/jre.zip" -P /data/workspace/agent-package/jre/linux/ &&\
     wget "https://github.com/stubenhuang/jre/raw/main/windows/jre.zip" -P /data/workspace/agent-package/jre/windows/ &&\
-    wget "https://github.com/stubenhuang/jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/
+    wget "https://github.com/stubenhuang/jre/raw/main/macos/jre.zip" -P /data/workspace/agent-package/jre/macos/ &&\
+    export LANG="en_US.UTF-8"
 
 COPY ./ci /data/workspace/
 COPY ./dockerfile/backend.bkci.sh /data/workspace/

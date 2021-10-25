@@ -109,7 +109,6 @@ class TurboPlanService @Autowired constructor(
     /**
      * 新增加速方案
      */
-    @Transactional
     fun addNewTurboPlan(turboPlanModel: TurboPlanModel, user: String): String? {
         logger.info("add turbo plan, engine code: ${turboPlanModel.engineCode}, plan name: ${turboPlanModel.planName}")
         var turboPlanEntity: TTurboPlanEntity? = null

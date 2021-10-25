@@ -71,7 +71,6 @@ class TurboEngineConfigService @Autowired constructor(
     /**
      * 新增引擎配置信息
      */
-    @Transactional
     fun addNewEngineConfig(
         turboEngineConfigModel: TurboEngineConfigModel,
         user: String

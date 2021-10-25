@@ -998,7 +998,7 @@ turbo:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bkci-turbo
-    tag: 0.0.12
+    tag: 0.0.14
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1

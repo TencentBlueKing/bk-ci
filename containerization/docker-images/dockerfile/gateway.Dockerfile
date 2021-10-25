@@ -15,7 +15,8 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     rm -rf /usr/local/openresty/nginx/conf &&\
     ln -s  /data/workspace/gateway/core /usr/local/openresty/nginx/conf &&\
     chmod +x /data/workspace/scripts/render_tpl &&\
-    mkdir -p /usr/local/openresty/nginx/run/
+    mkdir -p /usr/local/openresty/nginx/run/ &&\
+    export LANG="en_US.UTF-8"
 
 WORKDIR /usr/local/openresty/nginx/
 
