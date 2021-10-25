@@ -42,7 +42,6 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:process:api-process"))
-    api(project(":core:quality:api-quality"))
     api(project(":core:plugin:api-plugin"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:notify:api-notify"))
