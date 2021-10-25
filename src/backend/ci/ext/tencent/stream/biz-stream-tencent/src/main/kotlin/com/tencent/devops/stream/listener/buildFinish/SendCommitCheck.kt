@@ -5,6 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -32,6 +36,8 @@ class SendCommitCheck @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
+        private const val BUILD_STAGE_SUCCESS_DESC =
+            "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
         private const val BUILD_SUCCESS_DESC = "Your pipeline「%s」 is succeed."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Your pipeline「%s」 is failed."
@@ -116,7 +122,12 @@ class SendCommitCheck @Autowired constructor(
         val pipelineName = context.pipeline.displayName
         return when {
             (context.isSuccess()) -> {
-                BUILD_SUCCESS_DESC.format(pipelineName)
+                if (context.buildStatus == BuildStatus.STAGE_SUCCESS) {
+                    val (name, reason) = getReviewInfo(context)
+                    BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
+                } else {
+                    BUILD_SUCCESS_DESC.format(pipelineName)
+                }
             }
             context.buildStatus.isCancel() -> {
                 BUILD_CANCEL_DESC.format(pipelineName)
@@ -125,6 +136,31 @@ class SendCommitCheck @Autowired constructor(
                 BUILD_FAILED_DESC.format(pipelineName)
             }
         }
+    }
+
+    private fun getReviewInfo(context: StreamFinishContextV2): Pair<String, String> {
+        val model = try {
+            client.get(ServiceBuildResource::class).getBuildDetail(
+                userId = context.buildFinishEvent.userId,
+                projectId = context.buildFinishEvent.projectId,
+                pipelineId = context.buildFinishEvent.pipelineId,
+                buildId = context.buildFinishEvent.buildId,
+                channelCode = ChannelCode.GIT
+            ).data!!.model
+        } catch (e: Exception) {
+            logger.warn("get build finish model info error: ${e.message}")
+            return Pair(" ", " ")
+        }
+        model.stages.forEach { stage ->
+            if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
+                stage.checkIn?.reviewGroups?.forEach { review ->
+                    if (review.status == ManualReviewAction.ABORT.name) {
+                        return Pair(review.operator ?: " ", review.suggest ?: " ")
+                    }
+                }
+            }
+        }
+        return Pair(" ", " ")
     }
 
     private fun sendCommitCheckV1(
