@@ -1149,7 +1149,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         sb.append("\r\n")
                     }
                 } catch (ignored: Throwable) {
-                    sb.insert(0, "# 参数[$paramKey] 的$ignored ,请检查task.json配置格式是否正确 \n")
+                    sb.insert(0, "# 参数[$paramKey] 的${ignored.message} ,请检查task.json配置格式是否正确 \n")
                 }
             }
         }
