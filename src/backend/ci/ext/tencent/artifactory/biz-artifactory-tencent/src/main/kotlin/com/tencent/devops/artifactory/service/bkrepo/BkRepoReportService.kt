@@ -44,12 +44,21 @@ import javax.ws.rs.NotFoundException
 class BkRepoReportService @Autowired constructor(
     private val bkRepoClient: BkRepoClient
 ) : ReportService {
-    override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
-        logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, elementId: $elementId, path: $path")
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    ) {
+        logger.info("get, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+            "elementId: $elementId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
-        bkRepoClient.getFileDetail("", projectId, RepoUtils.REPORT_REPO, realPath) ?: throw NotFoundException("文件($path)不存在")
-        val fileContent = bkRepoClient.getFileContent("", projectId, RepoUtils.REPORT_REPO, realPath)
+        bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, realPath)
+            ?: throw NotFoundException("文件($path)不存在")
+        val fileContent = bkRepoClient.getFileContent(userId, projectId, RepoUtils.REPORT_REPO, realPath)
 
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
         response.contentType = MimeUtil.mediaType(path)

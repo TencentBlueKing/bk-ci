@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
@@ -163,21 +164,15 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             defaultMessage = "流水线已不存在，请检查"
         )
-        val yamlSb = getYamlStringBuilder(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model,
-            isGitCI = isGitCI
-        )
 
         // 将所有插件ID按编排顺序刷新
         var stepCount = 1
-        model.stages.forEach { s ->
+        baseModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
                     e.id = "step_$stepCount"
@@ -185,6 +180,37 @@ class TXPipelineExportService @Autowired constructor(
                 }
             }
         }
+
+        // 过滤出enable == false 的stage/job/step
+        val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
+        val enableStages: MutableList<Stage> = mutableListOf()
+        filterStage.forEach { stageIt ->
+            val filterContainer = stageIt.containers.filter { fit ->
+                when (fit) {
+                    is NormalContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is VMBuildContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is TriggerContainer -> true
+                    else -> true
+                }
+            }
+            filterContainer.forEach { elementIt ->
+                elementIt.elements = elementIt.elements.filter { fit ->
+                    fit.additionalOptions?.enable != false
+                }
+            }
+            enableStages.add(stageIt.copy(containers = filterContainer))
+        }
+        val model = baseModel.copy(stages = enableStages)
+        val yamlSb = getYamlStringBuilder(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            isGitCI = isGitCI
+        )
 
         val pipelineGroupsMap = mutableMapOf<String, String>()
         pipelineGroupService.getGroups(userId, projectId).forEach {
@@ -973,7 +999,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         exportFile: Boolean
     ): String {
-        val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
+        val pattern = Pattern.compile("\\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         var newValue = value as String
         while (matcher.find()) {

@@ -25,25 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.common
+package com.tencent.devops.store.pojo.atom
 
-const val BS_TASK_HOST = "_bsTaskHost_"
-const val BS_ATOM_STATUS_REFRESH_DELAY_MILLS = "_bsDelayMills_"
-const val BS_ATOM_START_TIME_MILLS = "_bsAtomStartTimeMills_"
-const val BS_ATOM_LOOP_TIMES = "_bsAtomLoopTimes_"
-const val BS_QUALITY_RESULT = "_bsQualityResult_"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-const val BS_MANUAL_ACTION = "_bsManualAction_"
-const val BS_MANUAL_ACTION_USERID = "_bsManualActionUserId_"
-const val BS_MANUAL_ACTION_SUGGEST = "_bsManualActionSuggest_"
-const val BS_MANUAL_ACTION_PARAMS = "_bsManualActionParams_"
-const val BS_MANUAL_ACTION_DESC = "_bsManualActionDesc_"
-
-const val BS_MANUAL_START_STAGE = "manual_start_stage"
-const val BS_QUALITY_PASS_STAGE = "quality_start_stage"
-const val BS_QUALITY_ABORT_STAGE = "quality_abort_stage"
-const val BS_CONTAINER_END_SOURCE_PREFIX = "CONTAINER_END_"
-const val BS_MANUAL_STOP_PAUSE_ATOM = "taskCancel_"
-const val BS_STAGE_CANCELED_END_SOURCE = "STAGE_CANCELED_END"
-
-const val BS_PAUSE_TASK = "_bkTaskPauseTag_"
+@ApiModel("插件输出参数")
+data class AtomOutput(
+    @ApiModelProperty("参数名")
+    val name: String,
+    @ApiModelProperty("参数说明")
+    val desc: String?
+)

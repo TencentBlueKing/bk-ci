@@ -25,25 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.common
+package com.tencent.devops.stream.pojo.v2
 
-const val BS_TASK_HOST = "_bsTaskHost_"
-const val BS_ATOM_STATUS_REFRESH_DELAY_MILLS = "_bsDelayMills_"
-const val BS_ATOM_START_TIME_MILLS = "_bsAtomStartTimeMills_"
-const val BS_ATOM_LOOP_TIMES = "_bsAtomLoopTimes_"
-const val BS_QUALITY_RESULT = "_bsQualityResult_"
+import com.tencent.devops.stream.pojo.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-const val BS_MANUAL_ACTION = "_bsManualAction_"
-const val BS_MANUAL_ACTION_USERID = "_bsManualActionUserId_"
-const val BS_MANUAL_ACTION_SUGGEST = "_bsManualActionSuggest_"
-const val BS_MANUAL_ACTION_PARAMS = "_bsManualActionParams_"
-const val BS_MANUAL_ACTION_DESC = "_bsManualActionDesc_"
-
-const val BS_MANUAL_START_STAGE = "manual_start_stage"
-const val BS_QUALITY_PASS_STAGE = "quality_start_stage"
-const val BS_QUALITY_ABORT_STAGE = "quality_abort_stage"
-const val BS_CONTAINER_END_SOURCE_PREFIX = "CONTAINER_END_"
-const val BS_MANUAL_STOP_PAUSE_ATOM = "taskCancel_"
-const val BS_STAGE_CANCELED_END_SOURCE = "STAGE_CANCELED_END"
-
-const val BS_PAUSE_TASK = "_bkTaskPauseTag_"
+@ApiModel("蓝盾工蜂项目用户校验结果")
+data class GitUserValidateResult(
+    @ApiModelProperty("工蜂项目ID")
+    override val gitProjectId: Long,
+    @ApiModelProperty("工蜂项目名")
+    override val name: String,
+    @ApiModelProperty("工蜂项目url")
+    override val url: String,
+    @ApiModelProperty("homepage")
+    override val homepage: String,
+    @ApiModelProperty("gitHttpUrl")
+    override val gitHttpUrl: String,
+    @ApiModelProperty("gitSshUrl")
+    override val gitSshUrl: String,
+    @ApiModelProperty("蓝盾项目ID")
+    val projectCode: String,
+    @ApiModelProperty("蓝盾项目名")
+    val projectName: String,
+    @ApiModelProperty("是否开启CI功能")
+    val enableCi: Boolean
+) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

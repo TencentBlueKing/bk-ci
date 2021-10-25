@@ -29,5 +29,8 @@ package com.tencent.devops.common.quality.pojo.enums
 
 enum class RuleInterceptResult {
     PASS,
-    FAIL
+    FAIL,
+    WAIT,
+    INTERCEPT,
+    INTERCEPT_PASS
 }

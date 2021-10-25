@@ -88,6 +88,7 @@ import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.trigger.GitCIEventService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -186,7 +187,7 @@ class YamlBuild @Autowired constructor(
         val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer =
             TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), VMUtils.genStageId(1))
         stageList.add(stage1)
 
         // 第二个stage，services初始化

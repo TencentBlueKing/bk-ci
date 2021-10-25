@@ -199,6 +199,9 @@ class QualityRuleCheckService @Autowired constructor(
         // 更新build id
         qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
+        // 更新gateKeepers
+        qualityRuleBuildHisService.convertGateKeepers(ruleList, buildCheckParams)
+
         val params = BuildCheckParams(
             buildCheckParams.projectId,
             buildCheckParams.pipelineId,
@@ -275,6 +278,10 @@ class QualityRuleCheckService @Autowired constructor(
 
             resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
+            if (!rule.gateKeepers.isNullOrEmpty() && !interceptResult) {
+                qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId),
+                    RuleInterceptResult.WAIT.name)
+            }
         }
 
         return Pair(resultList, ruleInterceptList)
@@ -291,7 +298,8 @@ class QualityRuleCheckService @Autowired constructor(
         // generate result
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
         val allPass = failRule.isEmpty()
-        val allEnd = allPass || (!allPass && !failRule.any { it.operation == RuleOperation.AUDIT })
+        val allEnd = allPass || (!allPass && !failRule.any { it.operation == RuleOperation.AUDIT } &&
+                failRule.all { it.gateKeepers.isNullOrEmpty() })
         val auditTimeOutMinutes = if (!allPass) {
             Collections.min(failRule.map { it.auditTimeoutMinutes ?: DEFAULT_TIMEOUT_MINUTES })
         } else DEFAULT_TIMEOUT_MINUTES
