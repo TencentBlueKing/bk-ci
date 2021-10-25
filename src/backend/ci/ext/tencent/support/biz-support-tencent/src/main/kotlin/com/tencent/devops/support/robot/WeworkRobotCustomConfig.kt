@@ -39,4 +39,7 @@ class WeworkRobotCustomConfig {
 
     @Value("\${robot.robotKey:#{null}}")
     val robotKey: String? = null
+
+    @Value("\${robot.url:#{null}}")
+    val weworkUrl: String? = null
 }

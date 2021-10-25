@@ -4,7 +4,7 @@ import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
-import com.tencent.devops.support.robot.pojo.RobotSendMsg
+import com.tencent.devops.support.robot.pojo.RobotTextSendMsg
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -15,7 +15,8 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
 class WeworkRobotService @Autowired constructor(
-    private val weweorkRobotConfiguration: WeworkRobotCustomConfig
+    private val weweorkRobotConfiguration: WeworkRobotCustomConfig,
+    private val weworkRobotSendMsgService: WeworkRobotSendMsgService
 ) {
     private val rototWxcpt =
         WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, "")
@@ -40,23 +41,15 @@ class WeworkRobotService @Autowired constructor(
         return verifyResult
     }
 
-    fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
+    fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
         logger.info("signature:$signature")
         logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
         logger.info("reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId}")
-
-        val robotSendMsg = RobotSendMsg(
-            MsgType = WeworkTextType.text.name,
-            Text = "本群ID='${robotCallBack.chatId}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。",
-            Content = "本群ID='${robotCallBack.chatId}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。",
-            MentionedList = robotCallBack.chatId
-        )
-        val sendMsg = encryptMsg(robotSendMsg, timestamp, nonce)
-        logger.info("sendMsg: $sendMsg")
-        return sendMsg
+        weworkRobotSendMsgService.sendTextMsgByRobot(chatId = robotCallBack.chatId, "群Id: ${robotCallBack.chatId}")
+        return true
     }
 
     /*
@@ -115,10 +108,10 @@ class WeworkRobotService @Autowired constructor(
     /*
     * 获取密文的xml字符串
     * */
-    fun encryptMsg(robotSendMsg: RobotSendMsg, timestamp: Long, nonce: String): String {
+    fun encryptMsg(robotTextSendMsg: RobotTextSendMsg, timestamp: Long, nonce: String): String {
         var xmlString = ""
         try {
-            xmlString = rototWxcpt.EncryptMsg(robotSendMsg.toJsonString(), timestamp.toString(), nonce)
+            xmlString = rototWxcpt.EncryptMsg(robotTextSendMsg.toJsonString(), timestamp.toString(), nonce)
         } catch (e: Exception) {
             // 转换失败，错误原因请查看异常
             e.printStackTrace()

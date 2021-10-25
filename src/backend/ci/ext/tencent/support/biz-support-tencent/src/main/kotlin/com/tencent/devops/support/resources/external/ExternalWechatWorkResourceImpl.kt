@@ -77,7 +77,7 @@ class ExternalWechatWorkResourceImpl @Autowired constructor(
         timestamp: Long,
         nonce: String,
         reqData: String?,
-    ): Result<String> {
+    ): Result<Boolean> {
         return Result(weworkRobotService.robotCallbackPost(signature, timestamp, nonce, reqData))
     }
 

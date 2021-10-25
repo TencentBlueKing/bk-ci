@@ -103,7 +103,7 @@ interface ExternalWechatWorkResource {
         nonce: String,
         @ApiParam(value = "回调密文", required = true)
         reqData: String?
-    ): Result<String>
+    ): Result<Boolean>
 
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.TEXT_XML)
