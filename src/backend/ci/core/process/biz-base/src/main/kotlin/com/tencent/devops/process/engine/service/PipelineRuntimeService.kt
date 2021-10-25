@@ -1132,7 +1132,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     variables = buildVariables
                 )
+
                 if (buildHistoryRecord != null) {
+                    if (!context.stageRetry &&
+                        context.actionType.isRetry() &&
+                        context.retryStartTaskId.isNullOrEmpty()) {
+                        // 完整重试,重置启动时间
+                        buildHistoryRecord.startTime = LocalDateTime.now()
+                    }
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
