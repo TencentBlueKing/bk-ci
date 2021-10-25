@@ -55,7 +55,6 @@ import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
-import com.tencent.devops.experience.resources.service.ServiceExperienceResourceImpl
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -412,7 +411,8 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         val scheme = if (platform == "ANDROID") {
-            "bkdevopsapp://bkdevopsapp/app/experience/expDetail/${experiencePublicRecord.recordId}"
+            "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
+                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
         } else {
             "bkdevopsapp://app/experience/expDetail/${experiencePublicRecord.recordId}"
         }
