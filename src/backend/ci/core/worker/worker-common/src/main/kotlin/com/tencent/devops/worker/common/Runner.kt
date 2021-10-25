@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -246,7 +247,8 @@ object Runner {
             exception.stackTrace.forEach {
                 with(it) {
                     defaultMessage.append(
-                        "\n    at $className.$methodName($fileName:$lineNumber)")
+                        "\n    at $className.$methodName($fileName:$lineNumber)"
+                    )
                 }
             }
             message = exception.message ?: defaultMessage.toString()
@@ -329,12 +331,15 @@ object Runner {
                     return@forEach
                 }
             }
+            logger.info("${v.key}: ${v.value}")
+            if (PipelineVarUtil.fetchReverseVarName(v.key) != null) {
+                return@forEach
+            }
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
                 LoggerService.addNormalLine("${v.key}: ******")
             } else {
                 LoggerService.addNormalLine("${v.key}: ${v.value}")
             }
-            logger.info("${v.key}: ${v.value}")
         }
         LoggerService.addFoldEndLine("-----")
         LoggerService.addNormalLine("")

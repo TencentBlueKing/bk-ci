@@ -199,7 +199,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                         event,
                         buildRunningDesc.format(pipeline.displayName)
                     ),
-                    mergeRequestId = event.mergeRequestId ?: 0L,
+                    mergeRequestId = event.mergeRequestId,
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,

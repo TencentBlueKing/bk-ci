@@ -29,6 +29,7 @@ package com.tencent.devops.stream.resources.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
@@ -38,13 +39,24 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
+import com.tencent.devops.stream.v2.service.StreamScmService
+import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val permissionService: GitCIV2PermissionService
+    private val permissionService: GitCIV2PermissionService,
+    private val streamScmService: StreamScmService
 ) : ServiceGitBasicSettingResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceGitBasicSettingResourceImpl::class.java)
+    }
 
     override fun enableGitCI(
         userId: String,
@@ -70,6 +82,65 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
+    }
+
+    override fun validateGitProject(
+        userId: String,
+        request: GitUserValidateRequest
+    ): Result<GitUserValidateResult?> {
+        logger.info("STREAM|validateGitProject|request=$request")
+        val projectName = try {
+            GitUtils.getProjectName(request.url)
+        } catch (t: Throwable) {
+            return Result(
+                status = Response.Status.BAD_REQUEST.statusCode,
+                message = t.message,
+                data = null
+            )
+        }
+        // 直接请求新的token，如果不是合法的项目在获取时直接报错
+        val token = try {
+            streamScmService.getToken(projectName).accessToken
+        } catch (t: Throwable) {
+            return Result(
+                status = Response.Status.BAD_REQUEST.statusCode,
+                message = t.message,
+                data = null
+            )
+        }
+        val projectInfo = streamScmService.getProjectInfo(
+            gitProjectId = projectName,
+            token = token,
+            useAccessToken = true
+        ) ?: return Result(
+            status = Response.Status.NOT_FOUND.statusCode,
+            message = "工蜂项目信息不存在，请检查链接",
+            data = null
+        )
+        logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
+        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
+
+        permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.USE)
+
+        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
+            ?: return Result(
+                status = Response.Status.NOT_FOUND.statusCode,
+                message = "工蜂项目未开启Stream，请前往仓库的CI/CD进行配置",
+                data = null
+            )
+        logger.info("STREAM|validateGitProjectSetting|setting=$setting")
+        return Result(GitUserValidateResult(
+            gitProjectId = gitProjectId,
+            name = setting.name,
+            url = setting.url,
+            homepage = setting.homepage,
+            gitHttpUrl = setting.gitHttpUrl,
+            gitSshUrl = setting.gitSshUrl,
+            projectCode = projectCode,
+            projectName = projectInfo.nameWithNamespace,
+            enableCi = setting.enableCi
+        ))
     }
 
     override fun saveGitCIConf(

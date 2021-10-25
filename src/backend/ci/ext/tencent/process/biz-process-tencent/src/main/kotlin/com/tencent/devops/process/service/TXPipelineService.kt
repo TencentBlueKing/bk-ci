@@ -696,7 +696,7 @@ class TXPipelineService @Autowired constructor(
             } else {
                 when (agentsResult.data!![0].os) {
                     "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
+                    "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX
                 }
             }
@@ -752,7 +752,7 @@ class TXPipelineService @Autowired constructor(
             } else {
                 when (agentResult.data!!.os) {
                     "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
+                    "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX
                 }
             }

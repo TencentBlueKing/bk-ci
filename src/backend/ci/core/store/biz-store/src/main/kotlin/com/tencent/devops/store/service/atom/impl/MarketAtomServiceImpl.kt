@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
+import com.tencent.devops.common.api.constant.DESC
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
@@ -71,6 +72,7 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
@@ -87,6 +89,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
@@ -931,6 +934,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getAtomOutput(atomCode: String): List<AtomOutput> {
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
+        val propMap = JsonUtil.toMap(atom.props)
+        val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
+        return outputDataMap?.keys?.map { outputKey ->
+            val outputDataObj = outputDataMap[outputKey] as Map<String, Any>
+            AtomOutput(
+                name = outputKey,
+                desc = if (outputDataObj[DESC] == null) {
+                    null
+                } else {
+                    outputDataObj[DESC].toString()
+                }
+            )
+        } ?: emptyList()
+    }
+
     override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
         val atomList = marketAtomDao.getLatestAtomListByCodes(
             dslContext = dslContext,
@@ -1091,7 +1111,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                    "true".equals(paramValueMap["required"].toString(), true)
+                        "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {

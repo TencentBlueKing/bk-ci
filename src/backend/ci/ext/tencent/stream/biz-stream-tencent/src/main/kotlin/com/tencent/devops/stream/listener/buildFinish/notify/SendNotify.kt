@@ -7,7 +7,6 @@ import com.tencent.devops.common.ci.v2.GitNotices
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -20,6 +19,7 @@ import com.tencent.devops.stream.listener.buildFinish.StreamFinishContext
 import com.tencent.devops.stream.listener.buildFinish.StreamFinishContextV1
 import com.tencent.devops.stream.listener.buildFinish.StreamFinishContextV2
 import com.tencent.devops.stream.listener.buildFinish.getGitCommitCheckState
+import com.tencent.devops.stream.listener.buildFinish.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
@@ -70,7 +70,7 @@ class SendNotify @Autowired constructor(
             ).notices
             notices?.forEach { notice ->
                 // 替换 variables
-                if (!checkStatus(build.id, replaceVar(notice.ifField, variables), buildStatus)) {
+                if (!checkStatus(this, build.id, replaceVar(notice.ifField, variables))) {
                     return@forEach
                 }
                 val newType = getNoticeType(build.id, replaceVar(notice.type, variables)) ?: return@forEach
@@ -138,7 +138,11 @@ class SendNotify @Autowired constructor(
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
             GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
-                val accessToken = RtxCustomApi.getAccessToken(config.rtxUrl, config.corpSecret, config.corpId)
+                val accessToken = RtxCustomApi.getAccessToken(
+                    urlPrefix = config.rtxUrl,
+                    corpId = config.corpId,
+                    corpSecret = config.corpSecret
+                )
                 val (rtxReceivers, receiversType) = if (notifyType == GitCINotifyType.RTX_GROUP) {
                     Pair(replaceReceivers(chatIds, build.buildParameters), ReceiverType.GROUP)
                 } else {
@@ -172,20 +176,26 @@ class SendNotify @Autowired constructor(
     }
 
     // 校验V2通知状态
-    private fun checkStatus(buildId: String, ifField: String?, buildStatus: BuildStatus): Boolean {
+    private fun checkStatus(
+        context: StreamFinishContextV2,
+        buildId: String,
+        ifField: String?
+    ): Boolean {
         // 未填写则所有状态都发送
         if (ifField.isNullOrBlank()) {
             return true
         }
+        // stage审核的状态专门判断为成功
+        val success = context.isSuccess()
         return when (ifField) {
             IfType.SUCCESS.name -> {
-                return buildStatus.isSuccess()
+                return success
             }
             IfType.FAILURE.name -> {
-                return buildStatus.isFailure()
+                return !success
             }
             IfType.CANCELLED.name -> {
-                return buildStatus.isCancel()
+                return context.buildStatus.isCancel()
             }
             IfType.ALWAYS.name -> {
                 return true
