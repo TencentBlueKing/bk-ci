@@ -138,7 +138,11 @@ class SendNotify @Autowired constructor(
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
             GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
-                val accessToken = RtxCustomApi.getAccessToken(config.rtxUrl, config.corpSecret, config.corpId)
+                val accessToken = RtxCustomApi.getAccessToken(
+                    urlPrefix = config.rtxUrl,
+                    corpId = config.corpId,
+                    corpSecret = config.corpSecret
+                )
                 val (rtxReceivers, receiversType) = if (notifyType == GitCINotifyType.RTX_GROUP) {
                     Pair(replaceReceivers(chatIds, build.buildParameters), ReceiverType.GROUP)
                 } else {
