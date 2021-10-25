@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -509,6 +510,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
             stageId = stageId,
             isCancel = cancel ?: false,
             reviewRequest = reviewRequest
+        )
+        return Result(true)
+    }
+
+    override fun qualityTriggerStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        qualityRequest: StageQualityRequest
+    ): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        pipelineBuildFacadeService.qualityTriggerStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            qualityRequest = qualityRequest
         )
         return Result(true)
     }

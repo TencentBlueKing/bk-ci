@@ -33,11 +33,11 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("")
 data class GithubToken(
-    @ApiModelProperty("鉴权token")
+    @ApiModelProperty("鉴权token", name = "access_token")
     @JsonProperty("access_token")
     val accessToken: String,
     @JsonProperty("token_type")
-    @ApiModelProperty("token类型")
+    @ApiModelProperty("token类型", name = "token_type")
     val tokenType: String,
     @ApiModelProperty("范围")
     val scope: String
