@@ -14,13 +14,15 @@ interface StreamFinishContext {
     val streamBuildEvent: StreamBuildEvent
     val pipeline: GitProjectPipeline
     val buildStatus: BuildStatus
-    val gitStatus: GitCICommitCheckState
 }
+
+// 获取整体的构建状态
+fun StreamFinishContext.isSuccess() = buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS
 
 // 获取commit checkState
 fun StreamFinishContext.getGitCommitCheckState(): GitCICommitCheckState {
     // stage审核的状态专门判断为成功
-    return if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
+    return if (isSuccess()) {
         GitCICommitCheckState.SUCCESS
     } else {
         GitCICommitCheckState.FAILURE
@@ -34,11 +36,6 @@ data class StreamFinishContextV2(
     override val streamBuildEvent: StreamBuildEvent,
     override val pipeline: GitProjectPipeline,
     override val buildStatus: BuildStatus = BuildStatus.valueOf(buildFinishEvent.status),
-    override val gitStatus: GitCICommitCheckState = if (buildStatus.isSuccess()) {
-        GitCICommitCheckState.SUCCESS
-    } else {
-        GitCICommitCheckState.FAILURE
-    },
     val streamSetting: GitCIBasicSetting
 ) : StreamFinishContext
 
@@ -48,11 +45,6 @@ data class StreamFinishContextV1(
     override val streamBuildEvent: StreamBuildEvent,
     override val pipeline: GitProjectPipeline,
     override val buildStatus: BuildStatus = BuildStatus.valueOf(buildFinishEvent.status),
-    override val gitStatus: GitCICommitCheckState = if (buildStatus.isSuccess()) {
-        GitCICommitCheckState.SUCCESS
-    } else {
-        GitCICommitCheckState.FAILURE
-    },
     val streamSetting: GitRepositoryConf
 ) : StreamFinishContext
 

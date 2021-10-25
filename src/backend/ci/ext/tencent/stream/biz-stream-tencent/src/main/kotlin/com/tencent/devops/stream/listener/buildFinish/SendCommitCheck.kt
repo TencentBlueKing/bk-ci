@@ -5,7 +5,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -75,7 +74,7 @@ class SendCommitCheck @Autowired constructor(
             gitCheckService.pushCommitCheck(
                 commitId = requestEvent.commitId,
                 description = triggerMessageUtil.getCommitCheckDesc(
-                    prefix = getDescByBuildStatus(buildStatus, pipeline.displayName),
+                    prefix = getDescByBuildStatus(this),
                     objectKind = requestEvent.objectKind,
                     action = if (gitEvent is GitMergeRequestEvent) {
                         StreamMrEventAction.getActionValue(gitEvent) ?: ""
@@ -95,7 +94,7 @@ class SendCommitCheck @Autowired constructor(
                 context = "${pipeline.filePath}@${requestEvent.objectKind.toUpperCase()}",
                 gitCIBasicSetting = streamSetting,
                 pipelineId = buildFinishEvent.pipelineId,
-                block = requestEvent.isMr() && !buildStatus.isSuccess() && streamSetting.enableMrBlock,
+                block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 reportData = streamQualityService.getQualityGitMrResult(
                     client = client,
                     gitProjectId = streamSetting.gitProjectId,
@@ -113,12 +112,13 @@ class SendCommitCheck @Autowired constructor(
     }
 
     // 根据状态切换描述
-    private fun getDescByBuildStatus(buildStatus: BuildStatus, pipelineName: String): String {
+    private fun getDescByBuildStatus(context: StreamFinishContextV2): String {
+        val pipelineName = context.pipeline.displayName
         return when {
-            buildStatus.isSuccess() -> {
+            (context.isSuccess()) -> {
                 BUILD_SUCCESS_DESC.format(pipelineName)
             }
-            buildStatus.isCancel() -> {
+            context.buildStatus.isCancel() -> {
                 BUILD_CANCEL_DESC.format(pipelineName)
             }
             else -> {
