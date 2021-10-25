@@ -55,7 +55,7 @@ class ContainerAgentUpHandler(
             try {
                 // 等待5s，看agent是否正常启动
                 Thread.sleep(5000)
-                val containerState = getContainerState(containerId)
+                val containerState = getContainerState(containerId!!)
                 logger.info("containerState: $containerState")
                 if (containerState != null) {
                     exitCode = containerState.exitCodeLong ?: 0L

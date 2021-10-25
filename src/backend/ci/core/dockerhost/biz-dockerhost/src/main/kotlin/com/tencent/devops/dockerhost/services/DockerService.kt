@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dockerhost.services
 
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -35,6 +36,10 @@ import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
+import com.tencent.devops.dockerhost.services.container.ContainerAgentUpHandler
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
+import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
@@ -47,7 +52,10 @@ import java.util.concurrent.Future
 @Service@Suppress("ALL")
 class DockerService @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostImageService: DockerHostImageService
+    private val dockerHostImageService: DockerHostImageService,
+    private val containerPullImageHandler: ContainerPullImageHandler,
+    private val containerRunHandler: ContainerRunHandler,
+    private val containerAgentUpHandler: ContainerAgentUpHandler
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -100,7 +108,29 @@ class DockerService @Autowired constructor(
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
 
-        val (containerId, timeStamp, portBindingList) = dockerHostBuildService.dockerRun(
+        val containerHandlerContext = ContainerHandlerContext(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId.toInt(),
+            poolNo = dockerRunParam.poolNo?.toInt() ?: 1,
+            userName = "",
+            originImageName = dockerRunParam.imageName,
+            imageType = ImageType.THIRD.type,
+            agentId = null,
+            secretKey = null,
+            registryUser = dockerRunParam.registryUser,
+            registryPwd = dockerRunParam.registryPwd,
+            dockerRunParam = dockerRunParam
+        )
+
+        containerPullImageHandler.setNextHandler(
+            containerRunHandler.setNextHandler(containerAgentUpHandler)
+        ).handlerRequest(containerHandlerContext)
+
+        return containerHandlerContext.dockerRunResponse!!
+
+        /*val (containerId, timeStamp, portBindingList) = dockerHostBuildService.dockerRun(
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
@@ -109,7 +139,7 @@ class DockerService @Autowired constructor(
         )
 
         logger.info("$buildId|dockerRunEnd|vmSeqId=$vmSeqId|poolNo=${dockerRunParam.poolNo}")
-        return DockerRunResponse(containerId, timeStamp, portBindingList)
+        return DockerRunResponse(containerId, timeStamp, portBindingList)*/
     }
 
     fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
@@ -153,14 +183,41 @@ class DockerService @Autowired constructor(
 
     fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): String {
         logger.warn("Create container, dockerStartBuildInfo: $dockerHostBuildInfo")
-        val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
+        with(dockerHostBuildInfo) {
+            val containerHandlerContext = ContainerHandlerContext(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo,
+                userName = "",
+                originImageName = imageName,
+                imageType = imageType,
+                agentId = agentId,
+                secretKey = secretKey,
+                registryUser = registryUser,
+                registryPwd = registryPwd,
+                containerHashId = containerHashId,
+                customBuildEnv = customBuildEnv,
+                buildType = buildType,
+                qpcUniquePath = qpcUniquePath,
+                dockerResource = dockerResource
+            )
+
+            containerPullImageHandler.setNextHandler(
+                containerRunHandler.setNextHandler(containerAgentUpHandler)
+            ).handlerRequest(containerHandlerContext)
+
+            return containerHandlerContext.containerId!!
+        }
+/*        val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
         dockerHostBuildService.log(
             buildId = dockerHostBuildInfo.buildId,
             message = "构建环境启动成功，等待Agent启动...",
             tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
             containerHashId = dockerHostBuildInfo.containerHashId
         )
-        return containerId
+        return containerId*/
     }
 
     fun getDockerHostLoad(): DockerHostLoad {

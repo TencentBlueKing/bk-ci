@@ -59,8 +59,8 @@ class SystemDockerEnvGenerator @Autowired constructor(
         val gateway = DockerEnv.getGatway()
         val envList = mutableListOf(
             Env(key = ENV_KEY_PROJECT_ID, value = dockerHostBuildInfo.projectId),
-            Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId),
-            Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey),
+            Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId!!),
+            Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey!!),
             Env(key = ENV_KEY_GATEWAY, value = gateway),
             Env(key = "TERM", value = "xterm-256color"),
             Env(key = "pool_no", value = dockerHostBuildInfo.poolNo.toString()),

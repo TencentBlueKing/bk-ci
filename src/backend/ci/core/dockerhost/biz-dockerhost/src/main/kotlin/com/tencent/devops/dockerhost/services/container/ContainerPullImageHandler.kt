@@ -51,21 +51,21 @@ class ContainerPullImageHandler(
             val taskId = VMUtils.genStartVMTaskId(vmSeqId.toString())
 
             try {
-                LocalImageCache.saveOrUpdate(formatImageName)
+                LocalImageCache.saveOrUpdate(formatImageName!!)
                 val authConfig = CommonUtils.getAuthConfig(
                     imageType = imageType,
                     dockerHostConfig = dockerHostConfig,
-                    imageName = formatImageName,
+                    imageName = formatImageName!!,
                     registryUser = registryUser,
                     registryPwd = registryPwd
                 )
-                log(buildId, "开始拉取镜像，镜像名称：$formatImageName", taskId, containerHashId)
-                httpLongDockerCli.pullImageCmd(formatImageName).withAuthConfig(authConfig)
+                log(buildId, "开始拉取镜像，镜像名称：$formatImageName!!", taskId, containerHashId)
+                httpLongDockerCli.pullImageCmd(formatImageName!!).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId))
                     .awaitCompletion()
                 log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$formatImageName，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "无权限拉取镜像：$formatImageName!!，请检查镜像路径或凭证是否正确；" +
                         "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
@@ -74,11 +74,11 @@ class ContainerPullImageHandler(
                     message = errorMessage
                 )
             } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$formatImageName，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "镜像不存在：$formatImageName!!，请检查镜像路径或凭证是否正确；" +
                         "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
             } catch (t: Throwable) {
-                logger.warn("Fail to pull the image $formatImageName of build $buildId", t)
+                logger.warn("Fail to pull the image $formatImageName!! of build $buildId", t)
                 log(
                     buildId = buildId,
                     message = "拉取镜像失败，错误信息：${t.message}",

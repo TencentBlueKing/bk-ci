@@ -29,12 +29,7 @@ package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.async.ResultCallback
-import com.github.dockerjava.api.model.Driver
-import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.PullResponseItem
-import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
@@ -42,7 +37,6 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import org.slf4j.LoggerFactory
-import java.io.File
 
 abstract class Handler<T : HandlerContext> constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -110,87 +104,6 @@ abstract class Handler<T : HandlerContext> constructor(
             )
         } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
-        }
-    }
-
-    fun mountOverlayfs(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        hostConfig: HostConfig
-    ) {
-        val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
-            projectId = projectId,
-            buildId = buildId,
-            vmSeqId = vmSeqId.toString(),
-            poolNo = poolNo
-        )?.data
-
-        var qpcUniquePath = ""
-        if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
-            qpcUniquePath = qpcGitProjectList.first()
-        }
-
-        mountOverlayfs(pipelineId, vmSeqId, poolNo, qpcUniquePath, hostConfig)
-    }
-
-    fun mountOverlayfs(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        qpcUniquePath: String?,
-        hostConfig: HostConfig
-    ) {
-        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}upper"
-            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}work"
-            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
-
-            if (!File(upperDir).exists()) {
-                File(upperDir).mkdirs()
-            }
-
-            if (!File(workDir).exists()) {
-                File(workDir).mkdirs()
-            }
-
-            if (!File(lowerDir).exists()) {
-                File(lowerDir).mkdirs()
-            }
-
-            val mount = Mount().withType(MountType.VOLUME)
-                .withTarget(dockerHostConfig.volumeWorkspace)
-                .withVolumeOptions(
-                    VolumeOptions().withDriverConfig(
-                        Driver().withName("local").withOptions(
-                            mapOf(
-                                "type" to "overlay",
-                                "device" to "overlay",
-                                "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                            )
-                        )
-                    )
-                )
-
-            hostConfig.withMounts(listOf(mount))
-        }
-    }
-
-    private fun getWorkspace(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int
-    ): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
-    }
-
-    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
-        return if (poolNo > 1) {
-            "$vmSeqId" + "_$poolNo"
-        } else {
-            vmSeqId.toString()
         }
     }
 

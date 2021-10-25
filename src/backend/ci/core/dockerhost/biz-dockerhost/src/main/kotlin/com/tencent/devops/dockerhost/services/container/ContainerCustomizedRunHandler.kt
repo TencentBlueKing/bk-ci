@@ -29,35 +29,70 @@ package com.tencent.devops.dockerhost.services.container
 
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.Capability
+import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Ports
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
+import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.services.Handler
-import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class ContainerRunHandler(
+class ContainerCustomizedRunHandler(
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) : Handler<ContainerHandlerContext>(dockerHostConfig, dockerHostBuildApi) {
     override fun handlerRequest(handlerContext: ContainerHandlerContext) {
         with(handlerContext) {
             try {
+                val env = mutableListOf<String>()
+                env.addAll(DockerEnvLoader.loadEnv(this))
+                env.add("bk_devops_start_source=dockerRun") // dockerRun启动标识
+                dockerRunParam!!.env?.forEach {
+                    env.add("${it.key}=${it.value ?: ""}")
+                }
+                logger.info("[$buildId]|[$vmSeqId] env is $env")
+                val binds = DockerBindLoader.loadBinds(this)
+
+                val dockerRunPortBindingList = mutableListOf<DockerRunPortBinding>()
+                val hostIp = CommonUtils.getInnerIP()
+                val portBindings = Ports()
+                dockerRunParam.portList?.forEach {
+                    val localPort = getAvailableHostPort()
+                    if (localPort == 0) {
+                        throw ContainerException(
+                            errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
+                            message = "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}"
+                        )
+                    }
+                    val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
+                    portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
+                    dockerRunPortBindingList.add(DockerRunPortBinding(hostIp, it, localPort))
+                }
+
                 val containerName =
-                    "dispatch-$buildId-$vmSeqId-${RandomUtil.randomString()}"
+                    "dockerRun-$buildId-$vmSeqId-${RandomUtil.randomString()}"
+
+                val dockerResource = dockerHostBuildApi.getResourceConfig(pipelineId, vmSeqId.toString())?.data
+
                 val hostConfig = HostConfig()
                     .withCapAdd(Capability.SYS_PTRACE)
-                    .withBinds(DockerBindLoader.loadBinds(this))
-                    .withMounts(DockerMountLoader.loadMounts(this))
+                    .withBinds(binds)
                     .withNetworkMode("bridge")
+                    .withPortBindings(portBindings)
+                    .withMounts(DockerMountLoader.loadMounts(this))
 
                 if (dockerResource != null) {
+                    logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
                     hostConfig
                         .withMemory(dockerResource.memoryLimitBytes)
                         .withMemorySwap(dockerResource.memoryLimitBytes)
@@ -65,17 +100,26 @@ class ContainerRunHandler(
                         .withCpuPeriod(dockerResource.cpuPeriod.toLong())
                 }
 
-                val container = httpLongDockerCli.createContainerCmd(formatImageName!!)
+                val createContainerCmd = httpLongDockerCli.createContainerCmd(formatImageName!!)
                     .withName(containerName)
-                    .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                    .withEnv(DockerEnvLoader.loadEnv(this))
+                    .withEnv(env)
                     .withHostConfig(hostConfig)
-                    .exec()
+                    .withWorkingDir(dockerHostConfig.volumeWorkspace)
 
-                logger.info("Created container $container")
+                if (!(dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]"))) {
+                    createContainerCmd.withCmd(dockerRunParam.command)
+                }
+
+                val container = createContainerCmd.exec()
+
+                logger.info("[$buildId]|[$vmSeqId] Created container $container")
                 httpLongDockerCli.startContainerCmd(container.id).exec()
 
-                containerId = container.id
+                dockerRunResponse = DockerRunResponse(
+                    containerId = container.id,
+                    startTimeStamp = (System.currentTimeMillis() / 1000).toInt(),
+                    dockerRunPortBindings = dockerRunPortBindingList
+                )
             } catch (er: Throwable) {
                 logger.error(er.toString())
                 logger.error(er.message)
@@ -97,11 +141,35 @@ class ContainerRunHandler(
                         message = "$buildId|$vmSeqId Create container failed"
                     )
                 }
+            } finally {
+                if (!registryUser.isNullOrEmpty()) {
+                    try {
+                        httpLongDockerCli.removeImageCmd(formatImageName!!)
+                        logger.info("[$buildId]|[$vmSeqId] Delete local image successfully......")
+                    } catch (e: java.lang.Exception) {
+                        logger.info("[$buildId]|[$vmSeqId] the exception of deleteing local image is ${e.message}")
+                    } finally {
+                        logger.info("[$buildId]|[$vmSeqId] Docker run end......")
+                    }
+                }
             }
         }
     }
 
+    private fun getAvailableHostPort(): Int {
+        val startPort = dockerHostConfig.dockerRunStartPort ?: 20000
+        for (i in startPort..(startPort + 1000)) {
+            if (!CommonUtils.isPortUsing("127.0.0.1", i)) {
+                return i
+            } else {
+                continue
+            }
+        }
+
+        return 0
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(ContainerRunHandler::class.java)
+        private val logger = LoggerFactory.getLogger(ContainerCustomizedRunHandler::class.java)
     }
 }
