@@ -41,7 +41,6 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_PUSH = "push"
         const val OBJECT_KIND_TAG_PUSH = "tag_push"
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        // 定时触发在Stream中本质是定时器使用PUSH触发，所以不在上面维护
         const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }
