@@ -24,7 +24,7 @@ object BranchMatchUtils {
 
     fun isBranchMatch(branchList: List<String>?, eventBranch: String): Boolean {
         if (branchList.isNullOrEmpty()) {
-            return false
+            return true
         }
         logger.info("Include branch set($branchList)")
 
