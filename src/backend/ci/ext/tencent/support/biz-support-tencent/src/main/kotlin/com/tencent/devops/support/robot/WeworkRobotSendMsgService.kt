@@ -1,9 +1,6 @@
 package com.tencent.devops.support.robot
 
-import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.support.robot.pojo.RobotTextSendMsg
-import com.tencent.devops.support.robot.pojo.TextMsg
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -15,15 +12,9 @@ import org.springframework.stereotype.Service
 class WeworkRobotSendMsgService @Autowired constructor(
     val robotCustomConfig: WeworkRobotCustomConfig
 ) {
-    fun sendTextMsgByRobot(chatId: String, context: String) {
-        val url = "${robotCustomConfig.weworkUrl}/cgi-bin/webhook/send?key=${robotCustomConfig.robotKey}"
-        val msg = RobotTextSendMsg(
-            chatId = chatId,
-            text = TextMsg(
-                context = context
-            )
-        )
-        send(url, msg.toJsonString())
+    fun sendTextMsgByRobot(msg: String) {
+        val url = buildHost("/cgi-bin/webhook/send?key=${robotCustomConfig.robotKey}")
+        send(url, msg)
     }
 
     private fun send(seanURL: String, jsonString: String) {
@@ -40,6 +31,25 @@ class WeworkRobotSendMsgService @Autowired constructor(
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
         }
+    }
+
+    private fun buildHost(uri: String): String {
+        val host = robotCustomConfig.weworkUrl
+        var newHost = ""
+        newHost = if (host!!.endsWith("/")) {
+            if (uri.startsWith("/")) {
+                host.substring(0, host.length - 1) + uri
+            } else {
+                host + uri
+            }
+        } else {
+            if (uri.startsWith("/")) {
+                host + uri
+            } else {
+                "$host/$uri"
+            }
+        }
+        return newHost.replace("//", "/")
     }
 
     companion object {

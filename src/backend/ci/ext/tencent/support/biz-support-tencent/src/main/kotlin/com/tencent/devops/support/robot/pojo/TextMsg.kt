@@ -3,7 +3,7 @@ package com.tencent.devops.support.robot.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class TextMsg(
-    val context: String,
+    val content: String,
 
     @JsonProperty("mentioned_list")
     var mentionedList: List<String>? = mutableListOf(),

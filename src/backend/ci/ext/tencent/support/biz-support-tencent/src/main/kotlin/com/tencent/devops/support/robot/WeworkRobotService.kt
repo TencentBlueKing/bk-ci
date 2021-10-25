@@ -5,6 +5,7 @@ import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.support.robot.pojo.RobotTextSendMsg
+import com.tencent.devops.support.robot.pojo.TextMsg
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,7 +49,13 @@ class WeworkRobotService @Autowired constructor(
         logger.info("reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId}")
-        weworkRobotSendMsgService.sendTextMsgByRobot(chatId = robotCallBack.chatId, "群Id: ${robotCallBack.chatId}")
+        val msg = RobotTextSendMsg(
+            chatId = robotCallBack.chatId,
+            text = TextMsg(
+                content = "本群Id: ${robotCallBack.chatId}"
+            )
+        )
+        weworkRobotSendMsgService.sendTextMsgByRobot(msg.toJsonString())
         return true
     }
 
