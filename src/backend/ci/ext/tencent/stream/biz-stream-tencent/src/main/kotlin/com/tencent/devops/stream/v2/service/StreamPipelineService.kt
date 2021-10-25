@@ -143,8 +143,7 @@ class StreamPipelineService @Autowired constructor(
         }
     }
 
-    fun getPipelineListById(
-        userId: String,
+    fun getPipelineById(
         gitProjectId: Long,
         pipelineId: String
     ): GitProjectPipeline? {
