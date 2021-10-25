@@ -13,7 +13,7 @@ class WeworkRobotSendMsgService @Autowired constructor(
     val robotCustomConfig: WeworkRobotCustomConfig
 ) {
     fun sendTextMsgByRobot(msg: String) {
-        val url = buildHost("/cgi-bin/webhook/send?key=${robotCustomConfig.robotKey}")
+        val url = "${robotCustomConfig.weworkUrl}/cgi-bin/webhook/send?key=${robotCustomConfig.robotKey}"
         send(url, msg)
     }
 
@@ -31,25 +31,6 @@ class WeworkRobotSendMsgService @Autowired constructor(
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
         }
-    }
-
-    private fun buildHost(uri: String): String {
-        val host = robotCustomConfig.weworkUrl
-        var newHost = ""
-        newHost = if (host!!.endsWith("/")) {
-            if (uri.startsWith("/")) {
-                host.substring(0, host.length - 1) + uri
-            } else {
-                host + uri
-            }
-        } else {
-            if (uri.startsWith("/")) {
-                host + uri
-            } else {
-                "$host/$uri"
-            }
-        }
-        return newHost.replace("//", "/")
     }
 
     companion object {
