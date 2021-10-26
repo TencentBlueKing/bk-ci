@@ -25,26 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
+import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerVolumeGenerator
-import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerBindGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.BindGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@VolumeGenerator(description = "默认Docker Volume生成器")
+@BindGenerator(description = "Docker上Codecc用到的Bind生成器")
 @Component
-class SystemDockerVolumeGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerVolumeGenerator {
+class CodeccDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+    DockerBindGenerator {
 
-    override fun generateVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
-        return listOf(
-            Volume(dockerHostConfig.volumeWorkspace),
-            Volume(dockerHostConfig.volumeApps),
-            Volume(dockerHostConfig.volumeInit)
-        )
+    override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
+        return listOf(Bind(dockerHostConfig.hostPathCodecc, Volume(dockerHostConfig.volumeCodecc), AccessMode.ro))
     }
 }

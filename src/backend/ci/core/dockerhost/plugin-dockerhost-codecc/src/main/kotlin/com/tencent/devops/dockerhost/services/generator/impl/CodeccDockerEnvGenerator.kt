@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.container.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component
 class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerEnvGenerator {
 
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
+    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
         return listOf(
             Env(
                 key = ENV_LOG_SAVE_MODE,

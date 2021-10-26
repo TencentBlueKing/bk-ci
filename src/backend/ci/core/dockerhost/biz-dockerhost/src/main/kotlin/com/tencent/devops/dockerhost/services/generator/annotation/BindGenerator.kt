@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container
-
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+package com.tencent.devops.dockerhost.services.generator.annotation
 
 /**
- * Docker Volume生成器
+ * DockerBind生成器注解，标示生成器
  */
-interface DockerMountGenerator {
-
-    fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount>
-}
+annotation class BindGenerator(
+    /**
+     * 生成器说明
+     */
+    val description: String
+)

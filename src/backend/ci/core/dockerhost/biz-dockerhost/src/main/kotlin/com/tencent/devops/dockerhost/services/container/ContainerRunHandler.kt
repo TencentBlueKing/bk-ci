@@ -35,6 +35,9 @@ import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.Handler
+import com.tencent.devops.dockerhost.services.generator.DockerBindLoader
+import com.tencent.devops.dockerhost.services.generator.DockerEnvLoader
+import com.tencent.devops.dockerhost.services.generator.DockerMountLoader
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.process.engine.common.VMUtils
@@ -60,7 +63,7 @@ class ContainerRunHandler(
                 if (dockerResource != null) {
                     hostConfig
                         .withMemory(dockerResource.memoryLimitBytes)
-                        .withMemorySwap(dockerResource.memoryLimitBytes)
+                        // .withMemorySwap(dockerResource.memoryLimitBytes)
                         .withCpuQuota(dockerResource.cpuQuota.toLong())
                         .withCpuPeriod(dockerResource.cpuPeriod.toLong())
                 }

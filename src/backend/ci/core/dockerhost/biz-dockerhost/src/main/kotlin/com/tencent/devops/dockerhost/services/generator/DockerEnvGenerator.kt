@@ -25,14 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.annotation
+package com.tencent.devops.dockerhost.services.generator
+
+import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 
 /**
- * DockerBind生成器注解，标示生成器
+ * Docker环境变量生成器
  */
-annotation class BindGenerator(
-    /**
-     * 生成器说明
-     */
-    val description: String
-)
+interface DockerEnvGenerator {
+
+    fun generateEnv(handlerContext: ContainerHandlerContext): List<Env>
+}

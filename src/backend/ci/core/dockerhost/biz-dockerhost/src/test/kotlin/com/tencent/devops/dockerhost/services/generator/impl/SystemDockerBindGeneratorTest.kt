@@ -25,15 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import org.junit.Assert
+import org.junit.Test
 
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+class SystemDockerBindGeneratorTest {
+
+    @Test
+    fun generateBinds() {
+        val lock = ReentrantLock()
+        Thread {
+            lock.lock()
+            Thread.sleep(1999)
+        }.start()
+        Thread.sleep(500)
+        val start = System.currentTimeMillis()
+        try {
+            lock.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
+        } catch (ignore: TimeoutException) {
+        } finally {
+            val end = System.currentTimeMillis()
+            println(start)
+            println(end)
+            Assert.assertTrue(end - start >= 1000)
+        }
+    }
 }

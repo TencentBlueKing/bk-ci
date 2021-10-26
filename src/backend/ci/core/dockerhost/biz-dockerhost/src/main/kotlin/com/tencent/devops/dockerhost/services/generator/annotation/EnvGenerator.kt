@@ -25,15 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
-
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.pojo.Env
+package com.tencent.devops.dockerhost.services.generator.annotation
 
 /**
- * Docker环境变量生成器
+ * Docker环境变量生成器注解，标示生成器
  */
-interface DockerEnvGenerator {
-
-    fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env>
-}
+annotation class EnvGenerator(
+    /**
+     * 生成器说明
+     */
+    val description: String
+)
