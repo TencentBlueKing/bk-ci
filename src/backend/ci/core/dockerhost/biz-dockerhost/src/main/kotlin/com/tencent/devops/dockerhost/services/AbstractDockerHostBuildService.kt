@@ -316,9 +316,9 @@ abstract class AbstractDockerHostBuildService constructor(
         poolNo: Int,
         hostConfig: HostConfig
     ) {
-        val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUperPath!!)}upper"
-        val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUperPath!!)}work"
-        val lowerDir = "${dockerHostConfig.bazelOverlayfsCache}"
+        val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
+        val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}work"
+        val lowerDir = "${dockerHostConfig.bazelLowerPath}"
 
         if (!File(upperDir).exists()) {
             File(upperDir).mkdirs()
@@ -333,7 +333,7 @@ abstract class AbstractDockerHostBuildService constructor(
         }
 
         val mount = Mount().withType(MountType.VOLUME)
-            .withTarget(dockerHostConfig.volumeWorkspace)
+            .withTarget(dockerHostConfig.bazelContainerPath)
             .withVolumeOptions(
                 VolumeOptions().withDriverConfig(
                     Driver().withName("local").withOptions(
@@ -356,7 +356,7 @@ abstract class AbstractDockerHostBuildService constructor(
     ) {
         // 出现错误也不影响执行
         try {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUperPath!!)}upper"
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
             ShellUtil.executeEnhance(
                 "time flock -xn /data/landun/thirdparty/bazel_cache -c " +
                         "\"rsync --stats -ah --ignore-errors --delete $upperDir\""
