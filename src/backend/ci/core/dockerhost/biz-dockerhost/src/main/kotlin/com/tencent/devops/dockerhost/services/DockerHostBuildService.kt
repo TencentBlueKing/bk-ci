@@ -28,6 +28,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.command.InspectContainerResponse
+import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.Image
 import com.github.dockerjava.api.model.Statistics
@@ -379,7 +380,8 @@ class DockerHostBuildService(
                 if (localPort == 0) {
                     throw ContainerException(
                         errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
-                        message = "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}"
+                        message = "No enough port to use in dockerRun.
+                        startPort: ${dockerHostConfig.dockerRunStartPort}"
                     )
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
@@ -523,23 +525,10 @@ class DockerHostBuildService(
             } else {
                 0
             }
-
-            // 优先判断CPU
             val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
-            if (cpuUsagePer >= elasticityCpuThreshold) {
-                // 上报负载超额预警到数据平台
-                dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                    "containerName" to container.names[0],
-                    "containerId" to container.id,
-                    "cpuUsagePer" to cpuUsagePer.toString(),
-                    "memUsagePer" to "",
-                    "statistics" to JsonUtil.toJson(statistics)
-                ))
 
-                // 重置容器负载
-                resetContainer(container.id)
-                continue
-            }
+            val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
+            val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
 
             if (statistics.memoryStats == null ||
                 statistics.memoryStats.usage == null ||
@@ -547,19 +536,10 @@ class DockerHostBuildService(
                 continue
             }
 
-            val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
-            val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
-            if (memUsage >= elasticityMemThreshold) {
-                // 上报负载超额预警到数据平台
-                dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                    "containerName" to container.names[0],
-                    "containerId" to container.id,
-                    "cpuUsagePer" to cpuUsagePer.toString(),
-                    "memUsagePer" to memUsage.toString(),
-                    "statistics" to JsonUtil.toJson(statistics)
-                ))
-
-                resetContainer(container.id)
+            if (cpuUsagePer >= elasticityCpuThreshold || memUsage >= elasticityMemThreshold) {
+                // 重置容器负载
+                resetContainer(container, statistics, cpuUsagePer, memUsage)
+                continue
             }
         }
     }
@@ -578,15 +558,28 @@ class DockerHostBuildService(
         }
     }
 
-    private fun resetContainer(containerId: String) {
+    private fun resetContainer(
+        container: Container,
+        statistics: Statistics,
+        cpuUsagePer: Long,
+        memUsage: Long
+    ) {
+        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+            "containerName" to container.names[0],
+            "containerId" to container.id,
+            "cpuUsagePer" to cpuUsagePer.toString(),
+            "memUsagePer" to memUsage.toString(),
+            "statistics" to JsonUtil.toJson(statistics)
+        ))
+
         val memReservation = dockerHostConfig.elasticityMemReservation ?: 32 * 1024 * 1024 * 1024L
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
         val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
-        httpDockerCli.updateContainerCmd(containerId)
+        httpDockerCli.updateContainerCmd(container.id)
             .withMemoryReservation(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
-        logger.info("<<<< Trigger container reset, containerId: $containerId," +
+        logger.info("<<<< Trigger container reset, containerId: ${container.id}," +
             " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
     }
 
