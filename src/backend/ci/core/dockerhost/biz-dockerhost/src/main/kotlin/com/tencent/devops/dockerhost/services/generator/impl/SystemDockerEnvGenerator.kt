@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
@@ -53,24 +53,24 @@ class SystemDockerEnvGenerator @Autowired constructor(
     val dockerHostConfig: DockerHostConfig
 ) : DockerEnvGenerator {
 
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
+    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
 
         val hostIp = CommonUtils.getInnerIP()
         val gateway = DockerEnv.getGatway()
         val envList = mutableListOf(
-            Env(key = ENV_KEY_PROJECT_ID, value = dockerHostBuildInfo.projectId),
-            Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId),
-            Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey),
+            Env(key = ENV_KEY_PROJECT_ID, value = handlerContext.projectId),
+            Env(key = ENV_KEY_AGENT_ID, value = handlerContext.agentId!!),
+            Env(key = ENV_KEY_AGENT_SECRET_KEY, value = handlerContext.secretKey!!),
             Env(key = ENV_KEY_GATEWAY, value = gateway),
             Env(key = "TERM", value = "xterm-256color"),
-            Env(key = "pool_no", value = dockerHostBuildInfo.poolNo.toString()),
+            Env(key = "pool_no", value = handlerContext.poolNo.toString()),
             Env(key = "landun_env", value = dockerHostConfig.landunEnv ?: "prod"),
             Env(key = ENV_DOCKER_HOST_IP, value = hostIp),
             Env(key = ENV_DOCKER_HOST_PORT, value = commonConfig.serverPort.toString()),
             Env(key = COMMON_DOCKER_SIGN, value = "docker"),
-            Env(key = ENV_JOB_BUILD_TYPE, value = dockerHostBuildInfo.buildType.name))
+            Env(key = ENV_JOB_BUILD_TYPE, value = handlerContext.buildType.name))
 
-        dockerHostBuildInfo.customBuildEnv?.forEach { k, v ->
+        handlerContext.customBuildEnv?.forEach { k, v ->
             envList.add(Env(key = k, value = v))
         }
 

@@ -25,14 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container
+package com.tencent.devops.dockerhost.services.generator.impl
 
+import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.Volume
+import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerBindGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.BindGenerator
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-/**
- * Docker HostConf生成器
- */
-interface DockerBindGenerator {
+@BindGenerator(description = "Docker上Codecc用到的Bind生成器")
+@Component
+class CodeccDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+    DockerBindGenerator {
 
-    fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind>
+    override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
+        return listOf(Bind(dockerHostConfig.hostPathCodecc, Volume(dockerHostConfig.volumeCodecc), AccessMode.ro))
+    }
 }

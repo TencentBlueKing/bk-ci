@@ -25,26 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerVolumeGenerator
-import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.junit.Assert
+import org.junit.Test
 
-@VolumeGenerator(description = "默认Docker Volume生成器")
-@Component
-class SystemDockerVolumeGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerVolumeGenerator {
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
-    override fun generateVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
-        return listOf(
-            Volume(dockerHostConfig.volumeWorkspace),
-            Volume(dockerHostConfig.volumeApps),
-            Volume(dockerHostConfig.volumeInit)
-        )
+class SystemDockerBindGeneratorTest {
+
+    @Test
+    fun generateBinds() {
+        val lock = ReentrantLock()
+        Thread {
+            lock.lock()
+            Thread.sleep(1999)
+        }.start()
+        Thread.sleep(500)
+        val start = System.currentTimeMillis()
+        try {
+            lock.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
+        } catch (ignore: TimeoutException) {
+        } finally {
+            val end = System.currentTimeMillis()
+            println(start)
+            println(end)
+            Assert.assertTrue(end - start >= 1000)
+        }
     }
 }

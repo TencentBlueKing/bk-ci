@@ -28,43 +28,22 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.command.InspectContainerResponse
-import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.exception.UnauthorizedException
-import com.github.dockerjava.api.model.Capability
-import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
-import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.Statistics
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
-import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.common.Constants
-import com.tencent.devops.dockerhost.common.DockerExitCodeEnum
-import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
-import com.tencent.devops.dockerhost.docker.DockerBindLoader
-import com.tencent.devops.dockerhost.docker.DockerEnvLoader
-import com.tencent.devops.dockerhost.docker.DockerVolumeLoader
-import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
-import com.tencent.devops.dockerhost.pojo.DockerRunParam
-import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
-import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
@@ -131,7 +110,7 @@ class DockerHostBuildService(
     }
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
-        val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
+/*        val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
         // 执行docker pull
         createPullImage(dockerHostBuildInfo)
 
@@ -141,7 +120,8 @@ class DockerHostBuildService(
         // 等待一段时间，检查一下agent是否正常启动
         waitAgentUp(dockerHostBuildInfo, containerId)
 
-        return containerId
+        return containerId*/
+        return ""
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
@@ -180,17 +160,17 @@ class DockerHostBuildService(
         }
     }
 
-    private fun createDockerRun(dockerBuildInfo: DockerHostBuildInfo, imageName: String): String {
+ /*   private fun createDockerRun(dockerBuildInfo: DockerHostBuildInfo, imageName: String): String {
         try {
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
-/*            val blkioRateDeviceWirte = BlkioRateDevice()
+*//*            val blkioRateDeviceWirte = BlkioRateDevice()
                 .withPath("/dev/sda")
                 .withRate(dockerBuildInfo.dockerResource.blkioDeviceWriteBps)
             val blkioRateDeviceRead = BlkioRateDevice()
                 .withPath("/dev/sda")
-                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)*/
+                .withRate(dockerBuildInfo.dockerResource.blkioDeviceReadBps)*//*
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
@@ -200,8 +180,8 @@ class DockerHostBuildService(
                 .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
                 .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
                 .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
-/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+*//*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*//*
                 .withBinds(binds)
                 .withNetworkMode("bridge")
 
@@ -276,7 +256,7 @@ class DockerHostBuildService(
                 message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
             )
         }
-    }
+    }*/
 
     private fun getDockerRunStopPattern(dockerBuildInfo: DockerHostBuildInfo): String {
         // 用户取消操作
@@ -297,7 +277,7 @@ class DockerHostBuildService(
         return 0
     }
 
-    fun dockerRun(
+/*    fun dockerRun(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
@@ -410,12 +390,12 @@ class DockerHostBuildService(
             val hostConfig: HostConfig
             if (dockerResource != null) {
                 logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
-/*                val blkioRateDeviceWirte = BlkioRateDevice()
+*//*                val blkioRateDeviceWirte = BlkioRateDevice()
                     .withPath("/dev/sda")
                     .withRate(dockerResource.blkioDeviceWriteBps)
                 val blkioRateDeviceRead = BlkioRateDevice()
                     .withPath("/dev/sda")
-                    .withRate(dockerResource.blkioDeviceReadBps)*/
+                    .withRate(dockerResource.blkioDeviceReadBps)*//*
 
                 hostConfig = HostConfig()
                     .withCapAdd(Capability.SYS_PTRACE)
@@ -424,8 +404,8 @@ class DockerHostBuildService(
                     .withMemorySwap(dockerResource.memoryLimitBytes)
                     .withCpuQuota(dockerResource.cpuQuota.toLong())
                     .withCpuPeriod(dockerResource.cpuPeriod.toLong())
-/*                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+*//*                        .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                        .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*//*
                     .withNetworkMode("bridge")
                     .withPortBindings(portBindings)
             } else {
@@ -480,7 +460,7 @@ class DockerHostBuildService(
                 }
             }
         }
-    }
+    }*/
 
     fun getDockerLogs(containerId: String, lastLogTime: Int): List<String> {
         val logs = ArrayList<String>()
@@ -501,7 +481,7 @@ class DockerHostBuildService(
         return logs
     }
 
-    fun getDockerRunExitCode(containerId: String): Int? {
+/*    fun getDockerRunExitCode(containerId: String): Int? {
         return try {
             httpLongDockerCli.waitContainerCmd(containerId)
                 .exec(WaitContainerResultCallback())
@@ -510,7 +490,7 @@ class DockerHostBuildService(
             logger.error("[$containerId]| getDockerRunExitCode error.", e)
             Constants.DOCKER_EXIST_CODE
         }
-    }
+    }*/
 
     /**
      * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
@@ -731,13 +711,13 @@ class DockerHostBuildService(
         return result
     }
 
-    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
+/*    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
         return if (poolNo > 1) {
             "$vmSeqId" + "_$poolNo"
         } else {
             vmSeqId.toString()
         }
-    }
+    }*/
 
     private fun checkFinishTime(utcTime: String?): Boolean {
         if (utcTime != null && utcTime.isNotEmpty()) {
@@ -771,7 +751,7 @@ class DockerHostBuildService(
         return false
     }
 
-    private fun getAvailableHostPort(): Int {
+/*    private fun getAvailableHostPort(): Int {
         val startPort = dockerHostConfig.dockerRunStartPort ?: 20000
         for (i in startPort..(startPort + 1000)) {
             if (!CommonUtils.isPortUsing("127.0.0.1", i)) {
@@ -782,5 +762,5 @@ class DockerHostBuildService(
         }
 
         return 0
-    }
+    }*/
 }

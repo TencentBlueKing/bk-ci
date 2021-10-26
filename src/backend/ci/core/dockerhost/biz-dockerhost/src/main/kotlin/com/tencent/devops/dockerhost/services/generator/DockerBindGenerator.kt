@@ -25,36 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container
+package com.tencent.devops.dockerhost.services.generator
 
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dockerhost.services.container.annotation.ContainerEnvGenerator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.BeansException
+import com.github.dockerjava.api.model.Bind
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 
-object DockerEnvLoader {
+/**
+ * Docker HostConf生成器
+ */
+interface DockerBindGenerator {
 
-    private val logger: Logger = LoggerFactory.getLogger(DockerEnvLoader::class.java)
-
-    @Suppress("UNCHECKED_CAST")
-    fun loadEnv(dockerHostBuildInfo: ContainerHandlerContext): List<String> {
-
-        val envList = mutableListOf<String>()
-        try {
-            val generators: List<DockerEnvGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(ContainerEnvGenerator::class.java) as List<DockerEnvGenerator>
-            generators.forEach { generator ->
-                generator.generateEnv(dockerHostBuildInfo).forEach {
-                    envList.add("${it.key}=${it.value}")
-                }
-            }
-        } catch (notFound: BeansException) {
-            logger.warn("[${dockerHostBuildInfo.buildId}]|not found env generator| ex=$notFound")
-        } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadEnv_fail|", ignored)
-        }
-
-        return envList
-    }
+    fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind>
 }

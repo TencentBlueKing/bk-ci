@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container
+package com.tencent.devops.dockerhost.services.generator
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 
 /**
  * Docker环境变量生成器

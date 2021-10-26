@@ -40,6 +40,9 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.services.Handler
+import com.tencent.devops.dockerhost.services.generator.DockerBindLoader
+import com.tencent.devops.dockerhost.services.generator.DockerEnvLoader
+import com.tencent.devops.dockerhost.services.generator.DockerMountLoader
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.process.engine.common.VMUtils

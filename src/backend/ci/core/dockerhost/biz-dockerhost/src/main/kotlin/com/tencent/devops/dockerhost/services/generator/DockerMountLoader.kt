@@ -25,14 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.annotation
+package com.tencent.devops.dockerhost.services.generator
 
-/**
- * DockerBind生成器注解，标示生成器
- */
-annotation class BindGenerator(
-    /**
-     * 生成器说明
-     */
-    val description: String
-)
+import com.github.dockerjava.api.model.Mount
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.annotation.MountGenerator
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
+
+object DockerMountLoader {
+
+    private val logger: Logger = LoggerFactory.getLogger(DockerMountLoader::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadMounts(handlerContext: ContainerHandlerContext): List<Mount> {
+
+        val mountList = mutableListOf<Mount>()
+        try {
+            val generators: List<DockerMountGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(MountGenerator::class.java) as List<DockerMountGenerator>
+            generators.forEach { generator ->
+                mountList.addAll(generator.generateMounts(handlerContext))
+            }
+        } catch (notFound: BeansException) {
+            logger.warn("${handlerContext.buildId}|${handlerContext.vmSeqId} not found mount generator.", notFound)
+        } catch (ignored: Throwable) {
+            logger.error("${handlerContext.buildId}|${handlerContext.vmSeqId} load mounts failed.", ignored)
+        }
+
+        return mountList
+    }
+}

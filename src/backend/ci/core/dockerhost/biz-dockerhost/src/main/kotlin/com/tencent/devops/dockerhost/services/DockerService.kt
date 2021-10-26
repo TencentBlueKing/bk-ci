@@ -41,7 +41,6 @@ import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
 import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
 import com.tencent.devops.dockerhost.utils.SigarUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -49,7 +48,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-@Service@Suppress("ALL")
+@Service
 class DockerService @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostImageService: DockerHostImageService,

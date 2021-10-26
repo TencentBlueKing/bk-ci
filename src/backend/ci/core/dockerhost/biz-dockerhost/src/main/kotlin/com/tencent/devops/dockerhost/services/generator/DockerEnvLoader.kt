@@ -25,14 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container.annotation
+package com.tencent.devops.dockerhost.services.generator
 
-/**
- * Docker Mount生成器注解，标示生成器
- */
-annotation class ContainerMountGenerator(
-    /**
-     * 生成器说明
-     */
-    val description: String
-)
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
+
+object DockerEnvLoader {
+
+    private val logger: Logger = LoggerFactory.getLogger(DockerEnvLoader::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadEnv(dockerHostBuildInfo: ContainerHandlerContext): List<String> {
+
+        val envList = mutableListOf<String>()
+        try {
+            val generators: List<DockerEnvGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(EnvGenerator::class.java) as List<DockerEnvGenerator>
+            generators.forEach { generator ->
+                generator.generateEnv(dockerHostBuildInfo).forEach {
+                    envList.add("${it.key}=${it.value}")
+                }
+            }
+        } catch (notFound: BeansException) {
+            logger.warn("[${dockerHostBuildInfo.buildId}]|not found env generator| ex=$notFound")
+        } catch (ignored: Throwable) {
+            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadEnv_fail|", ignored)
+        }
+
+        return envList
+    }
+}

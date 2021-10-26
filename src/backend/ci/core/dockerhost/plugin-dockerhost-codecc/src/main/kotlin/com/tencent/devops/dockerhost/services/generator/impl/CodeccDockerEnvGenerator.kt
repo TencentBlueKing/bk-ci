@@ -25,14 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.annotation
+package com.tencent.devops.dockerhost.services.generator.impl
 
-/**
- * Docker Volume生成器注解，标示生成器
- */
-annotation class VolumeGenerator(
-    /**
-     * 生成器说明
-     */
-    val description: String
-)
+import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@EnvGenerator(description = "Docker用到的Codecc环境变量生成器")
+@Component
+class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+    DockerEnvGenerator {
+
+    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
+        return listOf(
+            Env(
+                key = ENV_LOG_SAVE_MODE,
+                value = if ("codecc_build" == dockerHostConfig.dockerhostMode &&
+                    (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) {
+                    "LOCAL"
+                } else {
+                    "UPLOAD"
+                }
+            )
+        )
+    }
+}
