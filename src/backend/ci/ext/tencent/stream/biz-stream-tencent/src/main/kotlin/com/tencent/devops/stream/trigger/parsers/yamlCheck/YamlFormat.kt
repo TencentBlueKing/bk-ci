@@ -40,14 +40,13 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.trigger.parsers.TriggerMatcher
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 
 object YamlFormat {
 
-    private val logger = LoggerFactory.getLogger(TriggerMatcher::class.java)
+    private val logger = LoggerFactory.getLogger(YamlFormat::class.java)
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     fun formatYaml(

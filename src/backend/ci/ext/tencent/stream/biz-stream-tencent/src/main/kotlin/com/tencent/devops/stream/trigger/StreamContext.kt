@@ -31,5 +31,7 @@ data class StreamTriggerContext(
     // 用来构建的流水线
     val pipeline: GitProjectPipeline,
     // yaml原文配置
-    val originYaml: String
+    val originYaml: String,
+    // 变更文件列表
+    val mrChangeSet: Set<String>?
 ) : StreamContext

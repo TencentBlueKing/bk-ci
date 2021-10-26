@@ -79,14 +79,21 @@ data class GitRequestEvent(
     var gitEvent: GitEvent?
 )
 
-fun GitRequestEvent.isMr(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value
-}
+fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
     return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
             sourceGitProjectId != null &&
             sourceGitProjectId != gitProjectId
+}
+
+// 获取fork库的项目id
+fun GitRequestEvent.getForkGitProjectId(): Long? {
+    return if (isFork() && sourceGitProjectId != gitProjectId) {
+        sourceGitProjectId!!
+    } else {
+        null
+    }
 }
 
 // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
@@ -95,3 +102,6 @@ fun GitRequestEvent.isDeleteBranch(): Boolean {
             operationKind == TGitPushOperationKind.DELETE.value &&
             extensionAction == TGitPushActionKind.DELETE_BRANCH.value
 }
+
+// 当人工触发时不推送CommitCheck消息
+fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value

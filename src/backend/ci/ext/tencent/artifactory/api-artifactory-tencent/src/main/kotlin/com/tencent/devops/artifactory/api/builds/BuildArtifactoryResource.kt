@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
@@ -241,4 +242,25 @@ interface BuildArtifactoryResource {
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String
     ): Result<Boolean>
+
+    @ApiOperation("创建外部下载链接")
+    @Path("/{artifactoryType}/externalUrl")
+    @GET
+    fun externalUrl(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("完整路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
 }

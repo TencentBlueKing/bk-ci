@@ -29,6 +29,7 @@ package com.tencent.devops.stream.mq.streamTrigger
 
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.trigger.StreamTriggerContext
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import org.slf4j.LoggerFactory
@@ -60,13 +61,14 @@ class StreamTriggerListener @Autowired constructor(
                 pipeline = event.gitProjectPipeline,
                 action = {
                     streamYamlTrigger.triggerBuild(
-                        gitRequestEvent = event.gitRequestEvent,
-                        gitProjectPipeline = event.gitProjectPipeline,
-                        event = event.event,
-                        originYaml = event.originYaml,
-                        filePath = event.filePath,
-                        changeSet = event.changeSet,
-                        forkGitProjectId = event.forkGitProjectId
+                        StreamTriggerContext(
+                            gitEvent = event.event,
+                            requestEvent = event.gitRequestEvent,
+                            streamSetting = event.gitCIBasicSetting,
+                            pipeline = event.gitProjectPipeline,
+                            originYaml = event.originYaml!!,
+                            mrChangeSet = event.changeSet
+                        )
                     )
                 },
                 commitCheck = CommitCheck(

@@ -33,9 +33,12 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
@@ -49,7 +52,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val gray: Gray,
+    private val shortUrlService: ShortUrlService
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
@@ -185,6 +189,24 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
 
     override fun checkGrayProject(projectId: String): Result<Boolean> {
         return Result(gray.isGrayProject(projectId, redisOperation))
+    }
+
+    override fun externalUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        val shortUrl = shortUrlService.createShortUrl(
+            url = PathUtils.buildDetailLink(
+                projectId = projectId,
+                artifactoryType = artifactoryType.name,
+                path = path
+            ),
+            ttl = 24 * 3600 * 30
+        )
+        return Result(Url(shortUrl))
     }
 
     private fun checkParam(projectId: String) {

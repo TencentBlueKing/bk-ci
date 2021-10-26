@@ -162,7 +162,7 @@ class PipelineGroupService @Autowired constructor(
         }
     }
 
-    fun addLabel(userId: String, pipelineLabel: PipelineLabelCreate): Boolean {
+    fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Boolean {
         try {
             val groupId = decode(pipelineLabel.groupId)
             val labelCount = pipelineLabelDao.countByGroupId(
@@ -183,6 +183,7 @@ class PipelineGroupService @Autowired constructor(
             }
             pipelineLabelDao.create(
                 dslContext = dslContext,
+                projectId = projectId,
                 groupId = groupId,
                 name = pipelineLabel.name,
                 userId = userId
@@ -228,7 +229,7 @@ class PipelineGroupService @Autowired constructor(
         }
     }
 
-    fun addPipelineLabel(userId: String, pipelineId: String, labelIds: List<String>) {
+    fun addPipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
         if (labelIds.isEmpty()) {
             return
         }
@@ -236,6 +237,7 @@ class PipelineGroupService @Autowired constructor(
             val labelIdArr = labelIds.map { decode(it) }.toSet()
             pipelineLabelPipelineDao.batchCreate(
                 dslContext = dslContext,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 labelIds = labelIdArr,
                 userId = userId)
@@ -245,14 +247,24 @@ class PipelineGroupService @Autowired constructor(
         }
     }
 
-    fun updatePipelineLabel(userId: String, pipelineId: String, labelIds: List<String>) {
+    fun updatePipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
         val ids = labelIds.map { decode(it) }.toSet()
 
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                pipelineLabelPipelineDao.deleteByPipeline(context, pipelineId, userId)
-                pipelineLabelPipelineDao.batchCreate(context, pipelineId, ids, userId)
+                pipelineLabelPipelineDao.deleteByPipeline(
+                    dslContext = context,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
+                pipelineLabelPipelineDao.batchCreate(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    labelIds = ids,
+                    userId = userId
+                )
             }
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineId label $labelIds by userId $userId")

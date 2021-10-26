@@ -183,6 +183,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                             )
                             pipelineWebHookQueueDao.save(
                                 dslContext = context,
+                                projectId = projectId,
                                 pipelineId = pipelineId,
                                 sourceProjectId = sourceProjectId,
                                 sourceRepoName = sourceRepoName,
@@ -196,6 +197,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                     } else {
                         pipelineWebHookQueueDao.save(
                             dslContext = dslContext,
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             sourceProjectId = sourceProjectId,
                             sourceRepoName = sourceRepoName,

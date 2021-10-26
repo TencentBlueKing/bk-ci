@@ -39,6 +39,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.ResourcesPools
 import com.tencent.devops.common.client.Client
@@ -94,7 +95,11 @@ class ModelContainer @Autowired constructor(
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
-            buildEnv = null,
+            buildEnv = if (job.runsOn.selfHosted == false) {
+                job.runsOn.needs
+            } else {
+                null
+            },
             customBuildEnv = job.env,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
@@ -174,7 +179,10 @@ class ModelContainer @Autowired constructor(
     }
 
     private fun getBaseOs(job: Job): VMBaseOS {
-        if (job.runsOn.poolName.startsWith("macos")) {
+        // 公共构建机池
+        if (job.runsOn.poolName == JobRunsOnType.DOCKER.type) {
+            return VMBaseOS.LINUX
+        } else if (job.runsOn.poolName.startsWith("macos")) {
             return VMBaseOS.MACOS
         }
 
