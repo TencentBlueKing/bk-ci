@@ -54,7 +54,7 @@
                         <logo v-else class="fire-red-icon" name="fire" size="14" style="position:relative; top:2px;" />
                         {{ getHeatNum(atom.recentExecuteNum) || '-' }}
                     </span>
-                    <bk-rate class="atom-rate" width="10" :rate.sync="atom.score" :edit="false" />
+                    <bk-rate class="atom-rate" :width="10" :rate="atom.score" :edit="false" />
                 </a>
             </p>
             <template>
@@ -79,6 +79,15 @@
                     <i v-for="(os, osIndex) in atom.os" :key="osIndex" style="margin-right: 3px;" :class="`os-tag devops-icon icon-${os.toLowerCase()}`" />
                 </template>
             </div>
+            <div
+                v-if="!isRecommend && (atom.os && atom.os.length === 0)"
+                class="allow-os-list"
+                v-bk-tooltips="{ content: $t('editPage.suitable') + $t('editPage.noCompilerEnvironment'), zIndex: 99999 }">
+                <template>
+                    <i class="os-tag devops-icon icon-none stage-type-icon"></i>
+                </template>
+            </div>
+
             <p class="atom-update-time" v-if="atom.publisher">{{ atom.publisher }} {{ $t('editPage.update') }} {{ formatDiff(atom.updateTime) }}</p>
             <span class="atom-active" v-if="atomCode === atom.atomCode">
                 <i class="devops-icon icon-check-1" />
@@ -172,7 +181,7 @@
              * 适用系统tips
              */
             osTips (os) {
-                return `${this.$t('适用于')}${os.join(' / ')}`
+                return `${this.$t('editPage.suitable')}${os.join(' / ')}`
             },
 
             handleGoPipelineAtomManage (name) {

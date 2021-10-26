@@ -156,7 +156,6 @@ export default {
         return state
     },
     [IS_UNRECOMMEND_MORE_LOADING]: (state, loading) => {
-        console.log(loading, 222222)
         Vue.set(state, 'isUnRecommendMoreLoading', loading)
         return state
     },

@@ -649,6 +649,8 @@
         "knowMore": "Read more",
         "noInstallRight": "No permission to install this image",
         "noInstallPerm": "Install without permission. If necessary, contact the plug-in publisher to adjust the visibility",
+        "noCompilerEnvironment": "No Compiler Environment",
+        "suitable": "Suitable for ",
         "install": "Install",
         "all": "All",
         "store": "RD store",
@@ -955,5 +957,6 @@
     "permissionRefreshtitle": "Permission Request form has been submitted",
     "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
     "permissionRefreshOkText": "Reload Page",
-    "searchForMore": "search for pipelines"
+    "searchForMore": "search for pipelines",
+    "atomEmpty": "No plugins, try a different keyword"
 }

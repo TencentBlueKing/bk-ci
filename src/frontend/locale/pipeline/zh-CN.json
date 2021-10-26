@@ -656,6 +656,8 @@
         "all": "全部",
         "store": "研发商店",
         "projectAtom": "项目插件",
+        "noCompilerEnvironment": "无编译环境",
+        "suitable": "适用于",
         "fixedTips": "不适用于当前Job的插件",
         "removeAtom": "移出项目",
         "unRemoveAtom": "使用中的插件无法被移出",
@@ -958,5 +960,6 @@
     "permissionRefreshtitle": "权限申请单已提交",
     "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
     "permissionRefreshOkText": "刷新页面",
-    "searchForMore": "输入搜索更多流水线"
+    "searchForMore": "输入搜索更多流水线",
+    "atomEmpty": "没找到插件，换个关键字试试"
 }

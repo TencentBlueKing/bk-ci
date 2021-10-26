@@ -485,10 +485,6 @@ export default {
             jobType = undefined
         }
 
-        if (state.storeData && state.storeData.classifyId !== classifyId) {
-            page = 1
-        }
-
         try {
             if (page === 1) {
                 commit(FETCHING_ATOM_LIST, true)
