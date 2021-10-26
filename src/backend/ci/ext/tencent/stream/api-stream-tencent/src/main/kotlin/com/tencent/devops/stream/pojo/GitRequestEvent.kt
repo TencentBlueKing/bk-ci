@@ -87,6 +87,15 @@ fun GitRequestEvent.isFork(): Boolean {
             sourceGitProjectId != gitProjectId
 }
 
+// 获取fork库的项目id
+fun GitRequestEvent.getForkGitProjectId(): Long? {
+    return if (isFork() && sourceGitProjectId != gitProjectId) {
+        sourceGitProjectId!!
+    } else {
+        null
+    }
+}
+
 // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
 fun GitRequestEvent.isDeleteBranch(): Boolean {
     return objectKind == TGitObjectKind.PUSH.value &&

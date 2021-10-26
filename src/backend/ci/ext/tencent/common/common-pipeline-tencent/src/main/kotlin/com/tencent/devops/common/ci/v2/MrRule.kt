@@ -48,8 +48,8 @@ data class MrRule(
 
     val paths: List<String>? = null,
 
-    @ApiModelProperty(name = "path-ignore")
-    @JsonProperty("path-ignore")
+    @ApiModelProperty(name = "paths-ignore")
+    @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
     val action: List<String>? = null,
