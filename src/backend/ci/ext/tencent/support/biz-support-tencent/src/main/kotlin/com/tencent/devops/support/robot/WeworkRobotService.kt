@@ -17,11 +17,11 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
 class WeworkRobotService @Autowired constructor(
-    private val weweorkRobotConfiguration: WeworkRobotCustomConfig,
+    private val weworkRobotCustomConfig: WeworkRobotCustomConfig,
     val wechatWorkRobotService: WechatWorkRobotService
 ) {
     private val rototWxcpt =
-        WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, "")
+        WXBizMsgCrypt(weworkRobotCustomConfig.token, weworkRobotCustomConfig.aeskey, "")
 
     /*
     * 验证geturl
