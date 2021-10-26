@@ -53,6 +53,39 @@ BEGIN
         ALTER TABLE T_QUALITY_HIS_DETAIL_METADATA
             DROP INDEX BUILD_ID_INDEX;
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_QUALITY_RULE_BUILD_HIS'
+                        AND COLUMN_NAME = 'STAGE_ID') THEN
+        ALTER TABLE T_QUALITY_RULE_BUILD_HIS ADD COLUMN `STAGE_ID` varchar(40) COMMENT 'stage_id' NOT NULL DEFAULT '1';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_QUALITY_RULE_BUILD_HIS'
+                        AND COLUMN_NAME = 'STATUS') THEN
+        ALTER TABLE T_QUALITY_RULE_BUILD_HIS ADD COLUMN `STATUS` varchar(20) COMMENT '红线状态';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_QUALITY_RULE_BUILD_HIS'
+                        AND COLUMN_NAME = 'GATE_KEEPERS') THEN
+        ALTER TABLE T_QUALITY_RULE_BUILD_HIS ADD COLUMN `GATE_KEEPERS` varchar(1024) COMMENT '红线把关人';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_QUALITY_RULE_BUILD_HIS'
+                    AND INDEX_NAME = 'IDX_STAGE_ID') THEN
+        ALTER TABLE `T_QUALITY_RULE_BUILD_HIS`
+            ADD INDEX `IDX_STAGE_ID` (`STAGE_ID`);
+    END IF;
 
     COMMIT;
 END <CI_UBF>
