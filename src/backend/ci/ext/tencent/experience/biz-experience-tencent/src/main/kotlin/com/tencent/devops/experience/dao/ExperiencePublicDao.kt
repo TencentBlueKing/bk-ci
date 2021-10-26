@@ -273,6 +273,21 @@ class ExperiencePublicDao {
         }
     }
 
+    fun getByBundleId(
+        dslContext: DSLContext,
+        projectId: String,
+        platform: String,
+        bundleIdentifier: String
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PLATFORM.eq(platform))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .fetchAny()
+        }
+    }
+
     fun updateByBundleId(
         dslContext: DSLContext,
         projectId: String,
