@@ -54,6 +54,7 @@ import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -252,7 +253,7 @@ class StoreCommonServiceImpl @Autowired constructor(
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo {
-        val showReleaseType = when {
+        val defaultShowReleaseType = when {
             cancelFlag -> {
                 ReleaseTypeEnum.CANCEL_RE_RELEASE
             }
@@ -266,7 +267,24 @@ class StoreCommonServiceImpl @Autowired constructor(
                 ReleaseTypeEnum.COMPATIBILITY_FIX
             }
         }
-        val showVersion = getRequireVersion(version ?: "", showReleaseType)[0]
-        return StoreShowVersionInfo(showVersion, showReleaseType.name)
+        val dbVersion = version ?: ""
+        val defaultShowVersion = getRequireVersion(dbVersion, defaultShowReleaseType)[0]
+        val showVersionList = mutableListOf<StoreShowVersionItem>()
+        showVersionList.add(StoreShowVersionItem(defaultShowVersion, defaultShowReleaseType.name, true))
+        if (dbVersion.isNotBlank()) {
+            return StoreShowVersionInfo(showVersionList)
+        }
+        val tmpReleaseTypeList = listOf(
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
+            ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
+            ReleaseTypeEnum.COMPATIBILITY_FIX
+        )
+        tmpReleaseTypeList.forEach { tmpReleaseType ->
+            if (tmpReleaseType != defaultShowReleaseType) {
+                val showVersion = getRequireVersion(dbVersion, tmpReleaseType)[0]
+                showVersionList.add(StoreShowVersionItem(showVersion, tmpReleaseType.name))
+            }
+        }
+        return StoreShowVersionInfo(showVersionList)
     }
 }

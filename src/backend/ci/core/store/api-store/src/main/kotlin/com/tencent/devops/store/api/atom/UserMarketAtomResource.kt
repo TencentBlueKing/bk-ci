@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -236,17 +237,17 @@ interface UserMarketAtomResource {
         atomCode: String
     ): Result<Boolean>
 
-    @ApiOperation("根据插件标识获取插件最新版本详情")
+    @ApiOperation("根据插件标识获取插件回显版本信息")
     @GET
-    @Path("/atoms/{atomCode}/newest/detail")
-    fun getNewestAtomInfoByCode(
+    @Path("/atoms/{atomCode}/showVersionInfo")
+    fun getAtomShowVersionInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
-    ): Result<AtomVersion?>
+    ): Result<StoreShowVersionInfo>
 
     @ApiOperation("查看插件的yml信息")
     @GET

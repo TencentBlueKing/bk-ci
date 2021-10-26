@@ -94,6 +94,7 @@ import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
@@ -582,15 +583,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     /**
-     * 根据插件标识获取插件最新版本详情
+     * 根据插件标识获取插件回显版本信息
      */
-    override fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
-        return (if (null == record) {
-            Result(data = null)
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
+        val record = marketAtomDao.getNewestAtomByCode(dslContext, atomCode) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode)
+        )
+        val cancelFlag = record.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val showVersion = if (cancelFlag) {
+            record.version
         } else {
-            getAtomVersion(record.id, userId)
-        })
+            marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
+        }
+        val releaseType = marketAtomVersionLogDao.getAtomVersion(dslContext, record.id).releaseType
+        val showReleaseType = if (releaseType != null) {
+            ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
+        } else {
+            null
+        }
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        return Result(showVersionInfo)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -632,13 +645,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             } else null
             val atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt())
             val version = record["version"] as? String
-            val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.name
-            val showVersion = if (cancelFlag) {
-                version
-            } else {
-                marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
-            }
-            val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, releaseType, showVersion)
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -689,8 +695,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     // 开启插件yml显示
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                    showVersionInfo = showVersionInfo
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
                 )
             )
         }
