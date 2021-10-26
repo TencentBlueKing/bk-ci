@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -72,7 +73,7 @@ class ModelStage @Autowired constructor(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        stageIndex: Int = 0,
+        stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
         pipeline: GitProjectPipeline
@@ -104,12 +105,13 @@ class ModelStage @Autowired constructor(
             )
         }
 
+        val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
-            id = stage.id,
+            id = stageId,
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
-                "Stage-$stageIndex"
+                VMUtils.genStageId(stageIndex - 1)
             },
             tag = stage.label,
             fastKill = stage.fastKill,
@@ -120,13 +122,15 @@ class ModelStage @Autowired constructor(
                 stageCheck = stage.checkIn,
                 position = ControlPointPosition.BEFORE_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut,
                 position = ControlPointPosition.AFTER_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         )
     }
@@ -135,7 +139,8 @@ class ModelStage @Autowired constructor(
         stageCheck: StageCheck?,
         position: String,
         event: GitRequestEvent,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
@@ -153,7 +158,8 @@ class ModelStage @Autowired constructor(
                 stageCheck = stageCheck,
                 event = event,
                 position = position,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         }
         return check
@@ -190,7 +196,8 @@ class ModelStage @Autowired constructor(
         stageCheck: StageCheck,
         event: GitRequestEvent,
         position: String,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
         val operations = mapOf(
@@ -254,7 +261,9 @@ class ModelStage @Autowired constructor(
                     range = listOf(pipeline.pipelineId),
                     templateRange = null,
                     gatewayId = null,
-                    opList = opList
+                    opList = opList,
+                    stageId = stageId,
+                    gateKeepers = gate.continueOnFail?.gatekeepers
                 )
             )
         }

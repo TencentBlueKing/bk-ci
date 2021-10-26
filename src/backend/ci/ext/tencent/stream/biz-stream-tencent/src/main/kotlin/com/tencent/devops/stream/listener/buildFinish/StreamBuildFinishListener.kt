@@ -160,7 +160,7 @@ class StreamBuildFinishListener @Autowired constructor(
             // 发送通知，去掉v1
             sendNotify.sendNotify(context)
         } catch (e: Throwable) {
-            logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
+            logger.error("Fail to listenPipelineBuildFinishBroadCastEvent(${buildFinishEvent.buildId})", e)
         }
     }
 }

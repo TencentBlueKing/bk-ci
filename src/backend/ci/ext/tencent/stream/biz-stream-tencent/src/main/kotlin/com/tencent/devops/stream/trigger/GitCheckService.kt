@@ -65,7 +65,7 @@ class GitCheckService @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         commitId: String,
         description: String,
-        mergeRequestId: Long,
+        mergeRequestId: Long?,
         buildId: String,
         userId: String,
         status: GitCICommitCheckState,
