@@ -49,13 +49,15 @@ class WeworkRobotService @Autowired constructor(
         logger.info("reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId}")
-        val msg = RobotTextSendMsg(
-            chatId = robotCallBack.chatId,
-            text = TextMsg(
-                content = "本群Id: ${robotCallBack.chatId}"
+        if (robotCallBack.content.contains("会话ID")) {
+            val msg = RobotTextSendMsg(
+                chatId = robotCallBack.chatId,
+                text = TextMsg(
+                    content = "本群ChatId: ${robotCallBack.chatId}"
+                )
             )
-        )
-        weworkRobotSendMsgService.sendTextMsgByRobot(msg.toJsonString())
+            weworkRobotSendMsgService.sendTextMsgByRobot(msg.toJsonString())
+        }
         return true
     }
 
