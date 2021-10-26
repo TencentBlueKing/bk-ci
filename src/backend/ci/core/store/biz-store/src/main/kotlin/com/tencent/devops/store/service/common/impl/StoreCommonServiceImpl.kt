@@ -271,7 +271,7 @@ class StoreCommonServiceImpl @Autowired constructor(
         val defaultShowVersion = getRequireVersion(dbVersion, defaultShowReleaseType)[0]
         val showVersionList = mutableListOf<StoreShowVersionItem>()
         showVersionList.add(StoreShowVersionItem(defaultShowVersion, defaultShowReleaseType.name, true))
-        if (dbVersion.isNotBlank()) {
+        if (dbVersion.isBlank()) {
             return StoreShowVersionInfo(showVersionList)
         }
         val tmpReleaseTypeList = listOf(
