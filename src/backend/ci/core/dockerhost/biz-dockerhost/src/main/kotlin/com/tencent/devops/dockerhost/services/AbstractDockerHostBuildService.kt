@@ -353,7 +353,7 @@ abstract class AbstractDockerHostBuildService constructor(
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
             ShellUtil.executeEnhance(
                 "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
-                        "\"rsync --stats -ah --ignore-errors --delete $upperDir ${dockerHostConfig.bazelLowerPath} \""
+                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath} '"
             )
         } catch (e: Throwable) {
             logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")
