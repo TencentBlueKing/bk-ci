@@ -28,18 +28,25 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthPermissionVerifyRequest(
     @JsonProperty("project_code")
+    @ApiModelProperty(name = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
+    @ApiModelProperty(name = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
+    @ApiModelProperty(name = "resource_code")
     val resourceCode: String,
     @JsonProperty("policy_code")
+    @ApiModelProperty(name = "policy_code")
     val policyCode: String,
     @JsonProperty("resource_type")
+    @ApiModelProperty(name = "resource_type")
     val resourceType: String,
     @JsonProperty("user_id")
+    @ApiModelProperty(name = "user_id")
     val userId: String
 )

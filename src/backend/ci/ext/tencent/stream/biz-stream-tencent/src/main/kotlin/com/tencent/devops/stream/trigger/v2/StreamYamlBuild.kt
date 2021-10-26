@@ -61,6 +61,7 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
@@ -134,7 +135,7 @@ class StreamYamlBuild @Autowired constructor(
                     pipeline = realPipeline,
                     event = event,
                     gitCIBasicSetting = gitBasicSetting,
-                    model = creatTriggerModel(gitBasicSetting)
+                    model = createTriggerModel(gitBasicSetting)
                 )
             }
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
@@ -199,13 +200,13 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+    private fun createTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
         name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
         desc = "",
         stages = listOf(
             Stage(
-                id = "stage-0",
-                name = "Stage-0",
+                id = VMUtils.genStageId(1),
+                name = VMUtils.genStageId(1),
                 containers = listOf(
                     TriggerContainer(
                         id = "0",

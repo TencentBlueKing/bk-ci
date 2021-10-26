@@ -93,7 +93,7 @@ class PreTrigger @Autowired constructor(
     }
 
     private fun getRealUser(requestEvent: GitRequestEvent, token: String): String? {
-        val projectMember = scmService.getProjectMembersRetry(
+        val projectMember = scmService.getProjectMembersAllRetry(
             token = token,
             gitProjectId = requestEvent.gitProjectId.toString(),
             page = 1,

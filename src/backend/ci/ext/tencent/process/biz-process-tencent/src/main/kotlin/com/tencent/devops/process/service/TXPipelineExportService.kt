@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -50,6 +49,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
@@ -164,21 +164,15 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             defaultMessage = "流水线已不存在，请检查"
         )
-        val yamlSb = getYamlStringBuilder(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model,
-            isGitCI = isGitCI
-        )
 
         // 将所有插件ID按编排顺序刷新
         var stepCount = 1
-        model.stages.forEach { s ->
+        baseModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
                     e.id = "step_$stepCount"
@@ -186,6 +180,37 @@ class TXPipelineExportService @Autowired constructor(
                 }
             }
         }
+
+        // 过滤出enable == false 的stage/job/step
+        val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
+        val enableStages: MutableList<Stage> = mutableListOf()
+        filterStage.forEach { stageIt ->
+            val filterContainer = stageIt.containers.filter { fit ->
+                when (fit) {
+                    is NormalContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is VMBuildContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is TriggerContainer -> true
+                    else -> true
+                }
+            }
+            filterContainer.forEach { elementIt ->
+                elementIt.elements = elementIt.elements.filter { fit ->
+                    fit.additionalOptions?.enable != false
+                }
+            }
+            enableStages.add(stageIt.copy(containers = filterContainer))
+        }
+        val model = baseModel.copy(stages = enableStages)
+        val yamlSb = getYamlStringBuilder(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            isGitCI = isGitCI
+        )
 
         val pipelineGroupsMap = mutableMapOf<String, String>()
         pipelineGroupService.getGroups(userId, projectId).forEach {
@@ -490,7 +515,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -507,7 +532,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -974,7 +999,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         exportFile: Boolean
     ): String {
-        val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
+        val pattern = Pattern.compile("\\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         var newValue = value as String
         while (matcher.find()) {
@@ -1042,7 +1067,7 @@ class TXPipelineExportService @Autowired constructor(
         yamlSb.append("# 流水线名称: ${model.name} \n")
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
+        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：https://iwiki.woa.com/p/800638064 ！ \n")
         yamlSb.append("# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
             yamlSb.append("# 注意：[插件]Stream不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
@@ -1119,7 +1144,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         dispatchType: StoreDispatchType
-    ): Pair<String, Credentials?> {
+    ): Pair<String, String?> {
         try {
             when (dispatchType.imageType) {
                 ImageType.BKSTORE -> {
@@ -1147,10 +1172,7 @@ class TXPipelineExportService @Autowired constructor(
                     return if (imageRepoInfo.publicFlag) {
                         Pair(completeImageName, null)
                     } else Pair(
-                        completeImageName, Credentials(
-                            "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###",
-                            "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###"
-                        )
+                        completeImageName, imageRepoInfo.ticketId
                     )
                 }
                 ImageType.BKDEVOPS -> {
@@ -1166,10 +1188,7 @@ class TXPipelineExportService @Autowired constructor(
                     return if (dispatchType.credentialId.isNullOrBlank()) {
                         Pair(dispatchType.value, null)
                     } else Pair(
-                        dispatchType.value, Credentials(
-                            "### 重新配置凭据(${dispatchType.credentialId})后填入 ###",
-                            "### 重新配置凭据(${dispatchType.credentialId})后填入 ###"
-                        )
+                        dispatchType.value, dispatchType.credentialId
                     )
                 }
             }

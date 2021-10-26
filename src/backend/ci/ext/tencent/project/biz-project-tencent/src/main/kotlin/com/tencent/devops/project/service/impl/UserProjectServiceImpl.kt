@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED")
 @Service
@@ -133,38 +135,12 @@ class UserProjectServiceImpl @Autowired constructor(
                 s?.forEach { it ->
                     val status = it.status
                     val favor = favorServices.contains(it.id)
-                    var newWindow = false
-                    var newWindowUrl = ""
-                    if (it.name.contains("容器服务") && it.injectType.toLowerCase().trim() == "iframe" && request != null && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
-                        logger.info("listService interface:enter container.")
-                        val containerUrlList = containerUrl!!.split("[,;]".toRegex())
-                        val containerbgIdList = containerbgId!!.split("[,;]".toRegex())
-                        logger.info("listService interface containerUrlList:$containerUrlList")
-                        logger.info("listService interface containerbgIdList:$containerbgIdList")
-                        if (containerbgIdList.isNotEmpty() && containerUrlList.isNotEmpty() && containerUrlList.size == containerbgIdList.size) {
-                            val userDeptDetail = tofService.getUserDeptDetail(userId)
-                            run breaking@{
-                                containerbgIdList.forEachIndexed { index, bgId ->
-                                    if (bgId == userDeptDetail.bgId) {
-                                        newWindowUrl = containerUrlList[index]
-                                        newWindow = true
-                                        return@breaking
-                                    }
-                                }
-                            }
-                        }
-
-                        val originalHost = request.getHeader("Origin")
-
-                        logger.info("listService interface original hots:$originalHost")
-                        if (!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(
-                                containerIegUrl!!
-                            )
-                        ) {
-                            logger.info("listService interface change newWindow to false")
-                            newWindow = false
-                        }
-                    }
+                    val (newWindow, newWindowUrl) = getNewWindow(
+                        it,
+                        request,
+                        bkToken,
+                        userId
+                    )
                     services.add(
                         ServiceVO(
                             id = it.id,
@@ -205,6 +181,57 @@ class UserProjectServiceImpl @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
         }
+    }
+
+    @SuppressWarnings("ComplexCondition", "ComplexMethod")
+    private fun getNewWindow(
+        tServiceRecord: TServiceRecord,
+        request: HttpServletRequest?,
+        bkToken: String?,
+        userId: String
+    ): Pair<Boolean, String> {
+        var newWindow = tServiceRecord.newWindow
+        var newWindowUrl = tServiceRecord.newWindowurl
+        if (tServiceRecord.name.contains("容器服务") &&
+            tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
+            request != null &&
+            bkToken != null &&
+            !containerUrl.isNullOrBlank() &&
+            !containerbgId.isNullOrBlank()
+        ) {
+            logger.info("listService interface:enter container.")
+            val containerUrlList = containerUrl!!.split("[,;]".toRegex())
+            val containerBgIdList = containerbgId!!.split("[,;]".toRegex())
+            logger.info("listService interface containerUrlList:$containerUrlList")
+            logger.info("listService interface containerBgIdList:$containerBgIdList")
+            if (containerBgIdList.isNotEmpty() &&
+                containerUrlList.isNotEmpty() &&
+                containerUrlList.size == containerBgIdList.size
+            ) {
+                val userDeptDetail = tofService.getUserDeptDetail(userId)
+                run breaking@{
+                    containerBgIdList.forEachIndexed { index, bgId ->
+                        if (bgId == userDeptDetail.bgId) {
+                            newWindowUrl = containerUrlList[index]
+                            newWindow = true
+                            return@breaking
+                        }
+                    }
+                }
+            }
+
+            val originalHost = request.getHeader("Origin")
+
+            logger.info("listService interface original hots:$originalHost")
+            if (!containerIegUrl.isNullOrBlank() &&
+                !originalHost.isNullOrBlank() &&
+                originalHost.contains(containerIegUrl!!)
+            ) {
+                logger.info("listService interface change newWindow to false")
+                newWindow = false
+            }
+        }
+        return Pair(newWindow, newWindowUrl)
     }
 
     override fun syncService(userId: String, services: List<ServiceListVO>) {

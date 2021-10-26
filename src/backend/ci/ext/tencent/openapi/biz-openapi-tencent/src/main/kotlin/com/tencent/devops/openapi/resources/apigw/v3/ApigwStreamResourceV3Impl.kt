@@ -18,6 +18,8 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -194,6 +196,13 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = gitProjectId,
             gitCIUpdateSetting = gitCIUpdateSetting
+        )
+    }
+
+    override fun validateGitProject(userId: String, request: GitUserValidateRequest): Result<GitUserValidateResult?> {
+        return client.get(ServiceGitBasicSettingResource::class).validateGitProject(
+            userId = userId,
+            request = request
         )
     }
 }
