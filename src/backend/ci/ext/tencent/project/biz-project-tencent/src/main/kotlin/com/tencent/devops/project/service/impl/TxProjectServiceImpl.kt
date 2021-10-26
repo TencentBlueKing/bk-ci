@@ -167,13 +167,13 @@ class TxProjectServiceImpl @Autowired constructor(
             // stream场景下会传公共账号,tof不存在公共账号
             logger.warn("getDeptInfo: $e")
             return UserDeptDetail(
-                bgId = "",
+                bgId = "0",
                 bgName = "",
-                centerId = "",
+                centerId = "0",
                 centerName = "",
-                deptId = "",
+                deptId = "0",
                 deptName = "",
-                groupId = "",
+                groupId = "0",
                 groupName = ""
             )
         }
