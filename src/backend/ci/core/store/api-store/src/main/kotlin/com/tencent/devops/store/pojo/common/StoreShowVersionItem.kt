@@ -30,8 +30,12 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("回显版本详情")
-data class StoreShowVersionInfo(
-    @ApiModelProperty("回显版本信息列表", required = true)
-    val showVersionList: List<StoreShowVersionItem>
+@ApiModel("回显版本信息")
+data class StoreShowVersionItem(
+    @ApiModelProperty("版本号", required = true)
+    val version: String,
+    @ApiModelProperty("发布类型", required = true)
+    val releaseType: String,
+    @ApiModelProperty("是否默认选中", required = true)
+    val defaultFlag: Boolean = false
 )

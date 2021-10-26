@@ -30,7 +30,6 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
-import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModelProperty
 
@@ -114,7 +113,5 @@ data class AtomVersion(
     @ApiModelProperty("是否可编辑")
     val editFlag: Boolean? = null,
     @ApiModelProperty("每日统计信息列表")
-    val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @ApiModelProperty("回显版本信息")
-    val showVersionInfo: StoreShowVersionInfo
+    val dailyStatisticList: List<StoreDailyStatistic>? = null
 )

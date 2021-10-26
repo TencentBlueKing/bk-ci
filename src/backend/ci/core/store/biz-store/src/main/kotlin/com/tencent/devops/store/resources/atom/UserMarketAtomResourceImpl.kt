@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -138,8 +139,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.deleteAtom(userId, atomCode)
     }
 
-    override fun getNewestAtomInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        return marketAtomService.getNewestAtomInfoByCode(userId, atomCode)
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
+        return marketAtomService.getAtomShowVersionInfo(userId, atomCode)
     }
 
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
