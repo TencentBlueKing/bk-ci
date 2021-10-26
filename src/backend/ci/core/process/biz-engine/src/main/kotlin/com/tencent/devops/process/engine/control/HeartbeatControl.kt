@@ -37,7 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -77,6 +77,7 @@ class HeartbeatControl @Autowired constructor(
         }
     }
 
+    @Suppress("ReturnCount")
     private fun timeout(event: PipelineContainerAgentHeartBeatEvent, elapse: Long) {
         val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
@@ -100,8 +101,7 @@ class HeartbeatControl @Autowired constructor(
 
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask =
-            pipelineRuntimeService.getRunningTask(projectId = container.projectId, buildId = container.buildId)
+        val runningTask = pipelineRuntimeService.getRunningTask(container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true

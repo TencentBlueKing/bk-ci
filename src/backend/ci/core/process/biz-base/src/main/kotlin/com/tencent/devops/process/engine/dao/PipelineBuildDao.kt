@@ -306,7 +306,7 @@ class PipelineBuildDao {
             }
 
             if (errorInfoList != null) {
-                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
+                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList, formatted = false))
             }
 
             baseQuery.where(BUILD_ID.eq(buildId)).execute()
@@ -395,6 +395,7 @@ class PipelineBuildDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
         newBuildStatus: BuildStatus
@@ -402,7 +403,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
+                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute()
         } == 1
     }
@@ -708,11 +709,19 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateBuildRemark(dslContext: DSLContext, buildId: String, remark: String?) {
+    fun updateBuildRemark(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        remark: String?
+    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(REMARK, remark)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }
@@ -795,7 +804,7 @@ class PipelineBuildDao {
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
-                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
+                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }

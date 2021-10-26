@@ -44,5 +44,7 @@ data class RepositoryInfo(
     @ApiModelProperty("类型", required = true)
     val type: ScmType,
     @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long
+    val updatedTime: Long,
+    @ApiModelProperty("创建人", required = false)
+    val createUser: String? = null
 )

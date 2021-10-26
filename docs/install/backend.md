@@ -5,10 +5,10 @@
 ## 1.系统要求
 
 jdk: 1.8
-gradle: 4.8
+gradle: 6.7
 redis: 2.8.17
 mysql 5.7
-es: 5.6
+es: 7.4
 consul: 1.0 [Consul安装](consul.md)
 rabbitmq: 3.7.15 [rabbitmq部署](rabbitmq.md)
 

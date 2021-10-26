@@ -206,7 +206,7 @@ class FileTaskServiceImpl : FileTaskService {
         }
     }
 
-    @Scheduled(cron = "0 0 9 0/1 * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun clearRecordTask() {
         logger.info("clearRecordTask start")
         if (!clearRecordEnable) {

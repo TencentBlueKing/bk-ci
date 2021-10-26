@@ -71,4 +71,8 @@ object CommonMessageCode {
     const val ERROR_SENSITIVE_API_NO_AUTH = "2100021" // 无敏感API访问权限
     const val PARAMETER_LENGTH_TOO_LONG = "2100022" // 参数长度不能超过{0}个字符
     const val PARAMETER_LENGTH_TOO_SHORT = "2100023" // 参数长度不能小于{0}个字符
+    const val PARAMETER_ILLEGAL_ERROR = "2100024" // {0}参数非法错误: {1}
+    const val PARAMETER_EXPIRED_ERROR = "2100025" // {0}token过期错误: {1}
+    const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
+    const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
 }

@@ -36,11 +36,13 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("LongParameterList")
 @Repository
 class TemplateInstanceItemDao {
 
     fun createTemplateInstanceItem(
         dslContext: DSLContext,
+        projectId: String,
         baseId: String,
         instances: List<TemplateInstanceUpdate>,
         status: String,
@@ -53,6 +55,7 @@ class TemplateInstanceItemDao {
                 dslContext.insertInto(
                     this,
                     ID,
+                    PROJECT_ID,
                     PIPELINE_ID,
                     PIPELINE_NAME,
                     BUILD_NO_INFO,
@@ -64,11 +67,12 @@ class TemplateInstanceItemDao {
                 )
                     .values(
                         UUIDUtil.generate(),
+                        projectId,
                         it.pipelineId,
                         it.pipelineName,
-                        if (buildNo != null) JsonUtil.toJson(buildNo) else null,
+                        buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         status,
-                        if (param != null) JsonUtil.toJson(param) else null,
+                        param?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         baseId,
                         userId,
                         userId

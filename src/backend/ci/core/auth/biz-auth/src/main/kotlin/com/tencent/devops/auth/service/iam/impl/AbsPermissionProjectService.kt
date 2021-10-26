@@ -131,18 +131,29 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
-        // 校验是否有project_view权限
-        return iamCacheService.checkProjectView(userId, projectCode)
+        // 优先匹配缓存
+        if (iamCacheService.checkProjectUser(userId, projectCode)) {
+            return true
+        }
+        var checkProjectUser = false
+
+        val extProjectId = getProjectId(projectCode)
+        val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
+        if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
+            iamCacheService.cacheProjectUser(userId, projectCode)
+            checkProjectUser = true
+        }
+        return checkProjectUser
     }
 
-    override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
+    override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
         val extProjectId = getProjectId(projectCode)
-        val projectRoles = groupService.getGroupByName(projectCode, role)
+        val projectRoles = groupService.getGroupByCode(projectCode, roleCode)
         if (projectRoles == null) {
-            logger.warn("$projectCode | $role group not exists")
-            throw ParamBlankException("user group $role not exists")
+            logger.warn("$projectCode | $roleCode group not exists")
+            throw ParamBlankException("user group $roleCode not exists")
         }
-        val managerRole = role == BkAuthGroup.MANAGER.value
+        val managerRole = roleCode == BkAuthGroup.MANAGER.value
         val members = mutableListOf<RoleMemberDTO>()
         members.add(RoleMemberDTO(type = ManagerScopesEnum.USER, id = userId))
         permissionRoleMemberService.createRoleMember(

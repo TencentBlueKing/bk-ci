@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -46,4 +47,19 @@ data class ManualReviewParam(
     val options: List<ManualReviewParamPair>? = null,
     @ApiModelProperty("中文名称", required = false)
     val chineseName: String? = null
-)
+) {
+    /**
+     *  变量值处理，如果是已有值则直接使用，如果是变量引用则做替换
+     */
+    fun parseValueWithType(variables: Map<String, String>) {
+        value = if (variables.containsKey(key) && !variables[key].isNullOrBlank()) {
+            when (valueType) {
+                ManualReviewParamType.BOOLEAN -> variables[key].toBoolean()
+                // TODO 将入库保存的字符串转回数组对象
+                else -> variables[key]
+            }
+        } else {
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
+        }
+    }
+}

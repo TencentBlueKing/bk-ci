@@ -908,7 +908,12 @@ class PipelineListFacadeService @Autowired constructor(
         try {
             watcher.start("s_s_r_summary")
             projectId.forEach { project_id ->
-                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(project_id, channelCode)
+                val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = project_id,
+                    channelCode = channelCode,
+                    page = 1,
+                    pageSize = 500
+                )
                 if (pipelineBuildSummary.isNotEmpty) {
                     pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
                 }
@@ -1162,10 +1167,10 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+        val pipelineRecords = templatePipelineDao.listByPipelinesId(dslContext, pipelineIds)
         val pipelineTemplateMap = mutableMapOf<String, String>()
         pipelineRecords.forEach {
-            pipelineTemplateMap[it.pipelineId] = it.templateId
+            pipelineTemplateMap[it["pipelineId"] as String] = it["templateId"] as String
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelines.forEach {
@@ -1474,7 +1479,8 @@ class PipelineListFacadeService @Autowired constructor(
                 taskCount = it.taskCount,
                 isDelete = it.delete,
                 instanceFromTemplate = false,
-                id = it.id
+                id = it.id,
+                createUser = it.creator
             )
         }
     }
@@ -1495,7 +1501,8 @@ class PipelineListFacadeService @Autowired constructor(
                 taskCount = it.taskCount,
                 isDelete = it.delete,
                 instanceFromTemplate = false,
-                id = it.id
+                id = it.id,
+                createUser = it.creator
             )
         }
     }

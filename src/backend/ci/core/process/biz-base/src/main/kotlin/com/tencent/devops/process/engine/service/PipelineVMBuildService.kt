@@ -56,7 +56,7 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
@@ -441,7 +441,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|userId=$userId|[${task.taskId}-${task.taskName}]")
         return when {
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
@@ -466,7 +466,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 buildVariable.putAll(allVariable)
 
                 // 认领任务
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId)
+                pipelineRuntimeService.claimBuildTask(task, userId)
                 taskBuildDetailService.taskStart(buildId, task.taskId)
                 jmxElements.execute(task.taskType)
                 pipelineEventDispatcher.dispatch(
@@ -485,7 +485,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
-                        it.key to JsonUtil.toJson(obj)
+                        it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
                         !it.first.startsWith("@type")
                     }.toMap(),

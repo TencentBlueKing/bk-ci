@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,7 +45,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -61,7 +62,8 @@ class TaskControl @Autowired constructor(
     private val taskAtomService: TaskAtomService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     companion object {
@@ -94,6 +96,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[PipelineBuildAtomTaskEvent]事件，开始执行/结束插件任务
      */
+    @Suppress("LongMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
@@ -227,6 +230,10 @@ class TaskControl @Autowired constructor(
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
             redisOperation.leftPush(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId), taskId)
         }
+        // 如果是取消的构建，则会统一取消子流水线的构建
+        if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
+            terminateSubPipeline(buildId, buildTask)
+        }
         if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
@@ -285,5 +292,51 @@ class TaskControl @Autowired constructor(
 
     private fun atomBuildStatus(response: AtomResponse): BuildStatus {
         return response.buildStatus
+    }
+
+    private fun terminateSubPipeline(buildId: String, buildTask: PipelineBuildTask) {
+
+        if (buildTask.subBuildId.isNullOrBlank()) {
+            return
+        }
+
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+
+        if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
+            try {
+                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.buildId)
+                tasks.forEach { task ->
+                    val taskId = task["taskId"] ?: ""
+                    val containerId = task["containerId"] ?: ""
+                    val executeCount = task["executeCount"] ?: 1
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        tag = taskId.toString(),
+                        jobId = containerId.toString(),
+                        executeCount = executeCount as Int
+                    )
+                }
+
+                if (tasks.isEmpty()) {
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        tag = "",
+                        jobId = "",
+                        executeCount = 1
+                    )
+                }
+                pipelineRuntimeService.cancelBuild(
+                    projectId = subBuildInfo.projectId,
+                    pipelineId = subBuildInfo.pipelineId,
+                    buildId = subBuildInfo.buildId,
+                    userId = subBuildInfo.startUser,
+                    buildStatus = BuildStatus.CANCELED
+                )
+            } catch (ignored: Exception) {
+                LOG.warn("ENGINE|$buildId|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")
+            }
+        }
     }
 }

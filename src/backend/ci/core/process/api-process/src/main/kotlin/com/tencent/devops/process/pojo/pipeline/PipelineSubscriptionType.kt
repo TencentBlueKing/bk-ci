@@ -34,5 +34,6 @@ enum class PipelineSubscriptionType {
     EMAIL,
     RTX,
     WECHAT,
-    SMS
+    SMS,
+    WEWORK
 }

@@ -28,8 +28,13 @@
 package com.tencent.devops.auth.pojo.vo
 
 import com.tencent.devops.auth.pojo.BkUserInfo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("用户列表返回")
 data class BkUserInfoVo(
+    @ApiModelProperty("数量")
     val count: Int,
+    @ApiModelProperty("返回的列表内容")
     val results: List<BkUserInfo>
 )
