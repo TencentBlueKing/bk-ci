@@ -64,6 +64,7 @@ import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
@@ -145,6 +146,9 @@ class DockerHostBuildService(
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        val pipelineId = dockerHostBuildInfo.pipelineId
+        val vmSeqId = dockerHostBuildInfo.vmSeqId
+        val poolNo = dockerHostBuildInfo.poolNo
         try {
             // docker stop
             val containerInfo = httpLongDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
@@ -155,7 +159,11 @@ class DockerHostBuildService(
             logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
         } finally {
             // 将bazel 缓存回写到 lower层
-            reWriteBazelCache(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId, dockerHostBuildInfo.poolNo)
+            ThreadPoolUtils.getInstance().run {
+                logger.info("reWriteBazelCache start: $pipelineId $vmSeqId $poolNo ")
+                reWriteBazelCache(pipelineId, vmSeqId, poolNo)
+                logger.info("reWriteBazelCache end: $pipelineId $vmSeqId $poolNo")
+            }
         }
 
         try {
