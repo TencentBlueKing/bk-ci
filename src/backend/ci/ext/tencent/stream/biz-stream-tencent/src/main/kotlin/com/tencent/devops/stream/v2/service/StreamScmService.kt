@@ -27,10 +27,12 @@
 
 package com.tencent.devops.stream.v2.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils
@@ -51,6 +53,7 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -482,6 +485,35 @@ class StreamScmService @Autowired constructor(
                     token = gitToken,
                     ref = getTriggerBranch(gitRequestEvent.branch)
                 ).data ?: emptyList()
+            }
+        )
+    }
+
+    fun getLatestRevisionRetry(
+        pipelineId: String,
+        gitToken: String,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        branchName: String,
+        userName: String
+    ): RevisionInfo? {
+        return retryFun(
+            log = "timer|[$pipelineId] get latestRevision fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR,
+            action = {
+                client.get(ServiceScmOauthResource::class).getLatestRevision(
+                    projectName = projectName,
+                    url = url,
+                    type = ScmType.CODE_GIT,
+                    branchName = branchName,
+                    additionalPath = null,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = gitToken,
+                    region = null,
+                    userName = userName
+                ).data
             }
         )
     }

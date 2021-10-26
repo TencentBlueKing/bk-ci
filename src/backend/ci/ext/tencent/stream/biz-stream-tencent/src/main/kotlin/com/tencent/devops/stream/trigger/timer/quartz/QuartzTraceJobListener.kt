@@ -25,22 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.stream.trigger.timer.quartz
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+import com.tencent.devops.common.service.trace.TraceTag
+import org.quartz.JobExecutionContext
+import org.quartz.JobExecutionException
+import org.quartz.listeners.JobListenerSupport
+import org.slf4j.MDC
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
+class QuartzTraceJobListener : JobListenerSupport() {
+    override fun getName(): String {
+        return "quartz-trace"
+    }
+
+    override fun jobToBeExecuted(context: JobExecutionContext) {
+        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+        log.info("${context.jobDetail.key.name}|STREAM_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
+    }
+
+    override fun jobExecutionVetoed(context: JobExecutionContext?) {
+        MDC.remove(TraceTag.BIZID)
+    }
+
+    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
+        MDC.remove(TraceTag.BIZID)
     }
 }

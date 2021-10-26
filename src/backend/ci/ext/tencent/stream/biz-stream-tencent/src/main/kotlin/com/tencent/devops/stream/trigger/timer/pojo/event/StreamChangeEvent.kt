@@ -25,22 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.stream.trigger.timer.pojo.event
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.stream.constant.MQ
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-    }
-}
+/**
+ * 广播定时规则变化的事件
+ *
+ * @version 1.0
+ */
+@Event(MQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, MQ.QUEUE_STREAM_TIMER)
+data class StreamChangeEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val crontabExpressionJson: String,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

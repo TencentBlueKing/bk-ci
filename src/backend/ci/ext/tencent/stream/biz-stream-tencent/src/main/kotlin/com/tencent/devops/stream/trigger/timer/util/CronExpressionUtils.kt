@@ -25,22 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.stream.trigger.timer.util
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+import org.quartz.TriggerUtils
+import org.quartz.impl.triggers.CronTriggerImpl
+import java.util.Date
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
+object CronExpressionUtils {
+
+    // 有效时间间隔60s
+    private const val VALID_TIME_INTERVAL = 60 * 1000
+
+    /**
+     * 计算cron表达式接下来的执行时间
+     * @param cron cron表达式
+     * @param numTimes 输出几次
+     */
+    fun getRecentTriggerTime(
+        cron: String,
+        numTimes: Int = 2
+    ): List<Date> {
+        val trigger = CronTriggerImpl()
+        trigger.cronExpression = cron
+        return TriggerUtils.computeFireTimes(trigger, null, numTimes)
+    }
+
+    /**
+     * 为了防止流水线执行太频繁，需要控制cron表达式执行时间间隔，不能秒级执行
+     */
+    fun isValidTimeInterval(cron: String): Boolean {
+        val recentTriggerTimes = getRecentTriggerTime(cron)
+        // 如果最近2次执行时间为空，表示表达式已经不会运行
+        if (recentTriggerTimes.isEmpty() || recentTriggerTimes.size == 1) {
+            return true
+        }
+        val interval = recentTriggerTimes[1].time - recentTriggerTimes[0].time
+        return interval >= VALID_TIME_INTERVAL
     }
 }

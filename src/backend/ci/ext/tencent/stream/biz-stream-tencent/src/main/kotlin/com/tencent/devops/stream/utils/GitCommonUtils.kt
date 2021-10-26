@@ -80,8 +80,8 @@ object GitCommonUtils {
                 urls.removeAt(urls.lastIndex)
                 urls.joinToString("/")
             }
-            httpUrl.startsWith(httpPrefix) -> {
-                val urls = httpUrl.removePrefix(httpPrefix)
+            httpUrl.startsWith(httpsPrefix) -> {
+                val urls = httpUrl.removePrefix(httpsPrefix)
                     .split("/").toMutableList()
                 urls.removeAt(0)
                 urls.removeAt(urls.lastIndex)
@@ -97,8 +97,8 @@ object GitCommonUtils {
                 httpUrl.removePrefix(httpPrefix)
                     .split("/")[2]
             }
-            httpUrl.startsWith(httpPrefix) -> {
-                httpUrl.removePrefix(httpPrefix)
+            httpUrl.startsWith(httpsPrefix) -> {
+                httpUrl.removePrefix(httpsPrefix)
                     .split("/")[2]
             }
             else -> ""

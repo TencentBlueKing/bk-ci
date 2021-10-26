@@ -25,22 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.stream.trigger.timer.pojo
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-    }
-}
+data class StreamTimer(
+    val projectId: String,
+    val pipelineId: String,
+    val userId: String,
+    var crontabExpressions: List<String>,
+    val gitProjectId: Long,
+    val branchs: List<String>?,
+    val always: Boolean,
+    val channelCode: ChannelCode,
+    val eventId: Long,
+    val originYaml: String
+)

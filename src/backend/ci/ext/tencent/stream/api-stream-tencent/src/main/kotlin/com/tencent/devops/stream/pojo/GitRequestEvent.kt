@@ -93,3 +93,6 @@ fun GitRequestEvent.isDeleteBranch(): Boolean {
             operationKind == TGitPushOperationKind.DELETE.value &&
             extensionAction == TGitPushActionKind.DELETE_BRANCH.value
 }
+
+// 当人工触发时不推送CommitCheck消息
+fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
