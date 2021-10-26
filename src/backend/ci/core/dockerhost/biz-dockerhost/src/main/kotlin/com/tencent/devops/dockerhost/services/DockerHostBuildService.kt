@@ -142,20 +142,23 @@ class DockerHostBuildService(
             logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
         } finally {
             // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
-            val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
-            for (container in containerInfo) {
-                try {
-                    // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
-                    val containerName = container.names[0]
-                    if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
-                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                                "stop dockerRun container, containerId: ${container.id}")
-                        httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
-                    }
-                } catch (e: Exception) {
-                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                            "Stop dockerRun container failed, containerId: ${container.id}", e)
+            stopLinkedDockerRunContainer(dockerHostBuildInfo)
+        }
+    }
+
+    private fun stopLinkedDockerRunContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        for (container in containerInfo) {
+            try {
+                val containerName = container.names[0]
+                if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
+                    logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                            "stop dockerRun container, containerId: ${container.id}")
+                    httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                 }
+            } catch (e: Exception) {
+                logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                        "Stop dockerRun container failed, containerId: ${container.id}", e)
             }
         }
     }
@@ -507,52 +510,51 @@ class DockerHostBuildService(
     private fun checkContainerStats() {
         val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
         for (container in containerInfo) {
-            val statistics = getContainerStats(container.id)
-            if (statistics != null) {
-                val systemCpuUsage = statistics.cpuStats.systemCpuUsage ?: 0
-                val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
-                val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
-                val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
-                val cpuUsagePer = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
-                    ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
-                } else {
-                    0
-                }
+            val statistics = getContainerStats(container.id) ?: continue
 
-                // 优先判断CPU
-                val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
-                if (cpuUsagePer >= elasticityCpuThreshold) {
+            val systemCpuUsage = statistics.cpuStats.systemCpuUsage ?: 0
+            val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
+            val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
+            val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
+            val cpuUsagePer = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
+                ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+            } else {
+                0
+            }
+
+            // 优先判断CPU
+            val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
+            if (cpuUsagePer >= elasticityCpuThreshold) {
+                // 上报负载超额预警到数据平台
+                dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                    "containerName" to container.names[0],
+                    "containerId" to container.id,
+                    "cpuUsagePer" to cpuUsagePer.toString(),
+                    "memUsagePer" to "",
+                    "statistics" to JsonUtil.toJson(statistics)
+                ))
+
+                // 重置容器负载
+                resetContainer(container.id)
+                continue
+            }
+
+            if (statistics.memoryStats != null &&
+                statistics.memoryStats.usage != null &&
+                statistics.memoryStats.limit != null) {
+                val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
+                val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
+                if (memUsage >= elasticityMemThreshold) {
                     // 上报负载超额预警到数据平台
                     dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
                         "containerName" to container.names[0],
                         "containerId" to container.id,
                         "cpuUsagePer" to cpuUsagePer.toString(),
-                        "memUsagePer" to "",
+                        "memUsagePer" to memUsage.toString(),
                         "statistics" to JsonUtil.toJson(statistics)
                     ))
 
-                    // 重置容器负载
                     resetContainer(container.id)
-                    continue
-                }
-
-                if (statistics.memoryStats != null &&
-                    statistics.memoryStats.usage != null &&
-                    statistics.memoryStats.limit != null) {
-                    val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
-                    val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
-                    if (memUsage >= elasticityMemThreshold) {
-                        // 上报负载超额预警到数据平台
-                        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                            "containerName" to container.names[0],
-                            "containerId" to container.id,
-                            "cpuUsagePer" to cpuUsagePer.toString(),
-                            "memUsagePer" to memUsage.toString(),
-                            "statistics" to JsonUtil.toJson(statistics)
-                        ))
-
-                        resetContainer(container.id)
-                    }
                 }
             }
         }
@@ -633,7 +635,11 @@ class DockerHostBuildService(
     }
 
     fun clearLocalImages() {
-        val danglingImages = httpLongDockerCli.listImagesCmd().withDanglingFilter(true).withShowAll(true).exec()
+        val danglingImages = httpLongDockerCli
+            .listImagesCmd()
+            .withDanglingFilter(true)
+            .withShowAll(true)
+            .exec()
         danglingImages.forEach {
             try {
                 httpLongDockerCli.removeImageCmd(it.id).exec()
@@ -655,19 +661,18 @@ class DockerHostBuildService(
                     return@t
                 }
 
-                val lastUsedDate = LocalImageCache.getDate(image)
-                if (null != lastUsedDate) {
-                    val days = TimeUnit.MILLISECONDS.toDays(Date().time - lastUsedDate.time)
-                    if (days >= dockerHostConfig.localImageCacheDays) {
-                        logger.info("remove local image, ${it.repoTags}")
-                        try {
-                            httpLongDockerCli.removeImageCmd(image).exec()
-                            logger.info("remove local image success, image: $image")
-                        } catch (e: java.lang.Exception) {
-                            logger.error("remove local image exception ${e.message}")
-                        }
-                        return@c
+                val lastUsedDate = LocalImageCache.getDate(image) ?: return@t
+
+                val days = TimeUnit.MILLISECONDS.toDays(Date().time - lastUsedDate.time)
+                if (days >= dockerHostConfig.localImageCacheDays) {
+                    logger.info("remove local image, ${it.repoTags}")
+                    try {
+                        httpLongDockerCli.removeImageCmd(image).exec()
+                        logger.info("remove local image success, image: $image")
+                    } catch (e: java.lang.Exception) {
+                        logger.error("remove local image exception ${e.message}")
                     }
+                    return@c
                 }
             }
         }

@@ -63,7 +63,7 @@ class ContainerRunHandler(
                 if (dockerResource != null) {
                     hostConfig
                         .withMemory(dockerResource.memoryLimitBytes)
-                        .withMemorySwap(dockerResource.memoryLimitBytes)
+                        // .withMemorySwap(dockerResource.memoryLimitBytes)
                         .withCpuQuota(dockerResource.cpuQuota.toLong())
                         .withCpuPeriod(dockerResource.cpuPeriod.toLong())
                 }

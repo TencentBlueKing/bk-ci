@@ -65,7 +65,7 @@ class ContainerPullImageHandler(
                     .awaitCompletion()
                 log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$formatImageName!!，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "无权限拉取镜像：$formatImageName，请检查镜像路径或凭证是否正确；" +
                         "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像

@@ -74,7 +74,8 @@ class ContainerCustomizedRunHandler(
                     if (localPort == 0) {
                         throw ContainerException(
                             errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
-                            message = "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}"
+                            message = "No enough port to use in dockerRun. " +
+                                    "startPort: ${dockerHostConfig.dockerRunStartPort}"
                         )
                     }
                     val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
@@ -98,7 +99,7 @@ class ContainerCustomizedRunHandler(
                     logger.info("[$buildId]|[$vmSeqId] dockerRun dockerResource: ${JsonUtil.toJson(dockerResource)}")
                     hostConfig
                         .withMemory(dockerResource.memoryLimitBytes)
-                        .withMemorySwap(dockerResource.memoryLimitBytes)
+                        // .withMemorySwap(dockerResource.memoryLimitBytes)
                         .withCpuQuota(dockerResource.cpuQuota.toLong())
                         .withCpuPeriod(dockerResource.cpuPeriod.toLong())
                 }
@@ -145,19 +146,28 @@ class ContainerCustomizedRunHandler(
                     )
                 }
             } finally {
-                if (!registryUser.isNullOrEmpty()) {
-                    try {
-                        httpLongDockerCli.removeImageCmd(formatImageName!!)
-                        logger.info("[$buildId]|[$vmSeqId] Delete local image successfully......")
-                    } catch (e: java.lang.Exception) {
-                        logger.info("[$buildId]|[$vmSeqId] the exception of deleteing local image is ${e.message}")
-                    } finally {
-                        logger.info("[$buildId]|[$vmSeqId] Docker run end......")
-                    }
-                }
+                doFinally(buildId, vmSeqId, registryUser, formatImageName!!)
             }
 
             nextHandler?.handlerRequest(this)
+        }
+    }
+
+    private fun doFinally(
+        buildId: String,
+        vmSeqId: Int,
+        registryUser: String?,
+        imageName: String
+    ) {
+        if (!registryUser.isNullOrEmpty()) {
+            try {
+                httpLongDockerCli.removeImageCmd(imageName)
+                logger.info("[$buildId]|[$vmSeqId] Delete local image successfully......")
+            } catch (e: java.lang.Exception) {
+                logger.info("[$buildId]|[$vmSeqId] the exception of deleteing local image is ${e.message}")
+            } finally {
+                logger.info("[$buildId]|[$vmSeqId] Docker run end......")
+            }
         }
     }
 
