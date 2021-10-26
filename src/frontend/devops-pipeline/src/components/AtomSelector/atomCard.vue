@@ -44,7 +44,7 @@
             </span>
 
             <p class="atom-name">
-                <a class="atom-link">
+                <span class="atom-link">
                     {{ atom.name }}
                     <span style="cursor: pointer;" @click.stop="handleGoDocs(atom.docsLink)">
                         <logo v-if="atom.docsLink" class="jump-icon" name="tiaozhuan" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
@@ -55,7 +55,7 @@
                         {{ getHeatNum(atom.recentExecuteNum) || '-' }}
                     </span>
                     <bk-rate class="atom-rate" :width="10" :rate="atom.score" :edit="false" />
-                </a>
+                </span>
             </p>
             <template>
                 <p v-if="atom.summary" :class="{ 'desc': true, 'desc-height': !atom.labelList }">{{ atom.summary }}</p>

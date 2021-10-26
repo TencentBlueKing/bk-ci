@@ -696,7 +696,6 @@
                     color: #000;
                     margin-bottom: 6px;
                     .atom-link {
-                        color: #000;
                         .jump-icon {
                             opacity: 0;
                         }
@@ -782,8 +781,17 @@
             }
         }
         .unRecommend-atom-item {
+            cursor: not-allowed;
+
             .atom-label {
                 padding: 10px 0 0 !important;
+                span {
+                    color: #c3cdd7 !important;
+                }
+            }
+            .atom-name,
+            .desc {
+                color: #c3cdd7 !important;
             }
         }
         .enter-atom {
@@ -791,9 +799,6 @@
                 background-color: #EA3636;
                 opacity: 1;
             }
-        }
-        .unRecommend-atom-item {
-            cursor: not-allowed;
         }
    }
     .unInstall-tips,
