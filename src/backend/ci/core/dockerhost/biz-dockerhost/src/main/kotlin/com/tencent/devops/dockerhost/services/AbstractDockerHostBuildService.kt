@@ -230,7 +230,7 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    private fun getWorkspace(
+    fun getWorkspace(
         pipelineId: String,
         vmSeqId: Int,
         poolNo: Int,
