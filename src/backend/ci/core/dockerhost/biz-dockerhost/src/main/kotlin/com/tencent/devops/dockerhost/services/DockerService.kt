@@ -30,6 +30,7 @@ package com.tencent.devops.dockerhost.services
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
@@ -52,6 +53,7 @@ import java.util.concurrent.Future
 class DockerService @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostImageService: DockerHostImageService,
+    private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val containerPullImageHandler: ContainerPullImageHandler,
     private val containerRunHandler: ContainerRunHandler,
     private val containerAgentUpHandler: ContainerAgentUpHandler
@@ -107,6 +109,18 @@ class DockerService @Autowired constructor(
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
 
+        val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            poolNo = dockerRunParam.poolNo?.toInt() ?: 1
+        )?.data
+
+        var qpcUniquePath = ""
+        if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+            qpcUniquePath = qpcGitProjectList.first()
+        }
+
         val containerHandlerContext = ContainerHandlerContext(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -120,7 +134,8 @@ class DockerService @Autowired constructor(
             secretKey = null,
             registryUser = dockerRunParam.registryUser,
             registryPwd = dockerRunParam.registryPwd,
-            dockerRunParam = dockerRunParam
+            dockerRunParam = dockerRunParam,
+            qpcUniquePath = qpcUniquePath
         )
 
         containerPullImageHandler.setNextHandler(

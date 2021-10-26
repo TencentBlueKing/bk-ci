@@ -160,7 +160,7 @@ class DockerHostBuildService(
         }
     }
 
- /*   private fun createDockerRun(dockerBuildInfo: DockerHostBuildInfo, imageName: String): String {
+    /*   private fun createDockerRun(dockerBuildInfo: DockerHostBuildInfo, imageName: String): String {
         try {
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
