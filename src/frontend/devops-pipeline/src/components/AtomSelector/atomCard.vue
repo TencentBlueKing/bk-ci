@@ -163,7 +163,9 @@
                 trigger: 'mouseenter',
                 content: '#unRemoveAtomTips',
                 zIndex: 99999,
-                delay: 200
+                delay: 200,
+                onShow: this.mouseEnterAtomUnRemove,
+                onClose: this.mouseLeaveAtomUnRemove
             }
         },
         methods: {
@@ -194,6 +196,21 @@
             getIconByCode (atomCode) {
                 const svg = document.getElementById(atomCode)
                 return svg ? atomCode : 'placeholder'
+            },
+
+            /**
+             * 鼠标移入无法移除插件按钮
+             */
+            mouseEnterAtomUnRemove () {
+                const curRecommendItemDom = document.querySelectorAll('.recommend-atom-item')[this.atomIndex]
+                curRecommendItemDom.setAttribute('class', 'recommend-atom-item enter-atom')
+            },
+            /**
+             * 鼠标移出无法移除插件按钮
+             */
+            mouseLeaveAtomUnRemove () {
+                const curRecommendItemDom = document.querySelectorAll('.recommend-atom-item')[this.atomIndex]
+                curRecommendItemDom.setAttribute('class', 'recommend-atom-item')
             },
 
             /**

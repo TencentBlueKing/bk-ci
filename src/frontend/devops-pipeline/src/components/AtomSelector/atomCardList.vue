@@ -473,7 +473,7 @@
                                 if (unRecommendDomScrollHeight - unRecommendDomInnerHeight - unRecommendDomScrollY < 100) {
                                     this.fetchStoreAtoms({
                                         projectCode: this.$route.params.projectId,
-                                        classifyId: undefined,
+                                        classifyId: this.innerActiveName === 'all' ? undefined : this.classifyId,
                                         recommendFlag: false,
                                         category: this.category,
                                         os: this.os,
@@ -729,7 +729,7 @@
                 .atom-label {
                     display: inline-block;
                     opacity: 0;
-                    padding: 10px 0 20px;
+                    padding: 10px 0 15px;
                     span {
                         display: inline-block;
                         height: 20px;
@@ -746,6 +746,7 @@
                 .allow-os-list {
                     position: relative;
                     right: 65px;
+                    top: 4px;
                     opacity: 0;
                     width: 60px;
                 }
@@ -778,6 +779,17 @@
                         background-color: #3A84FF;
                     }
                 }
+            }
+        }
+        .unRecommend-atom-item {
+            .atom-label {
+                padding: 10px 0 0 !important;
+            }
+        }
+        .enter-atom {
+            .atom-info-content .un-remove {
+                background-color: #EA3636;
+                opacity: 1;
             }
         }
         .unRecommend-atom-item {
