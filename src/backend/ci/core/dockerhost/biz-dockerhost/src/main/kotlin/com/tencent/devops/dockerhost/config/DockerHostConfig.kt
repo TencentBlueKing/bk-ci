@@ -254,4 +254,16 @@ class DockerHostConfig {
      */
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
+
+    /**
+     * bazel overlayfs lower层路径
+     */
+    @Value("\${dockerCli.bazelOverlayfsCache:/data/landun/thirdparty/bazel_cache}")
+    var bazelOverlayfsCache: String? = null
+
+    /**
+     * bazel overlayfs uper层路径
+     */
+    @Value("\${dockerCli.bazelUperPath:/root/.bazelcache}")
+    var bazelUperPath: String? = null
 }
