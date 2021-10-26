@@ -100,7 +100,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                 if (markerDownFlag) {
                     val msg = RobotMarkdownSendMsg(
                         chatId = it,
-                        content = MsgInfo(
+                        markdown = MsgInfo(
                             content = content
                         )
                     )

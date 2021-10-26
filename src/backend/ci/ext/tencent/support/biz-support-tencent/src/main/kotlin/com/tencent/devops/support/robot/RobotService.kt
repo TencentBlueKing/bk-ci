@@ -53,7 +53,7 @@ class RobotService @Autowired constructor(
         if (robotCallBack.content.contains("会话ID")) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
-                info = MsgInfo(
+                text = MsgInfo(
                     content = "本群ChatId: ${robotCallBack.chatId}"
                 )
             )
