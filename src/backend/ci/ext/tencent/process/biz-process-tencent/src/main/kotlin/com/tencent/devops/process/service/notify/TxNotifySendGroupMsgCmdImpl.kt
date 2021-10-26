@@ -74,7 +74,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         val detailUrl = vars["detailUrl"]
         weworkGroup.forEach {
 
-            if (Pattern.matches(roomPatten, it)) { // 应用号逻辑
+            if (it.startsWith("ww")) { // 应用号逻辑
                 logger.info("send group msg by app: $it")
                 if (markerDownFlag) {
                     wechatWorkService.sendMarkdownGroup(content!!, it)
