@@ -22,9 +22,8 @@ internal class TriggerMatcherTest {
 
     private val triggerMatcher = TriggerMatcher(streamScmService, streamTimerService)
 
-
     @Test
-    fun mrTest8(){
+    fun mrTest8() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -53,7 +52,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest7(){
+    fun mrTest7() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -82,7 +81,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest6(){
+    fun mrTest6() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -111,7 +110,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest5(){
+    fun mrTest5() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -140,7 +139,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest4(){
+    fun mrTest4() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -166,7 +165,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest3(){
+    fun mrTest3() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -192,7 +191,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest2(){
+    fun mrTest2() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -218,7 +217,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun mrTest1(){
+    fun mrTest1() {
         val result = triggerMatcher.isMrMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -244,7 +243,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest7(){
+    fun tagTest7() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -266,7 +265,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest6(){
+    fun tagTest6() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -288,7 +287,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest5(){
+    fun tagTest5() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -310,7 +309,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest4(){
+    fun tagTest4() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -332,7 +331,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest3m(){
+    fun tagTest3m() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -354,7 +353,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest3(){
+    fun tagTest3() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -376,7 +375,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest2(){
+    fun tagTest2() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -398,7 +397,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun tagTest1(){
+    fun tagTest1() {
         val result = triggerMatcher.isTagPushMatch(
             triggerOn = TriggerOn(
                 push = null,
@@ -420,7 +419,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest6(){
+    fun pushTest6() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -443,7 +442,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest5(){
+    fun pushTest5() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -466,7 +465,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest4(){
+    fun pushTest4() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -489,7 +488,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest3(){
+    fun pushTest3() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -512,7 +511,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest2(){
+    fun pushTest2() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -535,7 +534,7 @@ internal class TriggerMatcherTest {
     }
 
     @Test
-    fun pushTest1(){
+    fun pushTest1() {
         val result = triggerMatcher.isPushMatch(
             triggerOn = TriggerOn(
                 push = PushRule(
@@ -556,6 +555,4 @@ internal class TriggerMatcherTest {
         )
         Assert.assertTrue(result)
     }
-
-
 }

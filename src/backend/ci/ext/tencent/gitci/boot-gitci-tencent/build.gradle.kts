@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":ext:tencent:gitci:biz-gitci-tencent"))
-    testImplementation(project(":core:common:common-test"))
 }
 
 
