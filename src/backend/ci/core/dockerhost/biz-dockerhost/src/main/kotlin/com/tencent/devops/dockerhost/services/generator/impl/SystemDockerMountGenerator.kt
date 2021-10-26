@@ -46,50 +46,83 @@ class SystemDockerMountGenerator @Autowired constructor(private val dockerHostCo
 
     override fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount> {
         with(handlerContext) {
+            val mountList = mutableListOf<Mount>()
+            mountList.add(getBazelOverlayfsMount(
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo
+            ))
+
             if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
-                val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}upper"
-                val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}work"
+                val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
+                val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
                 val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
 
-                if (!File(upperDir).exists()) {
-                    File(upperDir).mkdirs()
-                }
-
-                if (!File(workDir).exists()) {
-                    File(workDir).mkdirs()
-                }
-
-                if (!File(lowerDir).exists()) {
-                    File(lowerDir).mkdirs()
-                }
-
-                val mount = Mount().withType(MountType.VOLUME)
-                    .withTarget(dockerHostConfig.volumeWorkspace)
-                    .withVolumeOptions(
-                        VolumeOptions().withDriverConfig(
-                            Driver().withName("local").withOptions(
-                                mapOf(
-                                    "type" to "overlay",
-                                    "device" to "overlay",
-                                    "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
-                                )
-                            )
-                        )
-                    )
-
-                return listOf(mount)
+                mountList.add(mountOverlayfs(
+                    lowerDir = lowerDir,
+                    upperDir = upperDir,
+                    workDir = workDir,
+                    targetPath = dockerHostConfig.bazelContainerPath
+                ))
             }
+
+            return mountList
+        }
+    }
+
+    private fun getBazelOverlayfsMount(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int
+    ): Mount {
+        return mountOverlayfs(
+            lowerDir = "${dockerHostConfig.bazelLowerPath}",
+            upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper",
+            workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}work",
+            targetPath = dockerHostConfig.bazelContainerPath
+        )
+    }
+
+    private fun mountOverlayfs(
+        lowerDir: String,
+        upperDir: String,
+        workDir: String,
+        targetPath: String?
+    ): Mount {
+        if (!File(upperDir).exists()) {
+            File(upperDir).mkdirs()
         }
 
-        return emptyList()
+        if (!File(workDir).exists()) {
+            File(workDir).mkdirs()
+        }
+
+        if (!File(lowerDir).exists()) {
+            File(lowerDir).mkdirs()
+        }
+
+        return Mount().withType(MountType.VOLUME)
+            .withTarget(targetPath)
+            .withVolumeOptions(
+                VolumeOptions().withDriverConfig(
+                    Driver().withName("local").withOptions(
+                        mapOf(
+                            "type" to "overlay",
+                            "device" to "overlay",
+                            "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                        )
+                    )
+                )
+            )
     }
 
     private fun getWorkspace(
         pipelineId: String,
         vmSeqId: Int,
-        poolNo: Int
+        poolNo: Int,
+        path: String
     ): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+        return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
