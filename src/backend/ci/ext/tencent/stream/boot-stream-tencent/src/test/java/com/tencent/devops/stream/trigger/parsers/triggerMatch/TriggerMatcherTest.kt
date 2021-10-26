@@ -1,7 +1,6 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.v2.service.StreamScmService
 import org.junit.Assert
 import org.junit.Test
 import com.nhaarman.mockito_kotlin.mock
@@ -15,12 +14,12 @@ import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 internal class TriggerMatcherTest {
     private val oauthService: StreamOauthService = StreamOauthService(mock(), mock(), mock())
 
-    private val streamScmService: StreamScmService = StreamScmService(mock(), mock(), oauthService, mock())
+//    private val streamScmService: StreamScmService = StreamScmService(mock(), mock(), oauthService, mock())
     private val streamTimerService: StreamTimerService = StreamTimerService(
         mock(), mock(), mock()
     )
 
-    private val triggerMatcher = TriggerMatcher(streamScmService, streamTimerService)
+    private val triggerMatcher = TriggerMatcher(streamTimerService)
 
     @Test
     fun mrTest8() {

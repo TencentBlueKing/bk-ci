@@ -27,7 +27,6 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMat
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -35,7 +34,6 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
-    private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService
 ) {
 
@@ -265,15 +263,16 @@ class TriggerMatcher @Autowired constructor(
         ) {
             return false
         }
-        logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included," +
-            " and fromBranch($fromBranch)")
+        logger.info(
+            "Git trigger tags($eventTag) is included and path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
+        )
         return true
     }
 
     private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {
             is GitPushEvent -> {
-                getCommitChangeSet(context)
+                getCommitChangeSet(context.gitEvent)
             }
             is GitMergeRequestEvent -> {
                 context.mrChangeSet
@@ -284,33 +283,14 @@ class TriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun getCommitChangeSet(context: StreamTriggerContext): Set<String> {
-        val resultList = mutableSetOf<String>()
-        val gitEvent = context.gitEvent as GitPushEvent
-        for (i in 1..10) {
-            val result = streamScmService.getCommitChangeFileListRetry(
-                token = null,
-                userId = context.streamSetting.enableUserId,
-                gitProjectId = context.streamSetting.gitProjectId,
-                from = gitEvent.before,
-                to = gitEvent.after,
-                straight = null,
-                page = i,
-                pageSize = 100
-            )
-            resultList.addAll(result.map {
-                if (it.deletedFile) {
-                    it.oldPath
-                } else {
-                    it.newPath
-                }
-            }
-            )
-            if (result.size < 100) {
-                break
-            }
+    private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
+        val changeSet = mutableSetOf<String>()
+        gitEvent.commits?.forEach { commit ->
+            changeSet.addAll(commit.added?.map { it }?.toSet() ?: emptySet())
+            changeSet.addAll(commit.modified?.map { it }?.toSet() ?: emptySet())
+            changeSet.addAll(commit.removed?.map { it }?.toSet() ?: emptySet())
         }
-        return resultList
+        return changeSet
     }
 
     private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {
