@@ -998,7 +998,7 @@ turbo:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bkci-turbo
-    tag: 0.0.14
+    tag: 0.0.15
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -1029,6 +1029,7 @@ turbo:
     tbs:
       rootpath: 
       urltemplate: api/v1/{engine}/resource/{resource_type}
+      dashboard: 
     devops:
       rootpath: 
 

@@ -23,15 +23,13 @@ spec:
           workingDir: /data/workspace/support-files/turbo
           env:
             - name: ENDPOINT_CI_TURBO
-              value: http://{{ .Release.Name }}-{{ .Chart.Name }}-turbo
+              value: http://{{ include "common.names.fullname" . }}-turbo
             - name: BK_TURBO_PUBLIC_URL
               value: {{ .Values.config.bkTurboPublicUrl }}
           command:
             - "/bin/bash"
             - "-c"
             - |
-              sh -x turbo-op-ci.sh scene add ue4;
               sh -x turbo-op-ci.sh scene add cc;
-              sleep 1000s;
       restartPolicy: OnFailure
 {{ end }}
