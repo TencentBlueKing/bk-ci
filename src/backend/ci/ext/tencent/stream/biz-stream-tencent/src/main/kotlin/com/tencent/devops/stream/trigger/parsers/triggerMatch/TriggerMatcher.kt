@@ -115,7 +115,12 @@ class TriggerMatcher @Autowired constructor(
                 )
             }
             is GitTagPushEvent -> {
-                isTagPushMatch(triggerOn, getTag(context.gitEvent), gitRequestEvent.userId)
+                isTagPushMatch(
+                    triggerOn,
+                    getTag(context.gitEvent),
+                    gitRequestEvent.userId,
+                    context.gitEvent.create_from
+                )
             }
             else -> {
                 false
@@ -151,7 +156,7 @@ class TriggerMatcher @Autowired constructor(
         return true
     }
 
-    private fun isPushMatch(
+    fun isPushMatch(
         triggerOn: TriggerOn,
         eventBranch: String,
         changeSet: Set<String>?,
@@ -189,7 +194,7 @@ class TriggerMatcher @Autowired constructor(
         return true
     }
 
-    private fun isMrMatch(
+    fun isMrMatch(
         triggerOn: TriggerOn,
         sourceBranch: String,
         targetBranch: String,
@@ -228,10 +233,11 @@ class TriggerMatcher @Autowired constructor(
         return true
     }
 
-    private fun isTagPushMatch(
+    fun isTagPushMatch(
         triggerOn: TriggerOn,
         eventTag: String,
-        userId: String
+        userId: String,
+        fromBranch: String?
     ): Boolean {
         if (triggerOn.tag == null) {
             return false
@@ -247,13 +253,18 @@ class TriggerMatcher @Autowired constructor(
             return false
         }
 
+        if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {
+            return false
+        }
+
         // include
         if (!BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag) ||
             !UserMatchUtils.isUserMatch(tagRule.users, userId)
         ) {
             return false
         }
-        logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
+        logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included," +
+            " and fromBranch($fromBranch)")
         return true
     }
 
