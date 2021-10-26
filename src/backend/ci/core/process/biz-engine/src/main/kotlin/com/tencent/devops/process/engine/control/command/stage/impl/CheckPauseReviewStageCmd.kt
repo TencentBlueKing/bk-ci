@@ -164,7 +164,7 @@ class CheckPauseReviewStageCmd(
     private fun qualityCheckInNeedReview(commandContext: StageContext) {
         LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
             "|STAGE_QUALITY_CHECK_IN_REVIEWING|${commandContext.event.stageId}")
-        commandContext.stage.checkIn?.status = BuildStatus.QUEUE.name
+        commandContext.stage.checkIn?.status = BuildStatus.PAUSE.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_IN"
         commandContext.cmdFlowState = CmdFlowState.BREAK
         pipelineStageService.refreshCheckStageStatus(
