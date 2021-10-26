@@ -161,12 +161,12 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
-        return try {
-            tofService.getUserDeptDetail(userId, "")
-        } catch (e: Exception) {
+        try {
+            return tofService.getUserDeptDetail(userId, "")
+        } catch (e: OperationException) {
             // stream场景下会传公共账号,tof不存在公共账号
             logger.warn("getDeptInfo: $e")
-            UserDeptDetail(
+            return UserDeptDetail(
                 bgId = "",
                 bgName = "",
                 centerId = "",
