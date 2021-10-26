@@ -1,4 +1,4 @@
-package com.tencent.devops.support.robot.pojo
+package com.tencent.devops.common.wechatwork.model.robot
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

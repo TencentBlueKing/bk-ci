@@ -1,11 +1,12 @@
 package com.tencent.devops.support.robot
 
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.tencent.devops.common.wechatwork.WechatWorkRobotService
+import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
-import com.tencent.devops.support.robot.pojo.RobotTextSendMsg
-import com.tencent.devops.support.robot.pojo.TextMsg
+import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
+import com.tencent.devops.common.wechatwork.model.robot.TextMsg
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -17,7 +18,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 @Service
 class WeworkRobotService @Autowired constructor(
     private val weweorkRobotConfiguration: WeworkRobotCustomConfig,
-    private val weworkRobotSendMsgService: WeworkRobotSendMsgService
+    val wechatWorkRobotService: WechatWorkRobotService
 ) {
     private val rototWxcpt =
         WXBizMsgCrypt(weweorkRobotConfiguration.token, weweorkRobotConfiguration.aeskey, "")
@@ -56,7 +57,7 @@ class WeworkRobotService @Autowired constructor(
                     content = "本群ChatId: ${robotCallBack.chatId}"
                 )
             )
-            weworkRobotSendMsgService.sendTextMsgByRobot(msg.toJsonString())
+            wechatWorkRobotService.send(msg.toJsonString())
         }
         return true
     }

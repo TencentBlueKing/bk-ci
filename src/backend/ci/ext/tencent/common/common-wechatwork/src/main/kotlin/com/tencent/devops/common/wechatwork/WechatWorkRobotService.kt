@@ -5,16 +5,18 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Autowired
 
-@Service
-class WechatWorkRobotService {
+class WechatWorkRobotService @Autowired constructor(
+    val robotCustomConfig: WeworkRobotCustomConfig
+) {
 
-    fun send(seanURL: String, jsonString: String) {
+    fun send(jsonString: String) {
+        val url = "${robotCustomConfig.weworkUrl}/cgi-bin/webhook/send?key=${robotCustomConfig.robotKey}"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
-        logger.info("sendRobot: $seanURL, body:$jsonString")
+        logger.info("sendRobot: $url, body:$jsonString")
         val sendRequest = Request.Builder()
-            .url(seanURL)
+            .url(url)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->

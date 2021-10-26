@@ -1,4 +1,4 @@
-package com.tencent.devops.support.robot/*
+package com.tencent.devops.common.wechatwork/*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.

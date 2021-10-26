@@ -1,7 +1,7 @@
-package com.tencent.devops.support.robot.pojo
+package com.tencent.devops.common.wechatwork.model.robot
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.support.model.wechatwork.enums.MsgType
+import com.tencent.devops.common.wechatwork.model.enums.MsgType
 
 data class RobotTextSendMsg(
     @JsonProperty("msgtype")
