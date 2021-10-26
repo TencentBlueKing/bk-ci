@@ -35,6 +35,7 @@ import com.tencent.devops.stream.pojo.git.GitCommit
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import org.joda.time.DateTime
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -137,6 +138,34 @@ object GitRequestEventHandle {
             event = "",
             description = triggerBuildReq.description,
             mrTitle = "",
+            gitEvent = null
+        )
+    }
+
+    fun createScheduleTriggerEvent(
+        streamTimerEvent: StreamTimerBuildEvent,
+        buildBranch: String,
+        buildCommit: String,
+        buildCommitMessage: String
+    ): GitRequestEvent {
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.SCHEDULE.value,
+            operationKind = null,
+            extensionAction = null,
+            gitProjectId = streamTimerEvent.gitProjectId,
+            sourceGitProjectId = null,
+            branch = buildBranch,
+            targetBranch = null,
+            commitId = buildCommit,
+            commitMsg = buildCommitMessage,
+            commitTimeStamp = getCommitTimeStamp(null),
+            userId = streamTimerEvent.userId,
+            totalCommitCount = 0,
+            mergeRequestId = null,
+            event = "",
+            description = null,
+            mrTitle = null,
             gitEvent = null
         )
     }

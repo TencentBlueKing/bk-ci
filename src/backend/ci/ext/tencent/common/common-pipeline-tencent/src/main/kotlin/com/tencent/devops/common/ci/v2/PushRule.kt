@@ -46,8 +46,8 @@ data class PushRule(
 
     val paths: List<String>? = null,
 
-    @ApiModelProperty(name = "path-ignore")
-    @JsonProperty("path-ignore")
+    @ApiModelProperty(name = "paths-ignore")
+    @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
     val users: List<String>? = null,

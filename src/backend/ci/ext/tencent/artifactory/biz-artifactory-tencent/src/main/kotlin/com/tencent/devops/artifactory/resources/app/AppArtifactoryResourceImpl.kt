@@ -277,7 +277,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String,
         experienceHashId: String?,
-        organization: String?
+        organization: String?,
+        ttl: Int?
     ): String {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa")) {
@@ -288,7 +289,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             projectId = projectId,
             artifactoryType = artifactoryType,
             argPath = path,
-            ttl = 24 * 3600,
+            ttl = ttl ?: (24 * 3600),
             directed = false,
             experienceHashId = experienceHashId,
             organization = organization

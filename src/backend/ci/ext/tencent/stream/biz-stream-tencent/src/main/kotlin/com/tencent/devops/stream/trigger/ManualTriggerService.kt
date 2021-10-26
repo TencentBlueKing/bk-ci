@@ -50,7 +50,6 @@ import com.tencent.devops.stream.trigger.v1.YamlBuild
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
-import com.tencent.devops.stream.v2.service.StreamOauthService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +60,6 @@ import org.springframework.beans.factory.annotation.Value
 @Service
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val oauthService: StreamOauthService,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -134,7 +132,7 @@ class ManualTriggerService @Autowired constructor(
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = TriggerReason.CI_YAML_CONTENT_NULL.name +
-                    "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
+                        "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
             )
         }
 
@@ -193,7 +191,6 @@ class ManualTriggerService @Autowired constructor(
             )
         } else {
             val result = handleTrigger(
-                userId = userId,
                 gitRequestEvent = gitRequestEvent,
                 originYaml = originYaml,
                 buildPipeline = buildPipeline,
@@ -221,7 +218,6 @@ class ManualTriggerService @Autowired constructor(
     }
 
     fun handleTrigger(
-        userId: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
@@ -229,13 +225,12 @@ class ManualTriggerService @Autowired constructor(
     ): BuildId? {
         var buildId: BuildId? = null
         triggerExceptionService.handleManualTrigger {
-            buildId = trigger(userId, gitRequestEvent, originYaml, buildPipeline, triggerBuildReq)
+            buildId = trigger(gitRequestEvent, originYaml, buildPipeline, triggerBuildReq)
         }
         return buildId
     }
 
     private fun trigger(
-        userId: String,
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
@@ -277,7 +272,9 @@ class ManualTriggerService @Autowired constructor(
             parsedYaml = parsedYaml,
             originYaml = originYaml,
             normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
-            gitBuildId = gitBuildId
+            gitBuildId = gitBuildId,
+            isTimeTrigger = false,
+            onlySavePipeline = false
         )
     }
 
@@ -294,7 +291,7 @@ class ManualTriggerService @Autowired constructor(
         }
 
         val yamlObject = try {
-            streamYamlService.createCIBuildYaml(originYaml!!, gitRequestEvent.gitProjectId)
+            streamYamlService.createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.warn("v1 git ci yaml is invalid", e)
             // 手动触发不发送commitCheck

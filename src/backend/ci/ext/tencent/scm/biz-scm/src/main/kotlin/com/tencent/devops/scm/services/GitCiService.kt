@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
@@ -365,6 +366,48 @@ class GitCiService {
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
         }
+    }
+
+    fun getChangeFileList(
+        token: String,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean? = false,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 10000) 10000 else pageSize
+        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list?access_token=$token"
+            .addParams(
+                mapOf(
+                    "from" to from,
+                    "to" to to,
+                    "straight" to straight,
+                    "page" to newPage,
+                    "per_page" to newPageSize
+                )
+            )
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getChangeFileList with response=$response")
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
+            val data = response.body()?.string() ?: return emptyList()
+            return JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+        }
+    }
+
+    private fun getUrlPrefix(gitProjectId: String): String {
+        return "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}"
     }
 
     private fun String.addParams(args: Map<String, Any?>): String {

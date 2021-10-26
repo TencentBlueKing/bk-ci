@@ -423,15 +423,17 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
-        yamlSchemaCheck.check(
-            StreamTriggerContext(
-                gitEvent = event,
-                requestEvent = gitRequestEvent,
-                streamSetting = gitProjectConf,
-                pipeline = buildPipeline,
-                originYaml = originYaml
-            ), templateType = null, isCiFile = true
+        // 组装上下文参数
+        val context = StreamTriggerContext(
+            gitEvent = event,
+            requestEvent = gitRequestEvent,
+            streamSetting = gitProjectConf,
+            pipeline = buildPipeline,
+            originYaml = originYaml,
+            mrChangeSet = changeSet
         )
+
+        yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
 
         // 为已存在的流水线设置名称
         buildPipeline.displayName = displayName
@@ -479,13 +481,7 @@ class GitCITriggerService @Autowired constructor(
             )
         } else {
             triggerInterface.triggerBuild(
-                gitRequestEvent = gitRequestEvent,
-                gitProjectPipeline = buildPipeline,
-                event = event,
-                originYaml = originYaml,
-                filePath = filePath,
-                changeSet = null,
-                forkGitProjectId = forkGitProjectId
+                context
             )
         }
         streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
