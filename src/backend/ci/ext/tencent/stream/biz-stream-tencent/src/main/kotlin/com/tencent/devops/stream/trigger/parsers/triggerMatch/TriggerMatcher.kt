@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService
