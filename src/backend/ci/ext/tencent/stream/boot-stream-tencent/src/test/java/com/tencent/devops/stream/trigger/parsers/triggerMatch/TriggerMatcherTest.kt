@@ -252,7 +252,7 @@ internal class TriggerMatcherTest {
                     tagsIgnore = listOf("release_1024"),
                     fromBranches = listOf("master"),
                     users = null,
-                    usersIgnore = listOf("yongyiduan"),
+                    usersIgnore = listOf("yongyiduan")
                 ),
                 mr = null,
                 schedules = null

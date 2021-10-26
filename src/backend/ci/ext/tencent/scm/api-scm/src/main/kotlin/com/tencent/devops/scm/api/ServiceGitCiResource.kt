@@ -302,6 +302,6 @@ interface ServiceGitCiResource {
         page: Int,
         @ApiParam(value = "每页大小")
         @QueryParam("pageSize")
-        pageSize: Int,
+        pageSize: Int
     ): Result<List<ChangeFileInfo>>
 }
