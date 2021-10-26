@@ -105,13 +105,14 @@ class TriggerMatcher @Autowired constructor(
                 isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId)
             }
             is GitMergeRequestEvent -> {
+                val mrAction = StreamMrEventAction.getActionValue(context.gitEvent) ?: false
                 isMrMatch(
                     triggerOn = triggerOn,
                     sourceBranch = sourceBranch,
                     targetBranch = targetBranch,
                     changeSet = changeSet,
                     userId = gitRequestEvent.userId,
-                    event = context.gitEvent
+                    mrAction = mrAction
                 )
             }
             is GitTagPushEvent -> {
@@ -200,7 +201,7 @@ class TriggerMatcher @Autowired constructor(
         targetBranch: String,
         changeSet: Set<String>?,
         userId: String,
-        event: GitMergeRequestEvent
+        mrAction: Any
     ): Boolean {
         if (triggerOn.mr == null) {
             return false
@@ -226,7 +227,7 @@ class TriggerMatcher @Autowired constructor(
         if (!BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch) ||
             !PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet) ||
             !UserMatchUtils.isUserMatch(mrRule.users, userId) ||
-            !isMrActionMatch(mrRule.action, event)
+            !isMrActionMatch(mrRule.action, mrAction)
         ) {
             return false
         }
@@ -311,7 +312,7 @@ class TriggerMatcher @Autowired constructor(
         return resultList
     }
 
-    private fun isMrActionMatch(actionList: List<String>?, event: GitMergeRequestEvent): Boolean {
+    private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {
         val realActionList = if (actionList.isNullOrEmpty()) {
             // 缺省时使用默认值
             listOf(
@@ -322,8 +323,6 @@ class TriggerMatcher @Autowired constructor(
         } else {
             actionList
         }
-
-        val mrAction = StreamMrEventAction.getActionValue(event) ?: false
         realActionList.forEach {
             if (it == mrAction) {
                 return true
