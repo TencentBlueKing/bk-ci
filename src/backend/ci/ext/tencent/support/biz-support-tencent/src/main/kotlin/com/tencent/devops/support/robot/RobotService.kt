@@ -16,8 +16,8 @@ import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
-class WeworkRobotService @Autowired constructor(
-    private val weworkRobotCustomConfig: WeworkRobotCustomConfig,
+class RobotService @Autowired constructor(
+    val weworkRobotCustomConfig: WeworkRobotCustomConfig,
     val wechatWorkRobotService: WechatWorkRobotService
 ) {
     private val rototWxcpt =
@@ -115,22 +115,7 @@ class WeworkRobotService @Autowired constructor(
         return xmlString
     }
 
-    /*
-    * 获取密文的xml字符串
-    * */
-    fun encryptMsg(robotTextSendMsg: RobotTextSendMsg, timestamp: Long, nonce: String): String {
-        var xmlString = ""
-        try {
-            xmlString = rototWxcpt.EncryptMsg(robotTextSendMsg.toJsonString(), timestamp.toString(), nonce)
-        } catch (e: Exception) {
-            // 转换失败，错误原因请查看异常
-            e.printStackTrace()
-        }
-        return xmlString
-    }
-
-
     companion object {
-        val logger = LoggerFactory.getLogger(WeworkRobotService::class.java)
+        val logger = LoggerFactory.getLogger(RobotService::class.java)
     }
 }

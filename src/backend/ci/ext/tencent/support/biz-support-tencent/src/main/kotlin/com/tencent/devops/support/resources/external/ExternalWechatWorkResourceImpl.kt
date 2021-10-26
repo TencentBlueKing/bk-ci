@@ -30,7 +30,7 @@ package com.tencent.devops.support.resources.external
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.external.ExternalWechatWorkResource
-import com.tencent.devops.support.robot.WeworkRobotService
+import com.tencent.devops.support.robot.RobotService
 import com.tencent.devops.support.services.WechatWorkCallbackService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ExternalWechatWorkResourceImpl @Autowired constructor(
     private val wechatWorkCallbackService: WechatWorkCallbackService,
-    private val weworkRobotService: WeworkRobotService
+    private val robotService: RobotService
 ) : ExternalWechatWorkResource {
     private val logger = LoggerFactory.getLogger(ExternalWechatWorkResourceImpl::class.java)
 
@@ -78,7 +78,7 @@ class ExternalWechatWorkResourceImpl @Autowired constructor(
         nonce: String,
         reqData: String?,
     ): Result<Boolean> {
-        return Result(weworkRobotService.robotCallbackPost(signature, timestamp, nonce, reqData))
+        return Result(robotService.robotCallbackPost(signature, timestamp, nonce, reqData))
     }
 
     override fun robotCallback(
@@ -88,7 +88,7 @@ class ExternalWechatWorkResourceImpl @Autowired constructor(
         echoStr: String,
         reqData: String?,
     ): String {
-        val sMsg = weworkRobotService.robotVerifyURL(signature, timestamp, nonce, echoStr)
+        val sMsg = robotService.robotVerifyURL(signature, timestamp, nonce, echoStr)
         logger.info(sMsg)
         return sMsg
     }
