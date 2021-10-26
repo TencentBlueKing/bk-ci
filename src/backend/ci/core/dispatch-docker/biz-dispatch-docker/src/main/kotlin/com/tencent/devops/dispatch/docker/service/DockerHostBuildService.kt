@@ -256,17 +256,15 @@ class DockerHostBuildService @Autowired constructor(
         val redisLock = RedisLock(redisOperation, "update_timeout_pool_task_nogkudla", 5L)
         try {
             if (redisLock.tryLock()) {
-                // 更新大于两天状态还是running的pool
+                // 更新大于七天状态还是running的pool
                 val timeoutPoolTask = pipelineDockerPoolDao.getTimeOutPool(dslContext)
-                if (timeoutPoolTask.isNotEmpty) {
-                    LOG.info("CLEAR_TIME_OUT_BUILD_POOL|pool_size=${timeoutPoolTask.size}|clear it.")
-                    for (i in timeoutPoolTask.indices) {
-                        LOG.info("CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
-                            "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})")
-                    }
-                    pipelineDockerPoolDao.updateTimeOutPool(dslContext)
-                    message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
+                LOG.info("CLEAR_TIME_OUT_BUILD_POOL|pool_size=${timeoutPoolTask.size}|clear it.")
+                for (i in timeoutPoolTask.indices) {
+                    LOG.info("CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
+                        "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})")
                 }
+                pipelineDockerPoolDao.updateTimeOutPool(dslContext)
+                message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
 
                 clearTimeoutBuildHistory()
             }
@@ -279,32 +277,32 @@ class DockerHostBuildService @Autowired constructor(
     private fun clearTimeoutBuildHistory() {
         // 大于七天状态还是running的build history，并主动关机
         val timeoutBuildList = pipelineDockerBuildDao.getTimeOutBuild(dslContext)
-        if (timeoutBuildList.isNotEmpty) {
-            LOG.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
-            for (i in timeoutBuildList.indices) {
-                try {
-                    val dockerIp = timeoutBuildList[i].dockerIp
-                    if (dockerIp.isNotEmpty()) {
-                        val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp)
-                        if (dockerIpInfo != null && dockerIpInfo.enable) {
-                            dockerHostClient.endBuild(
-                                projectId = timeoutBuildList[i].projectId,
-                                pipelineId = timeoutBuildList[i].pipelineId,
-                                buildId = timeoutBuildList[i].buildId,
-                                vmSeqId = timeoutBuildList[i].vmSeqId,
-                                containerId = timeoutBuildList[i].containerId,
-                                dockerIp = timeoutBuildList[i].dockerIp
-                            )
-
-                            pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
-                            LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
-                                    " buildId:(${timeoutBuildList[i].buildId}), " +
-                                    "poolNo:(${timeoutBuildList[i].poolNo})")
-                        }
-                    }
-                } catch (ignore: Exception) {
-                    LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
+        LOG.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
+        for (i in timeoutBuildList.indices) {
+            try {
+                val dockerIp = timeoutBuildList[i].dockerIp
+                if (dockerIp.isNullOrBlank()) {
+                    continue
                 }
+
+                val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp)
+                if (dockerIpInfo != null && dockerIpInfo.enable) {
+                    dockerHostClient.endBuild(
+                        projectId = timeoutBuildList[i].projectId,
+                        pipelineId = timeoutBuildList[i].pipelineId,
+                        buildId = timeoutBuildList[i].buildId,
+                        vmSeqId = timeoutBuildList[i].vmSeqId,
+                        containerId = timeoutBuildList[i].containerId,
+                        dockerIp = timeoutBuildList[i].dockerIp
+                    )
+
+                    pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
+                    LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
+                            " buildId:(${timeoutBuildList[i].buildId}), " +
+                            "poolNo:(${timeoutBuildList[i].poolNo})")
+                }
+            } catch (ignore: Exception) {
+                LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
             }
         }
     }

@@ -29,6 +29,7 @@ package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.model.Frame
+import com.github.dockerjava.api.model.Image
 import com.github.dockerjava.api.model.Statistics
 import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
@@ -247,7 +248,8 @@ class DockerHostBuildService(
                 exitCode = containerState.exitCodeLong ?: 0L
             }
         } catch (e: Exception) {
-            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. containerId: $containerId", e)
+            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed.
+            containerId: $containerId", e)
         }
 
         if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
@@ -539,23 +541,25 @@ class DockerHostBuildService(
                 continue
             }
 
-            if (statistics.memoryStats != null &&
-                statistics.memoryStats.usage != null &&
-                statistics.memoryStats.limit != null) {
-                val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
-                val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
-                if (memUsage >= elasticityMemThreshold) {
-                    // 上报负载超额预警到数据平台
-                    dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                        "containerName" to container.names[0],
-                        "containerId" to container.id,
-                        "cpuUsagePer" to cpuUsagePer.toString(),
-                        "memUsagePer" to memUsage.toString(),
-                        "statistics" to JsonUtil.toJson(statistics)
-                    ))
+            if (statistics.memoryStats == null ||
+                statistics.memoryStats.usage == null ||
+                statistics.memoryStats.limit == null) {
+                continue
+            }
 
-                    resetContainer(container.id)
-                }
+            val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
+            val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
+            if (memUsage >= elasticityMemThreshold) {
+                // 上报负载超额预警到数据平台
+                dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                    "containerName" to container.names[0],
+                    "containerId" to container.id,
+                    "cpuUsagePer" to cpuUsagePer.toString(),
+                    "memUsagePer" to memUsage.toString(),
+                    "statistics" to JsonUtil.toJson(statistics)
+                ))
+
+                resetContainer(container.id)
             }
         }
     }
@@ -649,31 +653,36 @@ class DockerHostBuildService(
             }
         }
 
-        val publicImages = getPublicImages()
         val imageList = httpLongDockerCli.listImagesCmd().withShowAll(true).exec()
         imageList.forEach c@{
             if (it.repoTags == null || it.repoTags.isEmpty()) {
                 return@c
             }
-            it.repoTags.forEach t@{ image ->
-                if (publicImages.contains(image)) {
-                    logger.info("skip public image: $image")
-                    return@t
-                }
 
-                val lastUsedDate = LocalImageCache.getDate(image) ?: return@t
+            loopRepoTagsAndRemove(it)
+        }
+    }
 
-                val days = TimeUnit.MILLISECONDS.toDays(Date().time - lastUsedDate.time)
-                if (days >= dockerHostConfig.localImageCacheDays) {
-                    logger.info("remove local image, ${it.repoTags}")
-                    try {
-                        httpLongDockerCli.removeImageCmd(image).exec()
-                        logger.info("remove local image success, image: $image")
-                    } catch (e: java.lang.Exception) {
-                        logger.error("remove local image exception ${e.message}")
-                    }
-                    return@c
+    private fun loopRepoTagsAndRemove(it: Image) {
+        val publicImages = getPublicImages()
+        it.repoTags.forEach t@{ image ->
+            if (publicImages.contains(image)) {
+                logger.info("skip public image: $image")
+                return@t
+            }
+
+            val lastUsedDate = LocalImageCache.getDate(image) ?: return@t
+
+            val days = TimeUnit.MILLISECONDS.toDays(Date().time - lastUsedDate.time)
+            if (days >= dockerHostConfig.localImageCacheDays) {
+                logger.info("remove local image, ${it.repoTags}")
+                try {
+                    httpLongDockerCli.removeImageCmd(image).exec()
+                    logger.info("remove local image success, image: $image")
+                } catch (e: java.lang.Exception) {
+                    logger.error("remove local image exception ${e.message}")
                 }
+                return
             }
         }
     }

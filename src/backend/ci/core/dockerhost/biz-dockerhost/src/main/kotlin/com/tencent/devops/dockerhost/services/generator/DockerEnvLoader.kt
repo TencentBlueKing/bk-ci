@@ -39,21 +39,21 @@ object DockerEnvLoader {
     private val logger: Logger = LoggerFactory.getLogger(DockerEnvLoader::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun loadEnv(dockerHostBuildInfo: ContainerHandlerContext): List<String> {
+    fun loadEnv(handlerContext: ContainerHandlerContext): List<String> {
 
         val envList = mutableListOf<String>()
         try {
             val generators: List<DockerEnvGenerator> =
                 SpringContextUtil.getBeansWithAnnotation(EnvGenerator::class.java) as List<DockerEnvGenerator>
             generators.forEach { generator ->
-                generator.generateEnv(dockerHostBuildInfo).forEach {
+                generator.generateEnv(handlerContext).forEach {
                     envList.add("${it.key}=${it.value}")
                 }
             }
         } catch (notFound: BeansException) {
-            logger.warn("[${dockerHostBuildInfo.buildId}]|not found env generator| ex=$notFound")
+            logger.warn("[${handlerContext.buildId}]|not found env generator| ex=$notFound")
         } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadEnv_fail|", ignored)
+            logger.error("[${handlerContext.buildId}]|Docker_loadEnv_fail|", ignored)
         }
 
         return envList

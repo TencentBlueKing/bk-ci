@@ -40,19 +40,19 @@ object DockerBindLoader {
     private val logger: Logger = LoggerFactory.getLogger(DockerBindLoader::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun loadBinds(containerInfo: ContainerHandlerContext): List<Bind> {
+    fun loadBinds(handlerContext: ContainerHandlerContext): List<Bind> {
 
         val bindList = mutableListOf<Bind>()
         try {
             val generators: List<DockerBindGenerator> =
                 SpringContextUtil.getBeansWithAnnotation(BindGenerator::class.java) as List<DockerBindGenerator>
             generators.forEach { generator ->
-                bindList.addAll(generator.generateBinds(containerInfo))
+                bindList.addAll(generator.generateBinds(handlerContext))
             }
         } catch (notFound: BeansException) {
-            logger.warn("[${containerInfo.buildId}]|not found bind generator| ex=$notFound")
+            logger.warn("[${handlerContext.buildId}]|not found bind generator| ex=$notFound")
         } catch (ignored: Throwable) {
-            logger.error("[${containerInfo.buildId}]|loadBinds_fail|", ignored)
+            logger.error("[${handlerContext.buildId}]|loadBinds_fail|", ignored)
         }
 
         return bindList
