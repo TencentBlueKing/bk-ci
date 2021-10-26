@@ -822,13 +822,16 @@ class AtomDao : AtomBaseDao() {
                 conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             } else {
                 conditions.add(ta.JOB_TYPE.eq(jobType))
+                if (queryFitAgentBuildLessAtomFlag == false && category == null) {
+                    conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
+                }
             }
         }
         if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
             if (fitOsFlag == false) {
                 conditions.add((ta.OS.notLike("%$os%")
                     .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
-                    .or(ta.CATEGROY.eq(AtomCategoryEnum.TRIGGER.category.toByte())))
+                    .and(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte())))
             } else {
                 conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
             }
