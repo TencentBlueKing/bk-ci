@@ -150,6 +150,7 @@ import com.tencent.devops.gitci.trigger.GitCheckService
 import com.tencent.devops.gitci.v2.service.GitCIV2WebsocketService
 import com.tencent.devops.gitci.v2.service.GitPipelineBranchService
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
@@ -237,7 +238,7 @@ class YamlBuildV2 @Autowired constructor(
                     pipeline = pipeline,
                     event = event,
                     gitCIBasicSetting = gitBasicSetting,
-                    model = creatTriggerModel(gitBasicSetting)
+                    model = createTriggerModel(gitBasicSetting)
                 )
             }
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
@@ -301,13 +302,13 @@ class YamlBuildV2 @Autowired constructor(
         }
     }
 
-    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+    private fun createTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
         name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
         desc = "",
         stages = listOf(
             Stage(
-                id = "stage-0",
-                name = "Stage-0",
+                id = "stage-1",
+                name = "Stage-1",
                 containers = listOf(
                     TriggerContainer(
                         id = "0",
@@ -345,7 +346,8 @@ class YamlBuildV2 @Autowired constructor(
         stageCheck: StageCheck?,
         position: String,
         event: GitRequestEvent,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
@@ -363,7 +365,8 @@ class YamlBuildV2 @Autowired constructor(
                 stageCheck = stageCheck,
                 event = event,
                 position = position,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         }
         return check
@@ -400,7 +403,8 @@ class YamlBuildV2 @Autowired constructor(
         stageCheck: StageCheck,
         event: GitRequestEvent,
         position: String,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
         val operations = mapOf(
@@ -463,7 +467,9 @@ class YamlBuildV2 @Autowired constructor(
                     range = listOf(pipeline.pipelineId),
                     templateRange = null,
                     gatewayId = null,
-                    opList = opList
+                    opList = opList,
+                    gateKeepers = gate.continueOnFail?.gatekeepers,
+                    stageId = stageId
                 )
             )
         }
@@ -563,16 +569,20 @@ class YamlBuildV2 @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "Stage-0")
+        // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
+        var stageIndex = 1
+        val stageId = VMUtils.genStageId(stageIndex++)
+        val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
         stageList.add(stage1)
 
         // 其他的stage
-        yaml.stages.forEachIndexed { stageIndex, stage ->
+        yaml.stages.forEach { stage ->
             stageList.add(createStage(
                 stage = stage,
                 event = event,
                 gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1,
+                // stream的stage标号从1开始，后续都加1
+                stageIndex = stageIndex++,
                 resources = yaml.resource,
                 pipeline = pipeline
             ))
@@ -593,6 +603,7 @@ class YamlBuildV2 @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
+                    stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
                     pipeline = pipeline
@@ -686,7 +697,7 @@ class YamlBuildV2 @Autowired constructor(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        stageIndex: Int = 0,
+        stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
         pipeline: GitProjectPipeline
@@ -718,12 +729,13 @@ class YamlBuildV2 @Autowired constructor(
             )
         }
 
+        val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
-            id = stage.id,
+            id = stageId,
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
-                "Stage-$stageIndex"
+                VMUtils.genStageId(stageIndex - 1)
             },
             tag = stage.label,
             fastKill = stage.fastKill,
@@ -734,13 +746,15 @@ class YamlBuildV2 @Autowired constructor(
                 stageCheck = stage.checkIn,
                 position = ControlPointPosition.BEFORE_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut,
                 position = ControlPointPosition.AFTER_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         )
     }

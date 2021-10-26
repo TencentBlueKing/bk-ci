@@ -28,10 +28,13 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthProjectCodeAndId(
     @JsonProperty("project_code", required = true)
+    @ApiModelProperty(name = "project_code")
     val projectCode: String,
     @JsonProperty("project_id", required = true)
+    @ApiModelProperty(name = "project_id")
     val projectId: String
 )

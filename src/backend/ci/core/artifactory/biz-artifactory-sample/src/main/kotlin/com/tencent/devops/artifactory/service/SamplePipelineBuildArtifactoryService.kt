@@ -47,7 +47,12 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val defaultBkRepoClient: DefaultBkRepoClient
 ) : PipelineBuildArtifactoryService {
 
-    override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
+    override fun getArtifactList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<FileInfo> {
         return if (defaultBkRepoClient.useBkRepo()) {
             getBkRepoArtifactoryList(projectId, pipelineId, buildId)
         } else {

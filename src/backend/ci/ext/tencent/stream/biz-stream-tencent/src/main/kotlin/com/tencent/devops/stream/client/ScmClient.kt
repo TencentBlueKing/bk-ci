@@ -53,7 +53,7 @@ class ScmClient @Autowired constructor(
     fun pushCommitCheck(
         commitId: String,
         description: String,
-        mergeRequestId: Long,
+        mergeRequestId: Long?,
         pipelineId: String,
         buildId: String,
         userId: String,
