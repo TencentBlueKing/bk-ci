@@ -68,6 +68,6 @@ export default {
     },
 
     requestAtomVersionDetail (code) {
-        return vue.$ajax.get(`${prefix}/user/market/atoms/${code}/newest/detail`)
+        return vue.$ajax.get(`${prefix}/user/market/atoms/${code}/showVersionInfo`)
     }
 }

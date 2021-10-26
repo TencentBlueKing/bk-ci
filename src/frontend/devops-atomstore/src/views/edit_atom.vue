@@ -365,7 +365,8 @@
                     sortError: false,
                     envError: false,
                     releaseTypeError: false
-                }
+                },
+                versionMap: {}
             }
         },
         computed: {
@@ -410,25 +411,7 @@
             },
 
             'atomForm.releaseType' (val) {
-                const tpl = ['INCOMPATIBILITY_UPGRADE', 'COMPATIBILITY_UPGRADE', 'COMPATIBILITY_FIX', 'HIS_VERSION_UPGRADE']
-                let temp = this.atomForm.version.split('.')
-
-                for (let i = 0; i < temp.length; i++) {
-                    if (tpl[i] === val) {
-                        temp[i] = (parseInt(temp[i]) + 1).toString()
-                    }
-                }
-                if (val === 'INCOMPATIBILITY_UPGRADE') {
-                    temp[1] = '0'
-                    temp[2] = '0'
-                } else if (val === 'COMPATIBILITY_UPGRADE') {
-                    temp[2] = '0'
-                } else if (val === 'CANCEL_RE_RELEASE') {
-                    temp = this.atomForm.version.split('.')
-                } else if (val === 'HIS_VERSION_UPGRADE') {
-                    temp = []
-                }
-                this.curVersion = temp.join('.')
+                this.curVersion = this.versionMap[val] || ''
                 this.formErrors.releaseTypeError = false
             }
         },
@@ -473,48 +456,24 @@
                     const res = await this.$store.dispatch('store/requestAtomDetail', {
                         atomId: atomId
                     })
+                    const { showVersionList } = await api.requestAtomVersionDetail(res.atomCode)
                     if (res) {
                         Object.assign(this.atomForm, res, {})
-                        this.curVersion = res.version
                         this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
                         this.initJobType = this.atomForm.jobType
                         this.atomForm.labelIdList = [this.atomForm.labelList || []].map(item => {
                             return item.id
                         })
                         this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))
-
-                        const { showVersionInfo } = await api.requestAtomVersionDetail(this.atomForm.atomCode)
-                        this.$set(this.atomForm, 'releaseType', showVersionInfo.releaseType)
-                        this.curVersion = showVersionInfo.version
-                        this.initReleaseType = showVersionInfo.releaseType
-
-                        // if (res.version) {
-                        //     let status = ''
-                        //     switch (res.atomStatus) {
-                        //         case 'GROUNDING_SUSPENSION':
-                        //             status = 'CANCEL_RE_RELEASE'
-                        //             break
-                        //         default:
-                        //             const types = {
-                        //                 NEW: 'INCOMPATIBILITY_UPGRADE',
-                        //                 INCOMPATIBILITY_UPGRADE: 'INCOMPATIBILITY_UPGRADE',
-                        //                 COMPATIBILITY_UPGRADE: 'COMPATIBILITY_UPGRADE',
-                        //                 COMPATIBILITY_FIX: 'COMPATIBILITY_FIX',
-                        //                 HIS_VERSION_UPGRADE: 'HIS_VERSION_UPGRADE'
-                        //             }
-                        //             status = types[res.releaseType] || 'COMPATIBILITY_FIX'
-                        //             break
-                        //     }
-                        //     this.$set(this.atomForm, 'releaseType', status)
-
-                        //     const temp = this.atomForm.version.split('.')
-                        //     temp[0] = (parseInt(temp[0]) + 1).toString()
-                        //     this.curVersion = temp.join('.')
-                        // } else {
-                        //     this.curVersion = '1.0.0'
-                        // }
-
-                        // this.initReleaseType = this.atomForm.releaseType
+                        // init version
+                        showVersionList.forEach((versionInfo) => {
+                            this.versionMap[versionInfo.releaseType] = versionInfo.version
+                            if (versionInfo.defaultFlag) {
+                                this.curVersion = versionInfo.version
+                                this.atomForm.releaseType = versionInfo.releaseType
+                                this.initReleaseType = versionInfo.releaseType
+                            }
+                        })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -718,7 +677,8 @@
                         packageShaContent: this.atomForm.packageShaContent,
                         pkgName: this.atomForm.pkgName,
                         frontendType: this.atomForm.frontendType,
-                        fieldCheckConfirmFlag
+                        fieldCheckConfirmFlag,
+                        branch: this.atomForm.branch
                     }
 
                     return this.$store.dispatch('store/editAtom', {
