@@ -3,10 +3,10 @@ package com.tencent.devops.common.wechatwork.model.robot
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.wechatwork.model.enums.MsgType
 
-data class RobotTextSendMsg(
+data class RobotMarkdownSendMsg(
     @JsonProperty("msgtype")
-    val msgType: String = MsgType.text.name,
+    val msgType: String = MsgType.markdown.name,
     @JsonProperty("chatid")
     val chatId: String,
-    val text: MsgInfo
+    val markdown: MsgInfo
 )

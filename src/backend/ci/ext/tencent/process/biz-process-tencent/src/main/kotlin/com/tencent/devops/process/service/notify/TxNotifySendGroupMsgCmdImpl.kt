@@ -5,7 +5,8 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import com.tencent.devops.common.wechatwork.model.robot.TextMsg
+import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
+import com.tencent.devops.common.wechatwork.model.robot.RobotMarkdownSendMsg
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
@@ -97,11 +98,17 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
                 logger.info("send group msg by robot: $it, $content")
                 if (markerDownFlag) {
-                    // TODO: 机器人发送markDown
+                    val msg = RobotMarkdownSendMsg(
+                        chatId = it,
+                        content = MsgInfo(
+                            content = content
+                        )
+                    )
+                    wechatWorkRobotService.send(msg.toJsonString())
                 } else {
                     val msg = RobotTextSendMsg(
                         chatId = it,
-                        text = TextMsg(
+                        text = MsgInfo(
                             content = content
                         )
                     )

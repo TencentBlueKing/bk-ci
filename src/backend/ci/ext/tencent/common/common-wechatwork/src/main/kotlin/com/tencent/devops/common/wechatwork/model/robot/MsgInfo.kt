@@ -2,7 +2,7 @@ package com.tencent.devops.common.wechatwork.model.robot
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class TextMsg(
+data class MsgInfo(
     val content: String,
 
     @JsonProperty("mentioned_list")

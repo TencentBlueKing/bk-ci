@@ -6,7 +6,7 @@ import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import com.tencent.devops.common.wechatwork.model.robot.TextMsg
+import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,7 +53,7 @@ class RobotService @Autowired constructor(
         if (robotCallBack.content.contains("会话ID")) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
-                text = TextMsg(
+                info = MsgInfo(
                     content = "本群ChatId: ${robotCallBack.chatId}"
                 )
             )
