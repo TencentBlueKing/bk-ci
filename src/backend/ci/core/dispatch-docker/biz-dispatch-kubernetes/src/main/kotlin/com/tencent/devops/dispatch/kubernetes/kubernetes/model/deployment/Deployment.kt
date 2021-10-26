@@ -25,20 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.Pod
+import io.kubernetes.client.openapi.models.V1Deployment
+import io.kubernetes.client.openapi.models.V1DeploymentSpec
+import io.kubernetes.client.openapi.models.V1LabelSelector
+import io.kubernetes.client.openapi.models.V1ObjectMeta
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec
+import io.kubernetes.client.proto.V1
 
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) :
-    OpDockerBuildResource {
+object Deployment {
 
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
+    fun deployment(
+        deployment: DeploymentData
+    ): V1Deployment {
+        with(deployment) {
+            return V1Deployment()
+                .apiVersion("apps/v1")
+                .kind("Deployment")
+                .metadata(
+                    V1ObjectMeta()
+                        .name(name)
+                        .namespace(nameSpace)
+                        .labels(labels)
+                )
+                .spec(spec(deployment))
+        }
+    }
+
+    private fun spec(
+        deployment: DeploymentData
+    ): V1DeploymentSpec {
+        with(deployment) {
+            return V1DeploymentSpec()
+                .replicas(1)
+                .selector(
+                    V1LabelSelector()
+                        .matchLabels(selectorLabels)
+                )
+                .template(Pod.template(deployment.pod))
+        }
     }
 }

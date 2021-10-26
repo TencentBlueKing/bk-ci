@@ -25,20 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) :
-    OpDockerBuildResource {
-
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
-    }
-}
+data class DeploymentData(
+    val name: String,
+    val nameSpace: String,
+    val labels: Map<String, String>,
+    val selectorLabels: Map<String, String>,
+    val pod: PodData
+)

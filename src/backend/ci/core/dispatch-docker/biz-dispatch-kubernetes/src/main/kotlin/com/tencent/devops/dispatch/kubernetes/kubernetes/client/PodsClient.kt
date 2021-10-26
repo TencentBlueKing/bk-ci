@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.client.kubernetes
+package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig

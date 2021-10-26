@@ -30,8 +30,8 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.dispatch.kubernetes.client.kubernetes.DeploymentClient
-import com.tencent.devops.dispatch.kubernetes.client.kubernetes.PodsClient
+import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
+import com.tencent.devops.dispatch.kubernetes.kubernetes.client.PodsClient
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
@@ -92,7 +92,10 @@ class ContainerClient @Autowired constructor(
         val containerName = "${dispatchMessage.userId}1574210195791"
         val result = when (buildContainer.type) {
             ContainerType.DEV -> {
-                deploymentClient.create(buildContainer, containerName)
+                val resp = deploymentClient.create(buildContainer, containerName)
+                if (resp.isSuccessful()){
+                    true
+                }
             }
             ContainerType.STATEFUL -> {
                 TODO()
