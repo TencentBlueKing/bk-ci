@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
@@ -76,7 +77,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("销毁项目的token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(
@@ -145,7 +146,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<String?>
 
-    @ApiOperation("获取指定项目详细信息")
+    @ApiOperation("获取指定项目详细信息(简略)")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
@@ -276,4 +277,31 @@ interface ServiceGitCiResource {
         @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<GitCodeFileInfo>
+
+    @ApiOperation("获取两次提交的差异文件列表")
+    @GET
+    @Path("/getCommitChangeFileList")
+    fun getCommitChangeFileList(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "旧commit")
+        @QueryParam("from")
+        from: String,
+        @ApiParam(value = "新commit")
+        @QueryParam("to")
+        to: String,
+        @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @QueryParam("straight")
+        straight: Boolean? = false,
+        @ApiParam(value = "页码")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页大小")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>>
 }

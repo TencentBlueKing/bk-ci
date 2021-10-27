@@ -37,21 +37,25 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
+
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -72,8 +76,13 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
+import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapBaseItem
+import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
+import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
@@ -116,16 +125,38 @@ class TXPipelineExportService @Autowired constructor(
 
     // 导出工蜂CI-2.0的yml
     fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
-        val pair = generateV2Yaml(userId, projectId, pipelineId, isGitCI)
+        val pair = generateV2Yaml(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isGitCI = isGitCI,
+            exportFile = true
+        )
         return exportToFile(pair.first, pair.second.name)
     }
 
-    fun exportV2YamlStr(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): String {
-        val pair = generateV2Yaml(userId, projectId, pipelineId, isGitCI)
-        return pair.first
+    fun exportV2YamlStr(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean = false
+    ): PipelineExportV2YamlData {
+        val pair = generateV2Yaml(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isGitCI = isGitCI
+        )
+        return PipelineExportV2YamlData(pair.first, pair.third)
     }
 
-    fun generateV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Pair<String, Model> {
+    fun generateV2Yaml(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean = false,
+        exportFile: Boolean = false
+    ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -133,21 +164,15 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             defaultMessage = "流水线已不存在，请检查"
         )
-        val yamlSb = getYamlStringBuilder(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model,
-            isGitCI = isGitCI
-        )
 
         // 将所有插件ID按编排顺序刷新
         var stepCount = 1
-        model.stages.forEach { s ->
+        baseModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
                     e.id = "step_$stepCount"
@@ -155,6 +180,37 @@ class TXPipelineExportService @Autowired constructor(
                 }
             }
         }
+
+        // 过滤出enable == false 的stage/job/step
+        val filterStage = baseModel.stages.filter { it.stageControlOption?.enable != false }
+        val enableStages: MutableList<Stage> = mutableListOf()
+        filterStage.forEach { stageIt ->
+            val filterContainer = stageIt.containers.filter { fit ->
+                when (fit) {
+                    is NormalContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is VMBuildContainer -> {
+                        fit.jobControlOption?.enable != false
+                    }
+                    is TriggerContainer -> true
+                    else -> true
+                }
+            }
+            filterContainer.forEach { elementIt ->
+                elementIt.elements = elementIt.elements.filter { fit ->
+                    fit.additionalOptions?.enable != false
+                }
+            }
+            enableStages.add(stageIt.copy(containers = filterContainer))
+        }
+        val model = baseModel.copy(stages = enableStages)
+        val yamlSb = getYamlStringBuilder(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            isGitCI = isGitCI
+        )
 
         val pipelineGroupsMap = mutableMapOf<String, String>()
         pipelineGroupService.getGroups(userId, projectId).forEach {
@@ -175,7 +231,9 @@ class TXPipelineExportService @Autowired constructor(
             it.id to it.stageTagName
         }?.toMap() ?: emptyMap()
 
-        val output2Elements = mutableMapOf</*outputName*/String, MutableList<MarketBuildAtomElement>>()
+        val output2Elements = mutableMapOf</*outputName*/String, MutableList<MarketBuildAtomElementWithLocation>>()
+        val outputConflictMap =
+            mutableMapOf</*字段*/String, MutableList<List</*定位信息*/PipelineExportV2YamlConflictMapItem>>>()
         val variables = getVariableFromModel(model)
         val yamlObj = try {
             ExportPreScriptBuildYaml(
@@ -192,7 +250,9 @@ class TXPipelineExportService @Autowired constructor(
                     comment = yamlSb,
                     stageTagsMap = stageTagsMap,
                     output2Elements = output2Elements,
-                    variables = variables
+                    variables = variables,
+                    outputConflictMap = outputConflictMap,
+                    exportFile = exportFile
                 ),
                 extends = null,
                 resources = null,
@@ -204,7 +264,9 @@ class TXPipelineExportService @Autowired constructor(
                     stage = model.stages.last(),
                     comment = yamlSb,
                     output2Elements = output2Elements,
-                    variables = variables
+                    variables = variables,
+                    outputConflictMap = outputConflictMap,
+                    exportFile = exportFile
                 )
             )
         } catch (t: Throwable) {
@@ -225,7 +287,7 @@ class TXPipelineExportService @Autowired constructor(
         }
         val modelYaml = toYamlStr(yamlObj)
         yamlSb.append(modelYaml)
-        return Pair(yamlSb.toString(), model)
+        return Triple(yamlSb.toString(), model, outputConflictMap)
     }
 
     private fun getV2StageFromModel(
@@ -235,14 +297,23 @@ class TXPipelineExportService @Autowired constructor(
         model: Model,
         comment: StringBuilder,
         stageTagsMap: Map<String, String>,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        exportFile: Boolean
     ): List<PreStage> {
         val stages = mutableListOf<PreStage>()
         model.stages.drop(1).forEach { stage ->
             if (stage.finally) {
                 return@forEach
             }
+            val pipelineExportV2YamlConflictMapItem =
+                PipelineExportV2YamlConflictMapItem(
+                    stage = PipelineExportV2YamlConflictMapBaseItem(
+                        id = stage.id,
+                        name = stage.name
+                    )
+                )
             val jobs = getV2JobFromStage(
                 userId = userId,
                 projectId = projectId,
@@ -250,7 +321,10 @@ class TXPipelineExportService @Autowired constructor(
                 stage = stage,
                 comment = comment,
                 output2Elements = output2Elements,
-                variables = variables
+                variables = variables,
+                outputConflictMap = outputConflictMap,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                exportFile = exportFile
             )
             val tags = mutableListOf<String>()
             stage.tag?.forEach {
@@ -262,10 +336,30 @@ class TXPipelineExportService @Autowired constructor(
                     name = stage.name,
                     id = null,
                     label = tags,
-                    ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
-                        stage.stageControlOption?.customCondition
-                    } else {
-                        null
+                    ifField = when (stage.stageControlOption?.runCondition) {
+                        StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
+                        StageRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                            val ifString =
+                                parseNameAndValueWithAnd(
+                                    nameAndValueList = stage.stageControlOption?.customVariables,
+                                    variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                    output2Elements = output2Elements
+                                )
+                            if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
+                            else ifString
+                        }
+                        StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                            val ifString = parseNameAndValueWithOr(
+                                nameAndValueList = stage.stageControlOption?.customVariables,
+                                variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                output2Elements = output2Elements
+                            )
+                            if (stage.stageControlOption?.customVariables?.isEmpty() == true) null
+                            else ifString
+                        }
+                        else -> null
                     },
                     fastKill = if (stage.fastKill == true) true else null,
                     jobs = jobs,
@@ -284,10 +378,19 @@ class TXPipelineExportService @Autowired constructor(
         pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        exportFile: Boolean
     ): Map<String, PreJob>? {
         if (stage.finally) {
+            val pipelineExportV2YamlConflictMapItem =
+                PipelineExportV2YamlConflictMapItem(
+                    stage = PipelineExportV2YamlConflictMapBaseItem(
+                        id = stage.id,
+                        name = stage.name
+                    )
+                )
             return getV2JobFromStage(
                 userId = userId,
                 projectId = projectId,
@@ -295,7 +398,10 @@ class TXPipelineExportService @Autowired constructor(
                 stage = stage,
                 comment = comment,
                 output2Elements = output2Elements,
-                variables = variables
+                variables = variables,
+                outputConflictMap = outputConflictMap,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                exportFile = exportFile
             )
         }
         return null
@@ -307,8 +413,11 @@ class TXPipelineExportService @Autowired constructor(
         pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): Map<String, PreJob>? {
         val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
@@ -319,6 +428,11 @@ class TXPipelineExportService @Autowired constructor(
             } else {
                 "unknown_job"
             }
+            pipelineExportV2YamlConflictMapItem.job =
+                PipelineExportV2YamlConflictMapBaseItem(
+                    id = it.id,
+                    name = it.name
+                )
             when (it.getClassType()) {
                 NormalContainer.classType -> {
                     val job = it as NormalContainer
@@ -332,18 +446,40 @@ class TXPipelineExportService @Autowired constructor(
                         ),
                         container = null,
                         services = null,
-                        ifField = if (job.jobControlOption?.runCondition ==
-                            JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                            job.jobControlOption?.customCondition
-                        } else {
-                            null
+                        ifField = when (job.jobControlOption?.runCondition) {
+                            JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                val ifString =
+                                    parseNameAndValueWithAnd(
+                                        nameAndValueList = job.jobControlOption?.customVariables,
+                                        variables = variables,
+                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                        output2Elements = output2Elements
+                                    )
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                val ifString = parseNameAndValueWithOr(
+                                    nameAndValueList = job.jobControlOption?.customVariables,
+                                    variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                    output2Elements = output2Elements
+                                )
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            else -> null
                         },
                         steps = getV2StepFromJob(
                             projectId = projectId,
                             job = job,
                             comment = comment,
                             output2Elements = output2Elements,
-                            variables = variables
+                            variables = variables,
+                            outputConflictMap = outputConflictMap,
+                            pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                            exportFile = exportFile
                         ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
@@ -379,7 +515,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -396,7 +532,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container(
+                                container = com.tencent.devops.common.ci.v2.Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -427,18 +563,40 @@ class TXPipelineExportService @Autowired constructor(
                         runsOn = runsOn,
                         container = null,
                         services = null,
-                        ifField = if (job.jobControlOption?.runCondition ==
-                            JobRunCondition.CUSTOM_CONDITION_MATCH) {
-                            job.jobControlOption?.customCondition
-                        } else {
-                            null
+                        ifField = when (job.jobControlOption?.runCondition) {
+                            JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                                val ifString =
+                                    parseNameAndValueWithAnd(
+                                        nameAndValueList = job.jobControlOption?.customVariables,
+                                        variables = variables,
+                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                        output2Elements = output2Elements
+                                    )
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                                val ifString = parseNameAndValueWithOr(
+                                    nameAndValueList = job.jobControlOption?.customVariables,
+                                    variables = variables,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                    output2Elements = output2Elements
+                                )
+                                if (job.jobControlOption?.customVariables?.isEmpty() == true) null
+                                else ifString
+                            }
+                            else -> null
                         },
                         steps = getV2StepFromJob(
                             projectId = projectId,
                             job = job,
                             comment = comment,
                             output2Elements = output2Elements,
-                            variables = variables
+                            variables = variables,
+                            outputConflictMap = outputConflictMap,
+                            pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                            exportFile = exportFile
                         ),
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
@@ -461,8 +619,11 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         job: Container,
         comment: StringBuilder,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): List<V2Step> {
         val stepList = mutableListOf<V2Step>()
 
@@ -472,17 +633,21 @@ class TXPipelineExportService @Autowired constructor(
             when (element.getClassType()) {
                 MarketBuildAtomElement.classType -> {
                     val step = element as MarketBuildAtomElement
-                    thirdPartyElementList.add(ElementThirdPartySearchParam(
-                        atomCode = step.getAtomCode(),
-                        version = step.version
-                    ))
+                    thirdPartyElementList.add(
+                        ElementThirdPartySearchParam(
+                            atomCode = step.getAtomCode(),
+                            version = step.version
+                        )
+                    )
                 }
                 MarketBuildLessAtomElement.classType -> {
                     val step = element as MarketBuildLessAtomElement
-                    thirdPartyElementList.add(ElementThirdPartySearchParam(
-                        atomCode = step.getAtomCode(),
-                        version = step.version
-                    ))
+                    thirdPartyElementList.add(
+                        ElementThirdPartySearchParam(
+                            atomCode = step.getAtomCode(),
+                            version = step.version
+                        )
+                    )
                 }
                 else -> {
                 }
@@ -501,6 +666,11 @@ class TXPipelineExportService @Autowired constructor(
             val retryTimes = if (originRetryTimes > 1) originRetryTimes else null
             val timeoutMinutes = if (originTimeout < 480) originTimeout else null
             val continueOnError = if (element.additionalOptions?.continueWhenFailed == true) true else null
+            pipelineExportV2YamlConflictMapItem.step =
+                PipelineExportV2YamlConflictMapBaseItem(
+                    id = element.id,
+                    name = element.name
+                )
             when (element.getClassType()) {
                 // Bash脚本插件直接转为run
                 LinuxScriptElement.classType -> {
@@ -509,19 +679,27 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
+                            // bat插件上的
+                            ifFiled = parseStepIfFiled(
+                                step = step,
+                                variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                output2Elements = output2Elements
+                            ),
                             uses = null,
                             with = null,
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = formatScriptOutput(step.script, output2Elements, variables),
+                            run = formatScriptOutput(
+                                script = step.script,
+                                output2Elements = output2Elements,
+                                variables = variables,
+                                outputConflictMap = outputConflictMap,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                exportFile = exportFile
+                            ),
                             checkout = null
                         )
                     )
@@ -532,19 +710,27 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
+                            // bat插件上的
+                            ifFiled = parseStepIfFiled(
+                                step = step,
+                                variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                output2Elements = output2Elements
+                            ),
                             uses = null,
                             with = null,
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
                             retryTimes = retryTimes,
                             env = null,
-                            run = formatScriptOutput(step.script, output2Elements, variables),
+                            run = formatScriptOutput(
+                                script = step.script,
+                                output2Elements = output2Elements,
+                                variables = variables,
+                                outputConflictMap = outputConflictMap,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                exportFile = exportFile
+                            ),
                             checkout = null
                         )
                     )
@@ -557,16 +743,23 @@ class TXPipelineExportService @Autowired constructor(
                     val inputMap = if (input != null && !(input as MutableMap<String, Any>).isNullOrEmpty()) {
                         input
                     } else null
-                    logger.info("[$projectId] getV2StepFromJob export MarketBuildAtom " +
-                        "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step")
+                    logger.info(
+                        "[$projectId] getV2StepFromJob export MarketBuildAtom " +
+                            "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step"
+                    )
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
                             val outputWithNamespace = if (namespace.isNullOrBlank()) key else "${namespace}_$key"
                             val conflictElements = output2Elements[outputWithNamespace]
+                            val item = MarketBuildAtomElementWithLocation(
+                                stageLocation = pipelineExportV2YamlConflictMapItem.stage?.copy(),
+                                jobLocation = pipelineExportV2YamlConflictMapItem.job?.copy(),
+                                stepAtom = step
+                            )
                             if (!conflictElements.isNullOrEmpty()) {
-                                conflictElements.add(step)
+                                conflictElements.add(item)
                             } else {
-                                output2Elements[outputWithNamespace] = mutableListOf(step)
+                                output2Elements[outputWithNamespace] = mutableListOf(item)
                             }
                         }
                     }
@@ -581,24 +774,31 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = timeoutMinutes,
                         continueOnError = continueOnError,
                         retryTimes = retryTimes,
-                        relyMap = relyList?.data?.get(step.getAtomCode())
+                        relyMap = relyList?.data?.get(step.getAtomCode()),
+                        outputConflictMap = outputConflictMap,
+                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                        exportFile = exportFile
                     )
                     if (!checkoutAtom) stepList.add(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
+                            // 插件上的
+                            ifFiled = parseStepIfFiled(
+                                step = step,
+                                variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                output2Elements = output2Elements
+                            ),
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
                                 inputMap = inputMap,
                                 output2Elements = output2Elements,
                                 variables = variables,
-                                relyMap = relyList?.data?.get(step.getAtomCode())
+                                relyMap = relyList?.data?.get(step.getAtomCode()),
+                                outputConflictMap = outputConflictMap,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                exportFile = exportFile
                             ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
@@ -619,18 +819,22 @@ class TXPipelineExportService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition ==
-                                RunCondition.CUSTOM_CONDITION_MATCH) {
-                                step.additionalOptions?.customCondition
-                            } else {
-                                null
-                            },
+                            // 插件上的
+                            ifFiled = parseStepIfFiled(
+                                step = step,
+                                variables = variables,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                output2Elements = output2Elements
+                            ),
                             uses = "${step.getAtomCode()}@${step.version}",
                             with = replaceMapWithDoubleCurlyBraces(
                                 inputMap = inputMap,
                                 output2Elements = output2Elements,
                                 variables = variables,
-                                relyMap = relyList?.data?.get(step.getAtomCode())
+                                relyMap = relyList?.data?.get(step.getAtomCode()),
+                                outputConflictMap = outputConflictMap,
+                                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                exportFile = exportFile
                             ),
                             timeoutMinutes = timeoutMinutes,
                             continueOnError = continueOnError,
@@ -688,9 +892,12 @@ class TXPipelineExportService @Autowired constructor(
 
     fun replaceMapWithDoubleCurlyBraces(
         inputMap: MutableMap<String, Any>?,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
         variables: Map<String, String>?,
-        relyMap: Map<String, Any>? = null
+        relyMap: Map<String, Any>? = null,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): Map<String, Any?>? {
         if (inputMap.isNullOrEmpty()) {
             return null
@@ -698,8 +905,9 @@ class TXPipelineExportService @Autowired constructor(
         val result = mutableMapOf<String, Any>()
         inputMap.forEach lit@{ (key, value) ->
             if (!relyMap.isNullOrEmpty()) {
+                var rely: Map<String, Any>? = null
                 try {
-                    val rely = relyMap[key] as Map<String, Any>
+                    rely = relyMap[key] as Map<String, Any>
                     if (null != rely["expression"]) {
                         val expression = rely["expression"] as List<Map<String, Any>>
                         if (rely["operation"] == "AND") {
@@ -711,7 +919,14 @@ class TXPipelineExportService @Autowired constructor(
                         } else if (rely["operation"] == "OR") {
                             expression.forEach {
                                 if (inputMap[it["key"]] == it["value"]) {
-                                    result[key] = replaceValueWithDoubleCurlyBraces(value, output2Elements, variables)
+                                    result[key] = replaceValueWithDoubleCurlyBraces(
+                                        value = value,
+                                        output2Elements = output2Elements,
+                                        variables = variables,
+                                        outputConflictMap = outputConflictMap,
+                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                        exportFile = exportFile
+                                    )
                                     return@lit
                                 }
                             }
@@ -719,27 +934,53 @@ class TXPipelineExportService @Autowired constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    logger.info("load atom input[rely] with error: ${e.message}")
+                    logger.info("load atom input[rely] with error: ${e.message} ,rely=$rely")
                 }
             }
-            result[key] = replaceValueWithDoubleCurlyBraces(value, output2Elements, variables)
+            result[key] = replaceValueWithDoubleCurlyBraces(
+                value = value,
+                output2Elements = output2Elements,
+                variables = variables,
+                outputConflictMap = outputConflictMap,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                exportFile = exportFile
+            )
         }
         return result
     }
 
     private fun replaceValueWithDoubleCurlyBraces(
         value: Any,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): Any {
         if (value is String) {
-            return replaceStringWithDoubleCurlyBraces(value, output2Elements, variables)
+            return replaceStringWithDoubleCurlyBraces(
+                value = value,
+                output2Elements = output2Elements,
+                variables = variables,
+                outputConflictMap = outputConflictMap,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                exportFile = exportFile
+            )
         }
         if (value is List<*>) {
             val result = mutableListOf<Any?>()
             value.forEach {
                 if (it is String) {
-                    result.add(replaceStringWithDoubleCurlyBraces(it, output2Elements, variables))
+                    result.add(
+                        replaceStringWithDoubleCurlyBraces(
+                            value = it,
+                            output2Elements = output2Elements,
+                            variables = variables,
+                            outputConflictMap = outputConflictMap,
+                            pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                            exportFile = exportFile
+                        )
+                    )
                 } else {
                     result.add(it)
                 }
@@ -752,23 +993,52 @@ class TXPipelineExportService @Autowired constructor(
 
     private fun replaceStringWithDoubleCurlyBraces(
         value: String,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): String {
-        val pattern = Pattern.compile("\\\$\\{([^{}]+?)}")
+        val pattern = Pattern.compile("\\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         var newValue = value as String
         while (matcher.find()) {
             val originKey = matcher.group(1).trim()
             // 假设匹配到了前序插件的output则优先引用，否则引用全局变量
             val existingOutputElements = output2Elements[originKey]
-            val realValue = if (!existingOutputElements.isNullOrEmpty()) {
-                checkConflictOutput(originKey, existingOutputElements)
-                "\${{ steps.${existingOutputElements.first().id}.outputs.$originKey }}"
+            var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
+            run outside@{
+                existingOutputElements?.reversed()?.forEach {
+                    if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem.job?.id ||
+                        it.stageLocation?.id != pipelineExportV2YamlConflictMapItem.stage?.id
+                    ) {
+                        lastExistingOutputElements = it
+                        return@outside
+                    }
+                }
+            }
+            val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
+            val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
+                originKey.replace("${namespace}_", "")
+            } else originKey
+
+            val realValue = if (lastExistingOutputElements.stepAtom != null) {
+                checkConflictOutput(
+                    key = originKey,
+                    existingOutputElements = existingOutputElements!!,
+                    outputConflictMap = outputConflictMap,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                    exportFile = exportFile
+                )
+                if (namespace.isNullOrBlank()) {
+                    "\${{ steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                } else {
+                    "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
+                }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
-                "\${{ variables.$originKey }}"
+                "\${{ variables.$originKeyWithNamespace }}"
             } else {
-                "\${{ $originKey }}"
+                "\${{ $originKeyWithNamespace }}"
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
@@ -788,20 +1058,24 @@ class TXPipelineExportService @Autowired constructor(
     ): StringBuilder {
 
         val yamlSb = StringBuilder()
-        yamlSb.append("############################################################################" +
-            "#########################################\n")
+        yamlSb.append(
+            "############################################################################" +
+                "#########################################\n"
+        )
         yamlSb.append("# 项目ID: $projectId \n")
         yamlSb.append("# 流水线ID: $pipelineId \n")
         yamlSb.append("# 流水线名称: ${model.name} \n")
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
+        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：https://iwiki.woa.com/p/800638064 ！ \n")
         yamlSb.append("# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
             yamlSb.append("# 注意：[插件]Stream不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         }
-        yamlSb.append("########################################################" +
-            "#############################################################\n\n")
+        yamlSb.append(
+            "########################################################" +
+                "#############################################################\n\n"
+        )
         return yamlSb
     }
 
@@ -870,7 +1144,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         dispatchType: StoreDispatchType
-    ): Pair<String, Credentials?> {
+    ): Pair<String, String?> {
         try {
             when (dispatchType.imageType) {
                 ImageType.BKSTORE -> {
@@ -897,10 +1171,9 @@ class TXPipelineExportService @Autowired constructor(
                     } + ":" + imageRepoInfo.repoTag
                     return if (imageRepoInfo.publicFlag) {
                         Pair(completeImageName, null)
-                    } else Pair(completeImageName, Credentials(
-                        "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###",
-                        "### 重新配置凭据(${imageRepoInfo.ticketId})后填入 ###"
-                    ))
+                    } else Pair(
+                        completeImageName, imageRepoInfo.ticketId
+                    )
                 }
                 ImageType.BKDEVOPS -> {
                     // 针对非商店的旧数据处理
@@ -914,10 +1187,9 @@ class TXPipelineExportService @Autowired constructor(
                 else -> {
                     return if (dispatchType.credentialId.isNullOrBlank()) {
                         Pair(dispatchType.value, null)
-                    } else Pair(dispatchType.value, Credentials(
-                        "### 重新配置凭据(${dispatchType.credentialId})后填入 ###",
-                        "### 重新配置凭据(${dispatchType.credentialId})后填入 ###"
-                    ))
+                    } else Pair(
+                        dispatchType.value, dispatchType.credentialId
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -927,8 +1199,11 @@ class TXPipelineExportService @Autowired constructor(
 
     fun formatScriptOutput(
         script: String,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
-        variables: Map<String, String>?
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        variables: Map<String, String>?,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): String {
         val regex = Regex("setEnv\\s+(\"?.*\"?)\\s*\\n?")
         val foundMatches = regex.findAll(script)
@@ -942,7 +1217,14 @@ class TXPipelineExportService @Autowired constructor(
             formatScript =
                 formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
         }
-        return replaceStringWithDoubleCurlyBraces(formatScript, output2Elements, variables)
+        return replaceStringWithDoubleCurlyBraces(
+            value = formatScript,
+            output2Elements = output2Elements,
+            variables = variables,
+            outputConflictMap = outputConflictMap,
+            pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+            exportFile = exportFile
+        )
     }
 
     private fun addCheckoutAtom(
@@ -950,13 +1232,16 @@ class TXPipelineExportService @Autowired constructor(
         stepList: MutableList<V2Step>,
         atomCode: String,
         step: MarketBuildAtomElement,
-        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElement>>,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
         variables: Map<String, String>?,
         inputMap: MutableMap<String, Any>?,
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
         retryTimes: Int?,
-        relyMap: Map<String, Any>? = null
+        relyMap: Map<String, Any>? = null,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ): Boolean {
         if (inputMap == null || atomCode.isBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
         logger.info("[$projectId] addCheckoutAtom export with atomCode($atomCode), inputMap=$inputMap, step=$step")
@@ -997,18 +1282,22 @@ class TXPipelineExportService @Autowired constructor(
                 V2Step(
                     name = step.name,
                     id = step.id,
-                    ifFiled = if (step.additionalOptions?.runCondition ==
-                        RunCondition.CUSTOM_CONDITION_MATCH) {
-                        step.additionalOptions?.customCondition
-                    } else {
-                        null
-                    },
+                    // 插件上的
+                    ifFiled = parseStepIfFiled(
+                        step = step,
+                        variables = variables,
+                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                        output2Elements = output2Elements
+                    ),
                     uses = null,
                     with = replaceMapWithDoubleCurlyBraces(
                         inputMap = inputMap,
                         output2Elements = output2Elements,
                         variables = variables,
-                        relyMap = relyMap
+                        relyMap = relyMap,
+                        outputConflictMap = outputConflictMap,
+                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                        exportFile = exportFile
                     ),
                     timeoutMinutes = timeoutMinutes,
                     continueOnError = continueOnError,
@@ -1025,18 +1314,186 @@ class TXPipelineExportService @Autowired constructor(
         return false
     }
 
+    private fun parseStepIfFiled(
+        step: Element,
+        variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
+    ): String? {
+        return when (step.additionalOptions?.runCondition) {
+            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+            RunCondition.CUSTOM_VARIABLE_MATCH -> {
+                val ifString = parseNameAndValueWithAnd(
+                    nameAndValueList = step.additionalOptions?.customVariables,
+                    variables = variables,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                    output2Elements = output2Elements
+                )
+                if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                else ifString
+            }
+            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                val ifString = parseNameAndValueWithOr(
+                    nameAndValueList = step.additionalOptions?.customVariables,
+                    variables = variables,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                    output2Elements = output2Elements
+                )
+                if (step.additionalOptions?.customVariables?.isEmpty() == true) null
+                else ifString
+            }
+            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                IfType.ALWAYS_UNLESS_CANCELLED.name
+            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                IfType.ALWAYS.name
+            RunCondition.PRE_TASK_FAILED_ONLY ->
+                IfType.FAILURE.name
+            else -> null
+        }
+    }
+
     private fun checkConflictOutput(
         key: String,
-        existingOutputElements: MutableList<MarketBuildAtomElement>
+        existingOutputElements: MutableList<MarketBuildAtomElementWithLocation>,
+        outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        exportFile: Boolean
     ) {
-        if (existingOutputElements.size > 1) {
-            val names = existingOutputElements.map { it.name }
-            throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
-                defaultMessage = "变量名[$key]来源不唯一，请修改变量名称或增加插件输出命名空间：$names",
-                params = arrayOf(key, names.toString())
-            )
+        val distinctMap = HashMap<String?, MarketBuildAtomElementWithLocation>()
+        existingOutputElements.forEach {
+            distinctMap[it.jobLocation?.id] = it
         }
+        val realExistingOutputElements =
+            distinctMap.values.groupBy { it.stageLocation?.id }
+        realExistingOutputElements.keys.reversed().forEach {
+            if (it == pipelineExportV2YamlConflictMapItem.stage?.id ||
+                realExistingOutputElements[it]?.size!! < 2
+            ) return
+            val names = realExistingOutputElements[it]?.map { _it -> _it.stepAtom?.name }
+            val conflictElements = outputConflictMap[key]
+            val itemElements = realExistingOutputElements[it]?.map { _it ->
+                PipelineExportV2YamlConflictMapItem(
+                    stage = _it.stageLocation?.copy(),
+                    job = _it.jobLocation?.copy(),
+                    step = PipelineExportV2YamlConflictMapBaseItem(
+                        id = _it.stepAtom?.id,
+                        name = _it.stepAtom?.name
+                    )
+                )
+            } ?: return@forEach
+            val item = mutableListOf(
+                PipelineExportV2YamlConflictMapItem(
+                    stage = pipelineExportV2YamlConflictMapItem.stage?.copy(),
+                    job = pipelineExportV2YamlConflictMapItem.job?.copy(),
+                    step = pipelineExportV2YamlConflictMapItem.step?.copy()
+                )
+            )
+            item.addAll(itemElements)
+            if (!conflictElements.isNullOrEmpty()) {
+                conflictElements.add(item.toList())
+            } else {
+                outputConflictMap[key] = mutableListOf(item.toList())
+            }
+            if (exportFile) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
+                    defaultMessage = "变量名[$key]来源不唯一，请修改变量名称或增加插件输出命名空间：$names",
+                    params = arrayOf(key, names.toString())
+                )
+            }
+            return
+        }
+    }
+
+    private fun parseNameAndValueWithAnd(
+        nameAndValueList: List<NameAndValue>? = emptyList(),
+        variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
+    ): String {
+
+        var ifString = ""
+        nameAndValueList?.forEachIndexed { index, nameAndValue ->
+            val preStr = parseNameAndValueWithPreStr(
+                output2Elements = output2Elements,
+                nameAndValue = nameAndValue,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                variables = variables
+            )
+            ifString += if (index == nameAndValueList.size - 1) {
+                "$preStr == ${nameAndValue.value}"
+            } else {
+                "$preStr == ${nameAndValue.value} && "
+            }
+        }
+        return ifString
+    }
+
+    private fun parseNameAndValueWithOr(
+        nameAndValueList: List<NameAndValue>? = emptyList(),
+        variables: Map<String, String>?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>
+    ): String {
+        var ifString = ""
+        nameAndValueList?.forEachIndexed { index, nameAndValue ->
+            val preStr = parseNameAndValueWithPreStr(
+                output2Elements = output2Elements,
+                nameAndValue = nameAndValue,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                variables = variables
+            )
+            ifString += if (index == nameAndValueList.size - 1) {
+                "$preStr != ${nameAndValue.value}"
+            } else {
+                "$preStr != ${nameAndValue.value} || "
+            }
+        }
+        return ifString
+    }
+
+    private fun parseNameAndValueWithPreStr(
+        output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
+        nameAndValue: NameAndValue,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
+        variables: Map<String, String>?
+    ): String {
+        val stepElement = output2Elements[nameAndValue.key]
+        val ciName = PipelineVarUtil.fetchReverseVarName("${nameAndValue.key}")
+        return if (stepElement != null) {
+            var lastExistingOutputElements = MarketBuildAtomElementWithLocation()
+            val keyStr = nameAndValue.key ?: ""
+            run outside@{
+                stepElement.reversed().forEach lit@{
+                    if (it.jobLocation?.id == pipelineExportV2YamlConflictMapItem?.job?.id ||
+                        it.stageLocation?.id != pipelineExportV2YamlConflictMapItem?.stage?.id
+                    ) {
+                        if (it.stepAtom?.id == pipelineExportV2YamlConflictMapItem?.step?.id)
+                            return@lit
+                        lastExistingOutputElements = it
+                        return@outside
+                    }
+                }
+            }
+            val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
+            val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
+                keyStr.replace("${namespace}_", "")
+            } else keyStr
+            if (namespace.isNullOrBlank()) {
+                val stepID = lastExistingOutputElements.stepAtom?.id
+                if (stepID.isNullOrBlank()) {
+                    originKeyWithNamespace
+                } else {
+                    "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                }
+            } else {
+                "steps.$namespace.outputs.$originKeyWithNamespace"
+            }
+        } else if (!ciName.isNullOrBlank()) {
+            ciName
+        } else if (!variables?.get(nameAndValue.key).isNullOrBlank()) {
+            "variables.${nameAndValue.key}"
+        } else "${nameAndValue.key}"
     }
 }

@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("ALL")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
 class PipelineInfoDao {
 
@@ -76,7 +76,9 @@ class PipelineInfoDao {
                 CREATOR,
                 LAST_MODIFY_USER,
                 MANUAL_STARTUP,
-                ELEMENT_SKIP, TASK_COUNT
+                ELEMENT_SKIP,
+                TASK_COUNT,
+                PIPELINE_NAME_PINYIN
             )
                 .values(
                     pipelineId,
@@ -89,7 +91,8 @@ class PipelineInfoDao {
                     channelCode.name, userId, userId,
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
-                    taskCount
+                    taskCount,
+                    nameToPinyin(pipelineName)
                 )
                 .execute()
         }
@@ -106,7 +109,6 @@ class PipelineInfoDao {
         pipelineDesc: String? = null,
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
-        buildNo: BuildNo? = null,
         taskCount: Int = 0,
         latestVersion: Int = 0
     ): Int {
@@ -120,6 +122,7 @@ class PipelineInfoDao {
 
             if (!pipelineName.isNullOrBlank()) {
                 update.set(PIPELINE_NAME, pipelineName)
+                update.set(PIPELINE_NAME_PINYIN, nameToPinyin(pipelineName))
             }
             if (!pipelineDesc.isNullOrBlank()) {
                 update.set(PIPELINE_DESC, pipelineDesc)
@@ -186,13 +189,15 @@ class PipelineInfoDao {
             val query = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.`in`(projectIds))
 
-            if (channelCode != null)
+            if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
+            }
 
             query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
         }
     }
 
+    @Suppress("unused")
     fun listAll(dslContext: DSLContext): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
@@ -279,7 +284,11 @@ class PipelineInfoDao {
         }
     }
 
-    fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String, days: Long?): Result<TPipelineInfoRecord>? {
+    fun listDeletePipelineIdByProject(
+        dslContext: DSLContext,
+        projectId: String,
+        days: Long?
+    ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
@@ -295,7 +304,13 @@ class PipelineInfoDao {
     /**
      * 查找updateTime之前被删除的流水线
      */
-    fun listDeletePipelineBefore(dslContext: DSLContext, updateTime: LocalDateTime, offset: Int?, limit: Int?): Result<TPipelineInfoRecord>? {
+    @Suppress("ComplexCondition", "unused")
+    fun listDeletePipelineBefore(
+        dslContext: DSLContext,
+        updateTime: LocalDateTime,
+        offset: Int?,
+        limit: Int?
+    ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val baseQuery = dslContext.selectFrom(this)
                 .where(DELETE.eq(true))
@@ -351,7 +366,7 @@ class PipelineInfoDao {
 
     fun getPipelineInfo(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String? = null,
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean? = false,
@@ -432,6 +447,7 @@ class PipelineInfoDao {
         }
     }
 
+    @Suppress("SpreadOperator")
     fun listOrderInfoByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: List<String>
@@ -467,7 +483,7 @@ class PipelineInfoDao {
         projectIds: Set<String>?,
         channelCodes: Set<ChannelCode>?
     ): Record1<Int>? {
-        val conditions = mutableListOf<org.jooq.Condition>()
+        val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         if (projectIds != null && projectIds.isNotEmpty()) {
             conditions.add(T_PIPELINE_INFO.PROJECT_ID.`in`(projectIds))
@@ -475,7 +491,7 @@ class PipelineInfoDao {
         if (channelCodes != null && channelCodes.isNotEmpty()) {
             conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
         }
-        return dslContext.select(T_PIPELINE_INFO.PROJECT_ID.count()).from(T_PIPELINE_INFO)
+        return dslContext.select(DSL.count(T_PIPELINE_INFO.PROJECT_ID)).from(T_PIPELINE_INFO)
             .where(conditions).fetch().first()
     }
 
@@ -566,7 +582,33 @@ class PipelineInfoDao {
         }
     }
 
+    @Suppress("MagicNumber")
+    fun batchUpdatePipelineNamePinYin(dslContext: DSLContext) {
+        val limit = 1000
+        var offset = 0
+        var fetchSize = 0
+        do {
+            with(T_PIPELINE_INFO) {
+                val fetch = dslContext.select(PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
+                    .limit(offset, limit).fetch()
+                val updates = fetch.map {
+                    dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))
+                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]))
+                }
+                dslContext.batch(updates).execute()
+                val size = fetch.size
+                offset += size
+                fetchSize = size
+            }
+        } while (fetchSize == 1000)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
+    }
+
+    private fun nameToPinyin(pipelineName: String): String {
+        val fieldLength = T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.dataType.length()
+        return PinyinUtil.toPinyin(pipelineName).take(fieldLength)
     }
 }

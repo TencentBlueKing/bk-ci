@@ -37,6 +37,7 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -245,7 +246,13 @@ interface AppArtifactoryResource {
         path: String,
         @ApiParam("体验id", required = false)
         @QueryParam("experienceHashId")
-        experienceHashId: String?
+        experienceHashId: String?,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
+        @ApiParam("过期时间", required = false)
+        @QueryParam("ttl")
+        ttl: Int? = null
     ): String
 
     @ApiOperation("创建外部直接下载链接")

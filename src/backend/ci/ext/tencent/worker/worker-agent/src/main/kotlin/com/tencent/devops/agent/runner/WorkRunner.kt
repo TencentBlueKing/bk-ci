@@ -93,8 +93,8 @@ object WorkRunner {
                                 }
                             }, mapOf(
                                 WORKSPACE_CONTEXT to workspace,
-                                JOB_OS_CONTEXT to AgentEnv.getOS().name
-                            ))
+                                JOB_OS_CONTEXT to AgentEnv.getOS().name)
+                            )
                         } else {
                             workspace
                         }
@@ -114,7 +114,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
-            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+            LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }

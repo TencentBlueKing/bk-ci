@@ -161,7 +161,7 @@ class MtaTest {
         }
         var s = sb.toString()
         if (s.endsWith("&")) {
-            s = org.apache.commons.lang.StringUtils.substringBeforeLast(s, "&")
+            s = org.apache.commons.lang3.StringUtils.substringBeforeLast(s, "&")
         }
         return s
     }

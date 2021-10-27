@@ -27,6 +27,18 @@
 
 rootProject.name = "bk-ci-backend"
 
+pluginManagement {
+    val devopsBootVersion: String by settings
+    plugins {
+        id("com.tencent.devops.boot") version devopsBootVersion
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 // Single CI Service
 include(":boot-assembly")
 
@@ -93,6 +105,7 @@ include(":core:quality:model-quality")
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
+include(":core:dockerhost:biz-dockerhost-sample")
 include(":core:dockerhost:boot-dockerhost")
 include(":core:dockerhost:plugin-dockerhost-codecc")
 
@@ -163,6 +176,7 @@ include(":core:process:plugin-trigger")
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")
 include(":core:dispatch:biz-dispatch")
+include(":core:dispatch:biz-dispatch-sample")
 include(":core:dispatch:boot-dispatch")
 include(":core:dispatch:model-dispatch")
 
@@ -194,6 +208,7 @@ include(":core:notify")
 include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
+include(":core:notify:biz-notify-wework")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 
@@ -367,6 +382,12 @@ include(":ext:tencent:gitci:api-gitci-tencent")
 include(":ext:tencent:gitci:biz-gitci-tencent")
 include(":ext:tencent:gitci:boot-gitci-tencent")
 include(":ext:tencent:gitci:model-gitci-tencent")
+
+include(":ext:tencent:stream")
+include(":ext:tencent:stream:api-stream-tencent")
+include(":ext:tencent:stream:biz-stream-tencent")
+include(":ext:tencent:stream:boot-stream-tencent")
+include(":ext:tencent:stream:model-stream-tencent")
 
 include(":ext:tencent:support")
 include(":ext:tencent:support:api-support-tencent")

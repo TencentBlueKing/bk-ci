@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineExportV2YamlData
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -60,5 +62,14 @@ interface ServiceTXPipelineResource {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<String>
+    ): Result<PipelineExportV2YamlData>
+
+    @ApiOperation("根据自增id获取流水线信息")
+    @GET
+    @Path("/ids/{id}/info")
+    fun getPipelineInfobyId(
+        @PathParam("id")
+        @ApiParam(value = "流水线自增id", required = true)
+        id: Int
+    ): Result<SimplePipeline>
 }

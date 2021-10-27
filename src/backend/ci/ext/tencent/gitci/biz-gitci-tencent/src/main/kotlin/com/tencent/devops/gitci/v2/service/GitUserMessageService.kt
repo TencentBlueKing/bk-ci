@@ -50,8 +50,8 @@ import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
-import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

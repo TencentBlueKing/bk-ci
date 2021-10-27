@@ -276,15 +276,23 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        experienceHashId: String?
+        experienceHashId: String?,
+        organization: String?,
+        ttl: Int?
     ): String {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
         return bkRepoAppService.getPlistFile(
-            userId, projectId, artifactoryType, path, 24 * 3600, false,
-            experienceHashId
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            argPath = path,
+            ttl = ttl ?: (24 * 3600),
+            directed = false,
+            experienceHashId = experienceHashId,
+            organization = organization
         )
     }
 

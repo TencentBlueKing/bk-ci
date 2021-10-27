@@ -107,7 +107,7 @@ class BkRepoService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
-            bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException("文件不存在")
 
         return RepoUtils.toFileDetail(fileDetail)
@@ -516,8 +516,12 @@ class BkRepoService @Autowired constructor(
         throw OperationException("not supported")
     }
 
-    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
-        logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): List<String> {
+        logger.info("listCustomFiles, userId: $userId, projectId: $projectId, condition: $condition")
         var pathNamePairs = mutableListOf<Pair<String, String>>()
         if (!condition.glob.isNullOrEmpty()) {
             condition.glob!!.split(",").map { globItem ->
@@ -532,7 +536,7 @@ class BkRepoService @Autowired constructor(
             }
         }
         val fileList = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
-            userId = "",
+            userId = userId,
             projectId = projectId,
             repoNames = listOf(RepoUtils.CUSTOM_REPO),
             pathNamePairs = pathNamePairs,

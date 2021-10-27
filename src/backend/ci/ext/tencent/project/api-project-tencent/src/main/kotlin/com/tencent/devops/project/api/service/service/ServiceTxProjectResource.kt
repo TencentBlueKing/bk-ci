@@ -286,7 +286,10 @@ interface ServiceTxProjectResource {
         gitProjectId: Long,
         @ApiParam("用户名", required = true)
         @PathParam("userId")
-        userId: String
+        userId: String,
+        @ApiParam("工蜂项目名称", required = false)
+        @QueryParam("gitProjectName")
+        gitProjectName: String?
     ): Result<ProjectVO>
 
     @POST
@@ -372,5 +375,20 @@ interface ServiceTxProjectResource {
         @ApiParam("关联系统ID", required = true)
         @QueryParam("relationId")
         relationId: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("{projectCode}/update/name")
+    @ApiOperation("修改项目名称")
+    fun updateProjectName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("关联系统ID", required = true)
+        @QueryParam("projectName")
+        projectName: String
     ): Result<Boolean>
 }

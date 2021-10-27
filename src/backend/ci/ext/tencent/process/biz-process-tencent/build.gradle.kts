@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
+    api(project(":core:common:common-test"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
@@ -53,7 +54,7 @@ dependencies {
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":core:auth:api-auth"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:gitci:api-gitci-tencent"))
+    api(project(":ext:tencent:stream:api-stream-tencent"))
     api("org.apache.poi:poi")
     api("org.apache.poi:poi-ooxml")
 }

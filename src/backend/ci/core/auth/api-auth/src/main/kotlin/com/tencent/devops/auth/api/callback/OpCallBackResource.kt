@@ -35,6 +35,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -63,4 +64,11 @@ interface OpCallBackResource {
     @GET
     @Path("/list")
     fun list(): Result<List<IamCallBackInfo>?>
+
+    @PUT
+    @Path("/refresh_gateway")
+    fun refreshGateway(
+        @ApiParam("新旧网关映射")
+        oldToNewMap: Map<String, String>
+    ): Result<Boolean>
 }

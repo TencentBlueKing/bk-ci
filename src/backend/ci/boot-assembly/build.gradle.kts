@@ -26,12 +26,6 @@
  */
 
 dependencies {
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    testImplementation("junit:junit")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-
     implementation(project(":core:common:common-auth:common-auth-mock"))
     implementation(project(":core:common:common-auth:common-auth-blueking"))
     implementation(project(":core:common:common-auth:common-auth-v3"))
@@ -47,6 +41,7 @@ dependencies {
     implementation(project(":core:log:biz-log-sample"))
     implementation(project(":core:misc:biz-misc-sample"))
     implementation(project(":core:notify:biz-notify-blueking"))
+    implementation(project(":core:notify:biz-notify-wework"))
     implementation(project(":core:openapi:biz-openapi"))
     implementation(project(":core:plugin:biz-plugin"))
     implementation(project(":core:process:plugin-load"))
@@ -60,10 +55,6 @@ dependencies {
     implementation(project(":core:store:biz-store-image-sample"))
     implementation(project(":core:ticket:biz-ticket-sample"))
     implementation(project(":core:websocket:biz-websocket-blueking"))
-}
-
-plugins {
-   `task-spring-boot-package`
 }
 
 configurations.all {

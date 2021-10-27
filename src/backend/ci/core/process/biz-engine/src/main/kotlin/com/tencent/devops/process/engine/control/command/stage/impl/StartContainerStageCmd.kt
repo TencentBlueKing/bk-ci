@@ -39,7 +39,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -64,7 +64,6 @@ class StartContainerStageCmd(
         // 执行成功则结束本次事件处理，否则要尝试下一stage
         judgeStageContainer(commandContext)
         commandContext.latestSummary = "from_s(${commandContext.stage.stageId})"
-//        }
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 

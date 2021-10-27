@@ -4,19 +4,22 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.GitCIDetailResource
-import com.tencent.devops.gitci.api.GitCIHistoryResource
-import com.tencent.devops.gitci.api.GitCIPipelineResource
-import com.tencent.devops.gitci.api.service.ServiceGitBasicSettingResource
-import com.tencent.devops.gitci.api.service.ServiceStreamTriggerResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.GitCIModelDetail
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.StreamTriggerBuildReq
-import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.gitci.pojo.v2.GitCIUpdateSetting
+import com.tencent.devops.stream.api.GitCIDetailResource
+import com.tencent.devops.stream.api.GitCIHistoryResource
+import com.tencent.devops.stream.api.GitCIPipelineResource
+import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
+import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.pojo.GitCIBuildHistory
+import com.tencent.devops.stream.pojo.GitCIModelDetail
+import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -31,7 +34,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         gitProjectId: String,
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
-    ): Result<Boolean> {
+    ): Result<TriggerBuildResult> {
         return client.get(ServiceStreamTriggerResource::class).triggerStartup(
             userId = userId,
             projectId = "git_$gitProjectId",
@@ -193,6 +196,13 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = gitProjectId,
             gitCIUpdateSetting = gitCIUpdateSetting
+        )
+    }
+
+    override fun validateGitProject(userId: String, request: GitUserValidateRequest): Result<GitUserValidateResult?> {
+        return client.get(ServiceGitBasicSettingResource::class).validateGitProject(
+            userId = userId,
+            request = request
         )
     }
 }

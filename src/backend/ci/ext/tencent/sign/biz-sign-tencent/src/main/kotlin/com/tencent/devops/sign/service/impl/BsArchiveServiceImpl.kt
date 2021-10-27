@@ -65,7 +65,7 @@ class BsArchiveServiceImpl @Autowired constructor(
                 if (null != resolveIpaIcon) {
                     val sha256 = resolveIpaIcon.inputStream().sha256()
                     val url = directBkRepoClient.uploadByteArray(
-                        userId = ipaSignInfo.userId,
+                        userId = "app-icon",
                         projectId = getIconProject(),
                         repoName = getIconRepo(),
                         path = "/app-icon/ipa/$sha256.png",

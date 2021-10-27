@@ -239,12 +239,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
-        val appName = if (projectUpdateInfo.ccAppId != null && projectUpdateInfo.ccAppId!! > 0) {
-            tofService.getCCAppName(projectUpdateInfo.ccAppId!!)
-        } else {
-            null
-        }
-        projectUpdateInfo.ccAppName = appName
+        return
     }
 
     private fun request(request: Request, errorMessage: String): String {

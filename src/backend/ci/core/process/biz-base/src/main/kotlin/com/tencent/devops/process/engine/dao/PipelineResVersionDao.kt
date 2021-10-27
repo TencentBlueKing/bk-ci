@@ -27,31 +27,33 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("Unused", "LongParameterList")
 @Repository
-class PipelineResVersionDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResVersionDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
         versionName: String = "init",
         model: Model
     ) {
-        val modelString = objectMapper.writeValueAsString(model)
+        val modelString = JsonUtil.toJson(model, formatted = false)
         create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             version = version,
@@ -62,6 +64,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -71,13 +74,14 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 VERSION_NAME,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
-            ).values(pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
+            ).values(projectId, pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -144,7 +148,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
                 .limit(limit).offset(offset)
                 .fetch()
 
-            result?.forEach {
+            result.forEach {
                 list.add(PipelineVersionSimple(
                     pipelineId = pipelineId,
                     creator = it[CREATOR] ?: "unknown",

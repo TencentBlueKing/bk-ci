@@ -27,12 +27,4 @@
 
 subprojects {
     group = "com.tencent.bk.devops.ci.monitoring"
-    dependencies {
-        api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        api("org.jetbrains.kotlin:kotlin-reflect")
-        testImplementation("junit:junit")
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
-        compile("org.influxdb:influxdb-java:2.10")
-        api(("com.squareup.okhttp3:okhttp:3.14.4"))
-    }
 }

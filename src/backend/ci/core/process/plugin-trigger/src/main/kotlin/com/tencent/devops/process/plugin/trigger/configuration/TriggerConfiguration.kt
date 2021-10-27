@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin.trigger.configuration
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
@@ -52,6 +53,8 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.quartz.QuartzProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -60,36 +63,41 @@ import org.springframework.context.annotation.Configuration
  */
 
 @Configuration
-open class TriggerConfiguration {
+@EnableConfigurationProperties(QuartzProperties::class)
+@SuppressWarnings("TooManyFunctions")
+class TriggerConfiguration {
 
     @Bean
-    open fun pipelineJobBean(
+    @SuppressWarnings("LongParameterList")
+    fun pipelineJobBean(
         pipelineEventDispatcher: PipelineEventDispatcher,
         schedulerManager: SchedulerManager,
         pipelineTimerService: PipelineTimerService,
         redisOperation: RedisOperation,
-        gray: Gray
+        gray: Gray,
+        client: Client
     ): PipelineJobBean {
         return PipelineJobBean(
             pipelineEventDispatcher = pipelineEventDispatcher,
             schedulerManager = schedulerManager,
             pipelineTimerService = pipelineTimerService,
             redisOperation = redisOperation,
-            gray = gray
+            gray = gray,
+            client = client
         )
     }
 
     @Bean
-    open fun schedulerManager() = QuartzSchedulerManager()
+    fun schedulerManager(quartzProperties: QuartzProperties) = QuartzSchedulerManager(quartzProperties)
 
     @Bean
-    open fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
     @Value("\${queueConcurrency.timerTrigger:5}")
     private val timerConcurrency: Int? = null
 
     @Bean
-    open fun pipelineCoreExchange(): DirectExchange {
+    fun pipelineCoreExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, true, false)
         directExchange.isDelayed = true
         return directExchange
@@ -99,10 +107,10 @@ open class TriggerConfiguration {
      * 定时构建队列--- 并发一般
      */
     @Bean
-    open fun pipelineTimerBuildQueue() = Queue(MQ.QUEUE_PIPELINE_TIMER)
+    fun pipelineTimerBuildQueue() = Queue(MQ.QUEUE_PIPELINE_TIMER)
 
     @Bean
-    open fun pipelineTimerBuildQueueBind(
+    fun pipelineTimerBuildQueueBind(
         @Autowired pipelineTimerBuildQueue: Queue,
         @Autowired pipelineCoreExchange: DirectExchange
     ): Binding {
@@ -110,7 +118,7 @@ open class TriggerConfiguration {
     }
 
     @Bean
-    open fun pipelineTimerBuildListenerContainer(
+    fun pipelineTimerBuildListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineTimerBuildQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -135,7 +143,7 @@ open class TriggerConfiguration {
      * 构建定时构建定时变化的广播交换机
      */
     @Bean
-    open fun pipelineTimerChangeFanoutExchange(): FanoutExchange {
+    fun pipelineTimerChangeFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
@@ -148,12 +156,12 @@ open class TriggerConfiguration {
      * 用于接收定时任务状态变化广播的临时队列，队列将自动销毁
      */
     @Bean
-    open fun timerChangeQueueTemp(): Queue {
+    fun timerChangeQueueTemp(): Queue {
         return QueueBuilder.nonDurable().autoDelete().build()
     }
 
     @Bean
-    open fun timerChangeQueueTempBind(
+    fun timerChangeQueueTempBind(
         @Autowired timerChangeQueueTemp: Queue,
         @Autowired pipelineTimerChangeFanoutExchange: FanoutExchange
     ): Binding {
@@ -161,7 +169,7 @@ open class TriggerConfiguration {
     }
 
     @Bean
-    open fun timerChangeQueueListenerContainer(
+    fun timerChangeQueueListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired timerChangeQueueTemp: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

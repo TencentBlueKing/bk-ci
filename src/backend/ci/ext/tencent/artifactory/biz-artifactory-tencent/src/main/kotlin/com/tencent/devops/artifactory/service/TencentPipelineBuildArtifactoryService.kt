@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
@@ -38,7 +37,6 @@ import org.springframework.stereotype.Service
 @Service
 @Primary
 class TencentPipelineBuildArtifactoryService constructor(
-    private val artifactoryInfoService: ArtifactoryInfoService,
     private val bkRepoSearchService: BkRepoSearchService
 ) : PipelineBuildArtifactoryService {
 
@@ -46,10 +44,16 @@ class TencentPipelineBuildArtifactoryService constructor(
         private val logger = LoggerFactory.getLogger(TencentPipelineBuildArtifactoryService::class.java)!!
     }
 
-    override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
+    override fun getArtifactList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<FileInfo> {
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoList.addAll(
             bkRepoSearchService.serviceSearchFileAndProperty(
+                userId = userId,
                 projectId = projectId,
                 searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
                 customized = null,
@@ -58,30 +62,5 @@ class TencentPipelineBuildArtifactoryService constructor(
         )
         logger.info("ArtifactFileList size: ${fileInfoList.size}")
         return fileInfoList.sorted()
-    }
-
-    override fun synArtifactoryInfo(
-        userId: String,
-        artifactList: List<FileInfo>,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildNum: Int
-    ) {
-        try {
-
-            artifactList.forEach { fileInfo ->
-                artifactoryInfoService.createInfo(
-                    buildId = buildId,
-                    pipelineId = pipelineId,
-                    projectId = projectId,
-                    buildNum = buildNum,
-                    fileInfo = fileInfo,
-                    dataFrom = Constants.SYN_DATA_FROM_NEW
-                )
-            }
-        } catch (ex: Exception) {
-            logger.warn("[$pipelineId]|[$buildId]|syn artifactory fail", ex)
-        }
     }
 }

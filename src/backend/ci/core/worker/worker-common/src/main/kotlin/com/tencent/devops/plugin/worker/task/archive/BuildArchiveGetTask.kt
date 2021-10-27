@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
 
+@Suppress("ComplexMethod")
 @TaskClassType(classTypes = [BuildArchiveGetElement.classType])
 class BuildArchiveGetTask : ITask() {
 
@@ -61,6 +62,7 @@ class BuildArchiveGetTask : ITask() {
     private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
+    @Suppress("ComplexMethod", "MagicNumber")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")

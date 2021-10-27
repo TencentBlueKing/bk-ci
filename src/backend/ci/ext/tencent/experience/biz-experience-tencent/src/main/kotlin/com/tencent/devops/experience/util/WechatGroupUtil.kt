@@ -45,7 +45,7 @@ object WechatGroupUtil {
         richtextContentList.add(
             RichtextText(
                 RichtextTextText(
-                "$projectName】最新体验版本分享\n\n"
+                "【$projectName】最新体验版本分享\n\n"
         )
             )
         )

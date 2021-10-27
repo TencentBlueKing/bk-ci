@@ -84,6 +84,7 @@ class RepositoryAuthService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.repositoryHashId
             entity.displayName = it.aliasName
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${repositoryInfos.size.toLong()}")

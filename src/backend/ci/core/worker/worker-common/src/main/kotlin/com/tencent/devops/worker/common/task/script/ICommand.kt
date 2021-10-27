@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.pipeline.enums.CharSetType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
@@ -51,7 +50,7 @@ interface ICommand {
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
         elementId: String? = null,
-        charSetType: String? = CharSetType.UTF_8.name
+        charsetType: String? = null
     )
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {

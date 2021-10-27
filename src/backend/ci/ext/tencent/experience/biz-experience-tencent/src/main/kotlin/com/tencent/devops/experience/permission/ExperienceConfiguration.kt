@@ -69,4 +69,16 @@ class ExperienceConfiguration {
     ) = TxV3ExperiencePermissionServiceImpl(
         client, dslContext, experienceDao, groupDao, tokenService, authResourceApiStr
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun streamExperiencePermissionServiceImpl(
+        client: Client,
+        tokenService: ClientTokenService,
+        experienceDao: ExperienceDao,
+        groupDao: GroupDao,
+        dslContext: DSLContext
+    ) = StreamExperiencePermissionServiceImpl(
+        client, tokenService, experienceDao, groupDao, dslContext
+    )
 }

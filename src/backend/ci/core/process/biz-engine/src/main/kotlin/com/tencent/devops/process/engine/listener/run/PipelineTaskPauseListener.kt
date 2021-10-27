@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -43,7 +44,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -161,6 +162,16 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerId = task.containerId,
                 stageId = task.stageId,
                 containerType = containerRecord?.containerType ?: "vmBuild"
+            ),
+            PipelineBuildStatusBroadCastEvent(
+                source = "pauseCancel-${task.containerId}-${task.buildId}",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                userId = task.starter,
+                buildId = task.buildId,
+                taskId = null,
+                stageId = null,
+                actionType = ActionType.END
             )
         )
     }
