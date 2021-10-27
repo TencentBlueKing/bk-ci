@@ -10,7 +10,7 @@ class BluekingNotifyReceiversCmdImpl : NotifyReceiversCmd() {
         return true
     }
 
-    @Value("\${user.domain:#{null}")
+    @Value("\${user.domain:#{null}}")
     private val userUseDomain: Boolean? = true
 
     override fun execute(commandContext: BuildNotifyContext) {
