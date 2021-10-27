@@ -354,7 +354,7 @@ abstract class AbstractDockerHostBuildService constructor(
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
             CommandLineUtils.execute(
                 command = "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
-                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath} '",
+                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath}'",
                 workspace = File(dockerHostConfig.bazelLowerPath!!),
                 print2Logger = true
             )
