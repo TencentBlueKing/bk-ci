@@ -42,9 +42,11 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -53,7 +55,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val shortUrlService: ShortUrlService
+    private val shortUrlService: ShortUrlService,
+    private val client: Client
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
@@ -62,34 +65,37 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun check(
-        userId: String,
+        pipelineId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Boolean> {
         checkParam(projectId, path)
+        val userId = getLastModifyUser(projectId, pipelineId)
         return Result(bkRepoService.check(userId, projectId, artifactoryType, path))
     }
 
     override fun setProperties(
-        userId: String,
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         properties: Map<String, String>
     ): Result<Boolean> {
         checkParam(projectId, path)
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoService.setProperties(userId, projectId, artifactoryType, path, properties)
         return Result(true)
     }
 
     override fun getProperties(
-        userId: String,
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<List<Property>> {
         checkParam(projectId, path)
+        val userId = getLastModifyUser(projectId, pipelineId)
         return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
@@ -147,13 +153,13 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun getFileDownloadUrl(
-        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<List<String>> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         val param = ArtifactorySearchParam(
             userId,
             projectId,
@@ -182,14 +188,15 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun acrossProjectCopy(
-        userId: String,
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
+        val userId = getLastModifyUser(projectId, pipelineId)
         return Result(
             bkRepoService.acrossProjectCopy(userId, projectId, artifactoryType, path, targetProjectId, targetPath)
         )
@@ -225,5 +232,10 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
+    }
+
+    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+        return client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 }

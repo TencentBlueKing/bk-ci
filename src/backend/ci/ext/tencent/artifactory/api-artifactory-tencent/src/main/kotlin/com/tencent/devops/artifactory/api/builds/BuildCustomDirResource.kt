@@ -31,7 +31,7 @@ import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -58,9 +58,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -74,9 +74,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/dir")
     @POST
     fun mkdir(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -90,9 +90,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/rename")
     @POST
     fun rename(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -105,9 +105,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/copy")
     @POST
     fun copy(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -120,9 +120,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/move")
     @POST
     fun move(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -135,9 +135,9 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

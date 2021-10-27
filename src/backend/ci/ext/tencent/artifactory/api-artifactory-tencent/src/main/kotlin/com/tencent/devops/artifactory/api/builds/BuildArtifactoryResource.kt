@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -63,12 +62,12 @@ interface BuildArtifactoryResource {
     @Path("/properties")
     @GET
     fun getProperties(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -81,12 +80,12 @@ interface BuildArtifactoryResource {
     @Path("/properties")
     @POST
     fun setProperties(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -167,9 +166,6 @@ interface BuildArtifactoryResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/buildId/{buildId}/getFileDownloadUrl")
     @GET
     fun getFileDownloadUrl(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
@@ -203,9 +199,9 @@ interface BuildArtifactoryResource {
     @Path("/projects/{projectId}/fileCheck")
     @GET
     fun check(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -221,12 +217,12 @@ interface BuildArtifactoryResource {
     @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
     @GET
     fun acrossProjectCopy(
-        @ApiParam("用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,

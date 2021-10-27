@@ -34,45 +34,59 @@ import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.PathPair
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoBuildCustomDirService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildCustomDirResourceImpl @Autowired constructor(
-    private val bkRepoBuildCustomDirService: BkRepoBuildCustomDirService
+    private val bkRepoBuildCustomDirService: BkRepoBuildCustomDirService,
+    private val client: Client
 ) : BuildCustomDirResource {
-    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
+    override fun list(pipelineId: String, projectId: String, path: String): List<FileInfo> {
         if (path.contains(".")) {
             throw RuntimeException("please confirm the param is directory...")
         }
+        val userId = getLastModifyUser(projectId, pipelineId)
         return bkRepoBuildCustomDirService.list(userId, projectId, path)
     }
 
-    override fun mkdir(userId: String, projectId: String, path: String): Result<Boolean> {
+    override fun mkdir(pipelineId: String, projectId: String, path: String): Result<Boolean> {
         logger.info("mkdir, projectId: $projectId")
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoBuildCustomDirService.mkdir(userId, projectId, path)
         return Result(true)
     }
 
-    override fun rename(userId: String, projectId: String, pathPair: PathPair): Result<Boolean> {
+    override fun rename(pipelineId: String, projectId: String, pathPair: PathPair): Result<Boolean> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoBuildCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
         return Result(true)
     }
 
-    override fun copy(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+    override fun copy(pipelineId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoBuildCustomDirService.copy(userId, projectId, combinationPath)
         return Result(true)
     }
 
-    override fun move(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+    override fun move(pipelineId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoBuildCustomDirService.move(userId, projectId, combinationPath)
         return Result(true)
     }
 
-    override fun delete(userId: String, projectId: String, pathList: PathList): Result<Boolean> {
+    override fun delete(pipelineId: String, projectId: String, pathList: PathList): Result<Boolean> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         bkRepoBuildCustomDirService.delete(userId, projectId, pathList)
         return Result(true)
+    }
+
+    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+        return client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 
     companion object {
