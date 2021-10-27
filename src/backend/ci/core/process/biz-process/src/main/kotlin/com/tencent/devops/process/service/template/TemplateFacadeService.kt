@@ -1892,7 +1892,7 @@ class TemplateFacadeService @Autowired constructor(
                 TemplateSortTypeEnum.STATUS -> {
                     b.status.name.compareTo(a.status.name)
                 }
-                else -> return@Comparator
+                else -> 0
             }
         })
 
