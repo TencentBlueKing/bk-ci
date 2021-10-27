@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwAuthValidateResourceV3 {
     @GET
-    @Path("/{projectId}/isProjectUsers")
+    @Path("/projects/{projectId}/isProjectUsers")
     @ApiOperation("判断是否某个项目中某个组角色的成员")
     fun isProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
