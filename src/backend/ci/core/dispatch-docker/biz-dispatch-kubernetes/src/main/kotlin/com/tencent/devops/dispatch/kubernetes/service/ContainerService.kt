@@ -58,7 +58,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.Registry
 import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
-import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.kubernetes.utils.RedisUtils
 import com.tencent.devops.process.engine.common.VMUtils
@@ -236,7 +235,7 @@ class ContainerService @Autowired constructor(
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                            "start deployment success, wait for agent startup..."
+                        "start deployment success, wait for agent startup..."
                 )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
@@ -259,7 +258,7 @@ class ContainerService @Autowired constructor(
                 buildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
 
                 // 创建成功的要记录，shutdown时关机，创建失败时不记录，shutdown时不关机
-                buildContainerPoolNoDao.setDevCloudBuildLastContainer(
+                buildContainerPoolNoDao.setBuildLastContainer(
                     dslContext = dslContext, buildId = buildId, vmSeqId = vmSeqId,
                     executeCount = executeCount ?: 1,
                     containerName = containerName, poolNo = poolNo.toString()
@@ -284,10 +283,15 @@ class ContainerService @Autowired constructor(
     fun startContainer(
         containerName: String,
         dispatchMessage: DispatchMessage,
-        poolNo: Int
-    ) {
+        poolNo: Int,
+        cpu: ThreadLocal<Int>,
+        memory: ThreadLocal<String>,
+        disk: ThreadLocal<String>
+    ): OperateContainerResult {
         with(dispatchMessage) {
-            val devCloudTaskId = containerClient.operateContainer(
+            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start container")
+
+            containerClient.operateContainer(
                 containerName = containerName,
                 action = Action.START,
                 param = Params(
@@ -304,9 +308,8 @@ class ContainerService @Autowired constructor(
                 )
             )
 
-            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start container, taskId:($devCloudTaskId)")
             printLogs(this, "下发启动构建机请求成功，containerName: $containerName 等待机器启动...")
-            buildContainerPoolNoDao.setDevCloudBuildLastContainer(
+            buildContainerPoolNoDao.setBuildLastContainer(
                 dslContext = dslContext,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -319,50 +322,49 @@ class ContainerService @Autowired constructor(
             val startResult = containerClient.waitContainerStart(containerName)
             redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
 
-            if (startResult.first == TaskStatus.SUCCEEDED) {
+            if (startResult.result) {
                 // 启动成功
-                val instContainerName = startResult.second
                 logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
-                devCloudBuildDao.createOrUpdate(
+                buildDao.createOrUpdate(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     poolNo = poolNo,
                     projectId = projectId,
-                    containerName = instContainerName,
+                    containerName = containerName,
                     image = this.dispatchMessage,
                     status = ContainerStatus.BUSY.status,
                     userId = userId,
-                    cpu = threadLocalCpu.get(),
-                    memory = threadLocalMemory.get(),
-                    disk = threadLocalDisk.get()
+                    cpu = cpu.get(),
+                    memory = memory.get(),
+                    disk = disk.get()
                 )
+                return startResult
             } else {
-                // 暂时注释，统一放在shutdown执行
-                /*buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
-                    dslContext = dslContext,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    executeCount = executeCount
-                )*/
                 // 重置资源池状态
-                devCloudBuildDao.updateStatus(
+                buildDao.updateStatus(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
                     poolNo = poolNo,
                     status = ContainerStatus.IDLE.status
                 )
-                onFailure(
-                    startResult.third.errorType,
-                    startResult.third.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                    KubernetesClientUtil.getClientFailInfo("构建机启动失败，错误信息:${startResult.second}")
-                )
+                return startResult
             }
         }
+    }
+
+    fun stopContainer(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        containerName: String
+    ): OperateContainerResult {
+        logger.info("buildId: $buildId,vmSeqId: $vmSeqId, $userId stop container")
+        containerClient.operateContainer(containerName, Action.STOP, null)
+        return containerClient.waitContainerStop(containerName)
     }
 
     private fun clearExceptionContainer(
@@ -373,8 +375,8 @@ class ContainerService @Autowired constructor(
             // 下发删除，不管成功失败
             logger.info(
                 "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
-                        "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
-                        dispatchMessage.buildId
+                    "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
+                    dispatchMessage.buildId
             )
             containerClient.operateContainer(containerName, Action.DELETE, null).let {
                 if (!it.result) {
@@ -396,9 +398,9 @@ class ContainerService @Autowired constructor(
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(
                 "buildId: ${dispatchMessage.buildId}, " +
-                        "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
-                        "old image: $images, " +
-                        "new image: ${dispatchMessage.dispatchMessage}"
+                    "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                    "old image: $images, " +
+                    "new image: ${dispatchMessage.dispatchMessage}"
             )
             return true
         }

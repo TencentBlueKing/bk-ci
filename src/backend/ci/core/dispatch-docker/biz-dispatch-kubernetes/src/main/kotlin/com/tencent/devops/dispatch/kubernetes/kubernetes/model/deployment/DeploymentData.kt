@@ -33,6 +33,7 @@ data class DeploymentData(
     val apiVersion: String,
     val name: String,
     val nameSpace: String,
+    val replicas: Int,
     val labels: Map<String, String>,
     val selectorLabels: Map<String, String>,
     val pod: PodData

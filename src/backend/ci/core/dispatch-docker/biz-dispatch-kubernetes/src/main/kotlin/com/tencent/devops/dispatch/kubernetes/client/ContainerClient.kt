@@ -53,7 +53,7 @@ class ContainerClient @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerClient::class.java)
-        private val MAX_WAIT = 10
+        private const val MAX_WAIT = 10
     }
 
     fun getContainerStatus(
@@ -114,7 +114,11 @@ class ContainerClient @Autowired constructor(
     fun waitContainerStart(
         containerName: String
     ): OperateContainerResult {
-        var state = getContainerStatus(containerName).data?.state
+        var state = try {
+            getContainerStatus(containerName).data?.state
+        } catch (e: Throwable) {
+            return OperateContainerResult(containerName, false, e.message)
+        }
         var max = MAX_WAIT
         while (state?.running == null && max != 0) {
             if (state?.terminated != null) {
@@ -122,7 +126,8 @@ class ContainerClient @Autowired constructor(
             } else {
                 state = getContainerStatus(containerName).data?.state
             }
-            max --
+            Thread.sleep(1000)
+            max--
         }
         return OperateContainerResult(containerName, state?.running != null)
     }
@@ -141,12 +146,40 @@ class ContainerClient @Autowired constructor(
                 OperateContainerResult("", true)
             }
             Action.START -> {
+                try {
+                    deploymentClient.start(containerName, param)
+                } catch (e: Exception) {
+                    logger.error("start container $containerName error", e)
+                    throw BuildFailureException(
+                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        errorMessage = KubernetesClientUtil.getClientFailInfo("启动容器接口错误, ${e.message}")
+                    )
+                }
+                OperateContainerResult("", true)
             }
             Action.STOP -> {
-            }
-            else -> {
-                OperateContainerResult("", false)
+                val result = deploymentClient.stop(containerName)
+                OperateContainerResult("", result.isSuccessful())
             }
         }
+    }
+
+    fun waitContainerStop(
+        containerName: String
+    ): OperateContainerResult {
+        var replicas = try {
+            deploymentClient.list(containerName).data?.items?.get(0)?.spec?.replicas
+        } catch (e: Throwable) {
+            return OperateContainerResult(containerName, false, e.message)
+        }
+        var max = MAX_WAIT
+        while (replicas != 0 && max != 0) {
+            replicas = deploymentClient.list(containerName).data?.items?.get(0)?.spec?.replicas
+            Thread.sleep(1000)
+            max--
+        }
+        return OperateContainerResult(containerName, replicas == 0)
     }
 }

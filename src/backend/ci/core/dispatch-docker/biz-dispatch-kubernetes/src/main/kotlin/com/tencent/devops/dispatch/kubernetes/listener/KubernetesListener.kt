@@ -34,13 +34,18 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
+import com.tencent.devops.dispatch.kubernetes.dao.BuildDao
+import com.tencent.devops.dispatch.kubernetes.pojo.ContainerStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.service.BuildHisService
 import com.tencent.devops.dispatch.kubernetes.service.ContainerService
+import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
@@ -54,16 +59,21 @@ import org.springframework.stereotype.Service
 class KubernetesListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
+    private val redisOperation: RedisOperation,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val dispatchConfig: DispatchBuildConfig,
+    private val jobUtils: JobRedisUtils,
     private val buildLogPrinter: BuildLogPrinter,
     private val containerService: ContainerService,
-    private val buildHisService: BuildHisService
+    private val buildHisService: BuildHisService,
+    private val buildDao: BuildDao
 ) : BuildListener {
 
     private val threadLocalCpu = ThreadLocal<Int>()
     private val threadLocalMemory = ThreadLocal<String>()
     private val threadLocalDisk = ThreadLocal<String>()
+
+    private val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
 
     companion object {
         private val logger = LoggerFactory.getLogger(KubernetesListener::class.java)
@@ -84,7 +94,7 @@ class KubernetesListener @Autowired constructor(
             message = "Start kubernetes deployment build ${dispatch.kubernetesBuildVersion} for the build"
         )
 
-        val buildContainerPoolNo = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
+        val buildContainerPoolNo = buildContainerPoolNoDao.getBuildLastPoolNo(
             dslContext = dslContext,
             buildId = dispatchMessage.buildId,
             vmSeqId = dispatchMessage.vmSeqId,
@@ -99,7 +109,23 @@ class KubernetesListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        TODO("Not yet implemented")
+        if (event.source == "shutdownAllVMTaskAtom") {
+            // 同一个buildId的多个shutdownAllVMTaskAtom事件一定在短时间内到达，300s足够
+            val shutdownLock = RedisLock(redisOperation, shutdownLockBaseKey + event.buildId, 300L)
+            try {
+                if (shutdownLock.tryLock()) {
+                    doShutdown(event)
+                } else {
+                    logger.info("shutdownAllVMTaskAtom of {} already invoked, ignore", event.buildId)
+                }
+            } catch (e: Exception) {
+                logger.info("Fail to shutdown VM", e)
+            } finally {
+                shutdownLock.unlock()
+            }
+        } else {
+            doShutdown(event)
+        }
     }
 
     private fun createOrStartContainer(dispatchMessage: DispatchMessage) {
@@ -129,7 +155,7 @@ class KubernetesListener @Autowired constructor(
             if (null == lastIdleContainer || containerChanged) {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                            "create new container, poolNo: $poolNo"
+                        "create new container, poolNo: $poolNo"
                 )
                 containerService.createNewContainer(
                     dispatchMessage = dispatchMessage,
@@ -151,14 +177,30 @@ class KubernetesListener @Autowired constructor(
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                            "start idle container, containerName: $lastIdleContainer"
+                        "start idle container, containerName: $lastIdleContainer"
                 )
-                startContainer(lastIdleContainer, dispatchMessage, poolNo)
+                containerService.startContainer(
+                    containerName = lastIdleContainer,
+                    dispatchMessage = dispatchMessage,
+                    poolNo = poolNo,
+                    cpu = threadLocalCpu,
+                    memory = threadLocalMemory,
+                    disk = threadLocalDisk
+                ).let {
+                    if (!it.result) {
+                        onFailure(
+                            ErrorCodeEnum.START_VM_ERROR.errorType,
+                            ErrorCodeEnum.START_VM_ERROR.errorCode,
+                            ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                            KubernetesClientUtil.getClientFailInfo("构建机启动失败，错误信息:${it.errorMessage}")
+                        )
+                    }
+                }
             }
         } catch (e: BuildFailureException) {
             logger.error(
                 "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "create deployment failed. msg:${e.message}."
+                    "create deployment failed. msg:${e.message}."
             )
             onFailure(
                 errorType = e.errorType,
@@ -167,7 +209,9 @@ class KubernetesListener @Autowired constructor(
                 message = e.message ?: "启动kubernetes deployment构建容器"
             )
         } catch (e: Exception) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create devCloud failed, msg:${e.message}")
+            logger.error(
+                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create container failed, msg:${e.message}"
+            )
             if (e.message.equals("timeout")) {
                 onFailure(
                     ErrorCodeEnum.KUBERNETES_INTERFACE_TIMEOUT.errorType,
@@ -183,6 +227,73 @@ class KubernetesListener @Autowired constructor(
                 "创建构建机失败，错误信息:${e.message}."
             )
         }
+    }
+
+    private fun doShutdown(event: PipelineAgentShutdownEvent) {
+        logger.info("do shutdown - ($event)")
+
+        //        // 有可能出现kubernetes返回容器状态running了，但是其实流水线任务早已经执行完了，
+        //        // 导致shutdown消息先收到而redis和db还没有设置的情况，因此扔回队列，sleep等待30秒重新触发
+        val containerNameList = buildContainerPoolNoDao.getBuildLastContainer(
+            dslContext = dslContext,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount ?: 1
+        )
+        //
+        //        if (containerNameList.none { it.second != null } && event.retryTime <= 3) {
+        //            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] shutdown no containerName, " +
+        //                "sleep 10s and retry ${event.retryTime}. ")
+        //            event.retryTime += 1
+        //            event.delayMills = 10000
+        //            pipelineEventDispatcher.dispatch(event)
+        //
+        //            return
+        //        }
+
+        containerNameList.filter { it.second != null }.forEach {
+            val containerName = it.second
+            try {
+                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud container,vmSeqId: ${it.first}, containerName:${containerName}")
+                val result = containerService.stopContainer(
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId ?: "",
+                    userId = event.userId,
+                    containerName = containerName!!
+                )
+                if (result.result) {
+                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm success.")
+                } else {
+                    logger.info(
+                        "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed, msg: ${result.errorMessage}"
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed. containerName: $containerName", e)
+            } finally {
+                // 清除job创建记录
+                jobUtils.deleteJobCount(event.buildId, containerName!!)
+            }
+        }
+
+        val containerPoolList = buildContainerPoolNoDao.getBuildLastPoolNo(
+            dslContext = dslContext,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount ?: 1
+        )
+        containerPoolList.filter { it.second != null }.forEach {
+            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
+            buildDao.updateStatus(dslContext, event.pipelineId, it.first, it.second!!.toInt(), ContainerStatus.IDLE.status)
+        }
+
+        logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] delete buildContainerPoolNo.")
+        buildContainerPoolNoDao.deleteBuildLastContainerPoolNo(
+            dslContext = dslContext,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount ?: 1
+        )
     }
 
     private fun Pool.getContainerPool(): Pool {

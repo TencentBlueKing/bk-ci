@@ -57,7 +57,7 @@ object Deployment {
     ): V1DeploymentSpec {
         with(deployment) {
             return V1DeploymentSpec()
-                .replicas(1)
+                .replicas(replicas)
                 .selector(
                     V1LabelSelector()
                         .matchLabels(selectorLabels)

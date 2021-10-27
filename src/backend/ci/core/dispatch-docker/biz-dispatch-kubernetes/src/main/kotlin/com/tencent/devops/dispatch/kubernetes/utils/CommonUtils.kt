@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.kubernetes.utils
 
 import org.slf4j.LoggerFactory
-import java.util.Random
 
 object CommonUtils {
 
@@ -86,20 +85,20 @@ object CommonUtils {
         }
     }
 
-    fun generatePwd(): String {
-        val secretSeed = arrayOf(
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            "abcdefghijklmnopqrstuvwxyz",
-            "0123456789",
-            "[()~!@#%&-+=_"
-        )
-
-        val random = Random()
-        val buf = StringBuffer()
-        for (i in 0 until 15) {
-            val num = random.nextInt(secretSeed[i / 4].length)
-            buf.append(secretSeed[i / 4][num])
-        }
-        return buf.toString()
-    }
+//    fun generatePwd(): String {
+//        val secretSeed = arrayOf(
+//            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+//            "abcdefghijklmnopqrstuvwxyz",
+//            "0123456789",
+//            "[()~!@#%&-+=_"
+//        )
+//
+//        val random = Random()
+//        val buf = StringBuffer()
+//        for (i in 0 until 15) {
+//            val num = random.nextInt(secretSeed[i / 4].length)
+//            buf.append(secretSeed[i / 4][num])
+//        }
+//        return buf.toString()
+//    }
 }

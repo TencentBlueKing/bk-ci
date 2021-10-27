@@ -36,12 +36,14 @@ import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
 import io.kubernetes.client.custom.V1Patch
 import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.AppsV1Api
 import io.kubernetes.client.openapi.models.V1Deployment
+import io.kubernetes.client.openapi.models.V1DeploymentList
 import io.kubernetes.client.openapi.models.V1Status
-import io.kubernetes.client.util.Yaml
+import io.kubernetes.client.util.PatchUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -63,6 +65,7 @@ class DeploymentClient @Autowired constructor(
                     apiVersion = "apps/v1",
                     name = containerName,
                     nameSpace = k8sConfig.nameSpace!!,
+                    replicas = 1,
                     labels = labels,
                     selectorLabels = labels,
                     pod = PodData(
@@ -100,13 +103,15 @@ class DeploymentClient @Autowired constructor(
     fun start(
         containerName: String,
         params: Params?
-    ): ApiResponse<V1Deployment> {
+    ): V1Deployment {
         val labels = getCoreLabels(containerName)
-        val yaml = Yaml.dump(
+        val deployment = Gson().toJson(
             Deployment.deployment(
                 DeploymentData(
+                    apiVersion = "apps/v1",
                     name = containerName,
                     nameSpace = k8sConfig.nameSpace!!,
+                    replicas = 1,
                     labels = labels,
                     selectorLabels = labels,
                     pod = PodData(
@@ -125,16 +130,28 @@ class DeploymentClient @Autowired constructor(
                 )
             )
         )
-        return AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
-            containerName,
-            k8sConfig.nameSpace,
-            V1Patch(patchReplicasJson(1)),
-            null, null, null, null
+        val appsApi = AppsV1Api()
+        return PatchUtils.patch(
+            V1Deployment::class.java,
+            {
+                appsApi.patchNamespacedDeploymentCall(
+                    containerName,
+                    k8sConfig.nameSpace,
+                    V1Patch(deployment),
+                    null,
+                    null,
+                    "start $containerName", // field-manager is required for server-side apply
+                    true,
+                    null
+                )
+            },
+            V1Patch.PATCH_FORMAT_APPLY_YAML,
+            appsApi.apiClient
         )
     }
 
     fun stop(
-        deploymentName: String
+        containerName: String
     ): ApiResponse<V1Deployment> {
         val stopJson = Gson().toJson(
             listOf(
@@ -146,10 +163,24 @@ class DeploymentClient @Autowired constructor(
             )
         )
         return AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
-            deploymentName,
+            containerName,
             k8sConfig.nameSpace,
             V1Patch(stopJson),
             null, null, null, null
+        )
+    }
+
+    fun list(
+        containerName: String
+    ): ApiResponse<V1DeploymentList> {
+        return AppsV1Api().listNamespacedDeploymentWithHttpInfo(
+            k8sConfig.nameSpace,
+            "true",
+            null,
+            null,
+            null,
+            mapOf(dispatchBuildConfig.label!! to containerName).toLabelSelector(),
+            null, null, null, null, null
         )
     }
 

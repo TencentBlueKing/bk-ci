@@ -35,7 +35,7 @@ import java.time.LocalDateTime
 @Repository
 class BuildContainerPoolNoDao {
 
-    fun setDevCloudBuildLastContainer(
+    fun setBuildLastContainer(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String,
@@ -63,7 +63,7 @@ class BuildContainerPoolNoDao {
         }
     }
 
-    fun getDevCloudBuildLastContainer(
+    fun getBuildLastContainer(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String?,
@@ -76,7 +76,7 @@ class BuildContainerPoolNoDao {
                     .where(BUILD_ID.eq(buildId))
                     .and(EXECUTE_COUNT.eq(executeCount))
                     .fetch()
-                records?.forEach {
+                records.forEach {
                     result.add(Pair(it.vmSeqId, it.containerName))
                 }
             } else {
@@ -91,7 +91,7 @@ class BuildContainerPoolNoDao {
         return result
     }
 
-    fun getDevCloudBuildLastPoolNo(
+    fun getBuildLastPoolNo(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String?,
@@ -104,7 +104,7 @@ class BuildContainerPoolNoDao {
                     .where(BUILD_ID.eq(buildId))
                     .and(EXECUTE_COUNT.eq(executeCount))
                     .fetch()
-                records?.forEach {
+                records.forEach {
                     result.add(Pair(it.vmSeqId, it.poolNo))
                 }
             } else {
@@ -120,7 +120,7 @@ class BuildContainerPoolNoDao {
         return result
     }
 
-    fun deleteDevCloudBuildLastContainerPoolNo(
+    fun deleteBuildLastContainerPoolNo(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String?,
