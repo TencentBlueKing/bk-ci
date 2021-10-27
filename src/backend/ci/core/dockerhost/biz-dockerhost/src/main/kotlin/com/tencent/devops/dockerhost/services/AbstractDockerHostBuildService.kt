@@ -32,18 +32,13 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
-import com.github.dockerjava.api.model.Driver
-import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.PullResponseItem
-import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.script.ShellUtil
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -236,7 +231,7 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    private fun getWorkspace(
+    fun getWorkspace(
         pipelineId: String,
         vmSeqId: Int,
         poolNo: Int,
@@ -245,7 +240,7 @@ abstract class AbstractDockerHostBuildService constructor(
         return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    fun mountOverlayfs(
+/*    fun mountOverlayfs(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -347,7 +342,7 @@ abstract class AbstractDockerHostBuildService constructor(
             )
 
         hostConfig.withMounts(listOf(mount))
-    }
+    }*/
 
     fun reWriteBazelCache(
         pipelineId: String,
@@ -357,9 +352,11 @@ abstract class AbstractDockerHostBuildService constructor(
         // 出现错误也不影响执行
         try {
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
-            ShellUtil.executeEnhance(
-                "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
-                        "\"rsync --stats -ah --ignore-errors --delete $upperDir ${dockerHostConfig.bazelLowerPath} \""
+            CommandLineUtils.execute(
+                command = "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
+                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath}/'",
+                workspace = File(dockerHostConfig.bazelLowerPath!!),
+                print2Logger = true
             )
         } catch (e: Throwable) {
             logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")

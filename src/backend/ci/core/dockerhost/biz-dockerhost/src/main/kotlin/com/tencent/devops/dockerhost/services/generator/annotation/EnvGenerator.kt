@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.annotation
+package com.tencent.devops.dockerhost.services.generator.annotation
 
 /**
- * Docker Volume生成器注解，标示生成器
+ * Docker环境变量生成器注解，标示生成器
  */
-annotation class VolumeGenerator(
+annotation class EnvGenerator(
     /**
      * 生成器说明
      */

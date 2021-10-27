@@ -25,36 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services.generator
 
-import com.github.dockerjava.api.model.Volume
+import com.github.dockerjava.api.model.Mount
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.annotation.MountGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 
-object DockerVolumeLoader {
+object DockerMountLoader {
 
-    private val logger: Logger = LoggerFactory.getLogger(DockerVolumeLoader::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(DockerMountLoader::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun loadVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
+    fun loadMounts(handlerContext: ContainerHandlerContext): List<Mount> {
 
-        val volumeList = mutableListOf<Volume>()
+        val mountList = mutableListOf<Mount>()
         try {
-            val generators: List<DockerVolumeGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(VolumeGenerator::class.java) as List<DockerVolumeGenerator>
+            val generators: List<DockerMountGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(MountGenerator::class.java) as List<DockerMountGenerator>
             generators.forEach { generator ->
-                volumeList.addAll(generator.generateVolumes(dockerHostBuildInfo))
+                mountList.addAll(generator.generateMounts(handlerContext))
             }
         } catch (notFound: BeansException) {
-            logger.warn("[${dockerHostBuildInfo.buildId}]|not found volume generator| ex=$notFound")
+            logger.warn("${handlerContext.buildId}|${handlerContext.vmSeqId} not found mount generator.", notFound)
         } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadVolume_fail|", ignored)
+            logger.error("${handlerContext.buildId}|${handlerContext.vmSeqId} load mounts failed.", ignored)
         }
 
-        return volumeList
+        return mountList
     }
 }
