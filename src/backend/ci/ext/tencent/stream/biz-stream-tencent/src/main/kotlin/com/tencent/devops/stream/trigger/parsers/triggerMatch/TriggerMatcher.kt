@@ -289,7 +289,7 @@ class TriggerMatcher @Autowired constructor(
     private fun getCommitChangeSet(context: StreamTriggerContext): Set<String> {
         val gitEvent = context.gitEvent as GitPushEvent
         val changeSet = mutableSetOf<String>()
-        if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTWORD.value) {
+        if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
             for (i in 1..10) {
                 // 反向进行三点比较可以比较出rebase的真实提交
                 val result = streamScmService.getCommitChangeFileListRetry(
