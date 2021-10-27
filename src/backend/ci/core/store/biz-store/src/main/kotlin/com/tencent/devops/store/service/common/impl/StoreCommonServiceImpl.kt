@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.configuration.StoreDetailUrlConfig
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
@@ -143,6 +145,8 @@ class StoreCommonServiceImpl @Autowired constructor(
                         "${reqVersionParts[0]}.${reqVersionParts[1]}.${reqVersionParts[2].toInt() + 1}",
                         "${reqVersionParts[0]}.${reqVersionParts[1].toInt() + 1}.0"
                     )
+                } else {
+                    throw ErrorCodeException(errorCode = StoreMessageCode.USER_HIS_VERSION_UPGRADE_INVALID)
                 }
             }
             else -> {

@@ -76,7 +76,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 import javax.ws.rs.core.Response
 
 @Suppress("ALL")
@@ -123,7 +122,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
-        val dbOsList = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(
+        val dbOsList = if (!atomRecord.os.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
             atomRecord.os,
             List::class.java
         ) as List<String> else null
@@ -332,8 +331,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as? Map<String, Any>
         var atomPostInfo: AtomPostInfo? = null
         if (null != executionInfoMap) {
-            val target = executionInfoMap[KEY_TARGET]
-            if (StringUtils.isEmpty(target)) {
+            val target = executionInfoMap[KEY_TARGET] as? String
+            if (target.isNullOrBlank()) {
                 // 执行入口为空则校验失败
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
@@ -435,7 +434,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         )
         val postEntryParam = atomEnv.postEntryParam
         val postCondition = atomEnv.postCondition
-        val postFlag = !StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)
+        val postFlag = !postEntryParam.isNullOrBlank() && !postCondition.isNullOrBlank()
         val atomPostMap = mapOf(
             ATOM_POST_FLAG to postFlag,
             ATOM_POST_ENTRY_PARAM to postEntryParam,

@@ -31,10 +31,12 @@ import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.SECURITY
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -544,8 +546,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 branch = branch
             )
             logger.info("the quality json str is :$qualityJsonStr")
-            return if (!qualityJsonStr.isNullOrBlank()) {
-                val qualityDataMap = JsonUtil.toMap(qualityJsonStr!!)
+            return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
+                val qualityDataMap = JsonUtil.toMap(qualityJsonStr)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = qualityDataMap["stage"] as String
                 val stage = when (stageCode) {
@@ -601,14 +603,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
                 GetAtomQualityConfigResult(
                     StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL,
-                    arrayOf(QUALITY_JSON_NAME)
+                    arrayOf(branch ?: MASTER, QUALITY_JSON_NAME)
                 )
             }
         } catch (e: Exception) {
             logger.error("getFileContent error is :$e", e)
             return GetAtomQualityConfigResult(
                 StoreMessageCode.USER_ATOM_QUALITY_CONF_INVALID,
-                arrayOf(QUALITY_JSON_NAME)
+                arrayOf(branch ?: MASTER, QUALITY_JSON_NAME)
             )
         }
     }
@@ -740,13 +742,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.error("getFileContent error is :$e", e)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
-                params = arrayOf(TASK_JSON_NAME)
+                params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)
             )
         }
-        if (null == taskJsonStr) {
+        if (null == taskJsonStr || !JsonSchemaUtil.validateJson(taskJsonStr)) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
-                params = arrayOf(TASK_JSON_NAME)
+                params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)
             )
         }
         return parseTaskJson(
