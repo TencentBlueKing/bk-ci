@@ -37,7 +37,7 @@ import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -253,7 +253,7 @@ class QualityRuleService @Autowired constructor(
         // 过滤已删除的模板
         val templateIds = rule.templateRange.toSet()
         val templateMap = if (templateIds.isNotEmpty()) {
-            client.get(ServiceTemplateResource::class).listTemplateById(templateIds, null).data?.templates
+            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, null).data?.templates
         } else {
             mapOf()
         }
@@ -366,7 +366,10 @@ class QualityRuleService @Autowired constructor(
                 listOf()
             } else ruleOperation.auditUser.split(","),
             auditTimeoutMinutes = ruleOperation.auditTimeout ?: 15,
-            gatewayId = record.gatewayId
+            gatewayId = record.gatewayId,
+            gateKeepers = listOf(),
+            stageId = "1",
+            status = null
         )
     }
 
@@ -405,7 +408,7 @@ class QualityRuleService @Autowired constructor(
         ruleRecordList?.filter { !it.pipelineTemplateRange.isNullOrBlank() }?.forEach {
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
-        val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
+        val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServicePTemplateResource::class)
             .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
         val templateIdMap = mutableMapOf<String, OptionalTemplate>()

@@ -44,9 +44,10 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -57,7 +58,7 @@ import java.util.concurrent.TimeUnit
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
@@ -151,9 +152,15 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-                        e.startEpoch = System.currentTimeMillis()
-                        if (c.startEpoch == null) {
-                            c.startEpoch = e.startEpoch
+                        // 如果是自动重试则不重置task和job的时间
+                        val retryCount = redisOperation.get(
+                            TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
+                        )?.toInt() ?: 0
+                        if (retryCount < 1) {
+                            e.startEpoch = System.currentTimeMillis()
+                            if (c.startEpoch == null) {
+                                c.startEpoch = e.startEpoch
+                            }
                         }
                         e.errorType = null
                         e.errorCode = null
@@ -267,11 +274,11 @@ class TaskBuildDetailService(
             operation = "taskEnd"
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineBuildTaskDao.updateStatus(
-                dslContext = dslContext,
+            pipelineRuntimeService.updateTaskStatusInfo(
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
-                buildStatus = updateTaskStatusInfo.buildStatus
+                taskStatus = updateTaskStatusInfo.buildStatus,
+                transactionContext = dslContext
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
@@ -308,11 +315,31 @@ class TaskBuildDetailService(
                 updateTaskStatusInfos = updateTaskStatusInfos
             )
         } else {
-            if (tmpElement == endElement) {
-                if (buildStatus != BuildStatus.CANCELED &&
-                    endElement.additionalOptions?.runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
-                    return true
-                }
+            return handleCancelTaskNormal(
+                tmpElement = tmpElement,
+                endElement = endElement,
+                buildStatus = buildStatus,
+                endElementIndex = endElementIndex,
+                elements = elements,
+                containerId = containerId,
+                updateTaskStatusInfos = updateTaskStatusInfos
+            )
+        }
+    }
+
+    private fun handleCancelTaskNormal(
+        tmpElement: Element,
+        endElement: Element,
+        buildStatus: BuildStatus,
+        endElementIndex: Int,
+        elements: List<Element>,
+        containerId: String,
+        updateTaskStatusInfos: MutableList<PipelineTaskStatusInfo>?
+    ): Boolean {
+        if (tmpElement == endElement) {
+            if (buildStatus == BuildStatus.CANCELED &&
+                endElement.additionalOptions?.runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            ) {
                 val startIndex = endElementIndex + 1
                 val endIndex = elements.size - 1
                 if (endIndex >= startIndex) {
@@ -324,8 +351,8 @@ class TaskBuildDetailService(
                         updateTaskStatusInfos = updateTaskStatusInfos
                     )
                 }
-                return true
             }
+            return true
         }
         return false
     }

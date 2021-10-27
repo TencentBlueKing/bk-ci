@@ -30,13 +30,18 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
+import com.tencent.devops.common.api.constant.DESC
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
+import com.tencent.devops.common.api.constant.OR
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
+import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -67,6 +72,7 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
@@ -83,6 +89,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
@@ -927,6 +934,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getAtomOutput(atomCode: String): List<AtomOutput> {
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
+        val propMap = JsonUtil.toMap(atom.props)
+        val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
+        return outputDataMap?.keys?.map { outputKey ->
+            val outputDataObj = outputDataMap[outputKey] as Map<String, Any>
+            AtomOutput(
+                name = outputKey,
+                desc = if (outputDataObj[DESC] == null) {
+                    null
+                } else {
+                    outputDataObj[DESC].toString()
+                }
+            )
+        } ?: emptyList()
+    }
+
     override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
         val atomList = marketAtomDao.getLatestAtomListByCodes(
             dslContext = dslContext,
@@ -940,7 +964,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             var value = it
             val atom = getMap[it.atomCode]
             if (atom?.contains("*") == true &&
-                !it.version.startsWith(atom.replace("*", ""))) {
+                !it.version.startsWith(atom.replace("*", ""))
+            ) {
                 value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
             }
             val itemMap = mutableMapOf<String, Any>()
@@ -1008,7 +1033,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
                 if ((type == "selector" && multiple) ||
-                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
+                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
+                ) {
                     sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {
@@ -1087,7 +1113,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                    "true".equals(paramValueMap["required"].toString(), true)
+                        "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1100,45 +1126,50 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val optionsName = MessageCodeUtil.getCodeLanMessage(OPTIONS)
                 val multipleName = MessageCodeUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
                 val singleName = MessageCodeUtil.getCodeLanMessage(SINGLE_SELECTOR)
-                if ((type == "selector" && multiple) ||
-                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
-                    addParamComment(
-                        builder = sb,
-                        description = description,
-                        paramKey = paramKey,
-                        required = required,
-                        optionsName = optionsName,
-                        selectorTypeName = multipleName,
-                        paramValueMap = paramValueMap,
-                        requiredName = requiredName,
-                        defaultValue = defaultValue,
-                        defaultName = defaultName
-                    )
-                    sb.append("\r\n")
-                    sb.append("    $paramKey:\r\n")
-                    sb.append("        - string\r\n")
-                    sb.append("        - string\r\n")
-                } else {
-                    addParamComment(
-                        builder = sb,
-                        description = description,
-                        paramKey = paramKey,
-                        required = required,
-                        optionsName = optionsName,
-                        selectorTypeName = singleName,
-                        paramValueMap = paramValueMap,
-                        requiredName = requiredName,
-                        defaultValue = defaultValue,
-                        defaultName = defaultName
-                    )
-                    sb.append("\r\n")
-                    sb.append("    $paramKey: ")
-                    if (type == "atom-checkbox") {
-                        sb.append("boolean")
+                try {
+                    if ((type == "selector" && multiple) ||
+                        type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
+                    ) {
+                        addParamComment(
+                            builder = sb,
+                            description = description,
+                            paramKey = paramKey,
+                            required = required,
+                            optionsName = optionsName,
+                            selectorTypeName = multipleName,
+                            paramValueMap = paramValueMap,
+                            requiredName = requiredName,
+                            defaultValue = defaultValue,
+                            defaultName = defaultName
+                        )
+                        sb.append("\r\n")
+                        sb.append("    $paramKey:\r\n")
+                        sb.append("        - string\r\n")
+                        sb.append("        - string\r\n")
                     } else {
-                        sb.append("string")
+                        addParamComment(
+                            builder = sb,
+                            description = description,
+                            paramKey = paramKey,
+                            required = required,
+                            optionsName = optionsName,
+                            selectorTypeName = singleName,
+                            paramValueMap = paramValueMap,
+                            requiredName = requiredName,
+                            defaultValue = defaultValue,
+                            defaultName = defaultName
+                        )
+                        sb.append("\r\n")
+                        sb.append("    $paramKey: ")
+                        if (type == "atom-checkbox") {
+                            sb.append("boolean")
+                        } else {
+                            sb.append("string")
+                        }
+                        sb.append("\r\n")
                     }
-                    sb.append("\r\n")
+                } catch (ignored: Throwable) {
+                    sb.insert(0, "# 参数[$paramKey] 的${ignored.message} ,请检查task.json配置格式是否正确 \n")
                 }
             }
         }
@@ -1204,18 +1235,83 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
             builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
         }
-        val options = paramValueMap["options"] ?: return
-        try {
-            options as List<Map<String, String>>
+        val rely = paramValueMap["rely"]
+        if (null != rely) {
+            try {
+                parseRely(builder, rely as Map<String, Any>)
+            } catch (e: Exception) {
+                throw Exception("rely 配置解析错误")
+            }
+        }
+        val options = paramValueMap["options"]
+        if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
+            try {
+                parseOptions(builder, options as List<Map<String, Any>>)
+            } catch (e: Exception) {
+                throw Exception("options 配置解析错误")
+            }
+        }
+        val list = paramValueMap["list"]
+        if (null != list) {
+            builder.append(", $optionsName:")
+            try {
+                parseList(builder, list as List<Map<String, Any>>)
+            } catch (e: Exception) {
+                throw Exception("list 配置解析错误")
+            }
+        }
+    }
+
+    private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
+        val dang = MessageCodeUtil.getCodeLanMessage(DANG)
+        val and = MessageCodeUtil.getCodeLanMessage(AND)
+        val or = MessageCodeUtil.getCodeLanMessage(OR)
+        val timeToSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+        try {
+            if (null != rely["expression"]) {
+                val expression = rely["expression"] as List<Map<String, Any>>
+                builder.append(", $dang")
+                val link = if (rely["operation"] == "AND") and else or
+                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
+                    builder.append(value)
+                    if (index < expression.size - 1) {
+                        builder.append(link)
+                    }
+                }
+                builder.append(timeToSelect)
+            }
+        } catch (e: Exception) {
+            println("load atom input[rely] with error: ${e.message}")
+        }
+    }
+
+    private fun parseOptions(builder: StringBuilder, options: List<Map<String, Any>>) {
+        try {
             options.forEachIndexed { index, map ->
                 if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
         } catch (e: Exception) {
-            logger.error("load atom input[$paramKey] with error: ${e.message}")
+            println("load atom input[options] with error: ${e.message}")
+        }
+    }
+
+    private fun parseList(builder: StringBuilder, list: List<Map<String, Any>>) {
+        try {
+            list.forEachIndexed { index, map ->
+                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
+                    null ?: return
+                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
+                    null ?: return
+                if (index == list.size - 1) builder.append(" $key[$value]")
+                else builder.append(" $key[$value] |")
+            }
+            builder.removeSuffix("|")
+        } catch (e: Exception) {
+            println("load atom input[list] with error: ${e.message} ")
         }
     }
 }

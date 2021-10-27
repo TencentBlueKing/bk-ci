@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container
 
-import com.tencent.devops.process.engine.control.command.Cmd
+import com.tencent.devops.process.command.Cmd
 
 /**
  * 容器命令接口

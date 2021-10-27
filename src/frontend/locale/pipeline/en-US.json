@@ -85,6 +85,7 @@
     "store": "Store",
     "buildNum": "BuildNo.",
     "propertyBar": "Property",
+    "pipelineNameTips": "Please enter pipeline name",
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
     "pipelineDesc": "Description",
     "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
@@ -454,7 +455,11 @@
         "constraintMode": "Constraint mode",
         "constraintModeTips": "You can‘t arrange the pipeline freely and should update the instance through template",
         "noTemplateTips": " Please select a template first",
-        "noSearchResult": " No results found"
+        "noSearchResult": " No results found",
+        "success": "Success",
+        "failed": "Failed",
+        "cancel": "Cancel",
+        "stageSuccess": "Stage success"
     },
     "subpage": {
         "saveAndExec": " Save and run",
@@ -704,6 +709,8 @@
         "imageType": "Image type",
         "assignResource": "Docker image url",
         "imageTicket": "Docker image  ticket",
+        "performance": "Model",
+        "cpuUnit": "C",
         "workspace": "workspace on",
         "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/src by default",
         "envDependency": "Mount dependent software over NFS",
@@ -811,7 +818,6 @@
         "confirmMsg": " If leave, the data of new edition will be lost",
         "confirmTitle": "Confirm exit",
         "operateSuc": "Operate successfully",
-        "addImage": " Add custom build mirroring",
         "publicResTips": " The build cluster provided by Blue Shield saves you from worrying the short supply of resources and security issue",
         "seeMore": "View more",
         "docker": {
@@ -897,6 +903,7 @@
         "automaticRetry": "Auto Retry",
         "manualRetry": "Manual Retry",
         "skipType": "Skip Type",
+        "customEnv": "Custom environment variables",
         "continueWhenFailedDesc": "If you open the option 'Continue on error' at the same time, we will continue only when all retry failed",
         "retryWhenFailed": "Retry on error",
         "retryCount": "Retry count",

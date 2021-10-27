@@ -28,14 +28,17 @@ package httputil
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
+	"time"
 )
 
 type HttpClient struct {
@@ -136,8 +139,9 @@ func (r *HttpClient) Execute() *HttpResult {
 			result.Error = errors.New("http request err")
 		}
 	}()
-
-	req, err := http.NewRequest(r.method, r.url, r.body)
+	withTimeout, cancel := context.WithTimeout(context.TODO(), time.Duration(config.GAgentConfig.TimeoutSec)*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(withTimeout, r.method, r.url, r.body)
 	if err != nil {
 		result.Error = err
 		return result
@@ -154,7 +158,6 @@ func (r *HttpClient) Execute() *HttpResult {
 		value.Add(k, v)
 	}
 	req.Form = value
-
 	resp, err := r.client.Do(req)
 	if err != nil {
 		result.Error = err
