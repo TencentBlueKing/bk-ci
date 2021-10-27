@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod
 
-import com.tencent.devops.dispatch.kubernetes.pojo.Ports
 import io.kubernetes.client.custom.Quantity
 import io.kubernetes.client.openapi.models.V1Container
 import io.kubernetes.client.openapi.models.V1ContainerPort
@@ -39,17 +38,20 @@ import io.kubernetes.client.openapi.models.V1ResourceRequirements
 
 object Pod {
 
+    private val resource = listOf("cpu", "memory", "ephemeral-storage")
+
     fun template(
         pod: PodData
     ): V1PodTemplateSpec {
         with(pod) {
-            return V1PodTemplateSpec()
+            val pods = V1PodTemplateSpec()
                 .metadata(
                     V1ObjectMeta().labels(labels)
                 )
-                .spec(
-                    spec(container)
-                )
+            if (container != null) {
+                pods.spec(spec(container))
+            }
+            return pods
         }
     }
 
@@ -57,38 +59,53 @@ object Pod {
         container: ContainerData
     ): V1PodSpec {
         with(container) {
+            val resourceMap = mutableMapOf<String, Quantity>()
+            listOf(cpu, memory, disk).forEachIndexed { index, value ->
+                if (!value.isNullOrBlank()) {
+                    resourceMap[resource[index]] = Quantity(value)
+                }
+            }
+
+            val con = V1Container()
+                .name(imageName)
+
+            if (!image.isNullOrBlank()) {
+                con.image(image)
+            }
+
+            if (resourceMap.isNotEmpty()) {
+                con.resources(V1ResourceRequirements().limits(resourceMap))
+            }
+
+            if (!ports.isNullOrEmpty()) {
+                con.ports(
+                    ports.map { port ->
+                        V1ContainerPort()
+                            .protocol(port.protocol)
+                            .containerPort(port.port?.toInt())
+                            .hostPort(port.targetPort?.toInt())
+                    }
+                )
+            }
+
+            if (!env.isNullOrEmpty()) {
+                con.env(
+                    env.map {
+                        V1EnvVar()
+                            .name(it.key)
+                            .value(it.value)
+                    }
+                )
+            }
+
+            if (!commends.isNullOrEmpty()) {
+                con.command(commends)
+            }
+
             return V1PodSpec()
                 .containers(
                     listOf(
-                        V1Container()
-                            .name(imageName)
-                            .resources(
-                                V1ResourceRequirements()
-                                    .limits(
-                                        mapOf(
-                                            "cpu" to Quantity(cpu),
-                                            "memory" to Quantity(memory),
-                                            "ephemeral-storage" to Quantity(disk)
-                                        )
-                                    )
-                            )
-                            .image(image)
-                            .ports(
-                                ports?.map { port ->
-                                    V1ContainerPort()
-                                        .protocol(port.protocol)
-                                        .containerPort(port.port?.toInt())
-                                        .hostPort(port.targetPort?.toInt())
-                                }
-                            )
-                            .env(
-                                env?.map {
-                                    V1EnvVar()
-                                        .name(it.key)
-                                        .value(it.value)
-                                }
-                            )
-                            .command(commends)
+                        con
                     )
                 )
         }

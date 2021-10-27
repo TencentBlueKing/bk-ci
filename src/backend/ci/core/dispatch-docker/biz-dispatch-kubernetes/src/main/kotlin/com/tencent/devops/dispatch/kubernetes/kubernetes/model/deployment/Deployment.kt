@@ -32,8 +32,6 @@ import io.kubernetes.client.openapi.models.V1Deployment
 import io.kubernetes.client.openapi.models.V1DeploymentSpec
 import io.kubernetes.client.openapi.models.V1LabelSelector
 import io.kubernetes.client.openapi.models.V1ObjectMeta
-import io.kubernetes.client.openapi.models.V1PodTemplateSpec
-import io.kubernetes.client.proto.V1
 
 object Deployment {
 
@@ -42,7 +40,7 @@ object Deployment {
     ): V1Deployment {
         with(deployment) {
             return V1Deployment()
-                .apiVersion("apps/v1")
+                .apiVersion(apiVersion)
                 .kind("Deployment")
                 .metadata(
                     V1ObjectMeta()

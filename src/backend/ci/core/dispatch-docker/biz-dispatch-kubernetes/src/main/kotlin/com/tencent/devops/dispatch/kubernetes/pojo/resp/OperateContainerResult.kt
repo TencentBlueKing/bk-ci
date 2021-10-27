@@ -27,7 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo.resp
 
-data class CreatContainerResult(
-    val taskId: String,
-    val createName: String
+data class OperateContainerResult(
+    val containerName: String,
+    val result: Boolean,
+    val errorMessage: String? = null
 )

@@ -30,16 +30,16 @@ package com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod
 import com.tencent.devops.dispatch.kubernetes.pojo.Ports
 
 data class PodData(
-    val labels: Map<String, String>,
-    val container: ContainerData
+    val labels: Map<String, String>?,
+    val container: ContainerData?
 )
 
 data class ContainerData(
-    val imageName: String,
-    val image: String,
-    val cpu: String,
-    val memory: String,
-    val disk: String,
+    val imageName: String?,
+    val image: String?,
+    val cpu: String?,
+    val memory: String?,
+    val disk: String?,
     val ports: List<Ports>?,
     val env: Map<String, String>?,
     val commends: List<String>?

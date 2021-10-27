@@ -27,47 +27,48 @@
 
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
+import com.google.gson.Gson
+import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.Deployment
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.DeploymentData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.Pod
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
-import com.tencent.devops.dispatch.kubernetes.pojo.Ports
+import com.tencent.devops.dispatch.kubernetes.pojo.Params
+import io.kubernetes.client.custom.V1Patch
 import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.AppsV1Api
 import io.kubernetes.client.openapi.models.V1Deployment
-import io.kubernetes.client.openapi.models.V1DeploymentSpec
-import io.kubernetes.client.openapi.models.V1LabelSelector
-import io.kubernetes.client.openapi.models.V1ObjectMeta
-import io.kubernetes.client.openapi.models.V1PodTemplateSpec
+import io.kubernetes.client.openapi.models.V1Status
+import io.kubernetes.client.util.Yaml
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class DeploymentClient @Autowired constructor(
-    private val k8sConfig: KubernetesClientConfig
+    private val k8sConfig: KubernetesClientConfig,
+    private val dispatchBuildConfig: DispatchBuildConfig
 ) {
 
     fun create(
         buildContainer: BuildContainer,
         containerName: String
     ): ApiResponse<V1Deployment> {
-        val labels = buildContainer.params?.labels?.toMutableMap() ?: mutableMapOf()
-        labels["container-name"] = containerName
+        val labels = getCoreLabels(containerName)
 
         val deployment = with(buildContainer) {
             Deployment.deployment(
                 DeploymentData(
-                    name = name,
+                    apiVersion = "apps/v1",
+                    name = containerName,
                     nameSpace = k8sConfig.nameSpace!!,
                     labels = labels,
                     selectorLabels = labels,
                     pod = PodData(
                         labels = labels,
                         container = ContainerData(
-                            imageName = image.split(":")[0],
+                            imageName = containerName,
                             image = image,
                             cpu = cpu.toString(),
                             memory = memory,
@@ -84,4 +85,73 @@ class DeploymentClient @Autowired constructor(
             k8sConfig.nameSpace, deployment, null, null, null
         )
     }
+
+    fun delete(
+        containerName: String
+    ): ApiResponse<V1Status> {
+        return AppsV1Api().deleteNamespacedDeploymentWithHttpInfo(
+            containerName,
+            k8sConfig.nameSpace,
+            null, null, null, null, null, null
+        )
+    }
+
+    // 目前启动，和停止通过扩，缩容deployment的pod数量实现
+    fun start(
+        containerName: String,
+        params: Params?
+    ): ApiResponse<V1Deployment> {
+        val labels = getCoreLabels(containerName)
+        val yaml = Yaml.dump(
+            Deployment.deployment(
+                DeploymentData(
+                    name = containerName,
+                    nameSpace = k8sConfig.nameSpace!!,
+                    labels = labels,
+                    selectorLabels = labels,
+                    pod = PodData(
+                        labels = labels,
+                        container = ContainerData(
+                            imageName = containerName,
+                            image = null,
+                            cpu = null,
+                            memory = null,
+                            disk = null,
+                            ports = null,
+                            env = params?.env,
+                            commends = params?.command
+                        )
+                    )
+                )
+            )
+        )
+        return AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
+            containerName,
+            k8sConfig.nameSpace,
+            V1Patch(patchReplicasJson(1)),
+            null, null, null, null
+        )
+    }
+
+    fun stop(
+        deploymentName: String
+    ): ApiResponse<V1Deployment> {
+        val stopJson = Gson().toJson(
+            listOf(
+                mapOf(
+                    "op" to "replace",
+                    "path" to "/spec/replicas",
+                    "value" to 0
+                )
+            )
+        )
+        return AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
+            deploymentName,
+            k8sConfig.nameSpace,
+            V1Patch(stopJson),
+            null, null, null, null
+        )
+    }
+
+    private fun getCoreLabels(containerName: String) = mapOf("container-name" to containerName)
 }

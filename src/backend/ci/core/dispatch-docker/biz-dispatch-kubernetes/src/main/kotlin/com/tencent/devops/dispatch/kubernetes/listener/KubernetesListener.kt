@@ -41,6 +41,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.service.BuildHisService
 import com.tencent.devops.dispatch.kubernetes.service.ContainerService
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -128,20 +129,36 @@ class KubernetesListener @Autowired constructor(
             if (null == lastIdleContainer || containerChanged) {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "create new container, poolNo: $poolNo"
+                            "create new container, poolNo: $poolNo"
                 )
-                createNewContainer(dispatchMessage, containerPool, poolNo)
+                containerService.createNewContainer(
+                    dispatchMessage = dispatchMessage,
+                    containerPool = containerPool,
+                    poolNo = poolNo,
+                    cpu = threadLocalCpu,
+                    memory = threadLocalMemory,
+                    disk = threadLocalDisk
+                ).let {
+                    if (!it.result) {
+                        onFailure(
+                            ErrorCodeEnum.CREATE_VM_ERROR.errorType,
+                            ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
+                            ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
+                            KubernetesClientUtil.getClientFailInfo("构建机创建失败: ${it.errorMessage}")
+                        )
+                    }
+                }
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "start idle container, containerName: $lastIdleContainer"
+                            "start idle container, containerName: $lastIdleContainer"
                 )
                 startContainer(lastIdleContainer, dispatchMessage, poolNo)
             }
         } catch (e: BuildFailureException) {
             logger.error(
                 "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                    "create deployment failed. msg:${e.message}."
+                        "create deployment failed. msg:${e.message}."
             )
             onFailure(
                 errorType = e.errorType,
@@ -171,9 +188,19 @@ class KubernetesListener @Autowired constructor(
     private fun Pool.getContainerPool(): Pool {
         if (third != null && !third) {
             val containerPoolFixed = if (container!!.startsWith(dispatchConfig.registryHost!!)) {
-                Pool(container, Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!), performanceConfigId, third)
+                Pool(
+                    container,
+                    Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!),
+                    performanceConfigId,
+                    third
+                )
             } else {
-                Pool(dispatchConfig.registryHost + "/" + container, Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!), performanceConfigId, third)
+                Pool(
+                    dispatchConfig.registryHost + "/" + container,
+                    Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!),
+                    performanceConfigId,
+                    third
+                )
             }
 
             return containerPoolFixed

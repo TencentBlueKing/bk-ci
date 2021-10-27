@@ -33,9 +33,11 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.PodsClient
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.Action
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
+import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
-import com.tencent.devops.dispatch.kubernetes.pojo.resp.CreatContainerResult
+import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
 import io.kubernetes.client.openapi.models.V1ContainerStatus
@@ -51,18 +53,13 @@ class ContainerClient @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerClient::class.java)
+        private val MAX_WAIT = 10
     }
 
     fun getContainerStatus(
-        buildId: String,
-        vmSeqId: String,
-        userId: String,
-        name: String,
-        retryTime: Int = 3
+        containerName: String
     ): Result<V1ContainerStatus> {
-        logger.info("[$buildId]|[$vmSeqId] request $name getContainerStatus")
-        val result = podsClient.list(name)
-        logger.info("[$buildId]|[$vmSeqId] containerName: $name response: $result")
+        val result = podsClient.list(containerName)
         if (!result.isSuccessful()) {
             // 先不添加重试逻辑，看后续使用
             //           if (retryTime > 0) {
@@ -88,13 +85,20 @@ class ContainerClient @Autowired constructor(
     fun createContainer(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
-    ): CreatContainerResult {
+    ): String {
         val containerName = "${dispatchMessage.userId}1574210195791"
-        val result = when (buildContainer.type) {
+        when (buildContainer.type) {
             ContainerType.DEV -> {
                 val resp = deploymentClient.create(buildContainer, containerName)
-                if (resp.isSuccessful()){
-                    true
+                if (!resp.isSuccessful()) {
+                    throw BuildFailureException(
+                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        errorMessage = KubernetesClientUtil.getClientFailInfo(
+                            "创建容器接口异常 （Fail to create container status, http response code: ${resp.statusCode}"
+                        )
+                    )
                 }
             }
             ContainerType.STATEFUL -> {
@@ -104,7 +108,45 @@ class ContainerClient @Autowired constructor(
                 TODO()
             }
         }
+        return containerName
+    }
 
-        return CreatContainerResult()
+    fun waitContainerStart(
+        containerName: String
+    ): OperateContainerResult {
+        var state = getContainerStatus(containerName).data?.state
+        var max = MAX_WAIT
+        while (state?.running == null && max != 0) {
+            if (state?.terminated != null) {
+                return OperateContainerResult(containerName, false, state.terminated?.message)
+            } else {
+                state = getContainerStatus(containerName).data?.state
+            }
+            max --
+        }
+        return OperateContainerResult(containerName, state?.running != null)
+    }
+
+    fun operateContainer(
+        containerName: String,
+        action: Action,
+        param: Params?
+    ): OperateContainerResult {
+        return when (action) {
+            Action.DELETE -> {
+                val result = deploymentClient.delete(containerName)
+                if (!result.isSuccessful()) {
+                    OperateContainerResult("", false, result.data?.message)
+                }
+                OperateContainerResult("", true)
+            }
+            Action.START -> {
+            }
+            Action.STOP -> {
+            }
+            else -> {
+                OperateContainerResult("", false)
+            }
+        }
     }
 }

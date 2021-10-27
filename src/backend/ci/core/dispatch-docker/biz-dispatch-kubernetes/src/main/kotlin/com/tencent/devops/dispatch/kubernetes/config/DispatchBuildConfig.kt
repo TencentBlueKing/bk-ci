@@ -55,5 +55,5 @@ class DispatchBuildConfig {
     val label: String? = null
 
     @Value("\${dispatch.build.entrypoint}")
-    val entrypoint: String = "dispatch_kubernetes_init"
+    val entrypoint: String = "dispatch_kubernetes_init.sh"
 }

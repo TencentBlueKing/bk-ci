@@ -44,7 +44,10 @@ import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.PipelineBuildConfig
+import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.kubernetes.dao.BuildDao
+import com.tencent.devops.dispatch.kubernetes.dao.BuildHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.Action
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
@@ -53,9 +56,11 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Life
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.Registry
+import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.PipelineContainerLock
+import com.tencent.devops.dispatch.kubernetes.utils.RedisUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -67,11 +72,14 @@ class ContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
+    private val redisUtils: RedisUtils,
     private val dispatchBuildConfig: DispatchBuildConfig,
     private val pipelineBuildConfig: PipelineBuildConfig,
     private val buildLogPrinter: BuildLogPrinter,
     private val containerClient: ContainerClient,
-    private val buildDao: BuildDao
+    private val buildDao: BuildDao,
+    private val buildHisDao: BuildHisDao,
+    private val buildContainerPoolNoDao: BuildContainerPoolNoDao
 ) {
 
     companion object {
@@ -130,16 +138,16 @@ class ContainerService @Autowired constructor(
                     }
 
                     val statusResponse = containerClient.getContainerStatus(
-                        buildId = dispatchMessage.buildId,
-                        vmSeqId = dispatchMessage.vmSeqId,
-                        userId = dispatchMessage.userId,
-                        name = containerInfo.containerName
+                        containerName = containerInfo.containerName
                     )
 
                     if (statusResponse.data?.state?.terminated != null) {
                         var containerChanged = false
                         // 查看构建性能配置是否变更
-                        if (cpu.get() != containerInfo.cpu || disk.get() != containerInfo.disk || memory.get() != containerInfo.memory) {
+                        if (cpu.get() != containerInfo.cpu ||
+                            disk.get() != containerInfo.disk ||
+                            memory.get() != containerInfo.memory
+                        ) {
                             containerChanged = true
                             logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} performanceConfig changed.")
                         }
@@ -179,17 +187,16 @@ class ContainerService @Autowired constructor(
         cpu: ThreadLocal<Int>,
         memory: ThreadLocal<String>,
         disk: ThreadLocal<String>
-    ) {
+    ): OperateContainerResult {
         val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
         val userName = containerPool.credential!!.user
         val password = containerPool.credential.password
 
         with(dispatchMessage) {
-            val (devCloudTaskId, createName) = containerClient.createContainer(
+            val containerName = containerClient.createContainer(
                 this,
                 BuildContainer(
                     life = Life.BRIEF,
-                    name = buildId,
                     type = ContainerType.DEV,
                     image = "$name:$tag",
                     registry = Registry(host, userName, password),
@@ -198,7 +205,6 @@ class ContainerService @Autowired constructor(
                     disk = disk.get(),
                     replica = 1,
                     ports = emptyList(),
-                    password = CommonUtils.generatePwd(),
                     params = Params(
                         env = mapOf(
                             ENV_KEY_PROJECT_ID to projectId,
@@ -209,35 +215,32 @@ class ContainerService @Autowired constructor(
                             SLAVE_ENVIRONMENT to "Kubernetes",
                             ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                         ),
-                        command = listOf("/bin/sh", dispatchBuildConfig.entrypoint),
-                        labels = mapOf(
-                            "projectId" to projectId,
-                            "pipelineId" to pipelineId,
-                            "buildId" to buildId,
-                            "vmSeqId" to vmSeqId
-                        ),
-                        ipEnabled = false
+                        command = listOf("/bin/sh", dispatchBuildConfig.entrypoint)
                     )
                 )
             )
-            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createContainer, taskId:($devCloudTaskId)")
-            printLogs(this, "下发创建构建机请求成功，containerName: $createName 等待机器启动...")
+            logger.info(
+                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createContainer $containerName"
+            )
+            printLogs(this, "下发创建构建机请求成功，containerName: $containerName 等待机器启动...")
 
             // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
-            redisUtils.setCreatingContainer(createName, dispatchMessage.userId)
+            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
 
-            val createResult = dispatchDevCloudClient.waitTaskFinish(userId, devCloudTaskId)
+            val createContainerResult = containerClient.waitContainerStart(containerName)
 
             // 创建完成移除缓存信息
-            redisUtils.removeCreatingContainer(createName, userId)
+            redisUtils.removeCreatingContainer(containerName, userId)
 
-            if (createResult.first == TaskStatus.SUCCEEDED) {
+            if (createContainerResult.result) {
                 // 启动成功
-                val containerName = createResult.second
-                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
+                logger.info(
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                            "start deployment success, wait for agent startup..."
+                )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
-                devCloudBuildDao.createOrUpdate(
+                buildDao.createOrUpdate(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
@@ -253,18 +256,98 @@ class ContainerService @Autowired constructor(
                 )
 
                 // 更新历史表中containerName
-                devCloudBuildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
+                buildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
 
                 // 创建成功的要记录，shutdown时关机，创建失败时不记录，shutdown时不关机
                 buildContainerPoolNoDao.setDevCloudBuildLastContainer(
-                    dslContext, buildId, vmSeqId,
-                    executeCount
-                        ?: 1,
-                    containerName, poolNo.toString()
+                    dslContext = dslContext, buildId = buildId, vmSeqId = vmSeqId,
+                    executeCount = executeCount ?: 1,
+                    containerName = containerName, poolNo = poolNo.toString()
                 )
+                return createContainerResult
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionContainer(this, createName)
+                clearExceptionContainer(this, containerName)
+                buildDao.updateStatus(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo,
+                    status = ContainerStatus.IDLE.status
+                )
+                buildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
+                return createContainerResult
+            }
+        }
+    }
+
+    fun startContainer(
+        containerName: String,
+        dispatchMessage: DispatchMessage,
+        poolNo: Int
+    ) {
+        with(dispatchMessage) {
+            val devCloudTaskId = containerClient.operateContainer(
+                containerName = containerName,
+                action = Action.START,
+                param = Params(
+                    env = mapOf(
+                        ENV_KEY_PROJECT_ID to projectId,
+                        ENV_KEY_AGENT_ID to id,
+                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
+                        ENV_KEY_GATEWAY to gateway,
+                        "TERM" to "xterm-256color",
+                        SLAVE_ENVIRONMENT to "Kubernetes",
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+                    ),
+                    command = listOf("/bin/sh", dispatchBuildConfig.entrypoint)
+                )
+            )
+
+            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start container, taskId:($devCloudTaskId)")
+            printLogs(this, "下发启动构建机请求成功，containerName: $containerName 等待机器启动...")
+            buildContainerPoolNoDao.setDevCloudBuildLastContainer(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1,
+                containerName = containerName,
+                poolNo = poolNo.toString()
+            )
+
+            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
+            val startResult = containerClient.waitContainerStart(containerName)
+            redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
+
+            if (startResult.first == TaskStatus.SUCCEEDED) {
+                // 启动成功
+                val instContainerName = startResult.second
+                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
+                printLogs(this, "构建机启动成功，等待Agent启动...")
+
+                devCloudBuildDao.createOrUpdate(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo,
+                    projectId = projectId,
+                    containerName = instContainerName,
+                    image = this.dispatchMessage,
+                    status = ContainerStatus.BUSY.status,
+                    userId = userId,
+                    cpu = threadLocalCpu.get(),
+                    memory = threadLocalMemory.get(),
+                    disk = threadLocalDisk.get()
+                )
+            } else {
+                // 暂时注释，统一放在shutdown执行
+                /*buildContainerPoolNoDao.deleteDevCloudBuildLastContainerPoolNo(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount
+                )*/
+                // 重置资源池状态
                 devCloudBuildDao.updateStatus(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
@@ -272,10 +355,37 @@ class ContainerService @Autowired constructor(
                     poolNo = poolNo,
                     status = ContainerStatus.IDLE.status
                 )
-                devCloudBuildHisDao.updateContainerName(dslContext, buildId, vmSeqId, createName, executeCount ?: 1)
-                onFailure(createResult.third.errorType, createResult.third.errorCode, ErrorCodeEnum.CREATE_VM_ERROR
-                    .formatErrorMessage, KubernetesClientUtil.getClientFailInfo("构建机创建失败:${createResult.second}"))
+                onFailure(
+                    startResult.third.errorType,
+                    startResult.third.errorCode,
+                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    KubernetesClientUtil.getClientFailInfo("构建机启动失败，错误信息:${startResult.second}")
+                )
             }
+        }
+    }
+
+    private fun clearExceptionContainer(
+        dispatchMessage: DispatchMessage,
+        containerName: String
+    ) {
+        try {
+            // 下发删除，不管成功失败
+            logger.info(
+                "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
+                        "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
+                        dispatchMessage.buildId
+            )
+            containerClient.operateContainer(containerName, Action.DELETE, null).let {
+                if (!it.result) {
+                    logger.error(
+                        "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] delete container failed",
+                        it.errorMessage
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] delete container failed", e)
         }
     }
 
@@ -286,9 +396,9 @@ class ContainerService @Autowired constructor(
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(
                 "buildId: ${dispatchMessage.buildId}, " +
-                    "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
-                    "old image: $images, " +
-                    "new image: ${dispatchMessage.dispatchMessage}"
+                        "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                        "old image: $images, " +
+                        "new image: ${dispatchMessage.dispatchMessage}"
             )
             return true
         }

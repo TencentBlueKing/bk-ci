@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 
 data class DeploymentData(
+    val apiVersion: String,
     val name: String,
     val nameSpace: String,
     val labels: Map<String, String>,
