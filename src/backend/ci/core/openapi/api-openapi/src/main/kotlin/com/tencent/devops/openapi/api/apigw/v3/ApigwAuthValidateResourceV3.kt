@@ -1,6 +1,7 @@
 package com.tencent.devops.openapi.api.apigw.v3
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import io.swagger.annotations.Api
@@ -22,13 +23,10 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwAuthValidateResourceV3 {
     @GET
-    @Path("/{projectId}/users/{userId}/isProjectUsers")
+    @Path("/{projectId}/isProjectUsers")
     @ApiOperation("判断是否某个项目中某个组角色的成员")
     fun isProjectUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("认证token", required = true)
-        token: String,
-        @PathParam("userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户Id", required = true)
         userId: String,
         @PathParam("projectId")

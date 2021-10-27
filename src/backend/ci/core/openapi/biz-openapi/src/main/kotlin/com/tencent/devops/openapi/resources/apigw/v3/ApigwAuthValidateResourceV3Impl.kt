@@ -13,18 +13,18 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwAuthValidateResourceV3Impl @Autowired constructor(
     val tokenService: ClientTokenService,
     val client: Client
-): ApigwAuthValidateResourceV3 {
+) : ApigwAuthValidateResourceV3 {
+
     override fun isProjectUser(
-        token: String,
         userId: String,
         projectId: String,
         group: BkAuthGroup?
     ): Result<Boolean> {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-                token = tokenService.getSystemToken(null)!!,
-                userId = userId,
-                projectCode = projectId,
-                group = group
-            )
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            group = group
+        )
     }
 }
