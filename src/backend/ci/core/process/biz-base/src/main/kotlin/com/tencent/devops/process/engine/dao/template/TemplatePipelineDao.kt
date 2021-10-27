@@ -232,12 +232,12 @@ class TemplatePipelineDao {
                 .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
             when (sortType) {
                 TemplateSortTypeEnum.VERSION -> {
-                    baseStep.orderBy(if (desc == true) VERSION.desc() else VERSION)
+                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc())
                 }
                 TemplateSortTypeEnum.UPDATE_TIME -> {
-                    baseStep.orderBy(if (desc == true) UPDATED_TIME.desc() else UPDATED_TIME)
+                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
                 }
-                else -> baseStep.orderBy(if (desc == true) UPDATED_TIME.desc() else UPDATED_TIME)
+                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
             }
             val allCount = baseStep.count()
             val records = if (null != page && null != pageSize) {
