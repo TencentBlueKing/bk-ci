@@ -57,7 +57,7 @@
                             <span class="atom-status-icon devops-icon icon-initialize" v-if="prop.atomStatus === 'INIT'"></span>
                             <span
                                 :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }"
-                            >V{{ prop.version }}</span>
+                            >{{ prop.version }}</span>
                         </span>
                     </template>
                 </bk-table-column>
