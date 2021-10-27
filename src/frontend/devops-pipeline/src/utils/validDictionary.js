@@ -45,7 +45,7 @@ const dictionary = {
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
             mutualGroup: field => `字段不能为空，只支持英文、数字或填写变量`,
-            nonVarRule: field => '该字段不需要包含${}',
+            nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线'
         }
@@ -75,7 +75,7 @@ const dictionary = {
             pullmode: field => 'Field cannot be empty',
             excludeEmptyCapital: field => `The field must be filled and only supports English letter, numbers or variables `,
             mutualGroup: field => `Field only supports English, numbers or fill in variables`,
-            nonVarRule: field => 'This field does not need to be included ${}',
+            nonVarRule: field => 'This field does not need to be included ${{}}',
             notStartWithBKCI: field => "Field can not start with 'BK_CI'",
             paramsRule: () => 'Field only support English letter, numbers and underscores'
         }
