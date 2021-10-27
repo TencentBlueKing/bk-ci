@@ -82,6 +82,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -1827,7 +1828,9 @@ class TemplateFacadeService @Autowired constructor(
         templateId: String,
         page: Int?,
         pageSize: Int?,
-        searchKey: String?
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean? = true
     ): TemplateInstancePage {
         logger.info("LIST_TEMPLATE[$projectId|$userId|$templateId|$page|$pageSize]|$searchKey")
 
@@ -1879,11 +1882,29 @@ class TemplateFacadeService @Autowired constructor(
                 status = templatePipelineStatus
             )
         }
+        val sortTemplatePipelines = templatePipelines.sortedWith(Comparator { a, b ->
+            when (sortType) {
+                TemplateSortTypeEnum.PIPELINE_NAME -> {
+                    a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
+                }
+                TemplateSortTypeEnum.VERSION -> {
+                    b.version.compareTo(a.version)
+                }
+                TemplateSortTypeEnum.UPDATE_TIME -> {
+                    b.updateTime.compareTo(a.updateTime)
+                }
+                TemplateSortTypeEnum.STATUS -> {
+                    b.status.name.compareTo(a.status.name)
+                }
+                else -> a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
+            }
+        })
+
 
         return TemplateInstancePage(
             projectId = projectId,
             templateId = templateId,
-            instances = templatePipelines,
+            instances = if (desc == true) sortTemplatePipelines.reversed() else sortTemplatePipelines,
             latestVersion = TemplateVersion(
                 version = latestVersion.version,
                 versionName = latestVersion.versionName,
