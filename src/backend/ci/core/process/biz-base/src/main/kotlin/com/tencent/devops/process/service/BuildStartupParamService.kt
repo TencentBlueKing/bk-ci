@@ -46,7 +46,7 @@ class BuildStartupParamService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao
 ) {
 
-    fun updateBuildParameters(projectId: String, pipelineId: String, buildId: String, param: String) =
+    fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) =
         pipelineBuildDao.updateBuildParameters(
             dslContext = dslContext,
             buildId = buildId,
@@ -88,7 +88,7 @@ class BuildStartupParamService @Autowired constructor(
 //                    else it.id to it.defaultValue.toString()
                 }
             )
-            updateBuildParameters(
+            addParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
