@@ -33,22 +33,22 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("git用户信息")
 data class GitUserInfo(
-    @ApiModelProperty("ID")
+    @ApiModelProperty("ID", name = "id")
     @JsonProperty("id")
     val id: Int,
-    @ApiModelProperty("用户名称")
+    @ApiModelProperty("用户名称", name = "username")
     @JsonProperty("username")
     val username: String?,
-    @ApiModelProperty("用户空间地址")
+    @ApiModelProperty("用户空间地址", name = "web_url")
     @JsonProperty("web_url")
     val webUrl: String?,
-    @ApiModelProperty("名称")
+    @ApiModelProperty("名称", name = "name")
     @JsonProperty("name")
     val name: String?,
-    @ApiModelProperty("状态")
+    @ApiModelProperty("状态", name = "state")
     @JsonProperty("state")
     val state: String?,
-    @ApiModelProperty("头像")
+    @ApiModelProperty("头像", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?
 )

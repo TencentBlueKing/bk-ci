@@ -45,7 +45,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -96,6 +96,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[PipelineBuildAtomTaskEvent]事件，开始执行/结束插件任务
      */
+    @Suppress("LongMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
@@ -303,7 +304,7 @@ class TaskControl @Autowired constructor(
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
-                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
+                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
                     val containerId = task["containerId"] ?: ""

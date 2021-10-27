@@ -310,22 +310,10 @@ open class GitApi {
     }
 
     private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
-        var page = 1
-        val result = mutableListOf<GitHook>()
         try {
-            while (true) {
-                val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "page=$page&per_page=100")
-                page++
-                val pageResult: List<GitHook> =
-                    JsonUtil.getObjectMapper().readValue(getBody(OPERATION_LIST_WEBHOOK, request))
-                result.addAll(pageResult)
-                if (pageResult.size < 100) {
-                    if (result.size >= HOOK_LIMIT) {
-                        logger.error("there are ${result.size} hooks in project $projectName")
-                    }
-                    return result.sortedBy { it.createdAt }.reversed()
-                }
-            }
+            val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
+            val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(getBody(OPERATION_LIST_WEBHOOK, request))
+            return result.sortedBy { it.createdAt }.reversed()
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
                 throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")

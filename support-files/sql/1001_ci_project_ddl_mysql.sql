@@ -178,9 +178,12 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `web_socket` text COMMENT '支持webSocket的页面',
   `weight` int(11) DEFAULT NULL,
   `gray_iframe_url` varchar(255) DEFAULT NULL,
+  `new_window` bit(1) DEFAULT b'0' COMMENT '是否打开新标签页',
+  `new_windowUrl` varchar(200) DEFAULT '' COMMENT '新标签页地址',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `service_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `service_name` (`name`),
+  UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for T_SERVICE_TYPE

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
@@ -37,16 +37,16 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("ALL")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
-class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -54,16 +54,17 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     ) {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
-            val modelString = objectMapper.writeValueAsString(model)
+            val modelString = JsonUtil.toJson(model, formatted = false)
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
             )
-                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
+                .values(projectId, pipelineId, version, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -146,6 +147,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                 }
                 dslContext.update(this)
                     .set(MODEL, it.model)
+                    .set(CREATOR, userId)
                     .where(conditions)
             }
             dslContext.batch(updateStep).execute()

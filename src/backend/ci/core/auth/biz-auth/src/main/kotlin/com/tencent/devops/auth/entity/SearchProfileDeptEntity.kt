@@ -32,6 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel
+@Suppress("ConstructorParameterNaming")
 data class SearchProfileDeptEntity(
     @ApiModelProperty("用户 ID")
     val id: String,
