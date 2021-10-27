@@ -296,8 +296,6 @@ class PipelineBuildService(
                     }, formatted = false)
                 )
             }
-            // 构建过程中可获取构建启动参数 #2800
-            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
             if (acquire) {

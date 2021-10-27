@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.dao.BuildStartupParamDao
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -43,18 +43,28 @@ import org.springframework.stereotype.Service
 @Service
 class BuildStartupParamService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val buildStartupParamDao: BuildStartupParamDao
 ) {
 
     fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) =
-        pipelineBuildDao.updateBuildParameters(
+        buildStartupParamDao.add(
             dslContext = dslContext,
             buildId = buildId,
-            buildParameters = param
+            param = param,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
 
     fun getParam(buildId: String) =
-        pipelineBuildDao.getBuildParameters(dslContext, buildId)
+        buildStartupParamDao.get(dslContext, buildId)
+
+    fun deletePipelineBuildParam(projectId: String, pipelineId: String) {
+        buildStartupParamDao.deletePipelineBuildParams(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
 
     /**
      * 如果是重试，不应该更新启动参数, 直接返回
