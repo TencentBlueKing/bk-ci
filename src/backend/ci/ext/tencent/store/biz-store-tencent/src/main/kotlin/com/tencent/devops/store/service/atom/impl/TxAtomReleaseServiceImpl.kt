@@ -559,15 +559,19 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)
             }
         } else {
-            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId) ?: return false
+            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
             // 判断插件版本最近一次的构建是否完成
-            val buildResult = client.get(ServiceBuildResource::class).getBuildStatus(
-                userId = userId,
-                projectId = initProjectCode,
-                pipelineId = buildInfoRecord.pipelineId,
-                buildId = buildInfoRecord.buildId,
-                channelCode = ChannelCode.AM
-            ).data
+            val buildResult = if (buildInfoRecord != null) {
+                client.get(ServiceBuildResource::class).getBuildStatus(
+                    userId = userId,
+                    projectId = initProjectCode,
+                    pipelineId = buildInfoRecord.pipelineId,
+                    buildId = buildInfoRecord.buildId,
+                    channelCode = ChannelCode.AM
+                ).data
+            } else {
+                null
+            }
             if (buildResult != null) {
                 val buildStatus = BuildStatus.parse(buildResult.status)
                 if (!buildStatus.isFinish()) {
