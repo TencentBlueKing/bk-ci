@@ -85,6 +85,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/check")
     @GET
     fun check(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

@@ -40,6 +40,7 @@ class SampleBuildFileResourceImpl @Autowired constructor(private val archiveFile
     SampleBuildFileResource {
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -47,6 +48,7 @@ class SampleBuildFileResourceImpl @Autowired constructor(private val archiveFile
         targetPath: String
     ): Result<Count> {
         val count = archiveFileService.acrossProjectCopy(
+            userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
             path = path,
