@@ -179,7 +179,7 @@ class UpdateStateForStageCmdFinally(
                     BuildStatus.QUALITY_CHECK_PASS -> {
                         qualityCheckOutPass(commandContext)
                     }
-                    BuildStatus.REVIEWING -> {
+                    BuildStatus.QUALITY_CHECK_WAIT -> {
                         // #5246 如果设置了把关人则卡在运行状态等待审核
                         qualityCheckOutNeedReview(commandContext)
                         needBreak = true
@@ -198,7 +198,7 @@ class UpdateStateForStageCmdFinally(
     ) {
         LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
             "|STAGE_QUALITY_CHECK_OUT_REVIEWING|${commandContext.event.stageId}")
-        commandContext.stage.checkOut?.status = BuildStatus.REVIEWING.name
+        commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_WAIT.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
