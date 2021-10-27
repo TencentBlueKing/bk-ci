@@ -702,7 +702,7 @@ class BkRepoClient constructor(
         logger.info("getFileDownloadUrl, param: $param")
         val repoName = if (param.custom) "custom" else "pipeline"
         val files = matchBkRepoFile(
-            userId = "",
+            userId = param.userId,
             srcPath = param.regexPath,
             projectId = param.projectId,
             pipelineId = param.pipelineId,

@@ -61,29 +61,36 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0L, 1, -1, result.second, result.first))
     }
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
         checkParam(projectId, path)
-        return Result(bkRepoService.check(projectId, artifactoryType, path))
+        return Result(bkRepoService.check(userId, projectId, artifactoryType, path))
     }
 
     override fun setProperties(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         properties: Map<String, String>
     ): Result<Boolean> {
         checkParam(projectId, path)
-        bkRepoService.setProperties(projectId, artifactoryType, path, properties)
+        bkRepoService.setProperties(userId, projectId, artifactoryType, path, properties)
         return Result(true)
     }
 
     override fun getProperties(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<List<Property>> {
         checkParam(projectId, path)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun getPropertiesByRegex(
@@ -140,6 +147,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun getFileDownloadUrl(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -147,6 +155,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<String>> {
         val param = ArtifactorySearchParam(
+            userId,
             projectId,
             pipelineId,
             buildId,
@@ -173,6 +182,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -180,7 +190,9 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        return Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        return Result(
+            bkRepoService.acrossProjectCopy(userId, projectId, artifactoryType, path, targetProjectId, targetPath)
+        )
     }
 
     override fun checkRepoGray(projectId: String): Result<Boolean> {

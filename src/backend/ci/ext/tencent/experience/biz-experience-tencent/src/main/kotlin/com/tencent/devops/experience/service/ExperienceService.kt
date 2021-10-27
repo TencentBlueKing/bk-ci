@@ -339,7 +339,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
     ): Long {
         val fileDetail =
-            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
+            client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
             logger.error(

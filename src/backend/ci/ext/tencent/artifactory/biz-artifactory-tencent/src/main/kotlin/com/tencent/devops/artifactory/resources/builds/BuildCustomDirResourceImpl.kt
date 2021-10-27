@@ -42,36 +42,36 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildCustomDirResourceImpl @Autowired constructor(
     private val bkRepoBuildCustomDirService: BkRepoBuildCustomDirService
 ) : BuildCustomDirResource {
-    override fun list(projectId: String, path: String): List<FileInfo> {
+    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
         if (path.contains(".")) {
             throw RuntimeException("please confirm the param is directory...")
         }
-        return bkRepoBuildCustomDirService.list(projectId, path)
+        return bkRepoBuildCustomDirService.list(userId, projectId, path)
     }
 
-    override fun mkdir(projectId: String, path: String): Result<Boolean> {
+    override fun mkdir(userId: String, projectId: String, path: String): Result<Boolean> {
         logger.info("mkdir, projectId: $projectId")
-        bkRepoBuildCustomDirService.mkdir(projectId, path)
+        bkRepoBuildCustomDirService.mkdir(userId, projectId, path)
         return Result(true)
     }
 
-    override fun rename(projectId: String, pathPair: PathPair): Result<Boolean> {
-        bkRepoBuildCustomDirService.rename(projectId, pathPair.srcPath, pathPair.destPath)
+    override fun rename(userId: String, projectId: String, pathPair: PathPair): Result<Boolean> {
+        bkRepoBuildCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
         return Result(true)
     }
 
-    override fun copy(projectId: String, combinationPath: CombinationPath): Result<Boolean> {
-        bkRepoBuildCustomDirService.copy(projectId, combinationPath)
+    override fun copy(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+        bkRepoBuildCustomDirService.copy(userId, projectId, combinationPath)
         return Result(true)
     }
 
-    override fun move(projectId: String, combinationPath: CombinationPath): Result<Boolean> {
-        bkRepoBuildCustomDirService.move(projectId, combinationPath)
+    override fun move(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
+        bkRepoBuildCustomDirService.move(userId, projectId, combinationPath)
         return Result(true)
     }
 
-    override fun delete(projectId: String, pathList: PathList): Result<Boolean> {
-        bkRepoBuildCustomDirService.delete(projectId, pathList)
+    override fun delete(userId: String, projectId: String, pathList: PathList): Result<Boolean> {
+        bkRepoBuildCustomDirService.delete(userId, projectId, pathList)
         return Result(true)
     }
 
