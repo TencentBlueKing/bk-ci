@@ -201,7 +201,7 @@ class PipelineBuildFacadeService(
             if (lastTimeBuildInfo != null) {
                 val latestParamsStr = buildStartupParamService.getParam(lastTimeBuildInfo.buildId)
                 // 为空的时候不处理
-                if (latestParamsStr != null) {
+                if (!latestParamsStr.isNullOrBlank()) {
                     val latestParams =
                         JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
                     triggerContainer.params.forEach { param ->
