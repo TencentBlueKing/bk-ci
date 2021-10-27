@@ -38,7 +38,7 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.script.ShellUtil
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -48,6 +48,7 @@ import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
+import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -351,9 +352,11 @@ abstract class AbstractDockerHostBuildService constructor(
         // 出现错误也不影响执行
         try {
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
-            ShellUtil.executeEnhance(
-                "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
-                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath} '"
+            CommandLineUtils.execute(
+                command = "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
+                        "'rsync --stats -ah --ignore-errors --delete $upperDir/* ${dockerHostConfig.bazelLowerPath} '",
+                workspace = File(dockerHostConfig.bazelLowerPath!!),
+                print2Logger = true
             )
         } catch (e: Throwable) {
             logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")
