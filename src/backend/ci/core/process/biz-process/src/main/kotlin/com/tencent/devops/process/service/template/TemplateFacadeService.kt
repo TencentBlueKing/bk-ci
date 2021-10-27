@@ -1830,7 +1830,7 @@ class TemplateFacadeService @Autowired constructor(
         pageSize: Int?,
         searchKey: String?,
         sortType: TemplateSortTypeEnum?,
-        desc: Boolean? = true
+        desc: Boolean?
     ): TemplateInstancePage {
         logger.info("LIST_TEMPLATE[$projectId|$userId|$templateId|$page|$pageSize]|$searchKey")
 
@@ -1842,7 +1842,9 @@ class TemplateFacadeService @Autowired constructor(
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                 page = page,
                 pageSize = pageSize,
-                searchKey = searchKey
+                searchKey = searchKey,
+                sortType = sortType,
+                desc = desc
             )
         val associatePipelines = instancePage.records
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
@@ -1887,16 +1889,10 @@ class TemplateFacadeService @Autowired constructor(
                 TemplateSortTypeEnum.PIPELINE_NAME -> {
                     a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
                 }
-                TemplateSortTypeEnum.VERSION -> {
-                    b.version.compareTo(a.version)
-                }
-                TemplateSortTypeEnum.UPDATE_TIME -> {
-                    b.updateTime.compareTo(a.updateTime)
-                }
                 TemplateSortTypeEnum.STATUS -> {
                     b.status.name.compareTo(a.status.name)
                 }
-                else -> a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
+                else -> return@Comparator
             }
         })
 
