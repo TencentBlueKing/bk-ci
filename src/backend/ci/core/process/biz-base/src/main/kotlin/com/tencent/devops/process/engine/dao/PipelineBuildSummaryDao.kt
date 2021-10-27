@@ -117,17 +117,20 @@ class PipelineBuildSummaryDao {
     fun updateBuildNum(
         dslContext: DSLContext,
         pipelineId: String,
-        buildNum: Int = 0
+        buildNum: Int = 0,
+        buildNumAlias: String? = null
     ): Int {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
             if (buildNum == 0) {
                 dslContext.update(this)
                     .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
             } else {
                 dslContext.update(this)
                     .set(BUILD_NUM, buildNum)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
             }
         }
@@ -136,18 +139,6 @@ class PipelineBuildSummaryDao {
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun updateBuildNumAlias(
-        dslContext: DSLContext,
-        pipelineId: String,
-        buildNumAlias: String
-    ) {
-        with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.update(this)
-                .set(BUILD_NUM_ALIAS, buildNumAlias)
-                .where(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 
