@@ -154,7 +154,7 @@ class ExperienceDownloadService @Autowired constructor(
 
         val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
         if (!client.get(ServiceArtifactoryResource::class)
-                .check(experienceRecord.projectId, artifactoryType, experienceRecord.artifactoryPath).data!!
+                .check(userId, experienceRecord.projectId, artifactoryType, experienceRecord.artifactoryPath).data!!
         ) {
             throw ErrorCodeException(
                 statusCode = 404,
@@ -198,7 +198,7 @@ class ExperienceDownloadService @Autowired constructor(
         checkIfExpired(experienceRecord)
 
         val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
