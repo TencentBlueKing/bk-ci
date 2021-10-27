@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.api
 
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -52,6 +53,9 @@ interface SampleBuildFileResource {
     @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
     @GET
     fun acrossProjectCopy(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String,

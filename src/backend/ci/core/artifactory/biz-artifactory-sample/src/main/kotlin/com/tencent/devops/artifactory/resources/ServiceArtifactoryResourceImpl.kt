@@ -52,9 +52,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
-        val fileDetail =
-            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
+        val fileDetail = archiveFileService.show(userId, projectId, artifactoryType, path)
         return Result(fileDetail.name.isNotBlank())
     }
 
@@ -90,7 +94,10 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         val urls = archiveFileService.getFileDownloadUrls(
-            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
+            userId = userId,
+            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
+            filePath = path,
+            artifactoryType = artifactoryType
         )
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }

@@ -44,11 +44,12 @@ class BuildFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : BuildFileResource {
 
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
-        archiveFileService.downloadFile(filePath, response)
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+        archiveFileService.downloadFile(userId, filePath, response)
     }
 
     override fun archiveFile(
+        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -58,7 +59,7 @@ class BuildFileResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String?> {
         val url = archiveFileService.archiveFile(
-            userId = "",
+            userId = userId,
             projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -72,6 +73,7 @@ class BuildFileResourceImpl @Autowired constructor(
     }
 
     override fun downloadArchiveFile(
+        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -80,7 +82,7 @@ class BuildFileResourceImpl @Autowired constructor(
         response: HttpServletResponse
     ) {
         return archiveFileService.downloadArchiveFile(
-            userId = "",
+            userId = userId,
             projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -91,6 +93,7 @@ class BuildFileResourceImpl @Autowired constructor(
     }
 
     override fun getFileDownloadUrls(
+        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -98,7 +101,7 @@ class BuildFileResourceImpl @Autowired constructor(
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
         val urls = archiveFileService.getFileDownloadUrls(
-            userId = "",
+            userId = userId,
             projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
