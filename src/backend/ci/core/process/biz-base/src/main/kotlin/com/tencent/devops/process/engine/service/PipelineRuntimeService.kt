@@ -101,6 +101,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -187,6 +188,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
@@ -1755,18 +1757,26 @@ class PipelineRuntimeService @Autowired constructor(
     fun startLatestRunningBuild(latestRunningBuild: LatestRunningBuild, retry: Boolean) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
+            val startTime = LocalDateTime.now()
             buildDetailDao.updateStatus(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 buildStatus = BuildStatus.RUNNING,
-                startTime = LocalDateTime.now()
+                startTime = startTime
             )
             pipelineBuildDao.startBuild(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
+                startTime = startTime,
                 retry = retry
+            )
+            pipelineInfoDao.updateLatestStartTime(
+                dslContext = transactionContext,
+                projectId = latestRunningBuild.projectId,
+                pipelineId = latestRunningBuild.pipelineId,
+                startTime = startTime,
             )
             pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }

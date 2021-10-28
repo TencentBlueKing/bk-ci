@@ -599,6 +599,20 @@ class PipelineInfoDao {
         } while (fetchSize == 1000)
     }
 
+    fun updateLatestStartTime(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        startTime: LocalDateTime
+    ) {
+        with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(LATEST_START_TIME, startTime)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
     }
