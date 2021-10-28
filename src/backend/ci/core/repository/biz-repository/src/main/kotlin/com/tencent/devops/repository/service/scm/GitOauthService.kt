@@ -174,8 +174,9 @@ class GitOauthService @Autowired constructor(
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
-        val userId = authParams["userId"] as String
+        var userId = authParams["userId"] as String
         val token = gitService.getToken(userId, code)
+        userId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
         saveAccessToken(userId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
