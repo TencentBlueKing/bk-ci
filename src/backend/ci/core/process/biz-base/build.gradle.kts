@@ -42,7 +42,7 @@ dependencies {
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")
     api("mysql:mysql-connector-java")
-    api("org.apache.shardingsphere:sharding-jdbc-core:${Versions.ShardingJdbc}")
+    api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingJdbc}")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

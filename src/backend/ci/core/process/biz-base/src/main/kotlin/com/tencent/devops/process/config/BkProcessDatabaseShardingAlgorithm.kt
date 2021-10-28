@@ -31,10 +31,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue
+import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue
+import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue
+import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm
 
-class BkProcessDatabaseShardingAlgorithm : PreciseShardingAlgorithm<String> {
+class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
 
     override fun doSharding(
         availableTargetNames: MutableCollection<String>,
@@ -55,9 +56,22 @@ class BkProcessDatabaseShardingAlgorithm : PreciseShardingAlgorithm<String> {
             }
         }
         if (routingRule == null || !availableTargetNames.contains(routingRule)) {
-           // 没有配置路由规则则路由到ds_0
+            // 没有配置路由规则则路由到ds_0
             return "ds_0"
         }
         return routingRule
     }
+
+    override fun doSharding(
+        availableTargetNames: MutableCollection<String>,
+        shardingValue: RangeShardingValue<String>
+    ): MutableCollection<String> {
+        return availableTargetNames
+    }
+
+    override fun getType(): String? {
+        return null
+    }
+
+    override fun init() = Unit
 }

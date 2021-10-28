@@ -218,14 +218,6 @@ class PipelineSettingDao {
         }
     }
 
-    fun getSetting(dslContext: DSLContext, pipelineIds: Collection<String>): Result<TPipelineSettingRecord> {
-        with(TPipelineSetting.T_PIPELINE_SETTING) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
-    }
-
     fun getSetting(
         dslContext: DSLContext,
         projectId: String,

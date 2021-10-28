@@ -107,13 +107,17 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
-        batchSetVariable(dslContext = commonDslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
-        )
+    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+        commonDslContext.transaction { t ->
+            val context = DSL.using(t)
+            batchSetVariable(dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+            )
+        }
+    }
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
@@ -200,24 +204,21 @@ class BuildVariableService @Autowired constructor(
                     updateBuildParameters.add(it)
                 }
             }
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                watch.start("batchSave")
-                pipelineBuildVarDao.batchSave(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = insertBuildParameters
-                )
-                watch.start("batchUpdate")
-                pipelineBuildVarDao.batchUpdate(
-                    dslContext = context,
-                    projectId = projectId,
-                    buildId = buildId,
-                    variables = updateBuildParameters
-                )
-            }
+            watch.start("batchSave")
+            pipelineBuildVarDao.batchSave(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = insertBuildParameters
+            )
+            watch.start("batchUpdate")
+            pipelineBuildVarDao.batchUpdate(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                variables = updateBuildParameters
+            )
         } finally {
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)

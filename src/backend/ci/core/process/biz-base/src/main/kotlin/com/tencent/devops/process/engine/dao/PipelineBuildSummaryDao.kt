@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
-import com.tencent.devops.model.process.Tables.T_PIPELINE_SETTING
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -46,10 +45,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
-import org.jooq.Record
-import org.jooq.Record1
 import org.jooq.Result
-import org.jooq.SelectOnConditionStep
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
@@ -172,7 +168,7 @@ class PipelineBuildSummaryDao {
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag
         )
-        return getPipelineInfoBuildSummaryCountBaseQuery(dslContext, favorPipelines, authPipelines)
+        return dslContext.selectCount().from(T_PIPELINE_INFO)
             .where(conditions)
             .fetchOne(0, Long::class.java)!!
     }
@@ -191,7 +187,7 @@ class PipelineBuildSummaryDao {
         page: Int? = null,
         pageSize: Int? = null,
         offsetNum: Int? = 0
-    ): Result<out Record> {
+    ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
             channelCode = channelCode,
@@ -374,7 +370,7 @@ class PipelineBuildSummaryDao {
         channelCodes: Set<ChannelCode>?,
         limit: Int?,
         offset: Int?
-    ): Result<out Record> {
+    ): Result<TPipelineInfoRecord> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         if (projectIds != null && projectIds.isNotEmpty()) {
@@ -383,7 +379,7 @@ class PipelineBuildSummaryDao {
         if (channelCodes != null && channelCodes.isNotEmpty()) {
             conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
         }
-        val where = getPipelineInfoBuildSummaryBaseQuery(dslContext).where(conditions)
+        val where = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
         if (limit != null && limit >= 0) {
             where.limit(limit)
         }
@@ -400,7 +396,7 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         channelCodes: Set<ChannelCode>?,
         pipelineIds: Collection<String>
-    ): Result<out Record> {
+    ): Result<TPipelineInfoRecord> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
         conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
@@ -425,8 +421,8 @@ class PipelineBuildSummaryDao {
         page: Int? = null,
         pageSize: Int? = null,
         offsetNum: Int? = 0
-    ): Result<out Record> {
-        val baseStep = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions)
+    ): Result<TPipelineInfoRecord> {
+        val baseStep = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
@@ -439,7 +435,7 @@ class PipelineBuildSummaryDao {
                     T_PIPELINE_INFO.UPDATE_TIME.desc()
                 }
                 PipelineSortType.LAST_EXEC_TIME -> {
-                    T_PIPELINE_BUILD_SUMMARY.LATEST_START_TIME.desc()
+                    T_PIPELINE_INFO.LATEST_START_TIME.desc()
                 }
             }
             baseStep.orderBy(sortTypeField)
@@ -449,65 +445,6 @@ class PipelineBuildSummaryDao {
         } else {
             baseStep.fetch()
         }
-    }
-
-    /**
-     * 获取PipelineInfo与BuildSummary Join后的表
-     */
-    fun getPipelineInfoBuildSummaryBaseQuery(
-        dslContext: DSLContext,
-        favorPipelines: List<String> = emptyList(),
-        authPipelines: List<String> = emptyList()
-    ): SelectOnConditionStep<Record> {
-        return dslContext.select(
-            T_PIPELINE_INFO.PIPELINE_ID,
-            T_PIPELINE_INFO.PROJECT_ID,
-            T_PIPELINE_INFO.VERSION,
-            T_PIPELINE_INFO.PIPELINE_NAME,
-            T_PIPELINE_INFO.CREATE_TIME,
-            T_PIPELINE_INFO.UPDATE_TIME,
-            T_PIPELINE_INFO.CHANNEL,
-            T_PIPELINE_INFO.CREATOR,
-            T_PIPELINE_INFO.MANUAL_STARTUP,
-            T_PIPELINE_INFO.ELEMENT_SKIP,
-            T_PIPELINE_INFO.TASK_COUNT,
-            T_PIPELINE_INFO.PIPELINE_NAME_PINYIN,
-            T_PIPELINE_SETTING.DESC,
-            T_PIPELINE_SETTING.RUN_LOCK_TYPE,
-            T_PIPELINE_BUILD_SUMMARY.BUILD_NUM,
-            T_PIPELINE_BUILD_SUMMARY.BUILD_NUM_ALIAS,
-            T_PIPELINE_BUILD_SUMMARY.BUILD_NO,
-            T_PIPELINE_BUILD_SUMMARY.FINISH_COUNT,
-            T_PIPELINE_BUILD_SUMMARY.RUNNING_COUNT,
-            T_PIPELINE_BUILD_SUMMARY.QUEUE_COUNT,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_BUILD_ID,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_TASK_COUNT,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_START_USER,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_START_TIME,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_END_TIME,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_TASK_NAME,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_STATUS
-        )
-            .from(T_PIPELINE_INFO)
-            .innerJoin(T_PIPELINE_SETTING)
-            .on(T_PIPELINE_INFO.PIPELINE_ID.eq(T_PIPELINE_SETTING.PIPELINE_ID))
-            .innerJoin(T_PIPELINE_BUILD_SUMMARY)
-            .on(T_PIPELINE_SETTING.PIPELINE_ID.eq(T_PIPELINE_BUILD_SUMMARY.PIPELINE_ID))
-    }
-
-    fun getPipelineInfoBuildSummaryCountBaseQuery(
-        dslContext: DSLContext,
-        favorPipelines: List<String> = emptyList(),
-        authPipelines: List<String> = emptyList()
-    ): SelectOnConditionStep<Record1<Int>> {
-        return dslContext.selectCount()
-            .from(T_PIPELINE_INFO)
-            .innerJoin(
-                T_PIPELINE_SETTING
-                    .innerJoin(
-                        T_PIPELINE_BUILD_SUMMARY
-                    ).on(T_PIPELINE_SETTING.PIPELINE_ID.eq(T_PIPELINE_BUILD_SUMMARY.PIPELINE_ID))
-            ).on(T_PIPELINE_INFO.PIPELINE_ID.eq(T_PIPELINE_SETTING.PIPELINE_ID))
     }
 
     /**
@@ -644,6 +581,21 @@ class PipelineBuildSummaryDao {
             }
             update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun listSummaryByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Collection<String>,
+        projectId: String? = null
+    ): Result<TPipelineBuildSummaryRecord> {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
