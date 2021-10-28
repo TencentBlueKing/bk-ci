@@ -74,13 +74,6 @@ class TemplateService @Autowired constructor(
         val versionName: String
 
         when {
-            latestTemplate.type == TemplateType.CONSTRAINT.name -> { // 如果是强制模式，则查找父模板
-                logger.info("template[$templateId] is from store, srcTemplateId is ${latestTemplate.srcTemplateId}")
-                val rootTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
-                rootTemplateId = rootTemplate.id
-                templateVersion = rootTemplate.version
-                versionName = rootTemplate.versionName
-            }
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
                 versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
