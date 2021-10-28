@@ -34,6 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("灰度项目列表查询响应实体")
 data class OpGrayProject(
     @JsonProperty(value = "projectCodeList", required = true)
-    @ApiModelProperty("项目编码集合")
+    @ApiModelProperty("项目编码集合", name = "projectCodeList")
     val projectCodeList: List<String>
 )

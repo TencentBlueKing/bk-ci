@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 
@@ -38,20 +37,24 @@ data class DockerHostBuildInfo(
     val buildId: String,
     val vmSeqId: Int,
     val secretKey: String,
-    val status: Int,
+    @Deprecated("待废除")
+    val status: Int? = 0,
     val imageName: String,
     val containerId: String,
-    @JsonProperty("wsInHost")
-    val wsInHost: Boolean,
+    @Deprecated("待废除")
+    val wsInHost: Boolean? = true,
     val poolNo: Int,
     val registryUser: String?,
     val registryPwd: String?,
     val imageType: String?,
-    val imagePublicFlag: Boolean?,
-    val imageRDType: String?,
+    @Deprecated("待废除")
+    val imagePublicFlag: Boolean? = false,
+    @Deprecated("待废除")
+    val imageRDType: String? = "THIRD_PARTY",
     val containerHashId: String?,
     val customBuildEnv: Map<String, String>? = null,
     val buildType: BuildType = BuildType.DOCKER,
+    val qpcUniquePath: String? = null,
     val dockerResource: DockerResourceOptionsVO = DockerResourceOptionsVO(
         memoryLimitBytes = 34359738368L,
         cpuPeriod = 10000,

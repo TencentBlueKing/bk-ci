@@ -76,7 +76,7 @@ class AppBuildService @Autowired constructor(
         val packageVersion = StringBuilder()
         files?.records?.forEach {
             val singlePackageVersion =
-                client.get(ServiceArtifactoryResource::class).show(projectId, it.artifactoryType, it.path)
+                client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
                     .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }

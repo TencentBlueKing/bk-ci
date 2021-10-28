@@ -189,11 +189,16 @@
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
                     try {
-                        let result = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime).match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
-                        if (result.indexOf('分') > 0) {
-                            result += '钟'
+                        const timeLocaleString = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime)
+                        if (window.pipelineVue.$i18n && window.pipelineVue.$i18n.locale === 'en-US') {
+                            return timeLocaleString
+                        } else {
+                            let result = timeLocaleString.match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
+                            if (result.indexOf('分') > 0) {
+                                result += '钟'
+                            }
+                            return `${result}前`
                         }
-                        return `${result}前`
                     } catch (err) {
                         return '---'
                     }

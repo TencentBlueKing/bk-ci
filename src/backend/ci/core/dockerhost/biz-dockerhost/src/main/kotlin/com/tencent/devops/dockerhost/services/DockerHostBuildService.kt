@@ -75,7 +75,6 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Suppress("ALL")
 @Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
@@ -195,21 +194,31 @@ class DockerHostBuildService(
 
             val containerName =
                 "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val hostConfig = HostConfig()
+                .withCapAdd(Capability.SYS_PTRACE)
+                .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
+                .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
+                .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
+                .withBinds(binds)
+                .withNetworkMode("bridge")
+
+            // 挂载构建缓存
+            mountOverlayfs(
+                pipelineId = dockerBuildInfo.pipelineId,
+                vmSeqId = dockerBuildInfo.vmSeqId,
+                poolNo = dockerBuildInfo.poolNo,
+                qpcUniquePath = dockerBuildInfo.qpcUniquePath,
+                hostConfig = hostConfig
+            )
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig()
-                    .withCapAdd(Capability.SYS_PTRACE)
-                    .withMemory(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withMemorySwap(dockerBuildInfo.dockerResource.memoryLimitBytes)
-                    .withCpuQuota(dockerBuildInfo.dockerResource.cpuQuota.toLong())
-                    .withCpuPeriod(dockerBuildInfo.dockerResource.cpuPeriod.toLong())
-/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
-                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
-                    .withBinds(binds)
-                    .withNetworkMode("bridge"))
+                .withHostConfig(hostConfig)
                 .exec()
 
             logger.info("Created container $container")
@@ -335,6 +344,18 @@ class DockerHostBuildService(
                 )
             }
 
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                poolNo = dockerRunParam.poolNo!!.toInt()
+            )?.data
+
+            var qpcUniquePath = ""
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                qpcUniquePath = qpcGitProjectList.first()
+            }
+
             val dockerBuildInfo = DockerHostBuildInfo(
                 projectId = projectId,
                 agentId = "",
@@ -352,7 +373,8 @@ class DockerHostBuildService(
                 imageType = ImageType.THIRD.type,
                 imagePublicFlag = false,
                 imageRDType = null,
-                containerHashId = ""
+                containerHashId = "",
+                qpcUniquePath = qpcUniquePath
             )
             // docker run
             val env = mutableListOf<String>()
@@ -415,6 +437,7 @@ class DockerHostBuildService(
                     .withPortBindings(portBindings)
             }
 
+            mountOverlayfs(pipelineId, vmSeqId.toInt(), dockerRunParam.poolNo!!.toInt(), qpcUniquePath, hostConfig)
             val createContainerCmd = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withEnv(env)

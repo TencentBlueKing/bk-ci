@@ -30,13 +30,11 @@ package com.tencent.devops.dispatch.docker.controller
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
@@ -48,11 +46,13 @@ import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -71,6 +71,9 @@ class UserDockerHostResourceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerHostResourceImpl::class.java)
     }
+
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
@@ -162,22 +165,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
             poolNo = 1
         }
 
-        with(debugStartParam) {
-            dockerHostDebugService.startDebug(
-                dockerIp = dockerIp,
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo,
-                imageCode = imageCode,
-                imageVersion = imageVersion,
-                imageName = imageName,
-                buildEnv = buildEnv,
-                imageType = ImageType.getType(imageType),
-                credentialId = credentialId
-            )
-        }
+        dockerHostDebugService.startDebug(
+            dockerIp = dockerIp,
+            userId = userId,
+            poolNo = poolNo,
+            debugStartParam = debugStartParam
+        )
 
         return Result(true)
     }
@@ -206,19 +199,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String
     ): Result<ContainerInfo>? {
-        checkParam(userId, projectId, pipelineId, vmSeqId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("BuildId参数非法")
-        }
-        if (!bkAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = AuthPermission.VIEW)) {
-            throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)详情")
-        }
+        checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         return dockerHostBuildService.getContainerInfo(buildId, vmSeqId.toInt())
     }
@@ -230,6 +211,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun cleanIp(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean>? {
         checkParam(userId, projectId, pipelineId, vmSeqId)
         return dockerHostDebugService.cleanIp(projectId, pipelineId, vmSeqId)
+    }
+
+    override fun getDockerHostLoad(userId: String): Result<DockerHostLoad> {
+        return Result(dockerHostBuildService.getDockerHostLoad(userId))
     }
 
     fun checkParam(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
@@ -250,14 +235,16 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        validPipelinePermission(
-            userId = userId,
-            authResourceType = AuthResourceType.PIPELINE_DEFAULT,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
-        )
+        if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
+            validPipelinePermission(
+                userId = userId,
+                authResourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT,
+                message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+            )
+        }
     }
 
     private fun validPipelinePermission(

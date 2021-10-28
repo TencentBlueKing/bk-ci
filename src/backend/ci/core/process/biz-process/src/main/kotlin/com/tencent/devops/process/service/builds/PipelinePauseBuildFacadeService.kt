@@ -155,6 +155,17 @@ class PipelinePauseBuildFacadeService(
         val newInputData = ParameterUtils.getElementInput(newElement)
 
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: return isDiff
+
+        if (newInputData!!.toString() != oldInputData.toString()) {
+            logger.info("pause continue value diff,new| $newInputData, old|$oldInputData")
+            isDiff = true
+        }
+
+        if (newInputData!!.keys != oldInputData.keys) {
+            logger.info("pause continue keys diff,new| ${newInputData.keys}, old|${oldInputData.keys}")
+            isDiff = true
+        }
+
         newInputData?.keys?.forEach {
             val oldData = oldInputData[it]
             val newData = newInputData[it]

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -73,6 +74,7 @@ interface BuildCredentialResource {
         credentialId: String,
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
+        @BkField(required = true)
         publicKey: String
     ): Result<CredentialInfo?>
 

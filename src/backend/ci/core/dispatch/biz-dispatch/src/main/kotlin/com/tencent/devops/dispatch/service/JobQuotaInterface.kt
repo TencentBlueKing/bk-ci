@@ -25,16 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command
+package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 
-/**
- * 命令上下文基础类
- */
-open class CmdContext(
-    open var cmdFlowSeq: Int,
-    open val executeCount: Int = 1,
-    open val variables: Map<String, String>,
-    open val watcher: Watcher
-)
+interface JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
+}

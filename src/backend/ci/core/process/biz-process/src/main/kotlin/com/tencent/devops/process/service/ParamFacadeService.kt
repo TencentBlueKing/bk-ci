@@ -194,6 +194,7 @@ class ParamFacadeService @Autowired constructor(
             }
 
             val listResult = client.get(ServiceArtifactoryResource::class).searchCustomFiles(
+                userId ?: "",
                 projectId,
                 CustomFileSearchCondition(
                     property.glob,

@@ -31,6 +31,7 @@ import java.io.File
 
 interface FileService {
     fun downloadFileTolocal(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,

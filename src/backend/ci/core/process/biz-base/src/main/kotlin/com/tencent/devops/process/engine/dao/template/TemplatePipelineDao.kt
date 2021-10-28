@@ -38,6 +38,7 @@ import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -145,6 +146,21 @@ class TemplatePipelineDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
+                .fetch()
+        }
+    }
+
+    fun listByPipelinesId(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
+    ): Result<out Record> {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.select(PIPELINE_ID.`as`("pipelineId"), TEMPLATE_ID.`as`("templateId"))
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .and(INSTANCE_TYPE.eq(instanceType))
+                .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
                 .fetch()
         }
     }

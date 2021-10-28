@@ -2,7 +2,7 @@
     <div v-bk-clickoutside="toggleCrumbList" :class="{ 'bread-crumb-item': true, 'active': isActive, 'disabled': !to && hasRecords }">
         <slot>
             <i v-if="icon" :class="`devops-icon icon-${icon} bread-crumb-item-icon`" />
-            <span @click="handleNameClick" :title="activeName" :disabled="!to" class="bread-crumb-name">{{selectedValue}}</span>
+            <span @click="handleNameClick" :title="selectedValue" :disabled="!to" class="bread-crumb-name">{{selectedValue}}</span>
         </slot>
         <span @click.stop="breadCrumbItemClick" :class="{ 'devops-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"></span>
         <template v-if="hasRecords">

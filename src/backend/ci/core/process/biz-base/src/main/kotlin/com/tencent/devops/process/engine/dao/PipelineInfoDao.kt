@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -46,7 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
 class PipelineInfoDao {
 
@@ -77,7 +76,9 @@ class PipelineInfoDao {
                 CREATOR,
                 LAST_MODIFY_USER,
                 MANUAL_STARTUP,
-                ELEMENT_SKIP, TASK_COUNT
+                ELEMENT_SKIP,
+                TASK_COUNT,
+                PIPELINE_NAME_PINYIN
             )
                 .values(
                     pipelineId,
@@ -90,7 +91,8 @@ class PipelineInfoDao {
                     channelCode.name, userId, userId,
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
-                    taskCount
+                    taskCount,
+                    nameToPinyin(pipelineName)
                 )
                 .execute()
         }
@@ -108,7 +110,6 @@ class PipelineInfoDao {
         pipelineDesc: String? = null,
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
-        buildNo: BuildNo? = null,
         taskCount: Int = 0,
         latestVersion: Int = 0
     ): Int {
@@ -122,6 +123,7 @@ class PipelineInfoDao {
 
             if (!pipelineName.isNullOrBlank()) {
                 update.set(PIPELINE_NAME, pipelineName)
+                update.set(PIPELINE_NAME_PINYIN, nameToPinyin(pipelineName))
             }
             if (!pipelineDesc.isNullOrBlank()) {
                 update.set(PIPELINE_DESC, pipelineDesc)
@@ -293,6 +295,28 @@ class PipelineInfoDao {
         }
     }
 
+    /**
+     * 查找updateTime之前被删除的流水线
+     */
+    @Suppress("ComplexCondition", "unused")
+    fun listDeletePipelineBefore(
+        dslContext: DSLContext,
+        updateTime: LocalDateTime,
+        offset: Int?,
+        limit: Int?
+    ): Result<TPipelineInfoRecord>? {
+        with(T_PIPELINE_INFO) {
+            val baseQuery = dslContext.selectFrom(this)
+                .where(DELETE.eq(true))
+                .and(UPDATE_TIME.le(updateTime))
+            return if (offset != null && offset >= 0 && limit != null && limit >= 0) {
+                baseQuery.limit(offset, limit).fetch()
+            } else {
+                baseQuery.fetch()
+            }
+        }
+    }
+
     fun isNameExist(dslContext: DSLContext, projectId: String, pipelineName: String, channelCode: ChannelCode) =
         isNameExist(dslContext, projectId, pipelineName, channelCode, null)
 
@@ -344,7 +368,7 @@ class PipelineInfoDao {
         days: Long? = null // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
-            val query = if (!projectId.isNullOrBlank()) {
+            val query = if (!projectId.isBlank()) {
                 dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
             } else {
@@ -554,6 +578,7 @@ class PipelineInfoDao {
         }
     }
 
+    @Suppress("MagicNumber")
     fun batchUpdatePipelineNamePinYin(dslContext: DSLContext) {
         val limit = 1000
         var offset = 0
@@ -579,7 +604,7 @@ class PipelineInfoDao {
     }
 
     private fun nameToPinyin(pipelineName: String): String {
-        // 数据库字段长度1300
-        return PinyinUtil.toPinyin(pipelineName).take(1300)
+        val fieldLength = T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.dataType.length()
+        return PinyinUtil.toPinyin(pipelineName).take(fieldLength)
     }
 }

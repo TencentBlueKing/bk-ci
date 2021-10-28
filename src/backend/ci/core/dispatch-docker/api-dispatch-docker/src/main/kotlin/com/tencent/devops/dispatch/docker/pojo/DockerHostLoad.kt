@@ -23,21 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class BKPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
-    }
-}
+@ApiModel("DockerHostLoad")
+data class DockerHostLoad(
+    val clusterLoad: Map<String, Load>
+)
+
+@ApiModel("DockerHostLoad")
+data class Load(
+    @ApiModelProperty("构建机已使用量")
+    val usedNum: Int,
+    @ApiModelProperty("构建机CPU负载")
+    val averageCpuLoad: Int,
+    @ApiModelProperty("构建机内存负载")
+    val averageMemLoad: Int,
+    @ApiModelProperty("构建机硬盘负载")
+    val averageDiskLoad: Int,
+    @ApiModelProperty("构建机硬盘IO负载")
+    val averageDiskIOLoad: Int,
+    @ApiModelProperty("集群节点数量")
+    val totalNode: Int,
+    @ApiModelProperty("集群可用节点数量")
+    val enableNode: Int
+)

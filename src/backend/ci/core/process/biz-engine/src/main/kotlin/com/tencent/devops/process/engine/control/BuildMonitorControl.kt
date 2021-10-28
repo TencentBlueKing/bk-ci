@@ -54,7 +54,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -109,9 +109,10 @@ class BuildMonitorControl @Autowired constructor(
 
         val minInterval = min(jobMinInt, stageMinInt)
 
-        if (minInterval > 0 && jobMinInt < Timeout.CONTAINER_MAX_MILLS && stageMinInt < Timeout.STAGE_MAX_MILLS) {
+        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS, Timeout.STAGE_MAX_MILLS)) {
             LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
                 "stageMinInt=$stageMinInt|Interval=$minInterval")
+            // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
             event.delayMills = coerceAtMost10Min(minInterval).toInt()
             pipelineEventDispatcher.dispatch(event)
         } else {
@@ -218,8 +219,7 @@ class BuildMonitorControl @Autowired constructor(
             )
         }
 
-        // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
-        return coerceAtMost10Min(interval)
+        return interval
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
@@ -262,8 +262,7 @@ class BuildMonitorControl @Autowired constructor(
             )
         }
 
-        // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
-        return coerceAtMost10Min(interval)
+        return interval
     }
 
     @Suppress("LongMethod")

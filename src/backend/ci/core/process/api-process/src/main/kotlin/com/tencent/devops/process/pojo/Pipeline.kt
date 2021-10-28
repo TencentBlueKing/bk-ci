@@ -61,7 +61,7 @@ data class Pipeline(
     var latestBuildNum: Int? = null,
     @ApiModelProperty("最后构建任务名称", required = false)
     var latestBuildTaskName: String? = null,
-    @ApiModelProperty("最后任务预计执行时间（秒）", required = false)
+    @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
     @ApiModelProperty("最后构建实例ID", required = false)
     var latestBuildId: String? = null,
