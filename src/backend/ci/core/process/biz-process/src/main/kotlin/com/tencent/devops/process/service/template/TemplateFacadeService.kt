@@ -1027,11 +1027,7 @@ class TemplateFacadeService @Autowired constructor(
             template!!.createdTime.timestampmilli(),
             template!!.creator
         )
-        val model: Model = if (isConstrainedFlag) {
-            objectMapper.readValue(latestTemplate.template)
-        } else {
-            objectMapper.readValue(template!!.template)
-        }
+        val model: Model = objectMapper.readValue(template!!.template)
         model.name = setting.name
         model.desc = setting.desc
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
