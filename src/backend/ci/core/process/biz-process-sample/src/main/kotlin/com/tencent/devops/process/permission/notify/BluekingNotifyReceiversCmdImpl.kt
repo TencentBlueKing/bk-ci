@@ -40,6 +40,8 @@ class BluekingNotifyReceiversCmdImpl : NotifyReceiversCmd() {
                 // 若用户名包含域,取域前的用户名.
                 if (it.contains("@")) {
                     weworkUserSet.add(it.substringBefore("@"))
+                } else {
+                    weworkUserSet.add(it)
                 }
             }
             return weworkUserSet
