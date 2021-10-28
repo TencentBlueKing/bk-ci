@@ -16,9 +16,11 @@ class ApigwAuthValidateResourceV3Impl @Autowired constructor(
 ) : ApigwAuthValidateResourceV3 {
 
     override fun isProjectUser(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
-        group: BkAuthGroup?
+        group: BkAuthGroup?,
     ): Result<Boolean> {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
             token = tokenService.getSystemToken(null)!!,
