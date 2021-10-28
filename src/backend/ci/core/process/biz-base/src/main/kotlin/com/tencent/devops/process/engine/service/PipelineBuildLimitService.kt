@@ -92,15 +92,6 @@ class PipelineBuildLimitService @Autowired constructor(
     }
 
     /**
-     * 刷新redis运行job数据
-     */
-    fun refreshExecuteCount() {
-        val runningCount = pipelineBuildContainerDao.countByStatus(dslContext, BuildStatus.RUNNING.ordinal)
-        logger.info("refreshExecuteCount $runningCount")
-        redisOperation.set(executeJobKey, runningCount.toString())
-    }
-
-    /**
      * job运行数量减1
      */
     fun jobRunningCountLess(buildId: String, containerId: String) {

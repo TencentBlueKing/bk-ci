@@ -72,6 +72,7 @@ class ApigwPipelineGroupResourceV3Impl @Autowired constructor(private val client
         logger.info("Get pipeline groups at groupId:$groupId, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).deleteGroup(
             userId = userId,
+            projectId = projectId,
             groupId = groupId
         )
     }
@@ -80,6 +81,7 @@ class ApigwPipelineGroupResourceV3Impl @Autowired constructor(private val client
         logger.info("Add pipeline label at pipelineLabel:$pipelineLabel, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).addLabel(
             userId = userId,
+            projectId = projectId,
             pipelineLabel = pipelineLabel
         )
     }
@@ -88,6 +90,7 @@ class ApigwPipelineGroupResourceV3Impl @Autowired constructor(private val client
         logger.info("Get pipeline groups at labelId:$labelId, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).deleteLabel(
             userId = userId,
+            projectId = projectId,
             labelId = labelId
         )
     }
@@ -96,6 +99,7 @@ class ApigwPipelineGroupResourceV3Impl @Autowired constructor(private val client
         logger.info("Get pipeline groups at pipelineLabel:$pipelineLabel, userId:$userId")
         return client.get(ServicePipelineGroupResource::class).updateLabel(
             userId = userId,
+            projectId = projectId,
             pipelineLabel = pipelineLabel
         )
     }

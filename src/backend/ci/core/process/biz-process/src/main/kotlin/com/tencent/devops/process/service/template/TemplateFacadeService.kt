@@ -32,9 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -678,63 +676,6 @@ class TemplateFacadeService @Autowired constructor(
             pageSize = null
         ) else null
         return srcTemplateRecords?.associateBy { it["templateId"] as String }
-    }
-
-    fun listTemplateByProjectIds(
-        projectIds: Set<String>,
-        userId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        keywords: String? = null
-    ): Page<TemplateModel> {
-        val projectIdsStr = projectIds.fold("") { s1, s2 -> "$s1:$s2" }
-        logger.info(
-            "listTemplateByProjectIds|$projectIdsStr,$userId,$templateType,$storeFlag,$page,$pageSize,$keywords"
-        )
-        var totalCount = 0
-        val templates = ArrayList<TemplateModel>()
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            totalCount = templateDao.countTemplateByProjectIds(
-                dslContext = context,
-                projectIds = projectIds,
-                includePublicFlag = null,
-                templateType = templateType,
-                templateName = null,
-                storeFlag = storeFlag
-            )
-            val templateRecords = templateDao.listTemplateByProjectIds(
-                dslContext = context,
-                projectIds = projectIds,
-                includePublicFlag = null,
-                templateType = templateType,
-                templateIdList = null,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize
-            )
-            // 接口用做统计，操作者是否有单个模板管理权限无意义，hasManagerPermission统一为false
-            fillResult(
-                context = context,
-                templates = templateRecords,
-                hasManagerPermission = false,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords,
-                result = templates
-            )
-        }
-        return Page(
-            page = PageUtil.getValidPage(page),
-            pageSize = PageUtil.getValidPageSize(pageSize),
-            count = totalCount.toLong(),
-            records = templates
-        )
     }
 
     /**
