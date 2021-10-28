@@ -58,7 +58,7 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         return Result(url)
     }
 
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
-        archiveFileService.downloadFileToLocal(filePath, response)
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+        archiveFileService.downloadFileToLocal(userId, filePath, response)
     }
 }
