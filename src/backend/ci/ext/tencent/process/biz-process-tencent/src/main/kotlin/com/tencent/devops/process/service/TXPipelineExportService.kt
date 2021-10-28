@@ -502,7 +502,8 @@ class TXPipelineExportService @Autowired constructor(
                                 selfHosted = true,
                                 poolName = "### 该环境不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###",
                                 container = null,
-                                agentSelector = listOf(job.baseOS.name.toLowerCase())
+                                agentSelector = listOf(job.baseOS.name.toLowerCase()),
+                                needs = job.buildEnv
                             )
                         }
                         is DockerDispatchType -> {
@@ -519,7 +520,8 @@ class TXPipelineExportService @Autowired constructor(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
-                                agentSelector = null
+                                agentSelector = null,
+                                needs = job.buildEnv
                             )
                         }
                         is PublicDevCloudDispathcType -> {
@@ -536,7 +538,8 @@ class TXPipelineExportService @Autowired constructor(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
-                                agentSelector = null
+                                agentSelector = null,
+                                needs = job.buildEnv
                             )
                         }
                         is MacOSDispatchType -> {
