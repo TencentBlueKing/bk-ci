@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.process.pojo.enums
 
-enum class TemplateSortTypeEnum(val value:String) {
+enum class TemplateSortTypeEnum(val value: String) {
     PIPELINE_NAME("pipelineName"),
     VERSION("version"),
     UPDATE_TIME("updateTime"),
