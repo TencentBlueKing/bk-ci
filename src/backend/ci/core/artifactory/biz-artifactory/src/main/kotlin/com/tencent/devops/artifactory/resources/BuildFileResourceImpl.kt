@@ -33,7 +33,9 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
@@ -41,15 +43,21 @@ import javax.servlet.http.HttpServletResponse
 
 @RestResource@Suppress("ALL")
 class BuildFileResourceImpl @Autowired constructor(
-    private val archiveFileService: ArchiveFileService
+    private val archiveFileService: ArchiveFileService,
+    private val client: Client
 ) : BuildFileResource {
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(
+        projectCode: String,
+        pipelineId: String,
+        filePath: String,
+        response: HttpServletResponse
+    ) {
+        val userId = getLastModifyUser(projectCode, pipelineId)
         archiveFileService.downloadFile(userId, filePath, response)
     }
 
     override fun archiveFile(
-        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -58,6 +66,7 @@ class BuildFileResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
+        val userId = getLastModifyUser(projectCode, pipelineId)
         val url = archiveFileService.archiveFile(
             userId = userId,
             projectId = projectCode,
@@ -73,7 +82,6 @@ class BuildFileResourceImpl @Autowired constructor(
     }
 
     override fun downloadArchiveFile(
-        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -81,6 +89,7 @@ class BuildFileResourceImpl @Autowired constructor(
         customFilePath: String,
         response: HttpServletResponse
     ) {
+        val userId = getLastModifyUser(projectCode, pipelineId)
         return archiveFileService.downloadArchiveFile(
             userId = userId,
             projectId = projectCode,
@@ -93,13 +102,13 @@ class BuildFileResourceImpl @Autowired constructor(
     }
 
     override fun getFileDownloadUrls(
-        userId: String,
         projectCode: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
+        val userId = getLastModifyUser(projectCode, pipelineId)
         val urls = archiveFileService.getFileDownloadUrls(
             userId = userId,
             projectId = projectCode,
@@ -110,5 +119,10 @@ class BuildFileResourceImpl @Autowired constructor(
             fileChannelType = FileChannelTypeEnum.BUILD
         )
         return Result(urls)
+    }
+
+    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+        return client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 }
