@@ -41,8 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class SampleBuildFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService,
     private val client: Client
-) :
-    SampleBuildFileResource {
+) : SampleBuildFileResource {
 
     override fun acrossProjectCopy(
         projectId: String,
