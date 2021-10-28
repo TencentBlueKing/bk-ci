@@ -63,6 +63,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -72,7 +73,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         TODO("not implemented")
     }
 
@@ -113,7 +119,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         TODO("not implemented")
     }
 
