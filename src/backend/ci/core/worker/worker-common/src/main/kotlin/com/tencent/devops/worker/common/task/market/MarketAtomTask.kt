@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
-import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
@@ -192,11 +191,6 @@ open class MarketAtomTask : ITask() {
                     )
                 } else {
                     atomParams[name] = valueStr
-                }
-            }
-            inputTemplate.forEach { (key, value) ->
-                value[KEY_DEFAULT]?.let {
-                    atomParams.getOrPut<String, String>(key) { JsonUtil.toJson(it) }
                 }
             }
         } catch (e: Throwable) {
