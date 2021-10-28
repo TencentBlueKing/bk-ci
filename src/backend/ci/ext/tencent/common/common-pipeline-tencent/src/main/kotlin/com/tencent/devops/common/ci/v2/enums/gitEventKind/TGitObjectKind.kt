@@ -27,11 +27,13 @@
 
 package com.tencent.devops.common.ci.v2.enums.gitEventKind
 
+// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
 enum class TGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
-    MANUAL("manual");
+    MANUAL("manual"),
+    SCHEDULE("schedule");
 
     // 方便Json初始化使用常量保存，需要同步维护
     companion object {
@@ -39,5 +41,6 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_PUSH = "push"
         const val OBJECT_KIND_TAG_PUSH = "tag_push"
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }

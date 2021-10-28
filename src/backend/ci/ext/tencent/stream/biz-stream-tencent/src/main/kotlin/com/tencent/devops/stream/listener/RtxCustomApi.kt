@@ -38,8 +38,12 @@ import com.tencent.devops.stream.pojo.rtxCustom.RtxMarkdownMessage
 import com.tencent.devops.stream.pojo.rtxCustom.RtxTokenResponse
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
 
 object RtxCustomApi {
+
+    private val logger = LoggerFactory.getLogger(RtxCustomApi::class.java)
+
     fun getAccessToken(
         urlPrefix: String?,
         corpId: String?,
@@ -70,6 +74,7 @@ object RtxCustomApi {
         receiverId: String,
         content: String
     ) {
+        logger.info("sendGitCIFinishMessage to $receiverId")
         if (urlPrefix.isNullOrBlank()) {
             throw RuntimeException(
                 "RtxCustomApi send Stream finish message error"

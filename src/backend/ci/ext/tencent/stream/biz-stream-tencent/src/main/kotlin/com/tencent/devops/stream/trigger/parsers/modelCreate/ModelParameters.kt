@@ -29,8 +29,8 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -66,6 +66,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
+@Suppress("ComplexMethod")
 object ModelParameters {
 
     fun createPipelineParams(
@@ -84,7 +85,11 @@ object ModelParameters {
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
         startParams[CommonVariables.CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
-        startParams[CommonVariables.CI_ACTOR] = event.userId
+        startParams[CommonVariables.CI_ACTOR] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+            "system"
+        } else {
+            event.userId
+        }
         startParams[CommonVariables.CI_BRANCH] = event.branch
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commitId
@@ -138,7 +143,11 @@ object ModelParameters {
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
-                startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    TGitObjectKind.SCHEDULE.value
+                } else {
+                    TGitObjectKind.MANUAL.value
+                }
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 GitUtils.getProjectName(gitBasicSetting.gitHttpUrl)
             }

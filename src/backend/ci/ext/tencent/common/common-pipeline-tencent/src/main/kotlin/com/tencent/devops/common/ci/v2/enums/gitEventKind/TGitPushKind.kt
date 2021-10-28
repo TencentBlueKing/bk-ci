@@ -38,7 +38,7 @@ enum class TGitPushOperationKind(val value: String) {
     CREAT("create"),
     DELETE("delete"),
     UPDATE("update"),
-    UPDATE_NONFASTWORD("update_nonfastword")
+    UPDATE_NONFASTFORWORD("update_nonfastforward")
 }
 
 /*

@@ -28,20 +28,13 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 
 interface YamlTriggerInterface<T> {
 
     fun triggerBuild(
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
+        context: StreamTriggerContext
     ): Boolean
 
     fun prepareCIBuildYaml(

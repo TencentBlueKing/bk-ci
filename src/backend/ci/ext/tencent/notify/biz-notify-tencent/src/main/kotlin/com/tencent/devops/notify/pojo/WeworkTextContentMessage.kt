@@ -43,13 +43,13 @@ data class WeworkTextContentMessage(
      * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
      */
     @JsonProperty("mentioned_list")
-    @ApiModelProperty("userid的列表")
+    @ApiModelProperty("userid的列表", name = "mentioned_list")
     val mentionedList: Set<String>?,
 
     /**
      * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
      */
     @JsonProperty("mentioned_mobile_list")
-    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人")
+    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", name = "mentioned_mobile_list")
     val mentionedMobileList: Set<String>?
 )

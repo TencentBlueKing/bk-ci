@@ -121,7 +121,6 @@ class PreBuildV2Service @Autowired constructor(
 
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject)
         val model = getPipelineModel(userId, preProjectId, startUpReq, scriptBuildYaml, agentId)
-        logger.warn("model info v2: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 
@@ -259,7 +258,7 @@ class PreBuildV2Service @Autowired constructor(
                 val buildEnv = if (JobRunsOnType.DOCKER.type == job.runsOn.poolName ||
                     JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
                 ) {
-                    job.runsOn.nfsMount
+                    job.runsOn.needs
                 } else {
                     null
                 }
@@ -284,7 +283,7 @@ class PreBuildV2Service @Autowired constructor(
                     dockerBuildVersion = null,
                     tstackAgentId = null,
                     jobControlOption = getJobControlOption(job, finalStage),
-                    dispatchType = getDispatchType(job, startUpReq, agentInfo)
+                    dispatchType = getDispatchType(job, startUpReq, agentInfo, userId)
                 )
                 containerList.add(vmContainer)
             }
@@ -560,7 +559,8 @@ class PreBuildV2Service @Autowired constructor(
     private fun getDispatchType(
         job: Job,
         startUpReq: StartUpReq,
-        agentInfo: ThirdPartyAgentStaticInfo
+        agentInfo: ThirdPartyAgentStaticInfo,
+        userId: String
     ): DispatchType {
         if (job.runsOn.poolName == JobRunsOnType.LOCAL.type) {
             return ThirdPartyAgentIDDispatchType(
@@ -586,6 +586,9 @@ class PreBuildV2Service @Autowired constructor(
                 containerPool.copy(macOS = MacOS("Catalina10.15.4", "12.2"))
             )
         }
+
+        val projectId = getUserProjectId(userId)
+        logger.info("prebuild v2 $projectId, runsOn: ${JsonUtil.toJson(job.runsOn)}")
 
         return when (job.runsOn.poolName) {
             JobRunsOnType.DEV_CLOUD.type -> {

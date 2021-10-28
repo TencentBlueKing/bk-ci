@@ -25,41 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
-
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+package com.tencent.devops.stream.trigger.timer.exception
 
 /**
- * Container事件
- *
+ * 定时异常
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_CONTAINER)
-data class PipelineBuildContainerEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerType: String,
-    val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    val reason: String? = null,
-    @Deprecated(message = "errorCode=com.tencent.devop.common.api.pojo.ErrorCode.USER_JOB_OUTTIME_LIMIT")
-    val timeout: Boolean? = false,
-    /**
-     * 0 表示 没有错误
-     */
-    var errorCode: Int = 0,
-    /**
-     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
-     */
-    var errorTypeName: String? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+class InvalidTimerException : Exception()

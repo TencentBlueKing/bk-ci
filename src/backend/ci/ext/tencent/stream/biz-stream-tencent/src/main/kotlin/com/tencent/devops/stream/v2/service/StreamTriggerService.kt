@@ -36,10 +36,10 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.trigger.v2.StreamYamlBaseBuild
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +54,7 @@ class StreamTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val yamlBuildV2: StreamYamlBuild
+    private val yamlBuildV2: StreamYamlBaseBuild
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -127,6 +127,7 @@ class StreamTriggerService @Autowired constructor(
         model: Model,
         gitBuildId: Long
     ): BuildId? {
+        logger.info("startBuild build")
         return yamlBuildV2.startBuild(pipeline, event, gitCIBasicSetting, model, gitBuildId)
     }
 }
