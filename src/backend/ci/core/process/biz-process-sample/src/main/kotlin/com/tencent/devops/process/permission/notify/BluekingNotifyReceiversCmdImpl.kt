@@ -13,11 +13,17 @@ class BluekingNotifyReceiversCmdImpl : NotifyReceiversCmd() {
         val setting = commandContext.pipelineSetting
         if (commandContext.buildStatus.isFailure()) {
             setting.failSubscription.users.split(",").forEach {
-                commandContext.receivers.add(EnvUtils.parseEnv(it, commandContext.variables, true))
+                commandContext.receivers.add(EnvUtils.parseEnv(
+                    command = it,
+                    data = commandContext.variables,
+                    replaceWithEmpty = true))
             }
         } else if (commandContext.buildStatus.isSuccess()) {
             setting.successSubscription.users.split(",").forEach {
-                commandContext.receivers.add(EnvUtils.parseEnv(it, commandContext.variables, true))
+                commandContext.receivers.add(EnvUtils.parseEnv(
+                    command = it,
+                    data = commandContext.variables,
+                    replaceWithEmpty = true))
             }
         }
     }
