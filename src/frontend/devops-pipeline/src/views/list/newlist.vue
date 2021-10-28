@@ -470,7 +470,7 @@
                             content: [
                                 {
                                     key: this.$t('lastBuildNum'),
-                                    value: item.latestBuildNumAlias ? item.latestBuildNumAlias : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
+                                    value: item.buildNumRule ? (item.latestBuildNumAlias ? item.latestBuildNumAlias : `#${item.latestBuildNum}`) : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
                                 },
                                 {
                                     key: this.$t('lastExecTime'),
