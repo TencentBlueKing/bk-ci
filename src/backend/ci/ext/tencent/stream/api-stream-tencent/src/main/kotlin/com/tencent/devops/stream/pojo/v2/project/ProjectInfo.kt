@@ -52,7 +52,7 @@ data class ProjectCIInfo(
     @ApiModelProperty("项目描述")
     val description: String?,
     @ApiModelProperty("CI相关信息")
-    val ciInfo: CIInfo
+    val ciInfo: CIInfo?
 )
 
 @ApiModel("CI相关信息")

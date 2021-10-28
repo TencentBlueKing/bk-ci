@@ -85,6 +85,7 @@
     "store": "Store",
     "buildNum": "BuildNo.",
     "propertyBar": "Property",
+    "pipelineNameTips": "Please enter pipeline name",
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
     "pipelineDesc": "Description",
     "pipelineDescInputTips": "Please describe this pipeline within 100 letters",

@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -49,6 +50,7 @@ data class Repositories(
 )
 
 data class ResCredentials(
+    @ApiModelProperty(name = "personal-access-token")
     @JsonProperty("personal-access-token")
     val personalAccessToken: String?
 )

@@ -126,6 +126,14 @@ class PipelineGroupDao {
         }
     }
 
+    fun get(dslContext: DSLContext, id: Long): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
     fun listByIds(dslContext: DSLContext, projectId: String, ids: Set<Long>): Result<TPipelineGroupRecord> {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)

@@ -249,7 +249,10 @@ interface AppArtifactoryResource {
         experienceHashId: String?,
         @ApiParam("组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
-        organization: String? = null
+        organization: String? = null,
+        @ApiParam("过期时间", required = false)
+        @QueryParam("ttl")
+        ttl: Int? = null
     ): String
 
     @ApiOperation("创建外部直接下载链接")

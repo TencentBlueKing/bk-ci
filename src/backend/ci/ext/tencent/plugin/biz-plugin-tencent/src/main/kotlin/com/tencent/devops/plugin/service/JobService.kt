@@ -34,6 +34,7 @@ import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.process.api.builds.BuildHistoryBuildResource
 import com.tencent.devops.process.api.service.ServiceOperationResource
 import org.slf4j.LoggerFactory
@@ -70,6 +71,15 @@ class JobService @Autowired constructor(
         return result
     }
 
+    fun listUsableServerNodes(projectId: String, buildId: String): Result<List<NodeWithPermission>> {
+        logger.info("listUsableServerNodes(projectId=$projectId,buildId=$buildId)=")
+        val userId = getUserId(buildId) ?: return Result(500, "服务端内部异常，buildId=${buildId}的构建未查到")
+        // 以启动人的身份调用service接口获取信息
+        val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
+        logger.info("listUsableServerNodes==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")
+        return result
+    }
+
     fun listRawByEnvHashIds(projectId: String, buildId: String, envHashIds: List<String>): Result<List<EnvWithPermission>> {
         logger.info("listRawByEnvHashIds(projectId=$projectId,buildId=$buildId,envHashIds=${envHashIds.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, "服务端内部异常，buildId=${buildId}的构建未查到")
@@ -101,6 +111,15 @@ class JobService @Autowired constructor(
         // 以流水线最后修改人的身份调用service接口获取信息
         val result = client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
         logger.info("listUsableServerEnvs==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")
+        return result
+    }
+
+    fun listUsableServerNodesByLastUpdateUser(projectId: String, pipelineId: String): Result<List<NodeWithPermission>> {
+        logger.info("listUsableServerNodesByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
+        val userId = getLastUpdateUserId(pipelineId) ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
+        // 以流水线最后修改人的身份调用service接口获取信息
+        val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
+        logger.info("listUsableServerNodes==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")
         return result
     }
 

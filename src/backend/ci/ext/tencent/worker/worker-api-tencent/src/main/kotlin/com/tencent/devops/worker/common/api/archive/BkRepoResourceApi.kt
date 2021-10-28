@@ -355,18 +355,21 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
 
     fun setPipelineMetadata(repoName: String, buildVariables: BuildVariables) {
         try {
+            val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
             val projectId = buildVariables.projectId
             val pipelineId = buildVariables.pipelineId
             val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
             val buildId = buildVariables.buildId
             val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            val headers = mapOf(BKREPO_UID to userId)
             if (!pipelineName.isNullOrBlank()) {
                 val pipelineNameRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
                     RequestBody.create(
                         MediaType.parse("application/json; charset=utf-8"),
                         JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
-                    )
+                    ),
+                    headers
                 )
                 request(pipelineNameRequest, "set pipeline displayName failed")
             }
@@ -376,7 +379,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                     RequestBody.create(
                         MediaType.parse("application/json; charset=utf-8"),
                         JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
-                    )
+                    ),
+                    headers
                 )
                 request(buildNumRequest, "set build displayName failed")
             }

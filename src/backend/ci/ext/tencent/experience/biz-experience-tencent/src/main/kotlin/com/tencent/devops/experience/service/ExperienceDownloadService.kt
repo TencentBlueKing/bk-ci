@@ -50,6 +50,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceCount
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
@@ -139,7 +140,12 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+    fun getExternalDownloadUrl(
+        userId: String,
+        experienceId: Long,
+        isOuter: Boolean = false,
+        ttl: Int? = null
+    ): DownloadUrl {
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
@@ -168,11 +174,19 @@ class ExperienceDownloadService @Autowired constructor(
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
+            val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
+                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
-                .externalUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
+                .externalUrl(
+                    projectId,
+                    artifactoryType,
+                    experienceRecord.creator,
+                    path,
+                    ttl ?: (24 * 3600),
+                    false
+                ).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
@@ -363,6 +377,58 @@ class ExperienceDownloadService @Autowired constructor(
                 Pagination(hasNext, experiences)
             }
         }
+    }
+
+    fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): ExperienceJumpInfo {
+        if (platform != "ANDROID" && platform != "IOS") {
+            logger.warn("platform is illegal , {}", platform)
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "平台错误",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val experiencePublicRecord = experiencePublicDao.getByBundleId(
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform
+        )
+
+        if (null == experiencePublicRecord) {
+            logger.warn(
+                "can not found record , projectId:{} , bundleIdentifier:{} , platform:{}",
+                projectId,
+                bundleIdentifier,
+                platform
+            )
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "未找到对应的体验",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+            )
+        }
+
+        val scheme = if (platform == "ANDROID") {
+            "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
+                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
+        } else {
+            "bkdevopsapp://app/experience/expDetail/${experiencePublicRecord.recordId}"
+        }
+
+        val shortUrlRequest = CreateShortUrlRequest(
+            getExternalDownloadUrl(
+                "third_app",
+                experiencePublicRecord.recordId,
+                false,
+                10 * 60
+            ).url, 10 * 60 * 2
+        )
+        return ExperienceJumpInfo(
+            scheme,
+            client.get(ServiceShortUrlResource::class).createShortUrl(shortUrlRequest).data!!
+        )
     }
 
     private fun addUserDownloadTime(

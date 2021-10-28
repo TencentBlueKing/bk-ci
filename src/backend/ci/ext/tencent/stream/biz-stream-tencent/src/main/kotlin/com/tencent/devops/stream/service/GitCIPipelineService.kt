@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val gitCIDetailService: GitCIDetailService
@@ -59,7 +59,7 @@ class GitCIPipelineService @Autowired constructor(
         logger.info("get pipeline list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return Page(
@@ -116,7 +116,7 @@ class GitCIPipelineService @Autowired constructor(
         gitProjectId: Long
     ): List<GitProjectPipeline> {
         logger.info("get pipeline info list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return emptyList()
@@ -146,7 +146,7 @@ class GitCIPipelineService @Autowired constructor(
         withHistory: Boolean? = false
     ): GitProjectPipeline? {
         logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return null
@@ -187,5 +187,24 @@ class GitCIPipelineService @Autowired constructor(
             pipelineId = pipelineId,
             enabled = enabled
         ) == 1
+    }
+
+    fun getPipelineByFile(
+        gitProjectId: Long,
+        filePath: String
+    ): GitProjectPipeline? {
+        val record = pipelineResourceDao.getPipelineByFile(dslContext, gitProjectId, filePath) ?: return null
+        with(record) {
+            return GitProjectPipeline(
+                gitProjectId = gitProjectId,
+                displayName = displayName,
+                pipelineId = pipelineId,
+                filePath = filePath,
+                enabled = enabled,
+                creator = creator,
+                latestBuildInfo = null,
+                latestBuildBranch = null
+            )
+        }
     }
 }

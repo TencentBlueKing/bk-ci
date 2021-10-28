@@ -27,7 +27,6 @@
 
 package com.tencent.devops.prebuild.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
@@ -119,7 +118,6 @@ class PreBuildService @Autowired constructor(
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
-        logger.warn("model info v1: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 

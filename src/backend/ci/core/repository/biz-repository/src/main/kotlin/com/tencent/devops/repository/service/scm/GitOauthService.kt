@@ -42,6 +42,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -196,8 +197,9 @@ class GitOauthService @Autowired constructor(
             group = null
         )
         if (!projectUserCheck) {
-            throw RemoteServiceException(
-                "user permission denied: userId=$userId, projectCode=${buildBasicInfo.projectId}"
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, buildBasicInfo.projectId)
             )
         }
         return getAccessToken(userId)

@@ -28,16 +28,22 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthPermissionsResourcesRequest(
     @JsonProperty("project_code")
+    @ApiModelProperty(name = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
+    @ApiModelProperty(name = "service_code")
     val serviceCode: String,
     @JsonProperty("policy_resource_type_list")
+    @ApiModelProperty(name = "policy_resource_type_list")
     val policyResourceTypeList: List<BkAuthPermissionsPolicyCodeAndResourceType>,
     @JsonProperty("user_id")
+    @ApiModelProperty(name = "user_id")
     val userId: String,
     @get:JsonProperty("is_exact_resource")
+    @ApiModelProperty(name = "is_exact_resource")
     val exactResource: Int = 1
 )

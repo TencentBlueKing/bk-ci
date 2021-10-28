@@ -38,6 +38,6 @@ class UserQualityMarketResourceImpl constructor(
     private val qualityIndicatorService: QualityIndicatorService
 ) : UserQualityMarketResource {
     override fun getAuditUserList(atomCode: String): Result<List<QualityIndicator>> {
-        return Result(qualityIndicatorService.serviceList(atomCode, listOf()))
+        return Result(qualityIndicatorService.serviceListFilterBash(atomCode, listOf()))
     }
 }

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
@@ -44,7 +45,8 @@ import org.springframework.beans.factory.annotation.Value
 
 class V0ProjectExtPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val projectIamV0Service: ProjectIamV0Service
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) : ProjectExtPermissionService {
 
     @Value("\${auth.url}")
@@ -88,6 +90,25 @@ class V0ProjectExtPermissionServiceImpl @Autowired constructor(
                 roleId = roleId
             )
         }
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean {
+        return projectIamV0Service.createPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = action,
+            resourceType = resourceType,
+            authServiceCode = bsPipelineAuthServiceCode,
+            resourceTypeCode = resourceCode,
+            userList = userList
+        )
     }
 
     private fun request(request: Request, errorMessage: String): String {

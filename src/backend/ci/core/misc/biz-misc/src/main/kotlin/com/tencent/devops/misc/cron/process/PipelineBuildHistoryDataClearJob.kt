@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.cron.process
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
@@ -288,12 +289,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         projectDataClearConfig: ProjectDataClearConfig
     ) {
         // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中X个月前的构建记录
-/*        cleanBuildHistoryData(
+        cleanBuildHistoryData(
             pipelineId = pipelineId,
             projectId = projectId,
             isCompletelyDelete = false,
             maxStartTime = projectDataClearConfig.maxStartTime
-        )*/
+        )
         // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
         val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(projectId, pipelineId)
         val maxKeepNum = projectDataClearConfig.maxKeepNum
@@ -307,6 +308,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 maxBuildNum = maxBuildNum.toInt()
             )
         }
+        // 同步构建时间晚于maxStartTime的记录的项目信息
+        syncBuildProjectData(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            maxStartTime = projectDataClearConfig.maxStartTime
+        )
     }
 
     private fun cleanDeletePipelineData(pipelineId: String, projectId: String) {
@@ -351,6 +358,71 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     qualityDataClearService.clearBuildData(buildId)
                     artifactoryDataClearService.clearBuildData(buildId)
                     processDataClearService.clearOtherBuildData(projectId, pipelineId, buildId)
+                } else {
+                    // 分库路由需要同步T_PIPELINE_BUILD_DETAIL的项目信息（同步完后再删除该逻辑）
+                    val buildDetail = processMiscService.getPipelineBuildDetailList(listOf(buildId))?.get(0)
+                    if (buildDetail != null) {
+                        processMiscService.updatePipelineBuildDetailProject(
+                            buildId = buildId,
+                            projectId = projectId,
+                            model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                        )
+                    }
+                }
+            }
+            totalHandleNum += DEFAULT_PAGE_SIZE
+        }
+    }
+
+    private fun syncBuildProjectData(
+        pipelineId: String,
+        projectId: String,
+        maxStartTime: LocalDateTime? = null
+    ) {
+        // 同步项目信息
+        val pipelineResourceList = processMiscService.getPipelineResourceList(pipelineId)
+        pipelineResourceList?.forEach { pipelineResource ->
+            processMiscService.updatePipelineResourceProject(
+                pipelineId = pipelineId,
+                version = pipelineResource.version,
+                projectId = projectId,
+                model = JsonUtil.toJson(pipelineResource.modelInfo, false)
+            )
+        }
+        val pipelineResourceVersionList = processMiscService.getPipelineResourceVersionList(pipelineId)
+        pipelineResourceVersionList?.forEach { pipelineResourceVersion ->
+            processMiscService.updatePipelineResourceVersionProject(
+                pipelineId = pipelineId,
+                version = pipelineResourceVersion.version,
+                projectId = projectId,
+                model = JsonUtil.toJson(pipelineResourceVersion.modelInfo, false)
+            )
+        }
+        processMiscService.updateTemplatePipelineProject(pipelineId, projectId)
+        val totalBuildCount = processMiscService.getTotalBuildCount(
+            pipelineId = pipelineId,
+            maxStartTime = maxStartTime,
+            geTimeFlag = true
+        )
+        var totalHandleNum = 0
+        while (totalHandleNum < totalBuildCount) {
+            val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
+                pipelineId = pipelineId,
+                totalHandleNum = totalHandleNum,
+                handlePageSize = DEFAULT_PAGE_SIZE,
+                isCompletelyDelete = false,
+                maxStartTime = maxStartTime,
+                geTimeFlag = true
+            )
+            if (!pipelineHistoryBuildIdList.isNullOrEmpty()) {
+                // 分库路由需要同步T_PIPELINE_BUILD_DETAIL的项目信息（同步完后再删除该逻辑）
+                val buildDetailList = processMiscService.getPipelineBuildDetailList(pipelineHistoryBuildIdList)
+                buildDetailList?.forEach { buildDetail ->
+                    processMiscService.updatePipelineBuildDetailProject(
+                        buildId = buildDetail.buildId,
+                        projectId = projectId,
+                        model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                    )
                 }
             }
             totalHandleNum += DEFAULT_PAGE_SIZE

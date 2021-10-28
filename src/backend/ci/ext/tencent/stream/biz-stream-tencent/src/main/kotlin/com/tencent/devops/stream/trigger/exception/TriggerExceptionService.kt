@@ -33,8 +33,8 @@ class TriggerExceptionService @Autowired constructor(
 
     fun <T> handle(
         requestEvent: GitRequestEvent,
-        gitEvent: GitEvent,
-        basicSetting: GitCIBasicSetting,
+        gitEvent: GitEvent?,
+        basicSetting: GitCIBasicSetting?,
         action: () -> T?
     ): T? {
         try {
@@ -42,18 +42,21 @@ class TriggerExceptionService @Autowired constructor(
         } catch (triggerE: TriggerBaseException) {
             return handleTriggerException(triggerE)
         } catch (e: Throwable) {
-            // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
-            logger.error("Trigger handle catch Throwable ${e.message}")
-
-            val mrEvent = gitEvent is GitMergeRequestEvent
-            if (basicSetting.enableMrBlock && mrEvent) {
-                noPipelineCommitCheck(
-                    gitRequestEvent = requestEvent,
-                    block = false,
-                    state = GitCICommitCheckState.FAILURE,
-                    gitCIBasicSetting = basicSetting
-                )
+            if (gitEvent != null && basicSetting != null) {
+                // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
+                logger.error("Trigger handle catch Throwable ${e.message}")
+                val mrEvent = gitEvent is GitMergeRequestEvent
+                if (basicSetting.enableMrBlock && mrEvent) {
+                    noPipelineCommitCheck(
+                        gitRequestEvent = requestEvent,
+                        block = false,
+                        state = GitCICommitCheckState.FAILURE,
+                        gitCIBasicSetting = basicSetting,
+                        description = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
+                    )
+                }
             }
+
             gitCIEventService.saveTriggerNotBuildEvent(
                 userId = requestEvent.userId,
                 eventId = requestEvent.id!!,
@@ -85,7 +88,8 @@ class TriggerExceptionService @Autowired constructor(
                     gitRequestEvent = triggerE.requestEvent,
                     block = triggerE.commitCheck.block,
                     state = triggerE.commitCheck.state,
-                    gitCIBasicSetting = triggerE.basicSetting!!
+                    gitCIBasicSetting = triggerE.basicSetting!!,
+                    description = realReasonDetail
                 )
             }
             return null
@@ -194,11 +198,13 @@ class TriggerExceptionService @Autowired constructor(
                     // todo: 未知的不是stream的错误码
                     Pair("", triggerE.errorMessage ?: "")
                 } else {
-                    Pair(error.name, if (triggerE.errorMessage.isNullOrBlank()) {
-                        error.formatErrorMessage
-                    } else {
-                        triggerE.errorMessage.format(triggerE.messageParams)
-                    })
+                    Pair(
+                        error.name, if (triggerE.errorMessage.isNullOrBlank()) {
+                            error.formatErrorMessage
+                        } else {
+                            triggerE.errorMessage.format(triggerE.messageParams)
+                        }
+                    )
                 }
             }
             else -> Pair("", "")
@@ -209,7 +215,8 @@ class TriggerExceptionService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         block: Boolean,
-        state: GitCICommitCheckState
+        state: GitCICommitCheckState,
+        description: String?
     ) {
         scmClient.pushCommitCheckWithBlock(
             commitId = gitRequestEvent.commitId,
@@ -220,7 +227,7 @@ class TriggerExceptionService @Autowired constructor(
             context = GitCITriggerService.noPipelineBuildEvent,
             gitCIBasicSetting = gitCIBasicSetting,
             jumpRequest = false,
-            description = null
+            description = description
         )
     }
 }

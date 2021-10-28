@@ -68,9 +68,9 @@ data class BuildHistory(
     val artifactList: List<FileInfo>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
-    @ApiModelProperty("总耗时(秒)", required = false)
+    @ApiModelProperty("总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
     @ApiModelProperty("启动参数", required = false)
     val buildParameters: List<BuildParameters>?,

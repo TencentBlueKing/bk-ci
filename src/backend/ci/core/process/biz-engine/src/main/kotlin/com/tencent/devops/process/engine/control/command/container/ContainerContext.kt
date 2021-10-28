@@ -30,11 +30,11 @@ package com.tencent.devops.process.engine.control.command.container
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.control.command.CmdContext
+import com.tencent.devops.process.command.CmdContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 
 data class ContainerContext(
     val container: PipelineBuildContainer, // 当前容器

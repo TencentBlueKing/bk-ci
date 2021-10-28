@@ -46,4 +46,11 @@ object MQ {
     const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
     const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
     const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
+
+    // 定时变更广播exchange ====================================
+    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
+    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
+
+    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
+    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
 }

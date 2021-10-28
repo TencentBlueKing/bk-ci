@@ -100,6 +100,37 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
+    fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int,
+        retryCount: Int = 3
+    ): Result<List<String>>? {
+        try {
+            val path = "/${getUrlPrefix()}/api/dockerhost//qpc/projects/$projectId/builds/$buildId/" +
+                    "vmSeqs/$vmSeqId?poolNo=$poolNo"
+            OkhttpUtils.doHttp(buildGet(path)).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("[$projectId]|[$buildId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorType = ErrorType.SYSTEM,
+                        errorMsg = "Get resourceConfig $path fail")
+                }
+                return objectMapper.readValue(responseContent)
+            }
+        } catch (e: Exception) {
+            val localRetryCount = retryCount - 1
+            return if (localRetryCount > 0) {
+                getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo, retryCount)
+            } else {
+                return null
+            }
+        }
+    }
+
     fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
         val dockerIp = CommonUtils.getInnerIP(dockerHostConfig.dockerhostLocalIp)
         val path = "/${getUrlPrefix()}/api/dockerhost/dockerIp/$dockerIp/refresh"

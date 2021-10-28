@@ -74,7 +74,7 @@ object RepoCommitUtil {
                 gitType = gitType
             )
         } catch (e: Exception) {
-            LoggerService.addRedLine("save commit fail: ${e.message}")
+            LoggerService.addErrorLine("save commit fail: ${e.message}")
         }
         return CommitMaterial(null, null, null, 0)
     }
@@ -170,7 +170,7 @@ object RepoCommitUtil {
                 LoggerService.addNormalLine("last commit: $lastCommitId")
                 return latestCommit
             } catch (e: Exception) {
-                LoggerService.addRedLine("resolve commit fail($lastCommitId): ${e.message} ")
+                LoggerService.addErrorLine("resolve commit fail($lastCommitId): ${e.message} ")
             }
         }
         logsCommand.setMaxCount(1)
@@ -199,7 +199,7 @@ object RepoCommitUtil {
                 lastCommit = lastCommit
             )
         } catch (e: Exception) {
-            LoggerService.addRedLine("save svn commit fail: ${e.message}")
+            LoggerService.addErrorLine("save svn commit fail: ${e.message}")
         }
 
         return CommitMaterial(null, lastCommit.toString(), null, 0)

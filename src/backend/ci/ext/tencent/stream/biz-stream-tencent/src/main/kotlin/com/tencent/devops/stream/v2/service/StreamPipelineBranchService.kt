@@ -74,4 +74,11 @@ class StreamPipelineBranchService @Autowired constructor(
     ): Boolean {
         return streamPipelineBranchDao.pipelineBranchCount(dslContext, gitProjectId, pipelineId) > 0
     }
+
+    fun getBranchPipelines(
+        gitProjectId: Long,
+        branch: String
+    ): List<String> {
+        return streamPipelineBranchDao.getBranchPipelines(dslContext, gitProjectId, branch).map { it.pipelineId }
+    }
 }

@@ -29,13 +29,17 @@ package com.tencent.devops.stream.pojo.rtxCustom
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RtxChatResponse(
     @JsonProperty("errcode")
+    @ApiModelProperty(name = "errcode")
     val errCode: Long,
     @JsonProperty("errmsg")
+    @ApiModelProperty(name = "errmsg")
     val errMsg: String,
     @JsonProperty("chatid")
+    @ApiModelProperty(name = "chatid")
     val chatId: String
 )
