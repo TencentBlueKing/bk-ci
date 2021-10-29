@@ -63,41 +63,32 @@ spec:
               value: {{ .Values.common.jvmOption }}
             - name: TURBO_SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}-
-            - name: TURBO_PROFILE
-              value: {{ .Values.common.springProfile }}
-          command:
-            - "/bin/bash"
-            - "-c"
-            - |
-              sleep 10000s;
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /actuator/health/liveness
-          #     port: http
-          #   initialDelaySeconds: 120
-          #   periodSeconds: 15
-          #   timeoutSeconds: 10
-          #   failureThreshold: 5
-          #   successThreshold: 1
-          # readinessProbe:
-          #   httpGet:
-          #     path: /actuator/health/readiness
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 15
-          #   timeoutSeconds: 10
-          #   failureThreshold: 5
-          #   successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /api/actuator/health/liveness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /api/actuator/health/readiness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
           volumeMounts:
             - name: quartz-config
               mountPath: /data/workspace/quartz.properties
               subPath: quartz.properties
-            - name: storage
-              mountPath: {{ .Values.persistence.mountPath }}
       volumes:
         - name: quartz-config
           configMap:
@@ -105,11 +96,4 @@ spec:
             items:
               - key: quartz.properties
                 path: quartz.properties
-        - name: storage
-          {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
 {{- end }}

@@ -82,23 +82,22 @@ spec:
             - "-c"
             - |
               cp /data/workspace/backend.bkci.sh .;
-              sleep 1000;
               /bin/bash backend.bkci.sh;
-          # livenessProbe:
-          #   httpGet:
-          #     path: /management/health/livenessState
-          #     port: http
-          #   initialDelaySeconds: 300
-          #   periodSeconds: 15
-          #   timeoutSeconds: 10
-          #   failureThreshold: 5
-          #   successThreshold: 1
-          # readinessProbe:
-          #   httpGet:
-          #     path: /management/health/readinessState
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 15
-          #   timeoutSeconds: 10
-          #   failureThreshold: 5
-          #   successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 300
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1

@@ -46,7 +46,6 @@ class TurboPlanInstanceService @Autowired constructor(
     /**
      * 根据方案id和客户端ip查找，如果没有则新增，如果有则返回
      */
-    @Transactional(propagation = Propagation.REQUIRED)
     fun upsertInstanceByPlanIdAndIp(
         turboPlanId: String,
         projectId: String,

@@ -62,6 +62,7 @@ mysql:
       character-set-server=UTF8
       collation-server=utf8_general_ci
       max_connections=2000
+      default-time-zone='+08:00'
       [client]
       port=3306
       socket=/opt/bitnami/mysql/tmp/mysql.sock
@@ -1031,9 +1032,9 @@ angetless:
 turbo:
   enabled: false
   image:
-    registry: mirrors.tencent.com
-    repository: ruitaoyuan/turbo-backend
-    tag: 0.0.14
+    registry: mirrors.tencent.com/bkce
+    repository: bkci-turbo
+    tag: 0.0.15
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -1064,6 +1065,7 @@ turbo:
     tbs:
       rootpath: 
       urltemplate: api/v1/{engine}/resource/{resource_type}
+      dashboard: 
     devops:
       rootpath: 
 

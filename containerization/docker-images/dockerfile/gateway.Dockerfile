@@ -3,7 +3,8 @@ FROM bkrepo/openrestry:0.0.1
 
 LABEL maintainer="Tencent BlueKing Devops"
 
-ENV INSTALL_PATH=/data/workspace/
+ENV INSTALL_PATH="/data/workspace/"
+ENV LANG="en_US.UTF-8"
 
 COPY ./ci/gateway /data/workspace/gateway
 COPY ./ci/support-files/templates /data/workspace/templates

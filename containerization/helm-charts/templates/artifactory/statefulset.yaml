@@ -1,6 +1,6 @@
-#artifactory Deployment
-apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
-kind: Deployment
+#artifactory StatefulSet
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
 metadata:
   name: {{ include "common.names.fullname" . }}-artifactory
   labels: {{- include "common.labels.standard" . | nindent 4 }}
@@ -13,6 +13,7 @@ spec:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: artifactory
   replicas: {{ .Values.artifactory.replicas }}
+  serviceName: {{ include "common.names.fullname" . }}-artifactory
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}

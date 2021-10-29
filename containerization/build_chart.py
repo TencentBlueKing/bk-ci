@@ -16,7 +16,7 @@ os.system("mkdir -p "+template_parent)
 
 # 设置一些默认值
 default_value_dict = {
-    'bkCiDataDir': '/data/dir/',
+    'bkCiDataDir': '/data/dir',
     'bkCiHttpPort': '80',
     'bkCiRedisDb': '0',
     'bkCiAuthProvider': 'sample',
