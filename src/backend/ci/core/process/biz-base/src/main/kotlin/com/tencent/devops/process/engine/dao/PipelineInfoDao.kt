@@ -156,7 +156,7 @@ class PipelineInfoDao {
         val version = with(T_PIPELINE_INFO) {
             dslContext.select(VERSION)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
         }
         logger.info(
