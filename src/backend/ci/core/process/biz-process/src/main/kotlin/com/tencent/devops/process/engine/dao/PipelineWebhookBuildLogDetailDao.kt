@@ -47,7 +47,7 @@ class PipelineWebhookBuildLogDetailDao {
         if (webhookBuildLogDetails.isEmpty()) {
             return
         }
-        val records = webhookBuildLogDetails.map {
+        webhookBuildLogDetails.map {
             with(T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
                 dslContext.insertInto(
                     this,
@@ -74,10 +74,9 @@ class PipelineWebhookBuildLogDetailDao {
                     it.success,
                     it.triggerResult,
                     Timestamp(it.createdTime).toLocalDateTime()
-                )
+                ).execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
     fun listByPage(

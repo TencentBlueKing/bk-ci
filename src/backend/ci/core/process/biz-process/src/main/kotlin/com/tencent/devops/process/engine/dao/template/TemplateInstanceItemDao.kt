@@ -49,7 +49,7 @@ class TemplateInstanceItemDao {
         userId: String
     ) {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            val addStep = instances.map {
+            instances.map {
                 val buildNo = it.buildNo
                 val param = it.param
                 dslContext.insertInto(
@@ -76,9 +76,8 @@ class TemplateInstanceItemDao {
                         baseId,
                         userId,
                         userId
-                    )
+                    ).execute()
             }
-            dslContext.batch(addStep).execute()
         }
     }
 

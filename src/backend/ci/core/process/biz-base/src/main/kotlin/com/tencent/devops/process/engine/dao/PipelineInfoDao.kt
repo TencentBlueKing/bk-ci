@@ -562,11 +562,11 @@ class PipelineInfoDao {
             with(T_PIPELINE_INFO) {
                 val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
                     .limit(offset, limit).fetch()
-                val updates = fetch.map {
+                fetch.map {
                     dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))
                         .where(PIPELINE_ID.eq(it[PIPELINE_ID]).and(PROJECT_ID.eq(it[PROJECT_ID])))
+                        .execute()
                 }
-                dslContext.batch(updates).execute()
                 val size = fetch.size
                 offset += size
                 fetchSize = size
