@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -65,7 +66,7 @@ class TxStoreUserServiceImpl : StoreUserService {
      * 获取用户机构ID信息
      */
     override fun getUserDeptList(userId: String): List<Int> {
-        val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+        val userInfo = client.get(ServiceTxUserResource::class).get(userId).data
         logger.info("the userInfo is:$userInfo")
         return if (userInfo == null) {
             listOf(0, 0, 0, 0)
