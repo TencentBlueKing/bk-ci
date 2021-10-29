@@ -323,13 +323,24 @@ class PipelineBuildQualityService(
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        buildLogPrinter.addRedLine(
-                            buildId = buildId,
-                            message = message.first + " " + message.second,
-                            tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
+                        if (message.second) {
+                            buildLogPrinter.addGreenLine(
+                                buildId = buildId,
+                                message = message.first + " " + message.third,
+                                tag = elementId,
+                                jobId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1
+                            )
+                        } else {
+                            buildLogPrinter.addRedLine(
+                                buildId = buildId,
+                                message = message.first + " " + message.third,
+                                tag = elementId,
+                                jobId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1
+                            )
+                        }
+
                     }
                 }
 

@@ -545,9 +545,10 @@ class QualityRuleCheckService @Autowired constructor(
             }
             val nullMsg = if (it.actualValue == null) "你可能并未添加工具或打开相应规则。" else ""
             val detailMsg = getDetailMsg(it, params)
-            Pair(
+            Triple(
                 sb.append("${it.indicatorName}当前值(${it.actualValue})，期望$thresholdOperationName${it.value}。 $nullMsg")
                     .toString(),
+                it.pass,
                 detailMsg
             )
         }
