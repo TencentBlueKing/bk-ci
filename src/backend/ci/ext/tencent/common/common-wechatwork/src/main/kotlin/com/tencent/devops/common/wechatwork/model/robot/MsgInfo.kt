@@ -36,5 +36,5 @@ data class MsgInfo(
     var mentionedList: List<String>? = mutableListOf(),
 
     @JsonProperty("mentioned_mobile_list")
-    var mentionedMobileList: List<String>? = mutableListOf(),
+    var mentionedMobileList: List<String>? = mutableListOf()
 )

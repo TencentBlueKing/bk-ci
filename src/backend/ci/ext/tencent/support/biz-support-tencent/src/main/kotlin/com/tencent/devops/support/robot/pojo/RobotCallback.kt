@@ -27,7 +27,7 @@
 
 package com.tencent.devops.support.robot.pojo
 
-data class RobotCallback (
+data class RobotCallback(
     val webhookUrl: String,
     val userId: String,
     val name: String,

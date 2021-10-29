@@ -55,7 +55,7 @@ class RobotService @Autowired constructor(
     * */
     fun robotVerifyURL(signature: String, timestamp: Long, nonce: String, echoStr: String?): String {
         logger.info("signature:$signature")
-        logger.info("timestamp:${timestamp}")
+        logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
         logger.info("echoStr:$echoStr")
         var verifyResult = ""
@@ -128,9 +128,9 @@ class RobotService @Autowired constructor(
         return db.parse(`is`)
     }
 
-     /*
-     * 获取密文的xml字符串
-     * */
+    /*
+    * 获取密文的xml字符串
+    * */
     fun getDecrypeMsg(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
         var xmlString = ""
         try {

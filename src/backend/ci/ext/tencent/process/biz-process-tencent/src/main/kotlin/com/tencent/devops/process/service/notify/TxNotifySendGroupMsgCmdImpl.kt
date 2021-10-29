@@ -114,7 +114,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     )
                     wechatWorkRobotService.send(msg.toJsonString())
                 }
-
             }
         }
     }
