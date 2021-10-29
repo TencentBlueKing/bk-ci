@@ -12,16 +12,16 @@ server:
 
 # kubernetes-dispatch集群配置
 kubernetes:
-  nameSpace: bkci-kube-client
+  nameSpace: default
   configMap:
     name: dispatch-kubernetes-init
 
 dispatch:
   build:
     deployment:
-      cpu: 32
-      memory: 65535M
-      disk: 500G
+      cpu: 1
+      memory: 1024M
+      disk: 1G
     container:
       registry:
         host: xx.artifactory.xxx
