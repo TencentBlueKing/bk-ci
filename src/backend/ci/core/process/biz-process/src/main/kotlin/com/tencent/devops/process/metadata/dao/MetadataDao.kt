@@ -78,10 +78,10 @@ class MetadataDao {
     ) {
         val now = LocalDateTime.now()
         with(TMetadata.T_METADATA) {
-            val recordList = metaPairList.map {
-                TMetadataRecord(0L, projectId, pipelineId, buildId, it.first, it.second, now)
+            metaPairList.map {
+                val record = TMetadataRecord(0L, projectId, pipelineId, buildId, it.first, it.second, now)
+                dslContext.executeInsert(record)
             }
-            dslContext.batchInsert(recordList).execute()
         }
     }
 

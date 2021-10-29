@@ -145,7 +145,7 @@ class PipelineResDao {
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         with(T_PIPELINE_RESOURCE) {
-            val updateStep = pipelineModelVersionList.map {
+            pipelineModelVersionList.map {
                 val conditions = mutableListOf<Condition>()
                 conditions.add(PROJECT_ID.eq(it.projectId))
                 conditions.add(PIPELINE_ID.eq(it.pipelineId))
@@ -157,8 +157,8 @@ class PipelineResDao {
                     .set(MODEL, it.model)
                     .set(CREATOR, userId)
                     .where(conditions)
+                    .execute()
             }
-            dslContext.batch(updateStep).execute()
         }
     }
 
