@@ -306,7 +306,7 @@ class PipelineBuildQualityService(
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
-                buildLogPrinter.addRedLine(
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测被拦截",
                     tag = elementId,
@@ -315,7 +315,7 @@ class PipelineBuildQualityService(
                 )
 
                 checkResult.resultList.forEach {
-                    buildLogPrinter.addRedLine(
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -324,7 +324,7 @@ class PipelineBuildQualityService(
                     )
                     it.messagePairs.forEach { message ->
                         if (message.third) {
-                            buildLogPrinter.addGreenLine(
+                            buildLogPrinter.addLine(
                                 buildId = buildId,
                                 message = message.first + " " + message.second,
                                 tag = elementId,
