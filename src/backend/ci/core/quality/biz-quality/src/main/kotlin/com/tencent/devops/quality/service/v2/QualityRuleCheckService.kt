@@ -548,8 +548,8 @@ class QualityRuleCheckService @Autowired constructor(
             Triple(
                 sb.append("${it.indicatorName}当前值(${it.actualValue})，期望$thresholdOperationName${it.value}。 $nullMsg")
                     .toString(),
-                it.pass,
-                detailMsg
+                detailMsg,
+                it.pass
             )
         }
         return RuleCheckSingleResult(ruleName, messageList)

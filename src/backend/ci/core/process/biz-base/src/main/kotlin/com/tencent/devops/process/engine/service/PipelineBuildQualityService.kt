@@ -323,10 +323,10 @@ class PipelineBuildQualityService(
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        if (message.second) {
+                        if (message.third) {
                             buildLogPrinter.addGreenLine(
                                 buildId = buildId,
-                                message = message.first + " " + message.third,
+                                message = message.first + " " + message.second,
                                 tag = elementId,
                                 jobId = task.containerHashId,
                                 executeCount = task.executeCount ?: 1
@@ -334,7 +334,7 @@ class PipelineBuildQualityService(
                         } else {
                             buildLogPrinter.addRedLine(
                                 buildId = buildId,
-                                message = message.first + " " + message.third,
+                                message = message.first + " " + message.second,
                                 tag = elementId,
                                 jobId = task.containerHashId,
                                 executeCount = task.executeCount ?: 1
