@@ -91,7 +91,6 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -130,7 +129,6 @@ class PipelineBuildFacadeService(
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val buildStartupParamService: BuildStartupParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val paramFacadeService: ParamFacadeService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -199,13 +197,12 @@ class PipelineBuildFacadeService(
             // 获取最后一次的构建id
             val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
             if (lastTimeBuildInfo != null) {
-                val latestParamsStr = buildStartupParamService.getParam(lastTimeBuildInfo.buildId)
+                val latestParamsList = pipelineRuntimeService.getBuildParametersFromStartup(lastTimeBuildInfo.buildId)
                 // 为空的时候不处理
-                if (latestParamsStr != null) {
-                    val latestParams =
-                        JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
+                if (latestParamsList.isNotEmpty()) {
+                    val latestParamsMap = latestParamsList.associate { it.key to it.value }
                     triggerContainer.params.forEach { param ->
-                        val realValue = latestParams[param.id]
+                        val realValue = latestParamsMap[param.id]
                         if (realValue != null) {
                             // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
                             // 当值是boolean类型的时候，需要转为boolean类型
@@ -287,25 +284,7 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW,
             message = "用户（$userId) 无权限获取流水线($pipelineId)信息"
         )
-
-        return try {
-            val startupParam = buildStartupParamService.getParam(buildId)
-            if (startupParam == null || startupParam.isEmpty()) {
-                emptyList()
-            } else {
-                try {
-                    val map: Map<String, Any> = JsonUtil.toMap(startupParam)
-                    map.map { transform ->
-                        BuildParameters(transform.key, transform.value)
-                    }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
-                } catch (e: Exception) {
-                    logger.warn("Fail to convert the parameters($startupParam) to map of build($buildId)", e)
-                    throw e
-                }
-            }
-        } catch (e: NotFoundException) {
-            return emptyList()
-        }
+        return pipelineRuntimeService.getBuildParametersFromStartup(buildId)
     }
 
     fun retry(
@@ -436,8 +415,8 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
                 try {
-                    val startupParam = buildStartupParamService.getParam(buildId)
-                    if (startupParam != null && startupParam.isNotEmpty()) {
+                    val startupParam = pipelineRuntimeService.getBuildParametersFromStartup(buildId)
+                    if (startupParam.isNotEmpty()) {
                         startParamsWithType.addAll(
                             JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
                                 BuildParameters(key = it.key, value = it.value)
