@@ -25,18 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-<<<<<<< HEAD:src/backend/ci/ext/tencent/plugin/api-plugin-tencent/src/main/kotlin/com/tencent/devops/plugin/api/BuildOnsResource.kt
-package com.tencent.devops.plugin.api
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.ons.OnsNameInfo
-=======
 package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.project.pojo.ShardingRoutingRule
->>>>>>> carl/issue_5267_sub_db:src/backend/ci/core/project/api-project/src/main/kotlin/com/tencent/devops/project/api/service/ServiceShardingRoutingRuleResource.kt
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -47,25 +40,6 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-<<<<<<< HEAD:src/backend/ci/ext/tencent/plugin/api-plugin-tencent/src/main/kotlin/com/tencent/devops/plugin/api/BuildOnsResource.kt
-/**
- * ons名字服务
- */
-@Api(tags = ["BUILD_ONS"], description = "名字服务")
-@Path("/build/ons")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildOnsResource {
-
-    @ApiOperation("获取无状态名字信息")
-    @GET
-    @Path("/host/domains/{domainName}")
-    fun getHostByDomainName(
-        @ApiParam("域名", required = true)
-        @PathParam("domainName")
-        domainName: String
-    ): Result<OnsNameInfo?>
-=======
 @Api(tags = ["SERVICE_SHARDING_ROUTING_RULE"], description = "SERVICE-DB分片规则")
 @Path("/service/sharding/routing/rules")
 @Produces(MediaType.APPLICATION_JSON)
@@ -81,5 +55,4 @@ interface ServiceShardingRoutingRuleResource {
         @BkField(minLength = 1, maxLength = 128)
         routingName: String,
     ): Result<ShardingRoutingRule?>
->>>>>>> carl/issue_5267_sub_db:src/backend/ci/core/project/api-project/src/main/kotlin/com/tencent/devops/project/api/service/ServiceShardingRoutingRuleResource.kt
 }
