@@ -9,7 +9,7 @@
             >
                 <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                     <template v-if="col.prop === 'clipboard'" v-slot="props">
-                        <i class="devops-icon icon-clipboard env-copy-icon" :data-clipboard-text="&quot;${&quot; + props.row.name + &quot;}&quot;"></i>
+                        <i class="devops-icon icon-clipboard env-copy-icon" :data-clipboard-text="bkVarWrapper(props.row.name)"></i>
                     </template>
                     <template v-else v-slot="props">
                         <span :title="props.row[col.prop]">{{ props.row[col.prop] }}</span>
@@ -23,6 +23,7 @@
 <script>
     import Clipboard from 'clipboard'
     import { mapGetters } from 'vuex'
+    import { bkVarWrapper } from '@/utils/util'
     export default {
         props: {
             container: Object,
@@ -123,6 +124,10 @@
 
         beforeDestroy () {
             this.clipboard.destroy()
+        },
+
+        methods: {
+            bkVarWrapper
         }
     }
 </script>

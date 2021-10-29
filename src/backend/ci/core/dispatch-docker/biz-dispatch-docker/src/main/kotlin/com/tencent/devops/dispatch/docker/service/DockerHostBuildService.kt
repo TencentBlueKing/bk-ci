@@ -73,13 +73,29 @@ class DockerHostBuildService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val dockerHostQpcService: DockerHostQpcService
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
+
+    fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int
+    ): List<String> {
+        return if (projectId.startsWith("git_") &&
+            dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
+        ) {
+            return listOf(projectId.removePrefix("git_"))
+        } else {
+            emptyList()
+        }
+    }
 
     fun getDockerHostLoad(userId: String): DockerHostLoad {
         try {

@@ -28,19 +28,30 @@
 package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("check run 模型")
 data class GithubCheckRuns(
+    @ApiModelProperty("名称")
     val name: String,
     @JsonProperty("head_sha")
+    @ApiModelProperty("head sha值", name = "head_sha")
     val headSha: String,
     @JsonProperty("details_url")
+    @ApiModelProperty("详情链接", name = "details_url")
     val detailsUrl: String,
     @JsonProperty("external_id")
+    @ApiModelProperty("拓展ID", name = "external_id")
     val externalId: String,
+    @ApiModelProperty("状态")
     val status: String,
     @JsonProperty("started_at")
+    @ApiModelProperty("开始于", name = "started_at")
     val startedAt: String?,
+    @ApiModelProperty("结论")
     val conclusion: String?,
     @JsonProperty("completed_at")
+    @ApiModelProperty("完成于", name = "completed_at")
     val completedAt: String?
 )

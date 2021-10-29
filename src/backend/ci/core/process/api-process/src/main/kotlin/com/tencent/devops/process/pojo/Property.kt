@@ -27,7 +27,13 @@
 
 package com.tencent.devops.process.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("属性")
 data class Property(
+    @ApiModelProperty("健", required = false)
     val key: String,
+    @ApiModelProperty("值", required = false)
     val value: String
 )
