@@ -162,14 +162,14 @@ class TXPipelineService @Autowired constructor(
         watch.stop()
 
         watch.start("s_r_summary")
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
+        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(projectId, channelCode)
         watch.stop()
 
         watch.start("s_r_fav")
         val skipPipelineIdsNew = mutableListOf<String>()
-        if (pipelineBuildSummary.isNotEmpty) {
-            pipelineBuildSummary.forEach {
-                skipPipelineIdsNew.add(it["PIPELINE_ID"] as String)
+        if (buildPipelineRecords.isNotEmpty) {
+            buildPipelineRecords.forEach {
+                skipPipelineIdsNew.add(it.pipelineId)
             }
         }
         if (skipPipelineIds.isNotEmpty()) {
@@ -186,19 +186,22 @@ class TXPipelineService @Autowired constructor(
         var count = 0L
         try {
 
-            val list = if (pipelineBuildSummary.isNotEmpty) {
+            val list = if (buildPipelineRecords.isNotEmpty) {
 
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines =
-                    pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
-                val allFilterPipelines =
-                    pipelineListFacadeService.filterViewPipelines(
-                        projectId = projectId,
-                        pipelines = pipelines,
-                        filterByName = filterByPipelineName,
-                        filterByCreator = filterByCreator,
-                        filterByLabels = filterByLabels
-                    )
+                val pipelines = pipelineListFacadeService.buildPipelines(
+                    pipelineInfoRecords = buildPipelineRecords,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    projectId = projectId
+                )
+                val allFilterPipelines = pipelineListFacadeService.filterViewPipelines(
+                    projectId = projectId,
+                    pipelines = pipelines,
+                    filterByName = filterByPipelineName,
+                    filterByCreator = filterByCreator,
+                    filterByLabels = filterByLabels
+                )
 
                 val hasPipelines = allFilterPipelines.isNotEmpty()
 
