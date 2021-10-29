@@ -340,7 +340,6 @@ class PipelineBuildQualityService(
                                 executeCount = task.executeCount ?: 1
                             )
                         }
-
                     }
                 }
 
