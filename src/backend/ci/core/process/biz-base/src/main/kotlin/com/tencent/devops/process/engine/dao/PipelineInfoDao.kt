@@ -344,7 +344,7 @@ class PipelineInfoDao {
         days: Long? = null // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
-            val query = if (!projectId.isNullOrBlank()) {
+            val query = if (!projectId.isBlank()) {
                 dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
             } else {
@@ -572,6 +572,20 @@ class PipelineInfoDao {
                 fetchSize = size
             }
         } while (fetchSize == 1000)
+    }
+
+    fun updateLatestStartTime(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        startTime: LocalDateTime
+    ) {
+        with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(LATEST_START_TIME, startTime)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
     }
 
     companion object {

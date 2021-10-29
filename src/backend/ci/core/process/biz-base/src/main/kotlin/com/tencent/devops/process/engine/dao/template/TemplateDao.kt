@@ -416,36 +416,6 @@ class TemplateDao {
         )
     }
 
-    /**
-     * 批量获取某一些Project下的模板，用做统计
-     */
-    fun listTemplateByProjectIds(
-        dslContext: DSLContext,
-        projectIds: Set<String>,
-        includePublicFlag: Boolean? = null,
-        templateType: TemplateType? = null,
-        templateIdList: Collection<String>? = null,
-        storeFlag: Boolean? = null,
-        page: Int? = null,
-        pageSize: Int? = null
-    ): Result<out Record>? {
-        val a = TTemplate.T_TEMPLATE.`as`("a")
-
-        val conditions = mutableListOf<Condition>()
-        conditions.add(a.PROJECT_ID.`in`(projectIds))
-
-        return listTemplateByProjectCondition(
-            dslContext = dslContext,
-            templateType = templateType,
-            templateIdList = templateIdList,
-            storeFlag = storeFlag,
-            page = page,
-            pageSize = pageSize,
-            a = a,
-            conditions = conditions
-        )
-    }
-
     fun listTemplateByProjectCondition(
         dslContext: DSLContext,
         templateType: TemplateType?,
@@ -465,7 +435,7 @@ class TemplateDao {
         if (storeFlag != null) {
             conditions.add(a.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`("templateId"), a.VERSION.max().`as`("version")).from(a).where(conditions).groupBy(a.ID)
+        val t = dslContext.select(a.ID.`as`("templateId"), DSL.max(a.VERSION).`as`("version")).from(a).groupBy(a.ID)
 
         val baseStep = dslContext.select(
             a.ID.`as`("templateId"),
@@ -494,6 +464,7 @@ class TemplateDao {
                     )
                 )
             )
+            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
 
         return if (null != page && null != pageSize) {

@@ -276,11 +276,17 @@ class PipelineBuildDao {
     /**
      * 1：开始构建
      */
-    fun startBuild(dslContext: DSLContext, projectId: String, buildId: String, retry: Boolean = false) {
+    fun startBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        startTime: LocalDateTime? = null,
+        retry: Boolean = false
+    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
             if (!retry) {
-                update.set(START_TIME, LocalDateTime.now())
+                update.set(START_TIME, startTime)
             }
             update.set(IS_RETRY, retry)
             update.setNull(ERROR_INFO)

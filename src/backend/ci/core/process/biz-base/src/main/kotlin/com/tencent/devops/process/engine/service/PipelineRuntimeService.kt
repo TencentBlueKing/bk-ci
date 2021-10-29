@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -81,6 +82,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -99,6 +101,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -124,7 +127,7 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildStartupParamService
@@ -156,7 +159,6 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -165,8 +167,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
 
 /**
  * 流水线运行时相关的服务
@@ -188,6 +188,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val stageTagService: StageTagService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
@@ -283,7 +284,7 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)
     }
 
-    fun getBuildSummaryRecords(
+    fun getBuildPipelineRecords(
         projectId: String,
         channelCode: ChannelCode,
         pipelineIds: Collection<String>? = null,
@@ -295,7 +296,7 @@ class PipelineRuntimeService @Autowired constructor(
         permissionFlag: Boolean? = null,
         page: Int? = null,
         pageSize: Int? = null
-    ): Result<out Record> {
+    ): Result<TPipelineInfoRecord> {
         return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
             projectId = projectId,
@@ -312,41 +313,40 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-    fun getBuildSummaryRecords(
+    fun getBuildPipelineRecords(
         dslContext: DSLContext,
         projectIds: Set<String>,
         channelCodes: Set<ChannelCode>?,
         limit: Int?,
         offset: Int?
-    ): Result<out Record> {
-        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectIds, channelCodes, limit, offset)
+    ): Result<TPipelineInfoRecord> {
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectIds = projectIds,
+            channelCodes = channelCodes,
+            limit = limit,
+            offset = offset
+        )
     }
 
-    fun getBuildSummaryRecords(
+    fun getBuildPipelineRecords(
         channelCodes: Set<ChannelCode>?,
         pipelineIds: Collection<String>
-    ): Result<out Record> {
+    ): Result<TPipelineInfoRecord> {
         return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, channelCodes, pipelineIds)
     }
 
     fun getLatestBuild(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {
-        val records = getBuildSummaryRecords(
-            projectId = projectId,
-            channelCode = ChannelCode.BS,
-            pipelineIds = pipelineIds
-        )
-        val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val records = pipelineBuildSummaryDao.listSummaryByPipelineIds(dslContext, pipelineIds, projectId)
         val ret = mutableMapOf<String, PipelineLatestBuild>()
         records.forEach {
-            val startTime = it["LATEST_START_TIME"] as? TemporalAccessor
-            val endTime = it["LATEST_END_TIME"] as? TemporalAccessor
-            val status = it["LATEST_STATUS"] as? Int
-            val pipelineId = it["PIPELINE_ID"] as String
+            val status = it.latestStatus
+            val pipelineId = it.pipelineId
             ret[pipelineId] = PipelineLatestBuild(
-                buildId = it["LATEST_BUILD_ID"] as String? ?: "",
-                startUser = it["LATEST_START_USER"] as String? ?: "",
-                startTime = if (startTime != null) df.format(startTime) else "",
-                endTime = if (endTime != null) df.format(endTime) else "",
+                buildId = it.latestBuildId ?: "",
+                startUser = it.latestStartUser ?: "",
+                startTime = DateTimeUtil.toDateTime(it.latestStartTime),
+                endTime = DateTimeUtil.toDateTime(it.latestEndTime),
                 status = if (status != null) BuildStatus.values()[status].name else null
             )
         }
@@ -1160,7 +1160,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     variables = buildVariables
                 )
+
                 if (buildHistoryRecord != null) {
+                    if (!context.stageRetry &&
+                        context.actionType.isRetry() &&
+                        context.retryStartTaskId.isNullOrEmpty()) {
+                        // 完整重试,重置启动时间
+                        buildHistoryRecord.startTime = LocalDateTime.now()
+                    }
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
@@ -1750,18 +1757,26 @@ class PipelineRuntimeService @Autowired constructor(
     fun startLatestRunningBuild(latestRunningBuild: LatestRunningBuild, retry: Boolean) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
+            val startTime = LocalDateTime.now()
             buildDetailDao.updateStatus(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 buildStatus = BuildStatus.RUNNING,
-                startTime = LocalDateTime.now()
+                startTime = startTime
             )
             pipelineBuildDao.startBuild(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
+                startTime = startTime,
                 retry = retry
+            )
+            pipelineInfoDao.updateLatestStartTime(
+                dslContext = transactionContext,
+                projectId = latestRunningBuild.projectId,
+                pipelineId = latestRunningBuild.pipelineId,
+                startTime = startTime,
             )
             pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }
@@ -2214,13 +2229,16 @@ class PipelineRuntimeService @Autowired constructor(
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrEmpty()) {
-            buildVariableService.batchSetVariable(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
-            )
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                buildVariableService.batchSetVariable(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
+                )
+            }
         }
     }
 

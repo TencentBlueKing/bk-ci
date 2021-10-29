@@ -25,42 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.process.config
 
-import com.tencent.devops.artifactory.api.SampleBuildFileResource
-import com.tencent.devops.artifactory.pojo.Count
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
-import org.springframework.beans.factory.annotation.Autowired
+import org.jooq.DSLContext
+import org.jooq.SQLDialect
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DefaultConfiguration
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
+import javax.sql.DataSource
+import javax.validation.constraints.NotNull
 
-@RestResource
-class SampleBuildFileResourceImpl @Autowired constructor(
-    private val archiveFileService: ArchiveFileService,
-    private val client: Client
-) : SampleBuildFileResource {
+@Configuration
+@Import(BkShardingDataSourceConfiguration::class)
+class ProcessJooqConfiguration {
 
-    override fun acrossProjectCopy(
-        projectId: String,
-        pipelineId: String,
-        artifactoryType: ArtifactoryType,
-        path: String,
-        targetProjectId: String,
-        targetPath: String
-    ): Result<Count> {
-        val userId = client.get(ServicePipelineResource::class)
-            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-        val count = archiveFileService.acrossProjectCopy(
-            userId = userId,
-            projectId = projectId,
-            artifactoryType = artifactoryType,
-            path = path,
-            targetPath = targetPath,
-            targetProjectId = targetProjectId
-        )
-        return Result(count)
+    @Bean
+    @NotNull
+    fun shardingDslContest(
+        @Qualifier("shardingDataSource")
+        shardingDataSource: DataSource
+    ): DSLContext {
+        val configuration: org.jooq.Configuration = DefaultConfiguration()
+            .set(shardingDataSource)
+            .set(Settings().withRenderSchema(false)
+                .withExecuteLogging(true)
+                .withRenderFormatted(false))
+            .set(SQLDialect.MYSQL)
+        return DSL.using(configuration)
     }
 }

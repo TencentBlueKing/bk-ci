@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
+import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GROUP_COUNT_EXCEEDS_LIMIT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_COUNT_EXCEEDS_LIMIT
@@ -425,16 +426,34 @@ class PipelineGroupService @Autowired constructor(
 
     fun getPipelinesGroupLabel(
         pipelineIds: List<String>,
-        projectId: String? = null
+        projectId: String
     ): Map<String, List<PipelineGroupLabels>> {
-        val records = pipelineLabelPipelineDao.listPipelinesGroupsAndLabels(dslContext, pipelineIds, projectId)
+        val pipelineLabelRelRecords = pipelineLabelPipelineDao.listPipelineLabelRels(dslContext, pipelineIds, projectId)
         val result = mutableMapOf<String, MutableList<PipelineGroupLabels>>()
-        records.forEach {
-            val pipelineId = it.value1()
-            val groupName = it.value2()
-            val labelName = it.value3()
+        val labelIds = mutableSetOf<Long>()
+        pipelineLabelRelRecords?.forEach { pipelineLabelPipelineRecord ->
+            labelIds.add(pipelineLabelPipelineRecord.labelId)
+        }
+        val labelDataMap = mutableMapOf<Long, TPipelineLabelRecord>()
+        val groupIds = mutableSetOf<Long>()
+        val pipelineLabelRecords = pipelineLabelDao.getByIds(dslContext, projectId, labelIds)
+        pipelineLabelRecords.forEach { pipelineLabelRecord ->
+            labelDataMap[pipelineLabelRecord.id] = pipelineLabelRecord
+            groupIds.add(pipelineLabelRecord.groupId)
+        }
+        val groupDataMap = mutableMapOf<Long, TPipelineGroupRecord>()
+        val pipelineGroupRecords = pipelineGroupDao.listByIds(dslContext, projectId, groupIds)
+        pipelineGroupRecords.forEach { pipelineGroupRecord ->
+            groupDataMap[pipelineGroupRecord.id] = pipelineGroupRecord
+        }
+        pipelineLabelRelRecords?.forEach { pipelineLabelPipelineRecord ->
+            val pipelineId = pipelineLabelPipelineRecord.pipelineId
+            val pipelineLabelRecord = labelDataMap[pipelineLabelPipelineRecord.labelId]
+            val labelName = pipelineLabelRecord?.name
+            val groupId = pipelineLabelRecord?.groupId
+            val groupName = if (groupId != null) groupDataMap[groupId]?.name else null
             // groupName 和 labelName有可能为空
-            if (pipelineId.isNotBlank() && groupName.isNotBlank() && labelName.isNotBlank()) {
+            if (!pipelineId.isNullOrBlank() && !groupName.isNullOrBlank() && !labelName.isNullOrBlank()) {
                 if (result.containsKey(pipelineId)) {
                     var notHasGroupName = true
                     result[pipelineId]!!.forEach { pipelineGroupLabels ->

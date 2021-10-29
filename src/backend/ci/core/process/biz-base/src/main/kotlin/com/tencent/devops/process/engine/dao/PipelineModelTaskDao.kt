@@ -39,7 +39,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
@@ -54,13 +53,12 @@ import java.time.LocalDateTime
 class PipelineModelTaskDao {
 
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
-        val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineModelTaskRecord>>()
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
                 val taskParamJson = JsonUtil.toJson(modelTask.taskParams, formatted = false)
                 val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "", formatted = false)
                 val currentTime = LocalDateTime.now()
-                val set = dslContext.insertInto(this)
+                dslContext.insertInto(this)
                     .set(PIPELINE_ID, modelTask.pipelineId)
                     .set(PROJECT_ID, modelTask.projectId)
                     .set(STAGE_ID, modelTask.stageId)
@@ -85,18 +83,8 @@ class PipelineModelTaskDao {
                     .set(TASK_PARAMS, taskParamJson)
                     .set(ADDITIONAL_OPTIONS, additionalOptionsJson)
                     .set(UPDATE_TIME, currentTime)
-                records.add(set)
+                    .execute()
             }
-        }
-        if (records.isNotEmpty()) {
-            val count = dslContext.batch(records).execute()
-            var success = 0
-            count.forEach {
-                if (it == 1) {
-                    success++
-                }
-            }
-            logger.info("batchSave_model_tasks|total=${count.size}|success_count=$success")
         }
     }
 

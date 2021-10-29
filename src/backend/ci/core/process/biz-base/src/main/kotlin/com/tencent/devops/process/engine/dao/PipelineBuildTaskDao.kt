@@ -39,8 +39,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
-import org.jooq.InsertSetMoreStep
-import org.jooq.Query
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -111,11 +109,9 @@ class PipelineBuildTaskDao {
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildTask>) {
-        val records =
-            mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
-                val sql = dslContext.insertInto(this)
+                dslContext.insertInto(this)
                     .set(PROJECT_ID, it.projectId)
                     .set(PIPELINE_ID, it.pipelineId)
                     .set(BUILD_ID, it.buildId)
@@ -156,47 +152,42 @@ class PipelineBuildTaskDao {
                     )
                     .set(CONTAINER_HASH_ID, it.containerHashId)
                     .set(ATOM_CODE, it.atomCode)
-
-                records.add(sql)
+                    .execute()
             }
-            dslContext.batch(records).execute()
         }
     }
 
     fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildTaskRecord>) {
-        val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
-                records.add(
-                    dslContext.update(this)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(STAGE_ID, it.stageId)
-                        .set(CONTAINER_ID, it.containerId)
-                        .set(TASK_NAME, it.taskName)
-                        .set(TASK_PARAMS, it.taskParams)
-                        .set(TASK_TYPE, it.taskType)
-                        .set(TASK_ATOM, it.taskAtom)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(STARTER, it.starter)
-                        .set(APPROVER, it.approver)
-                        .set(STATUS, it.status)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(TASK_SEQ, it.taskSeq)
-                        .set(SUB_PROJECT_ID, it.subProjectId)
-                        .set(SUB_BUILD_ID, it.subBuildId)
-                        .set(CONTAINER_TYPE, it.containerType)
-                        .set(ADDITIONAL_OPTIONS, it.additionalOptions)
-                        .set(TOTAL_TIME, it.totalTime)
-                        .set(ERROR_TYPE, it.errorType)
-                        .set(ERROR_MSG, it.errorMsg)
-                        .set(ERROR_CODE, it.errorCode)
-                        .set(CONTAINER_HASH_ID, it.containerHashId)
-                        .set(ATOM_CODE, it.atomCode)
-                        .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)).and(PROJECT_ID.eq(it.projectId)))
-                )
+                dslContext.update(this)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(STAGE_ID, it.stageId)
+                    .set(CONTAINER_ID, it.containerId)
+                    .set(TASK_NAME, it.taskName)
+                    .set(TASK_PARAMS, it.taskParams)
+                    .set(TASK_TYPE, it.taskType)
+                    .set(TASK_ATOM, it.taskAtom)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(STARTER, it.starter)
+                    .set(APPROVER, it.approver)
+                    .set(STATUS, it.status)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(TASK_SEQ, it.taskSeq)
+                    .set(SUB_PROJECT_ID, it.subProjectId)
+                    .set(SUB_BUILD_ID, it.subBuildId)
+                    .set(CONTAINER_TYPE, it.containerType)
+                    .set(ADDITIONAL_OPTIONS, it.additionalOptions)
+                    .set(TOTAL_TIME, it.totalTime)
+                    .set(ERROR_TYPE, it.errorType)
+                    .set(ERROR_MSG, it.errorMsg)
+                    .set(ERROR_CODE, it.errorCode)
+                    .set(CONTAINER_HASH_ID, it.containerHashId)
+                    .set(ATOM_CODE, it.atomCode)
+                    .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)).and(PROJECT_ID.eq(it.projectId)))
+                    .execute()
             }
-            dslContext.batch(records).execute()
         }
     }
 

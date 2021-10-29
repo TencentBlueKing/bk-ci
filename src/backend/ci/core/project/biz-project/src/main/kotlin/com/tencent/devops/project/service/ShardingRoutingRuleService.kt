@@ -25,6 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+<<<<<<< HEAD:src/backend/ci/ext/tencent/scm/biz-scm/src/main/kotlin/com/tencent/devops/scm/resources/BuildGitCiResourceImpl.kt
+package com.tencent.devops.scm.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.services.GitService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class BuildGitCiResourceImpl @Autowired constructor(
+    private val gitService: GitService
+) : BuildGitCiResource {
+
+    override fun getToken(gitProjectId: String): Result<GitToken> {
+        return Result(gitService.getToken(gitProjectId))
+    }
+
+    override fun clearToken(token: String): Result<Boolean> {
+        return Result(gitService.clearToken(token))
+    }
+=======
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.ShardingRoutingRule
@@ -40,4 +63,5 @@ interface ShardingRoutingRuleService {
     fun getShardingRoutingRuleById(id: String): ShardingRoutingRule?
 
     fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule?
+>>>>>>> carl/issue_5267_sub_db:src/backend/ci/core/project/biz-project/src/main/kotlin/com/tencent/devops/project/service/ShardingRoutingRuleService.kt
 }

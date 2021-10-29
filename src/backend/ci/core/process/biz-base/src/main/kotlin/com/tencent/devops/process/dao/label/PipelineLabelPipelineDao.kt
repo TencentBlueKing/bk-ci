@@ -27,13 +27,10 @@
 
 package com.tencent.devops.process.dao.label
 
-import com.tencent.devops.model.process.tables.TPipelineGroup
-import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record3
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -82,25 +79,24 @@ class PipelineLabelPipelineDao {
     ) {
         logger.info("Create pipeline-label for pipeline $pipelineId with labels $labelIds by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-            dslContext.batch(
-                labelIds.map {
-                    dslContext.insertInto(
-                        this,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        LABEL_ID,
-                        CREATE_TIME,
-                        CREATE_USER
-                    )
-                        .values(
-                            projectId,
-                            pipelineId,
-                            it,
-                            LocalDateTime.now(),
-                            userId
-                        ).onDuplicateKeyIgnore()
-                }
-            ).execute()
+            labelIds.map {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    LABEL_ID,
+                    CREATE_TIME,
+                    CREATE_USER
+                )
+                    .values(
+                        projectId,
+                        pipelineId,
+                        it,
+                        LocalDateTime.now(),
+                        userId
+                    ).onDuplicateKeyIgnore()
+                    .execute()
+            }
         }
     }
 
@@ -170,40 +166,17 @@ class PipelineLabelPipelineDao {
         }
     }
 
-    /**
-     * 获取Pipelines的group与label
-     */
-    fun listPipelinesGroupsAndLabels(
+    fun listPipelineLabelRels(
         dslContext: DSLContext,
         pipelineIds: List<String>,
-        projectId: String? = null
-    ): Result<Record3<String, String, String>> {
-        val labelPipelineTable = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("t1")
-        val labelTable = TPipelineLabel.T_PIPELINE_LABEL.`as`("t2")
-        val groupTable = TPipelineGroup.T_PIPELINE_GROUP.`as`("t3")
-        // 排除标签和分组为空的情况
-        val conditions = mutableListOf<Condition>()
-        conditions.add(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
-        conditions.add(labelTable.NAME.notEqual(""))
-        conditions.add(labelTable.NAME.isNotNull)
-        conditions.add(groupTable.NAME.notEqual(""))
-        conditions.add(groupTable.NAME.isNotNull)
-        conditions.add(labelPipelineTable.PIPELINE_ID.notEqual(""))
-        conditions.add(labelPipelineTable.PIPELINE_ID.isNotNull)
-        if (projectId != null) {
-            conditions.add(groupTable.PROJECT_ID.eq(projectId))
+        projectId: String
+    ): Result<TPipelineLabelPipelineRecord>? {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            conditions.add(PROJECT_ID.eq(projectId))
+            return dslContext.selectFrom(this).where(conditions).fetch()
         }
-        return dslContext.select(
-            labelPipelineTable.PIPELINE_ID.`as`("PIPELINE_ID"),
-            groupTable.NAME.`as`("GROUP_NAME"),
-            labelTable.NAME.`as`("LABEL_NAME")
-        ).from(labelPipelineTable)
-            .leftJoin(labelTable)
-            .on(labelPipelineTable.LABEL_ID.eq(labelTable.ID))
-            .leftJoin(groupTable)
-            .on(labelTable.GROUP_ID.eq(groupTable.ID))
-            .where(conditions)
-            .fetch()
     }
 
     companion object {

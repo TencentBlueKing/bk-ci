@@ -28,17 +28,15 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
 import org.jooq.DatePart
-import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.Query
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -89,59 +87,52 @@ class PipelineBuildContainerDao {
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildContainer>) {
-        val records =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
         with(T_PIPELINE_BUILD_CONTAINER) {
             taskList.forEach {
-                records.add(
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(BUILD_ID, it.buildId)
-                        .set(STAGE_ID, it.stageId)
-                        .set(CONTAINER_ID, it.containerId)
-                        .set(CONTAINER_TYPE, it.containerType)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status.ordinal)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                        .onDuplicateKeyUpdate()
-                        .set(STATUS, it.status.ordinal)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                )
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(BUILD_ID, it.buildId)
+                    .set(STAGE_ID, it.stageId)
+                    .set(CONTAINER_ID, it.containerId)
+                    .set(CONTAINER_TYPE, it.containerType)
+                    .set(SEQ, it.seq)
+                    .set(STATUS, it.status.ordinal)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .onDuplicateKeyUpdate()
+                    .set(STATUS, it.status.ordinal)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
     fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildContainerRecord>) {
-        val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_CONTAINER) {
             taskList.forEach {
-                records.add(
-                    dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(CONTAINER_TYPE, it.containerType)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.conditions)
-                        .where(BUILD_ID.eq(it.buildId)
-                            .and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
-                )
+                dslContext.update(this)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(CONTAINER_TYPE, it.containerType)
+                    .set(SEQ, it.seq)
+                    .set(STATUS, it.status)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(CONDITIONS, it.conditions)
+                    .where(BUILD_ID.eq(it.buildId)
+                        .and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
+                    .execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
     fun get(
@@ -184,10 +175,10 @@ class PipelineBuildContainerDao {
                 if (buildStatus.isFinish()) {
                     update.set(
                         COST, COST + JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    )
+                            DatePart.SECOND,
+                            START_TIME.cast(java.sql.Timestamp::class.java),
+                            END_TIME.cast(java.sql.Timestamp::class.java)
+                        )
                     )
                 }
             }
@@ -219,12 +210,6 @@ class PipelineBuildContainerDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
-        }
-    }
-
-    fun countByStatus(dslContext: DSLContext, status: Int): Int {
-        return with(T_PIPELINE_BUILD_CONTAINER) {
-            dslContext.selectCount().from(this).where(STATUS.eq(status)).fetchOne(0, Int::class.java)!!
         }
     }
 
