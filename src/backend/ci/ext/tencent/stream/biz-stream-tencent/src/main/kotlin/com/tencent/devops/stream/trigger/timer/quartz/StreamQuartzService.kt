@@ -88,7 +88,7 @@ class StreamQuartzService @Autowired constructor(
             list.forEach { timer ->
                 logger.info("TIMER_RELOAD| load crontab($timer)")
                 timer.crontabExpressions.forEach { crontab ->
-                    addJob(pipelineId = timer.pipelineId, crontab = crontab)
+                    addJob(projectId = timer.projectId, pipelineId = timer.pipelineId, crontab = crontab)
                 }
             }
             start += limit
@@ -97,10 +97,10 @@ class StreamQuartzService @Autowired constructor(
         logger.warn("TIMER_RELOAD| reload ok!")
     }
 
-    fun addJob(pipelineId: String, crontab: String) {
+    fun addJob(projectId: String, pipelineId: String, crontab: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = "${pipelineId}_$md5"
+            val comboKey = "${pipelineId}_${md5}_${projectId}"
             schedulerManager.addJob(
                 comboKey, crontab,
                 jobBeanClass
