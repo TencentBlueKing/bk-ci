@@ -20,7 +20,7 @@ class ApigwAuthValidateResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        group: BkAuthGroup?,
+        group: BkAuthGroup?
     ): Result<Boolean> {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
             token = tokenService.getSystemToken(null)!!,
