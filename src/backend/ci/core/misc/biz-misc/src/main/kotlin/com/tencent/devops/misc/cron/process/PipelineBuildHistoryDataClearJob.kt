@@ -400,6 +400,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         }
         processMiscService.updateTemplatePipelineProject(pipelineId, projectId)
         val totalBuildCount = processMiscService.getTotalBuildCount(
+            projectId = projectId,
             pipelineId = pipelineId,
             maxStartTime = maxStartTime,
             geTimeFlag = true
@@ -407,6 +408,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
+                projectId = projectId,
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
                 handlePageSize = DEFAULT_PAGE_SIZE,
