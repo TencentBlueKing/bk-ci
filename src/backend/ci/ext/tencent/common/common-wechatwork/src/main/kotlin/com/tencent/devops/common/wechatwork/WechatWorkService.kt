@@ -30,9 +30,16 @@ package com.tencent.devops.common.wechatwork
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JacksonUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.common.wechatwork.model.CallbackElement
+import com.tencent.devops.common.wechatwork.model.CreateChatItem
+import com.tencent.devops.common.wechatwork.model.LinkItem
+import com.tencent.devops.common.wechatwork.model.ReceiverItem
+import com.tencent.devops.common.wechatwork.model.RichTextItem
+import com.tencent.devops.common.wechatwork.model.SendInfo
+import com.tencent.devops.common.wechatwork.model.TextItem
 import com.tencent.devops.common.wechatwork.model.enums.FromType
 import com.tencent.devops.common.wechatwork.model.enums.MsgType
 import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
@@ -66,6 +73,7 @@ class WechatWorkService @Autowired constructor(
     private var timeOutStamp: LocalDateTime? = null
     private var accessToken: String? = null
     private var mapper = jacksonObjectMapper()
+
     //    private var httpClient = OkHttpClient.Builder()
 //            .connectTimeout(5L, TimeUnit.SECONDS)
 //            .readTimeout(60L, TimeUnit.SECONDS)
@@ -184,20 +192,19 @@ class WechatWorkService @Autowired constructor(
     * */
     fun sendTextSingle(text: String, receiver: String) {
         val accessToken = getAccessToken()
-        val jsonString = """
-{
-   "receiver":
-   {
-       "type": "single",
-       "id": "$receiver"
-   },
-   "msgtype": "text",
-   "text":
-   {
-       "content": "$text"
-   }
-}
-            """
+        val requestData = SendInfo(
+            receiver = ReceiverItem(
+                type = "single",
+                id = receiver
+            ),
+            messageType = "text",
+            text = TextItem(
+                content = text
+            ),
+            markdown = null,
+            richText = null
+        )
+        val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
@@ -219,20 +226,19 @@ class WechatWorkService @Autowired constructor(
     * */
     fun sendTextGroup(text: String, chatId: String) {
         val accessToken = getAccessToken()
-        val jsonString = """
-{
-   "receiver":
-   {
-       "type": "group",
-       "id": "$chatId"
-   },
-   "msgtype": "text",
-   "text":
-   {
-       "content": "$text"
-   }
-}
-            """
+        val requestData = SendInfo(
+            receiver = ReceiverItem(
+                type = "group",
+                id = chatId
+            ),
+            messageType = "text",
+            text = TextItem(
+                content = text
+            ),
+            markdown = null,
+            richText = null
+        )
+        val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
@@ -254,20 +260,19 @@ class WechatWorkService @Autowired constructor(
     * */
     fun sendMarkdownGroup(markdown: String, chatId: String) {
         val accessToken = getAccessToken()
-        val jsonString = """
-{
-   "receiver":
-   {
-       "type": "group",
-       "id": "$chatId"
-   },
-   "msgtype": "markdown",
-   "markdown":
-   {
-       "content": "$markdown"
-   }
-}
-            """
+        val requestData = SendInfo(
+            receiver = ReceiverItem(
+                type = "group",
+                id = chatId
+            ),
+            messageType = "markdown",
+            text = null,
+            markdown = TextItem(
+                content = markdown
+            ),
+            richText = null
+        )
+        val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
@@ -312,32 +317,33 @@ class WechatWorkService @Autowired constructor(
     * */
     fun sendRichTextCommon(text: String, receiver: String) {
         val accessToken = getAccessToken()
-        val jsonString = """
-{
-   "receiver":
-   {
-       "type": "single",
-       "id": "$receiver"
-   },
-   "msgtype": "rich_text",
-   "rich_text": [
-   {
-       "type": "text",
-       "text": {
-         "content": "$text"
-       }
-   },
-   {
-       "type": "link",
-       "link": {
-         "type": "click",
-         "text": "人工服务",
-         "key": "humanService"
-       }
-   },
-  ]
-}
-"""
+        val requestData = SendInfo(
+            receiver = ReceiverItem(
+                type = "single",
+                id = receiver
+            ),
+            messageType = "rich_text",
+            text = null,
+            markdown = null,
+            richText = listOf(
+                RichTextItem(
+                    type = "text",
+                    text = TextItem(
+                        content = text
+                    ),
+                    link = null
+                ), RichTextItem(
+                    type = "link",
+                    link = LinkItem(
+                        type = "click",
+                        text = "人工服务",
+                        key = "humanService"
+                    ),
+                    text = null
+                )
+            )
+        )
+        val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
@@ -368,22 +374,13 @@ class WechatWorkService @Autowired constructor(
     fun createChatByUserNames(title: String, userNameList: List<String>): String {
         var chatId = ""
         val accessToken = getAccessToken()
-        var userNameString = ""
-        var i = 0
-        userNameList.forEach {
-            userNameString += if (i == 0) {
-                "\"$it\""
-            } else {
-                ",\"$it\""
-            }
-            i++
-        }
-        val jsonString = """
-{
-   "name": "$title",
-   "userlist": [$userNameString]
-}
-"""
+
+        val requestData = CreateChatItem(
+            name = title,
+            userList = userNameList
+        )
+        val jsonString = JsonUtil.toJson(requestData)
+
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/create?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
         val sendRequest = Request.Builder()

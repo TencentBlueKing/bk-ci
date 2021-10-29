@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,28 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service.job
-
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Service
-
-/**
- * deng
- * 2019-01-14
- */
-@Service
-class SyncCCAppNameJobService @Autowired constructor(private val synProjectService: SynProjectService) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SyncCCAppNameJobService::class.java)
-    }
-
-    @Scheduled(cron = "0 0 4 * * ?") // 每天早上4点执行一次
-    fun syncCCName() {
-        logger.info("Start to sync project cc name")
-        val count = synProjectService.syncCCAppName()
-        logger.info("Success to sync $count cc names")
-    }
+dependencies {
+    api(project(":core:dispatch:biz-dispatch"))
 }

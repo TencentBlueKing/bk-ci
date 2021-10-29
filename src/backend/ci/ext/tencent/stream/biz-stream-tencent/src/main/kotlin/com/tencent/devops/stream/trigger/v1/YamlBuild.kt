@@ -105,6 +105,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -185,7 +186,7 @@ class YamlBuild @Autowired constructor(
         val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer =
             TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), VMUtils.genStageId(1))
         stageList.add(stage1)
 
         // 第二个stage，services初始化
@@ -208,7 +209,7 @@ class YamlBuild @Autowired constructor(
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-$stageIndex"))
+            stageList.add(Stage(containerList, VMUtils.genStageId(stageIndex)))
         }
         return Model(
             name = GitCIPipelineUtils.genBKPipelineName(gitProjectConf.gitProjectId),

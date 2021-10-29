@@ -49,12 +49,6 @@ interface OpenExperienceResource {
         token: String
     ): Result<OuterProfileVO>
 
-    // TODO 修复数据用,20210621之后可以删除掉
-    @ApiOperation("重载热门推荐数据")
-    @Path("/reloadHot")
-    @GET
-    fun reloadHot()
-
     @ApiOperation("苹果应用商店跳转")
     @Path("/appstore/redirect")
     @GET

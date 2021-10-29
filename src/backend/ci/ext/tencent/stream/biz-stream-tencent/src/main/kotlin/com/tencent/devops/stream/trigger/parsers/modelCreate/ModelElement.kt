@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -81,10 +82,15 @@ class ModelElement @Autowired constructor(
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = getElementEnv(step.env),
-                runCondition = if (step.ifFiled.isNullOrBlank()) {
-                    RunCondition.PRE_TASK_SUCCESS
-                } else {
-                    RunCondition.CUSTOM_CONDITION_MATCH
+                runCondition = when {
+                    step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
+                    IfType.ALWAYS_UNLESS_CANCELLED.name == step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+                    IfType.ALWAYS.name == step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+                    IfType.FAILURE.name == step.ifFiled ?: "" ->
+                        RunCondition.PRE_TASK_FAILED_ONLY
+                    else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
                 customCondition = step.ifFiled
             )
@@ -178,6 +184,11 @@ class ModelElement @Autowired constructor(
                         inputMap["refName"] = event.branch
                     }
                 }
+                // 定时触发根据传入的分支参数触发
+                TGitObjectKind.SCHEDULE.value -> {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
                 else -> {
                     inputMap["pullType"] = "COMMIT_ID"
                     inputMap["refName"] = event.commitId
@@ -261,7 +272,8 @@ class ModelElement @Autowired constructor(
                 NameAndValue(
                     key = it.key,
                     value = it.value.toString()
-                ))
+                )
+            )
         }
 
         return nameAndValueList

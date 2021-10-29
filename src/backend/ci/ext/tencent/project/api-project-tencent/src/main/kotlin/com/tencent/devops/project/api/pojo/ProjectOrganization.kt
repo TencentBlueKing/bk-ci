@@ -34,33 +34,33 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("项目组织信息")
 data class ProjectOrganization(
     @JsonProperty(value = "project_id", required = true)
-    @ApiModelProperty("项目ID")
+    @ApiModelProperty("项目ID", name = "project_id")
     val projectId: String,
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty("项目名称", name = "project_name")
     @JsonProperty(value = "project_name", required = true)
     val projectName: String,
     @JsonProperty(value = "english_name", required = true)
-    @ApiModelProperty("项目英文简称")
+    @ApiModelProperty("项目英文简称", name = "english_name")
     val projectEnglishName: String,
     @JsonProperty(value = "bg_id", required = true)
-    @ApiModelProperty("项目所属一级机构ID")
+    @ApiModelProperty("项目所属一级机构ID", name = "bg_id")
     val bgId: Long,
     @JsonProperty(value = "bg_name", required = true)
-    @ApiModelProperty("项目所属一级机构名称")
+    @ApiModelProperty("项目所属一级机构名称", name = "bg_name")
     val bgName: String,
     @JsonProperty(value = "dept_id", required = true)
-    @ApiModelProperty("项目所属二级机构ID")
+    @ApiModelProperty("项目所属二级机构ID", name = "dept_id")
     val deptId: Long,
     @JsonProperty(value = "dept_name", required = true)
-    @ApiModelProperty("项目所属二级机构名称")
+    @ApiModelProperty("项目所属二级机构名称", name = "dept_name")
     val deptName: String,
     @JsonProperty(value = "center_id", required = true)
-    @ApiModelProperty("项目所属三级机构ID")
+    @ApiModelProperty("项目所属三级机构ID", name = "center_id")
     val centerId: Long,
     @JsonProperty(value = "center_name", required = true)
-    @ApiModelProperty("项目所属三级机构名称")
+    @ApiModelProperty("项目所属三级机构名称", name = "center_name")
     val centerName: String,
     @JsonProperty(value = "project_type", required = false)
-    @ApiModelProperty("项目类型")
+    @ApiModelProperty("项目类型", name = "project_type")
     val projectType: Int?
 )

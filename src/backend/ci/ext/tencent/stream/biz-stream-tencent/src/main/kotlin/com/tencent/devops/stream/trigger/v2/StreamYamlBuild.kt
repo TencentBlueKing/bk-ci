@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -45,9 +43,6 @@ import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
-import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitCITriggerLock
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -56,62 +51,51 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.trigger.GitCheckService
-import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
-import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
+import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
+import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
 class StreamYamlBuild @Autowired constructor(
-    client: Client,
-    kafkaClient: KafkaClient,
-    gitPipelineResourceDao: GitPipelineResourceDao,
-    gitRequestEventBuildDao: GitRequestEventBuildDao,
-    gitCIEventSaveService: GitCIEventService,
-    websocketService: StreamWebsocketService,
-    streamPipelineBranchService: StreamPipelineBranchService,
-    gitCheckService: GitCheckService,
-    streamGitConfig: StreamGitConfig,
-    triggerMessageUtil: StreamTriggerMessageUtils,
+    private val streamYamlBaseBuild: StreamYamlBaseBuild,
     private val dslContext: DSLContext,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineService: GitCIPipelineService,
     private val redisOperation: RedisOperation,
     private val modelCreate: ModelCreate,
-    private val streamStorageBean: StreamStorageBean
-) : StreamYamlBaseBuild<ScriptBuildYaml>(
-    client, kafkaClient, dslContext, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitCIEventSaveService, websocketService, streamPipelineBranchService,
-    gitCheckService, streamGitConfig, triggerMessageUtil
+    private val streamStorageBean: StreamStorageBean,
+    private val streamTimerService: StreamTimerService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
         private const val ymlVersion = "v2.0"
         const val VARIABLE_PREFIX = "variables."
+        private val channelCode = ChannelCode.GIT
     }
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
-    override fun gitStartBuild(
+    fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
         originYaml: String,
-        parsedYaml: String?,
+        parsedYaml: String,
         normalizedYaml: String,
-        gitBuildId: Long?
+        gitBuildId: Long?,
+        onlySavePipeline: Boolean,
+        isTimeTrigger: Boolean
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key
@@ -130,14 +114,33 @@ class StreamYamlBuild @Autowired constructor(
             ) ?: pipeline
             // 优先创建流水线为了绑定红线
             if (realPipeline.pipelineId.isBlank()) {
-                savePipeline(
+                streamYamlBaseBuild.savePipeline(
                     pipeline = realPipeline,
                     event = event,
                     gitCIBasicSetting = gitBasicSetting,
-                    model = creatTriggerModel(gitBasicSetting)
+                    model = createTriggerModel(gitBasicSetting)
                 )
             }
-            // 如果事件未传gitBuildId说明是不做触发只做流水线保存
+
+            // 如果是定时触发需要注册事件
+            if (isTimeTrigger) {
+                streamTimerService.saveTimer(
+                    StreamTimer(
+                        projectId = GitCIPipelineUtils.genGitProjectCode(event.gitProjectId),
+                        pipelineId = realPipeline.pipelineId,
+                        userId = event.userId,
+                        crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
+                        gitProjectId = event.gitProjectId,
+                        // 未填写则在每次触发拉默认分支
+                        branchs = yaml.triggerOn?.schedules?.branches,
+                        always = yaml.triggerOn?.schedules?.always ?: false,
+                        channelCode = channelCode,
+                        eventId = event.id!!,
+                        originYaml = originYaml
+                    )
+                )
+            }
+
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     pipeline = realPipeline,
@@ -146,13 +149,15 @@ class StreamYamlBuild @Autowired constructor(
                     gitBuildId = gitBuildId,
                     gitBasicSetting = gitBasicSetting
                 )
-            } else {
-                savePipelineModel(
+            } else if (onlySavePipeline) {
+                savePipeline(
                     pipeline = realPipeline,
                     event = event,
                     yaml = yaml,
                     gitBasicSetting = gitBasicSetting
                 )
+                null
+            } else {
                 null
             }
         } catch (e: Throwable) {
@@ -199,13 +204,13 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun creatTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
+    private fun createTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
         name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
         desc = "",
         stages = listOf(
             Stage(
-                id = "stage-0",
-                name = "Stage-0",
+                id = VMUtils.genStageId(1),
+                name = VMUtils.genStageId(1),
                 containers = listOf(
                     TriggerContainer(
                         id = "0",
@@ -222,7 +227,7 @@ class StreamYamlBuild @Autowired constructor(
         )
     )
 
-    fun startBuildPipeline(
+    private fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
@@ -233,23 +238,20 @@ class StreamYamlBuild @Autowired constructor(
 
         // create or refresh pipeline
         val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
-        savePipeline(pipeline, event, gitBasicSetting, model)
-        return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
+        return streamYamlBaseBuild.startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
-    fun savePipelineModel(
+    private fun savePipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
         gitBasicSetting: GitCIBasicSetting
     ) {
-        logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
-
-        // create or refresh pipeline
         val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
-        logger.info("Git request , pipeline:$pipeline, model: $model")
-        savePipeline(pipeline, event, gitBasicSetting, model)
+        logger.info("savePipeline pipeline:$pipeline, model: $model")
+        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
     }
 }

@@ -176,6 +176,7 @@ include(":core:process:plugin-trigger")
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")
 include(":core:dispatch:biz-dispatch")
+include(":core:dispatch:biz-dispatch-sample")
 include(":core:dispatch:boot-dispatch")
 include(":core:dispatch:model-dispatch")
 

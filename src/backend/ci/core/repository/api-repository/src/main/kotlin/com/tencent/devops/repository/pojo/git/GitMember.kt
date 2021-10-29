@@ -61,7 +61,7 @@ data class GitMember(
     val username: String,
     @ApiModelProperty("状态")
     val state: String,
-    @ApiModelProperty("权限级别")
+    @ApiModelProperty("权限级别", name = "access_level")
     @JsonProperty("access_level")
     val accessLevel: Int
 )

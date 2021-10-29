@@ -33,64 +33,64 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("WeTest设备信息")
 data class WetestDevice(
-    @ApiModelProperty("cloudid")
+    @ApiModelProperty("cloudid", name = "cloudid")
     @JsonProperty("cloudid")
     val cloudId: String?,
-    @ApiModelProperty("cpu_ghz")
+    @ApiModelProperty("cpu_ghz", name = "cpu_ghz")
     @JsonProperty("cpu_ghz")
     val cpuGhz: String?,
-    @ApiModelProperty("cpu_total")
+    @ApiModelProperty("cpu_total", name = "cpu_total")
     @JsonProperty("cpu_total")
     val cpuTotal: String?,
-    @ApiModelProperty("deviceid")
+    @ApiModelProperty("deviceid", name = "deviceid")
     @JsonProperty("deviceid")
     val deviceId: String?,
-    @ApiModelProperty("id")
+    @ApiModelProperty("id", name = "id")
     @JsonProperty("id")
     val id: String?,
-    @ApiModelProperty("location")
+    @ApiModelProperty("location", name = "location")
     @JsonProperty("location")
     val location: String?,
-    @ApiModelProperty("mac")
+    @ApiModelProperty("mac", name = "mac")
     @JsonProperty("mac")
     val mac: String?,
-    @ApiModelProperty("manu")
+    @ApiModelProperty("manu", name = "manu")
     @JsonProperty("manu")
     val manu: String?,
-    @ApiModelProperty("mem_show")
+    @ApiModelProperty("mem_show", name = "mem_show")
     @JsonProperty("mem_show")
     val memShow: String?,
-    @ApiModelProperty("model")
+    @ApiModelProperty("model", name = "model")
     @JsonProperty("model")
     val model: String?,
-    @ApiModelProperty("model_en")
+    @ApiModelProperty("model_en", name = "model_en")
     @JsonProperty("model_en")
     val modelEn: String?,
-    @ApiModelProperty("modelid")
+    @ApiModelProperty("modelid", name = "modelid")
     @JsonProperty("modelid")
     val modelId: String?,
-    @ApiModelProperty("opcode")
+    @ApiModelProperty("opcode", name = "opcode")
     @JsonProperty("opcode")
     val opcode: String?,
-    @ApiModelProperty("opcodedesc")
+    @ApiModelProperty("opcodedesc", name = "opcodedesc")
     @JsonProperty("opcodedesc")
     val opCodeDesc: String?,
-    @ApiModelProperty("resolution")
+    @ApiModelProperty("resolution", name = "resolution")
     @JsonProperty("resolution")
     val resolution: String?,
-    @ApiModelProperty("state")
+    @ApiModelProperty("state", name = "state")
     @JsonProperty("state")
     val state: String?,
-    @ApiModelProperty("statedesc")
+    @ApiModelProperty("statedesc", name = "statedesc")
     @JsonProperty("statedesc")
     val stateDesc: String?,
-    @ApiModelProperty("testid")
+    @ApiModelProperty("testid", name = "testid")
     @JsonProperty("testid")
     val testId: String?,
-    @ApiModelProperty("usernum")
+    @ApiModelProperty("usernum", name = "usernum")
     @JsonProperty("usernum")
     val userNum: String?,
-    @ApiModelProperty("version")
+    @ApiModelProperty("version", name = "version")
     @JsonProperty("version")
     val version: String?
 )

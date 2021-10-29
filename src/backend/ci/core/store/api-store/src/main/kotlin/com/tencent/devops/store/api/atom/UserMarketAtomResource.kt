@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -261,4 +262,16 @@ interface UserMarketAtomResource {
         @QueryParam("defaultShowFlag")
         defaultShowFlag: Boolean?
     ): Result<String?>
+
+    @ApiOperation("展示插件的outPut参数")
+    @GET
+    @Path("/atoms/{atomCode}/output")
+    fun getAtomOutput(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<List<AtomOutput>>
 }
