@@ -51,11 +51,13 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
+import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
@@ -96,6 +98,7 @@ class RepositoryService @Autowired constructor(
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
     private val repositoryGithubDao: RepositoryGithubDao,
+    private val repositoryCodeP4Dao: RepositoryCodeP4Dao,
     private val gitOauthService: IGitOauthService,
     private val gitService: IGitService,
     private val scmService: IScmService,
@@ -587,6 +590,24 @@ class RepositoryService @Autowired constructor(
                     repositoryGithubDao.create(dslContext, repositoryId, repository.projectName, userId)
                     repositoryId
                 }
+                is CodeP4Repository -> {
+                    val repositoryId = repositoryDao.create(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        userId = userId,
+                        aliasName = repository.aliasName,
+                        url = repository.getFormatURL(),
+                        type = ScmType.CODE_P4
+                    )
+                    repositoryCodeP4Dao.create(
+                        dslContext = transactionContext,
+                        repositoryId = repositoryId,
+                        projectName = repository.url,
+                        userName = repository.userName,
+                        credentialId = repository.credentialId
+                    )
+                    repositoryId
+                }
                 else -> throw IllegalArgumentException("Unknown repository type")
             }
             repositoryId
@@ -698,6 +719,18 @@ class RepositoryService @Autowired constructor(
                     repoHashId = hashId
                 )
             }
+            ScmType.CODE_P4.name -> {
+                val record = repositoryCodeP4Dao.get(dslContext, repositoryId)
+                CodeP4Repository(
+                    aliasName = repository.aliasName,
+                    url = repository.url,
+                    credentialId = record.credentialId,
+                    projectName = record.projectName,
+                    userName = record.userName,
+                    projectId = repository.projectId,
+                    repoHashId = hashId
+                )
+            }
             else -> throw IllegalArgumentException("Unknown repository type")
         }
     }
@@ -763,8 +796,7 @@ class RepositoryService @Autowired constructor(
             )
         }
 
-        val isGitOauth = repository is CodeGitRepository && repository.authType == RepoAuthType.OAUTH
-        if (!isGitOauth) {
+        if (needToCheckToken(repository)) {
             /**
              * 类型为tGit,去掉凭据验证
              */
@@ -867,6 +899,26 @@ class RepositoryService @Autowired constructor(
                         url = repository.getFormatURL()
                     )
                     repositoryGithubDao.edit(dslContext, repositoryId, repository.projectName, repository.userName)
+                }
+                ScmType.CODE_P4.name -> {
+                    if (repository !is CodeP4Repository) {
+                        throw OperationException(
+                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID)
+                        )
+                    }
+                    repositoryDao.edit(
+                        dslContext = transactionContext,
+                        repositoryId = repositoryId,
+                        aliasName = repository.aliasName,
+                        url = repository.getFormatURL()
+                    )
+                    repositoryCodeP4Dao.edit(
+                        dslContext = transactionContext,
+                        repositoryId = repositoryId,
+                        projectName = repository.url,
+                        userName = repository.userName,
+                        credentialId = repository.credentialId
+                    )
                 }
             }
         }
@@ -1518,6 +1570,32 @@ class RepositoryService @Autowired constructor(
                     token = list[0],
                     region = null,
                     userName = repo.userName
+                )
+            }
+            is CodeP4Repository -> {
+                val username = list[0]
+                if (username.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                }
+                if (list.size < 2) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                }
+                val password = list[1]
+                if (password.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                }
+                scmService.checkUsernameAndPassword(
+                    projectName = repo.projectName,
+                    url = repo.getFormatURL(),
+                    type = ScmType.CODE_P4,
+                    username = username,
+                    password = password,
+                    token = "",
+                    region = null,
+                    repoUsername = username
                 )
             }
             else -> {

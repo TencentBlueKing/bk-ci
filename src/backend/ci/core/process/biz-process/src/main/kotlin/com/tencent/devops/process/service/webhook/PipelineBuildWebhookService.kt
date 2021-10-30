@@ -39,11 +39,11 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -53,6 +53,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -73,7 +74,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 
 @Suppress("ALL")
 @Service
@@ -186,6 +186,21 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
     }
 
+    fun externalP4Build(body: String): Boolean {
+        logger.info("Trigger p4 build($body)")
+
+        val event = try {
+            objectMapper.readValue(body, P4Event::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the p4 web hook event", e)
+            return false
+        }
+
+        val p4WebHookMatcher = scmWebhookMatcherBuilder.createP4WebHookMatcher(event)
+
+        return startProcessByWebhook(CodeP4WebHookTriggerElement.classType, p4WebHookMatcher)
+    }
+
     private fun startProcessByWebhook(codeRepositoryType: String, matcher: ScmWebhookMatcher): Boolean {
         val watcher = Watcher("${matcher.getRepoName()}|${matcher.getRevision()}|webhook trigger")
         PipelineWebhookBuildLogContext.addRepoInfo(repoName = matcher.getRepoName(), commitId = matcher.getRevision())
@@ -250,40 +265,37 @@ class PipelineBuildWebhookService @Autowired constructor(
             triggerContainer.elements.forEach {
                 when (codeRepositoryType) {
                     CodeSVNWebHookTriggerElement.classType -> {
-                        if ((it is CodeSVNWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeSVNWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitWebHookTriggerElement.classType -> {
-                        if ((it is CodeGitWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)) {
+                        if ((it is CodeGitWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGithubWebHookTriggerElement.classType -> {
-                        if ((it is CodeGithubWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeGithubWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitlabWebHookTriggerElement.classType -> {
-                        if ((it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeGitlabWebHookTriggerElement && it.isElementEnable())) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeTGitWebHookTriggerElement.classType -> {
-                        if ((it is CodeTGitWebHookTriggerElement && it.isElementEnable()) ||
-                            canGitGenericWebhookStartUp(it)
-                        ) {
+                        if ((it is CodeTGitWebHookTriggerElement && it.isElementEnable())) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeP4WebHookTriggerElement.classType -> {
+                        if (it is CodeP4WebHookTriggerElement && it.isElementEnable()) {
                             canWebhookStartup = true
                             return@lit
                         }
@@ -292,15 +304,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
         return canWebhookStartup
-    }
-
-    private fun canGitGenericWebhookStartUp(
-        element: Element
-    ): Boolean {
-        if (element is CodeGitGenericWebHookTriggerElement && element.isElementEnable()) {
-            return true
-        }
-        return false
     }
 
     fun webhookTriggerPipelineBuild(

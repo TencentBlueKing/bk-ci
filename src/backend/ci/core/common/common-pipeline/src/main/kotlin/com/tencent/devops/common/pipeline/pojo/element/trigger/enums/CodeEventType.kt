@@ -44,5 +44,8 @@ enum class CodeEventType {
     // svn event
     POST_COMMIT,
     LOCK_COMMIT,
-    PRE_COMMIT
+    PRE_COMMIT,
+
+    // p4 event
+    CHANGE_COMMIT
 }

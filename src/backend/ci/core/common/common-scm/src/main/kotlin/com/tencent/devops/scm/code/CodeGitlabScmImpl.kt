@@ -41,6 +41,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
+@SuppressWarnings("TooManyFunctions")
 class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -102,7 +103,7 @@ class CodeGitlabScmImpl constructor(
         }
     }
 
-    override fun addWebHook(hookUrl: String) {
+    override fun addWebHook(hookUrl: String, path: String?) {
         if (token.isEmpty()) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY),

@@ -31,5 +31,6 @@ enum class CommitEventType {
     SVN,
     GIT,
     GITLAB,
-    TGIT
+    TGIT,
+    P4
 }

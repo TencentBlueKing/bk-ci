@@ -33,4 +33,5 @@ enum class CodeType {
     GITLAB,
     GITHUB,
     TGIT,
+    P4
 }
