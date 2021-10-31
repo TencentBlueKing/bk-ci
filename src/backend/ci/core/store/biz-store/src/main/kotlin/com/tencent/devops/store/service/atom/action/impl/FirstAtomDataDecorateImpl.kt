@@ -25,26 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.service.atom.SampleAtomService
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-@Service
-class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstAtomDataDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
 
-    override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
-        return true
-    }
+    override fun type() = AtomDecorateFactory.Kind.DATA
 
-    override fun updateRepoInfo(
-        visibilityLevel: VisibilityLevelEnum?,
-        dbVisibilityLevel: Int?,
-        userId: String,
-        repositoryHashId: String
-    ): Result<Boolean> {
-        return Result(true)
+    override fun deserialize(json: String): Map<String, Any> {
+        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
 }
