@@ -53,7 +53,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
@@ -373,17 +372,17 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(atomName)) conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8")))
-        if (null != atomType) conditions.add(ATOM_TYPE.eq(atomType.type.toByte()))
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(
-                serviceScope,
-                true
-            )
-        ) conditions.add(SERVICE_SCOPE.contains(serviceScope))
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) conditions.add(OS.contains(os))
-        if (null != category) conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(CLASSIFY_ID.eq(classifyId))
-        if (null != atomStatus) conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
+        atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
+        atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
+        serviceScope?.let {
+            if (!"all".equals(serviceScope, true)) {
+                conditions.add(SERVICE_SCOPE.contains(serviceScope))
+            }
+        }
+        os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
+        category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
+        classifyId?.let { conditions.add(CLASSIFY_ID.eq(classifyId)) }
+        atomStatus?.let { conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte())) }
         return conditions
     }
 
@@ -653,15 +652,19 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(serviceScope, true)) {
-            conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
+        serviceScope?.let {
+            if (!"all".equals(serviceScope, true)) {
+                conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
+            }
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) {
-            conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
+        os?.let {
+            if (!"all".equals(os, true)) {
+                conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
+            }
         }
-        if (null != category) conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(a.CLASSIFY_ID.eq(classifyId))
+        category?.let { conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
+        classifyId?.let { conditions.add(a.CLASSIFY_ID.eq(classifyId)) }
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         return conditions
     }
@@ -773,15 +776,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun convertString(str: String?): Map<String, Any> {
-        return if (!StringUtils.isEmpty(str)) {
-            JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
-        } else {
-            mapOf()
-        }
-    }
-
     fun serviceListAllAtom(dslContext: DSLContext) {
         with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
@@ -826,7 +820,7 @@ class AtomDao : AtomBaseDao() {
     ): Int {
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
 
-        return dslContext.select(ta.ATOM_CODE.countDistinct())
+        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
             .from(ta)
             .join(tspr)
             .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))

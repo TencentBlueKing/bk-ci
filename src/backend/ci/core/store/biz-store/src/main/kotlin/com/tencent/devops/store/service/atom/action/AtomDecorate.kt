@@ -25,26 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.service.atom.SampleAtomService
-import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
-@Service
-class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
+/**
+ * 装饰插件信息
+ */
+interface AtomDecorate<S : Any> {
 
-    override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
-        return true
+    @PostConstruct
+    fun init() {
+        AtomDecorateFactory.register(kind = type(), atomDecorate = this)
     }
 
-    override fun updateRepoInfo(
-        visibilityLevel: VisibilityLevelEnum?,
-        dbVisibilityLevel: Int?,
-        userId: String,
-        repositoryHashId: String
-    ): Result<Boolean> {
-        return Result(true)
-    }
+    fun type(): AtomDecorateFactory.Kind
+
+    fun setNext(next: AtomDecorate<S>)
+
+    fun getNext(): AtomDecorate<S>?
+
+    /**
+     * 主入口
+     */
+    fun decorate(json: String): S = decorateSpecial(deserialize(json))
+
+    /**
+     * 子类必须实现的反序列化
+     */
+    fun deserialize(json: String): S
+
+    /**
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
+     */
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }
