@@ -91,7 +91,7 @@ class WoaAtomPropsDecorateImpl : FirstAtomPropsDecorateImpl() {
             if (request.scheme == "http") { // 如果此时用户访问的不是https，则不做https替换
                 replaceMap.remove("http://")
             }
-            if (request.getHeader("referer").contains(".oa.com")) { // 如果访问提oa.com 则不做woa替换
+            if (request.getHeader("referer")?.contains(".oa.com") == true) { // 如果访问是oa.com 则不做woa替换
                 replaceMap.remove(".oa.com")
             }
             return replaceMap
