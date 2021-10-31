@@ -191,6 +191,7 @@ class ArtifactoryService @Autowired constructor(
     }
 
     override fun setProperties(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
@@ -214,7 +215,12 @@ class ArtifactoryService @Autowired constructor(
         jFrogPropertiesApi.setProperties(realPath, propertiesMap)
     }
 
-    override fun getProperties(projectId: String, artifactoryType: ArtifactoryType, argPath: String): List<Property> {
+    override fun getProperties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): List<Property> {
         logger.info("getProperties, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
@@ -254,10 +260,9 @@ class ArtifactoryService @Autowired constructor(
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
+        val lastModifyUser = client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         if (!crossProjectId.isNullOrBlank()) {
-            val lastModifyUser = client.get(ServicePipelineResource::class)
-                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-
             targetProjectId = crossProjectId!!
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
                     lastModifyUser,
@@ -322,7 +327,7 @@ class ArtifactoryService @Autowired constructor(
                 } else {
                     "/" + it.path.removePrefix(customDirPathPrefix)
                 }
-                ret.add(show(targetProjectId, artifactoryType, pathTemp))
+                ret.add(show(lastModifyUser, targetProjectId, artifactoryType, pathTemp))
             }
         }
         return ret
@@ -529,13 +534,14 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
+    override fun check(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         logger.info("check, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         return jFrogService.exist(realPath)
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,

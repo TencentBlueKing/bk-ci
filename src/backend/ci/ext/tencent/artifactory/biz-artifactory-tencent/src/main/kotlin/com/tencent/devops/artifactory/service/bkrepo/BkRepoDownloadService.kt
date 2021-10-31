@@ -266,39 +266,31 @@ open class BkRepoDownloadService @Autowired constructor(
             }
         }
 
-        val accessUserId = when {
-            !userId.isNullOrBlank() -> {
-                userId
-            }
-            !crossProjectId.isNullOrBlank() -> {
-                client.get(ServicePipelineResource::class)
-                    .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-            }
-            else -> {
-                null
-            }
+        val accessUserId = if (!userId.isNullOrBlank()) {
+            userId
+        } else {
+            client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         }
         logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
                 "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
         // 校验用户权限, auth权限优化实施后可以去掉
-        if (accessUserId != null) {
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
-                    accessUserId,
-                    targetProjectId
-                )
-            ) {
-                throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
-            }
-            if (artifactoryType == ArtifactoryType.PIPELINE) {
-                pipelineService.validatePermission(
-                    userId = accessUserId,
-                    projectId = targetProjectId,
-                    pipelineId = targetPipelineId,
-                    permission = AuthPermission.DOWNLOAD,
-                    message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
-                )
-            }
+        if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                accessUserId,
+                targetProjectId
+            )
+        ) {
+            throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+        }
+        if (artifactoryType == ArtifactoryType.PIPELINE) {
+            pipelineService.validatePermission(
+                userId = accessUserId,
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                permission = AuthPermission.DOWNLOAD,
+                message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+            )
         }
 
         val regex = Pattern.compile(",|;")
@@ -316,7 +308,7 @@ open class BkRepoDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = accessUserId ?: "",
+                userId = accessUserId,
                 projectId = targetProjectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
@@ -333,7 +325,7 @@ open class BkRepoDownloadService @Autowired constructor(
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
-                userId = accessUserId ?: "",
+                userId = accessUserId,
                 projectId = targetProjectId,
                 repoName = repoName,
                 fullPath = it.fullPath,
