@@ -25,25 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dockerhost.pojo.Env
+import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.Volume
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
-import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
+import com.tencent.devops.dockerhost.services.generator.DockerBindGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.BindGenerator
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@EnvGenerator(description = "Docker用到的Distcc环境变量生成器")
+@BindGenerator(description = "Docker上Codecc用到的Bind生成器")
 @Component
-class DistccDockerEnvGenerator : DockerEnvGenerator {
-    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
-        return listOf(
-            Env(
-                key = BK_DISTCC_LOCAL_IP,
-                value = CommonUtils.getInnerIP()
-            )
-        )
+class CodeccDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+    DockerBindGenerator {
+
+    override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
+        return listOf(Bind(dockerHostConfig.hostPathCodecc, Volume(dockerHostConfig.volumeCodecc), AccessMode.ro))
     }
 }

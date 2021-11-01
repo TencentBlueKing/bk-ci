@@ -32,17 +32,13 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
-import com.github.dockerjava.api.model.Driver
-import com.github.dockerjava.api.model.HostConfig
-import com.github.dockerjava.api.model.Mount
-import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.PullResponseItem
-import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -52,7 +48,6 @@ import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
-import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -235,15 +230,16 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    private fun getWorkspace(
+    fun getWorkspace(
         pipelineId: String,
         vmSeqId: Int,
-        poolNo: Int
+        poolNo: Int,
+        path: String
     ): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+        return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    fun mountOverlayfs(
+/*    fun mountOverlayfs(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -274,8 +270,8 @@ abstract class AbstractDockerHostBuildService constructor(
         hostConfig: HostConfig
     ) {
         if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}upper"
-            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo)}work"
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
+            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
             val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
 
             if (!File(upperDir).exists()) {
@@ -305,6 +301,62 @@ abstract class AbstractDockerHostBuildService constructor(
                 )
 
             hostConfig.withMounts(listOf(mount))
+        }
+    }
+
+    fun mountBazelOverlayfs(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        hostConfig: HostConfig
+    ) {
+        val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
+        val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}work"
+        val lowerDir = "${dockerHostConfig.bazelLowerPath}"
+
+        if (!File(upperDir).exists()) {
+            File(upperDir).mkdirs()
+        }
+
+        if (!File(workDir).exists()) {
+            File(workDir).mkdirs()
+        }
+
+        if (!File(lowerDir).exists()) {
+            File(lowerDir).mkdirs()
+        }
+
+        val mount = Mount().withType(MountType.VOLUME)
+            .withTarget(dockerHostConfig.bazelContainerPath)
+            .withVolumeOptions(
+                VolumeOptions().withDriverConfig(
+                    Driver().withName("local").withOptions(
+                        mapOf(
+                            "type" to "overlay",
+                            "device" to "overlay",
+                            "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                        )
+                    )
+                )
+            )
+
+        hostConfig.withMounts(listOf(mount))
+    }*/
+
+    fun reWriteBazelCache(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int
+    ) {
+        // 出现错误也不影响执行
+        try {
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
+            ShellUtil.executeEnhance(
+                "time flock -xn ${dockerHostConfig.bazelLowerPath} -c " +
+                        "\"rsync --stats -ah --ignore-errors --delete $upperDir ${dockerHostConfig.bazelLowerPath} \""
+            )
+        } catch (e: Throwable) {
+            logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")
         }
     }
 

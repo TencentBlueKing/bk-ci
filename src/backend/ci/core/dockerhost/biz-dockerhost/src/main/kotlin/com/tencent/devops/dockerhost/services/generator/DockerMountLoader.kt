@@ -25,25 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator
 
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dockerhost.pojo.Env
+import com.github.dockerjava.api.model.Mount
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
-import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
-import org.springframework.stereotype.Component
+import com.tencent.devops.dockerhost.services.generator.annotation.MountGenerator
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 
-@EnvGenerator(description = "Docker用到的Distcc环境变量生成器")
-@Component
-class DistccDockerEnvGenerator : DockerEnvGenerator {
-    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
-        return listOf(
-            Env(
-                key = BK_DISTCC_LOCAL_IP,
-                value = CommonUtils.getInnerIP()
-            )
-        )
+object DockerMountLoader {
+
+    private val logger: Logger = LoggerFactory.getLogger(DockerMountLoader::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadMounts(handlerContext: ContainerHandlerContext): List<Mount> {
+
+        val mountList = mutableListOf<Mount>()
+        try {
+            val generators: List<DockerMountGenerator> =
+                SpringContextUtil.getBeansWithAnnotation(MountGenerator::class.java) as List<DockerMountGenerator>
+            generators.forEach { generator ->
+                mountList.addAll(generator.generateMounts(handlerContext))
+            }
+        } catch (notFound: BeansException) {
+            logger.warn("${handlerContext.buildId}|${handlerContext.vmSeqId} not found mount generator.", notFound)
+        } catch (ignored: Throwable) {
+            logger.error("${handlerContext.buildId}|${handlerContext.vmSeqId} load mounts failed.", ignored)
+        }
+
+        return mountList
     }
 }

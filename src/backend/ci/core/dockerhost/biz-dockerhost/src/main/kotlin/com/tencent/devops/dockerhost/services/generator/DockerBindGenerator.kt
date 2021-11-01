@@ -25,25 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator
 
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dockerhost.pojo.Env
+import com.github.dockerjava.api.model.Bind
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
-import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
-import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
-import org.springframework.stereotype.Component
 
-@EnvGenerator(description = "Docker用到的Distcc环境变量生成器")
-@Component
-class DistccDockerEnvGenerator : DockerEnvGenerator {
-    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
-        return listOf(
-            Env(
-                key = BK_DISTCC_LOCAL_IP,
-                value = CommonUtils.getInnerIP()
-            )
-        )
-    }
+/**
+ * Docker HostConf生成器
+ */
+interface DockerBindGenerator {
+
+    fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind>
 }
