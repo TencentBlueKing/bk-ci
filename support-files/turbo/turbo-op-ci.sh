@@ -71,7 +71,7 @@ for i in $target; do
   printf "$fmt_ue4_download_url" "$BK_TURBO_PUBLIC_URL/clients/bk-booster-for-ue$i.zip" "$i"
 done
 )
-bk_turbo_install_cmd="curl -sSf ${BK_TURBO_PUBLIC_URL}/downloads/clients/linux/install.sh | bash -s -- -r public"
+bk_turbo_install_cmd="curl -sSf ${BK_TURBO_PUBLIC_URL}/downloads/clients/install.sh | bash -s -- -r public"
 
 # 添加编译加速引擎.
 declare -A tpl_scene
