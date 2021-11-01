@@ -103,8 +103,8 @@ class ProjectLocalService @Autowired constructor(
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-    @Value("\${gitCI.tag:#{null}}")
-    private val gitCI: String? = null
+    @Value("\${tag.stream:#{null}}")
+    private val streamTag: String? = null
 
     fun listForApp(
         userId: String,
@@ -117,7 +117,7 @@ class ProjectLocalService @Autowired constructor(
 
         // 先查询GITCI的项目
         if (page == 1) {
-            val gitCIProjectList = ConsulContent.invokeByTag(gitCI) {
+            val gitCIProjectList = ConsulContent.invokeByTag(streamTag) {
                 try {
                     client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 100, searchName)
                 } catch (e: Exception) {
@@ -588,8 +588,8 @@ class ProjectLocalService @Autowired constructor(
                 channel = ProjectChannelCode.GITCI
             )
 
-            // GitCI项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
-            projectTagService.updateTagByProject(projectCreateInfo.englishName, gitCI)
+            // stream项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, streamTag)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
