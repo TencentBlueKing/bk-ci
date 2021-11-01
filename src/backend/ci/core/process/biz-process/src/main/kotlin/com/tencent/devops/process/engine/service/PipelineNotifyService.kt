@@ -3,7 +3,6 @@ package com.tencent.devops.process.engine.service
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -21,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 abstract class PipelineNotifyService @Autowired constructor(
     open val buildVariableService: BuildVariableService,
-    open val pipelineRepositoryService: PipelineRepositoryService,
-    open val pipelineRuntimeService: PipelineRuntimeService
+    open val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     private val commandCache: LoadingCache<Class<out NotifyCmd>, NotifyCmd> = CacheBuilder.newBuilder()
@@ -45,7 +43,6 @@ abstract class PipelineNotifyService @Autowired constructor(
         val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
 
         val setting = pipelineRepositoryService.getSetting(pipelineId) ?: return
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
 
         val context = BuildNotifyContext(
             buildId = buildId,
@@ -57,8 +54,7 @@ abstract class PipelineNotifyService @Autowired constructor(
             cmdFlowSeq = 0,
             pipelineSetting = setting,
             receivers = mutableSetOf(),
-            watcher = Watcher("buildNotify"),
-            buildInfo = buildInfo
+            watcher = Watcher("buildNotify")
         )
 
         val commandList = mutableListOf(

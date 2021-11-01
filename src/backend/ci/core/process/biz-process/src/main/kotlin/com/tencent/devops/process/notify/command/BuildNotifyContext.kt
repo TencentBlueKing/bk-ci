@@ -3,7 +3,6 @@ package com.tencent.devops.process.notify.command
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.command.CmdContext
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 
 data class BuildNotifyContext(
@@ -17,8 +16,7 @@ data class BuildNotifyContext(
     var receivers: Set<String> = mutableSetOf(),
     val projectId: String,
     val pipelineId: String,
-    val buildId: String,
-    val buildInfo: BuildInfo
+    val buildId: String
 ) : CmdContext(
     executeCount = executeCount,
     variables = variables,
