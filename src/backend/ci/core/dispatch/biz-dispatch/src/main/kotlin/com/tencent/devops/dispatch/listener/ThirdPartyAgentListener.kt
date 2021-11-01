@@ -40,11 +40,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ThirdPartyAgentListener @Autowired
-constructor(
+class ThirdPartyAgentListener @Autowired constructor(
     private val pipelineDispatchService: PipelineDispatchService,
     private val client: Client
-    ) {
+) {
     fun listenAgentStartUpEvent(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         try {
             if (checkRunning(pipelineAgentStartupEvent)) {
