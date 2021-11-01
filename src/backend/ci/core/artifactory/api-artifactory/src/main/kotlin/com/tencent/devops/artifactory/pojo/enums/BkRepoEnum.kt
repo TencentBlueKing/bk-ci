@@ -25,49 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.artifactory.pojo.enums
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
-
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+enum class BkRepoEnum(val repoName: String) {
+    GENERIC("generic-local"), // 二进制通用仓库
+    DOCKER("generic-docker"), // 镜像仓库
+    PLUGIN("bk-plugin"), // 插件仓库
+    STATIC("static"); // 静态资源仓库
 }
