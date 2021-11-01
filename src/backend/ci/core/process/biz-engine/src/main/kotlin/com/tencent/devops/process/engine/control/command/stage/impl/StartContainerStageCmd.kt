@@ -210,7 +210,7 @@ class StartContainerStageCmd(
     }
 
     private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name
+        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
+            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }
