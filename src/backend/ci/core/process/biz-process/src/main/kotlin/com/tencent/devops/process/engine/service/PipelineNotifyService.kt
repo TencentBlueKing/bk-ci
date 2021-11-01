@@ -16,13 +16,13 @@ import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class PipelineNotifyService @Autowired constructor(
     open val buildVariableService: BuildVariableService,
-    open val pipelineRepositoryService: PipelineRepositoryService
+    open val pipelineRepositoryService: PipelineRepositoryService,
+    open val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
     private val commandCache: LoadingCache<Class<out NotifyCmd>, NotifyCmd> = CacheBuilder.newBuilder()
@@ -43,10 +43,9 @@ abstract class PipelineNotifyService @Autowired constructor(
         logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
 
         val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
-        vars[PIPELINE_TIME_DURATION]?.takeIf { it.isNotBlank() }?.toLongOrNull()?.let {
-            vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
-        }
+
         val setting = pipelineRepositoryService.getSetting(pipelineId) ?: return
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
 
         val context = BuildNotifyContext(
             buildId = buildId,
@@ -58,7 +57,8 @@ abstract class PipelineNotifyService @Autowired constructor(
             cmdFlowSeq = 0,
             pipelineSetting = setting,
             receivers = mutableSetOf(),
-            watcher = Watcher("buildNotify")
+            watcher = Watcher("buildNotify"),
+            buildInfo = buildInfo
         )
 
         val commandList = mutableListOf(
