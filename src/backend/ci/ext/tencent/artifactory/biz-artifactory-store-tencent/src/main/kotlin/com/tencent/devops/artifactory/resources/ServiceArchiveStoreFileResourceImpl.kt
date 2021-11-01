@@ -25,14 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":ext:tencent:store:api-store-service"))
-}
+package com.tencent.devops.artifactory.resources
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
+import com.tencent.devops.artifactory.service.ArchiveStoreFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
+
+@RestResource
+class ServiceArchiveStoreFileResourceImpl @Autowired constructor(
+    private val archiveStoreFileService: ArchiveStoreFileService
+) : ServiceArchiveStoreFileResource {
+
+    override fun archiveFile(
+        userId: String,
+        repoName: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        destPath: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
+        return archiveStoreFileService.archiveFile(
+            userId = userId,
+            repoName = repoName,
+            projectId = projectId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

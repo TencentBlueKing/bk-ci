@@ -25,26 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.config
+package com.tencent.devops.store.api.atom
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * 扩展服务仓库配置
- */
-@Component
-class BkRepoExtServiceConfig {
+@Api(tags = ["OP_PIPELINE_ATOM"], description = "OP-流水线-插件")
+@Path("/op/pipeline/atom")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpMigrateAtomResource {
 
-    // 蓝盾新仓库扩展服务项目名称
-    @Value("\${bkrepo.extService.projectName}")
-    val bkrepoExtServiceProjectName: String = ""
+    @ApiOperation("迁移插件包")
+    @PUT
+    @Path("/pkg/migrate")
+    fun migrateAtomPkg(
+        @ApiParam(value = "结束时间", required = true)
+        @QueryParam("endTime")
+        endTime: String
+    ): Result<Boolean>
 
-    // 蓝盾新仓库扩展服务用户名
-    @Value("\${bkrepo.extService.userName}")
-    val bkrepoExtServiceUserName: String = ""
-
-    // 蓝盾新仓库扩展服务密码
-    @Value("\${bkrepo.extService.password}")
-    val bkrepoExtServicePassword: String = ""
+    @ApiOperation("迁移插件静态文件")
+    @PUT
+    @Path("/static/file/migrate")
+    fun migrateAtomStaticFile(): Result<Boolean>
 }

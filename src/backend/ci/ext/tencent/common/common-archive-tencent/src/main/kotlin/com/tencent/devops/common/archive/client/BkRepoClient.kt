@@ -419,7 +419,6 @@ class BkRepoClient constructor(
             "uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path," +
                     " localFile: ${file.canonicalPath}"
         )
-        logger.info("uploadLocalFile, userName: $userName, password: $password")
         val gateway = gatewayUrl ?: getGatewaytUrl()
         val repoUrlPrefix = if (gatewayFlag) "$gateway/bkrepo/api/service/generic" else bkrepoApiUrl
         val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"

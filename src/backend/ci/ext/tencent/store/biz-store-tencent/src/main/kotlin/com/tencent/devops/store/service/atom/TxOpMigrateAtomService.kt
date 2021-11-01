@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
-
-interface ArchiveExtServicePkgService {
+interface TxOpMigrateAtomService {
 
     /**
-     * 归档扩展服务执行包
+     * 迁移插件包
      */
-    fun archiveExtService(
-        userId: String,
-        projectCode: String,
-        serviceCode: String,
-        version: String,
-        destPath: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    fun migrateAtomPkg(endTime: String): Boolean
+
+    /**
+     * 迁移插件静态文件
+     */
+    fun migrateAtomStaticFile(): Boolean
 }

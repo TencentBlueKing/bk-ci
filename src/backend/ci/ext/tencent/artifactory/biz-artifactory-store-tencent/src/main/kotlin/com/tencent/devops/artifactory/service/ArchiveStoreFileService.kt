@@ -25,14 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":ext:tencent:store:api-store-service"))
-}
+package com.tencent.devops.artifactory.service
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
+
+interface ArchiveStoreFileService {
+
+    /**
+     * 归档文件
+     */
+    fun archiveFile(
+        userId: String,
+        repoName: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        destPath: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean>
 }

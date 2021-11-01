@@ -25,38 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.store.dao
 
-import com.tencent.devops.artifactory.api.BuildArchiveExtServiceResource
-import com.tencent.devops.artifactory.service.ArchiveExtServicePkgService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@RestResource
-class BuildArchiveExtServiceResourceImpl @Autowired constructor(
-    private val archiveExtServicePkgService: ArchiveExtServicePkgService
-) : BuildArchiveExtServiceResource {
+@Repository
+class TxAtomEnvDao {
 
-    override fun archiveExtService(
-        userId: String,
-        projectCode: String,
-        serviceCode: String,
-        version: String,
-        destPath: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        return archiveExtServicePkgService.archiveExtService(
-            userId = userId,
-            projectCode = projectCode,
-            serviceCode = serviceCode,
-            version = version,
-            destPath = destPath,
-            inputStream = inputStream,
-            disposition = disposition
-        )
+    fun getAtomEnvsByEndTime(
+        dslContext: DSLContext,
+        endTime: LocalDateTime,
+        limit: Int,
+        offset: Int
+    ): Result<TAtomEnvInfoRecord>? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.selectFrom(this)
+                .where(CREATE_TIME.lt(endTime))
+                .limit(limit).offset(offset)
+                .fetch()
+        }
     }
 }

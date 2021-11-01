@@ -25,14 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":ext:tencent:store:api-store-service"))
-}
+package com.tencent.devops.store.resources.atom
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.TxOpMigrateAtomResource
+import com.tencent.devops.store.service.atom.TxOpMigrateAtomService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class TxOpMigrateAtomResourceImpl @Autowired constructor(
+    private val txOpMigrateAtomService: TxOpMigrateAtomService
+) : TxOpMigrateAtomResource {
+
+    override fun migrateAtomPkg(endTime: String): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomPkg(endTime))
+    }
+
+    override fun migrateAtomStaticFile(): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomStaticFile())
+    }
 }
