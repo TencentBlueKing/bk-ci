@@ -66,11 +66,6 @@ class PreTrigger @Autowired constructor(
             }
 
             val token = scmService.getToken(gitProjectId.toString()).accessToken
-            val giProjectInfo = scmService.getProjectInfoRetry(
-                token = token,
-                gitProjectId = gitProjectId.toString(),
-                useAccessToken = true
-            )
             // 因为用户是 devops 所以需要修改
             val realUser = getRealUser(this, token)
             if (realUser.isNullOrBlank()) {
@@ -83,8 +78,7 @@ class PreTrigger @Autowired constructor(
                     userId = realUser,
                     projectId = GitCommonUtils.getCiProjectId(gitProjectId),
                     gitProjectId = gitProjectId,
-                    enabled = true,
-                    projectInfo = giProjectInfo
+                    enabled = true
                 )
             } catch (e: Throwable) {
                 logger.error("create from store atom error: ${e.message}")
@@ -121,7 +115,7 @@ class PreTrigger @Autowired constructor(
             return false
         }
 
-        if (!repository.git_http_url.isBlank() && repository.git_http_url.startsWith(config.gitPrefix!!)) {
+        if (repository.git_http_url.isNotBlank() && repository.git_http_url.startsWith(config.gitPrefix!!)) {
             return true
         }
 
