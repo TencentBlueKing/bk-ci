@@ -1744,12 +1744,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters: List<BuildParameters> = try {
-                getBuildParametersFromStartup(buildId)
-            } catch (ignored: Throwable) {
-                logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", ignored)
-                mutableListOf()
-            }
+            val buildParameters = getBuildParametersFromStartup(buildId)
 
             val recommendVersion = try {
                 getRecommendVersion(buildParameters)

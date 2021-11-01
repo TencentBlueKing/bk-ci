@@ -40,7 +40,6 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
-import io.swagger.util.Json
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -451,6 +450,7 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
+                buildParameters = t.errorInfo.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0
             )

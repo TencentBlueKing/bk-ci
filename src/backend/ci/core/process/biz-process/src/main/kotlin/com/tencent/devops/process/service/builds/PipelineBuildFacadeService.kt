@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
-import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -106,7 +106,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
@@ -197,7 +196,7 @@ class PipelineBuildFacadeService(
             // 获取最后一次的构建id
             val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
             if (lastTimeBuildInfo != null) {
-                val latestParamsList = pipelineRuntimeService.getBuildParametersFromStartup(lastTimeBuildInfo.buildId)
+                val latestParamsList = JsonUtil.getObjectMapper().readValue(lastTimeBuildInfo.buildParameters) as List<BuildParameters>
                 // 为空的时候不处理
                 if (latestParamsList.isNotEmpty()) {
                     val latestParamsMap = latestParamsList.associate { it.key to it.value }
