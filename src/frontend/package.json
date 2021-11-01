@@ -2,16 +2,17 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "@commitlint/cli": "^9.1.1",
+    "@commitlint/config-conventional": "^9.1.1",
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
+    "husky": "^3.0.7",
     "lerna": "3.17.0",
+    "lint-staged": "^10.2.11",
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
-    "husky": "^3.0.7",
-    "lint-staged": "^10.2.11",
-    "@commitlint/cli": "^9.1.1",
-    "@commitlint/config-conventional": "^9.1.1"
+    "vue-eslint-parser": "^7.11.0"
   },
   "scripts": {
     "start": "lerna bootstrap",
