@@ -28,18 +28,25 @@
 package com.tencent.devops.common.archive.shorturl.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class ShortUrlRequest(
     @JsonProperty("req_ver")
+    @ApiModelProperty(name = "req_ver")
     val reqVer: Int = 1,
     @JsonProperty("app_id")
+    @ApiModelProperty(name = "app_id")
     val appid: Int,
     @JsonProperty("app_pass")
+    @ApiModelProperty(name = "app_pass")
     val appPass: String,
     @JsonProperty("long_url")
+    @ApiModelProperty(name = "long_url")
     val longUrl: String,
     @JsonProperty("has_expire")
+    @ApiModelProperty(name = "has_expire")
     val hasExpire: Int,
     @JsonProperty("uiExpireTime")
+    @ApiModelProperty(name = "uiExpireTime")
     val uiExpireTime: Long
 )

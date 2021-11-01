@@ -152,7 +152,8 @@ class SubPipelineStartUpService(
             dslContext = dslContext,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId
+            subBuildId = subBuildId,
+            subProjectId = project
         )
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId)

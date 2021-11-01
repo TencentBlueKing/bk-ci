@@ -37,7 +37,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.ScmService
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -46,6 +45,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 class GitCheckService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val scmService: ScmService
+    private val tokenService: StreamGitTokenService
 ) {
 
     companion object {
@@ -65,7 +65,7 @@ class GitCheckService @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         commitId: String,
         description: String,
-        mergeRequestId: Long,
+        mergeRequestId: Long?,
         buildId: String,
         userId: String,
         status: GitCICommitCheckState,
@@ -235,14 +235,14 @@ class GitCheckService @Autowired constructor(
         context: String,
         description: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
-    ): String {
+    ) {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
 
-            val gitProjectId = gitCIBasicSetting.gitProjectId.toString()
-            val token = scmService.getToken(gitProjectId).accessToken
+            val gitProjectId = gitCIBasicSetting.gitProjectId
+            val token = tokenService.getToken(gitProjectId)
             val request = CommitCheckRequest(
-                projectName = gitProjectId,
+                projectName = gitProjectId.toString(),
                 url = gitCIBasicSetting.gitHttpUrl,
                 type = ScmType.CODE_GIT,
                 privateKey = null,
@@ -259,7 +259,6 @@ class GitCheckService @Autowired constructor(
                 reportData = reportData
             )
             client.get(ServiceScmOauthResource::class).addCommitCheck(request)
-            return gitProjectId
         }
     }
 

@@ -29,8 +29,8 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -55,8 +55,7 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.trigger.v2.YamlBuildV2
-import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -67,6 +66,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
+@Suppress("ComplexMethod")
 object ModelParameters {
 
     fun createPipelineParams(
@@ -85,9 +85,12 @@ object ModelParameters {
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
         startParams[CommonVariables.CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
-        startParams[CommonVariables.CI_ACTOR] = event.userId
+        startParams[CommonVariables.CI_ACTOR] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+            "system"
+        } else {
+            event.userId
+        }
         startParams[CommonVariables.CI_BRANCH] = event.branch
-        startParams[PIPELINE_GIT_EVENT_CONTENT] = EmojiUtil.removeAllEmoji(JsonUtil.toJson(event))
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commitId
         if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
@@ -97,11 +100,12 @@ object ModelParameters {
         // 替换BuildMessage为了展示commit信息
         startParams[PIPELINE_BUILD_MSG] = parsedCommitMsg
 
-        // 写入WEBHOOK触发环境变量
-        startParams["BK_CI_EVENT_CONTENT"] = event.event
-
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
+                startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(
+                    bean = originEvent.copy(commits = null),
+                    formatted = false
+                )
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
@@ -109,6 +113,10 @@ object ModelParameters {
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
+                startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(
+                    bean = originEvent.copy(commits = null),
+                    formatted = false
+                )
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
@@ -116,6 +124,10 @@ object ModelParameters {
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
+                startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(
+                    bean = originEvent,
+                    formatted = false
+                )
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
                 startParams[PIPELINE_GIT_BASE_REPO_URL] = originEvent.object_attributes.source.http_url
                 startParams[PIPELINE_GIT_HEAD_REPO_URL] = originEvent.object_attributes.target.http_url
@@ -131,9 +143,13 @@ object ModelParameters {
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
-                startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    TGitObjectKind.SCHEDULE.value
+                } else {
+                    TGitObjectKind.MANUAL.value
+                }
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
-                GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
+                GitUtils.getProjectName(gitBasicSetting.gitHttpUrl)
             }
         }
 
@@ -192,7 +208,7 @@ object ModelParameters {
         yaml.variables!!.forEach { (key, variable) ->
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = YamlBuildV2.VARIABLE_PREFIX + key,
+                    id = StreamYamlBuild.VARIABLE_PREFIX + key,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",

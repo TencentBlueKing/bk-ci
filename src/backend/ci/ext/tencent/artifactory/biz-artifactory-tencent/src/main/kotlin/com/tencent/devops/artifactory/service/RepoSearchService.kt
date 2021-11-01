@@ -47,6 +47,7 @@ interface RepoSearchService {
     ): Pair<Long, List<FileInfo>>
 
     fun serviceSearchFileAndProperty(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean? = null,
@@ -54,6 +55,7 @@ interface RepoSearchService {
     ): Pair<Long, List<FileInfo>>
 
     fun serviceSearchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean? = null

@@ -49,6 +49,11 @@ class RegexUtilsTest {
             RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.first)
         Assert.assertEquals(contextPath,
             RegexUtils.splitDomainContextPath(protocol + httpsDomain + contextPath)!!.second)
+
+        val domainWithPort = "https://www.tencent.com:12345"
+        contextPath = "/report.html"
+        Assert.assertEquals("www.tencent.com", RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.first)
+        Assert.assertEquals(contextPath, RegexUtils.splitDomainContextPath(domainWithPort + contextPath)!!.second)
     }
 
     @Test
@@ -59,7 +64,7 @@ class RegexUtilsTest {
         Assert.assertEquals("//$noSubDomain$contextPath",
             RegexUtils.trimProtocol("http://$noSubDomain$contextPath"))
 
-        val httpsDomain = "www.tencent-inc123.com"
+        val httpsDomain = "www.tencent-inc123.com:1234"
         Assert.assertEquals("//$httpsDomain$contextPath",
             RegexUtils.trimProtocol("https://$httpsDomain$contextPath"))
     }

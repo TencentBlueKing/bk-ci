@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.api.v2.pojo
 
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -63,7 +64,13 @@ data class QualityRule(
     @ApiModelProperty("操作类型列表", required = false)
     val opList: List<RuleOp>? = null,
     @ApiModelProperty("红线匹配的id", required = false)
-    val gatewayId: String?
+    val gatewayId: String?,
+    @ApiModelProperty("红线把关人", required = false)
+    val gateKeepers: List<String>?,
+    @ApiModelProperty("红线状态", required = false)
+    val status: RuleInterceptResult?,
+    @ApiModelProperty("红线所在stage", required = true)
+    val stageId: String
 ) {
     data class RuleControlPoint(
         val hashId: String,

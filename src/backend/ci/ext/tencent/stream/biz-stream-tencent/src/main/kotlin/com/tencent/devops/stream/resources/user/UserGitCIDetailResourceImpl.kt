@@ -39,13 +39,13 @@ import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.v2.service.GitCIV2DetailService
+import com.tencent.devops.stream.v2.service.StreamDetailService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIDetailResourceImpl @Autowired constructor(
-    private val gitCIV2DetailService: GitCIV2DetailService,
+    private val streamDetailService: StreamDetailService,
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCIDetailResource {
 
@@ -58,9 +58,9 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return if (!buildId.isNullOrBlank()) {
-            Result(gitCIV2DetailService.getBuildDetail(userId, gitProjectId, buildId!!))
+            Result(streamDetailService.getBuildDetail(userId, gitProjectId, buildId!!))
         } else {
-            Result(gitCIV2DetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
+            Result(streamDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         }
     }
 
@@ -75,7 +75,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)
-        return Result(gitCIV2DetailService.search(
+        return Result(streamDetailService.search(
             userId = userId,
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
@@ -96,7 +96,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)
         permissionService.checkEnableGitCI(gitProjectId)
-        return Result(gitCIV2DetailService.downloadUrl(
+        return Result(streamDetailService.downloadUrl(
             userId = userId,
             gitUserId = gitUserId,
             gitProjectId = gitProjectId,
@@ -118,7 +118,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         } catch (e: Exception) {
             return Result(ErrorCodeEnum.NO_REPORT_AUTH.errorCode, ErrorCodeEnum.NO_REPORT_AUTH.formatErrorMessage)
         }
-        return Result(gitCIV2DetailService.getReports(userId, gitProjectId, pipelineId, buildId))
+        return Result(streamDetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 
     private fun checkParam(userId: String) {

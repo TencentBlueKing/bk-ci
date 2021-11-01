@@ -692,7 +692,11 @@ class ArtifactoryService @Autowired constructor(
         return jFrogApiService.createDockerUser(projectCode)
     }
 
-    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): List<String> {
         logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
         val allFiles = jFrogAQLService.searchByPathAndProperties(
             path = "generic-local/bk-custom/$projectId",

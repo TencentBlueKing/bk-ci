@@ -75,13 +75,12 @@ import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 
-@Suppress("ALL")
+@Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-    private const val dockerHubUrl = ""
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -93,10 +92,13 @@ object ScriptYmlUtils {
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
 
+    private const val MAX_SCHEDULES_BRANCHES = 3
+
     /**
      * 1、解决锚点
      * 2、yml string层面的格式化填充
      */
+    // TODO: 删除GitCi微服务后需要修改这里，锚点替换在schema检查已经做了
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
@@ -138,6 +140,7 @@ object ScriptYmlUtils {
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
+
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -146,11 +149,10 @@ object ScriptYmlUtils {
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
-            val realValue = settingMap[matcher.group(1).trim()]
-            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
-            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
+            val realValue = settingMap[matcher.group(1).trim()] ?: continue
+            newValue = newValue!!.replace(matcher.group(), realValue)
         }
-
+        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
         return newValue
     }
 
@@ -182,60 +184,7 @@ object ScriptYmlUtils {
         return newValue
     }
 
-//    fun parseImage(imageNameInput: String): Triple<String, String, String> {
-//        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-//        val arry = imageNameStr.split(":")
-//        if (arry.size == 1) {
-//            val str = imageNameStr.split("/")
-//            return if (str.size == 1) {
-//                Triple(dockerHubUrl, imageNameStr, "latest")
-//            } else {
-//                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//            }
-//        } else if (arry.size == 2) {
-//            val str = imageNameStr.split("/")
-//            when {
-//                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-//                str.size >= 2 -> return if (str[0].contains(":")) {
-//                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//                } else {
-//                    if (str.last().contains(":")) {
-//                        val nameTag = str.last().split(":")
-//                        Triple(
-//                            str[0],
-//                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-//                            nameTag[1]
-//                        )
-//                    } else {
-//                        Triple(str[0], str.last(), "latest")
-//                    }
-//                }
-//                else -> {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//            }
-//        } else if (arry.size == 3) {
-//            val str = imageNameStr.split("/")
-//            if (str.size >= 2) {
-//                val tail = imageNameStr.removePrefix(str[0] + "/")
-//                val nameAndTag = tail.split(":")
-//                if (nameAndTag.size != 2) {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-//            } else {
-//                logger.error("image name invalid: $imageNameStr")
-//                throw Exception("image name invalid.")
-//            }
-//        } else {
-//            logger.error("image name invalid: $imageNameStr")
-//            throw Exception("image name invalid.")
-//        }
-//    }
-
-    fun formatYamlCustom(yamlStr: String): String {
+    private fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
@@ -253,9 +202,17 @@ object ScriptYmlUtils {
     }
 
     fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
+        checkTriggerOn(preScriptBuildYaml)
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkExtend(yaml)
+    }
+
+    private fun checkTriggerOn(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        if (preScriptBuildYaml.triggerOn?.schedules?.branches?.size != null &&
+            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES) {
+            throw YamlFormatException("定时任务的最大执行分支数不能超过: $MAX_SCHEDULES_BRANCHES")
+        }
     }
 
     private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
@@ -380,10 +337,12 @@ object ScriptYmlUtils {
             val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
             return if (runsOn.container != null) {
                 try {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
                     runsOn.copy(container = container)
                 } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
                     runsOn.copy(container = container)
                 }
             } else {
@@ -683,10 +642,8 @@ object ScriptYmlUtils {
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
-        val schemaNode =
-            jsonNodeFromString(schema)
-        val jsonNode =
-            jsonNodeFromString(yamlJson)
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()

@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -43,11 +42,13 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
+import com.tencent.devops.worker.common.service.QuotaService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
@@ -68,8 +69,11 @@ object Runner {
         var failed = false
         try {
             logger.info("Start the worker ...")
-            // 启动成功了，报告process我已经启动了
+            // 启动成功, 报告process我已经启动了
             val buildVariables = EngineService.setStarted()
+
+            // 上报agent启动给quota
+            QuotaService.addRunningAgent(buildVariables)
 
             BuildEnv.setBuildId(buildVariables.buildId)
 
@@ -81,11 +85,12 @@ object Runner {
             } catch (ignore: Exception) {
                 failed = true
                 logger.error("Other unknown error has occurred:", ignore)
-                LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+                LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
                 LoggerService.archiveLogFiles()
-                EngineService.endBuild()
+                EngineService.endBuild(buildVariables)
+                QuotaService.removeRunningAgent(buildVariables)
                 Heartbeat.stop()
             }
         } catch (ignore: Exception) {
@@ -242,7 +247,8 @@ object Runner {
             exception.stackTrace.forEach {
                 with(it) {
                     defaultMessage.append(
-                        "\n    at $className.$methodName($fileName:$lineNumber)")
+                        "\n    at $className.$methodName($fileName:$lineNumber)"
+                    )
                 }
             }
             message = exception.message ?: defaultMessage.toString()
@@ -250,7 +256,7 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addRedLine(message)
+        LoggerService.addErrorLine(message)
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
@@ -325,12 +331,15 @@ object Runner {
                     return@forEach
                 }
             }
-            if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
-            } else {
-                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
-            }
             logger.info("${v.key}: ${v.value}")
+            if (PipelineVarUtil.fetchReverseVarName(v.key) != null) {
+                return@forEach
+            }
+            if (v.valueType == BuildFormPropertyType.PASSWORD) {
+                LoggerService.addNormalLine("${v.key}: ******")
+            } else {
+                LoggerService.addNormalLine("${v.key}: ${v.value}")
+            }
         }
         LoggerService.addFoldEndLine("-----")
         LoggerService.addNormalLine("")

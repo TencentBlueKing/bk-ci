@@ -33,6 +33,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
@@ -172,11 +173,25 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getCommitChangeFileList(
+        token: String,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>> {
+        return Result(
+            gitCiService.getChangeFileList(token, gitProjectId, from, to, straight, page, pageSize)
+        )
+    }
+
     override fun getProjectMembersAll(
         gitProjectId: String,
         page: Int,
         pageSize: Int,
-        query: String?
+        search: String?
     ): Result<List<GitMember>> {
         return Result(
             gitCiService.getGitCIAllMembers(
@@ -184,7 +199,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
-                query = query
+                query = search
             )
         )
     }

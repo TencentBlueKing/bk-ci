@@ -164,6 +164,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByAnd(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -172,11 +173,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndProperty(projectId, searchProps)
+        val result = bkRepoSearchService.serviceSearchFileAndProperty(userId, projectId, searchProps)
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
     override fun searchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -186,7 +188,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(projectId, searchProps)
+        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(userId, projectId, searchProps)
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
@@ -212,9 +214,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+    override fun searchCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): Result<List<String>> {
         checkParam(projectId)
-        return Result(bkRepoService.listCustomFiles(projectId, condition))
+        return Result(bkRepoService.listCustomFiles(userId, projectId, condition))
     }
 
     override fun getJforgInfoByteewTime(
@@ -234,20 +240,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         fileInfo: FileInfo,
         dataFrom: Int
     ): Result<Long> {
-        checkInfoParam(buildId, pipelineId, fileInfo)
-        val id = artifactoryInfoService.createInfo(
-            buildId = buildId,
-            pipelineId = pipelineId,
-            projectId = projectId,
-            buildNum = buildNum,
-            fileInfo = fileInfo,
-            dataFrom = dataFrom
-        )
-        return Result(id)
+        return Result(0)
     }
 
     override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
-        return Result(artifactoryInfoService.batchCreateArtifactoryInfo(infoList))
+        return Result(0)
     }
 
     private fun checkInfoParam(buildId: String, pipelineId: String, fileInfo: FileInfo) {

@@ -273,6 +273,21 @@ class ExperiencePublicDao {
         }
     }
 
+    fun getByBundleId(
+        dslContext: DSLContext,
+        projectId: String,
+        platform: String,
+        bundleIdentifier: String
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PLATFORM.eq(platform))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .fetchAny()
+        }
+    }
+
     fun updateByBundleId(
         dslContext: DSLContext,
         projectId: String,
@@ -347,6 +362,18 @@ class ExperiencePublicDao {
     fun listAllUnique(dslContext: DSLContext): Result<TExperiencePublicRecord> {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)
+                .where(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(10000)
+                .fetch()
+        }
+    }
+
+    fun listAllRecordId(dslContext: DSLContext): Result<Record1<Long>>? {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.select(RECORD_ID)
+                .from(this)
                 .where(END_DATE.gt(LocalDateTime.now()))
                 .and(ONLINE.eq(true))
                 .orderBy(UPDATE_TIME.desc())

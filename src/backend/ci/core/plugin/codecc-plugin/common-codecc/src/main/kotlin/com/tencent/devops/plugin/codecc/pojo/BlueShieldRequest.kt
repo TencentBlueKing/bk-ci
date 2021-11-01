@@ -28,12 +28,16 @@
 package com.tencent.devops.plugin.codecc.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BlueShieldRequest(
+    @ApiModelProperty(name = "proj_id_list")
     @JsonProperty("proj_id_list")
     val taskIds: Collection<String>,
+    @ApiModelProperty(name = "start_time")
     @JsonProperty("start_time")
     val startTime: String,
+    @ApiModelProperty(name = "end_time")
     @JsonProperty("end_time")
     val endTime: String
 )

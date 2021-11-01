@@ -96,7 +96,7 @@ interface RepoService {
 
     fun createDockerUser(projectCode: String): DockerUser
 
-    fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String>
+    fun listCustomFiles(userId: String, projectId: String, condition: CustomFileSearchCondition): List<String>
 
     fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq)
 }
