@@ -34,7 +34,8 @@ default_value_dict = {
     'bkCiIamCallbackUser': 'bk_iam',
     'bkCiAppCode': 'bk_ci',
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
-    'bkCiInfluxdbDb':'agentMetrix'
+    'bkCiInfluxdbDb':'agentMetrix',
+    'bkCiEnvironmentAgentCollectorOn':'true'
 }
 
 if os.path.isfile('./values.json'):
