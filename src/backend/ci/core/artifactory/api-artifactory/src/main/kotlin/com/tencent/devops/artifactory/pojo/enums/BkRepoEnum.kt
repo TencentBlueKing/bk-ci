@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.annotation
+package com.tencent.devops.artifactory.pojo.enums
 
-/**
- * Docker Volume生成器注解，标示生成器
- */
-annotation class VolumeGenerator(
-    /**
-     * 生成器说明
-     */
-    val description: String
-)
+enum class BkRepoEnum(val repoName: String) {
+    GENERIC("generic-local"), // 二进制通用仓库
+    DOCKER("generic-docker"), // 镜像仓库
+    PLUGIN("bk-plugin"), // 插件仓库
+    STATIC("static"); // 静态资源仓库
+}

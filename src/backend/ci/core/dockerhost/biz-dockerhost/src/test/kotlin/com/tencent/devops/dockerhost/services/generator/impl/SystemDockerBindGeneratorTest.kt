@@ -25,49 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import org.junit.Assert
+import org.junit.Test
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
+class SystemDockerBindGeneratorTest {
 
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+    @Test
+    fun generateBinds() {
+        val lock = ReentrantLock()
+        Thread {
+            lock.lock()
+            Thread.sleep(1999)
+        }.start()
+        Thread.sleep(500)
+        val start = System.currentTimeMillis()
+        try {
+            lock.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
+        } catch (ignore: TimeoutException) {
+        } finally {
+            val end = System.currentTimeMillis()
+            println(start)
+            println(end)
+            Assert.assertTrue(end - start >= 1000)
+        }
+    }
 }

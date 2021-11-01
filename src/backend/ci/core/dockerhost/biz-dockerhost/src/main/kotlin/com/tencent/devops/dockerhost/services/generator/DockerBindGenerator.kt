@@ -25,36 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services.generator
 
 import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.BeansException
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 
-object DockerBindLoader {
+/**
+ * Docker HostConf生成器
+ */
+interface DockerBindGenerator {
 
-    private val logger: Logger = LoggerFactory.getLogger(DockerBindLoader::class.java)
-
-    @Suppress("UNCHECKED_CAST")
-    fun loadBinds(containerInfo: DockerHostBuildInfo): List<Bind> {
-
-        val bindList = mutableListOf<Bind>()
-        try {
-            val generators: List<DockerBindGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(BindGenerator::class.java) as List<DockerBindGenerator>
-            generators.forEach { generator ->
-                bindList.addAll(generator.generateBinds(containerInfo))
-            }
-        } catch (notFound: BeansException) {
-            logger.warn("[${containerInfo.buildId}]|not found bind generator| ex=$notFound")
-        } catch (ignored: Throwable) {
-            logger.error("[${containerInfo.buildId}]|loadBinds_fail|", ignored)
-        }
-
-        return bindList
-    }
+    fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind>
 }

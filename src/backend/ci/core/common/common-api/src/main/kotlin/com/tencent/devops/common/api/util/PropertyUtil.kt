@@ -25,36 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.common.api.util
 
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.annotation.VolumeGenerator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.BeansException
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 
-object DockerVolumeLoader {
+object PropertyUtil {
 
-    private val logger: Logger = LoggerFactory.getLogger(DockerVolumeLoader::class.java)
+    private val propertiesMap = ConcurrentHashMap<String, Properties>()
 
-    @Suppress("UNCHECKED_CAST")
-    fun loadVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume> {
-
-        val volumeList = mutableListOf<Volume>()
-        try {
-            val generators: List<DockerVolumeGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(VolumeGenerator::class.java) as List<DockerVolumeGenerator>
-            generators.forEach { generator ->
-                volumeList.addAll(generator.generateVolumes(dockerHostBuildInfo))
-            }
-        } catch (notFound: BeansException) {
-            logger.warn("[${dockerHostBuildInfo.buildId}]|not found volume generator| ex=$notFound")
-        } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]|Docker_loadVolume_fail|", ignored)
+    /**
+     * 获取配置项的值
+     * @param propertyKey 配置项KEY
+     * @param propertyFileName 配置文件名
+     */
+    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
+        var properties = propertiesMap[propertyFileName]
+        if (properties == null) {
+            // 缓存中没有该配置文件则实时去加载
+            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
+            properties = Properties()
+            properties.load(fileInputStream)
+            propertiesMap[propertyFileName] = properties
+            properties[propertyKey] as String
         }
-
-        return volumeList
+        val propertyValue = properties[propertyKey]
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(propertyKey)
+            )
+        return propertyValue.toString()
     }
 }

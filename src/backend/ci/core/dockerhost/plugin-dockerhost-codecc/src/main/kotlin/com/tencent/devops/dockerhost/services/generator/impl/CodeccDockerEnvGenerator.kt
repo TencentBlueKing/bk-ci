@@ -25,24 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.github.dockerjava.api.model.AccessMode
-import com.github.dockerjava.api.model.Bind
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerBindGenerator
-import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
+import com.tencent.devops.dockerhost.pojo.Env
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerEnvGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
+import com.tencent.devops.dockerhost.utils.ENV_LOG_SAVE_MODE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@BindGenerator(description = "Docker上Codecc用到的Bind生成器")
+@EnvGenerator(description = "Docker用到的Codecc环境变量生成器")
 @Component
-class CodeccDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
-    DockerBindGenerator {
+class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
+    DockerEnvGenerator {
 
-    override fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind> {
-        return listOf(Bind(dockerHostConfig.hostPathCodecc, Volume(dockerHostConfig.volumeCodecc), AccessMode.ro))
+    override fun generateEnv(handlerContext: ContainerHandlerContext): List<Env> {
+        return listOf(
+            Env(
+                key = ENV_LOG_SAVE_MODE,
+                value = if ("codecc_build" == dockerHostConfig.dockerhostMode &&
+                    (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) {
+                    "LOCAL"
+                } else {
+                    "UPLOAD"
+                }
+            )
+        )
     }
 }
