@@ -3,7 +3,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.service.PipelineNotifyService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.service.notify.TxNotifySendGroupMsgCmdImpl
 import org.slf4j.LoggerFactory
@@ -13,12 +12,10 @@ import org.springframework.stereotype.Service
 @Service
 class TxPipelineNotifyServiceImpl @Autowired constructor(
     override val buildVariableService: BuildVariableService,
-    override val pipelineRepositoryService: PipelineRepositoryService,
-    override val pipelineRuntimeService: PipelineRuntimeService
+    override val pipelineRepositoryService: PipelineRepositoryService
 ) : PipelineNotifyService(
     buildVariableService,
-    pipelineRepositoryService,
-    pipelineRuntimeService
+    pipelineRepositoryService
 ) {
 
     override fun addExtCmd(): MutableList<NotifyCmd>? {
