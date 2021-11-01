@@ -126,6 +126,7 @@ class StartContainerStageCmd(
      * 所有容器都结束，但有失败的容器，则根据容器的状态判断[BuildStatusSwitcher.stageStatusMaker]决定哪种失败状态设置stageStatus
      * 所有容器都结束，但有取消的容器，则直接返回[BuildStatusSwitcher.stageStatusMaker] 决定取消的状态设置stageStatus
      */
+    @Suppress("ComplexMethod")
     private fun pickJob(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
         // hotfix：可能在出现最后的Job失败将前面的运行中的Job中断
         var running: BuildStatus? = null
@@ -140,7 +141,11 @@ class StartContainerStageCmd(
                         (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
                 }
             // #5246 前序中如果有准入准出失败的stage则直接作为前序stage并把构建状态设为红线失败
-            commandContext.previousStageStatus = getPreviousStageStatus(previousStage)
+            commandContext.previousStageStatus = if (hasFailedCheck(previousStage)) {
+                BuildStatus.QUALITY_CHECK_FAIL
+            } else {
+                previousStage?.status
+            }
         }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
@@ -207,13 +212,5 @@ class StartContainerStageCmd(
     private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
         return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name
-    }
-
-    private fun getPreviousStageStatus(previousStage: PipelineBuildStage?): BuildStatus? {
-        return if (hasFailedCheck(previousStage)) {
-            BuildStatus.QUALITY_CHECK_FAIL
-        } else {
-            previousStage?.status
-        }
     }
 }
