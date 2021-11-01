@@ -50,7 +50,7 @@
                         <logo v-if="atom.docsLink" class="jump-icon" name="tiaozhuan" size="14" style="fill:#3c96ff; position:relative; top:2px;" />
                     </span>
                     <span class="fire-num">
-                        <logo v-if="atom.recentExecuteNum >= 50000" class="fire-icon" name="fire-red" size="14" style="position:relative; top:2px;" />
+                        <logo v-if="atom.recentExecuteNum >= 10000" class="fire-icon" name="fire-red" size="14" style="position:relative; top:2px;" />
                         <logo v-else class="fire-red-icon" name="fire" size="14" style="position:relative; top:2px;" />
                         {{ getHeatNum(atom.recentExecuteNum) || '-' }}
                     </span>
@@ -253,7 +253,7 @@
                 if (!this.isRecommend || !installed) return
                 const { elementIndex, container, updateAtomType, getAtomModal, fetchAtomModal, getDefaultVersion } = this
                 this.setAtomCode(atomCode)
-                const version = getDefaultVersion(atomCode, 'aaa')
+                const version = getDefaultVersion(atomCode)
                 const atomModal = getAtomModal({
                     atomCode,
                     version
