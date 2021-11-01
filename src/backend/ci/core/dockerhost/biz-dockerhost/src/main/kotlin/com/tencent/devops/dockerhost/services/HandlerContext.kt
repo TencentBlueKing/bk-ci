@@ -25,15 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
-
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
-}
+open class HandlerContext(
+    open val projectId: String,
+    open val pipelineId: String,
+    open val buildId: String,
+    open val vmSeqId: Int,
+    open val poolNo: Int,
+    open val userName: String
+)
