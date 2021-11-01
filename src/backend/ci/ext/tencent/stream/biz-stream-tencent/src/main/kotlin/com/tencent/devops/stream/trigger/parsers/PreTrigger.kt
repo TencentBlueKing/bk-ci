@@ -33,6 +33,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitCommitRepository
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,6 +43,7 @@ import org.springframework.stereotype.Component
 class PreTrigger @Autowired constructor(
     private val config: StreamPreTriggerConfig,
     private val scmService: StreamScmService,
+    private val streamOauthService: StreamOauthService,
     private val gitBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
@@ -64,8 +66,12 @@ class PreTrigger @Autowired constructor(
                     return
                 }
             }
-
-            val token = scmService.getToken(gitProjectId.toString()).accessToken
+            // TODO: 目前直接写死使用橘子的oauth去拿用户的名称，后续支持公共账号了再改成公共账号
+            val token = streamOauthService.getOauthToken("fayewang")?.accessToken
+            if (token.isNullOrBlank()) {
+                logger.warn("create from store atom get project members error: get token null")
+                return
+            }
             // 因为用户是 devops 所以需要修改
             val realUser = getRealUser(this, token)
             if (realUser.isNullOrBlank()) {
@@ -87,7 +93,7 @@ class PreTrigger @Autowired constructor(
     }
 
     private fun getRealUser(requestEvent: GitRequestEvent, token: String): String? {
-        val projectMember = scmService.getProjectMembersAllRetry(
+        val projectMember = scmService.getProjectMembersRetry(
             token = token,
             gitProjectId = requestEvent.gitProjectId.toString(),
             page = 1,
