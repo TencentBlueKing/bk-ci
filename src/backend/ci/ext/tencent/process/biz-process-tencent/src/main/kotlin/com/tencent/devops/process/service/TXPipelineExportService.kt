@@ -999,7 +999,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         exportFile: Boolean
     ): String {
-        val pattern = Pattern.compile("\\\$\\{\\{([^{}]+?)}}")
+        val pattern = Pattern.compile("\\\$\\{\\{?([^{}]+?)}?}")
         val matcher = pattern.matcher(value)
         var newValue = value as String
         while (matcher.find()) {
