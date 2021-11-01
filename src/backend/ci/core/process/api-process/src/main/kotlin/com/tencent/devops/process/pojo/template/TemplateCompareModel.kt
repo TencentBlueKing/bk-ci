@@ -30,9 +30,15 @@ package com.tencent.devops.process.pojo.template
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("")
 data class TemplateCompareModel(
+    @ApiModelProperty("构建号", required = false)
     val buildNo: BuildNo?,
+    @ApiModelProperty("流水线变量列表", required = false)
     val params: List<BuildFormProperty>,
+    @ApiModelProperty("流水线模型", required = false)
     val model: Model
 )

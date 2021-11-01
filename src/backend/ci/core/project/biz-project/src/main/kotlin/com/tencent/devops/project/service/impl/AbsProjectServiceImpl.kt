@@ -374,7 +374,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
 
-            val projects = projectPermissionService.getUserProjects(userId)
+//            val projects = projectPermissionService.getUserProjects(userId)
+            val projects = getProjectFromAuth(userId, null)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {

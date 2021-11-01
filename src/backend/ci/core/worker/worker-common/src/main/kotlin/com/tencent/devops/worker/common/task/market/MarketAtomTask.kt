@@ -277,7 +277,13 @@ open class MarketAtomTask : ITask() {
         try {
             // 下载atom执行文件
             LoggerService.addFoldStartLine("[Install plugin]")
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
+            atomExecuteFile = downloadAtomExecuteFile(
+                projectId = buildVariables.projectId,
+                atomFilePath = atomData.pkgPath!!,
+                atomCreateTime = atomData.createTime,
+                workspace = atomTmpSpace,
+                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -329,34 +335,45 @@ open class MarketAtomTask : ITask() {
                 buildEnvs = buildEnvs,
                 postEntryParam = postEntryParam
             )
-            val errorMessage = "Fail to run the plugin"
-            when (AgentEnv.getOS()) {
-                OSType.WINDOWS -> {
-                    BatScriptUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\r\n$atomTarget\r\n",
-                        runtimeVariables = environment,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
+
+            // 运行阶段单独处理执行失败错误
+            try {
+                val errorMessage = "Fail to run the plugin"
+                when (AgentEnv.getOS()) {
+                    OSType.WINDOWS -> {
+                        BatScriptUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\r\n$atomTarget\r\n",
+                            runtimeVariables = environment,
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    OSType.LINUX, OSType.MAC_OS -> {
+                        ShellUtil.execute(
+                            buildId = buildVariables.buildId,
+                            script = "\n$atomTarget\n",
+                            dir = atomTmpSpace,
+                            workspace = workspace,
+                            buildEnvs = buildEnvs,
+                            runtimeVariables = environment,
+                            systemEnvVariables = systemEnvVariables,
+                            errorMessage = errorMessage,
+                            elementId = buildTask.elementId
+                        )
+                    }
+                    else -> {
+                    }
                 }
-                OSType.LINUX, OSType.MAC_OS -> {
-                    ShellUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = "\n$atomTarget\n",
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        buildEnvs = buildEnvs,
-                        runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables,
-                        errorMessage = errorMessage,
-                        elementId = buildTask.elementId
-                    )
-                }
-                else -> {
-                }
+            } catch (t: Throwable) {
+                logger.warn("Market atom execution exit with StackTrace:\n", t)
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "Market atom execution exit with StackTrace: ${t.message}"
+                )
             }
         } catch (e: Throwable) {
             error = e
@@ -370,7 +387,9 @@ open class MarketAtomTask : ITask() {
                         defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
                     }
                 }
-                throw TaskExecuteException(
+                throw if (error is TaskExecuteException) {
+                    error
+                } else TaskExecuteException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorMsg = defaultMessage.toString()
@@ -857,7 +876,13 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun downloadAtomExecuteFile(atomFilePath: String, workspace: File): File {
+    private fun downloadAtomExecuteFile(
+        projectId: String,
+        atomFilePath: String,
+        atomCreateTime: Long,
+        workspace: File,
+        isVmBuildEnv: Boolean
+    ): File {
         try {
             // 取插件文件名
             val lastFx = atomFilePath.lastIndexOf("/")
@@ -866,7 +891,13 @@ open class MarketAtomTask : ITask() {
             } else {
                 File(workspace, atomFilePath)
             }
-            atomApi.downloadAtom(atomFilePath, file)
+            atomApi.downloadAtom(
+                projectId = projectId,
+                atomFilePath = atomFilePath,
+                atomCreateTime = atomCreateTime,
+                file = file,
+                isVmBuildEnv = isVmBuildEnv
+            )
             return file
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
