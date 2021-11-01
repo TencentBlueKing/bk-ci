@@ -10,8 +10,13 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
     return {
-        cache: true,
-        devtool: 'source-map',
+        cache: {
+            type: 'filesystem',
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
+        devtool: 'eval-cheap-module-source-map',
         entry,
         output: {
             publicPath,
@@ -95,7 +100,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             })
         ],
         optimization: {
-            chunkIds: 'named',
+            chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
             minimize: !isDev
         },

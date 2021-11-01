@@ -33,13 +33,19 @@ module.exports = (env = {}, argv) => {
             'echarts/lib/component/tooltip',
             'echarts/lib/component/title',
             'echarts/lib/component/legend',
-            'jquery',
+            'bk-magic-vue',
+            'vue-i18n',
             'moment'
         ],
         output: {
             filename: '[name].dll.js',
             library: 'lib',
             path: path.join(__dirname, 'dist')
+        },
+        resolve: {
+            fallback: {
+                'path': false
+            }
         },
         module: {
             rules: [
