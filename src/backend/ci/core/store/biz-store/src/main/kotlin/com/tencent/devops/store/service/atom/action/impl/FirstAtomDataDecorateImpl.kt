@@ -25,37 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-object PropertyUtil {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstAtomDataDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun type() = AtomDecorateFactory.Kind.DATA
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中没有该配置文件则实时去加载
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            propertiesMap[propertyFileName] = properties
-            properties[propertyKey] as String
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun deserialize(json: String): Map<String, Any> {
+        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
 }

@@ -21,41 +21,21 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.store.service.atom.action.AtomDecorate
 
-object PropertyUtil {
+abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    private var nextPtr: AtomDecorate<S>? = null
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中没有该配置文件则实时去加载
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            propertiesMap[propertyFileName] = properties
-            properties[propertyKey] as String
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun setNext(next: AtomDecorate<S>) {
+        nextPtr = next
     }
+
+    override fun getNext(): AtomDecorate<S>? = nextPtr
 }

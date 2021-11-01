@@ -25,37 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.PostConstruct
 
-object PropertyUtil {
+/**
+ * 装饰插件信息
+ */
+interface AtomDecorate<S : Any> {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    @PostConstruct
+    fun init() {
+        AtomDecorateFactory.register(kind = type(), atomDecorate = this)
+    }
+
+    fun type(): AtomDecorateFactory.Kind
+
+    fun setNext(next: AtomDecorate<S>)
+
+    fun getNext(): AtomDecorate<S>?
 
     /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
+     * 主入口
      */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中没有该配置文件则实时去加载
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            propertiesMap[propertyFileName] = properties
-            properties[propertyKey] as String
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
-    }
+    fun decorate(json: String): S = decorateSpecial(deserialize(json))
+
+    /**
+     * 子类必须实现的反序列化
+     */
+    fun deserialize(json: String): S
+
+    /**
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
+     */
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }

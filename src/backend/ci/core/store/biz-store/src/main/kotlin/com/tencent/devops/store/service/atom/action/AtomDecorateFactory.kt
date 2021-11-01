@@ -25,37 +25,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.Priority
 
-object PropertyUtil {
+/**
+ * 用于对Atom进行修饰工厂类
+ */
+object AtomDecorateFactory {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    enum class Kind {
+        @Suppress("UNUSED")
+        DATA, // data
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中没有该配置文件则实时去加载
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            propertiesMap[propertyFileName] = properties
-            properties[propertyKey] as String
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+        @Suppress("UNUSED")
+        PROPS // task.json
     }
+
+    private val cache = ConcurrentHashMap<Kind, AtomDecorate<out Any>>()
+
+    fun <S : Any> register(kind: Kind, atomDecorate: AtomDecorate<S>) {
+        @Suppress("UNCHECKED_CAST") // 故障强转，让编码扩展类型不匹配直接在启动时失败，防止带病运行
+        val currentAD = cache[kind] as AtomDecorate<S>?
+        if (currentAD == null) {
+            cache[kind] = atomDecorate
+            return
+        }
+        val currentP = getPriority(currentAD)
+
+        val newP = getPriority(atomDecorate)
+        if (currentP <= newP) {
+            cache[kind] = atomDecorate
+            atomDecorate.setNext(currentAD)
+        } else {
+            var beforeAD = currentAD
+            var ptrAD = currentAD.getNext()
+            while (getPriority(ptrAD) > newP) {
+                beforeAD = ptrAD
+                ptrAD = ptrAD?.getNext()
+            }
+            beforeAD?.setNext(atomDecorate)
+            ptrAD?.let { atomDecorate.setNext(it) }
+        }
+    }
+
+    private fun getPriority(atomDecorate: AtomDecorate<out Any>?) =
+        atomDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
+
+    fun get(kind: Kind) = cache[kind]
 }
