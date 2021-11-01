@@ -780,7 +780,8 @@
                 }
             }
         }
-        .unRecommend-atom-item {
+        .unRecommend-atom-item,
+        .atom-info-content-disabled {
             cursor: not-allowed;
 
             .atom-label {
@@ -795,8 +796,25 @@
             }
         }
         .enter-atom {
+            max-height: 150px;
+            background-color: #F5F6FA;
+            transition-timing-function: ease-in;
             .atom-info-content .un-remove {
                 background-color: #EA3636;
+                opacity: 1;
+            }
+            .atom-info-content .allow-os-list,
+                .atom-info-content .atom-update-time {
+                    opacity: 1;
+                    transition: all .2s ease-out;
+                }
+            .atom-info-content .atom-name .atom-link .jump-icon {
+                opacity: 1;
+            }
+            .atom-info-content .remove-atom,
+            .atom-info-content .un-remove,
+            .atom-info-content .install-atom,
+            .atom-info-content .atom-label {
                 opacity: 1;
             }
         }
