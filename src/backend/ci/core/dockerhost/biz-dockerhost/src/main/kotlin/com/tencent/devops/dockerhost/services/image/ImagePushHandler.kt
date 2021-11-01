@@ -4,14 +4,17 @@ import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.api.model.ResponseItem
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.services.Handler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class ImagePushHandler(
+    dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
-) : Handler<ImageHandlerContext>() {
+) : Handler<ImageHandlerContext>(dockerHostConfig, dockerHostBuildApi) {
     override fun handlerRequest(handlerContext: ImageHandlerContext) {
         with(handlerContext) {
             imageTagSet.parallelStream().forEach {

@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.dockerhost.services.generator.impl
 
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.docker.DockerBindGenerator
-import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
+import com.tencent.devops.dockerhost.services.generator.DockerBindGenerator
+import com.tencent.devops.dockerhost.services.generator.annotation.BindGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
@@ -48,8 +48,8 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
 
     private val whiteListLocker = ReentrantLock()
 
-    override fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind> {
-        with(dockerHostBuildInfo) {
+    override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
+        with(handlerContext) {
 
             val binds = mutableListOf(
                 Bind(getMavenRepoPath(), Volume(dockerHostConfig.volumeMavenRepo)),
@@ -79,47 +79,47 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
         }
     }
 
-    private fun DockerHostBuildInfo.getGradlePath(): String {
+    private fun ContainerHandlerContext.getGradlePath(): String {
         return "${dockerHostConfig.hostPathGradleCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getGolangPath(): String {
+    private fun ContainerHandlerContext.getGolangPath(): String {
         return "${dockerHostConfig.hostPathGolangCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getSbtPath(): String {
+    private fun ContainerHandlerContext.getSbtPath(): String {
         return "${dockerHostConfig.hostPathSbtCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getSbt2Path(): String {
+    private fun ContainerHandlerContext.getSbt2Path(): String {
         return "${dockerHostConfig.hostPathSbt2Cache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getYarnPath(): String {
+    private fun ContainerHandlerContext.getYarnPath(): String {
         return "${dockerHostConfig.hostPathYarnCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getLogsPath(): String {
+    private fun ContainerHandlerContext.getLogsPath(): String {
         return "${dockerHostConfig.hostPathLogs}/$buildId/$vmSeqId/"
     }
 
-    private fun DockerHostBuildInfo.getCcachePath(): String {
+    private fun ContainerHandlerContext.getCcachePath(): String {
         return "${dockerHostConfig.hostPathCcache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getNpmCachePath(): String {
+    private fun ContainerHandlerContext.getNpmCachePath(): String {
         return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getNpmPrefixPath(): String {
+    private fun ContainerHandlerContext.getNpmPrefixPath(): String {
         return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getMavenRepoPath(): String {
+    private fun ContainerHandlerContext.getMavenRepoPath(): String {
         return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
-    private fun DockerHostBuildInfo.getWorkspace(): String {
+    private fun ContainerHandlerContext.getWorkspace(): String {
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 

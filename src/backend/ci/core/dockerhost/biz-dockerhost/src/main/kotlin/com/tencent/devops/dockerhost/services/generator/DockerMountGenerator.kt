@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services.generator
 
-import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.github.dockerjava.api.model.Mount
+import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 
 /**
  * Docker Volume生成器
  */
-interface DockerVolumeGenerator {
+interface DockerMountGenerator {
 
-    fun generateVolumes(dockerHostBuildInfo: DockerHostBuildInfo): List<Volume>
+    fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount>
 }

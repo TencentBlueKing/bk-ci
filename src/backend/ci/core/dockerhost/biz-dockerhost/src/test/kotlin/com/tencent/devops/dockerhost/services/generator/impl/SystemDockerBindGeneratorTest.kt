@@ -25,36 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dockerhost.services.generator.impl
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.BeansException
+import org.junit.Assert
+import org.junit.Test
 
-object DockerBindLoader {
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
-    private val logger: Logger = LoggerFactory.getLogger(DockerBindLoader::class.java)
+class SystemDockerBindGeneratorTest {
 
-    @Suppress("UNCHECKED_CAST")
-    fun loadBinds(containerInfo: DockerHostBuildInfo): List<Bind> {
-
-        val bindList = mutableListOf<Bind>()
+    @Test
+    fun generateBinds() {
+        val lock = ReentrantLock()
+        Thread {
+            lock.lock()
+            Thread.sleep(1999)
+        }.start()
+        Thread.sleep(500)
+        val start = System.currentTimeMillis()
         try {
-            val generators: List<DockerBindGenerator> =
-                SpringContextUtil.getBeansWithAnnotation(BindGenerator::class.java) as List<DockerBindGenerator>
-            generators.forEach { generator ->
-                bindList.addAll(generator.generateBinds(containerInfo))
-            }
-        } catch (notFound: BeansException) {
-            logger.warn("[${containerInfo.buildId}]|not found bind generator| ex=$notFound")
-        } catch (ignored: Throwable) {
-            logger.error("[${containerInfo.buildId}]|loadBinds_fail|", ignored)
+            lock.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
+        } catch (ignore: TimeoutException) {
+        } finally {
+            val end = System.currentTimeMillis()
+            println(start)
+            println(end)
+            Assert.assertTrue(end - start >= 1000)
         }
-
-        return bindList
     }
 }
