@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -195,21 +196,17 @@ class PipelineBuildFacadeService(
         if (useLatestParameters) {
             // 获取最后一次的构建id
             val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
-            if (lastTimeBuildInfo != null) {
-                val latestParamsList = JsonUtil.getObjectMapper().readValue(lastTimeBuildInfo.buildParameters) as List<BuildParameters>
-                // 为空的时候不处理
-                if (latestParamsList.isNotEmpty()) {
-                    val latestParamsMap = latestParamsList.associate { it.key to it.value }
-                    triggerContainer.params.forEach { param ->
-                        val realValue = latestParamsMap[param.id]
-                        if (realValue != null) {
-                            // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
-                            // 当值是boolean类型的时候，需要转为boolean类型
-                            if (param.defaultValue is Boolean) {
-                                param.defaultValue = realValue.toString().toBoolean()
-                            } else {
-                                param.defaultValue = realValue
-                            }
+            if (lastTimeBuildInfo?.buildParameters?.isNotEmpty() == true) {
+                val latestParamsMap = lastTimeBuildInfo.buildParameters!!.associate { it.key to it.value }
+                triggerContainer.params.forEach { param ->
+                    val realValue = latestParamsMap[param.id]
+                    if (realValue != null) {
+                        // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                        // 当值是boolean类型的时候，需要转为boolean类型
+                        if (param.defaultValue is Boolean) {
+                            param.defaultValue = realValue.toString().toBoolean()
+                        } else {
+                            param.defaultValue = realValue
                         }
                     }
                 }
