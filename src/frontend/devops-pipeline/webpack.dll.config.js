@@ -33,7 +33,6 @@ module.exports = (env = {}, argv) => {
             'echarts/lib/component/tooltip',
             'echarts/lib/component/title',
             'echarts/lib/component/legend',
-            'bk-magic-vue',
             'vue-i18n',
             'moment'
         ],

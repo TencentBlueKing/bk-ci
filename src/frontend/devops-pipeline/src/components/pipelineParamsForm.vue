@@ -46,7 +46,6 @@
         GIT_REF,
         CODE_LIB,
         CONTAINER_TYPE,
-        ARTIFACTORY,
         SUB_PIPELINE,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
@@ -137,7 +136,6 @@
                     case param.type === GIT_REF:
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
-                    case param.type === ARTIFACTORY:
                     case param.type === SUB_PIPELINE:
                         return param.options
                     default:
