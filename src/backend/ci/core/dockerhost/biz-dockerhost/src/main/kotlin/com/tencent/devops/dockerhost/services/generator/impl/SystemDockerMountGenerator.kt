@@ -62,7 +62,7 @@ class SystemDockerMountGenerator @Autowired constructor(private val dockerHostCo
                     lowerDir = lowerDir,
                     upperDir = upperDir,
                     workDir = workDir,
-                    targetPath = dockerHostConfig.bazelContainerPath
+                    targetPath = dockerHostConfig.volumeWorkspace
                 ))
             }
 
