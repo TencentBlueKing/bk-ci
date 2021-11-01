@@ -40,7 +40,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(commandContextBuild.buildId) ?: return
 
         val endTime = System.currentTimeMillis()
-        val timeDuration = ((endTime - commandContextBuild.buildInfo.startTime!!) / 1000)
+        val timeDuration = ((endTime - buildInfo.startTime!!) / 1000)
         commandContextBuild.notifyValue[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration * 1000)
 
         buildVariableService.setVariable(
@@ -80,7 +80,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             "trigger" to trigger,
             "username" to user,
             "failTask" to failTask,
-            "duration" to DateTimeUtil.formatMillSecond(timeDuration).removeSuffix("秒")
+            "duration" to DateTimeUtil.formatMillSecond(timeDuration * 1000).removeSuffix("秒")
         )
         commandContextBuild.notifyValue.putAll(pipelineMap)
     }
