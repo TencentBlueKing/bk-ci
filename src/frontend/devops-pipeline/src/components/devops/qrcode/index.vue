@@ -39,7 +39,7 @@
             }
         },
         async mounted () {
-            const QRCode = await import('./qrcode.min')
+            const { default: QRCode } = await import('./qrcode.min')
             this.qrCode = new QRCode(this.$refs.qrcode, {
                 text: this.text,
                 width: this.size,
