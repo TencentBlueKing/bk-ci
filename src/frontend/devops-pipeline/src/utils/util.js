@@ -686,3 +686,7 @@ export function formatDiff (times) {
     }
     return result
 }
+
+export function bkVarWrapper (name) {
+    return '${{' + name + '}}'
+}

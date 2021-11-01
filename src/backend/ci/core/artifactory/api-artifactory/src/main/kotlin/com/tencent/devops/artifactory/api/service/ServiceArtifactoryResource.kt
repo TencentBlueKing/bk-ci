@@ -85,6 +85,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/check")
     @GET
     fun check(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -101,6 +104,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/acrossProjectCopy")
     @POST
     fun acrossProjectCopy(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -123,6 +129,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -189,6 +198,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

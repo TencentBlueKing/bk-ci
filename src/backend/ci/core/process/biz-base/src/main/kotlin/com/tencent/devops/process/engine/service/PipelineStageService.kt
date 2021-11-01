@@ -461,7 +461,7 @@ class PipelineStageService @Autowired constructor(
             } else if (result.failEnd) {
                 BuildStatus.QUALITY_CHECK_FAIL
             } else {
-                BuildStatus.REVIEWING
+                BuildStatus.QUALITY_CHECK_WAIT
             }
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
