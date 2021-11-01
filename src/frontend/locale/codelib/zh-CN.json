@@ -54,6 +54,7 @@
     "Github": "Github",
     "Gitlab": "Gitlab",
     "TGit": "工蜂外网",
+    "P4": "P4",
     "authType": "授权方式",
     "authIdentity": "授权身份"
 }
