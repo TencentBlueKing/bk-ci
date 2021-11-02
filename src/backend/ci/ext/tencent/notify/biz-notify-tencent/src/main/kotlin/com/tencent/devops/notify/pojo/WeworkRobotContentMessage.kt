@@ -31,29 +31,25 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("企业微信机器人消息")
-data class WeworkRobotSingleTextMessage(
+@ApiModel("企业微信机器人消息内容")
+data class WeworkRobotContentMessage(
     /**
-     * 会话id，支持最多传100个，用‘|’分隔。可能是群聊会话，也可能是单聊会话或者小黑板会话，通过消息回调获得，也可以是userid。
-     * 特殊的，当chatid为“@all_group”时，表示对所有群和小黑板广播，为“@all_subscriber”时表示对订阅范围内员工广播单聊消息，为“@all”时，
-     * 表示对所有群、所有订阅范围内员工和所有小黑板广播。不填则默认为“@all_group”
+     * 文本内容，最长不超过2048个字节，必须是utf8编码
      */
-    @ApiModelProperty("会话id")
-    override val chatid: String?,
-    /**
-     * 小黑板帖子id，有且只有chatid指定了一个小黑板的时候生效
-     */
-    @ApiModelProperty("会话id", name = "post_id")
-    @JsonProperty("post_id")
-    override val postId: String?,
-    @ApiModelProperty("消息类型")
-    override val msgtype: String = "text",
     @ApiModelProperty("文本内容")
-    val text: WeworkRobotContentMessage,
+    val content: String,
+
     /**
-     * 该消息只有指定的群成员或小黑板成员可见（其他成员不可见），有且只有chatid指定了一个群或一个小黑板的时候生效，多个userid用‘|’分隔
+     * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
      */
-    @ApiModelProperty("会话id", name = "visible_to_user")
-    @JsonProperty("visible_to_user")
-    val visibleToUser: String?
-) : WeweokRobotBaseMessage(chatid, postId, msgtype)
+    @JsonProperty("mentioned_list")
+    @ApiModelProperty("userid的列表", name = "mentioned_list")
+    val mentionedList: Set<String>?,
+
+    /**
+     * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
+     */
+    @JsonProperty("mentioned_mobile_list")
+    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", name = "mentioned_mobile_list")
+    val mentionedMobileList: Set<String>?
+)
