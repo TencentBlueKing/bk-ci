@@ -450,7 +450,7 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
-                buildParameters = t.errorInfo?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
+                buildParameters = t.buildParameters?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0
             )
