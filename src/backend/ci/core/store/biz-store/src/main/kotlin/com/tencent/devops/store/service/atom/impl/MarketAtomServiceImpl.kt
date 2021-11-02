@@ -317,7 +317,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean,
-                        dailyStatisticList = getRecentDailyStatisticList(atomCode),
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0
                     )
                 )
