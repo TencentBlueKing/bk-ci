@@ -150,8 +150,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
                         variables = it.customBuildEnv?.let { it1 ->
-                            val envMap = it1.map { it2 -> "envs.${it2.key}" to it2.value }.toMap()
-                            variables.plus(envMap)
+                            variables.plus(it1)
                         } ?: variables
                         timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
