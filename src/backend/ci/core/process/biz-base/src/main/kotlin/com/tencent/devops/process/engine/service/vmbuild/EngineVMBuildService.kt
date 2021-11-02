@@ -112,7 +112,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    @Suppress("ThrowsCount","ComplexMethod")
+    @Suppress("ThrowsCount", "ComplexMethod")
     private fun handleStartUpVMBus(
         buildId: String,
         vmSeqId: String,
@@ -174,8 +174,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         }
                         emptyList()
                     }
-                    LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START_variables|j($vmSeqId)|vmName($vmName)" +
-                        " variables=$variables")
+                    LOG.info(
+                        "ENGINE|$buildId|Agent|BUILD_VM_START_variables|j($vmSeqId)|vmName($vmName)" +
+                            " variables=$variables"
+                    )
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
                     buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
