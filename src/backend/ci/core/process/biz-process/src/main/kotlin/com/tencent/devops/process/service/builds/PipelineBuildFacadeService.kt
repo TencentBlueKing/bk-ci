@@ -910,10 +910,10 @@ class PipelineBuildFacadeService(
                 )
             }
         }
-        if (check?.status != BuildStatus.REVIEWING.name) throw ErrorCodeException(
+        if (check?.status != BuildStatus.QUALITY_CHECK_WAIT.name) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
-            defaultMessage = "Stage($stageId)未处于质量红线审核状态",
+            defaultMessage = "Stage($stageId)未处于质量红线带把关状态",
             params = arrayOf(stageId)
         )
         pipelineStageService.qualityTriggerStage(

@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.worker.task.store
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -43,11 +44,13 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.dispatch.BcsResourceApi
 import com.tencent.devops.worker.common.api.store.ExtServiceResourceApi
+import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -109,8 +112,14 @@ class ExtServiceBuildDeployTask : ITask() {
         )
         //  开始上传扩展服务执行包到蓝盾新仓库
         val file = File(workspace, filePath)
-        val uploadFileUrl =
-            "/ms/artifactory/api/build/artifactories/ext/services/projects/${buildVariables.projectId}/services/$serviceCode/versions/$serviceVersion/archive?destPath=$destPath"
+        val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
+            repoName = BkRepoEnum.GENERIC.repoName,
+            projectId = buildVariables.projectId,
+            storeType = StoreTypeEnum.SERVICE,
+            storeCode = serviceCode,
+            version = serviceVersion,
+            destPath = destPath
+        )
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
             ?: throw TaskExecuteException(
                 errorMsg = "user basic info error, please check environment.",
@@ -120,7 +129,6 @@ class ExtServiceBuildDeployTask : ITask() {
         val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = archiveApi.uploadFile(
             url = uploadFileUrl,
-            destPath = destPath,
             file = file,
             headers = headers,
             isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)

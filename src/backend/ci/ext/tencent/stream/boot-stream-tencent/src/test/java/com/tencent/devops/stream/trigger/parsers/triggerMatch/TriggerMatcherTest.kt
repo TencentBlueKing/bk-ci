@@ -10,16 +10,17 @@ import com.tencent.devops.common.ci.v2.TagRule
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.v2.service.StreamScmService
 
 internal class TriggerMatcherTest {
     private val oauthService: StreamOauthService = StreamOauthService(mock(), mock(), mock())
 
-//    private val streamScmService: StreamScmService = StreamScmService(mock(), mock(), oauthService, mock())
+    private val streamScmService: StreamScmService = StreamScmService(mock(), mock(), oauthService, mock())
     private val streamTimerService: StreamTimerService = StreamTimerService(
         mock(), mock(), mock()
     )
 
-    private val triggerMatcher = TriggerMatcher(streamTimerService)
+    private val triggerMatcher = TriggerMatcher(streamScmService, streamTimerService)
 
     @Test
     fun mrTest8() {

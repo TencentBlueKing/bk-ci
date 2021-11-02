@@ -248,7 +248,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<Property>> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun externalUrl(
