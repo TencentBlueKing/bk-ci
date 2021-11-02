@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.mysql.cj.jdbc.exceptions.MysqlDataTruncation
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
