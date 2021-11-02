@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
@@ -39,6 +40,10 @@ import org.slf4j.LoggerFactory
 class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
 
     private val logger = LoggerFactory.getLogger(NodeJsAtomTargetHandleServiceImpl::class.java)
+
+    companion object {
+        private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
+    }
 
     override fun handleAtomTarget(
         target: String,
@@ -52,8 +57,8 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         // npm install命令兼容使用第三方依赖的插件包的情况
         val installCmd = "npm install --unsafe-perm"
         val command = StringBuilder()
-        val machineNodeSwitch = systemEnvVariables["machineNodeSwitch"]
-        if (machineNodeSwitch != null && machineNodeSwitch.toBoolean()) {
+        val machineNodeSwitch = PropertyUtil.getPropertyValue("machine.node.switch", AGENT_PROPERTIES_FILE_NAME)
+        if (machineNodeSwitch.toBoolean()) {
             var nodeEnvFlag = false
             try {
                 // 探测构建机上是否有node环境
