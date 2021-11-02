@@ -4,7 +4,7 @@
             <template v-if="groupKey === 'rootProps'">
                 <template v-for="(obj, key) in group.props">
                     <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                        <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                        <component :is="obj.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
                         <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                     </form-field>
                 </template>
