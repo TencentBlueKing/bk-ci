@@ -314,7 +314,6 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }

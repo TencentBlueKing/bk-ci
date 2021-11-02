@@ -210,7 +210,7 @@ class PipelineJobBean(
             }
         } finally {
             watcher.stop()
-            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 50)
         }
     }
 }

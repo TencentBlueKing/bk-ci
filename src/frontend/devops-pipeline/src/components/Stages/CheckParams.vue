@@ -10,7 +10,7 @@
                     :disabled="true"
                     :desc-tooltips="param.desc"
                     :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                    v-validate.initial="`required|unique:${params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                    v-validate.initial="`required|unique:${params.map(p => p.key).join(',')}|max: 50|${snonVarRule}`"
                     name="key"
                     :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                     :value="param.chineseName ? param.chineseName : param.key" />
