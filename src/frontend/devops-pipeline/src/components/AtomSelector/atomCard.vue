@@ -4,7 +4,7 @@
             <img v-if="atom.logoUrl" :src="atom.logoUrl" alt="">
             <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
         </div>
-        <div :class="{ 'atom-info-content': true, 'atom-info-content-disabled': !atom.installFlag && !atom.defaultFlag }">
+        <div :class="{ 'atom-info-content': true, 'atom-info-content-disabled': !atom.installFlag && !atom.defaultFlag && !isProjectAtom }">
             <!-- 项目插件Tab按钮 -->
             <div v-if="isProjectAtom && isRecommend">
                 <!-- 移除按钮 -->
