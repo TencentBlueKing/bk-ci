@@ -38,6 +38,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.container.ContainerAgentUpHandler
+import com.tencent.devops.dockerhost.services.container.ContainerCustomizedRunHandler
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
 import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
@@ -56,7 +57,8 @@ class DockerService @Autowired constructor(
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val containerPullImageHandler: ContainerPullImageHandler,
     private val containerRunHandler: ContainerRunHandler,
-    private val containerAgentUpHandler: ContainerAgentUpHandler
+    private val containerAgentUpHandler: ContainerAgentUpHandler,
+    private val containerCustomizedRunHandler: ContainerCustomizedRunHandler
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -138,9 +140,7 @@ class DockerService @Autowired constructor(
             qpcUniquePath = qpcUniquePath
         )
 
-        containerPullImageHandler.setNextHandler(
-            containerRunHandler.setNextHandler(containerAgentUpHandler)
-        ).handlerRequest(containerHandlerContext)
+        containerPullImageHandler.setNextHandler(containerCustomizedRunHandler).handlerRequest(containerHandlerContext)
 
         return containerHandlerContext.dockerRunResponse!!
 
