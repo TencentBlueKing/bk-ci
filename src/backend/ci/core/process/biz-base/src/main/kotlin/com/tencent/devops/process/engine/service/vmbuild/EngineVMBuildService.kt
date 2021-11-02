@@ -112,7 +112,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    @Suppress("ThrowsCount")
+    @Suppress("ThrowsCount","ComplexMethod")
     private fun handleStartUpVMBus(
         buildId: String,
         vmSeqId: String,
