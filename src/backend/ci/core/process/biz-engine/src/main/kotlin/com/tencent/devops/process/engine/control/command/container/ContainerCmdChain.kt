@@ -27,15 +27,12 @@
 
 package com.tencent.devops.process.engine.control.command.container
 
+import com.tencent.devops.process.command.Cmd
 import com.tencent.devops.process.command.CmdChain
 
 class ContainerCmdChain(private val commandList: List<ContainerCmd>) : CmdChain<ContainerContext> {
-
-    override fun doCommand(commandContext: ContainerContext) {
-        if (commandContext.cmdFlowSeq < 0) { // 校正
-            commandContext.cmdFlowSeq = 0
-        }
+    override fun nextCommand(commandContext: ContainerContext): Cmd<ContainerContext>? {
         // 每次调用，都增1，走向下一条命令链
-        commandList.getOrNull(commandContext.cmdFlowSeq++)?.doExecute(commandContext = commandContext, chain = this)
+        return commandList.getOrNull(commandContext.cmdFlowSeq++)
     }
 }

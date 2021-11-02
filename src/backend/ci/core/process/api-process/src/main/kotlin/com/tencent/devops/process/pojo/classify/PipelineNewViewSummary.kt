@@ -27,12 +27,23 @@
 
 package com.tencent.devops.process.pojo.classify
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("")
 data class PipelineNewViewSummary(
+    @ApiModelProperty("视图id", required = false)
     val id: String,
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("视图名称", required = false)
     val name: String,
+    @ApiModelProperty("是否项目", required = false)
     val projected: Boolean,
+    @ApiModelProperty("创建时间", required = false)
     val createTime: Long,
+    @ApiModelProperty("更新时间", required = false)
     val updateTime: Long,
+    @ApiModelProperty("创建者", required = false)
     val creator: String
 )

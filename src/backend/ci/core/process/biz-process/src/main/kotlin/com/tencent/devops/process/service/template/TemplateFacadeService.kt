@@ -1573,6 +1573,7 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 templateInstanceItemDao.createTemplateInstanceItem(
                     dslContext = context,
+                    projectId = projectId,
                     baseId = baseId,
                     instances = instances,
                     status = TemplateInstanceItemStatus.INIT.name,
@@ -1722,6 +1723,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Int {
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
