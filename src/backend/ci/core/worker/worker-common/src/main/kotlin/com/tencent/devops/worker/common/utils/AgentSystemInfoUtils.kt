@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import oshi.hardware.CentralProcessor.TickType
 import oshi.util.Util
+import java.lang.management.ManagementFactory
+import java.lang.management.OperatingSystemMXBean
 import kotlin.math.roundToLong
 
 object AgentSystemInfoUtils {
@@ -82,7 +84,7 @@ object AgentSystemInfoUtils {
 
     fun getAgentNetworkInfo(): List<AgentNetworkInfo> {
         val systemInfo = SystemInfo()
-        val hardware = systemInfo.getHardware()
+        val hardware = systemInfo.hardware
         val networks = hardware.networkIFs
 
         val networkInfos = mutableListOf<AgentNetworkInfo>()
@@ -94,7 +96,7 @@ object AgentSystemInfoUtils {
 
             val start = System.currentTimeMillis()
             val startData = mutableListOf(0L, 0L, 0L, 0L)
-            network.updateNetworkStats()
+            network.updateAttributes()
             startData[0] = network.bytesRecv
             startData[1] = network.bytesSent
             startData[2] = network.packetsRecv
@@ -102,10 +104,10 @@ object AgentSystemInfoUtils {
 
             Util.sleep(2000)
             val timeDiff = (System.currentTimeMillis() - start) / 1000.0
-            network.updateNetworkStats()
+            network.updateAttributes()
 
             val endData = mutableListOf(0L, 0L, 0L, 0L)
-            network.updateNetworkStats()
+            network.updateAttributes()
             endData[0] = network.bytesRecv
             endData[1] = network.bytesSent
             endData[2] = network.packetsRecv
@@ -132,16 +134,15 @@ object AgentSystemInfoUtils {
 
     fun getAgentCpuInfo(): AgentCpuInfo {
         val systemInfo = SystemInfo()
-        val hardware = systemInfo.getHardware()
+        val hardware = systemInfo.hardware
         val processor = hardware.processor
         val physicalProcessorCount = processor.physicalProcessorCount
         val logicalProcessorCount = processor.logicalProcessorCount
 
         // 采集cpu使用率
-//        var start = System.currentTimeMillis()
         val startTicks = processor.systemCpuLoadTicks
+        val startProcessorCpuLoadTicks = processor.processorCpuLoadTicks
         Util.sleep(1000)
-//        var timeDiff = (System.currentTimeMillis() - start) / 1000.0
         val endTicks = processor.systemCpuLoadTicks
 
         val userTick = endTicks[TickType.USER.index] - startTicks[TickType.USER.index]
@@ -161,10 +162,10 @@ object AgentSystemInfoUtils {
             irqTick / totalCpuTick,
             softirqTick / totalCpuTick
         )
-        val tickCpuLoad = processor.systemCpuLoadBetweenTicks
-        val systemCpuLoad = processor.systemCpuLoad
+        val tickCpuLoad = processor.getSystemCpuLoadBetweenTicks(startTicks)
+        val systemCpuLoad = (ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean).systemLoadAverage
 
-        val processorLoads = processor.processorCpuLoadBetweenTicks.toList()
+        val processorLoads = processor.getProcessorCpuLoadBetweenTicks(startProcessorCpuLoadTicks).toList()
 
         return AgentCpuInfo(
             logicalProcessorCount,
@@ -178,14 +179,14 @@ object AgentSystemInfoUtils {
 
     fun getAgentMemoryInfo(): AgentMemoryInfo {
         val systemInfo = SystemInfo()
-        val hardware = systemInfo.getHardware()
+        val hardware = systemInfo.hardware
         val memory = hardware.memory
 
         return AgentMemoryInfo(
             memory.total,
             memory.available,
-            memory.swapTotal,
-            memory.swapUsed
+            memory.virtualMemory.swapTotal,
+            memory.virtualMemory.swapUsed
         )
     }
 }
