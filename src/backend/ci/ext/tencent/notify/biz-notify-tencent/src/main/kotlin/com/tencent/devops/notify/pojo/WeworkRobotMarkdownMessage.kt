@@ -35,5 +35,4 @@ data class WeworkRobotMarkdownMessage(
     override val postId: String?,
     override val msgtype: String = "markdown",
     val markdown: WeworkRobotContentMessage
-) : WeweokRobotBaseMessage(chatid, postId, msgtype) {
-}
+) : WeweokRobotBaseMessage(chatid, postId, msgtype)
