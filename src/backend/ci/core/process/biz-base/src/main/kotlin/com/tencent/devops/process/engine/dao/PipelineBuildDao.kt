@@ -131,11 +131,11 @@ class PipelineBuildDao {
                     buildNumAlias
                 ).execute()
             }
-        } catch (e: MysqlDataTruncation) {
+        } catch (t: Throwable) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_PARAM_VALUE_TOO_LARGE,
-                defaultMessage = "流水线启动参数内容过大: ${e.message}"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_START_WITH_ERROR,
+                defaultMessage = "流水线启动准备失败: ${t.message}"
             )
         }
     }
