@@ -103,45 +103,63 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         weworkGroup.forEach {
 
             if (it.startsWith("ww")) { // 应用号逻辑
-                logger.info("send group msg by app: $it")
-                if (markerDownFlag) {
-                    wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), it)
-                } else {
-                    val receiver = Receiver(ReceiverType.group, it)
-                    val richtextContentList = mutableListOf<RichtextContent>()
-                    richtextContentList.add(
-                        RichtextText(RichtextTextText(content))
-                    )
-                    if (detailFlag) {
-                        richtextContentList.add(
-                            RichtextView(
-                                RichtextViewLink(text = "查看详情", key = detailUrl!!, browser = 1)
-                            )
-                        )
-                    }
-                    val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                    wechatWorkService.sendRichText(richtextMessage)
-                }
+                sendByApp(it, content, markerDownFlag, detailFlag, detailUrl!!)
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
-                logger.info("send group msg by robot: $it, $content")
-                if (markerDownFlag) {
-                    val msg = RobotMarkdownSendMsg(
-                        chatId = it,
-                        markdown = MsgInfo(
-                            content = content
-                        )
-                    )
-                    wechatWorkRobotService.send(msg.toJsonString())
-                } else {
-                    val msg = RobotTextSendMsg(
-                        chatId = it,
-                        text = MsgInfo(
-                            content = content
-                        )
-                    )
-                    wechatWorkRobotService.send(msg.toJsonString())
-                }
+                sendByRobot(it, content, markerDownFlag)
             }
+        }
+    }
+
+    private fun sendByApp(
+        chatId: String,
+        content: String,
+        markerDownFlag: Boolean,
+        detailFlag: Boolean,
+        detailUrl: String
+    ) {
+        logger.info("send group msg by app: $chatId")
+        if (markerDownFlag) {
+            wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), chatId)
+        } else {
+            val receiver = Receiver(ReceiverType.group, chatId)
+            val richtextContentList = mutableListOf<RichtextContent>()
+            richtextContentList.add(
+                RichtextText(RichtextTextText(content))
+            )
+            if (detailFlag) {
+                richtextContentList.add(
+                    RichtextView(
+                        RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
+                    )
+                )
+            }
+            val richtextMessage = RichtextMessage(receiver, richtextContentList)
+            wechatWorkService.sendRichText(richtextMessage)
+        }
+    }
+
+    private fun sendByRobot(
+        chatId: String,
+        content: String,
+        markerDownFlag: Boolean
+    ) {
+        logger.info("send group msg by robot: $chatId, $content")
+        if (markerDownFlag) {
+            val msg = RobotMarkdownSendMsg(
+                chatId = chatId,
+                markdown = MsgInfo(
+                    content = content
+                )
+            )
+            wechatWorkRobotService.send(msg.toJsonString())
+        } else {
+            val msg = RobotTextSendMsg(
+                chatId = chatId,
+                text = MsgInfo(
+                    content = content
+                )
+            )
+            wechatWorkRobotService.send(msg.toJsonString())
         }
     }
 
@@ -154,7 +172,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TxNotifySendGroupMsgCmdImpl::class.java)
-        private val roomPatten = "ww\\w" // ww 开头且接数字的正则表达式, 适用于应用号获取的roomid
-        private val chatPatten = "^[A-Za-z0-9]+\$" // 数字和字母组成的群chatId正则表达式
+        private const val roomPatten = "ww\\w" // ww 开头且接数字的正则表达式, 适用于应用号获取的roomid
+        private const val chatPatten = "^[A-Za-z0-9]+\$" // 数字和字母组成的群chatId正则表达式
     }
 }

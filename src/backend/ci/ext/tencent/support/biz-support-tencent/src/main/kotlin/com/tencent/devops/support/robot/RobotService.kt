@@ -124,8 +124,8 @@ class RobotService @Autowired constructor(
         val dbf = DocumentBuilderFactory.newInstance()
         val db = dbf.newDocumentBuilder()
         val sr = StringReader(xmlString)
-        val `is` = InputSource(sr)
-        return db.parse(`is`)
+        val document = InputSource(sr)
+        return db.parse(document)
     }
 
     /*

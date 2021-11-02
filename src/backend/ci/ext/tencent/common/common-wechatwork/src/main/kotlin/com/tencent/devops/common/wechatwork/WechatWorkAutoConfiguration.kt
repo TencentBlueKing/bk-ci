@@ -80,5 +80,7 @@ class WechatWorkAutoConfiguration {
 
     @Bean
     @Primary
-    fun weworkRobotService(weworkRobotCustomConfig: WeworkRobotCustomConfig) = WechatWorkRobotService(weworkRobotCustomConfig)
+    fun weworkRobotService(
+        weworkRobotCustomConfig: WeworkRobotCustomConfig
+    ) = WechatWorkRobotService(weworkRobotCustomConfig)
 }
