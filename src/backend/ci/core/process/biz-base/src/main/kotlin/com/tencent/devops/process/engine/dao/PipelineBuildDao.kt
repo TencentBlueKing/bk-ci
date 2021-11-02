@@ -124,7 +124,7 @@ class PipelineBuildDao {
                 webhookType,
                 webhookInfo,
                 buildMsg,
-                buildNumAlias,
+                buildNumAlias
             ).execute()
         }
     }
