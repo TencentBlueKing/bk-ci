@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
@@ -63,8 +62,7 @@ class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
-    private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
-    private val alertApi: AlertApi,
+    private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     companion object {
