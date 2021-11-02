@@ -75,7 +75,6 @@ class PipelinePauseValueDao {
                 .set(NEW_VALUE, pipelinePauseValue.newValue)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
-                .set(PROJECT_ID, pipelinePauseValue.projectId)
                 .set(BUILD_ID, pipelinePauseValue.buildId)
                 .set(TASK_ID, pipelinePauseValue.taskId)
                 .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
