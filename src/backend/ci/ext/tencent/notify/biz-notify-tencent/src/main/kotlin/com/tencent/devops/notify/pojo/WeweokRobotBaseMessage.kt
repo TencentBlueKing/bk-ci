@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("企业微信机器人消息基础结构")
 abstract class WeweokRobotBaseMessage(
     /**
      * 会话id，支持最多传100个，用‘|’分隔。可能是群聊会话，也可能是单聊会话或者小黑板会话，通过消息回调获得，也可以是userid。
