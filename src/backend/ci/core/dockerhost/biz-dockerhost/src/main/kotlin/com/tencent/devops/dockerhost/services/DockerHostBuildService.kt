@@ -73,7 +73,7 @@ class DockerHostBuildService(
         buildId: String,
         checkImageRequest: CheckImageRequest,
         containerId: String?,
-        containerHashId: String?,
+        containerHashId: String?
     ): Result<CheckImageResponse?> {
         logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
         // 判断用户录入的镜像信息是否能正常拉取到镜像
@@ -164,13 +164,17 @@ class DockerHostBuildService(
             try {
                 val containerName = container.names[0]
                 if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
-                    logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                        "stop dockerRun container, containerId: ${container.id}")
+                    logger.info(
+                        "${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                            "stop dockerRun container, containerId: ${container.id}"
+                    )
                     httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                 }
             } catch (e: Exception) {
-                logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
-                    "Stop dockerRun container failed, containerId: ${container.id}", e)
+                logger.error(
+                    "${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                        "Stop dockerRun container failed, containerId: ${container.id}", e
+                )
             }
         }
     }
@@ -573,15 +577,17 @@ class DockerHostBuildService(
         container: Container,
         statistics: Statistics,
         cpuUsagePer: Long,
-        memUsage: Long,
+        memUsage: Long
     ) {
-        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-            "containerName" to container.names[0],
-            "containerId" to container.id,
-            "cpuUsagePer" to cpuUsagePer.toString(),
-            "memUsagePer" to memUsage.toString(),
-            "statistics" to JsonUtil.toJson(statistics)
-        ))
+        dockerHostBuildLogResourceApi.sendFormatLog(
+            mapOf(
+                "containerName" to container.names[0],
+                "containerId" to container.id,
+                "cpuUsagePer" to cpuUsagePer.toString(),
+                "memUsagePer" to memUsage.toString(),
+                "statistics" to JsonUtil.toJson(statistics)
+            )
+        )
 
         val memReservation = dockerHostConfig.elasticityMemReservation ?: 32 * 1024 * 1024 * 1024L
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
@@ -590,8 +596,10 @@ class DockerHostBuildService(
             .withMemoryReservation(memReservation)
             .withCpuPeriod(cpuPeriod)
             .withCpuQuota(cpuQuota).exec()
-        logger.info("<<<< Trigger container reset, containerId: ${container.id}," +
-            " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
+        logger.info(
+            "<<<< Trigger container reset, containerId: ${container.id}," +
+                " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota"
+        )
     }
 
     fun clearContainers() {

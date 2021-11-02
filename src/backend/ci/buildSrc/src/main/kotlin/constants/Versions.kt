@@ -19,7 +19,6 @@ object Versions {
     const val DockerJava = "3.2.5"
     const val DdPlist = "1.23"
     const val ApkParser = "2.5.3"
-    const val OshiCore = "3.4.0"
     const val TencentBkRepo = "1.0.0"
     const val Ant = "1.10.5"
     const val Cglib = "2.2.2"

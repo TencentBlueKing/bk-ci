@@ -46,7 +46,6 @@ allprojects {
             dependency("com.vmware:vijava:${Versions.Vmware}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
-            dependency("com.github.oshi:oshi-core:${Versions.OshiCore}")
             dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
             dependency("dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.ant:ant:${Versions.Ant}")
