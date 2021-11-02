@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.project.pojo.DataSource
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,71 +48,61 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_SHARDING_ROUTING_RULE"], description = "OP-DB分片规则")
-@Path("/op/sharding/routing/rules")
+@Api(tags = ["OP_DATA_SOURCE"], description = "OP-数据源")
+@Path("/op/dataSources")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpShardingRoutingRuleResource {
+interface OPDataSourceResource {
 
-    @ApiOperation("添加分片规则")
+    @ApiOperation("添加数据源")
     @POST
     @Path("/add")
-    fun addShardingRoutingRule(
+    fun addDataSource(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam(value = "分片规则信息请求报文体", required = true)
+        @ApiParam(value = "数据源信息请求报文体", required = true)
         @Valid
-        shardingRoutingRule: ShardingRoutingRule
+        dataSource: DataSource
     ): Result<Boolean>
 
-    @ApiOperation("更新分片规则信息")
+    @ApiOperation("更新数据源信息")
     @PUT
     @Path("/ids/{id}/update")
-    fun updateShardingRoutingRule(
+    fun updateDataSource(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("规则ID", required = true)
+        @ApiParam("数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @ApiParam(value = "分片规则信息请求报文体", required = true)
+        @ApiParam(value = "数据源信息请求报文体", required = true)
         @Valid
-        shardingRoutingRule: ShardingRoutingRule
+        dataSource: DataSource
     ): Result<Boolean>
 
-    @ApiOperation("根据ID获取分片规则信息")
+    @ApiOperation("根据ID获取数据源信息")
     @GET
     @Path("/ids/{id}/get")
-    fun getShardingRoutingRuleById(
-        @ApiParam("规则ID", required = true)
+    fun getDataSourceById(
+        @ApiParam("数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
-        id: String,
-    ): Result<ShardingRoutingRule?>
+        id: String
+    ): Result<DataSource?>
 
-    @ApiOperation("根据名称获取分片规则信息")
-    @GET
-    @Path("/names/{routingName}/get")
-    fun getShardingRoutingRuleByName(
-        @ApiParam("规则名称", required = true)
-        @PathParam("routingName")
-        @BkField(minLength = 1, maxLength = 128)
-        routingName: String,
-    ): Result<ShardingRoutingRule?>
-
-    @ApiOperation("根据ID删除分片规则信息")
+    @ApiOperation("根据ID删除数据源信息")
     @DELETE
     @Path("/ids/{id}/delete")
-    fun deleteShardingRoutingRuleById(
+    fun deleteDataSourceById(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("标签ID", required = true)
+        @ApiParam("数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String

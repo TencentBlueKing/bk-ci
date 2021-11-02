@@ -28,74 +28,64 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.project.dao.ShardingRoutingRuleDao
-import com.tencent.devops.project.pojo.ShardingRoutingRule
-import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.pojo.DataSource
+import com.tencent.devops.project.service.DataSourceService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ShardingRoutingRuleServiceImpl @Autowired constructor(
+class DataSourceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
-) : ShardingRoutingRuleService {
+    private val dataSourceDao: DataSourceDao
+) : DataSourceService {
 
-    override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
-        val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(dslContext, routingName)
+    override fun addDataSource(userId: String, dataSource: DataSource): Boolean {
+        val dataSourceName = dataSource.dataSourceName
+        val moduleCode = dataSource.moduleCode.name
+        val nameCount = dataSourceDao.countByName(dslContext, moduleCode, dataSourceName)
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(routingName)
+                params = arrayOf("[$moduleCode]$dataSourceName")
             )
         }
-        shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
+        dataSourceDao.add(dslContext, userId, dataSource)
         return true
     }
 
-    override fun deleteShardingRoutingRule(userId: String, id: String): Boolean {
-        shardingRoutingRuleDao.delete(dslContext, id)
+    override fun deleteDataSource(userId: String, id: String): Boolean {
+        dataSourceDao.delete(dslContext, id)
         return true
     }
 
-    override fun updateShardingRoutingRule(
-        userId: String,
-        id: String,
-        shardingRoutingRule: ShardingRoutingRule
-    ): Boolean {
-        val routingName = shardingRoutingRule.routingName
-        val nameCount = shardingRoutingRuleDao.countByName(dslContext, routingName)
+    override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean {
+        val dataSourceName = dataSource.dataSourceName
+        val moduleCode = dataSource.moduleCode.name
+        val nameCount = dataSourceDao.countByName(dslContext, moduleCode, dataSourceName)
         if (nameCount > 0) {
             // 判断更新的名称是否属于自已
-            val rule = shardingRoutingRuleDao.getById(dslContext, id)
-            if (null != rule && routingName != rule.routingName) {
+            val obj = dataSourceDao.getById(dslContext, id)
+            if (null != obj && moduleCode != obj.moduleCode && dataSourceName != obj.dataSourceName) {
                 // 抛出错误提示
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(routingName)
+                    params = arrayOf("[$moduleCode]$dataSourceName")
                 )
             }
         }
-        shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
+        dataSourceDao.update(dslContext, id, dataSource)
         return true
     }
 
-    override fun getShardingRoutingRuleById(id: String): ShardingRoutingRule? {
-        val record = shardingRoutingRuleDao.getById(dslContext, id)
+    override fun getDataSourceById(id: String): DataSource? {
+        val record = dataSourceDao.getById(dslContext, id)
         return if (record != null) {
-            ShardingRoutingRule(record.routingName, record.routingRule)
-        } else {
-            null
-        }
-    }
-
-    override fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule? {
-        val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
-        return if (record != null) {
-            ShardingRoutingRule(record.routingName, record.routingRule)
+            DataSource(SystemModuleEnum.valueOf(record.moduleCode), record.dataSourceName, record.fullFlag)
         } else {
             null
         }

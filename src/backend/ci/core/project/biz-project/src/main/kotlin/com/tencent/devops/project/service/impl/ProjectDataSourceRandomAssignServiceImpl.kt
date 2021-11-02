@@ -24,41 +24,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OPShardingRoutingRuleResource
+package com.tencent.devops.project.service.impl
+
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.pojo.ShardingRoutingRule
-import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.project.service.ProjectDataSourceAssignService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class OPShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
-) : OPShardingRoutingRuleResource {
+@Service
+class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val dataSourceDao: DataSourceDao,
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+) : ProjectDataSourceAssignService {
 
-    override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Result<Boolean> {
-        return Result(shardingRoutingRuleService.addShardingRoutingRule(userId, shardingRoutingRule))
-    }
-
-    override fun updateShardingRoutingRule(
-        userId: String,
-        id: String,
-        shardingRoutingRule: ShardingRoutingRule
-    ): Result<Boolean> {
-        return Result(shardingRoutingRuleService.updateShardingRoutingRule(userId, id, shardingRoutingRule))
-    }
-
-    override fun getShardingRoutingRuleById(id: String): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleById(id))
-    }
-
-    override fun getShardingRoutingRuleByName(routingName: String): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(routingName))
-    }
-
-    override fun deleteShardingRoutingRuleById(userId: String, id: String): Result<Boolean> {
-        return Result(shardingRoutingRuleService.deleteShardingRoutingRule(userId, id))
+    override fun assignDataSource(projectId: String, moduleCodes: List<SystemModuleEnum>): Boolean {
+        moduleCodes.forEach { moduleCode ->
+            // 根据模块查找还有还有空余容量的数据源
+            val dataSources = dataSourceDao.listByModule(dslContext, moduleCode.name, false)
+            if (dataSources.isNullOrEmpty()) {
+                return@forEach
+            }
+            // 从可用的数据源中随机选择一个分配给该项目
+            val maxSizeIndex = dataSources.size - 1
+            val randomIndex = (0..maxSizeIndex).random()
+            val dataSource = dataSources[randomIndex]
+            val shardingRoutingRule = ShardingRoutingRule(projectId, dataSource.dataSourceName)
+            shardingRoutingRuleDao.add(dslContext, "system", shardingRoutingRule)
+        }
+        return true
     }
 }

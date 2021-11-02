@@ -28,37 +28,29 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OPShardingRoutingRuleResource
-import com.tencent.devops.project.pojo.ShardingRoutingRule
-import com.tencent.devops.project.service.ShardingRoutingRuleService
+import com.tencent.devops.project.api.op.OPDataSourceResource
+import com.tencent.devops.project.pojo.DataSource
+import com.tencent.devops.project.service.DataSourceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OPShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
-) : OPShardingRoutingRuleResource {
+class OPDataSourceResourceImpl @Autowired constructor(
+    private val dataSourceService: DataSourceService
+) : OPDataSourceResource {
 
-    override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Result<Boolean> {
-        return Result(shardingRoutingRuleService.addShardingRoutingRule(userId, shardingRoutingRule))
+    override fun addDataSource(userId: String, dataSource: DataSource): Result<Boolean> {
+        return Result(dataSourceService.addDataSource(userId, dataSource))
     }
 
-    override fun updateShardingRoutingRule(
-        userId: String,
-        id: String,
-        shardingRoutingRule: ShardingRoutingRule
-    ): Result<Boolean> {
-        return Result(shardingRoutingRuleService.updateShardingRoutingRule(userId, id, shardingRoutingRule))
+    override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Result<Boolean> {
+        return Result(dataSourceService.updateDataSource(userId, id, dataSource))
     }
 
-    override fun getShardingRoutingRuleById(id: String): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleById(id))
+    override fun getDataSourceById(id: String): Result<DataSource?> {
+        return Result(dataSourceService.getDataSourceById(id))
     }
 
-    override fun getShardingRoutingRuleByName(routingName: String): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(routingName))
-    }
-
-    override fun deleteShardingRoutingRuleById(userId: String, id: String): Result<Boolean> {
-        return Result(shardingRoutingRuleService.deleteShardingRoutingRule(userId, id))
+    override fun deleteDataSourceById(userId: String, id: String): Result<Boolean> {
+        return Result(dataSourceService.deleteDataSource(userId, id))
     }
 }
