@@ -45,8 +45,8 @@ class ServiceArchiveAtomResourceImpl @Autowired constructor(
         return Result(archiveAtomService.getAtomFileContent(filePath))
     }
 
-    override fun deleteAtomFile(projectCode: String, atomCode: String): Result<Boolean> {
-        archiveFileService.deleteFile("$BK_CI_ATOM_DIR/$projectCode/$atomCode")
+    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
+        archiveFileService.deleteFile(userId, "$BK_CI_ATOM_DIR/$projectCode/$atomCode")
         return Result(true)
     }
 }
