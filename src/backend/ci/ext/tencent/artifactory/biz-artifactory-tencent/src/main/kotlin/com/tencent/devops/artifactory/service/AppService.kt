@@ -30,6 +30,7 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 
+@SuppressWarnings("LongParameterList")
 interface AppService {
     fun getExternalDownloadUrl(
         userId: String,
@@ -64,6 +65,7 @@ interface AppService {
         argPath: String,
         ttl: Int,
         directed: Boolean = false,
-        experienceHashId: String?
+        experienceHashId: String?,
+        organization: String?
     ): String
 }

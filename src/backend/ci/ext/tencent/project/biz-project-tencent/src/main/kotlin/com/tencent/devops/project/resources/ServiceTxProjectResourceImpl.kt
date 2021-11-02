@@ -50,7 +50,8 @@ import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
-import com.tencent.devops.project.service.TxProjectPermissionService
+import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.ProjectTxInfoService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,12 +60,13 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val bsAuthPermissionApi: AuthPermissionApi,
-    private val projectPermissionService: TxProjectPermissionService,
+    private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
+    private val projectTxService: ProjectTxInfoService
 ) : ServiceTxProjectResource {
 
     @Value("\${auto.tag:#{null}}")
@@ -253,7 +255,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         projectCode: String,
         userId: String
     ): Result<Boolean> {
-        return Result(projectPermissionService.verifyUserProjectPermission(
+        return Result(projectExtPermissionService.verifyUserProjectPermission(
             accessToken = accessToken,
             projectCode = projectCode,
             userId = userId
@@ -280,21 +282,24 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         }
     }
 
-    override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
-        return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
+    override fun createGitCIProject(gitProjectId: Long, userId: String, gitProjectName: String?): Result<ProjectVO> {
+        return Result(projectLocalService.createGitCIProject(userId, gitProjectId, gitProjectName))
     }
 
     override fun createProjectUser(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createUser2Project(
-            createUser = createUser,
-            userIds = createInfo.userIds!!,
-            projectCode = createInfo.projectId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName
-        ))
+        return Result(
+            projectExtPermissionService.createUser2Project(
+                createUser = createUser,
+                userIds = createInfo.userIds ?: emptyList(),
+                projectCode = createInfo.projectId,
+                roleId = createInfo.roleId,
+                roleName = createInfo.roleName,
+                checkManager = true
+            )
+        )
     }
 
     override fun createProjectUserByApp(
@@ -317,13 +322,21 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createPipelinePermission(
-            createUser = createUser,
+//        return Result(projectIamV0Service.createPipelinePermission(
+//            createUser = createUser,
+//            projectId = createInfo.projectId,
+//            userId = createInfo.userId,
+//            permission = createInfo.permission,
+//            resourceType = createInfo.resourceType,
+//            resourceTypeCode = createInfo.resourceTypeCode
+//        ))
+        return Result(projectLocalService.grantInstancePermission(
+            userId = createUser,
             projectId = createInfo.projectId,
-            userId = createInfo.userId,
-            permission = createInfo.permission,
             resourceType = createInfo.resourceType,
-            resourceTypeCode = createInfo.resourceTypeCode
+            resourceCode = createInfo.resourceTypeCode,
+            permission = createInfo.permission,
+            createUserList = arrayListOf(createInfo.userId)
         ))
     }
 
@@ -355,6 +368,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     override fun bindRelationSystem(projectCode: String, relationId: String): Result<Boolean> {
         projectLocalService.updateRelationId(projectCode, relationId)
         return Result(true)
+    }
+
+    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+        return Result(projectTxService.updateProjectName(userId, projectCode, projectName))
     }
 
     companion object {

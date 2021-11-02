@@ -29,15 +29,26 @@ package com.tencent.devops.experience.resources.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
+import com.tencent.devops.experience.service.ExperienceBaseService
+import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceExperienceResourceImpl @Autowired constructor(private val experienceService: ExperienceService) : ServiceExperienceResource {
+class ServiceExperienceResourceImpl @Autowired constructor(
+    private val experienceService: ExperienceService,
+    private val experienceBaseService: ExperienceBaseService,
+    private val experienceDownloadService: ExperienceDownloadService
+) : ServiceExperienceResource {
 
     override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
         checkParam(userId, projectId)
@@ -54,6 +65,20 @@ class ServiceExperienceResourceImpl @Autowired constructor(private val experienc
         return Result(experienceService.get(userId, experienceHashId, false))
     }
 
+    override fun check(userId: String, experienceHashId: String, organization: String?): Result<Boolean> {
+        return Result(
+            experienceBaseService.userCanExperience(
+                userId,
+                HashUtil.decodeIdToLong(experienceHashId),
+                organization == ExperienceConstant.ORGANIZATION_OUTER
+            )
+        )
+    }
+
+    override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
+        return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
+    }
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -61,5 +86,9 @@ class ServiceExperienceResourceImpl @Autowired constructor(private val experienc
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(ServiceExperienceResourceImpl::class.java)
     }
 }

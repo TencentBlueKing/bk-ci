@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-notify-tencent"))
     api(project(":core:notify:api-notify"))
-    //api(project(":notify:model-notify-tencent")
     api(project(":core:notify:biz-notify"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
 }

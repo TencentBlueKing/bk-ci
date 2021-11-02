@@ -193,6 +193,7 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndProperty(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?,
@@ -225,6 +226,7 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?
@@ -295,6 +297,6 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ArtifactorySearchService::class.java)
     }
 }

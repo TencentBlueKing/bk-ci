@@ -26,9 +26,6 @@
  */
 
 dependencies {
-//    api(project(":core:common:common-service"))
-//    api(project(":core:common:common-web"))
-//    api(project(":core:common:common-client"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-wechatwork"))
@@ -37,21 +34,12 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:common:common-job"))
-    api(project(":ext:tencent:common:common-itest"))
     api(project(":ext:tencent:common:common-gcloud"))
-//    api(project(":core:process:model-process"))
-//    api(project(":ext:tencent:process:api-process-tencent"))
-//    api(project(":core:process:api-process"))
-//    api(project(":ext:tencent:external:api-external"))
-//    api(project(":ext:tencent:scm:api-scm"))
     api(project(":core:process:biz-engine"))
-//    api(project(":core:process:plugin-trigger"))
     api(project(":ext:tencent:experience:api-experience-tencent")) // 版本体验依赖
     api(project(":ext:tencent:artifactory:api-artifactory-tencent")) // 生成短链接(发短信，推送镜像到第三方，人工审核）
-//    api(project(":ext:tencent:support:api-support-tencent"))
     api(project(":ext:tencent:plugin:api-plugin-tencent")) // wetest插件
     api(project(":ext:tencent:image:api-image-tencent")) // 推送镜像到第三方
-//    api(project(":ext:tencent:project:api-project-tencent"))
     api("org.apache.poi:poi")
     api("org.apache.poi:poi-ooxml")
 }

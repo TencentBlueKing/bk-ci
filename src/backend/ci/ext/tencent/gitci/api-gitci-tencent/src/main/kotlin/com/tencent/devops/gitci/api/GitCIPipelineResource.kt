@@ -84,12 +84,14 @@ interface GitCIPipelineResource {
         gitProjectId: Long,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam(value = "是否带有最新一次构建历史", required = false)
+        @QueryParam("withHistory")
+        withHistory: Boolean? = false
     ): Result<GitProjectPipeline?>
 
     @ApiOperation("开启或关闭流水线")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{gitProjectId}/{pipelineId}/enable")
     fun enablePipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -108,7 +110,6 @@ interface GitCIPipelineResource {
 
     @ApiOperation("获取流水线列表")
     @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{gitProjectId}/listInfo")
     fun listPipelineNames(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

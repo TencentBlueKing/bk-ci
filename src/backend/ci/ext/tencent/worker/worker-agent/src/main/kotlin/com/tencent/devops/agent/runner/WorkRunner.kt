@@ -84,11 +84,17 @@ object WorkRunner {
                     ): Pair<File, File> {
                         val replaceWorkspace = if (workspace.isNotBlank()) {
                             ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                                override fun getReplacement(key: String): String? = variables[key]
+                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                                    return if (doubleCurlyBraces) {
+                                        variables[key] ?: "\${{$key}}"
+                                    } else {
+                                        variables[key] ?: "\${$key}"
+                                    }
+                                }
                             }, mapOf(
                                 WORKSPACE_CONTEXT to workspace,
-                                JOB_OS_CONTEXT to AgentEnv.getOS().name
-                            ))
+                                JOB_OS_CONTEXT to AgentEnv.getOS().name)
+                            )
                         } else {
                             workspace
                         }
@@ -108,7 +114,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
-            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
+            LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }

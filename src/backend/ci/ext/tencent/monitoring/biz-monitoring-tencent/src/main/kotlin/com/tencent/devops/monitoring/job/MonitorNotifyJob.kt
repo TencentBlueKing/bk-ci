@@ -27,6 +27,8 @@
 
 package com.tencent.devops.monitoring.job
 
+import com.google.common.collect.Sets
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -41,13 +43,15 @@ import com.tencent.devops.monitoring.util.EmailModuleData
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.aggregations.AggregationBuilders
-import org.elasticsearch.search.aggregations.metrics.avg.Avg
+import org.elasticsearch.search.aggregations.metrics.Avg
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.influxdb.dto.QueryResult
 import org.jooq.DSLContext
@@ -61,10 +65,21 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import javax.xml.parsers.DocumentBuilderFactory
 
 @Component
 @RefreshScope
-@SuppressWarnings("LongParameterList", "TooManyFunctions", "TooGenericExceptionCaught", "MagicNumber")
+@SuppressWarnings(
+    "LongParameterList",
+    "TooManyFunctions",
+    "TooGenericExceptionCaught",
+    "MagicNumber",
+    "LongMethod",
+    "LargeClass",
+    "TooGenericExceptionThrown",
+    "ThrowsCount"
+)
 class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient,
@@ -141,10 +156,43 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.oteam.target.job.time:#{null}}")
     private var oteamJobTimeTarget: Int? = null
 
+    @Value("\${esb.appCode:#{null}}")
+    val appCode: String = ""
+
+    @Value("\${esb.appSecret:#{null}}")
+    val appSecret: String = ""
+
+    @Value("\${bkdata.url:#{null}}")
+    val bkdataUrl: String = ""
+
+    @Value("\${bkdata.token:#{null}}")
+    val bkdataToken: String = ""
+
+    @Value("\${pot.sign.url:#{null}}")
+    val potSignUrl: String = ""
+
+    @Value("\${pot.sign.user:#{null}}")
+    val potSignUser: String = ""
+
+    @Value("\${pot.sign.password:#{null}}")
+    val potSignPassword: String = ""
+
+    @Value("\${pot.view.url:#{null}}")
+    val potViewUrl: String = ""
+
+    @Value("\${pot.view.id:#{null}}")
+    val potViewId: String = ""
+
+    @Value("\${sla.oteam.target.coverage:#{null}}")
+    private var oteamCoverageTarget: Int? = null
+
+    @Value("\${sla.oteam.target.user:#{null}}")
+    private var oteamUserTarget: Int? = null
+
     /**
      * 每天发送日报
      */
-    @Scheduled(cron = "0 0 10 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     fun notifyDaily() {
         if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
@@ -191,7 +239,9 @@ class MonitorNotifyJob @Autowired constructor(
             userStatus(startTime, endTime),
             commitCheck(startTime, endTime),
             codecc(startTime, endTime),
-            dispatchTime(startTime)
+            dispatchTime(startTime),
+            coverage(startTime),
+            userNum(startTime)
         )
 
         // 发送邮件
@@ -214,6 +264,129 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    private fun userNum(startTime: Long): EmailModuleData {
+        // 用户数
+        val reqBody = mapOf(
+            "bkdata_authentication_method" to "token",
+            "bkdata_data_token" to bkdataToken,
+            "bk_app_code" to appCode,
+            "bk_app_secret" to appSecret,
+            "sql" to """
+                    SELECT COUNT(distinct userId) as dailyCount
+                    FROM 100205_bkdevops_build_history.druid
+                    WHERE thedate='${DateFormatUtils.format(startTime, "yyyyMMdd")}'
+                    LIMIT 1
+                """.trimIndent(),
+            "prefer_storage" to ""
+        )
+        val bkDataBean = getBkData(reqBody)
+        val userNum = bkDataBean.data.list.map { it.values.first() }.first().toDouble()
+
+        // 上报数据
+        oteamStatus(userNum, oteamUserTarget, startTime)
+
+        return EmailModuleData(
+            "Oteam",
+            listOf(Triple("使用用户数", userNum, "https://techmap.woa.com/oteam/8524/operation/coverage")),
+            "https://techmap.woa.com/oteam/8524/operation/coverage",
+            "人数",
+            "人"
+        )
+    }
+
+    private fun getBkData(reqBody: Map<String, String>): BkDataBean {
+        val resp = OkhttpUtils.doPost(
+            bkdataUrl,
+            JsonUtil.toJson(reqBody),
+            mapOf("Content-Type" to "application/json; charset=utf-8")
+        )
+        if (!resp.isSuccessful) {
+            throw RuntimeException("gitResponse is failed , $resp")
+        } else if (resp.body() == null) {
+            throw RuntimeException("gitResponse is empty ")
+        }
+
+        return JsonUtil.to(resp.body()!!.string(), BkDataBean::class.java)
+    }
+
+    private fun coverage(startTime: Long): EmailModuleData {
+        try {
+            val localDateTime =
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault()).withDayOfMonth(1)
+            // 蓝盾插件的项目列表
+            val reqBody = mapOf(
+                "bkdata_authentication_method" to "token",
+                "bkdata_data_token" to bkdataToken,
+                "bk_app_code" to appCode,
+                "bk_app_secret" to appSecret,
+                "sql" to """
+                    SELECT distinct(projectName)
+                    FROM 100205_build_atom_metrics_git.hdfs
+                    WHERE thedate>='${localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMdd"))}'
+                    LIMIT 3000000
+                """.trimIndent(),
+                "prefer_storage" to ""
+            )
+            val bkDataBean = getBkData(reqBody)
+            val gitPluginProjects = bkDataBean.data.list.map { it.values.first() }.toSet()
+            logger.info("git plugin size: ${gitPluginProjects.size}")
+
+            // 工蜂项目列表
+            val potAuthResp = OkhttpUtils.doPost(
+                potSignUrl,
+                """{"credentials":{"name":"$potSignUser","password":"$potSignPassword","site":{"contentUrl":""}}}"""
+            )
+            var siteId: String? = null
+            var token: String? = null
+            if (potAuthResp.isSuccessful) {
+                potAuthResp.body()?.let {
+                    val builderFactory = DocumentBuilderFactory.newInstance()
+                    builderFactory.isValidating = false
+                    builderFactory.isIgnoringElementContentWhitespace = true
+                    val builder = builderFactory.newDocumentBuilder()
+                    val document = builder.parse(it.byteStream())
+                    siteId =
+                        document.getElementsByTagName("site").item(0).attributes.getNamedItem("id").nodeValue
+                    token =
+                        document.getElementsByTagName("credentials").item(0).attributes.getNamedItem("token").nodeValue
+                } ?: throw RuntimeException("potAuthResp is empty")
+            } else {
+                throw RuntimeException("potAuthResp is failed , $potAuthResp")
+            }
+            val potDataUrl = potViewUrl.replace("##siteId##", siteId!!).replace("##viewId##", potViewId)
+            val potDataResp = OkhttpUtils.doGet(potDataUrl, mapOf("x-tableau-auth" to token!!))
+            val potProjects = if (potDataResp.isSuccessful) {
+                potDataResp.body()?.run {
+                    IOUtils.readLines(byteStream(), Charsets.UTF_8).filter { it.contains("提交次数") }
+                        .map { it.split(",")[0] }.toSet()
+                } ?: throw RuntimeException("potDataResp is empty")
+            } else {
+                throw RuntimeException("potDataResp is failed , $potDataResp")
+            }
+            logger.info("pot projects size: ${potProjects.size}")
+
+            // 占比
+            val percent = 100.0 * Sets.intersection(gitPluginProjects, potProjects).size / potProjects.size
+
+            // 上报数据
+            oteamStatus(percent, oteamCoverageTarget, startTime)
+
+            return EmailModuleData(
+                "Oteam",
+                listOf(Triple("覆盖度", percent, "https://techmap.woa.com/oteam/8524/operation/coverage")),
+                "https://techmap.woa.com/oteam/8524/operation/coverage",
+                "比例"
+            )
+        } catch (e: Exception) {
+            logger.warn("get oteamCoverage error", e)
+            return EmailModuleData(
+                "Oteam",
+                emptyList(),
+                "https://techmap.woa.com/oteam/8524/operation/coverage"
+            )
+        }
+    }
+
     private fun dispatchTime(startTime: Long): EmailModuleData {
         val sourceBuilder = SearchSourceBuilder()
         val queryStringQuery = QueryBuilders.queryStringQuery(
@@ -228,7 +401,7 @@ class MonitorNotifyJob @Autowired constructor(
         searchRequest.indices("v2_9_bklog_prod_ci_gateway_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
 
-        val aggregations = restHighLevelClient.search(searchRequest).aggregations
+        val aggregations = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).aggregations
         val avgSecs = aggregations.get<Avg>("avg_ms").value
 
         oteamStatus(avgSecs, oteamJobTimeTarget, startTime)
@@ -297,7 +470,6 @@ class MonitorNotifyJob @Autowired constructor(
                 "process",
                 "dispatch",
                 "openapi",
-                "artifactory",
                 "websocket",
                 "store",
                 "log",
@@ -642,12 +814,12 @@ class MonitorNotifyJob @Autowired constructor(
                 .filter(
                     queryStringQuery
                 )
-        sourceBuilder.query(query).size(1)
+        sourceBuilder.query(query).trackTotalHits(true).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
-        val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
+        val hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).hits.totalHits?.value ?: 0
         logger.info("apiStatus:$name , hits:$hits")
         return hits
     }
@@ -705,4 +877,26 @@ class MonitorNotifyJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
+
+    data class BkDataBean(
+        val result: Boolean,
+        val message: String,
+        val code: String,
+        val data: BkDataData,
+        val error: String?
+    )
+
+    @SuppressWarnings("ConstructorParameterNaming")
+    data class BkDataData(
+        val result_table_scan_range: Map<*, *>,
+        val cluster: String,
+        val totalRecords: Int,
+        val timetaken: Double,
+        val list: List<Map<String, String>>,
+        val bksql_call_elapsed_time: Int,
+        val device: String,
+        val result_table_ids: List<String>,
+        val select_fields_order: List<String>,
+        val sql: String
+    )
 }

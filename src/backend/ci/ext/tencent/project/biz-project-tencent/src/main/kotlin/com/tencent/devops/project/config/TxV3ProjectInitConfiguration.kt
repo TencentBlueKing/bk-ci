@@ -33,10 +33,13 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl
+import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -73,8 +76,26 @@ class TxV3ProjectInitConfiguration {
         projectDao: ProjectDao,
         dslContext: DSLContext,
         projectDispatcher: ProjectDispatcher,
-        client: Client
+        client: Client,
+        userDao: UserDao
     ) = IamV3Service(
-        iamManagerService, iamConfiguration, projectDao, dslContext, projectDispatcher, client
+        iamManagerService = iamManagerService,
+        iamConfiguration = iamConfiguration,
+        projectDao = projectDao,
+        dslContext = dslContext,
+        projectDispatcher = projectDispatcher,
+        client = client,
+        userDao = userDao
+    )
+
+    @Bean
+    fun v3ProjectExtPermissionServiceImpl(
+        client: Client,
+        tokenService: ClientTokenService,
+        projectDao: ProjectDao,
+        dslContext: DSLContext,
+        tofService: TOFService
+    ) = V3ProjectExtPermissionServiceImpl(
+        client, tokenService, projectDao, dslContext, tofService
     )
 }

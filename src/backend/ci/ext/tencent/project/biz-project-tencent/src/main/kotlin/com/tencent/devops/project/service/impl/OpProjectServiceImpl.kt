@@ -123,12 +123,6 @@ class OpProjectServiceImpl @Autowired constructor(
             val transactionContext = DSL.using(configuration)
 
             try {
-                val appName = if (projectInfoRequest.ccAppId != null && projectInfoRequest.ccAppId!! > 0) {
-                    tofService.getCCAppName(projectInfoRequest.ccAppId!!)
-                } else {
-                    null
-                }
-                projectInfoRequest.cc_app_name = appName
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", e)

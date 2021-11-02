@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -49,7 +50,8 @@ import org.springframework.stereotype.Service
 class ExperienceIndexService @Autowired constructor(
     val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val redisOperation: RedisOperation
 ) {
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
         val offset = (page - 1) * pageSize
@@ -63,9 +65,11 @@ class ExperienceIndexService @Autowired constructor(
         ).map {
             IndexBannerVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
-                bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl)
+                bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl),
+                type = it.type,
+                externalUrl = it.externalLink
             )
-        }.toList()
+        }.toMutableList()
 
         val hasNext = if (banners.size < pageSize) {
             false
@@ -75,6 +79,21 @@ class ExperienceIndexService @Autowired constructor(
                 platform = platformStr,
                 withBanner = true
             ) > (offset + pageSize)
+        }
+
+        if (page == 1) {
+            val banner = redisOperation.get("bk:experience:banner")
+            if (null != banner) {
+                val bannerDatas = banner.split(",,,")
+                banners.add(
+                    0, IndexBannerVO(
+                        experienceHashId = "",
+                        bannerUrl = UrlUtil.toOuterPhotoAddr(bannerDatas[0]),
+                        type = ExperiencePublicType.BANNER_URL.id,
+                        externalUrl = bannerDatas[1]
+                    )
+                )
+            }
         }
 
         return Result(Pagination(hasNext, banners))

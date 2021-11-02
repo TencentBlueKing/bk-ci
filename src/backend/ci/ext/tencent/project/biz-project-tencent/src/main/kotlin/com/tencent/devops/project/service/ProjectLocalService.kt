@@ -41,6 +41,8 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -48,7 +50,7 @@ import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.gitci.api.service.ServiceGitForAppResource
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -92,11 +94,12 @@ class ProjectLocalService @Autowired constructor(
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
-    private val projectIamV0Service: ProjectIamV0Service,
     private val projectTagService: ProjectTagService,
     private val client: Client,
     private val projectPermissionService: ProjectPermissionService,
-    private val txProjectServiceImpl: TxProjectServiceImpl
+    private val txProjectServiceImpl: TxProjectServiceImpl,
+    private val projectExtPermissionService: ProjectExtPermissionService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -458,7 +461,14 @@ class ProjectLocalService @Autowired constructor(
     ): List<UserRole> {
         val groupAndUsersList = authProjectApi.getProjectGroupAndUserList(serviceCode, projectCode)
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
-            .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
+            .map {
+                // 因历史原因,前端是通过roleName==manager 来判断是否为管理员,故此处需兼容
+                if (it.displayName == DefaultGroupType.MANAGER.displayName) {
+                    UserRole(it.displayName, it.roleId, DefaultGroupType.MANAGER.value, it.type)
+                } else {
+                    UserRole(it.displayName, it.roleId, it.roleName, it.type)
+                }
+            }
     }
 
     fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
@@ -542,7 +552,7 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+    fun createGitCIProject(userId: String, gitProjectId: Long, gitProjectName: String?): ProjectVO {
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
@@ -550,7 +560,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         val projectCreateInfo = ProjectCreateInfo(
-            projectName = projectCode,
+            projectName = gitProjectName ?: projectCode,
             englishName = projectCode,
             projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
             description = "git ci project for git projectId: $gitProjectId",
@@ -627,12 +637,20 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (isCreate) {
-            return projectIamV0Service.createUser2ProjectImpl(
-                userIds = arrayListOf(userId),
-                projectId = projectCode,
+            return projectExtPermissionService.createUser2Project(
+                createUser = "", // 应用态无需校验创建者身份
+                projectCode = projectCode,
                 roleId = roleId,
-                roleName = roleName
+                roleName = roleName,
+                userIds = arrayListOf(userId),
+                checkManager = false
             )
+//            return projectIamV0Service.createUser2ProjectImpl(
+//                userIds = arrayListOf(userId),
+//                projectId = projectCode,
+//                roleId = roleId,
+//                roleName = roleName
+//            )
         } else {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
@@ -681,7 +699,6 @@ class ProjectLocalService @Autowired constructor(
         resourceType: String,
         resourceTypeCode: String
     ): Boolean {
-        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
         val projectList = getProjectListByOrg(userId, organizationType, organizationId)
         if (projectList.isEmpty()) {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
@@ -698,7 +715,40 @@ class ProjectLocalService @Autowired constructor(
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
         val createUserList = userId.split(",")
+        return grantInstancePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            resourceCode = resourceTypeCode,
+            createUserList = createUserList,
+            checkManager = false
+        )
+    }
 
+    fun updateRelationId(projectCode: String, relationId: String) {
+        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+    }
+
+    fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        permission: String,
+        resourceType: String,
+        resourceCode: String,
+        createUserList: List<String>,
+        checkManager: Boolean? = true
+    ): Boolean {
+        logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
+        if (checkManager!!) {
+            // 操作人必须为项目的管理员
+            if (!authProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+                logger.error("$userId is not manager for project[$projectId]")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
+            }
+        }
+
+        // 必须用户在项目下才能授权
         createUserList?.forEach {
             if (!projectPermissionService.verifyUserProjectPermission(
                     accessToken = null,
@@ -709,20 +759,25 @@ class ProjectLocalService @Autowired constructor(
             }
         }
 
-        // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
-        return projectIamV0Service.createPermission(
+        return projectExtPermissionService.grantInstancePermission(
             userId = userId,
             projectId = projectId,
-            permission = permission,
+            action = permission,
             resourceType = resourceType,
-            authServiceCode = bsPipelineAuthServiceCode,
-            resourceTypeCode = resourceTypeCode,
+            resourceCode = resourceCode,
             userList = createUserList
         )
-    }
-
-    fun updateRelationId(projectCode: String, relationId: String) {
-        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+//
+//        // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
+//        return projectIamV0Service.createPermission(
+//            userId = userId,
+//            projectId = projectId,
+//            permission = permission,
+//            resourceType = resourceType,
+//            authServiceCode = bsPipelineAuthServiceCode,
+//            resourceTypeCode = resourceTypeCode,
+//            userList = createUserList
+//        )
     }
 
     private fun getProjectListByOrg(

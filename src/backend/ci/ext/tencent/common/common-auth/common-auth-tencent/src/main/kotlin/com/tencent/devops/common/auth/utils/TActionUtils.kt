@@ -25,6 +25,21 @@ object TActionUtils {
         }
     }
 
+    fun extResourceTypeCheck(authResourceType: String): Boolean {
+        val extResourceTypeList = mutableListOf<String>()
+        extResourceTypeList.add(AuthResourceType.QUALITY_GROUP.value)
+        extResourceTypeList.add(AuthResourceType.QUALITY_RULE.value)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_TASK.value)
+        extResourceTypeList.add(AuthResourceType.EXPERIENCE_GROUP.value)
+        // 前端experience的枚举值为EXPERIENCE_TASK: experience, EXPERIENCE_GROUP: experienceGroup
+        extResourceTypeList.add("experience")
+        extResourceTypeList.add("experienceGroup")
+        if (extResourceTypeList.contains(authResourceType)) {
+            return true
+        }
+        return false
+    }
+
     fun buildActionList(authPermissions: Set<AuthPermission>, authResourceType: AuthResourceType): List<String> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {

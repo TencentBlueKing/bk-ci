@@ -38,7 +38,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_CC_NAME_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
@@ -46,9 +45,6 @@ import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.pojo.tof.APIModule
-import com.tencent.devops.project.pojo.tof.CCAppNameApplicationID
-import com.tencent.devops.project.pojo.tof.CCAppNameRequest
-import com.tencent.devops.project.pojo.tof.CCAppNameResponse
 import com.tencent.devops.project.pojo.tof.ChildDeptRequest
 import com.tencent.devops.project.pojo.tof.ChildDeptResponse
 import com.tencent.devops.project.pojo.tof.DeptInfoRequest
@@ -178,47 +174,6 @@ class TOFService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of id $id", t)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
-        }
-    }
-
-    /**
-     * 通过 app ID 获取 app Name
-     */
-    fun getCCAppName(ccAppId: Long): String {
-        try {
-            val path = "get_query_info"
-            val startTime = System.currentTimeMillis()
-            val responseContent = request(
-                path,
-                CCAppNameRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!,
-                    CCAppNameApplicationID(ccAppId)
-                ), MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL), APIModule.cc
-            )
-            val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
-            if (response.data == null || response.data!!.isEmpty()) {
-                uploadTofStatus(
-                    requestTime = startTime,
-                    statusCode = response.code,
-                    statusMessage = response.message,
-                    errorCode = QUERY_CC_NAME_FAIL,
-                    errorMessage = MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL)
-                )
-                logger.warn("Fail to get cc app name of $ccAppId with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL))
-            }
-            uploadTofStatus(
-                requestTime = startTime,
-                statusCode = response.code,
-                statusMessage = "success",
-                errorCode = SUCCESS,
-                errorMessage = "call tof success"
-            )
-            return response.data!![0].DisplayName
-        } catch (t: Throwable) {
-            logger.warn("Fail to get cc app name of $ccAppId", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
         }
     }
 

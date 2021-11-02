@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import nu.studer.gradle.jooq.JooqGenerate
-import org.gradle.api.tasks.compile.AbstractCompile
 
 plugins {
     id("nu.studer.jooq")
@@ -48,6 +47,9 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
     }
     "lambda" -> {
         listOf("process", "project", "lambda")
+    }
+    "gitci" -> {
+        listOf("stream")
     }
     else -> listOf(moduleName)
 }
@@ -123,7 +125,11 @@ jooq {
                         }
 
                         target.apply {
-                            packageName = "com.tencent.devops.model.$moduleName"
+                            if (packageName == "gitci") {
+                                packageName = "com.tencent.devops.model.gitci"
+                            } else {
+                                packageName = "com.tencent.devops.model.$moduleName"
+                            }
                         }
                     }
                 }

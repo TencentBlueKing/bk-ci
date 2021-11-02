@@ -59,7 +59,7 @@ abstract class V2AbstractService(
     fun parseImage(): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "STREAM Service镜像格式非法")
         }
         return Pair(list[0], list[1])
     }

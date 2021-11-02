@@ -5,6 +5,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.AuthPipelineIdService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
@@ -53,13 +54,17 @@ class IamAuthConfiguration {
         policyService: PolicyService,
         iamConfiguration: IamConfiguration,
         managerService: ManagerService,
-        iamCacheService: IamCacheService
+        iamCacheService: IamCacheService,
+        client: Client,
+        authPipelineIdService: AuthPipelineIdService
     ) = TxPermissionServiceImpl(
         authHelper = authHelper,
         policyService = policyService,
         iamConfiguration = iamConfiguration,
         managerService = managerService,
-        iamCacheService = iamCacheService
+        iamCacheService = iamCacheService,
+        client = client,
+        authPipelineIdService = authPipelineIdService
     )
 
     @Bean
@@ -79,12 +84,15 @@ class IamAuthConfiguration {
     fun permissionUrlService(
         iamConfiguration: IamConfiguration,
         managerService: com.tencent.bk.sdk.iam.service.ManagerService,
-        permissionProjectService: TxPermissionProjectServiceImpl
+        permissionProjectService: TxPermissionProjectServiceImpl,
+        client: Client,
+        authGroupService: AuthGroupService
     ) = TxPermissionUrlServiceImpl(
         iamConfiguration = iamConfiguration,
         managerService = managerService,
-        permissionProjectService = permissionProjectService
-
+        permissionProjectService = permissionProjectService,
+        client = client,
+        authGroupService = authGroupService
     )
 
     @Bean

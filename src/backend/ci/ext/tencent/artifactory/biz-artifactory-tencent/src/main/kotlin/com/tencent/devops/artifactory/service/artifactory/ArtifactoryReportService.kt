@@ -43,8 +43,16 @@ import javax.ws.rs.NotFoundException
 class ArtifactoryReportService @Autowired constructor(
     private val jFrogService: JFrogService
 ) : ReportService {
-    override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
-        logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, elementId: $elementId, path: $path")
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    ) {
+        logger.info("get, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+            "elementId: $elementId, path: $path")
         val normalizePath = JFrogUtil.normalize(path)
         val realPath = JFrogUtil.getReportPath(projectId, pipelineId, buildId, elementId, normalizePath)
         if (!jFrogService.exist(realPath)) {
@@ -59,6 +67,6 @@ class ArtifactoryReportService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ArtifactoryReportService::class.java)
     }
 }

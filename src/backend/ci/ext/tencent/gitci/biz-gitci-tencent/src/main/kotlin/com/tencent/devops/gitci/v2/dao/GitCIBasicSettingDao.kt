@@ -29,8 +29,8 @@ package com.tencent.devops.gitci.v2.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.model.gitci.tables.TGitBasicSetting
-import com.tencent.devops.model.gitci.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.model.stream.tables.TGitBasicSetting
+import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -120,17 +120,15 @@ class GitCIBasicSettingDao {
         homePage: String
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
-            dslContext.transaction { configuration ->
-                DSL.using(configuration).update(this)
-                    .set(NAME, gitProjectName)
-                    .set(URL, url)
-                    .set(HOME_PAGE, homePage)
-                    .set(GIT_HTTP_URL, httpUrl)
-                    .set(GIT_SSH_URL, sshUrl)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(ID.eq(gitProjectId))
-                    .execute()
-            }
+            dslContext.update(this)
+                .set(NAME, gitProjectName)
+                .set(URL, url)
+                .set(HOME_PAGE, homePage)
+                .set(GIT_HTTP_URL, httpUrl)
+                .set(GIT_SSH_URL, sshUrl)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 

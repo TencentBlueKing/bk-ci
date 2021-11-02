@@ -36,6 +36,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
+@Suppress("MaxLineLength")
 class AuthUtilsTest {
 
     private val actionPolicys = mutableListOf<ActionPolicyDTO>()

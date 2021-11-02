@@ -28,13 +28,16 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -74,7 +77,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("销毁项目的token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(
@@ -143,7 +146,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<String?>
 
-    @ApiOperation("获取指定项目详细信息")
+    @ApiOperation("获取指定项目详细信息(简略)")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
@@ -220,8 +223,20 @@ interface ServiceGitCiResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("搜索条件，模糊匹配path,name")
-        @QueryParam("searchName")
-        search: String?
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
 
     @ApiOperation("获取项目下具有权限的成员信息")
@@ -262,4 +277,31 @@ interface ServiceGitCiResource {
         @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<GitCodeFileInfo>
+
+    @ApiOperation("获取两次提交的差异文件列表")
+    @GET
+    @Path("/getCommitChangeFileList")
+    fun getCommitChangeFileList(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "旧commit")
+        @QueryParam("from")
+        from: String,
+        @ApiParam(value = "新commit")
+        @QueryParam("to")
+        to: String,
+        @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @QueryParam("straight")
+        straight: Boolean? = false,
+        @ApiParam(value = "页码")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页大小")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>>
 }

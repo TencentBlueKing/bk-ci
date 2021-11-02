@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -91,4 +92,34 @@ interface ServiceExperienceResource {
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Experience>
+
+    @ApiOperation("是否有体验权限")
+    @Path("/experienceIds/{experienceHashId}/check")
+    @GET
+    fun check(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("体验HashId", required = false)
+        @PathParam("experienceHashId")
+        experienceHashId: String,
+        @ApiParam("组织", required = false)
+        @QueryParam("organization")
+        organization: String?
+    ): Result<Boolean>
+
+    @ApiOperation("通过bundleId获取公开体验跳转信息")
+    @Path("/jumpInfo")
+    @GET
+    fun jumpInfo(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("bundleId", required = true)
+        @QueryParam("bundleIdentifier")
+        bundleIdentifier: String,
+        @ApiParam("平台", required = true)
+        @QueryParam("platform")
+        platform: String
+    ): Result<ExperienceJumpInfo>
 }

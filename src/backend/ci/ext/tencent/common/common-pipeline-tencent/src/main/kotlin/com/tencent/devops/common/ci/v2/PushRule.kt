@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -39,16 +40,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PushRule(
     val branches: List<String> = listOf("*"),
 
+    @ApiModelProperty(name = "branches-ignore")
     @JsonProperty("branches-ignore")
     val branchesIgnore: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @JsonProperty("path-ignore")
+    @ApiModelProperty(name = "paths-ignore")
+    @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
     val users: List<String>? = null,
 
+    @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
 )

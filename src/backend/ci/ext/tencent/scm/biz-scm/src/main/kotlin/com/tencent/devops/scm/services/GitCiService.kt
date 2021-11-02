@@ -35,12 +35,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -165,10 +168,14 @@ class GitCiService {
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
-                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
-                return data
+            OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                return response.body()!!.string()
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
@@ -180,17 +187,7 @@ class GitCiService {
         token: String,
         useAccessToken: Boolean = true
     ): Result<GitCIProjectInfo?> {
-        val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
-            "access_token=$token"
-        } else {
-            "private_token=$token"
-        }
-        val url = StringBuilder(str)
-        val request = Request.Builder()
-            .url(url.toString())
-            .get()
-            .build()
+        val (url, request) = getProjectInfoRequest(gitProjectId, useAccessToken, token)
         OkhttpUtils.doHttp(request).use { response ->
             logger.info("[url=$url]|getGitCIProjectInfo($gitProjectId) with response=$response")
             if (!response.isSuccessful) {
@@ -210,6 +207,20 @@ class GitCiService {
         useAccessToken: Boolean = true
     ): Result<GitCodeProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
+        val (url, request) = getProjectInfoRequest(gitProjectId, useAccessToken, token)
+        OkhttpUtils.doHttp(request).use {
+            val response = it.body()!!.string()
+            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
+        }
+    }
+
+    private fun getProjectInfoRequest(
+        gitProjectId: String,
+        useAccessToken: Boolean,
+        token: String
+    ): Pair<StringBuilder, Request> {
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
         val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
             "access_token=$token"
@@ -221,12 +232,7 @@ class GitCiService {
             .url(url.toString())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
-            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
-        }
+        return Pair(url, request)
     }
 
     fun getMergeRequestChangeInfo(gitProjectId: Long, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
@@ -237,11 +243,16 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
+        OkhttpUtils.doHttp(request).use { response ->
             logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            return Result(JsonUtil.to(response, GitMrChangeInfo::class.java))
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
+            val data = response.body()!!.string()
+            return Result(JsonUtil.to(data, GitMrChangeInfo::class.java))
         }
     }
 
@@ -250,22 +261,28 @@ class GitCiService {
         userId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
-            if (search != null) {
-                "&search=$search"
-            } else {
-                ""
-            }
+        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            .addParams(mapOf(
+                "search" to search,
+                "order_by" to orderBy?.value,
+                "sort" to sort?.value,
+                "owned" to owned,
+                "min_access_level" to minAccessLevel?.level
+            ))
         val res = mutableListOf<GitCodeProjectInfo>()
         val request = Request.Builder()
             .url(url)
             .get()
             .build()
-
+        logger.info("getProjectList: $url")
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
@@ -331,18 +348,75 @@ class GitCiService {
                 } else {
                     ""
                 }
-            logger.info("getFileInfo request url: $url")
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use {
-                val response = it.body()!!.string()
-                if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-                return Result(JsonUtil.to(response, GitCodeFileInfo::class.java))
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$url]|getFileInfo with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                val data = response.body()!!.string()
+                return Result(JsonUtil.to(data, GitCodeFileInfo::class.java))
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
         }
+    }
+
+    fun getChangeFileList(
+        token: String,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean? = false,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 10000) 10000 else pageSize
+        val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list?access_token=$token"
+            .addParams(
+                mapOf(
+                    "from" to from,
+                    "to" to to,
+                    "straight" to straight,
+                    "page" to newPage,
+                    "per_page" to newPageSize
+                )
+            )
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getChangeFileList with response=$response")
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
+            val data = response.body()?.string() ?: return emptyList()
+            return JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+        }
+    }
+
+    private fun getUrlPrefix(gitProjectId: String): String {
+        return "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}"
+    }
+
+    private fun String.addParams(args: Map<String, Any?>): String {
+        val sb = StringBuilder(this)
+        args.forEach { (name, value) ->
+            if (value != null) {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
     }
 }

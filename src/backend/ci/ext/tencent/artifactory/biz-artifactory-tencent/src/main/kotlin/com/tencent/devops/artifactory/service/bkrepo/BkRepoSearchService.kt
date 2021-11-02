@@ -179,6 +179,7 @@ class BkRepoSearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndProperty(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?,
@@ -202,7 +203,7 @@ class BkRepoSearchService @Autowired constructor(
         }
 
         val nodeList = bkRepoClient.queryByNameAndMetadata(
-            "",
+            userId,
             projectId,
             repoNames,
             fileNameSet.toList(),
@@ -216,11 +217,12 @@ class BkRepoSearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
-        return serviceSearchFileAndProperty(projectId, searchProps, customized)
+        return serviceSearchFileAndProperty(userId, projectId, searchProps, customized)
     }
 
     override fun getJforgInfoByteewTime(page: Int, pageSize: Int, startTime: Long, endTime: Long): List<FileInfo> {
@@ -228,6 +230,6 @@ class BkRepoSearchService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoSearchService::class.java)
     }
 }

@@ -28,16 +28,22 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthResourceModifyRequest(
     @JsonProperty("project_Code")
+    @ApiModelProperty(name = "project_Code")
     val projectCode: String,
     @JsonProperty("service_code")
+    @ApiModelProperty(name = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
+    @ApiModelProperty(name = "resource_code")
     val resourceCode: String,
     @JsonProperty("resource_name")
+    @ApiModelProperty(name = "resource_name")
     val resourceName: String,
     @JsonProperty("resource_type")
+    @ApiModelProperty(name = "resource_type")
     val resourceType: String
 )

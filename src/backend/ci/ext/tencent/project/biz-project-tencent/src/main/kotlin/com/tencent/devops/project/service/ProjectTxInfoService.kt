@@ -27,8 +27,12 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ProjectOrganization
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectFreshDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -36,6 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectTxInfoService @Autowired constructor(
     val projectDao: ProjectDao,
+    val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext
 ) {
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
@@ -52,5 +57,30 @@ class ProjectTxInfoService @Autowired constructor(
                 deptId = projectInfo.deptId,
                 deptName = projectInfo.deptName
         )
+    }
+
+    fun updateProjectName(
+        userId: String,
+        projectCode: String,
+        projectName: String
+    ): Boolean {
+        if (projectName.isEmpty() || projectName.length > 32) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                errorCode = ProjectMessageCode.NAME_TOO_LONG
+            )
+        }
+        if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
+            )
+        }
+        return projectFreshDao.updateProjectName(
+            dslContext = dslContext,
+            userId = userId,
+            englishName = projectCode,
+            projectName = projectName
+        ) > 0
     }
 }

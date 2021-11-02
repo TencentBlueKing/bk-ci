@@ -29,6 +29,7 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -56,7 +57,8 @@ data class WindowsScriptTask(
             id = null,
             status = null,
             script = inputs.content,
-            scriptType = inputs.scriptType ?: BuildScriptType.BAT
+            scriptType = inputs.scriptType ?: BuildScriptType.BAT,
+            charsetType = inputs.charsetType ?: CharsetType.DEFAULT
         )
     }
 }
@@ -66,5 +68,8 @@ data class WindowsScriptInput(
     @ApiModelProperty("脚本内容", required = true)
     val content: String,
     @ApiModelProperty("脚本类型", required = true)
-    val scriptType: BuildScriptType?
+    val scriptType: BuildScriptType?,
+    @ApiModelProperty("字符集类型", required = false)
+    val charsetType: CharsetType?
+
 ) : AbstractInput()

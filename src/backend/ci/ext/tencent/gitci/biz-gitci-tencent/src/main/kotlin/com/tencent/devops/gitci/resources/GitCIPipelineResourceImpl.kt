@@ -68,16 +68,18 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     override fun getPipeline(
         userId: String,
         gitProjectId: Long,
-        pipelineId: String
+        pipelineId: String,
+        withHistory: Boolean?
     ): Result<GitProjectPipeline?> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(pipelineService.getPipelineListById(
+        return Result(pipelineService.getPipelineById(
             userId = userId,
             gitProjectId = gitProjectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            withHistory = withHistory
         ))
     }
 

@@ -287,12 +287,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         projectDataClearConfig: ProjectDataClearConfig
     ) {
         // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中X个月前的构建记录
-/*        cleanBuildHistoryData(
+        cleanBuildHistoryData(
             pipelineId = pipelineId,
             projectId = projectId,
             isCompletelyDelete = false,
             maxStartTime = projectDataClearConfig.maxStartTime
-        )*/
+        )
         // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
         val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(projectId, pipelineId)
         val maxKeepNum = projectDataClearConfig.maxKeepNum
@@ -360,8 +360,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     if (buildDetail != null) {
                         processMiscService.updatePipelineBuildDetailProject(
                             buildId = buildId,
-                            projectId = projectId,
-                            model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                            projectId = projectId
                         )
                     }
                 }
@@ -381,8 +380,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             processMiscService.updatePipelineResourceProject(
                 pipelineId = pipelineId,
                 version = pipelineResource.version,
-                projectId = projectId,
-                model = JsonUtil.toJson(pipelineResource.modelInfo, false)
+                projectId = projectId
             )
         }
         val pipelineResourceVersionList = processMiscService.getPipelineResourceVersionList(pipelineId)
@@ -390,8 +388,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             processMiscService.updatePipelineResourceVersionProject(
                 pipelineId = pipelineId,
                 version = pipelineResourceVersion.version,
-                projectId = projectId,
-                model = JsonUtil.toJson(pipelineResourceVersion.modelInfo, false)
+                projectId = projectId
             )
         }
         processMiscService.updateTemplatePipelineProject(pipelineId, projectId)
@@ -416,8 +413,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 buildDetailList?.forEach { buildDetail ->
                     processMiscService.updatePipelineBuildDetailProject(
                         buildId = buildDetail.buildId,
-                        projectId = projectId,
-                        model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                        projectId = projectId
                     )
                 }
             }

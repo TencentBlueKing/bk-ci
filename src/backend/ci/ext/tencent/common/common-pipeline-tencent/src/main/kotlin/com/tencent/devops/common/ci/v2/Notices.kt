@@ -30,20 +30,43 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
- * model
+ * model Stream 通知类型基类
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Notices(
+open class Notices(
     val type: String,
+    open val receivers: Set<String>?
+)
+
+/**
+ * model Stream Yaml基本通知
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+class GitNotices(
+    type: String,
+    receivers: Set<String>?,
     val title: String?,
     val content: String?,
-    val receivers: Set<String>?,
     val ccs: Set<String>?,
+    @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String?,
+    @ApiModelProperty(name = "chat-id")
     @JsonProperty("chat-id")
     val chatId: Set<String>?
-)
+) : Notices(type, receivers)
+
+/**
+ * model Stream 质量红线通知
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+class GateNotices(
+    type: String,
+    receivers: Set<String>?
+) : Notices(type, receivers)

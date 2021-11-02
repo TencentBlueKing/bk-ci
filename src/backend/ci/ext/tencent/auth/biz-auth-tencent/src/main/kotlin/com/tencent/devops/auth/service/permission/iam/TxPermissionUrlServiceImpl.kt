@@ -33,11 +33,14 @@ import com.tencent.bk.sdk.iam.dto.RelationResourceInstance
 import com.tencent.bk.sdk.iam.dto.action.UrlAction
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -45,11 +48,14 @@ import org.springframework.beans.factory.annotation.Value
 class TxPermissionUrlServiceImpl @Autowired constructor(
     private val iamConfiguration: IamConfiguration,
     private val managerService: ManagerService,
-    private val permissionProjectService: TxPermissionProjectServiceImpl
+    private val permissionProjectService: TxPermissionProjectServiceImpl,
+    private val client: Client,
+    private val authGroupService: AuthGroupService
 ) : PermissionUrlService {
 
     @Value("\${auth.webHost:#{null}}")
     val permissionCenterHost: String? = null
+
     /**
     {
     "system": "bk_job",  # 权限的系统
@@ -128,13 +134,23 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
             } else {
                 val relatedInstanceInfos = mutableListOf<RelationResourceInstance>()
 
-                it.instanceId?.forEach {
+                it.instanceId?.forEach { instance ->
+                    var instanceId = instance.id
+                    // 如果是流水线, 需要将pipelineId转为自增Id
+                    if (instance.type == AuthResourceType.PIPELINE_DEFAULT.value) {
+                        instanceId = getPipelineAutoId(instance.id)
+                    }
+
+                    // 如果instance.type为质量红线、版本体验。因为历史问题，需要特殊处理。取最上层的资源类型作为type
+                    val instanceType = if (TActionUtils.extResourceTypeCheck(instance.type)) {
+                        TActionUtils.extResourceType(it.resourceId)
+                    } else instance.type
+
                     val relatedInstance = RelationResourceInstance(
                         iamConfiguration.systemId,
-                        it.type,
-                        it.id,
-                        ""
-                    )
+                        instanceType,
+                        instanceId,
+                        "")
                     relatedInstanceInfos.add(relatedInstance)
                 }
 
@@ -158,7 +174,7 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
                 actions.add(
                     UrlAction(
                         TActionUtils.buildAction(it.actionId, it.resourceId),
-                        emptyList()
+                        relatedResourceTypes
                     )
                 )
             }
@@ -174,7 +190,8 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
     override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
         val projectRelationId = permissionProjectService.getProjectId(projectId)
         val rolePermissionUrl = if (!groupId.isNullOrEmpty()) {
-            "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
+            val iamGroupId = authGroupService.getRelationId(groupId.toInt())
+            "user-group-detail/$iamGroupId?current_role_id=$projectRelationId&tab=group_perm"
         } else {
             "user-group?current_role_id=$projectRelationId"
         }
@@ -185,6 +202,13 @@ class TxPermissionUrlServiceImpl @Autowired constructor(
         } else {
             "$permissionCenterHost/$rolePermissionUrl"
         }
+    }
+
+    private fun getPipelineAutoId(pipelineId: String): String {
+        val pipelineInfo = client.get(ServicePipelineResource::class)
+            .getPipelineInfoByPipelineId(pipelineId)?.data
+            ?: return pipelineId
+        return pipelineInfo.id.toString()
     }
 
     companion object {

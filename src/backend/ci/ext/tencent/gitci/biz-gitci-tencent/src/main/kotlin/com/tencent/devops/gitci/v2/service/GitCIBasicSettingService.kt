@@ -30,12 +30,14 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
-import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
-import com.tencent.devops.model.gitci.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.gitci.common.exception.GitCINoEnableException
+import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.constant.GitCIConstant
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -149,9 +151,28 @@ class GitCIBasicSettingService @Autowired constructor(
     fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
+
+        // gitRepoConf为null表示新项目
         if (gitRepoConf?.projectCode == null) {
+            // 根据url截取group + project的完整路径名称
+            var gitProjectName = if (setting?.gitHttpUrl != null) {
+                GitUtils.getDomainAndRepoName(setting?.gitHttpUrl).second
+            } else {
+                setting.name
+            }
+
+            // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
+            if (gitProjectName?.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                gitProjectName = gitProjectName.substring(gitProjectName.length -
+                    GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length)
+            }
+
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createGitCIProject(setting.gitProjectId, userId)
+                client.get(ServiceTxProjectResource::class).createGitCIProject(
+                    gitProjectId = setting.gitProjectId,
+                    userId = userId,
+                    gitProjectName = gitProjectName
+                )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
@@ -192,6 +213,19 @@ class GitCIBasicSettingService @Autowired constructor(
         return count
     }
 
+    fun refreshSetting(gitProjectId: Long) {
+        val projectInfo = requestGitProjectInfo(gitProjectId)
+        if (projectInfo != null) gitCIBasicSettingDao.updateInfoSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: "",
+            homePage = projectInfo.homepage ?: "",
+            httpUrl = projectInfo.gitHttpsUrl ?: "",
+            sshUrl = projectInfo.gitSshUrl ?: ""
+        )
+    }
+
     private fun refresh(it: TGitBasicSettingRecord) {
         try {
             val projectResult = requestGitProjectInfo(it.id)
@@ -213,13 +247,14 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
-        val accessToken = try {
-            client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
-        } catch (e: Exception) {
+        return try {
+            val accessToken =
+                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId.toString()).data!!.accessToken
+            client.getScm(ServiceGitCiResource::class)
+                .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
+        } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
         }
-        return client.getScm(ServiceGitCiResource::class)
-            .getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true).data
     }
 }

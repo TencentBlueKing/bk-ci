@@ -30,11 +30,14 @@ package com.tencent.devops.auth.service.permission.iam
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.service.AuthPipelineIdService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxPermissionServiceImpl @Autowired constructor(
@@ -42,7 +45,9 @@ class TxPermissionServiceImpl @Autowired constructor(
     val policyService: PolicyService,
     val iamConfiguration: IamConfiguration,
     val managerService: ManagerService,
-    val iamCacheService: IamCacheService
+    val iamCacheService: IamCacheService,
+    val client: Client,
+    val authPipelineIdService: AuthPipelineIdService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -82,11 +87,22 @@ class TxPermissionServiceImpl @Autowired constructor(
             )) {
             return true
         }
+
+        // 如果校验的资源为pipeline,需要兼容repo传pipelineId的情况
+        val useResourceCode = authPipelineIdService.findPipelineAutoId(resourceType, resourceCode)
+
+        // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+        val useAction = if (!action.contains("_")) {
+            TActionUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resourceType))
+        } else {
+            action
+        }
+
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action = useAction,
             projectCode = projectCode,
-            resourceCode = resourceCode,
+            resourceCode = useResourceCode,
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
