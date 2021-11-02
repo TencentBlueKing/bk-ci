@@ -497,7 +497,7 @@ object ScriptYmlUtils {
             name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
                 preScriptBuildYaml.name!!
             } else {
-                filePath.removeSuffix(".yml")
+                filePath
             },
             version = preScriptBuildYaml.version,
             triggerOn = thisTriggerOn,
