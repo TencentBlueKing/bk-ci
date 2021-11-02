@@ -7,6 +7,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.ExecutionVariables
 import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -22,9 +23,10 @@ class BluekingNotifyPipelineCmd @Autowired constructor(
     override val pipelineRepositoryService: PipelineRepositoryService,
     override val pipelineRuntimeService: PipelineRuntimeService,
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    override val client: Client
+    override val client: Client,
+    override val buildVariableService: BuildVariableService
 ) : NotifyPipelineCmd(
-    pipelineRepositoryService, pipelineRuntimeService, pipelineBuildFacadeService, client
+    pipelineRepositoryService, pipelineRuntimeService, pipelineBuildFacadeService, client, buildVariableService
 ) {
     override fun getExecutionVariables(
         pipelineId: String,
