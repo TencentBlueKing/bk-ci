@@ -304,7 +304,6 @@
                 }
             },
             urlPlaceholder () {
-                console.log(this.codelibConfig, 111111)
                 return (
                     this.placeholders['url'][this.codelibConfig.label]
                     || this.placeholders['url'][this.codelib.authType]
