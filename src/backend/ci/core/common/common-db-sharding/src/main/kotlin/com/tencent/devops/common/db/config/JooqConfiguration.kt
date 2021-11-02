@@ -25,12 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.common.db.config
 
-data class DataSourceConfig(
-    val url: String,
-    val username: String,
-    val password: String,
-    val initSql: String? = null,
-    val leakDetectionThreshold: Long = 0
-)
+import org.jooq.DSLContext
+import org.jooq.SQLDialect
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
+import org.jooq.impl.DefaultConfiguration
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
+import javax.sql.DataSource
+
+@Configuration
+@Import(BkShardingDataSourceConfiguration::class)
+class JooqConfiguration {
+
+    @Bean
+    fun shardingDslContest(
+        @Qualifier("shardingDataSource")
+        shardingDataSource: DataSource
+    ): DSLContext {
+        val configuration: org.jooq.Configuration = DefaultConfiguration()
+            .set(shardingDataSource)
+            .set(Settings().withRenderSchema(false)
+                .withExecuteLogging(true)
+                .withRenderFormatted(false))
+            .set(SQLDialect.MYSQL)
+        return DSL.using(configuration)
+    }
+}

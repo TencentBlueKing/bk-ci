@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client")) // 其他微服务调用
     api(project(":core:common:common-archive"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-websocket")) // 依赖websocket枚举
     api(project(":core:dispatch:api-dispatch")) // Dispatch配额实现在dispatch，考虑移除
     api(project(":core:project:api-project")) // 依赖读取项目VO
@@ -41,7 +42,6 @@ dependencies {
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")
     api("mysql:mysql-connector-java")
-    api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingJdbc}")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

@@ -25,13 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.common.db.pojo
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
-
-@ConstructorBinding
-@ConfigurationProperties(prefix = "spring.datasource")
-data class DataSourceProperties(
-    val dataSourceConfigs: List<DataSourceConfig>
-)
+const val DATA_SOURCE_NAME_PREFIX = "ds_"
+const val DEFAULT_DATA_SOURCE_NAME = "ds_0"

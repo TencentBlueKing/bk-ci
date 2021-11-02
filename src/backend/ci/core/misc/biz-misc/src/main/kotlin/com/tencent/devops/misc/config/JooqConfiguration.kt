@@ -84,7 +84,7 @@ class JooqConfiguration {
 
     @Bean
     fun processJooqConfiguration(
-        @Qualifier("processDataSource")
+        @Qualifier("shardingDataSource")
         processDataSource: DataSource
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()

@@ -25,9 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.misc.sharding
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
@@ -57,7 +58,7 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         }
         if (routingRule == null || !availableTargetNames.contains(routingRule)) {
             // 没有配置路由规则则路由到ds_0
-            return "ds_0"
+            return DEFAULT_DATA_SOURCE_NAME
         }
         return routingRule
     }

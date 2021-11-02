@@ -25,18 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-misc"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-environment-thirdpartyagent"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-db-sharding"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:project:api-project"))
-    api(project(":core:misc:api-misc"))
-    api(project(":core:common:common-websocket"))
-    api("org.json:json")
-}
+package com.tencent.devops.common.db.pojo
+
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+
+@ConstructorBinding
+@ConfigurationProperties(prefix = "spring.datasource")
+data class DataSourceProperties(
+    val dataSourceConfigs: List<DataSourceConfig>
+)

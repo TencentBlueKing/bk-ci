@@ -25,9 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.common.db.config
 
 import com.mysql.cj.jdbc.Driver
+import com.tencent.devops.common.db.pojo.DATA_SOURCE_NAME_PREFIX
+import com.tencent.devops.common.db.pojo.DataSourceProperties
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory
 import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration
@@ -57,13 +59,13 @@ import javax.sql.DataSource
 class BkShardingDataSourceConfiguration {
 
     companion object {
-        private const val PROJECT_ID_FIELD = "PROJECT_ID"
-        private const val DATA_SOURCE_NAME_PREFIX = "ds_"
-        private const val DB_SHARDING_ALGORITHM_NAME = "bkProcessDatabaseShardingAlgorithm"
-        private const val DB_ALGORITHM_CLASS_NAME =
-            "com.tencent.devops.process.config.BkProcessDatabaseShardingAlgorithm"
+        private const val DB_SHARDING_ALGORITHM_NAME = "databaseShardingAlgorithm"
     }
 
+    @Value("\${sharding.databaseShardingStrategy.algorithmClassName:#{null}}")
+    private val databaseAlgorithmClassName: String? = null
+    @Value("\${sharding.databaseShardingStrategy.shardingField:#{null}}")
+    private val databaseShardingField: String? = null
     @Value("\${sharding.projectStrategy.tableConfig:#{null}}")
     private val shardingProjectStrategyTableConfig: String? = null
     @Value("\${sharding.broadcastStrategy.tableConfig:#{null}}")
@@ -74,8 +76,8 @@ class BkShardingDataSourceConfiguration {
     private fun dataSourceMap(config: DataSourceProperties): Map<String, DataSource> {
         val dataSourceMap: MutableMap<String, DataSource> = mutableMapOf()
         val dataSourceConfigs = config.dataSourceConfigs
-        dataSourceConfigs.forEachIndexed { index, dataSourceConfig ->
-            val dataSourceName = "$DATA_SOURCE_NAME_PREFIX$index"
+        dataSourceConfigs.forEach { dataSourceConfig ->
+            val dataSourceName = "$DATA_SOURCE_NAME_PREFIX${dataSourceConfig.index}"
             dataSourceMap[dataSourceName] = createHikariDataSource(
                 datasourcePoolName = dataSourceName,
                 datasourceUrl = dataSourceConfig.url,
@@ -144,13 +146,13 @@ class BkShardingDataSourceConfiguration {
         }
         val dbShardingAlgorithmrProps = Properties()
         dbShardingAlgorithmrProps.setProperty("strategy", "STANDARD")
-        dbShardingAlgorithmrProps.setProperty("algorithmClassName", DB_ALGORITHM_CLASS_NAME)
+        dbShardingAlgorithmrProps.setProperty("algorithmClassName", databaseAlgorithmClassName)
         shardingRuleConfig.shardingAlgorithms[DB_SHARDING_ALGORITHM_NAME] =
             ShardingSphereAlgorithmConfiguration("CLASS_BASED", dbShardingAlgorithmrProps)
 
         shardingRuleConfig.defaultTableShardingStrategy = NoneShardingStrategyConfiguration()
         shardingRuleConfig.defaultDatabaseShardingStrategy =
-            StandardShardingStrategyConfiguration(PROJECT_ID_FIELD, DB_SHARDING_ALGORITHM_NAME)
+            StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
         val properties = Properties()
         // 是否打印SQL解析和改写日志
         properties.setProperty("sql-show", "false")
@@ -176,7 +178,7 @@ class BkShardingDataSourceConfiguration {
         val tableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         tableRuleConfig.tableShardingStrategy = NoneShardingStrategyConfiguration()
         tableRuleConfig.databaseShardingStrategy =
-            StandardShardingStrategyConfiguration(PROJECT_ID_FIELD, DB_SHARDING_ALGORITHM_NAME)
+            StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
         return tableRuleConfig
     }
 }
