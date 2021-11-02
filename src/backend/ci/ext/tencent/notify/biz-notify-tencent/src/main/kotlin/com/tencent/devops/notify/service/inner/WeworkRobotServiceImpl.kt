@@ -87,7 +87,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotSingleTextMessage(
                                 chatid = it,
                                 text = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message,
+                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
@@ -100,7 +100,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotMarkdownMessage(
                                 chatid = it,
                                 markdown = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message,
+                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
