@@ -60,7 +60,7 @@ class WoaAtomPropsDecorateImpl : FirstAtomPropsDecorateImpl() {
         }
 
         obj.forEach { (key, entry) ->
-            if ((key == "url" || key == "itemTargetUrl") && entry is String) {
+            if (key == "url" && entry is String) {
                 val newUrl = replaceUrl(entry, replaceMap)
                 if (newUrl != entry) {
                     isChange = true
@@ -86,15 +86,18 @@ class WoaAtomPropsDecorateImpl : FirstAtomPropsDecorateImpl() {
     private fun getReplaceMapByRequest(): Map<String, String> {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         if (null != attributes) {
-            val replaceMap = MAP.toMutableMap()
             val request = attributes.request
-            if (request.scheme == "http") { // 如果此时用户访问的不是https，则不做https替换
-                replaceMap.remove("http://")
+            request.getHeader("referer")?.let { referer ->
+                val replaceMap = MAP.toMutableMap()
+                if (referer.trim().startsWith("http://")) { // 如果此时用户访问的不是https，则不做https替换
+                    replaceMap.remove("http://")
+                }
+
+                if (referer.contains(".oa.com")) { // 如果访问是oa.com 则不做woa替换
+                    replaceMap.remove(".oa.com")
+                }
+                return replaceMap
             }
-            if (request.getHeader("referer")?.contains(".oa.com") == true) { // 如果访问是oa.com 则不做woa替换
-                replaceMap.remove(".oa.com")
-            }
-            return replaceMap
         }
         return MAP
     }

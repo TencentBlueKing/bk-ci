@@ -64,7 +64,6 @@ class WoaAtomPropsDecorateImplTest {
         val map = mapOf(
             "demo" to "mock",
             "url" to "http://api.devops.oa.com",
-            "itemTargetUrl" to "https://devops.oa.com",
             "key1" to mapOf<String, Any>(
                 "name" to "kkk",
                 "url" to "http://xxx.apigw.o.oa.com/x/y/z?UT=1&cc=aa"
@@ -72,21 +71,20 @@ class WoaAtomPropsDecorateImplTest {
             "input" to mapOf(
                 "level3" to mapOf(
                     "name" to "keyword",
-                    "itemTargetUrl" to "http://devops.woa.com/x/y/z?UT=1&cc=aa"
+                    "url" to "http://devops.woa.com/x/y/z?UT=1&cc=aa"
                 )
             )
         )
 
         val decorate = props?.decorate(JsonUtil.toJson(map)) as Map<String, Any>
         Assert.assertEquals("https://devops.woa.com", decorate["url"])
-        Assert.assertEquals("https://devops.woa.com", decorate["itemTargetUrl"])
         Assert.assertEquals(
             "https://xxx.apigw.o.woa.com/x/y/z?UT=1&cc=aa",
             (decorate["key1"] as Map<String, Any>)["url"]
         )
         Assert.assertEquals(
             "https://devops.woa.com/x/y/z?UT=1&cc=aa",
-            ((decorate["input"] as Map<String, Any>)["level3"] as Map<String, Any>)["itemTargetUrl"]
+            ((decorate["input"] as Map<String, Any>)["level3"] as Map<String, Any>)["url"]
         )
     }
 }
