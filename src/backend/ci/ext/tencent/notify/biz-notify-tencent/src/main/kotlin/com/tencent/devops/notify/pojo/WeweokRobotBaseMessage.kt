@@ -20,5 +20,5 @@ abstract class WeweokRobotBaseMessage(
     @JsonProperty("post_id")
     open val postId: String?,
 
-    open val msgtype: String,
+    open val msgtype: String
 )
