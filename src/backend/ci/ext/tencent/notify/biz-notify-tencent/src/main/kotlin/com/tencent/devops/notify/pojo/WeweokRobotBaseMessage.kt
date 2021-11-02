@@ -1,7 +1,6 @@
 package com.tencent.devops.notify.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 abstract class WeweokRobotBaseMessage(
