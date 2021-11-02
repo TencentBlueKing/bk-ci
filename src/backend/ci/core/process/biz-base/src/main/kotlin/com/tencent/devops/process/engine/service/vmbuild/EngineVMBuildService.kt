@@ -122,7 +122,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
-        val variables = buildVariableService.getAllVariable(buildId)
+        var variables = buildVariableService.getAllVariable(buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -149,6 +149,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
+                        variables = it.customBuildEnv?.let { it1 ->
+                            val envMap = it1.map { it2 -> "envs.${it2.key}" to it2.value }.toMap()
+                            variables.plus(envMap)
+                        } ?: variables
                         timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
@@ -170,6 +174,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         }
                         emptyList()
                     }
+                    LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START_variables|j($vmSeqId)|vmName($vmName)" +
+                        " variables=$variables")
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
                     buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
@@ -344,16 +350,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
-                pipelineEventDispatcher.dispatch(PipelineBuildStatusBroadCastEvent(
-                    source = "TaskPause-${task.containerId}-${task.buildId}",
-                    projectId = task.projectId,
-                    pipelineId = task.pipelineId,
-                    userId = task.starter,
-                    buildId = task.buildId,
-                    taskId = task.taskId,
-                    stageId = task.stageId,
-                    actionType = ActionType.REFRESH
-                ))
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "TaskPause-${task.containerId}-${task.buildId}",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = task.starter,
+                        buildId = task.buildId,
+                        taskId = task.taskId,
+                        stageId = task.stageId,
+                        actionType = ActionType.REFRESH
+                    )
+                )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {
