@@ -610,7 +610,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.error("getFileContent error is :$e", e)
             return GetAtomQualityConfigResult(
                 StoreMessageCode.USER_ATOM_QUALITY_CONF_INVALID,
-                arrayOf(branch ?: MASTER, QUALITY_JSON_NAME)
+                arrayOf(QUALITY_JSON_NAME)
             )
         }
     }
@@ -742,7 +742,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.error("getFileContent error is :$e", e)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
-                params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)
+                params = arrayOf(TASK_JSON_NAME)
             )
         }
         if (null == taskJsonStr || !JsonSchemaUtil.validateJson(taskJsonStr)) {
