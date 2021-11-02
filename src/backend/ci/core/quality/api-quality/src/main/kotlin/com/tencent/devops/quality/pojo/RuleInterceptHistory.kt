@@ -61,5 +61,7 @@ data class RuleInterceptHistory(
     @ApiModelProperty("描述列表", required = true)
     val interceptList: List<QualityRuleInterceptRecord>? = null,
     @ApiModelProperty("流水线是否已删除", required = true)
-    val pipelineIsDelete: Boolean = false
+    val pipelineIsDelete: Boolean = false,
+    @ApiModelProperty("红线把关记录", required = false)
+    val qualityRuleBuildHisOpt: QualityRuleBuildHisOpt? = null
 )

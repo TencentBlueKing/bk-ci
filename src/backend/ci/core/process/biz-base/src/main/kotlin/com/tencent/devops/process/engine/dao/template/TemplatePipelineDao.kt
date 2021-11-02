@@ -51,6 +51,7 @@ class TemplatePipelineDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         instanceType: String,
         rootTemplateId: String,
@@ -65,6 +66,7 @@ class TemplatePipelineDao {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 INSTANCE_TYPE,
                 ROOT_TEMPLATE_ID,
@@ -79,6 +81,7 @@ class TemplatePipelineDao {
                 PARAM
             )
                 .values(
+                    projectId,
                     pipelineId,
                     instanceType,
                     rootTemplateId,

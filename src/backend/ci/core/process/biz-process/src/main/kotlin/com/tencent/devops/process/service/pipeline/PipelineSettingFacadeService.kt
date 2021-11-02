@@ -95,6 +95,7 @@ class PipelineSettingFacadeService @Autowired constructor(
 
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )

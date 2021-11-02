@@ -48,7 +48,10 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
+        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType,buildEnvs:$buildEnvs")
+        // npm install命令兼容使用第三方依赖的插件包的情况
+        val installCmd = "npm install --unsafe-perm"
+        val command = StringBuilder()
         val machineNodeSwitch = systemEnvVariables["machineNodeSwitch"]
         if (machineNodeSwitch != null && machineNodeSwitch.toBoolean()) {
             var nodeEnvFlag = false
@@ -60,29 +63,46 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
                 logger.warn("No node environment", ignored)
             }
             if (nodeEnvFlag) {
+                addInstallCmd(command, installCmd, osType)
                 // 如果构建机上有安装node，则直接使用户配置的node插件启动命令
-                return target
+                command.append(target)
+                return command.toString()
             }
         }
         var convertTarget = target
-        // 当构建机为公共构建机并且用户未为job执行环境选择nodejs依赖情况则用系统默认配置的nodejs环境执行
+        // 当构建机为公共构建机并且没有配置nodejs依赖、node命令也没有加到path变量中，则用系统默认配置的nodejs环境执行
         if (buildHostType == BuildHostTypeEnum.PUBLIC) {
             var flag = false
-            buildEnvs.forEach {
+            for (it in buildEnvs) {
                 if (it.name == NODEJS) {
                     flag = true
-                    return@forEach
+                    break
                 }
             }
+            var finallyInstallCmd = installCmd
             if (!flag) {
                 val executePath = systemEnvVariables[NODEJS_PATH_ENV]
+                finallyInstallCmd = "$executePath$installCmd"
                 convertTarget = "$executePath$target"
             }
+            addInstallCmd(command, finallyInstallCmd, osType)
+        } else {
+            addInstallCmd(command, installCmd, osType)
         }
         if (!postEntryParam.isNullOrBlank()) {
             convertTarget = "$target --post-action=$postEntryParam"
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
+        command.append(convertTarget)
+        return command.toString()
+    }
+
+    private fun addInstallCmd(command: StringBuilder, installCmd: String, osType: OSType) {
+        command.append(installCmd)
+        if (osType == OSType.WINDOWS) {
+            command.append("\r\n")
+        } else {
+            command.append("\n")
+        }
     }
 }

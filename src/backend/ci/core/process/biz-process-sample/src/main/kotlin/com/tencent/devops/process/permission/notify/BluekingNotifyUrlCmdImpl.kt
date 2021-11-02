@@ -7,16 +7,11 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Configurable
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 
-@Configurable
-@ConditionalOnMissingBean(NotifyReceiversCmd::class)
 class BluekingNotifyUrlCmdImpl @Autowired constructor(
     val pipelineRepositoryService: PipelineRepositoryService,
     val pipelineRuntimeService: PipelineRuntimeService,
