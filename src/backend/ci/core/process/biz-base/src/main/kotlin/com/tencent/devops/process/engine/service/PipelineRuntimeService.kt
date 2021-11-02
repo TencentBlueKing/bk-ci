@@ -124,7 +124,7 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildStartupParamService
@@ -930,6 +930,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = context.userId,
                                 approver = null,
+                                subProjectId = null,
                                 subBuildId = null,
                                 atomCode = atomElement.getAtomCode()
                             )
@@ -1131,7 +1132,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     variables = buildVariables
                 )
+
                 if (buildHistoryRecord != null) {
+                    if (!context.stageRetry &&
+                        context.actionType.isRetry() &&
+                        context.retryStartTaskId.isNullOrEmpty()) {
+                        // 完整重试,重置启动时间
+                        buildHistoryRecord.startTime = LocalDateTime.now()
+                    }
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
@@ -1145,18 +1153,6 @@ class PipelineRuntimeService @Autowired constructor(
                         cancelUser = ""
                     )
                 } else { // 创建构建记录
-                    // 构建号递增
-                    val buildNum = pipelineBuildSummaryDao.updateBuildNum(
-                        dslContext = transactionContext,
-                        pipelineId = pipelineId
-                    )
-                    buildVariableService.setVariable(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        varName = PIPELINE_BUILD_NUM,
-                        varValue = buildNum
-                    )
                     val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
                         val parsedValue = pipelineRuleService.parsePipelineRule(
                             pipelineId = pipelineId,
@@ -1168,11 +1164,6 @@ class PipelineRuntimeService @Autowired constructor(
                     } else null
                     // 写自定义构建号信息
                     if (!buildNumAlias.isNullOrBlank()) {
-                        pipelineBuildSummaryDao.updateBuildNumAlias(
-                            dslContext = transactionContext,
-                            pipelineId = pipelineId,
-                            buildNumAlias = buildNumAlias
-                        )
                         buildVariableService.setVariable(
                             projectId = pipelineInfo.projectId,
                             pipelineId = pipelineId,
@@ -1181,6 +1172,19 @@ class PipelineRuntimeService @Autowired constructor(
                             varValue = buildNumAlias
                         )
                     }
+                    // 构建号递增
+                    val buildNum = pipelineBuildSummaryDao.updateBuildNum(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        buildNumAlias = buildNumAlias
+                    )
+                    buildVariableService.setVariable(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = PIPELINE_BUILD_NUM,
+                        varValue = buildNum
+                    )
                     pipelineBuildDao.create(
                         dslContext = transactionContext,
                         projectId = pipelineInfo.projectId,
@@ -1205,6 +1209,7 @@ class PipelineRuntimeService @Autowired constructor(
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
                         dslContext = transactionContext,
+                        projectId = pipelineInfo.projectId,
                         buildId = buildId,
                         startUser = context.userId,
                         startType = context.startType,
@@ -1870,12 +1875,18 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
 
-    fun updateTaskSubBuildId(buildId: String, taskId: String, subBuildId: String) {
+    fun updateTaskSubBuildId(
+        buildId: String,
+        taskId: String,
+        subBuildId: String,
+        subProjectId: String
+    ) {
         pipelineBuildTaskDao.updateSubBuildId(
             dslContext = dslContext,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId
+            subBuildId = subBuildId,
+            subProjectId = subProjectId
         )
     }
 

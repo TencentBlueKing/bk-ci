@@ -39,7 +39,7 @@ data class DeptInfo(
     val name: String,
     @ApiModelProperty("父级组织")
     val parent: Int,
-    @ApiModelProperty("是否有子级")
+    @ApiModelProperty("是否有子级", name = "has_children")
     @JsonProperty("has_children")
     val hasChildren: Boolean,
     @ApiModelProperty("是否启用")
