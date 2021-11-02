@@ -41,7 +41,7 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
             users
         } else {
             val failReceiver = EnvUtils.parseEnv(
-                command = commandContext.pipelineSetting.successSubscription.users,
+                command = commandContext.pipelineSetting.failSubscription.users,
                 data = commandContext.variables,
                 replaceWithEmpty = true)
             users.addAll(failReceiver.split(",").toMutableSet())

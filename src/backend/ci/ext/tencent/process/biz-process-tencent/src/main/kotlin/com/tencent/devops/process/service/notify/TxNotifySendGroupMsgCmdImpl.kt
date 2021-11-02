@@ -68,7 +68,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         val detailUrl = vars["detailUrl"]
         weworkGroup.forEach {
             if (markerDownFlag) {
-                wechatWorkService.sendMarkdownGroup(content!!, it)
+                wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), it)
             } else {
                 val receiver = Receiver(ReceiverType.group, it)
                 val richtextContentList = mutableListOf<RichtextContent>()
