@@ -72,7 +72,7 @@ class LunaService @Autowired constructor(
         val tmpFolder = Files.createTempDir()
         try {
             val files = bkRepoClient.downloadFileByPattern(
-                userId = "",
+                userId = lunaUploadParam.operator,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

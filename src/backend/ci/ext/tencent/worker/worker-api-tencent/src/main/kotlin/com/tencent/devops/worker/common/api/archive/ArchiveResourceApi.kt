@@ -190,8 +190,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         isVmBuildEnv: Boolean
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
-        val header = HashMap<String, String>()
-        header["X-BKREPO-UID"] = user
+        val header = mutableMapOf("X-BKREPO-UID" to user)
         val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
@@ -270,7 +269,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadFile(
         url: String,
-        destPath: String,
         file: File,
         headers: Map<String, String>?,
         isVmBuildEnv: Boolean

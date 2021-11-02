@@ -82,6 +82,7 @@ class LunaPushFileTaskAtom @Autowired constructor(
                 destFileDir
             ),
             ArtifactorySearchParam(
+                userId,
                 projectId,
                 pipelineId,
                 buildId,
