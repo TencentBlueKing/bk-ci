@@ -28,17 +28,22 @@
 package com.tencent.devops.stream.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.ExternalScmResource
 import com.tencent.devops.stream.mq.streamRequest.GitCIRequestDispatcher
 import com.tencent.devops.stream.mq.streamRequest.GitCIRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val client: Client
 ) : ExternalScmResource {
 
     companion object {
@@ -54,5 +59,10 @@ class ExternalScmResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    override fun gitCallback(code: String, state: String): Response {
+        val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!
+        return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
     }
 }
