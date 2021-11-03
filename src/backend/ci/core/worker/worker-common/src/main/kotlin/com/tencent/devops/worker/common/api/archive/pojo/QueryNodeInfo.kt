@@ -25,14 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api(project(":core:artifactory:api-artifactory-store"))
-    api("com.tencent.bkrepo:api-generic")
-    api("com.tencent.bkrepo:api-repository")
-}
+package com.tencent.devops.worker.common.api.archive.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+data class QueryNodeInfo(
+    var createdBy: String,
+    var createdDate: String,
+    var lastModifiedBy: String,
+    var lastModifiedDate: String,
+    var folder: Boolean,
+    var path: String,
+    var name: String,
+    var fullPath: String,
+    var size: Long,
+    var sha256: String? = null,
+    var md5: String? = null,
+    var projectId: String,
+    var repoName: String,
+    var metadata: Map<String, String>
+)

@@ -198,7 +198,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         file: File,
         isVmBuildEnv: Boolean
     ) {
-        val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
+        val path = "/ms/artifactory/api/build/artifactories/file/download?local=true&filePath=${
             URLEncoder.encode(
                 "$BK_CI_ATOM_DIR/$atomFilePath",
                 "UTF-8"

@@ -51,10 +51,11 @@ class BuildFileResourceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         filePath: String,
+        local: Boolean?,
         response: HttpServletResponse
     ) {
         val userId = getLastModifyUser(projectCode, pipelineId)
-        archiveFileService.downloadFile(userId, filePath, response)
+        archiveFileService.downloadFile(userId, filePath, response, local)
     }
 
     override fun archiveFile(

@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("com.google.code.gson:gson")
-    api(project(":core:worker:worker-common"))
-    api(project(":core:artifactory:api-artifactory-store"))
-    api("com.tencent.bkrepo:api-generic")
-    api("com.tencent.bkrepo:api-repository")
-}
+package com.tencent.devops.artifactory.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+data class FileGatewayInfo(
+    val fileDevnetGateway: String,
+    val fileIdcGateway: String
+)

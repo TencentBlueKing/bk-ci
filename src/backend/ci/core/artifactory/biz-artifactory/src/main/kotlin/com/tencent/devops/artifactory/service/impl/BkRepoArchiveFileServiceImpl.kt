@@ -51,14 +51,17 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
+import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
 
@@ -68,6 +71,9 @@ import javax.ws.rs.NotFoundException
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
     private val defaultBkRepoClient: DefaultBkRepoClient
 ) : ArchiveFileServiceImpl() {
+
+    @Value("\${artifactory.archiveLocalBasePath:/data/bkee/public/ci/artifactory/}")
+    private lateinit var archiveLocalBasePath: String
 
     override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         val nodeDetail = defaultBkRepoClient.getFileDetail(userId = userId,
@@ -134,9 +140,18 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         }
     }
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(
+        userId: String,
+        filePath: String,
+        response: HttpServletResponse,
+        local: Boolean?
+    ) {
         response.contentType = MimeUtil.mediaType(filePath)
-        return downloadFile(userId, filePath, response.outputStream)
+        if (local == true) {
+            downloadDiskFile(filePath, response.outputStream)
+        } else {
+            downloadFile(userId, filePath, response.outputStream)
+        }
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
@@ -374,6 +389,16 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         with(artifactInfo) {
             defaultBkRepoClient.delete(BKREPO_DEFAULT_USER, projectId, repoName, artifactUri)
         }
+    }
+
+    private fun downloadDiskFile(filePath: String, outputStream: ServletOutputStream) {
+        logger.info("downloadFile, filePath: $filePath")
+        if (filePath.contains("..")) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
+        }
+        val basePath = if (archiveLocalBasePath.endsWith("/")) archiveLocalBasePath else "$archiveLocalBasePath/"
+        val inputStream = File("$basePath$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}").inputStream()
+        FileCopyUtils.copy(inputStream, outputStream)
     }
 
     companion object {

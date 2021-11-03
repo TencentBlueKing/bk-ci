@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
@@ -59,7 +60,7 @@ class BuildArchiveGetTask : ITask() {
         private val logger = LoggerFactory.getLogger(BuildArchiveGetTask::class.java)
     }
 
-    private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
+    private val archiveGetResourceApi = ArtifactApiFactory.create(ArchiveSDKApi::class)
     private val buildApi = ApiFactory.create(BuildSDKApi::class)
 
     @Suppress("ComplexMethod", "MagicNumber")
