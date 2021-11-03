@@ -164,6 +164,22 @@ class BuildLogPrinter(
         executeCount = executeCount
     )
 
+    fun addGreenLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String?,
+        executeCount: Int,
+        subTag: String? = null
+    ) = addLine(
+        buildId = buildId,
+        message = Ansi().bold().fgGreen().a(message).reset().toString(),
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
+
     fun addRedLine(
         buildId: String,
         message: String,

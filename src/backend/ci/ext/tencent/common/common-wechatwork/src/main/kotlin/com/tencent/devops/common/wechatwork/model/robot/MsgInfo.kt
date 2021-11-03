@@ -25,15 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.enums
+package com.tencent.devops.common.wechatwork.model.robot
 
-enum class MsgType(private val type: String) {
-    text("text"),
-    image("image"),
-    vocie("vocie"),
-    file("file"),
-    emotion("emotion"),
-    forward("forward"),
-    Event("Event"),
-    markdown("markdown")
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class MsgInfo(
+    val content: String,
+
+    @JsonProperty("mentioned_list")
+    var mentionedList: List<String>? = mutableListOf(),
+
+    @JsonProperty("mentioned_mobile_list")
+    var mentionedMobileList: List<String>? = mutableListOf()
+)

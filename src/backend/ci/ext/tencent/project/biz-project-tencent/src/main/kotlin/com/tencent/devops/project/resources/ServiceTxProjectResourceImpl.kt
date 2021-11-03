@@ -69,7 +69,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectTxService: ProjectTxInfoService
 ) : ServiceTxProjectResource {
 
-    @Value("\${auto.tag:#{null}}")
+    @Value("\${tag.auto:#{null}}")
     val autoTag: String? = null
 
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {

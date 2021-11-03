@@ -91,10 +91,10 @@ class OpProjectServiceImpl @Autowired constructor(
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"
 
-    @Value("\${prod.tag:#{null}}")
+    @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
-    @Value("\${gray.tag:#{null}}")
+    @Value("\${tag.gray:#{null}}")
     private val grayTag: String? = null
 
     override fun updateProjectFromOp(
