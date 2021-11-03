@@ -277,7 +277,6 @@
                         codelib.authType,
                         codelib.svnType
                     )
-                    console.log(codelib, 'authTypeauthType')
                     if (msg) {
                         this.urlErrMsg = msg
                     }
@@ -293,7 +292,6 @@
             },
             codelibAliasName: {
                 get () {
-                    console.log(this.codelib)
                     return this.codelib.aliasName
                 },
 
