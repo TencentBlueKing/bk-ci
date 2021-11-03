@@ -302,6 +302,17 @@ class StreamBasicSettingDao {
         }
     }
 
+    fun updateOauthSetting(dslContext: DSLContext, gitProjectId: Long, userId: String, oauthUserId: String) {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            dslContext.update(this)
+                .set(ENABLE_USER_ID, oauthUserId)
+                .set(OAUTH_OPERATOR, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(gitProjectId))
+                .execute()
+        }
+    }
+
     fun getBasicSettingList(
         dslContext: DSLContext,
         gitProjectIdList: List<Long>? = null,

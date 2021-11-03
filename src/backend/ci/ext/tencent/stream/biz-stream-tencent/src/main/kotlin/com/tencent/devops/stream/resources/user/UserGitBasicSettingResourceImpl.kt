@@ -38,6 +38,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import okhttp3.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
