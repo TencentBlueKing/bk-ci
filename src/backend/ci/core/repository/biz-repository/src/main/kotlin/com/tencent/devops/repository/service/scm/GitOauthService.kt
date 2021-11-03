@@ -46,6 +46,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
@@ -58,8 +59,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Service
 @Suppress("ALL")
@@ -168,7 +167,7 @@ class GitOauthService @Autowired constructor(
         return gitService.getAuthUrl(authParamJsonStr = authParamJsonStr)
     }
 
-    override fun gitCallback(code: String, state: String): Response {
+    override fun gitCallback(code: String, state: String): GitOauthCallback {
         if (!state.contains("BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
@@ -180,7 +179,7 @@ class GitOauthService @Autowired constructor(
         saveAccessToken(userId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
-        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
+        return GitOauthCallback(userId = userId, redirectUrl = redirectUrl)
     }
 
     override fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {
