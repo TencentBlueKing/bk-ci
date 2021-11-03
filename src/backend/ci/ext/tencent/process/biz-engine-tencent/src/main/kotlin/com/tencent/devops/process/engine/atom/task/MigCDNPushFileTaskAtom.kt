@@ -84,6 +84,7 @@ class MigCDNPushFileTaskAtom @Autowired constructor(
                 if (needUnzip) 1 else 0
             ),
             ArtifactorySearchParam(
+                userId,
                 projectId,
                 pipelineId,
                 buildId,

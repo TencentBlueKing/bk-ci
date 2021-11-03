@@ -25,24 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.atom.TxOpMigrateAtomResource
+import com.tencent.devops.store.service.atom.TxOpMigrateAtomService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface ArchiveExtServicePkgService {
+@RestResource
+class TxOpMigrateAtomResourceImpl @Autowired constructor(
+    private val txOpMigrateAtomService: TxOpMigrateAtomService
+) : TxOpMigrateAtomResource {
 
-    /**
-     * 归档扩展服务执行包
-     */
-    fun archiveExtService(
-        userId: String,
-        projectCode: String,
-        serviceCode: String,
-        version: String,
-        destPath: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    override fun migrateAtomPkg(endTime: String): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomPkg(endTime))
+    }
+
+    override fun migrateAtomStaticFile(): Result<Boolean> {
+        return Result(txOpMigrateAtomService.migrateAtomStaticFile())
+    }
 }

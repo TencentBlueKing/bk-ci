@@ -203,7 +203,7 @@ class JinGangService @Autowired constructor(
 
         // 获取文件信息
         val jfrogFile = try {
-            client.get(ServiceArtifactoryResource::class).show(projectId, type, file).data!!
+            client.get(ServiceArtifactoryResource::class).show(userId, projectId, type, file).data!!
         } catch (e: RemoteServiceException) {
             logger.error("client get ServiceArtifactoryResource#show fail for buildId($buildId)", e)
             throw RuntimeException("no file found in path($file)")

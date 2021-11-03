@@ -25,25 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.ENV_TSF_HOST_IP
-import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+interface TxOpMigrateAtomService {
 
-@EnvGenerator(description = "TFS相关环境变量生成")
-@Component
-class TFSDockerEnvGenerator : DockerEnvGenerator {
+    /**
+     * 迁移插件包
+     */
+    fun migrateAtomPkg(endTime: String): Boolean
 
-    @Value("\${tsf.ip}")
-    private var tsfIp: String = ""
-
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(key = ENV_TSF_HOST_IP, value = tsfIp)
-        )
-    }
+    /**
+     * 迁移插件静态文件
+     */
+    fun migrateAtomStaticFile(): Boolean
 }

@@ -25,26 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.config
+package com.tencent.devops.store.dao
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-/**
- * 扩展服务仓库配置
- */
-@Component
-class BkRepoExtServiceConfig {
+@Repository
+class TxAtomEnvDao {
 
-    // 蓝盾新仓库扩展服务项目名称
-    @Value("\${bkrepo.extService.projectName}")
-    val bkrepoExtServiceProjectName: String = ""
-
-    // 蓝盾新仓库扩展服务用户名
-    @Value("\${bkrepo.extService.userName}")
-    val bkrepoExtServiceUserName: String = ""
-
-    // 蓝盾新仓库扩展服务密码
-    @Value("\${bkrepo.extService.password}")
-    val bkrepoExtServicePassword: String = ""
+    fun getAtomEnvsByEndTime(
+        dslContext: DSLContext,
+        endTime: LocalDateTime,
+        limit: Int,
+        offset: Int
+    ): Result<TAtomEnvInfoRecord>? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.selectFrom(this)
+                .where(CREATE_TIME.lt(endTime))
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
 }

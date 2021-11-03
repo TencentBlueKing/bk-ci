@@ -56,6 +56,14 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
+        return with(TIdeAtomFeature.T_IDE_ATOM_FEATURE) {
+            dslContext.select(PUBLIC_FLAG).from(this)
+                .where(ATOM_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
+
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TIdeAtom.T_IDE_ATOM) {
             dslContext.select(ATOM_CODE.`as`("storeCode")).from(this)

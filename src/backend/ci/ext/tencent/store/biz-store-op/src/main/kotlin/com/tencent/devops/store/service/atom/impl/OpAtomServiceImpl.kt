@@ -59,13 +59,13 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 /**
@@ -74,6 +74,7 @@ import java.time.LocalDateTime
  * since: 2019-10-29
  */
 @Service
+@Suppress("LongParameterList", "LongMethod", "ReturnCount")
 class OpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val classifyDao: ClassifyDao,
@@ -106,8 +107,8 @@ class OpAtomServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<Atom>?> {
-        logger.info("getOpPipelineAtoms atomName is :$atomName,serviceScope is :$serviceScope,os is :$os,atomType is :$atomType")
-        logger.info("getOpPipelineAtoms category is :$category,classifyId is :$classifyId,page is :$page,pageSize is :$pageSize")
+        logger.info("getOpPipelineAtoms|atomName=$atomName,serviceScope=$serviceScope,os=$os,atomType=$atomType")
+        logger.info("getOpPipelineAtoms|category=$category,classifyId=$classifyId,page=$page,pageSize=$pageSize")
         val pipelineAtomList = atomDao.getOpPipelineAtoms(
             dslContext = dslContext,
             atomName = atomName,
@@ -125,9 +126,26 @@ class OpAtomServiceImpl @Autowired constructor(
             generatePipelineAtom(it)
         }
         // 处理分页逻辑
-        val totalSize = atomDao.getOpPipelineAtomCount(dslContext, atomName, atomType, serviceScope, os, category, classifyId, atomStatus)
+        val totalSize = atomDao.getOpPipelineAtomCount(
+            dslContext = dslContext,
+            atomName = atomName,
+            atomType = atomType,
+            serviceScope = serviceScope,
+            os = os,
+            category = category,
+            classifyId = classifyId,
+            atomStatus = atomStatus
+        )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
-        return Result(AtomResp(totalSize, page, pageSize, totalPage, pipelineAtomList))
+        return Result(
+            AtomResp(
+                count = totalSize,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPage,
+                records = pipelineAtomList
+            )
+        )
     }
 
     /**
@@ -137,11 +155,13 @@ class OpAtomServiceImpl @Autowired constructor(
         logger.info("the id is :{}", id)
         val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, id)
         logger.info("the pipelineAtomRecord is :{}", pipelineAtomRecord)
-        return Result(if (pipelineAtomRecord == null) {
-            null
-        } else {
-            generatePipelineAtom(pipelineAtomRecord)
-        })
+        return Result(
+            if (pipelineAtomRecord == null) {
+                null
+            } else {
+                generatePipelineAtom(pipelineAtomRecord)
+            }
+        )
     }
 
     /**
@@ -178,9 +198,9 @@ class OpAtomServiceImpl @Autowired constructor(
             logoUrl = atomRecord.logoUrl,
             icon = atomRecord.icon,
             summary = atomRecord.summary,
-            serviceScope = if (!StringUtils.isEmpty(atomRecord.serviceScope)) JsonUtil.getObjectMapper().readValue(atomRecord.serviceScope, List::class.java) as List<String> else null,
+            serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
             jobType = atomRecord.jobType,
-            os = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(atomRecord.os, List::class.java) as List<String> else null,
+            os = JsonUtil.toOrNull(atomRecord.os, List::class.java) as List<String>?,
             classifyId = atomClassifyRecord?.id,
             classifyCode = atomClassifyRecord?.classifyCode,
             classifyName = atomClassifyRecord?.classifyName,
@@ -199,8 +219,14 @@ class OpAtomServiceImpl @Autowired constructor(
             htmlTemplateVersion = atomRecord.htmlTemplateVersion,
             buildLessRunFlag = atomRecord.buildLessRunFlag,
             weight = atomRecord.weight,
-            props = atomDao.convertString(atomRecord.props),
-            data = atomDao.convertString(atomRecord.data),
+            props = atomRecord.props?.let {
+                AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                    ?.decorate(atomRecord.props) as Map<String, Any>?
+            },
+            data = atomRecord.data?.let {
+                AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                    ?.decorate(atomRecord.data) as Map<String, Any>?
+            },
             recommendFlag = atomFeature?.recommendFlag,
             yamlFlag = atomFeature?.yamlFlag,
             publisher = atomRecord.publisher,
