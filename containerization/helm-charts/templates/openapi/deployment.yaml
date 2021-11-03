@@ -55,13 +55,6 @@ spec:
           {{- if .Values.openapi.resources }}
           resources: {{- toYaml .Values.openapi.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.openapi.resources.requests.cpu | quote }}
-              memory: {{ .Values.openapi.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.openapi.resources.limits.cpu | quote }}
-              memory: {{ .Values.openapi.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80

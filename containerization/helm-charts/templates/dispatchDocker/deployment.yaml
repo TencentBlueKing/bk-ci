@@ -55,13 +55,6 @@ spec:
           {{- if .Values.dispatchDocker.resources }}
           resources: {{- toYaml .Values.dispatchDocker.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.dispatchDocker.resources.requests.cpu | quote }}
-              memory: {{ .Values.dispatchDocker.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.dispatchDocker.resources.limits.cpu | quote }}
-              memory: {{ .Values.dispatchDocker.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80

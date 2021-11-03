@@ -55,13 +55,6 @@ spec:
           {{- if .Values.plugin.resources }}
           resources: {{- toYaml .Values.plugin.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.plugin.resources.requests.cpu | quote }}
-              memory: {{ .Values.plugin.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.plugin.resources.limits.cpu | quote }}
-              memory: {{ .Values.plugin.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80

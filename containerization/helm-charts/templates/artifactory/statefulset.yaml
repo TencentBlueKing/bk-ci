@@ -56,13 +56,6 @@ spec:
           {{- if .Values.artifactory.resources }}
           resources: {{- toYaml .Values.artifactory.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.artifactory.resources.requests.cpu | quote }}
-              memory: {{ .Values.artifactory.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.artifactory.resources.limits.cpu | quote }}
-              memory: {{ .Values.artifactory.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80

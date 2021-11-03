@@ -55,13 +55,6 @@ spec:
           {{- if .Values.notify.resources }}
           resources: {{- toYaml .Values.notify.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.notify.resources.requests.cpu | quote }}
-              memory: {{ .Values.notify.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.notify.resources.limits.cpu | quote }}
-              memory: {{ .Values.notify.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80
