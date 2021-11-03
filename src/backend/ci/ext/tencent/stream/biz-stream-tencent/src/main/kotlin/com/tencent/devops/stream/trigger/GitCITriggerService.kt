@@ -57,6 +57,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
@@ -83,11 +84,11 @@ class GitCITriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamStorageBean: StreamStorageBean,
     private val gitCISettingDao: StreamBasicSettingDao,
+    private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val rabbitTemplate: RabbitTemplate,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val streamScmService: StreamScmService,
-    private val triggerParameter: TriggerParameter,
     private val preTrigger: PreTrigger,
     private val mergeConflictCheck: MergeConflictCheck,
     private val yamlVersion: YamlVersion,
@@ -117,7 +118,7 @@ class GitCITriggerService @Autowired constructor(
             return false
         }
 
-        val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
+        val gitRequestEvent = TriggerParameter.getGitRequestEvent(eventObject, event) ?: return true
 
         // 做一些在接收到请求后做的预处理
         if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value) {
@@ -125,11 +126,15 @@ class GitCITriggerService @Autowired constructor(
         }
 
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
-        // 完全没创建过得项目不存记录
-        if (null == gitCIBasicSetting) {
+        // 没开启的就不存
+        if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
             return null
         }
+
+        // 创建过项目的才保存记录继续后面的逻辑
+        val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
+        gitRequestEvent.id = id
 
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
