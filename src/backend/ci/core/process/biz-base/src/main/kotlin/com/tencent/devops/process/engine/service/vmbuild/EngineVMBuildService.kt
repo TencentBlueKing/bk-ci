@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -65,6 +66,7 @@ import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
@@ -86,6 +88,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val taskBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
     private val buildLogPrinter: BuildLogPrinter,
@@ -122,7 +125,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
-        var variables = buildVariableService.getAllVariable(buildId)
+        // var表中获取环境变量，并对老版本变量进行兼容
+        val variables = buildVariableService.getAllVariable(buildId)
+        // 环境变量替换上下文
+        var context = pipelineContextService.getAllBuildContext(variables)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -148,10 +154,23 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
+
+                    if (it is VMBuildContainer) {
+                        LOG.info(
+                            "ENGINE|$buildId|Agent|BUILD_VM_START_CUSTOMBUILDENV|j($vmSeqId)|vmName($vmName)" +
+                                " customBuildEnv=${it.customBuildEnv}"
+                        )
+                        // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
+                        context = context.plus(it.customBuildEnv?.map { mit ->
+                            mit.key to
+                                ReplacementUtils.replace(mit.value, object : ReplacementUtils.KeyReplacement {
+                                    override fun getReplacement(key: String): String? {
+                                        return context[key]
+                                    }
+                                })
+                        }?.toMap() ?: emptyMap())
+                    }
                     val buildEnvs = if (it is VMBuildContainer) {
-                        variables = it.customBuildEnv?.let { it1 ->
-                            variables.plus(it1)
-                        } ?: variables
                         timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
@@ -175,7 +194,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     }
                     LOG.info(
                         "ENGINE|$buildId|Agent|BUILD_VM_START_variables|j($vmSeqId)|vmName($vmName)" +
-                            " variables=$variables"
+                            " variables=$context"
                     )
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
@@ -194,7 +213,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         vmName = vmName,
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
-                        variables = variables,
+                        variables = context,
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
@@ -369,6 +388,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 val allVariable = buildVariableService.getAllVariable(buildId)
                 // 构造扩展变量
                 val extMap = buildExtService.buildExt(task, allVariable)
+                LOG.info("ENGINE|$buildId|Agent|CLAIM_EXTMAP|j($vmSeqId)|extMap=$extMap")
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
