@@ -150,7 +150,7 @@ export const isTGit = judgementCodelibType('codeTGit')
 
 /**
  * 判断是代码库是否为P4
- * method isTGit
+ * method isP4
  * @param {string} typeName
  */
 export const isP4 = judgementCodelibType('codeP4')

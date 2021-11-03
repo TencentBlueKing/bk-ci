@@ -32,7 +32,8 @@ const store = {
             aliasName: '',
             credentialId: '',
             projectName: '',
-            url: ''
+            url: '',
+            port: ''
         },
         gitOAuth: {
             project: []
