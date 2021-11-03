@@ -321,13 +321,12 @@
             },
             codelibPort: {
                 get () {
-                    return this.codelib.port
+                    return this.codelib.url
                 },
-                set (port) {
+                set (url) {
                     const param = {
-                        projectName: port,
-                        port,
-                        url: undefined
+                        projectName: url,
+                        url
                     }
                     this.updateCodelib(param)
                 }
