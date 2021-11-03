@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.enums
+package com.tencent.devops.common.wechatwork.model.robot
 
-enum class MsgType(private val type: String) {
-    text("text"),
-    image("image"),
-    vocie("vocie"),
-    file("file"),
-    emotion("emotion"),
-    forward("forward"),
-    Event("Event"),
-    markdown("markdown")
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.wechatwork.model.enums.MsgType
+
+data class RobotMarkdownSendMsg(
+    @JsonProperty("msgtype")
+    val msgType: String = MsgType.markdown.name,
+    @JsonProperty("chatid")
+    val chatId: String,
+    val markdown: MsgInfo
+)

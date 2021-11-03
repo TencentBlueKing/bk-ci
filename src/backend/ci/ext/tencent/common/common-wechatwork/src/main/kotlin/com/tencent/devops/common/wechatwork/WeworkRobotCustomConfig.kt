@@ -24,16 +24,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.wechatwork
 
-package com.tencent.devops.common.wechatwork.model.enums
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-enum class MsgType(private val type: String) {
-    text("text"),
-    image("image"),
-    vocie("vocie"),
-    file("file"),
-    emotion("emotion"),
-    forward("forward"),
-    Event("Event"),
-    markdown("markdown")
+@Component
+class WeworkRobotCustomConfig {
+
+    @Value("\${robot.token:#{null}}")
+    val token: String? = null
+
+    @Value("\${robot.aeskey:#{null}}")
+    val aeskey: String? = null
+
+    @Value("\${robot.robotKey:#{null}}")
+    val robotKey: String? = null
+
+    @Value("\${robot.url:#{null}}")
+    val weworkUrl: String? = null
 }
