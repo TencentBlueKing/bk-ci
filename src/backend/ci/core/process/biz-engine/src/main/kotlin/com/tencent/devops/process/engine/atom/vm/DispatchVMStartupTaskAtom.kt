@@ -107,7 +107,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         context[key]
                 })
         }?.toMap()
-        val fixParam = param.copy(buildEnv = buildEnv)
+        val fixParam = param.copy(customBuildEnv = buildEnv)
 
         try {
             atomResponse = execute(task, fixParam)
