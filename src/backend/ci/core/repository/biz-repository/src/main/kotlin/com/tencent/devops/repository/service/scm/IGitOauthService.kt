@@ -45,7 +45,7 @@ interface IGitOauthService {
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String? = null,
-        gitProjectId: String? = null,
+        gitProjectId: Long? = null,
         refreshToken: Boolean? = false
     ): AuthorizeResult
     fun gitCallback(code: String, state: String): GitOauthCallback
