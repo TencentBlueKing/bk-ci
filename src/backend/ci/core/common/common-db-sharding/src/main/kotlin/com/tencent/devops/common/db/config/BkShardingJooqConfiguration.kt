@@ -40,7 +40,7 @@ import javax.sql.DataSource
 
 @Configuration
 @Import(BkShardingDataSourceConfiguration::class)
-class JooqConfiguration {
+class BkShardingJooqConfiguration {
 
     @Bean
     fun shardingDslContest(
