@@ -44,9 +44,10 @@
         <div :class="{ 'unRecommend-atom-list': true, 'show-unRecommend': isToolActive }">
             <atom-card
                 class="unRecommend-atom-item"
-                v-for="(unRecommendAtom, index) in curUnRecommendAtomMap"
+                v-for="(unRecommendAtom, key, index) in curUnRecommendAtomMap"
                 :key="index + tabName"
                 :is-project-atom="isProjectAtom"
+                :atom-index="index"
                 :atom="unRecommendAtom"
                 :is-recommend="false" />
             <template v-if="isUnRecommendMoreLoading" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></template>
@@ -646,6 +647,7 @@
             .atom-info-content {
                 position: relative;
                 width: 494px;
+                min-height: 60px;
                 font-weight: bold;
                 font-size: 14px;
                 padding-right: 10px;
@@ -785,7 +787,6 @@
             cursor: not-allowed;
 
             .atom-label {
-                padding: 10px 0 0 !important;
                 span {
                     color: #c3cdd7 !important;
                 }
@@ -793,6 +794,11 @@
             .atom-name,
             .desc {
                 color: #c3cdd7 !important;
+            }
+        }
+        .unRecommend-atom-item {
+            .atom-label {
+                padding: 10px 0 0 !important;
             }
         }
         .enter-atom {

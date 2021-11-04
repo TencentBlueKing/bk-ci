@@ -71,10 +71,11 @@
                 </span>
                 <div v-else style="padding-bottom: 10px;"></div>
             </template>
+
             <div
                 v-if="!isRecommend && (atom.os && atom.os.length > 0)"
                 class="allow-os-list"
-                v-bk-tooltips="{ content: osTips(atom.os), zIndex: 99999 }">
+                v-bk-tooltips="{ content: osTips(atom.os), zIndex: 99999, onShow: mouseEnterAtomOsTips, onClose: mouseLeaveAtomOsTips }">
                 <template>
                     <i v-for="(os, osIndex) in atom.os" :key="osIndex" style="margin-right: 3px;" :class="`os-tag devops-icon icon-${os.toLowerCase()}`" />
                 </template>
@@ -82,7 +83,7 @@
             <div
                 v-if="!isRecommend && (atom.os && atom.os.length === 0)"
                 class="allow-os-list"
-                v-bk-tooltips="{ content: $t('editPage.suitable') + $t('editPage.noCompilerEnvironment'), zIndex: 99999 }">
+                v-bk-tooltips="{ content: $t('editPage.suitable') + $t('editPage.noCompilerEnvironment'), zIndex: 99999, onShow: mouseEnterAtomOsTips, onClose: mouseLeaveAtomOsTips }">
                 <template>
                     <i class="os-tag devops-icon icon-none stage-type-icon"></i>
                 </template>
@@ -178,6 +179,9 @@
                 'updateProjectAtoms',
                 'setAtomCode'
             ]),
+            onShow () {
+                console.log(1)
+            },
             formatDiff,
             /**
              * 适用系统tips
@@ -211,6 +215,14 @@
             mouseLeaveAtomUnRemove () {
                 const curRecommendItemDom = document.querySelectorAll('.recommend-atom-item')[this.atomIndex]
                 curRecommendItemDom.setAttribute('class', 'recommend-atom-item')
+            },
+            mouseEnterAtomOsTips () {
+                const curUnRecommendItemDom = document.querySelectorAll('.unRecommend-atom-item')[this.atomIndex]
+                curUnRecommendItemDom.setAttribute('class', 'unRecommend-atom-item enter-atom')
+            },
+            mouseLeaveAtomOsTips () {
+                const curUnRecommendItemDom = document.querySelectorAll('.unRecommend-atom-item')[this.atomIndex]
+                curUnRecommendItemDom.setAttribute('class', 'unRecommend-atom-item')
             },
 
             /**
