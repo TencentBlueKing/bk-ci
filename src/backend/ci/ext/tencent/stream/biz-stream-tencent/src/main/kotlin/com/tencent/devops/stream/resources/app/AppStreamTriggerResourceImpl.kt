@@ -64,5 +64,4 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
-
 }
