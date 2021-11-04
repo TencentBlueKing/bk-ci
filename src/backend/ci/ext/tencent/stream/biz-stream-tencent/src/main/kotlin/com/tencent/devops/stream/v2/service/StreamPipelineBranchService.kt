@@ -98,7 +98,7 @@ class StreamPipelineBranchService @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 
         val count = streamPipelineBranchDao.getProjectPipelineCount(
-            dslContext, gitProjectId, search, limit, orderBy, sort
+            dslContext, gitProjectId, pipelineId, search, limit, orderBy, sort
         ).let {
             if (it <= 0) {
                 return Page(0, 0, 0, emptyList())
@@ -107,7 +107,7 @@ class StreamPipelineBranchService @Autowired constructor(
         }
 
         val result = streamPipelineBranchDao.getProjectPipeline(
-            dslContext, gitProjectId, search, limit, orderBy, sort
+            dslContext, gitProjectId, pipelineId, search, limit, orderBy, sort
         )
         return Page(
             page = page,
