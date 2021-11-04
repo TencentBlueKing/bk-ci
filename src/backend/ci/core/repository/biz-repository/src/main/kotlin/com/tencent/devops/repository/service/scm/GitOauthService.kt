@@ -140,7 +140,13 @@ class GitOauthService @Autowired constructor(
         )
     }
 
-    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String?): AuthorizeResult {
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: String?,
+        refreshToken: Boolean?
+    ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
             if (redirectUrl.isNullOrEmpty()) {
@@ -151,12 +157,17 @@ class GitOauthService @Autowired constructor(
             }
         }
         val authParams = mapOf(
+            "gitProjectId" to gitProjectId,
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
             "redirectUrl" to redirectUrl,
             "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
         )
-        val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(authParams))
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            getAccessToken(userId)
+        } ?: return AuthorizeResult(403, getAuthUrl(authParams))
         logger.info("isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
     }
@@ -173,13 +184,20 @@ class GitOauthService @Autowired constructor(
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
-        var userId = authParams["userId"] as String
+        val userId = authParams["userId"] as String
+        val gitProjectId = authParams["gitProjectId"] as Long?
         val token = gitService.getToken(userId, code)
-        userId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
-        saveAccessToken(userId, token)
+        // 在oauth授权过程中,可以输入公共账号去鉴权，所以需要再验证token所属人
+        val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
+        saveAccessToken(oauthUserId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
-        return GitOauthCallback(userId = userId, redirectUrl = redirectUrl)
+        return GitOauthCallback(
+            gitProjectId = gitProjectId,
+            userId = userId,
+            oauthUserId = oauthUserId,
+            redirectUrl = redirectUrl
+        )
     }
 
     override fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {

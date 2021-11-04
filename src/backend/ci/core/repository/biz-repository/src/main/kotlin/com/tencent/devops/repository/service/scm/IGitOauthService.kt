@@ -41,7 +41,13 @@ interface IGitOauthService {
     fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>
     fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
     fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
-    fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String? = null): AuthorizeResult
+    fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String? = null,
+        gitProjectId: String? = null,
+        refreshToken: Boolean? = false
+    ): AuthorizeResult
     fun gitCallback(code: String, state: String): GitOauthCallback
     fun checkAndGetAccessToken(buildId: String, userId: String): GitToken?
     fun getAccessToken(userId: String): GitToken?

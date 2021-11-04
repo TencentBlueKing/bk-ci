@@ -32,8 +32,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工蜂oauth回调后信息")
 data class GitOauthCallback(
-    @ApiModelProperty("工蜂返回token真实userId，可能是公共账号")
+    @ApiModelProperty("工蜂项目Id")
+    val gitProjectId: Long?,
+    @ApiModelProperty("发起oauth认证的用户")
     val userId: String,
+    @ApiModelProperty("工蜂返回token真实userId，可能是公共账号")
+    val oauthUserId: String,
     @ApiModelProperty("回调后跳转的界面")
     val redirectUrl: String
 )
