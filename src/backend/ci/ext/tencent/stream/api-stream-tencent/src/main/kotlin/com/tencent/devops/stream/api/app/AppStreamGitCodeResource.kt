@@ -4,6 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -19,9 +21,9 @@ import javax.ws.rs.core.MediaType
 @Path("/app/gitcode")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface AppStreamGitCodeResource {
 
-    @SuppressWarnings("LongParameterList")
     @ApiOperation("获取工蜂项目所有提交信息")
     @GET
     @Path("/projects/commits")
@@ -51,4 +53,31 @@ interface AppStreamGitCodeResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<Commit>?>
+
+    @ApiOperation("获取项目中的所有分支")
+    @GET
+    @Path("/projects/repository/branches")
+    fun getGitCodeBranches(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "搜索条件，模糊匹配分支名")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("orderBy")
+        orderBy: GitCodeBranchesOrder?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?>
 }

@@ -3,6 +3,8 @@ package com.tencent.devops.stream.resources.app
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.api.app.AppStreamGitCodeResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.utils.GitCommonUtils
@@ -30,11 +32,9 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
     ): Result<List<Commit>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         permissionService.checkGitCIPermission(userId, projectId)
-        val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-        val token = oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
         return Result(
             streamScmService.getCommits(
-                token = token,
+                token = getOauthToken(gitProjectId),
                 gitProjectId = gitProjectId,
                 filePath = filePath,
                 branch = branch,
@@ -44,5 +44,35 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
                 perPage = pageSize
             )
         )
+    }
+
+    // TODO 需要过滤掉不带yaml的分支
+    override fun getGitCodeBranches(
+        userId: String,
+        projectId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
+        return Result(
+            streamScmService.getProjectBranches(
+                token = getOauthToken(gitProjectId.toLong()),
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = pageSize,
+                orderBy = orderBy,
+                sort = sort,
+                search = search
+            )
+        )
+    }
+
+    // 看是否使用工蜂开启人的OAuth
+    private fun getOauthToken(gitProjectId: Long): String {
+        val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        return oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
     }
 }
