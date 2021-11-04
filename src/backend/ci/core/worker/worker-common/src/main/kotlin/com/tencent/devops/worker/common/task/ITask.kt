@@ -58,13 +58,15 @@ abstract class ITask {
                 if (variables != null) {
                     additionalOptions.customEnv!!.forEach {
                         if (!it.key.isNullOrBlank()) {
-                            variables[it.key!!] = it.value ?: ""
                             // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            variablesBuild["envs.${it.key}"] =
+                            val value =
                                 ReplacementUtils.replace(it.value ?: "", object : ReplacementUtils.KeyReplacement {
                                     override fun getReplacement(key: String): String? =
                                         variablesBuild[key]
                                 })
+                            variablesBuild["envs.${it.key}"] = value
+
+                            variables[it.key!!] = value
                         }
                     }
                     return execute(
