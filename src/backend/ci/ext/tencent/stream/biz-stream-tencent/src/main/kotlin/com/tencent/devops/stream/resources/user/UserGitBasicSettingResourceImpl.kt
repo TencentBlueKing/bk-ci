@@ -118,7 +118,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?,
+        refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         return client.get(ServiceGitOauthResource::class).isOAuth(
             userId = userId,
