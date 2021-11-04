@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.task
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -53,11 +54,24 @@ abstract class ITask {
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
                 val variables = buildTask.buildVariable?.toMutableMap()
+                val variablesBuild = buildVariables.variables.toMutableMap()
                 if (variables != null) {
                     additionalOptions.customEnv!!.forEach {
-                        if (!it.key.isNullOrBlank()) variables[it.key!!] = it.value ?: ""
+                        if (!it.key.isNullOrBlank()) {
+                            variables[it.key!!] = it.value ?: ""
+                            // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
+                            variablesBuild["envs.${it.key}"] =
+                                ReplacementUtils.replace(it.value ?: "", object : ReplacementUtils.KeyReplacement {
+                                    override fun getReplacement(key: String): String? =
+                                        variablesBuild[key]
+                                })
+                        }
                     }
-                    return execute(buildTask.copy(buildVariable = variables), buildVariables, workspace)
+                    return execute(
+                        buildTask.copy(buildVariable = variables),
+                        buildVariables.copy(variables = variablesBuild),
+                        workspace
+                    )
                 }
             }
         }

@@ -162,7 +162,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         )
                         // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
                         context = context.plus(it.customBuildEnv?.map { mit ->
-                            mit.key to
+                            "envs.${mit.key}" to
                                 ReplacementUtils.replace(mit.value, object : ReplacementUtils.KeyReplacement {
                                     override fun getReplacement(key: String): String? {
                                         return context[key]
