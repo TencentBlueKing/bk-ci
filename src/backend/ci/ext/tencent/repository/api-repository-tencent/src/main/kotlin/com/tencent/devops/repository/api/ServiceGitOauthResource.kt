@@ -25,86 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api.user
+package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.GET
-import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_SETTING"], description = "user-setting页面")
-@Path("/user/basic/setting")
+@Api(tags = ["SERVICE_OAUTH_GIT"], description = "服务-git的oauth")
+@Path("/service/git/oauth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserGitBasicSettingResource {
-
-    @ApiOperation("开启，关闭，初始化呢Stream")
-    @POST
-    @Path("/enable")
-    fun enableGitCI(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("开启或关闭", required = true)
-        @QueryParam("enabled")
-        enabled: Boolean,
-        @ApiParam("工蜂项目信息(初始化时用)", required = false)
-        projectInfo: GitCIProjectInfo
-    ): Result<Boolean>
-
-    @ApiOperation("查询Stream项目配置")
-    @GET
-    @Path("/{projectId}")
-    fun getGitCIConf(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<GitCIBasicSetting?>
-
-    @ApiOperation("保存Stream配置")
-    @POST
-    @Path("/{projectId}/save")
-    fun saveGitCIConf(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("工蜂项目配置", required = true)
-        gitCIUpdateSetting: GitCIUpdateSetting
-    ): Result<Boolean>
-
-    @ApiOperation("修改项目启动人")
-    @POST
-    @Path("/{projectId}/user")
-    fun updateEnableUser(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<Boolean>
+interface ServiceGitOauthResource {
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
     @GET

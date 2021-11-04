@@ -29,7 +29,11 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceGitOauthResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
@@ -38,13 +42,13 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import okhttp3.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val permissionService: GitCIV2PermissionService
+    private val permissionService: GitCIV2PermissionService,
+    private val client: Client
 ) : UserGitBasicSettingResource {
 
     override fun enableGitCI(
@@ -106,6 +110,22 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 enableUserId = userId
             )
+        )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?,
+    ): Result<AuthorizeResult> {
+        return client.get(ServiceGitOauthResource::class).isOAuth(
+            userId = userId,
+            redirectUrlType = redirectUrlType,
+            redirectUrl = redirectUrl,
+            gitProjectId = gitProjectId,
+            refreshToken = refreshToken
         )
     }
 
