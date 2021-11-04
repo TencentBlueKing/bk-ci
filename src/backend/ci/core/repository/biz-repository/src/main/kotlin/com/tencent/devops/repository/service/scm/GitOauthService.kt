@@ -184,6 +184,7 @@ class GitOauthService @Autowired constructor(
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+        logger.info("gitCallback authParams is: $authParams")
         val userId = authParams["userId"] as String
         val gitProjectId = authParams["gitProjectId"] as String?
         val token = gitService.getToken(userId, code)
