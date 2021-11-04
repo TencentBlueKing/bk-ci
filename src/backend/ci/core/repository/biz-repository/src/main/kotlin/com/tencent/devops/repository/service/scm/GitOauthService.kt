@@ -144,7 +144,7 @@ class GitOauthService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: String?,
+        gitProjectId: Long?,
         refreshToken: Boolean?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
@@ -157,7 +157,7 @@ class GitOauthService @Autowired constructor(
             }
         }
         val authParams = mapOf(
-            "gitProjectId" to gitProjectId,
+            "gitProjectId" to gitProjectId?.toString(),
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
             "redirectUrl" to redirectUrl,
