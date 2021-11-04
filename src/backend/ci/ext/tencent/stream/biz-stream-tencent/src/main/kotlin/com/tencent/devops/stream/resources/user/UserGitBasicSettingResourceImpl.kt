@@ -27,12 +27,12 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceGitOauthResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
@@ -42,8 +42,6 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -121,18 +119,14 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         redirectUrl: String?,
         gitProjectId: Long?,
         refreshToken: Boolean?
-    ): Response {
-        val url = client.get(ServiceGitOauthResource::class).isOAuth(
+    ): Result<AuthorizeResult> {
+        return client.get(ServiceGitOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
             gitProjectId = gitProjectId,
             refreshToken = refreshToken
-        ).data?.url ?: throw CustomException(
-            status = Response.Status.INTERNAL_SERVER_ERROR,
-            message = "获取工蜂重定向链接失败，请联系蓝盾助手"
         )
-        return Response.temporaryRedirect(UriBuilder.fromUri(url).build()).build()
     }
 
     private fun checkParam(userId: String) {

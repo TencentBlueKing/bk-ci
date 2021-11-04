@@ -30,6 +30,7 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
@@ -46,7 +47,6 @@ import javax.ws.rs.GET
 import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_STREAM_SETTING"], description = "user-setting页面")
 @Path("/user/basic/setting")
@@ -125,5 +125,5 @@ interface UserGitBasicSettingResource {
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false
-    ): Response
+    ): Result<AuthorizeResult>
 }
