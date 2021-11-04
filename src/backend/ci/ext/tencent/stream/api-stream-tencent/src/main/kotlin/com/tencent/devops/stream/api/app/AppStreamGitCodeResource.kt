@@ -65,6 +65,9 @@ interface AppStreamGitCodeResource {
         @ApiParam(value = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "搜索条件，模糊匹配分支名")
         @QueryParam("search")
         search: String?,

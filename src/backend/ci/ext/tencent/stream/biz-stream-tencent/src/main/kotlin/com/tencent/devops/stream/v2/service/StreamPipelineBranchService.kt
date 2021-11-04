@@ -88,6 +88,7 @@ class StreamPipelineBranchService @Autowired constructor(
 
     fun getProjectBranches(
         gitProjectId: Long,
+        pipelineId: String,
         search: String?,
         page: Int,
         pageSize: Int,

@@ -52,6 +52,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
     override fun getGitCodeBranches(
         userId: String,
         projectId: String,
+        pipelineId: String,
         search: String?,
         page: Int?,
         pageSize: Int?,
@@ -62,6 +63,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
         return Result(
             streamPipelineBranchService.getProjectBranches(
                 gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
                 page = page ?: 1,
                 pageSize = pageSize ?: 100,
                 orderBy = orderBy ?: GitCodeBranchesOrder.UPDATE,

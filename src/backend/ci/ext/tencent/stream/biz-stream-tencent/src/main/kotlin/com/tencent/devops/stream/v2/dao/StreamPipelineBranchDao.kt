@@ -181,26 +181,31 @@ class StreamPipelineBranchDao {
     fun getProjectPipelineCount(
         dslContext: DSLContext,
         gitProjectId: Long,
+        pipelineId: String,
         search: String?,
         limit: SQLLimit,
         orderBy: GitCodeBranchesOrder,
         sort: GitCodeBranchesSort
     ): Int {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return projectPipelineDsl(dslContext, gitProjectId, search, orderBy, sort).count()
+            return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
+                .groupBy(BRANCH)
+                .count()
         }
     }
 
     fun getProjectPipeline(
         dslContext: DSLContext,
         gitProjectId: Long,
+        pipelineId: String,
         search: String?,
         limit: SQLLimit,
         orderBy: GitCodeBranchesOrder,
         sort: GitCodeBranchesSort
     ): List<TStreamPipelineBranchRecord> {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return projectPipelineDsl(dslContext, gitProjectId, search, orderBy, sort)
+            return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
+                .groupBy(BRANCH)
                 .offset(limit.offset)
                 .limit(limit.limit)
                 .fetch()
@@ -210,12 +215,14 @@ class StreamPipelineBranchDao {
     private fun TStreamPipelineBranch.projectPipelineDsl(
         dslContext: DSLContext,
         gitProjectId: Long,
+        pipelineId: String,
         search: String?,
         orderBy: GitCodeBranchesOrder,
         sort: GitCodeBranchesSort
     ): SelectConditionStep<TStreamPipelineBranchRecord> {
         val dsl = dslContext.selectFrom(this)
             .where(GIT_PROJECT_ID.eq(gitProjectId))
+            .and(PIPELINE_ID.eq(pipelineId))
         if (!search.isNullOrBlank()) {
             dsl.and(BRANCH.like("%$search%"))
         }
