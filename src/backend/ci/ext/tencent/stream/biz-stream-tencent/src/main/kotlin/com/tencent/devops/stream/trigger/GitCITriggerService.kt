@@ -433,11 +433,6 @@ class GitCITriggerService @Autowired constructor(
             mrChangeSet = changeSet
         )
 
-        yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
-
-        // 为已存在的流水线设置名称
-        buildPipeline.displayName = displayName
-
         // 如果当前文件没有内容直接不触发
         if (originYaml.isBlank()) {
             logger.warn(
@@ -459,6 +454,11 @@ class GitCITriggerService @Autowired constructor(
                 )
             )
         }
+
+        yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
+
+        // 为已存在的流水线设置名称
+        buildPipeline.displayName = displayName
 
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
