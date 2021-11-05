@@ -60,17 +60,9 @@ class PipelineViewUserLastViewDao {
                 viewId,
                 now,
                 now
-            ).execute()
-        }
-    }
-
-    fun update(dslContext: DSLContext, userId: String, projectId: String, viewId: String): Int {
-        val now = LocalDateTime.now()
-        with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
-            return dslContext.update(this)
+            ).onDuplicateKeyUpdate()
                 .set(VIEW_ID, viewId)
                 .set(UPDATE_TIME, now)
-                .where(USER_ID.eq(userId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

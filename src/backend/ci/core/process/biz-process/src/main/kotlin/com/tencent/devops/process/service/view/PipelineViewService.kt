@@ -77,22 +77,12 @@ class PipelineViewService @Autowired constructor(
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        val record = pipelineViewLastViewDao.get(dslContext, userId, projectId)
-        if (record == null) {
-            pipelineViewLastViewDao.save(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        } else {
-            pipelineViewLastViewDao.update(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        }
+        pipelineViewLastViewDao.save(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            viewId = viewId
+        )
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
