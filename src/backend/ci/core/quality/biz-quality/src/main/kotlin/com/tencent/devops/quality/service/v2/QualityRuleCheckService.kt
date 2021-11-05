@@ -316,6 +316,7 @@ class QualityRuleCheckService @Autowired constructor(
         result.forEach {
             val rule = it.first
             val ruleId = HashUtil.decodeIdToLong(rule.hashId)
+            logger.info("ruleId is: $ruleId")
             val interceptResult = it.second
 
             with(buildCheckParams) {
@@ -330,6 +331,7 @@ class QualityRuleCheckService @Autowired constructor(
                             rule.opList!!.forEach { ruleOp ->
                                 val finalRule = qualityRuleBuildHisService.listRuleBuildHis(
                                     listOf(ruleId)).firstOrNull()
+                                logger.info("finalRule is : $finalRule")
                                 if (!rule.gateKeepers.isNullOrEmpty() &&
                                     finalRule?.status == RuleInterceptResult.WAIT) {
                                     doRuleOperation(
