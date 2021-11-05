@@ -328,7 +328,8 @@ class QualityRuleCheckService @Autowired constructor(
                         if (rule.opList != null) {
                             logger.info("do op list action: $buildId, $rule")
                             rule.opList!!.forEach { ruleOp ->
-                                if (!rule.gateKeepers.isNullOrEmpty() && rule.status == RuleInterceptResult.WAIT) {
+                                val finalRule = qualityRuleBuildHisService.listRuleBuildHis(listOf(ruleId)).firstOrNull()
+                                if (!rule.gateKeepers.isNullOrEmpty() && finalRule?.status == RuleInterceptResult.WAIT) {
                                     doRuleOperation(
                                         this, resultList, QualityRule.RuleOp(
                                             operation = RuleOperation.AUDIT,
