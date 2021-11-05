@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -170,4 +172,26 @@ interface BuildJobResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<HeartBeatInfo>
+
+    @ApiOperation("job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话
+    @POST
+    @Path("/submit_error")
+    fun submitError(
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        @BkField(required = true)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        @BkField(required = true)
+        vmSeqId: String,
+        @ApiParam(value = "执行结果", required = true)
+        errorInfo: ErrorInfo
+    ): Result<Boolean>
 }

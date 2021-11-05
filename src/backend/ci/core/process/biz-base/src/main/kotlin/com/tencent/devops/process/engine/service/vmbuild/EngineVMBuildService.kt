@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.vmbuild
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
@@ -54,6 +55,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -63,7 +65,6 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
@@ -259,7 +260,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
 
         // 失败的话就发终止事件
-        val message: String?
+        var message: String?
         val actionType = when {
             buildStatus.isTimeout() -> {
                 message = "Job Timeout"
@@ -274,6 +275,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ActionType.START
             }
         }
+
+        // #1613 完善日志
+        errorType?.let { message = "$message \nerrorType: ${errorType.typeName}" }
+        errorCode?.let { message = "$message \nerrorCode: $errorCode" }
+        errorMsg?.let { message = "$message \nerrorMsg: $errorMsg" }
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
@@ -344,16 +350,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
                 pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
-                pipelineEventDispatcher.dispatch(PipelineBuildStatusBroadCastEvent(
-                    source = "TaskPause-${task.containerId}-${task.buildId}",
-                    projectId = task.projectId,
-                    pipelineId = task.pipelineId,
-                    userId = task.starter,
-                    buildId = task.buildId,
-                    taskId = task.taskId,
-                    stageId = task.stageId,
-                    actionType = ActionType.REFRESH
-                ))
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "TaskPause-${task.containerId}-${task.buildId}",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = task.starter,
+                        buildId = task.buildId,
+                        taskId = task.taskId,
+                        stageId = task.stageId,
+                        actionType = ActionType.REFRESH
+                    )
+                )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {
@@ -480,6 +488,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
 
         if (buildStatus.isFailure()) {
+            // #1613 可能为空，需要先对预置
+            task?.errorCode = result.errorCode
+            task?.errorType = errorType
+            task?.errorMsg = result.message
             logTaskFailed(task, errorType)
             // 打印出失败继续的日志
             if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
@@ -628,18 +640,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      */
     private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?) {
         task?.run {
-            errorType?.also {
-                val errMsg = when (errorType) {
-                    ErrorType.USER ->
-                        "Error: Process completed with exit code $errorCode. Please check your input or service."
-                    ErrorType.THIRD_PARTY ->
-                        "Error: Process completed with exit code $errorCode." +
-                            " Please contact the third-party service provider."
-                    ErrorType.PLUGIN ->
-                        "Error: Process completed with exit code $errorCode. Please contact the plugin developer."
-                    ErrorType.SYSTEM ->
-                        "Error: Process completed with exit code $errorCode. Please contact DevOps-helper."
-                }
+            errorType?.also { // #5046 增加错误信息
+                val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
+                    when (errorType) {
+                        ErrorType.USER -> "Please check your input or service."
+                        ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
+                        ErrorType.PLUGIN -> "Please contact the plugin developer."
+                        ErrorType.SYSTEM -> "Please contact platform."
+                    }
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = errMsg,
@@ -648,6 +656,30 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     executeCount = executeCount ?: 1
                 )
             }
+        }
+    }
+
+    /**
+     * #5046 提交构建机出错失败信息，并结束构建
+     */
+    fun submitError(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, errorInfo: ErrorInfo) {
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
+        try {
+            // 加锁防止和引擎并发改task状态的情况
+            containerIdLock.lock()
+            setStartUpVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.getErrorType(errorInfo.errorType),
+                errorCode = errorInfo.errorCode,
+                errorMsg = errorInfo.errorMsg
+            )
+        } finally {
+            redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
+            containerIdLock.unlock()
         }
     }
 
