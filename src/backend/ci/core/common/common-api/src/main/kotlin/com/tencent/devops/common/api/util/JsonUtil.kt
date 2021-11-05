@@ -221,10 +221,28 @@ object JsonUtil {
     fun <T> to(json: String, type: Class<T>): T = getObjectMapper().readValue(json, type)
 
     fun <T> toOrNull(json: String?, type: Class<T>): T? {
-        return if (json.isNullOrBlank()) {
-            null
-        } else {
-            getObjectMapper().readValue(json, type)
+        return json?.let { self ->
+            if (self.isBlank()) {
+                return null
+            }
+            try {
+                getObjectMapper().readValue(self, type)
+            } catch (ignore: Exception) {
+                null
+            }
+        }
+    }
+
+    fun <T> toOrNull(json: String?, typeReference: TypeReference<T>): T? {
+        return json?.let { self ->
+            if (self.isBlank()) {
+                return null
+            }
+            try {
+                getObjectMapper().readValue(self, typeReference)
+            } catch (ignore: Exception) {
+                null
+            }
         }
     }
 

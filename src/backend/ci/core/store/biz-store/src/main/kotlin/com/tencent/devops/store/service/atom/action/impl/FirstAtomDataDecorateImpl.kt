@@ -25,49 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstAtomDataDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
 
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
+    override fun type() = AtomDecorateFactory.Kind.DATA
 
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+    override fun deserialize(json: String): Map<String, Any> {
+        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
+    }
 }
