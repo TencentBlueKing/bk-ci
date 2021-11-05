@@ -25,19 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.common.event.pojo.project
 
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 
-interface ShardingRoutingRuleService {
-
-    fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
-
-    fun deleteShardingRoutingRule(userId: String, id: String): Boolean
-
-    fun updateShardingRoutingRule(userId: String, id: String, shardingRoutingRule: ShardingRoutingRule): Boolean
-
-    fun getShardingRoutingRuleById(id: String): ShardingRoutingRule?
-
-    fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule?
-}
+open class ShardingRoutingRuleEvent(
+    open val shardingRoutingRule: ShardingRoutingRule
+)

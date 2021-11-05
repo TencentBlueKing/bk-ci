@@ -24,17 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
-import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("DB分片路由规则")
-data class ShardingRoutingRule(
-    @ApiModelProperty("路由规则名称")
-    @field:BkField(minLength = 1, maxLength = 128)
-    val routingName: String,
-    @ApiModelProperty("路由规则值")
-    @field:BkField(minLength = 1, maxLength = 256)
-    val routingRule: String,
-)
+package com.tencent.devops.common.event.pojo.project
+
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
+@Event(exchange = MQ.EXCHANGE_SHARDING_ROUTING_RULE_UPDATE_FANOUT)
+data class ShardingRoutingRuleUpdateEvent(
+    override val shardingRoutingRule: ShardingRoutingRule
+) : ShardingRoutingRuleEvent(shardingRoutingRule)

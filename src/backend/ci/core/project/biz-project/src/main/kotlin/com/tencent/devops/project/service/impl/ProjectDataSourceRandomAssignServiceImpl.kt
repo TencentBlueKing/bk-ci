@@ -30,7 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.project.dao.DataSourceDao
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

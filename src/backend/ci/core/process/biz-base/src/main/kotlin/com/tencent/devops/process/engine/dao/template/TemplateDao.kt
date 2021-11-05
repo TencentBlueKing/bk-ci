@@ -550,14 +550,14 @@ class TemplateDao {
     }
 
     /**
-     * 获取关联的模版列表
+     * 获取关联的模版ID列表
      */
-    fun listTemplateReference(
+    fun listTemplateReferenceId(
         dslContext: DSLContext,
         templateId: String
-    ): Result<TTemplateRecord> {
+    ): Result<Record1<String>> {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectDistinct(ID).from(this)
                 .where(TYPE.eq(TemplateType.CONSTRAINT.name))
                 .and(SRC_TEMPLATE_ID.eq(templateId))
                 .fetch()

@@ -24,20 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.api.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-package com.tencent.devops.project.service
-
-import com.tencent.devops.common.api.pojo.ShardingRoutingRule
-
-interface ShardingRoutingRuleService {
-
-    fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
-
-    fun deleteShardingRoutingRule(userId: String, id: String): Boolean
-
-    fun updateShardingRoutingRule(userId: String, id: String, shardingRoutingRule: ShardingRoutingRule): Boolean
-
-    fun getShardingRoutingRuleById(id: String): ShardingRoutingRule?
-
-    fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule?
-}
+@ApiModel("DB分片路由规则")
+data class ShardingRoutingRule(
+    @ApiModelProperty("路由规则名称")
+    val routingName: String,
+    @ApiModelProperty("路由规则值")
+    val routingRule: String
+)
