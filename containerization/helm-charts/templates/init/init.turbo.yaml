@@ -31,5 +31,15 @@ spec:
             - "-c"
             - |
               sh -x turbo-op-ci.sh scene add cc;
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{    
+                "showProjectList": true,
+                "showNav": true,
+                "status": "ok",
+                "deleted": false,
+                "link": "/console/turbo/",
+                "linkNew": "/turbo/",
+                "css_url": "http://{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.css",
+                "js_url": "http://{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
+              }' "http://{{ include "common.names.fullname" . }}-project/api/op/services/update/Turbo"
       restartPolicy: OnFailure
 {{ end }}

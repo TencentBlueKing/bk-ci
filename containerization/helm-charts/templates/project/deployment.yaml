@@ -44,7 +44,27 @@ spec:
       {{- end }}
       {{- if .Values.project.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.project.podSecurityContext "enabled" | toYaml | nindent 8 }}
-      {{- end }}        
+      {{- end }}
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: project-wait-for-mysql
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              while true; do
+                count=$(echo 'select count(1) from devops_ci_project.T_MESSAGE_CODE_DETAIL' | mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} | tail -1)
+                if [[ $count -gt 0 ]]; then
+                  echo 'T_MESSAGE_CODE_DETAIL init success'
+                  break
+                fi
+                echo 'T_MESSAGE_CODE_DETAIL initing...'
+                sleep 10s
+              done
+      {{- end }}
       containers:
         - name: project
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
