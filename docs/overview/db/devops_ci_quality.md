@@ -23,6 +23,7 @@
 | [T_QUALITY_METADATA](#T_QUALITY_METADATA) | 质量红线基础数据表 |
 | [T_QUALITY_RULE](#T_QUALITY_RULE) |  |
 | [T_QUALITY_RULE_BUILD_HIS](#T_QUALITY_RULE_BUILD_HIS) |  |
+| [T_QUALITY_RULE_BUILD_HIS_OPERATION](#T_QUALITY_RULE_BUILD_HIS_OPERATION) |  |
 | [T_QUALITY_RULE_MAP](#T_QUALITY_RULE_MAP) |  |
 | [T_QUALITY_RULE_OPERATION](#T_QUALITY_RULE_OPERATION) |  |
 | [T_QUALITY_RULE_TEMPLATE](#T_QUALITY_RULE_TEMPLATE) | 质量红线模板表 |
@@ -334,6 +335,23 @@
 |  14   | OPERATION_LIST |   text   | 65535 |   0    |    Y     |  N   |       | 操作清单  |
 |  15   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  16   | CREATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 创建人  |
+|  17   | STAGE_ID |   varchar   | 40 |   0    |    N     |  N   |   1    | stage_id  |
+|  18   | STATUS |   varchar   | 20 |   0    |    Y     |  N   |       | 红线状态  |
+|  19   | GATE_KEEPERS |   varchar   | 1024 |   0    |    Y     |  N   |       | 红线把关人  |
+
+**表名：** <a id="T_QUALITY_RULE_BUILD_HIS_OPERATION">T_QUALITY_RULE_BUILD_HIS_OPERATION</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | RULE_ID |   bigint   | 20 |   0    |    N     |  N   |       | 规则id  |
+|  3   | STAGE_ID |   varchar   | 40 |   0    |    N     |  N   |       |   |
+|  4   | GATE_OPT_USER |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  5   | GATE_OPT_TIME |   datetime   | 19 |   0    |    Y     |  N   |       |   |
 
 **表名：** <a id="T_QUALITY_RULE_MAP">T_QUALITY_RULE_MAP</a>
 

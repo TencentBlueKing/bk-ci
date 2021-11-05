@@ -209,6 +209,8 @@
 |  23   | web_socket |   text   | 65535 |   0    |    Y     |  N   |       | 支持webSocket的页面  |
 |  24   | weight |   int   | 10 |   0    |    Y     |  N   |       | 权值  |
 |  25   | gray_iframe_url |   varchar   | 255 |   0    |    Y     |  N   |       | 灰度iframeUrl地址  |
+|  26   | new_window |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否打开新标签页  |
+|  27   | new_windowUrl |   varchar   | 200 |   0    |    Y     |  N   |       | 新标签页地址  |
 
 **表名：** <a id="T_SERVICE_TYPE">T_SERVICE_TYPE</a>
 
