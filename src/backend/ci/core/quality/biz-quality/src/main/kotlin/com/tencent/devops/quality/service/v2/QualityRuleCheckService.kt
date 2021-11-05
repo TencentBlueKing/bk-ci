@@ -340,7 +340,7 @@ class QualityRuleCheckService @Autowired constructor(
                                             notifyTypeList = ruleOp.notifyTypeList,
                                             notifyGroupList = ruleOp.notifyGroupList,
                                             notifyUserList = ruleOp.notifyUserList,
-                                            auditUserList = ruleOp.auditUserList,
+                                            auditUserList = rule.gateKeepers,
                                             auditTimeoutMinutes = ruleOp.auditTimeoutMinutes
                                         )
                                     )
