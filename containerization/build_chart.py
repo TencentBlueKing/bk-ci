@@ -34,8 +34,9 @@ default_value_dict = {
     'bkCiIamCallbackUser': 'bk_iam',
     'bkCiAppCode': 'bk_ci',
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
-    'bkCiInfluxdbDb':'agentMetrix',
-    'bkCiEnvironmentAgentCollectorOn':'true'
+    'bkCiInfluxdbDb': 'agentMetrix',
+    'bkCiEnvironmentAgentCollectorOn': 'true',
+    'bkCiDocsUrl': 'https://docs.bkci.net/'
 }
 
 if os.path.isfile('./values.json'):
@@ -115,7 +116,8 @@ for config_name in os.listdir(config_parent):
         config_file.close()
 
 # 生成网关的configmap
-gateway_envs = set()
+gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
+                   "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):
