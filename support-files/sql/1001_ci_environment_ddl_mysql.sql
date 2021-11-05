@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `T_ENV` (
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除',
   PRIMARY KEY (`ENV_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境信息表';
 
 -- ----------------------------
 -- Table structure for T_ENVIRONMENT_AGENT_PIPELINE
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT` (
   PRIMARY KEY (`ID`),
   KEY `idx_agent_node` (`NODE_ID`),
   KEY `idx_agent_project` (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方构建机agent信息表';
 
 -- ----------------------------
 -- Table structure for T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `T_ENV_NODE` (
   `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
   PRIMARY KEY (`ENV_ID`,`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-节点映射表';
 
 -- ----------------------------
 -- Table structure for T_NODE
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS `T_NODE` (
   `BIZ_ID` bigint(20) DEFAULT NULL COMMENT '所属业务',
   PRIMARY KEY (`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点信息表';
 
 -- ----------------------------
 -- Table structure for T_PROJECT_CONFIG

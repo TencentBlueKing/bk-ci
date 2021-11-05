@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `T_USER` (
   `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`USER_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户表';
 
 -- ----------------------------
 -- Table structure for T_USER_DAILY_FIRST_AND_LAST_LOGIN
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`service_id`,`username`),
   KEY `idx_username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8 COMMENT='';
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8 COMMENT='关注收藏表';
 
 -- ----------------------------
 -- Table structure for T_PROJECTS
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
   UNIQUE KEY `english_name` (`english_name`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目信息表';
 
 -- ----------------------------
 -- Table structure for T_SERVICE
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`name`),
   UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8 COMMENT='';
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8 COMMENT='服务信息表';
 
 -- ----------------------------
 -- Table structure for T_SERVICE_TYPE
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE_TYPE` (
   `weight` int(11) DEFAULT NULL COMMENT '权值',
   PRIMARY KEY (`id`),
   UNIQUE KEY `title` (`title`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='服务类型表';
 
 CREATE TABLE IF NOT EXISTS `T_GRAY_TEST`
 (
