@@ -25,15 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.enums
+package com.tencent.devops.notify.pojo
 
-enum class MsgType(private val type: String) {
-    text("text"),
-    image("image"),
-    vocie("vocie"),
-    file("file"),
-    emotion("emotion"),
-    forward("forward"),
-    Event("Event"),
-    markdown("markdown")
-}
+import io.swagger.annotations.ApiModel
+
+@ApiModel("企业微信机器人Markdown消息")
+data class WeworkRobotMarkdownMessage(
+    override val chatid: String?,
+    override val postId: String?,
+    override val msgtype: String = "markdown",
+    val markdown: WeworkRobotContentMessage
+) : WeweokRobotBaseMessage(chatid, postId, msgtype)

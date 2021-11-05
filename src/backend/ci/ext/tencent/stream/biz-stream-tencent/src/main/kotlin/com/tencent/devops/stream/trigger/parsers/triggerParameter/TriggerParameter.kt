@@ -29,47 +29,31 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
-import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class TriggerParameter @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val gitRequestEventDao: GitRequestEventDao
-) {
+object TriggerParameter {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
 
-    fun saveGitRequestEvent(event: GitEvent, e: String): GitRequestEvent? {
+    fun getGitRequestEvent(event: GitEvent, e: String): GitRequestEvent? {
         when (event) {
             is GitPushEvent -> {
                 if (!pushEventFilter(event)) {
                     return null
                 }
-                val gitRequestEvent = GitRequestEventHandle.createPushEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return GitRequestEventHandle.createPushEvent(event, e)
             }
             is GitTagPushEvent -> {
                 if (event.total_commits_count <= 0) {
                     logger.info("Git web hook no commit(${event.total_commits_count})")
                     return null
                 }
-                val gitRequestEvent = GitRequestEventHandle.createTagPushEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return GitRequestEventHandle.createTagPushEvent(event, e)
             }
             is GitMergeRequestEvent -> {
                 // 目前不支持Mr信息更新的触发
@@ -80,10 +64,7 @@ class TriggerParameter @Autowired constructor(
                     return null
                 }
 
-                val gitRequestEvent = GitRequestEventHandle.createMergeEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return GitRequestEventHandle.createMergeEvent(event, e)
             }
         }
         logger.info("event invalid: $event")

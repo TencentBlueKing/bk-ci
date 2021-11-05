@@ -36,11 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -110,6 +113,8 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+                    originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
@@ -121,6 +126,8 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+                    originEvent.commits?.get(0)?.author?.name ?: ""
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
@@ -140,12 +147,16 @@ object ModelParameters {
                 startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
                 startParams[PIPELINE_WEBHOOK_SOURCE_URL] = originEvent.object_attributes.source.http_url
                 startParams[PIPELINE_WEBHOOK_TARGET_URL] = originEvent.object_attributes.target.http_url
+                startParams[PIPELINE_GIT_MR_ID] = originEvent.object_attributes.id.toString()
+                startParams[PIPELINE_GIT_MR_IID] = originEvent.object_attributes.iid.toString()
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] = originEvent.object_attributes.last_commit.author.name
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
                     TGitObjectKind.SCHEDULE.value
                 } else {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
                     TGitObjectKind.MANUAL.value
                 }
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl

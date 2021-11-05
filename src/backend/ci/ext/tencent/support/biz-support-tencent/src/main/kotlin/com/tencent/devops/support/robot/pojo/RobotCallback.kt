@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.enums
+package com.tencent.devops.support.robot.pojo
 
-enum class MsgType(private val type: String) {
-    text("text"),
-    image("image"),
-    vocie("vocie"),
-    file("file"),
-    emotion("emotion"),
-    forward("forward"),
-    Event("Event"),
-    markdown("markdown")
-}
+data class RobotCallback(
+    val webhookUrl: String,
+    val userId: String,
+    val name: String,
+    val msgType: String,
+    val content: String,
+    val msgId: String,
+    val chatId: String,
+    val getChatInfoUrl: String
+)
