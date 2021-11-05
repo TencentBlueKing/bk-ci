@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -91,6 +92,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val projectDataSourceAssignService: ProjectDataSourceAssignService,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
@@ -103,7 +105,19 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
+) : AbsProjectServiceImpl(
+    projectPermissionService,
+    dslContext,
+    projectDao,
+    projectJmxApi,
+    redisOperation,
+    gray,
+    client,
+    projectDispatcher,
+    authPermissionApi,
+    projectAuthServiceCode,
+    projectDataSourceAssignService
+) {
 
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
