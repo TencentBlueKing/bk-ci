@@ -1,7 +1,7 @@
 import { bkMessage } from 'bk-magic-vue'
 
 module.exports = {
-    copy (value, $t) {
+    copyText (value, $t) {
         const input = document.createElement('input')
         document.body.appendChild(input)
         input.setAttribute('value', value)
