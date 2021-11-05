@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
@@ -39,7 +38,6 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -360,56 +358,6 @@ class TemplatePipelineDao {
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(instance.pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
-        }
-    }
-
-    fun listPipelineTemplate(
-        dslContext: DSLContext,
-        pipelineIds: Collection<String>
-    ): Result<TTemplatePipelineRecord>? {
-        return with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
-    }
-
-    fun countPipelineInstancedByTemplate(
-        dslContext: DSLContext,
-        projectIds: Set<String>
-    ): Record1<Int> {
-        // 流水线有软删除，需要过滤
-        val t1 = TTemplatePipeline.T_TEMPLATE_PIPELINE.`as`("t1")
-        val t2 = TPipelineInfo.T_PIPELINE_INFO.`as`("t2")
-        return dslContext.selectCount().from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
-            .where(t2.DELETE.eq(false))
-            .and(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()!!
-    }
-
-    fun countTemplateInstanced(
-        dslContext: DSLContext,
-        projectIds: Set<String>
-    ): Record1<Int> {
-        // 模板没有软删除，直接查即可
-        val t1 = TTemplatePipeline.T_TEMPLATE_PIPELINE.`as`("t1")
-        val t2 = TPipelineInfo.T_PIPELINE_INFO.`as`("t2")
-        return dslContext.select(DSL.countDistinct(t1.TEMPLATE_ID))
-            .from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
-            .where(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()!!
-    }
-
-    /**
-     * 查询实例化的原始模板总数
-     */
-    fun countSrcTemplateInstanced(
-        dslContext: DSLContext,
-        srcTemplateIds: Set<String>
-    ): Record1<Int> {
-        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.select(DSL.countDistinct(TEMPLATE_ID)).from(this)
-                .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()!!
         }
     }
 }

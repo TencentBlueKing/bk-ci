@@ -1472,11 +1472,13 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getByAutoIds(
-        ids: List<Int>
+        ids: List<Int>,
+        projectId: String? = null
     ): List<SimplePipeline> {
-        val pipelines = pipelineInfoDao.getPieplineByAutoId(
+        val pipelines = pipelineInfoDao.getPipelineByAutoId(
             dslContext = dslContext,
-            ids = ids
+            ids = ids,
+            projectId = projectId
         )
         return pipelines.map {
             SimplePipeline(

@@ -545,12 +545,18 @@ class PipelineInfoDao {
         }
     }
 
-    fun getPieplineByAutoId(
+    fun getPipelineByAutoId(
         dslContext: DSLContext,
-        ids: List<Int>
+        ids: List<Int>,
+        projectId: String? = null
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.`in`(ids))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 

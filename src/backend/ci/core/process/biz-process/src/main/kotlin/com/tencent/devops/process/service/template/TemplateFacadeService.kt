@@ -868,8 +868,9 @@ class TemplateFacadeService @Autowired constructor(
         } else {
             val templateIdList = mutableSetOf<String>()
             val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
-
-            val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+            val settings =
+                pipelineSettingDao.getSettings(dslContext, templateIdList, projectId).map { it.pipelineId to it }
+                    .toMap()
             templates.forEach { record ->
                 val templateId = record["templateId"] as String
                 val type = record["templateType"] as String
