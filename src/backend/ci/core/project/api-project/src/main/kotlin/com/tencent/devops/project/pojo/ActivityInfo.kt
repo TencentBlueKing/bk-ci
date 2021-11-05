@@ -39,7 +39,7 @@ data class ActivityInfo(
     val englishName: String? = "NEW",
     @ApiModelProperty("链接")
     val link: String,
-    @ApiModelProperty("创建时间")
+    @ApiModelProperty("创建时间", name = "create_time")
     @JsonProperty("create_time")
     val createTime: String?
 )

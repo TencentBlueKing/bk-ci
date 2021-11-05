@@ -79,7 +79,7 @@ data class GithubBranch(
 data class GithubCommit(
     @ApiModelProperty("sha值")
     val sha: String,
-    @ApiModelProperty("节点id")
+    @ApiModelProperty("节点id", name = "node_id")
     @JsonProperty("node_id")
     val nodeId: String,
     @ApiModelProperty("提交内容")

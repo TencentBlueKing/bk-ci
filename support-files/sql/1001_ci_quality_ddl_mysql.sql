@@ -442,3 +442,17 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE_BUILD_HIS` (
    KEY project_id_pipeline_id_idx (`PROJECT_ID`,`PIPELINE_ID`),
    KEY create_time_idx (`CREATE_TIME`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8 COMMENT='';
+
+-- ----------------------------
+-- Table structure for T_QUALITY_RULE_BUILD_HIS
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_QUALITY_RULE_BUILD_HIS_OPERATION`(
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `RULE_ID` bigint(20) NOT NULL COMMENT '规则id',
+  `STAGE_ID` varchar(40) COLLATE utf8_bin NOT NULL,
+  `GATE_OPT_USER` varchar(32) DEFAULT NULL,
+  `GATE_OPT_TIME` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `rule_id_idx` (`RULE_ID`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
