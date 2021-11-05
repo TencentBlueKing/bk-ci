@@ -31,6 +31,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleCreateEvent
+import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleDeleteEvent
+import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleUpdateEvent
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +43,8 @@ import org.springframework.stereotype.Service
 @Service
 class ShardingRoutingRuleServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
 
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
@@ -53,11 +58,22 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             )
         }
         shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
+        shardingRoutingRuleDispatcher.dispatch(
+            ShardingRoutingRuleCreateEvent(shardingRoutingRule)
+        )
         return true
     }
 
     override fun deleteShardingRoutingRule(userId: String, id: String): Boolean {
-        shardingRoutingRuleDao.delete(dslContext, id)
+        val shardingRoutingRuleRecord = shardingRoutingRuleDao.getById(dslContext, id)
+        if (shardingRoutingRuleRecord != null) {
+            shardingRoutingRuleDao.delete(dslContext, id)
+            val routingName = shardingRoutingRuleRecord.routingName
+            val routingRule = shardingRoutingRuleRecord.routingRule
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleDeleteEvent(ShardingRoutingRule(routingName, routingRule))
+            )
+        }
         return true
     }
 
@@ -80,6 +96,9 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             }
         }
         shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
+        shardingRoutingRuleDispatcher.dispatch(
+            ShardingRoutingRuleUpdateEvent(shardingRoutingRule)
+        )
         return true
     }
 

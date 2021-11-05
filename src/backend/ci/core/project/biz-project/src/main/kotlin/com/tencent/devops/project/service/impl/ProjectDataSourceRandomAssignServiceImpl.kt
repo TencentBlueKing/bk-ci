@@ -29,9 +29,9 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.project.dao.DataSourceDao
-import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.project.service.ProjectDataSourceAssignService
+import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val dataSourceDao: DataSourceDao,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+    private val shardingRoutingRuleService: ShardingRoutingRuleService
 ) : ProjectDataSourceAssignService {
 
     override fun assignDataSource(projectId: String, moduleCodes: List<SystemModuleEnum>): Boolean {
@@ -55,7 +55,7 @@ class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
             val randomIndex = (0..maxSizeIndex).random()
             val dataSource = dataSources[randomIndex]
             val shardingRoutingRule = ShardingRoutingRule(projectId, dataSource.dataSourceName)
-            shardingRoutingRuleDao.add(dslContext, "system", shardingRoutingRule)
+            shardingRoutingRuleService.addShardingRoutingRule("system", shardingRoutingRule)
         }
         return true
     }
