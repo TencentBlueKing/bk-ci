@@ -14,6 +14,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -27,13 +28,13 @@ interface AppStreamGitCodeResource {
 
     @ApiOperation("获取工蜂项目所有提交信息")
     @GET
-    @Path("/projects/commits")
+    @Path("/projects/{projectId}/commits")
     fun getGitCodeCommits(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID")
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "文件路径")
         @QueryParam("filePath")
@@ -57,16 +58,16 @@ interface AppStreamGitCodeResource {
 
     @ApiOperation("获取项目中的所有分支")
     @GET
-    @Path("/projects/repository/branches")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/repository/branches")
     fun getGitCodeBranches(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID")
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线ID", required = true)
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "搜索条件，模糊匹配分支名")
         @QueryParam("search")

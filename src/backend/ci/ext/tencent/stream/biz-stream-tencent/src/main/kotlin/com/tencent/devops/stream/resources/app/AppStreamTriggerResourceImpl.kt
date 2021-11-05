@@ -6,9 +6,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.app.AppStreamTriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
+import com.tencent.devops.stream.pojo.AppTriggerBuildResult
 import com.tencent.devops.stream.pojo.TriggerBuildReq
-import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.V2TriggerBuildReq
+import com.tencent.devops.stream.pojo.V2AppTriggerBuildReq
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService
@@ -23,16 +23,17 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
 ) : AppStreamTriggerResource {
     override fun triggerStartup(
         userId: String,
+        projectId: String,
         pipelineId: String,
-        triggerBuildReq: V2TriggerBuildReq
-    ): Result<TriggerBuildResult> {
+        triggerBuildReq: V2AppTriggerBuildReq
+    ): Result<AppTriggerBuildResult> {
         checkParam(userId)
-        val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         val yaml = triggerBuildReq.yaml ?: streamPipelineService.getYamlByPipeline(
             gitProjectId,
             pipelineId,
-            triggerBuildReq.commitId ?: triggerBuildReq.branch
+            triggerBuildReq.commitId?.ifBlank { triggerBuildReq.branch } ?: triggerBuildReq.branch
         )
         if (yaml.isNullOrBlank()) {
             throw CustomException(
@@ -56,7 +57,7 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
                 commitId = commitId
             )
         }
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
+        return Result(AppTriggerBuildResult(manualTriggerService.triggerBuild(userId, pipelineId, new).buildId))
     }
 
     private fun checkParam(userId: String) {
