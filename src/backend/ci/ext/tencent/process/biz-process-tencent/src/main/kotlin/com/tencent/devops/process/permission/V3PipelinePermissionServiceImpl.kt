@@ -142,7 +142,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
             val ids = iamInstanceList.map { it.toInt() }
-            pipelineInfoDao.getPieplineByAutoId(dslContext, ids)?.map { pipelineIds.add(it.pipelineId) }
+            pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
     }
