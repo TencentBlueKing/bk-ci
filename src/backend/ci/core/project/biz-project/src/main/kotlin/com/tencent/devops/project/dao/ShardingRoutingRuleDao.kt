@@ -30,7 +30,7 @@ package com.tencent.devops.project.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

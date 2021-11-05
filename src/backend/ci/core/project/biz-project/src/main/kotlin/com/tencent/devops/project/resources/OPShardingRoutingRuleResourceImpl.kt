@@ -28,15 +28,15 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpShardingRoutingRuleResource
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.project.api.op.OPShardingRoutingRuleResource
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OPShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleService: ShardingRoutingRuleService,
-) : OpShardingRoutingRuleResource {
+    private val shardingRoutingRuleService: ShardingRoutingRuleService
+) : OPShardingRoutingRuleResource {
 
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Result<Boolean> {
         return Result(shardingRoutingRuleService.addShardingRoutingRule(userId, shardingRoutingRule))

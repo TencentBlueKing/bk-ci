@@ -30,7 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

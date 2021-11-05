@@ -29,7 +29,7 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.project.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
