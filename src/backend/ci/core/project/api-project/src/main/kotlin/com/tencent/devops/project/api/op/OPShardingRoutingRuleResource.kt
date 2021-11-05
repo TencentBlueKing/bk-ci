@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/sharding/routing/rules")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpShardingRoutingRuleResource {
+interface OPShardingRoutingRuleResource {
 
     @ApiOperation("添加分片规则")
     @POST
@@ -91,7 +91,7 @@ interface OpShardingRoutingRuleResource {
         @ApiParam("规则ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
-        id: String,
+        id: String
     ): Result<ShardingRoutingRule?>
 
     @ApiOperation("根据名称获取分片规则信息")
@@ -101,7 +101,7 @@ interface OpShardingRoutingRuleResource {
         @ApiParam("规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
-        routingName: String,
+        routingName: String
     ): Result<ShardingRoutingRule?>
 
     @ApiOperation("根据ID删除分片规则信息")
@@ -112,7 +112,7 @@ interface OpShardingRoutingRuleResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("标签ID", required = true)
+        @ApiParam("规则ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
