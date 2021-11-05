@@ -148,7 +148,7 @@ class StreamYamlTrigger @Autowired constructor(
         gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
             yamlObject.name!!
         } else {
-            gitProjectPipeline.filePath.removeSuffix(".yml")
+            gitProjectPipeline.filePath
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新

@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.CommitCheck
@@ -99,8 +98,6 @@ class GitCITriggerService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
-        private val channelCode = ChannelCode.GIT
-        private val ciFileExtensions = listOf(".yml", ".yaml")
         private const val ciFileExtensionYml = ".yml"
         private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
@@ -303,9 +300,6 @@ class GitCITriggerService @Autowired constructor(
 
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
             var displayName = filePath
-            ciFileExtensions.forEach {
-                displayName = filePath.removeSuffix(it)
-            }
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
