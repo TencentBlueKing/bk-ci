@@ -234,11 +234,12 @@ class HistoryDao {
         }
     }
 
-    fun count(dslContext: DSLContext, ruleId: Long): Long {
+    fun count(dslContext: DSLContext, projectId: String, ruleId: Long): Long {
         with(THistory.T_HISTORY) {
             return dslContext.selectCount()
                 .from(this)
                 .where(RULE_ID.eq(ruleId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)!!
         }
     }
