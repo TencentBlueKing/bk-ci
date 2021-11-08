@@ -1163,7 +1163,8 @@ class PipelineListFacadeService @Autowired constructor(
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = it["LATEST_START_USER"] as String? ?: "",
                     creator = it["CREATOR"] as String,
-                    latestBuildNumAlias = it["BUILD_NUM_ALIAS"] as String?
+                    latestBuildNumAlias = it["BUILD_NUM_ALIAS"] as String?,
+                    buildNumRule = it["BUILD_NUM_RULE"] as String?
                 )
             )
         }

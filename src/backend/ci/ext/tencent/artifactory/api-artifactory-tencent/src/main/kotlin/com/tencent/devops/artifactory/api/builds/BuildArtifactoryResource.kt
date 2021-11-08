@@ -65,6 +65,9 @@ interface BuildArtifactoryResource {
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -80,6 +83,9 @@ interface BuildArtifactoryResource {
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -193,6 +199,9 @@ interface BuildArtifactoryResource {
     @Path("/projects/{projectId}/fileCheck")
     @GET
     fun check(
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -211,6 +220,9 @@ interface BuildArtifactoryResource {
         @ApiParam("项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,

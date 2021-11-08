@@ -123,7 +123,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ): Boolean {
         val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, type, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -131,7 +131,7 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val properties = client.get(ServiceArtifactoryResource::class).properties(projectId, type, path).data!!
+        val properties = client.get(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -269,7 +269,7 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
 
-        val propertyMap = getArtifactoryPropertiesMap(projectId, artifactoryType, experience.path)
+        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
 
         createExperience(
             projectId,
@@ -302,12 +302,13 @@ class ExperienceService @Autowired constructor(
     }
 
     private fun getArtifactoryPropertiesMap(
+        userId: String,
         projectId: String,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
         path: String
     ): MutableMap<String, String> {
         val properties =
-            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
+            client.get(ServiceArtifactoryResource::class).properties(userId, projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -339,7 +340,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
     ): Long {
         val fileDetail =
-            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
+            client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
             logger.error(
@@ -610,11 +611,11 @@ class ExperienceService @Autowired constructor(
         val path = experience.path
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
             throw RuntimeException("文件($path)不存在")
         }
 
-        val propertyMap = getArtifactoryPropertiesMap(projectId, artifactoryType, path)
+        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
             throw RuntimeException("元数据buildNo不存在")

@@ -39,21 +39,21 @@ data class WeworkRobotSingleTextMessage(
      * 表示对所有群、所有订阅范围内员工和所有小黑板广播。不填则默认为“@all_group”
      */
     @ApiModelProperty("会话id")
-    val chatid: String?,
+    override val chatid: String?,
     /**
      * 小黑板帖子id，有且只有chatid指定了一个小黑板的时候生效
      */
     @ApiModelProperty("会话id", name = "post_id")
     @JsonProperty("post_id")
-    val postId: String?,
+    override val postId: String?,
     @ApiModelProperty("消息类型")
-    val msgtype: String = "text",
+    override val msgtype: String = "text",
     @ApiModelProperty("文本内容")
-    val text: WeworkTextContentMessage,
+    val text: WeworkRobotContentMessage,
     /**
      * 该消息只有指定的群成员或小黑板成员可见（其他成员不可见），有且只有chatid指定了一个群或一个小黑板的时候生效，多个userid用‘|’分隔
      */
     @ApiModelProperty("会话id", name = "visible_to_user")
     @JsonProperty("visible_to_user")
     val visibleToUser: String?
-)
+) : WeweokRobotBaseMessage(chatid, postId, msgtype)

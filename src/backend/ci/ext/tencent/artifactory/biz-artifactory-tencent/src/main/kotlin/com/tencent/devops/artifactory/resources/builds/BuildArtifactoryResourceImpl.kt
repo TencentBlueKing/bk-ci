@@ -42,9 +42,11 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -53,7 +55,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val shortUrlService: ShortUrlService
+    private val shortUrlService: ShortUrlService,
+    private val client: Client
 ) : BuildArtifactoryResource {
 
     override fun getOwnFileList(userId: String, projectId: String): Result<FileInfoPage<FileInfo>> {
@@ -61,29 +64,39 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0L, 1, -1, result.second, result.first))
     }
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
+    override fun check(
+        pipelineId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
         checkParam(projectId, path)
-        return Result(bkRepoService.check(projectId, artifactoryType, path))
+        val userId = getLastModifyUser(projectId, pipelineId)
+        return Result(bkRepoService.check(userId, projectId, artifactoryType, path))
     }
 
     override fun setProperties(
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         properties: Map<String, String>
     ): Result<Boolean> {
         checkParam(projectId, path)
-        bkRepoService.setProperties(projectId, artifactoryType, path, properties)
+        val userId = getLastModifyUser(projectId, pipelineId)
+        bkRepoService.setProperties(userId, projectId, artifactoryType, path, properties)
         return Result(true)
     }
 
     override fun getProperties(
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<List<Property>> {
         checkParam(projectId, path)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        val userId = getLastModifyUser(projectId, pipelineId)
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun getPropertiesByRegex(
@@ -146,7 +159,9 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<List<String>> {
+        val userId = getLastModifyUser(projectId, pipelineId)
         val param = ArtifactorySearchParam(
+            userId,
             projectId,
             pipelineId,
             buildId,
@@ -174,13 +189,17 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
 
     override fun acrossProjectCopy(
         projectId: String,
+        pipelineId: String,
         artifactoryType: ArtifactoryType,
         path: String,
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        return Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        val userId = getLastModifyUser(projectId, pipelineId)
+        return Result(
+            bkRepoService.acrossProjectCopy(userId, projectId, artifactoryType, path, targetProjectId, targetPath)
+        )
     }
 
     override fun checkRepoGray(projectId: String): Result<Boolean> {
@@ -213,5 +232,10 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
+    }
+
+    private fun getLastModifyUser(projectId: String, pipelineId: String): String {
+        return client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
     }
 }

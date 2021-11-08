@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
@@ -47,6 +48,7 @@ import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,6 +64,7 @@ class ModelElement @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
+        private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"
     }
 
     @Suppress("ComplexMethod", "NestedBlockDepth")
@@ -84,11 +87,11 @@ class ModelElement @Autowired constructor(
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                    IfType.ALWAYS_UNLESS_CANCELLED.name == step.ifFiled ?: "" ->
+                    IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled ?: "") ->
                         RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-                    IfType.ALWAYS.name == step.ifFiled ?: "" ->
+                    IfType.ALWAYS.name == (step.ifFiled ?: "") ->
                         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-                    IfType.FAILURE.name == step.ifFiled ?: "" ->
+                    IfType.FAILURE.name == (step.ifFiled ?: "") ->
                         RunCondition.PRE_TASK_FAILED_ONLY
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
@@ -160,13 +163,22 @@ class ModelElement @Autowired constructor(
         if (!step.with.isNullOrEmpty()) {
             inputMap.putAll(step.with!!)
         }
+
+        // 用户不允许指定 stream的开启人参数
+        if ((inputMap["authType"] != null && inputMap["authType"] == STREAM_CHECK_AUTH_TYPE) ||
+            inputMap["authUserId"] != null
+        ) {
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                "The parameter authType:AUTH_USER_TOKEN or authUserId does not support user-specified"
+            )
+        }
+
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["authUserId"] = gitBasicSetting.enableUserId
             inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
                 gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
             }
-            inputMap["authType"] = "AUTH_USER_TOKEN"
 
             when (event.objectKind) {
                 TGitObjectKind.MERGE_REQUEST.value ->
@@ -196,10 +208,12 @@ class ModelElement @Autowired constructor(
             }
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
-            if (step.with == null || (step.with != null && !step.with!!.containsKey("authType"))) {
-                inputMap["authUserId"] = gitBasicSetting.enableUserId
-                inputMap["authType"] = "AUTH_USER_TOKEN"
-            }
+        }
+
+        // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
+        if (inputMap["authType"] == null) {
+            inputMap["authUserId"] = gitBasicSetting.enableUserId
+            inputMap["authType"] = STREAM_CHECK_AUTH_TYPE
         }
 
         // 拼装插件固定参数

@@ -100,7 +100,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             projectId!!
         }
         val repoName = BkRepoUtils.getRepoName(fileType)
-        defaultBkRepoClient.uploadLocalFile(BKREPO_DEFAULT_USER, repoProjectId, repoName, destPath, file, metadata)
+        defaultBkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, metadata)
         return generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
     }
 
@@ -120,26 +120,26 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         )
-        downloadFileToLocal("$projectId/${BkRepoUtils.getRepoName(fileType)}/$destPath", response)
+        downloadFileToLocal(userId, "$projectId/${BkRepoUtils.getRepoName(fileType)}/$destPath", response)
     }
 
-    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+    override fun downloadFile(userId: String, filePath: String, outputStream: OutputStream) {
         logger.info("downloadFile, filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
         }
         val artifactInfo = BkRepoUtils.parseArtifactoryInfo(filePath)
         with(artifactInfo) {
-            defaultBkRepoClient.downloadFile(BKREPO_DEFAULT_USER, projectId, repoName, artifactUri, outputStream)
+            defaultBkRepoClient.downloadFile(userId, projectId, repoName, artifactUri, outputStream)
         }
     }
 
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
         response.contentType = MimeUtil.mediaType(filePath)
-        return downloadFile(filePath, response.outputStream)
+        return downloadFile(userId, filePath, response.outputStream)
     }
 
-    override fun downloadFileToLocal(filePath: String, response: HttpServletResponse) {
+    override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         logger.info("downloadFile, filePath: $filePath")
         val artifactInfo = BkRepoUtils.parseArtifactoryInfo(filePath)
         val fileName = URLEncoder.encode(artifactInfo.fileName, "UTF-8")
@@ -148,11 +148,13 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         response.setHeader("Content-disposition", "attachment;filename=$fileName")
         response.setHeader("Cache-Control", "no-cache")
         with(artifactInfo) {
-            defaultBkRepoClient.downloadFile(userId = BKREPO_DEFAULT_USER,
+            defaultBkRepoClient.downloadFile(
+                userId = userId,
                 projectId = projectId,
                 repoName = repoName,
                 fullPath = artifactUri,
-                outputStream = response.outputStream)
+                outputStream = response.outputStream
+            )
         }
     }
 
@@ -166,7 +168,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ) {
         val filePath = "/$projectId/$REPO_NAME_REPORT/$pipelineId/$buildId/$elementId/$path"
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        downloadFile(filePath, response)
+        downloadFile(userId, filePath, response)
     }
 
     override fun searchFileList(
@@ -245,18 +247,21 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         )
-        return getFileDownloadUrls(filePath = "$projectId/${BkRepoUtils.getRepoName(artifactoryType)}/$filePath",
+        return getFileDownloadUrls(
+            userId = userId,
+            filePath = "$projectId/${BkRepoUtils.getRepoName(artifactoryType)}/$filePath",
             artifactoryType = artifactoryType,
             fileChannelType = fileChannelType, fullUrl = fullUrl)
     }
 
     override fun getFileDownloadUrls(
+        userId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,
         fullUrl: Boolean
     ): GetFileDownloadUrlsResponse {
-        logger.info("getFileDownloadUrls, filePath: $filePath, artifactoryType, $artifactoryType, " +
+        logger.info("getFileDownloadUrls, userId: $userId, filePath: $filePath, artifactoryType, $artifactoryType, " +
             "fileChannelType, $fileChannelType")
         if (filePath.contains("..")) {
             logger.warn("getFileDownloadUrls, path contains '..'")
@@ -266,7 +271,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         logger.debug("getFileDownloadUrls, artifactoryInfo, $artifactoryInfo")
         val repoName = BkRepoUtils.getRepoName(artifactoryType)
         val fileUrls = defaultBkRepoClient.queryByPathNamePairOrMetadataEqAnd(
-            userId = BKREPO_DEFAULT_USER,
+            userId = userId,
             projectId = artifactoryInfo.projectId,
             repoNames = listOf(repoName),
             pathNamePairs = listOf(BkRepoUtils.parsePathNamePair(artifactoryInfo.artifactUri)),
@@ -283,6 +288,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -291,7 +297,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ): Count {
         val repoName = BkRepoUtils.getRepoName(artifactoryType)
         val fileNodes = defaultBkRepoClient.queryByPathNamePairOrMetadataEqAnd(
-            userId = BKREPO_DEFAULT_USER,
+            userId = userId,
             projectId = projectId,
             repoNames = listOf(repoName),
             pathNamePairs = listOf(BkRepoUtils.parsePathNamePair(path)),
@@ -301,7 +307,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
 
         fileNodes.forEach {
             defaultBkRepoClient.copy(
-                userId = BKREPO_DEFAULT_USER,
+                userId = userId,
                 fromProject = projectId,
                 fromRepo = repoName,
                 fromPath = it.fullPath,
@@ -362,7 +368,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return flag
     }
 
-    override fun deleteFile(filePath: String) {
+    override fun deleteFile(userId: String, filePath: String) {
         logger.info("deleteFile, filePath: $filePath")
         val artifactInfo = BkRepoUtils.parseArtifactoryInfo(filePath)
         with(artifactInfo) {

@@ -31,8 +31,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Mount
+import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Volume
+import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
@@ -273,6 +277,48 @@ class DockerHostDebugService(
             logger.error("Get container num failed")
         }
         return 0
+    }
+
+    fun mountOverlayfs(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        qpcUniquePath: String?,
+        hostConfig: HostConfig
+    ) {
+        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
+            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
+
+            if (!File(upperDir).exists()) {
+                File(upperDir).mkdirs()
+            }
+
+            if (!File(workDir).exists()) {
+                File(workDir).mkdirs()
+            }
+
+            if (!File(lowerDir).exists()) {
+                File(lowerDir).mkdirs()
+            }
+
+            val mount = Mount().withType(MountType.VOLUME)
+                .withTarget(dockerHostConfig.volumeWorkspace)
+                .withVolumeOptions(
+                    VolumeOptions().withDriverConfig(
+                        Driver().withName("local").withOptions(
+                            mapOf(
+                                "type" to "overlay",
+                                "device" to "overlay",
+                                "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                            )
+                        )
+                    )
+                )
+
+            hostConfig.withMounts(listOf(mount))
+        }
     }
 
     private fun getWorkspace(pipelineId: String, vmSeqId: String): String {

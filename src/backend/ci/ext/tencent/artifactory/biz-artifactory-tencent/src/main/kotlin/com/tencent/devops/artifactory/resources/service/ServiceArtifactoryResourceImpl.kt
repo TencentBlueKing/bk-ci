@@ -63,12 +63,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val artifactoryInfoService: ArtifactoryInfoService
 ) : ServiceArtifactoryResource {
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
         checkParam(projectId)
-        return Result(bkRepoService.check(projectId, artifactoryType, path))
+        return Result(bkRepoService.check(userId, projectId, artifactoryType, path))
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -76,12 +82,19 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        return Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        return Result(
+            bkRepoService.acrossProjectCopy(userId, projectId, artifactoryType, path, targetProjectId, targetPath)
+        )
     }
 
-    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         checkParam(projectId)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun externalUrl(
@@ -128,9 +141,14 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             isDirected))
     }
 
-    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         checkParam(projectId)
-        return Result(bkRepoService.show(projectId, artifactoryType, path))
+        return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
     override fun search(

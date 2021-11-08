@@ -164,6 +164,14 @@ class TXPipelineExportService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
+        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在",
+                params = arrayOf(pipelineId)
+            )
+
         val baseModel = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -999,7 +1007,7 @@ class TXPipelineExportService @Autowired constructor(
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         exportFile: Boolean
     ): String {
-        val pattern = Pattern.compile("\\\$\\{\\{([^{}]+?)}}")
+        val pattern = Pattern.compile("\\\$\\{\\{?([^{}]+?)}?}")
         val matcher = pattern.matcher(value)
         var newValue = value as String
         while (matcher.find()) {
