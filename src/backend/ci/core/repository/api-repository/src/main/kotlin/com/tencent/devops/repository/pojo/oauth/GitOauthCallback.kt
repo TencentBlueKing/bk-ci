@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.repository.pojo.oauth
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ExternalRepoResource
-import com.tencent.devops.repository.service.scm.IGitOauthService
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ExternalRepoResourceImpl @Autowired constructor(
-    private val gitOauthService: IGitOauthService
-) : ExternalRepoResource {
-    override fun gitCallback(code: String, state: String): Response {
-        val gitOauthCallback = gitOauthService.gitCallback(code, state)
-        return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
-    }
-}
+@ApiModel("工蜂oauth回调后信息")
+data class GitOauthCallback(
+    @ApiModelProperty("工蜂项目Id")
+    val gitProjectId: Long?,
+    @ApiModelProperty("发起oauth认证的用户")
+    val userId: String,
+    @ApiModelProperty("工蜂返回token真实userId，可能是公共账号")
+    val oauthUserId: String,
+    @ApiModelProperty("回调后跳转的界面")
+    val redirectUrl: String
+)

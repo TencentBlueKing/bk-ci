@@ -30,6 +30,7 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,5 +41,9 @@ class ServiceOauthResourceImpl @Autowired constructor(
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
+    }
+
+    override fun gitCallback(code: String, state: String): Result<GitOauthCallback> {
+        return Result(gitOauthService.gitCallback(code = code, state = state))
     }
 }
