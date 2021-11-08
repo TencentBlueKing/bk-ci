@@ -93,10 +93,8 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        logger.info(
-            "listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
-                "page=$page|pageSize=$pageSize|searchKey=$searchKey"
-        )
+        logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
+            "page=$page|pageSize=$pageSize|searchKey=$searchKey")
         return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
