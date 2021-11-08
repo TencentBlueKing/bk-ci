@@ -42,6 +42,7 @@ import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.ext.Provider
+import org.springframework.beans.factory.annotation.Value
 
 @Component
 @Provider
@@ -55,6 +56,9 @@ class UserFilter @Autowired constructor(
     val opAppUserService: OpAppUserService
 ) : ContainerRequestFilter {
 
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
     override fun filter(requestContext: ContainerRequestContext?) {
         if (requestContext == null) {
             return
@@ -65,13 +69,13 @@ class UserFilter @Autowired constructor(
             logger.info("path: ${requestContext.uriInfo.path} not need userHead, appCode: $appCode ")
             return
         } else {
-            if (!opAppUserService.checkUser(userId!!)) {
+            if (!opAppUserService.checkUser(userId)) {
                 val appCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_APP_CODE)
                 logger.info("$userId is not rtx user, appCode: $appCode , path: ${requestContext.uriInfo.path}")
                 val appManagerUser = appUserInfoService.get(appCode)
                 if (appManagerUser.isNullOrEmpty()) {
                     logger.warn("$userId is not rtx user, appCode: $appCode not has manager")
-                    if (redisOperation.get(FAILTRUNFLAG) != null) {
+                    if (redisOperation.get("$FILTER_RUN_FLAG_PREFIX$tag") != null) {
                         throw ParamBlankException("非法用户")
                     }
                 } else {
@@ -83,6 +87,6 @@ class UserFilter @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserFilter::class.java)
-        const val FAILTRUNFLAG = "BK:OPENPAI:FILTER:FLAG"
+        const val FILTER_RUN_FLAG_PREFIX = "BK:OPENAPI:FILTER:FLAG:TAG:"
     }
 }
