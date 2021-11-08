@@ -28,6 +28,7 @@ import {
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
+    let nameMatchIndex = 3
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
 
     switch (true) {
@@ -46,6 +47,7 @@ export function parsePathAlias (type, path, authType, svnType) {
         case isGitLab(type) && authType === 'HTTP':
             reg = /^(http|https)?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
+            nameMatchIndex = 4
             break
         case isGitLab(type) && authType === 'SSH':
             reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
@@ -62,10 +64,9 @@ export function parsePathAlias (type, path, authType, svnType) {
     }
 
     const matchResult = path.match(reg)
-    const alias = isGitLab(type) && authType === 'HTTP' ? matchResult[4] : matchResult[3]
     
     return matchResult ? {
-        alias
+        alias: matchResult[nameMatchIndex]
     } : {
         msg
     }
