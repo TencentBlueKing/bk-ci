@@ -128,7 +128,9 @@ class DockerHostBuildService(
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        val projectId = dockerHostBuildInfo.projectId
         val pipelineId = dockerHostBuildInfo.pipelineId
+        val buildId = dockerHostBuildInfo.buildId
         val vmSeqId = dockerHostBuildInfo.vmSeqId
         val poolNo = dockerHostBuildInfo.poolNo
         try {
@@ -143,7 +145,7 @@ class DockerHostBuildService(
             // 将bazel 缓存回写到 lower层
             ThreadPoolUtils.getInstance().run {
                 logger.info("reWriteBazelCache start: $pipelineId $vmSeqId $poolNo ")
-                reWriteBazelCache(pipelineId, vmSeqId, poolNo)
+                reWriteBazelCache(projectId, pipelineId, buildId, vmSeqId, poolNo)
                 logger.info("reWriteBazelCache end: $pipelineId $vmSeqId $poolNo")
             }
         }
