@@ -25,49 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.common.api.util
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
+object PropertyUtil {
 
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
+    private val propertiesMap = ConcurrentHashMap<String, Properties>()
 
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+    /**
+     * 获取配置项的值
+     * @param propertyKey 配置项KEY
+     * @param propertyFileName 配置文件名
+     */
+    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
+        var properties = propertiesMap[propertyFileName]
+        if (properties == null) {
+            // 缓存中没有该配置文件则实时去加载
+            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
+            properties = Properties()
+            properties.load(fileInputStream)
+            propertiesMap[propertyFileName] = properties
+            properties[propertyKey] as String
+        }
+        val propertyValue = properties[propertyKey]
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(propertyKey)
+            )
+        return propertyValue.toString()
+    }
 }

@@ -306,7 +306,7 @@ class PipelineBuildQualityService(
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
-                buildLogPrinter.addRedLine(
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测被拦截",
                     tag = elementId,
@@ -315,7 +315,7 @@ class PipelineBuildQualityService(
                 )
 
                 checkResult.resultList.forEach {
-                    buildLogPrinter.addRedLine(
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -323,13 +323,23 @@ class PipelineBuildQualityService(
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        buildLogPrinter.addRedLine(
-                            buildId = buildId,
-                            message = message.first + " " + message.second,
-                            tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
+                        if (message.third) {
+                            buildLogPrinter.addLine(
+                                buildId = buildId,
+                                message = message.first + " " + message.second,
+                                tag = elementId,
+                                jobId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1
+                            )
+                        } else {
+                            buildLogPrinter.addRedLine(
+                                buildId = buildId,
+                                message = message.first + " " + message.second,
+                                tag = elementId,
+                                jobId = task.containerHashId,
+                                executeCount = task.executeCount ?: 1
+                            )
+                        }
                     }
                 }
 

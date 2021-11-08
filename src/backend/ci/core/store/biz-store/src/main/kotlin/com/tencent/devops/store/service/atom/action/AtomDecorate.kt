@@ -25,49 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import javax.annotation.PostConstruct
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
+/**
+ * 装饰插件信息
+ */
+interface AtomDecorate<S : Any> {
 
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
+    @PostConstruct
+    fun init() {
+        AtomDecorateFactory.register(kind = type(), atomDecorate = this)
+    }
 
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
+    fun type(): AtomDecorateFactory.Kind
 
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
+    fun setNext(next: AtomDecorate<S>)
 
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
+    fun getNext(): AtomDecorate<S>?
 
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
+    /**
+     * 主入口
+     */
+    fun decorate(json: String): S = decorateSpecial(deserialize(json))
 
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
+    /**
+     * 子类必须实现的反序列化
+     */
+    fun deserialize(json: String): S
 
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+    /**
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
+     */
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }
