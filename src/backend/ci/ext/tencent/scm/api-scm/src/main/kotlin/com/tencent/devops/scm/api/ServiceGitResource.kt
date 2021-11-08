@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -192,6 +193,15 @@ interface ServiceGitResource {
         @QueryParam("code")
         code: String
     ): Result<GitToken>
+
+    @ApiOperation("获取用户的token")
+    @GET
+    @Path("/getUserInfoByToken")
+    fun getUserInfoByToken(
+        @ApiParam("用户id", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<GitUserInfo>
 
     @ApiOperation("获取项目的token")
     @GET

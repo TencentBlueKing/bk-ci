@@ -29,19 +29,16 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserGitResource
+import com.tencent.devops.repository.api.ServiceGitOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.service.scm.IGitOauthService
-import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.code.git.api.GitTag
-import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserGitResourceImpl @Autowired constructor(
+class ServiceGitOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService
-) : UserGitResource {
+) : ServiceGitOauthResource {
 
     override fun isOAuth(
         userId: String,
@@ -59,25 +56,5 @@ class UserGitResourceImpl @Autowired constructor(
                 refreshToken
             )
         )
-    }
-
-    override fun deleteToken(userId: String): Result<Int> {
-        return Result(gitOauthService.deleteToken(userId))
-    }
-
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(gitOauthService.getProject(userId, projectId, repoHashId))
-    }
-
-    override fun getProjectList(userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
-        return Result(gitOauthService.getProjectList(userId, page, pageSize))
-    }
-
-    override fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitBranch>> {
-        return Result(gitOauthService.getBranch(userId, repository, page, pageSize))
-    }
-
-    override fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitTag>> {
-        return Result(gitOauthService.getTag(userId, repository, page, pageSize))
     }
 }
