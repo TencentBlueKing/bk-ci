@@ -31,7 +31,7 @@ class ImagePushHandler(
                     .awaitCompletion()
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 
