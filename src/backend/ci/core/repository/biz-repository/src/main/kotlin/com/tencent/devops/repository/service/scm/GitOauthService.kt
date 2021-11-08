@@ -186,7 +186,7 @@ class GitOauthService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         logger.info("gitCallback authParams is: $authParams")
         val userId = authParams["userId"] as String
-        val gitProjectId = authParams["gitProjectId"] as Long?
+        val gitProjectId = authParams["gitProjectId"] as String?
         val token = gitService.getToken(userId, code)
         // 在oauth授权过程中,可以输入公共账号去鉴权，所以需要再验证token所属人
         val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
@@ -194,7 +194,7 @@ class GitOauthService @Autowired constructor(
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return GitOauthCallback(
-            gitProjectId = gitProjectId,
+            gitProjectId = gitProjectId?.toLong(),
             userId = userId,
             oauthUserId = oauthUserId,
             redirectUrl = redirectUrl
