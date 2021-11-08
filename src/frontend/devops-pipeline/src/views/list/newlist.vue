@@ -400,7 +400,7 @@
 
                 const calcTime = Math.ceil((time - latestBuildStartTime) / (latestBuildEstimatedExecutionSeconds * 100 * 1000))
 
-                if (this.statusMap[item.latestBuildStatus] === 'error') {
+                if (this.statusMap[item.latestBuildStatus] === 'error' || this.statusMap[item.latestBuildStatus] === 'cancel') {
                     return '100%'
                 }
 
