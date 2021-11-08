@@ -434,8 +434,9 @@ class PipelineBuildFacadeService(
             )
 
             // rebuild重试计数
-            val retryCount = if (originVars[PIPELINE_RETRY_COUNT] != null) {
-                originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            val originRetryCount = buildInfo.buildParameters?.first { it.key == PIPELINE_RETRY_COUNT }?.value
+            val retryCount = if (originRetryCount != null) {
+                originRetryCount.toString().toInt() + 1
             } else {
                 1
             }
