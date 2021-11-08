@@ -17,6 +17,7 @@
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
+                    ext-cls="instance-handle-row-right"
                     :clearable="true"
                     right-icon="icon-search"
                     v-model="searchKey"
@@ -439,6 +440,11 @@
                 margin-right: 4px;
                 padding: 0 11px;
                 font-size: 12px;
+            }
+        }
+        .instance-handle-row-right {
+            .right-icon {
+                top: 16px;
             }
         }
         .instance-table {
