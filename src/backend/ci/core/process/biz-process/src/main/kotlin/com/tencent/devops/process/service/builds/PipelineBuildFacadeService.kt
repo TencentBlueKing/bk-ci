@@ -320,7 +320,8 @@ class PipelineBuildFacadeService(
         skipFailedTask: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        ignoreManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
@@ -365,7 +366,7 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
 
-            if (!readyToBuildPipelineInfo.canManualStartup) {
+            if (!readyToBuildPipelineInfo.canManualStartup || ignoreManualStartup) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -458,7 +459,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask"
+                    "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             // rebuild重试计数
@@ -636,12 +637,14 @@ class PipelineBuildFacadeService(
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
             startParams.forEach { (key, value, valueType, readOnly) ->
-                startParamsWithType.add(BuildParameters(
-                    key,
-                    value,
-                    valueType,
-                    readOnly
-                ))
+                startParamsWithType.add(
+                    BuildParameters(
+                        key,
+                        value,
+                        valueType,
+                        readOnly
+                    )
+                )
             }
 
             return pipelineBuildService.startPipeline(
@@ -1658,7 +1661,7 @@ class PipelineBuildFacadeService(
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
                     "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, " +
-                            "please check if the plugin is installed."
+                        "please check if the plugin is installed."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),

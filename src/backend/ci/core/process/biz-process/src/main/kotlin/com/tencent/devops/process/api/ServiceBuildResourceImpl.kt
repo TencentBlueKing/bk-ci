@@ -162,7 +162,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         taskId: String?,
         failedContainer: Boolean?,
         skipFailedTask: Boolean?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        ignoreManualStartup: Boolean?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -179,7 +180,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             skipFailedTask = skipFailedTask,
             isMobile = false,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            ignoreManualStartup = ignoreManualStartup ?: false
         )))
     }
 
