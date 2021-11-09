@@ -82,7 +82,7 @@ class ImageBuildHandler(
             step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
                 .awaitImageId()
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 
