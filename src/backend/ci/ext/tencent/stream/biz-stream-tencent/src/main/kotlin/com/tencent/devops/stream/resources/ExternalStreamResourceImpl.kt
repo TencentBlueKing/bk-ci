@@ -27,14 +27,21 @@
 
 package com.tencent.devops.stream.resources
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.ExternalStreamBadgeResource
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.stream.api.ExternalStreamResource
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
-class ExternalStreamBadgeResourceImpl(
-    private val streamPipelineBadgeService: StreamPipelineBadgeService
-) : ExternalStreamBadgeResource {
+class ExternalStreamResourceImpl(
+    private val streamPipelineBadgeService: StreamPipelineBadgeService,
+    private val basicSettingService: StreamBasicSettingService,
+    private val client: Client
+) : ExternalStreamResource {
     override fun getPipelineBadge(
         gitProjectId: Long,
         filePath: String,
@@ -47,5 +54,19 @@ class ExternalStreamBadgeResourceImpl(
             branch = branch,
             objectKind = objectKind
         )
+    }
+
+    override fun gitCallback(code: String, state: String): Response {
+        val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!
+        with(gitOauthCallback) {
+            if (gitOauthCallback.gitProjectId != null) {
+                basicSettingService.updateOauthSetting(
+                    gitProjectId = gitProjectId!!,
+                    userId = userId,
+                    oauthUserId = oauthUserId
+                )
+            }
+            return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
+        }
     }
 }

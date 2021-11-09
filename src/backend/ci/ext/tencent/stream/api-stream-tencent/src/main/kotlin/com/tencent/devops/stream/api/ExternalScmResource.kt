@@ -55,16 +55,4 @@ interface ExternalScmResource {
         token: String,
         event: String
     ): Result<Boolean>
-
-    @ApiOperation("工蜂回调请求")
-    @GET
-    @Path("/git/callback")
-    fun gitCallback(
-        @ApiParam(value = "code")
-        @QueryParam("code")
-        code: String,
-        @ApiParam(value = "state")
-        @QueryParam("state")
-        state: String
-    ): Response
 }

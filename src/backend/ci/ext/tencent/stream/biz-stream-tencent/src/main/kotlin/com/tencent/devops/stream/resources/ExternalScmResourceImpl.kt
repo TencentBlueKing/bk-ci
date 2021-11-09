@@ -43,9 +43,7 @@ import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
-    private val basicSettingService: StreamBasicSettingService,
-    private val client: Client
+    private val rabbitTemplate: RabbitTemplate
 ) : ExternalScmResource {
 
     companion object {
@@ -61,19 +59,5 @@ class ExternalScmResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
-    }
-
-    override fun gitCallback(code: String, state: String): Response {
-        val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!
-        with(gitOauthCallback) {
-            if (gitOauthCallback.gitProjectId != null) {
-                basicSettingService.updateOauthSetting(
-                    gitProjectId = gitProjectId!!,
-                    userId = userId,
-                    oauthUserId = oauthUserId
-                )
-            }
-            return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
-        }
     }
 }

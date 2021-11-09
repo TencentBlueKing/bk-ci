@@ -37,12 +37,13 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
 @Path("/external/stream")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalStreamBadgeResource {
+interface ExternalStreamResource {
 
     @ApiOperation("获取流水线徽章")
     @Produces("image/svg+xml")
@@ -62,4 +63,16 @@ interface ExternalStreamBadgeResource {
         @QueryParam("object_kind")
         objectKind: String?
     ): String
+
+    @ApiOperation("工蜂回调请求")
+    @GET
+    @Path("/git/callback")
+    fun gitCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
 }
