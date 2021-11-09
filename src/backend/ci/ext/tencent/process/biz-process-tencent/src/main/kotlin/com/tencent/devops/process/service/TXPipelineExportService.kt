@@ -1273,6 +1273,12 @@ class TXPipelineExportService @Autowired constructor(
                 repositoryUrl
             }
 
+            // branchName应该转换成refName
+            val branchName = inputMap.remove("branchName")
+            if (branchName != null) {
+                inputMap["refName"] = branchName
+            }
+
             // 去掉所有插件上的凭证配置
             inputMap.remove("credentialId")
             inputMap.remove("ticketId")
