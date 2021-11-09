@@ -27,17 +27,31 @@
 
 package com.tencent.devops.dockerhost.utils
 
-import org.hyperic.sigar.FileSystem
-import org.hyperic.sigar.FileSystemUsage
-import org.hyperic.sigar.Sigar
+import com.sun.management.OperatingSystemMXBean
 import org.slf4j.LoggerFactory
+import oshi.SystemInfo
+import oshi.hardware.GlobalMemory
+import oshi.software.os.OSFileStore
+import oshi.software.os.OperatingSystem
+import java.lang.management.ManagementFactory
 import java.nio.charset.Charset
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
 
-@Suppress("ALL")
-object SigarUtil {
-    private val logger = LoggerFactory.getLogger(SigarUtil::class.java)
+object SystemInfoUtil {
+    private val logger = LoggerFactory.getLogger(SystemInfoUtil::class.java)
+
+    private val memory: GlobalMemory
+    private val operatingSystem: OperatingSystem
+    private var fileStore: OSFileStore? = null
+    private val systemMXBean = ManagementFactory.getOperatingSystemMXBean() as OperatingSystemMXBean
+
+    init {
+        val systemInfo = SystemInfo()
+        val hardware = systemInfo.hardware
+        memory = hardware.memory
+        operatingSystem = systemInfo.operatingSystem
+    }
 
     private const val MAX_MEM = 90
     private const val MAX_CPU = 90
@@ -198,15 +212,9 @@ object SigarUtil {
     }
 
     private fun getMemUsedPercent(): Int {
-        val sigar = Sigar()
-        val mem = sigar.mem
-/*        logger.info("usedPercent: " + mem.usedPercent)
-        logger.info("used: " + mem.used)
-        logger.info("total: " + mem.total)
-        logger.info("actualUsed: " + mem.actualUsed)
-        logger.info("actualFree: " + mem.actualFree)
-        logger.info("free: " + mem.free)*/
-        val element = (mem.usedPercent).roundToInt()
+        val total = memory.total
+        val available = memory.available
+        val element = ((total - available) * 100 / total).toInt()
         return if (element in 0..100) {
             element
         } else {
@@ -215,62 +223,37 @@ object SigarUtil {
     }
 
     private fun getCpuUsedPercent(): Int {
-        val sigar = Sigar()
-        val cpuInfoList = sigar.cpuInfoList
-        val cpuList = sigar.cpuPercList
-
-        var cpuTotalIdle = 0.0
-        for (i in cpuInfoList.indices) {
-            val cpuPerc = cpuList[i]
-            cpuTotalIdle += cpuPerc.idle
-        }
-
-        val element = 100 - (cpuTotalIdle / cpuInfoList.size.toDouble() * 100).toInt()
-        return if (element in 0..100) {
-            element
-        } else {
-            0
-        }
+        return (systemMXBean.systemCpuLoad * 100.0).toInt()
     }
 
     private fun getDiskUsedPercent(): Int {
         var element = file()
-        // logger.info("getDiskUsedPercent ==========>：$element")
         if (element !in 0..100) {
             element = 0
         }
         return element
     }
 
-    @Throws(Exception::class)
     private fun file(): Int {
         var diskUsedPercent = 0
-        val sigar = Sigar()
-        val fslist: Array<FileSystem> = sigar.fileSystemList
-        for (i in fslist.indices) {
-            val fs: FileSystem = fslist[i]
-            var usage: FileSystemUsage?
-            usage = sigar.getFileSystemUsage(fs.dirName)
-            when (fs.type) {
-                2 -> {
-                    // 分区的盘符名称
-                    // logger.info("盘符名称:    " + fs.devName)
-                    // 分区的盘符名称
-                    // logger.info("盘符路径:    " + fs.dirName)
-                    if (fs.dirName == "/data") {
-                        diskUsedPercent = (usage.usePercent * 100).roundToInt()
-                    }
-                }
-            }
+        if (fileStore == null) {
+            fileStore = operatingSystem.fileSystem
+                .getFileStores(true)
+                .firstOrNull { "/data" == it.mount }
         }
-
+        fileStore?.also {
+            it.updateAttributes()
+            val freeSpace = it.freeSpace
+            val totalSpace = it.totalSpace
+            diskUsedPercent = (100 - freeSpace * 100 / totalSpace).toInt()
+        }
         return diskUsedPercent
     }
 
     private fun getDiskIORate(): Int {
         var totalIOUtil = 0
         val commandStr = runCommand("iostat -d -x -k 1 8")
-        val stringArray = commandStr!!.split("\n")
+        val stringArray = commandStr.split("\n")
         stringArray.forEach {
             if (it.isNotEmpty() && !it.contains("Device") && !it.contains("Linux")) {
                 val strArr = it.split(" ")
@@ -294,9 +277,9 @@ object SigarUtil {
      * @param CMD 命令
      * @return 字符串结果
      */
-    private fun runCommand(CMD: String): String? {
+    private fun runCommand(command: String): String {
         return try {
-            val pos = Runtime.getRuntime().exec(CMD)
+            val pos = Runtime.getRuntime().exec(command)
             pos.waitFor()
             pos.inputStream.readBytes().toString(Charset.defaultCharset())
         } catch (e: Exception) {

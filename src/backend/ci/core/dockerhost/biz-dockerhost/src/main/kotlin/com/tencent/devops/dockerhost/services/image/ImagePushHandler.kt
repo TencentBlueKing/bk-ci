@@ -1,6 +1,7 @@
 package com.tencent.devops.dockerhost.services.image
 
 import com.github.dockerjava.api.async.ResultCallback
+import com.github.dockerjava.api.exception.DockerClientException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.api.model.ResponseItem
@@ -30,7 +31,7 @@ class ImagePushHandler(
                     .awaitCompletion()
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 
@@ -39,6 +40,8 @@ class ImagePushHandler(
         private val elementId: String?,
         private val dockerHostBuildApi: DockerHostBuildResourceApi
     ) : ResultCallback.Adapter<PushResponseItem>() {
+        private var latestItem: PushResponseItem? = null
+
         private val totalList = mutableListOf<Long>()
         private val step = mutableMapOf<Int, Long>()
         override fun onNext(item: PushResponseItem?) {
@@ -64,7 +67,27 @@ class ImagePushHandler(
                     step[lays] = currentProgress
                 }
             }
+
+            if (item != null && item.errorDetail == null) {
+                dockerHostBuildApi.postLog(
+                    buildId,
+                    false,
+                    item.status ?: "",
+                    elementId
+                )
+            }
+
+            this.latestItem = item
             super.onNext(item)
+        }
+
+        override fun throwFirstError() {
+            super.throwFirstError()
+            if (latestItem == null) {
+                throw DockerClientException("Could not push image")
+            } else if (latestItem?.isErrorIndicated == true) {
+                throw DockerClientException("Could not push image: " + latestItem!!.errorDetail?.message)
+            }
         }
 
         private fun canPrintLog(text: ResponseItem.ProgressDetail?): Boolean {
