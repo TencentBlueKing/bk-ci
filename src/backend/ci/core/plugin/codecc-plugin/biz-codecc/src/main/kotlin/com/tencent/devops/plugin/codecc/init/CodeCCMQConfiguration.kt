@@ -30,8 +30,6 @@ package com.tencent.devops.plugin.codecc.init
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.plugin.codecc.event.listener.ChangeCodeCCListener
 import com.tencent.devops.plugin.codecc.event.listener.PipelineModelAnalysisListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -64,52 +62,6 @@ class CodeCCMQConfiguration {
 
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    /**
-     * 声明 流水线设置变更 事件交换机
-     */
-    @Bean
-    fun pipelineSettingChangeExchange(): FanoutExchange {
-        val pipelineSettingChangeExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT, true, false)
-        pipelineSettingChangeExchange.isDelayed = true
-        return pipelineSettingChangeExchange
-    }
-
-    /**
-     * 入口：整个构建开始队列---- 并发一般
-     */
-    @Bean
-    fun pipelineSettingChangeQueue() = Queue(MQ.QUEUE_PIPELINE_SETTING_CHANGE)
-
-    @Bean
-    fun pipelineSettingChangeQueueBind(
-        @Autowired pipelineSettingChangeQueue: Queue,
-        @Autowired pipelineSettingChangeExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineSettingChangeQueue).to(pipelineSettingChangeExchange)
-    }
-
-    @Bean
-    fun pipelineSettingChangeQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineSettingChangeQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired changeCodeCCListener: ChangeCodeCCListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineSettingChangeQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = changeCodeCCListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 20000,
-            consecutiveActiveTrigger = 3,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
-    }
 
     @Value("\${queueConcurrency.modelAnalysis:2}")
     private val modelAnalysisConcurrency: Int? = null
@@ -150,7 +102,7 @@ class CodeCCMQConfiguration {
         container.setQueueNames(pipelineModelAnalysisQueue.name)
         val concurrency = modelAnalysisConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
+        container.setMaxConcurrentConsumers(10.coerceAtLeast(concurrency))
         container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
