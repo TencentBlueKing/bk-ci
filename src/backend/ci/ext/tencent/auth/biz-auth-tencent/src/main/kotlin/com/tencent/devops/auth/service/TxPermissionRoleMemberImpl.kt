@@ -93,6 +93,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
                 if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     watcher.start("getUserDept")
                     if (userDeptIds.contains(it.id)) {
+                        logger.info("$userId join $projectId by dept ${it.id} ")
                         departmentGroup.add(
                             ManagerRoleGroupInfo(
                                 it.name,
