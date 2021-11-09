@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
@@ -107,7 +108,9 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         templateId: String,
         page: Int?,
         pageSize: Int?,
-        searchKey: String?
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
     ): Result<TemplateInstancePage> {
         return Result(templateFacadeService.listTemplateInstancesInPage(
             projectId = projectId,
@@ -115,7 +118,9 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
             templateId = templateId,
             page = page,
             pageSize = pageSize,
-            searchKey = searchKey
+            searchKey = searchKey,
+            sortType = sortType,
+            desc = desc
         ))
     }
 

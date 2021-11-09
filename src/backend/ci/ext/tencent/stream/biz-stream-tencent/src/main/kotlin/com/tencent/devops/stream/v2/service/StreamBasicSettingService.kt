@@ -95,6 +95,15 @@ class StreamBasicSettingService @Autowired constructor(
         return true
     }
 
+    fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
+        streamBasicSettingDao.updateOauthSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            userId = userId,
+            oauthUserId = oauthUserId
+        )
+    }
+
     fun getGitCIConf(gitProjectId: Long): GitCIBasicSetting? {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }

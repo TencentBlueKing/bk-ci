@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -37,6 +38,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_REPOSITORY_OAUTH"], description = "服务-oauth相关")
@@ -53,4 +55,16 @@ interface ServiceOauthResource {
         @PathParam("userId")
         userId: String
     ): Result<GitToken?>
+
+    @ApiOperation("工蜂回调请求")
+    @GET
+    @Path("/git/callback")
+    fun gitCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Result<GitOauthCallback>
 }

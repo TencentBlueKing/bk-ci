@@ -25,41 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
-@Path("/external/stream")
+@Api(tags = ["SERVICE_OAUTH_GIT"], description = "服务-git的oauth")
+@Path("/service/git/oauth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalStreamBadgeResource {
+interface ServiceGitOauthResource {
 
-    @ApiOperation("获取流水线徽章")
-    @Produces("image/svg+xml")
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
     @GET
-    @Path("/projects/{gitProjectId}/pipelines/badge")
-    fun getPipelineBadge(
-        @ApiParam("Git仓库ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("流水线文件名称", required = true)
-        @QueryParam("file_path")
-        filePath: String,
-        @ApiParam("分支名称", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @ApiParam("触发方式", required = false)
-        @QueryParam("object_kind")
-        objectKind: String?
-    ): String
+    @Path("/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum?,
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?,
+        @ApiParam(value = "工蜂项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long? = null,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = false
+    ): Result<AuthorizeResult>
 }
