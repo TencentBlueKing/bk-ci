@@ -61,4 +61,8 @@ class DefaultDeptServiceImpl : DeptService {
     override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
         return null
     }
+
+    override fun getUserDeptInfo(userId: String): Set<String> {
+        return emptySet()
+    }
 }

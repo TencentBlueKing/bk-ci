@@ -43,6 +43,7 @@ import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
+import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
@@ -198,15 +199,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserParentDept(userId: String): Int {
-        val deptSearch = SearchProfileDeptEntity(
-            id = userId,
-            with_family = true,
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId
-        )
-        val deptSearchResponse = callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
-        val deptId = getUserDept(deptSearchResponse)
+        val deptSearchResponse = getUserDeptFamily(userId)
+        val deptId = getUserLastDeptId(deptSearchResponse)
         val parentSearch = SearchRetrieveDeptEntity(
             id = deptId,
             bk_app_code = appCode!!,
@@ -229,6 +223,22 @@ class AuthDeptServiceImpl @Autowired constructor(
             accessToken = null
         )
         return getDeptInfo(search)
+    }
+
+    override fun getUserDeptInfo(userId: String): Set<String> {
+        val deptFamilyInfo = getUserDeptFamily(userId)
+        return getUserDeptTreeIds(deptFamilyInfo)
+    }
+
+    private fun getUserDeptFamily(userId: String): String {
+        val deptSearch = SearchProfileDeptEntity(
+            id = userId,
+            with_family = true,
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId
+        )
+        return callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
     }
 
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
@@ -300,13 +310,25 @@ class AuthDeptServiceImpl @Autowired constructor(
         return dataMap["parent"]?.toString()?.toInt() ?: 0
     }
 
-    fun getUserDept(responseData: String): Int {
+    private fun getUserLastDeptId(responseData: String): Int {
         val deptInfo = JsonUtil.fromJson(responseData, List::class.java)
         val any = deptInfo[0] as Any
         if (any is Map<*, *>) {
             return any["id"].toString().toInt()
         }
         return 0
+    }
+
+    private fun getUserDeptTreeIds(responseData: String): Set<String> {
+        val deptInfo = JsonUtil.fromJson(responseData, List::class.java)
+        val deptTreeId = mutableSetOf<String>()
+        val deptTree = deptInfo[0] as UserDeptTreeInfo
+        deptTreeId.add(deptTree.id)
+        val family = deptTree.family
+        family.forEach {
+            deptTreeId.add(it.id.toString())
+        }
+        return deptTreeId
     }
 
     /**
