@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -490,14 +489,6 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildNo = buildNo
-            ),
-            PipelineModelAnalysisEvent(
-                source = "create_pipeline",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                model = JsonUtil.toJson(model, formatted = false),
-                channelCode = channelCode.name
             )
         )
         return DeployPipelineResult(pipelineId, 1)
@@ -600,14 +591,6 @@ class PipelineRepositoryService constructor(
                 version = version,
                 userId = userId,
                 buildNo = buildNo
-            ),
-            PipelineModelAnalysisEvent(
-                source = "update_pipeline",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                model = JsonUtil.toJson(model, formatted = false),
-                channelCode = channelCode.name
             )
         )
         return DeployPipelineResult(pipelineId, version)
@@ -723,14 +706,6 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     userId = userId,
                     clearUpModel = delete
-                ),
-                PipelineModelAnalysisEvent(
-                    source = "delete_pipeline",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    model = "",
-                    channelCode = record.channel
                 )
             )
         }
