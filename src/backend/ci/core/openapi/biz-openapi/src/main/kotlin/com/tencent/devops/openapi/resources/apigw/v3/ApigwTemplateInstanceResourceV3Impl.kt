@@ -102,8 +102,8 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = pageSize ?: 30,
             searchKey = searchKey,
             sortType = sortType,
             desc = desc
