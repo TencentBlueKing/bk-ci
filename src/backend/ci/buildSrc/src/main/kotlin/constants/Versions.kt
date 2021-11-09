@@ -35,5 +35,5 @@ object Versions {
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
     const val YamlSchema = "1.0.49"
-    const val ShardingJdbc = "5.0.0-beta"
+    const val ShardingSphere = "5.0.0"
 }
