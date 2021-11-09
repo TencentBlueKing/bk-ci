@@ -76,7 +76,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         watcher.start("callIamUserGroup")
         try {
             val userSimpleGroup = super.getUserGroups(projectId, userId)
-            if (userSimpleGroup.isNullOrEmpty()) {
+            if (userSimpleGroup != null && userSimpleGroup.isNotEmpty()) {
                 return userSimpleGroup
             }
             logger.info("find $userId join $projectId by dept")
