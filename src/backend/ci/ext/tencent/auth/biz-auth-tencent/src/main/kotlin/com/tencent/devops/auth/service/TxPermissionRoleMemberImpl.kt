@@ -89,7 +89,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
             watcher.start("findGroupIndexInfo")
             projectMemberInfos.forEach {
                 // 如果是用户组下是组织,才匹配用户是否在该组织下
-                if (it.type == ManagerScopesEnum.DEPARTMENT.name) {
+                if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     watcher.start("findDept${it.id}User")
                     val deptUsers = deptService.getDeptUser(it.id.toInt(), null)
                     if (deptUsers.isNullOrEmpty()) {
