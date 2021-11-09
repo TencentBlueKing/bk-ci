@@ -210,8 +210,8 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
