@@ -219,6 +219,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun doCheckRules(buildCheckParams: BuildCheckParams, ruleList: List<QualityRule>): RuleCheckResult {
         with(buildCheckParams) {
+            logger.info("QUALITY|doCheckRules buildCheckParams is|$buildCheckParams")
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
                 if (buildCheckParams.taskId.isNotBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
