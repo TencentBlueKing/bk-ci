@@ -93,7 +93,7 @@ class ContainerPullImageHandler(
                 )
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 

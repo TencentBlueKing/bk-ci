@@ -40,5 +40,5 @@ dependencies {
     api("org.glassfish.jersey.containers:jersey-container-servlet")
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
-    api("com.tencent.devops.ci-plugins:sigar")
+    implementation("com.github.oshi:oshi-core")
 }
