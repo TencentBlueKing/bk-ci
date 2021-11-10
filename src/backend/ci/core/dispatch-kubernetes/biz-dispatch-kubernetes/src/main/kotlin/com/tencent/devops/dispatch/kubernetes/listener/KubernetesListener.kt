@@ -27,16 +27,18 @@
 
 package com.tencent.devops.dispatch.kubernetes.listener
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.DockerVersion
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.config.DefaultImageConfig
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.kubernetes.dao.BuildDao
@@ -45,11 +47,13 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.service.BuildHisService
 import com.tencent.devops.dispatch.kubernetes.service.ContainerService
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,10 +62,11 @@ import org.springframework.stereotype.Service
 @Service
 class KubernetesListener @Autowired constructor(
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
+    private val client: Client,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val dispatchConfig: DispatchBuildConfig,
+    private val defaultImageConfig: DefaultImageConfig,
     private val jobUtils: JobRedisUtils,
     private val buildLogPrinter: BuildLogPrinter,
     private val containerService: ContainerService,
@@ -134,7 +139,7 @@ class KubernetesListener @Autowired constructor(
         threadLocalDisk.set(dispatchConfig.deploymentDisk)
 
         try {
-            val containerPool = (objectMapper.readValue<Pool>(dispatchMessage.dispatchMessage)).getContainerPool()
+            val containerPool = getPool(dispatchMessage)
             printLogs(dispatchMessage, "启动镜像：${containerPool.container}")
 
             val (lastIdleContainer, poolNo, containerChanged) = containerService.getIdleContainer(
@@ -155,7 +160,7 @@ class KubernetesListener @Autowired constructor(
             if (null == lastIdleContainer || containerChanged) {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "create new container, poolNo: $poolNo"
+                            "create new container, poolNo: $poolNo"
                 )
                 containerService.createNewContainer(
                     dispatchMessage = dispatchMessage,
@@ -177,7 +182,7 @@ class KubernetesListener @Autowired constructor(
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "start idle container, containerName: $lastIdleContainer"
+                            "start idle container, containerName: $lastIdleContainer"
                 )
                 containerService.startContainer(
                     containerName = lastIdleContainer,
@@ -200,7 +205,7 @@ class KubernetesListener @Autowired constructor(
         } catch (e: BuildFailureException) {
             logger.error(
                 "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                    "create deployment failed. msg:${e.message}."
+                        "create deployment failed. msg:${e.message}."
             )
             onFailure(
                 errorType = e.errorType,
@@ -269,7 +274,10 @@ class KubernetesListener @Autowired constructor(
                     )
                 }
             } catch (e: Exception) {
-                logger.error("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed. containerName: $containerName", e)
+                logger.error(
+                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed. containerName: $containerName",
+                    e
+                )
             } finally {
                 // 清除job创建记录
                 jobUtils.deleteJobCount(event.buildId, containerName!!)
@@ -284,7 +292,13 @@ class KubernetesListener @Autowired constructor(
         )
         containerPoolList.filter { it.second != null }.forEach {
             logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
-            buildDao.updateStatus(dslContext, event.pipelineId, it.first, it.second!!.toInt(), ContainerStatus.IDLE.status)
+            buildDao.updateStatus(
+                dslContext,
+                event.pipelineId,
+                it.first,
+                it.second!!.toInt(),
+                ContainerStatus.IDLE.status
+            )
         }
 
         logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] delete buildContainerPoolNo.")
@@ -294,30 +308,6 @@ class KubernetesListener @Autowired constructor(
             vmSeqId = event.vmSeqId,
             executeCount = event.executeCount ?: 1
         )
-    }
-
-    private fun Pool.getContainerPool(): Pool {
-        if (third != null && !third) {
-            val containerPoolFixed = if (container!!.startsWith(dispatchConfig.registryHost!!)) {
-                Pool(
-                    container,
-                    Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!),
-                    performanceConfigId,
-                    third
-                )
-            } else {
-                Pool(
-                    dispatchConfig.registryHost + "/" + container,
-                    Credential(dispatchConfig.registryUser!!, dispatchConfig.registryPwd!!),
-                    performanceConfigId,
-                    third
-                )
-            }
-
-            return containerPoolFixed
-        }
-
-        return this
     }
 
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
@@ -332,6 +322,60 @@ class KubernetesListener @Autowired constructor(
         } catch (e: Throwable) {
             // 日志有问题就不打日志了，不能影响正常流程
             logger.error("", e)
+        }
+    }
+
+    private fun getPool(dispatchMessage: DispatchMessage): Pool {
+        val dispatchType = dispatchMessage.dispatchType as KubernetesDispatchType
+        val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
+            dispatchType.dockerBuildVersion
+        } else {
+            when (dispatchType.dockerBuildVersion) {
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
+            }
+        }
+        logger.info(
+            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
+                    "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
+                    "|${dispatchType.credentialProject}"
+        )
+        var userName: String? = null
+        var password: String? = null
+        return if (dispatchType.imageType == ImageType.THIRD && !dispatchType.credentialId.isNullOrBlank()) {
+
+            val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
+                dispatchMessage.projectId
+            } else {
+                dispatchType.credentialProject!!
+            }
+            val ticketsMap = CommonUtils.getCredential(
+                client = client,
+                projectId = projectId,
+                credentialId = dispatchType.credentialId!!,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+            userName = ticketsMap["v1"] as String
+            password = ticketsMap["v2"] as String
+            Pool(
+                container = dockerImage,
+                credential = Credential(
+                    user = userName,
+                    password = password
+                )
+            )
+        } else {
+            Pool(
+                container = dockerImage,
+                credential = null
+            )
         }
     }
 }
