@@ -72,7 +72,12 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         )
         val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
+            streamBasicSettingService.initGitCIConf(
+                userId = userId,
+                projectId = projectId,
+                gitProjectId = gitProjectId,
+                enabled = enabled
+            )
         } else {
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
