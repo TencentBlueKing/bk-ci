@@ -159,7 +159,7 @@ class ExperienceAppService(
         }
 
         // 同步文件大小到数据表
-        syncExperienceSize(experience, projectId, artifactoryType, path)
+        syncExperienceSize(userId, experience, projectId, artifactoryType, path)
 
         return AppExperienceDetail(
             experienceHashId = experienceHashId,
@@ -296,6 +296,7 @@ class ExperienceAppService(
     }
 
     private fun syncExperienceSize(
+        userId: String,
         experience: TExperienceRecord,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -304,7 +305,7 @@ class ExperienceAppService(
         if (experience.size == 0L) {
             executorService.submit {
                 val fileDetail =
-                    client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+                    client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, path).data
                 if (null != fileDetail) {
                     experienceDao.updateSize(dslContext, experience.id, fileDetail.size)
                     experience.size = fileDetail.size

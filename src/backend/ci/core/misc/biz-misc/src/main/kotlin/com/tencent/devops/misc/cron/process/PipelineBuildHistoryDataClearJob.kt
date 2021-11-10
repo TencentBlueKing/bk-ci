@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.cron.process
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
@@ -360,8 +359,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     if (buildDetail != null) {
                         processMiscService.updatePipelineBuildDetailProject(
                             buildId = buildId,
-                            projectId = projectId,
-                            model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                            projectId = projectId
                         )
                     }
                 }
@@ -381,8 +379,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             processMiscService.updatePipelineResourceProject(
                 pipelineId = pipelineId,
                 version = pipelineResource.version,
-                projectId = projectId,
-                model = JsonUtil.toJson(pipelineResource.modelInfo, false)
+                projectId = projectId
             )
         }
         val pipelineResourceVersionList = processMiscService.getPipelineResourceVersionList(pipelineId)
@@ -390,8 +387,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             processMiscService.updatePipelineResourceVersionProject(
                 pipelineId = pipelineId,
                 version = pipelineResourceVersion.version,
-                projectId = projectId,
-                model = JsonUtil.toJson(pipelineResourceVersion.modelInfo, false)
+                projectId = projectId
             )
         }
         processMiscService.updateTemplatePipelineProject(pipelineId, projectId)
@@ -416,8 +412,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 buildDetailList?.forEach { buildDetail ->
                     processMiscService.updatePipelineBuildDetailProject(
                         buildId = buildDetail.buildId,
-                        projectId = projectId,
-                        model = JsonUtil.toJson(buildDetail.modelInfo, false)
+                        projectId = projectId
                     )
                 }
             }

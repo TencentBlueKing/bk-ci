@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -204,6 +205,10 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
         return Result(gitService.getToken(gitProjectId.toString()))
+    }
+
+    override fun getUserInfoByToken(token: String): Result<GitUserInfo> {
+        return Result(gitService.getUserInfoByToken(token))
     }
 
     override fun getGitCIFileContent(

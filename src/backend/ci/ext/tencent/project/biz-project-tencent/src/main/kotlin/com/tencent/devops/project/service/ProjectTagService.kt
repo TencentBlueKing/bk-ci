@@ -62,7 +62,7 @@ class ProjectTagService @Autowired constructor(
     @Value("\${system.router}")
     val routerTagList: String = ""
 
-    @Value("\${auto.tag:#{null}}")
+    @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
 
     fun updateTagByProject(

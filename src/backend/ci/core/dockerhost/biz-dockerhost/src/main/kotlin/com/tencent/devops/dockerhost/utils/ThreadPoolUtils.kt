@@ -94,7 +94,7 @@ class ThreadPoolUtils private constructor() {
      *  @param runnable 对应的 runnable 任务
      * */
     fun removeTask(tag: String, runnable: Runnable) {
-        getThreadPool(tag)?.queue?.remove(runnable)
+        getThreadPool(tag).queue?.remove(runnable)
     }
 
     /**
@@ -113,7 +113,7 @@ class ThreadPoolUtils private constructor() {
     // shutDown()：关闭线程池后不影响已经提交的任务
     // shutDownNow()：关闭线程池后会尝试去终止正在执行任务的线程
     fun exitThreadPool(tag: String) {
-        var threadPoolExecutor = threadPoolMap[tag]
+        val threadPoolExecutor = threadPoolMap[tag]
         if (threadPoolExecutor != null) {
             threadPoolExecutor.shutdownNow()
             threadPoolMap.remove(tag)
