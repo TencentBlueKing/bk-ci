@@ -216,7 +216,7 @@ interface ServiceBuildResource {
         channelCode: ChannelCode,
         @ApiParam("是否忽略人工触发", required = false)
         @QueryParam("ignoreManualStartup")
-        ignoreManualStartup: Boolean? = false,
+        ignoreManualStartup: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
