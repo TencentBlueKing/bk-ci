@@ -62,7 +62,7 @@ class GrafanaWebhookService @Autowired constructor(
      * grafana回调接口
      */
     fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
-        logger.info("the grafanaNotification is:${grafanaNotification.toString()}")
+        logger.info("the grafanaNotification is:$grafanaNotification")
         // 只有处于alerting告警状态的信息才发送监控消息
         if ("Alerting".equals(grafanaNotification.state, true)) {
             val message = grafanaNotification.message
