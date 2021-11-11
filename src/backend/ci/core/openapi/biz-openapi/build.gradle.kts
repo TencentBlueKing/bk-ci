@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:openapi:model-openapi"))
     api(project(":core:openapi:api-openapi"))
+    api(project(":core:common:common-db"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:process:api-process"))
     api(project(":core:repository:api-repository"))
