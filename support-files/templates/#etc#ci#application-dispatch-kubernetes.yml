@@ -7,7 +7,7 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21938
 server:
-  port: __BK_CI_DISPATCH_KUBERNETES_API_PORT__
+  port: __BK_CI_DISPATCH_DOCKER_API_PORT__
 
 # kubernetes-dispatch集群配置
 kubernetes:
