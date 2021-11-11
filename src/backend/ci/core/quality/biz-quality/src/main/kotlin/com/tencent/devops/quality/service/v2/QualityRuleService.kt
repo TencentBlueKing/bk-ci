@@ -371,7 +371,8 @@ class QualityRuleService @Autowired constructor(
             gatewayId = record.gatewayId,
             gateKeepers = listOf(),
             stageId = "1",
-            status = null
+            status = null,
+            taskSteps = listOf()
         )
     }
 

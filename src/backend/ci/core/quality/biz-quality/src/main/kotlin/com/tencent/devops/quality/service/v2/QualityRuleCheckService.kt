@@ -267,7 +267,7 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("start to check rule(${rule.name})")
 
             val result = checkIndicator(
-                rule.controlPoint.name, rule.indicators, metadataList
+                rule.controlPoint.name, rule.indicators, metadataList, rule.taskSteps
             )
             val interceptRecordList = result.second
             val interceptResult = result.first
@@ -426,7 +426,8 @@ class QualityRuleCheckService @Autowired constructor(
     private fun checkIndicator(
         controlPointName: String,
         indicators: List<QualityIndicator>,
-        metadataList: List<QualityHisMetadata>
+        metadataList: List<QualityHisMetadata>,
+        ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
@@ -443,6 +444,16 @@ class QualityRuleCheckService @Autowired constructor(
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
             } else {
                 indicator.metadataList.map { metadataMap[it.enName] }
+            }
+
+            val checkMetaList = mutableListOf<QualityHisMetadata>()
+            if (!ruleTaskSteps.isNullOrEmpty() && filterMetadataList.isNotEmpty()) {
+                filterMetadataList.forEach { metadata ->
+                    val ruleTask = QualityRule.RuleTask(metadata?.taskName, metadata?.enName)
+                    if (ruleTask in ruleTaskSteps) {
+                        checkMetaList.add(metadata!!)
+                    }
+                }
             }
 
             // 遍历所有基础数据
