@@ -64,7 +64,7 @@ class GrafanaWebhookService @Autowired constructor(
     fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
         logger.info("the grafanaNotification is:$grafanaNotification")
         // 只有处于alerting告警状态的信息才发送监控消息
-        if ("alerting".equals(grafanaNotification.state, true)) {
+        if ("Alerting".equals(grafanaNotification.state, true)) {
             val message = grafanaNotification.message
             val grafanaMessage = JsonUtil.to(message, SendNotifyMessageTemplateRequest::class.java) // 转换消息内容json串
             val notifyMessage = (grafanaMessage.bodyParams ?: emptyMap()).toMutableMap()
@@ -80,10 +80,8 @@ class GrafanaWebhookService @Autowired constructor(
                 }
                 notifyMessage["data"] += "）"
             }
-            val sendMessage = grafanaMessage.copy(bodyParams = notifyMessage)
-            logger.info("Alerting sendMessage=$sendMessage ")
             return client.get(ServiceNotifyMessageTemplateResource::class)
-                .sendNotifyMessageByTemplate(sendMessage)
+                .sendNotifyMessageByTemplate(grafanaMessage.copy(bodyParams = notifyMessage))
         }
         return Result(data = false, message = "只有处于alerting告警状态的信息才发送监控消息")
     }
