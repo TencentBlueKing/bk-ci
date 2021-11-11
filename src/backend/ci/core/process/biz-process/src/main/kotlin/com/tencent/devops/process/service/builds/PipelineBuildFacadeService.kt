@@ -321,7 +321,7 @@ class PipelineBuildFacadeService(
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true,
-        ignoreManualStartup: Boolean? = false
+        checkManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
@@ -366,7 +366,7 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
 
-            if (!readyToBuildPipelineInfo.canManualStartup || ignoreManualStartup == true) {
+            if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == true) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
