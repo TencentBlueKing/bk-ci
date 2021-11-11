@@ -366,7 +366,7 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
 
-            if (!readyToBuildPipelineInfo.canManualStartup || ignoreManualStartup) {
+            if (!readyToBuildPipelineInfo.canManualStartup || ignoreManualStartup == true) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
