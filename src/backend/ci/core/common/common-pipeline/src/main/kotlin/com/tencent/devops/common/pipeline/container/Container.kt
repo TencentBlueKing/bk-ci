@@ -55,6 +55,7 @@ interface Container {
     var executeCount: Int?
     val jobId: String? // 用户自定义id
     var containPostTaskFlag: Boolean? // 是否包含post任务
+    val matrixFlag: Boolean? // 是否为构建矩阵
 
     /**
      * 只存储Container相关的配置，elements不会存储。
