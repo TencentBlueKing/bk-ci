@@ -428,18 +428,18 @@ class PipelineBuildFacadeService(
             // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
             pipelineTaskPauseService.resetElementWhenPauseRetry(buildId, model)
 
-            logger.info(
-                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask"
-            )
-
             // rebuild重试计数
-            val originRetryCount = buildInfo.buildParameters?.first { it.key == PIPELINE_RETRY_COUNT }?.value
+            val originRetryCount = buildInfo.buildParameters?.firstOrNull { it.key == PIPELINE_RETRY_COUNT }?.value
             val retryCount = if (originRetryCount != null) {
                 originRetryCount.toString().toInt() + 1
             } else {
                 1
             }
+
+            logger.info(
+                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
+                    "originRetryCount=$originRetryCount|fc=$failedContainer|skip=$skipFailedTask"
+            )
             startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount))
             startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_BUILD_ID, value = buildId))
 
