@@ -187,7 +187,7 @@ class ContainerService @Autowired constructor(
         memory: ThreadLocal<String>,
         disk: ThreadLocal<String>
     ): OperateContainerResult {
-        val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
+//        val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
         val userName = containerPool.credential!!.user
         val password = containerPool.credential.password
 
@@ -197,8 +197,12 @@ class ContainerService @Autowired constructor(
                 BuildContainer(
                     life = Life.BRIEF,
                     type = ContainerType.DEV,
-                    image = "$name:$tag",
-                    registry = Registry(host, userName, password),
+                    image = containerPool.container!!,
+                    registry = if (userName != null && password != null) {
+                        Registry("", userName, password)
+                    } else {
+                        null
+                    },
                     cpu = cpu.get(),
                     memory = memory.get(),
                     disk = disk.get(),

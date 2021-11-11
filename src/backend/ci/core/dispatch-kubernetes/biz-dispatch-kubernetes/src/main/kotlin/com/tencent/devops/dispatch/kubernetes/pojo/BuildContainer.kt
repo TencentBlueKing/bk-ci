@@ -32,7 +32,7 @@ data class BuildContainer(
 //    val name: String, // 容器名称
     val type: ContainerType, // 容器类型, dev,stateless,stateful三个之一
     val image: String, // 镜像（镜像名:版本)
-    val registry: Registry, // 镜像仓库信息
+    val registry: Registry?, // 镜像仓库信息
     val cpu: Int, // 容器cpu核数
     val memory: String, // 容器内存大小， 256的倍数，比如512M， 1024M， 以M为单位
     val disk: String, // 容器磁盘大小，10的倍数，比如50G，60G，以G为单位
