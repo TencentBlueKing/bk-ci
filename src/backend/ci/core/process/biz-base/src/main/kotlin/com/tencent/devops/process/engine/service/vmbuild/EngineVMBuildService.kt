@@ -156,10 +156,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
                     if (it is VMBuildContainer) {
-                        LOG.info(
-                            "ENGINE|$buildId|Agent|BUILD_VM_START_CUSTOMBUILDENV|j($vmSeqId)|vmName($vmName)" +
-                                " customBuildEnv=${it.customBuildEnv}"
-                        )
                         // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
                         context = context.plus(it.customBuildEnv?.map { mit ->
                             "envs.${mit.key}" to EnvUtils.parseEnv(mit.value, context)
@@ -187,10 +183,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         }
                         emptyList()
                     }
-                    LOG.info(
-                        "ENGINE|$buildId|Agent|BUILD_VM_START_variables|j($vmSeqId)|vmName($vmName)" +
-                            " variables=$context"
-                    )
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
                     buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
@@ -383,7 +375,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 val allVariable = buildVariableService.getAllVariable(buildId)
                 // 构造扩展变量
                 val extMap = buildExtService.buildExt(task, allVariable)
-                LOG.info("ENGINE|$buildId|Agent|CLAIM_EXTMAP|j($vmSeqId)|extMap=$extMap")
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
