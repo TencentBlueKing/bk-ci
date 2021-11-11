@@ -31,6 +31,7 @@ dependencies {
     api(project(":ext:tencent:openapi:api-openapi-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":core:common:common-client"))
     api("io.jsonwebtoken:jjwt-api")
