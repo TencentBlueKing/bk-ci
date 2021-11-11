@@ -35,6 +35,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
+            dependency("org.apache.commons:commons-text:${Versions.CommonText}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
             dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
