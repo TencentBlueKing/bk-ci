@@ -52,7 +52,6 @@ import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
