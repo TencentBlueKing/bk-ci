@@ -189,7 +189,10 @@ object Runner {
                     logger.info("WAIT $sleepMills ms")
                     Thread.sleep(sleepMills)
                 }
-                BuildTaskStatus.END -> break@loop
+                BuildTaskStatus.END -> {
+                    Thread.sleep(maxSleepStep * millsStep)
+                    break@loop
+                }
             }
         }
 
