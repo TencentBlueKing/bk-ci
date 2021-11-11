@@ -213,10 +213,11 @@ class ModelStage @Autowired constructor(
             QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
         )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
+        val taskSteps: MutableList<RuleCreateRequestV3.CreateRequestTask> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
-                val (atomCode, mid) = getAtomCodeAndOther(rule)
+                val (atomCode, stepName, mid) = getAtomCodeAndOther(rule)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -230,12 +231,23 @@ class ModelStage @Autowired constructor(
                     logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
                     return@GateEach
                 }
-                val enNameAndthreshold = mid.split(op)
+                val enNameAndThreshold = mid.split(op)
+
+                // 步骤不为空时添加步骤参数
+                if (stepName != null) {
+                    taskSteps.add(
+                        RuleCreateRequestV3.CreateRequestTask(
+                            taskName = stepName.removeSuffix("."),
+                            indicatorEnName = enNameAndThreshold.first().trim()
+                        )
+                    )
+                }
+
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = enNameAndthreshold.first().trim(),
+                    enName = enNameAndThreshold.first().trim(),
                     operation = operations[op]!!.name,
-                    threshold = enNameAndthreshold.last().trim()
+                    threshold = enNameAndThreshold.last().trim()
                 )
             }
             val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
@@ -268,7 +280,8 @@ class ModelStage @Autowired constructor(
                     gatewayId = null,
                     opList = opList,
                     stageId = stageId,
-                    gateKeepers = gate.continueOnFail?.gatekeepers
+                    gateKeepers = gate.continueOnFail?.gatekeepers,
+                    taskSteps = taskSteps
                 )
             )
         }
@@ -292,11 +305,29 @@ class ModelStage @Autowired constructor(
         return null
     }
 
-    private fun getAtomCodeAndOther(rule: String): Pair<String, String> {
-        val index = rule.indexOfFirst { it == '.' }
-        return Pair(
-            rule.substring(0 until index),
-            rule.substring((index + 1) until rule.length)
-        )
+    // 1、 <插件code>.<指标名><操作符><阈值>
+    // 2、 <插件code>.<步骤名称>.<指标名><操作符><阈值>
+    private fun getAtomCodeAndOther(rule: String): Triple<String, String?, String> {
+        return when (rule.toCharArray().filter { it == '.' }.groupBy { it }.count()) {
+            1 -> {
+                val index = rule.indexOfFirst { it == '.' }
+                return Triple(
+                    rule.substring(0 until index),
+                    null,
+                    rule.substring((index + 1) until rule.length)
+                )
+            }
+            2 -> {
+                val list = rule.split('.')
+                return Triple(
+                    list[0],
+                    list[1],
+                    list[2]
+                )
+            }
+            else -> {
+                throw QualityRulesException("gates rules format error: '.' number is wrong")
+            }
+        }
     }
 }
