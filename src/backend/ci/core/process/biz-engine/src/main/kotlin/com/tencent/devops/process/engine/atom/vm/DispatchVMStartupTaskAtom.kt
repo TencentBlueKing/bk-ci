@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -101,11 +102,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 解决BUG:93319235,env变量提前替换
         val context = pipelineContextService.getAllBuildContext(runVariables)
         val buildEnv = param.customBuildEnv?.map { mit ->
-            mit.key to
-                ReplacementUtils.replace(mit.value, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? =
-                        context[key]
-                })
+            mit.key to EnvUtils.parseEnv(mit.value, context)
         }?.toMap()
         val fixParam = param.copy(customBuildEnv = buildEnv)
 

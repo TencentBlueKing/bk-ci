@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
@@ -162,12 +163,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         )
                         // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
                         context = context.plus(it.customBuildEnv?.map { mit ->
-                            "envs.${mit.key}" to
-                                ReplacementUtils.replace(mit.value, object : ReplacementUtils.KeyReplacement {
-                                    override fun getReplacement(key: String): String? {
-                                        return context[key]
-                                    }
-                                })
+                            "envs.${mit.key}" to EnvUtils.parseEnv(mit.value, context)
                         }?.toMap() ?: emptyMap())
                     }
                     val buildEnvs = if (it is VMBuildContainer) {
