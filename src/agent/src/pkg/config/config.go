@@ -56,6 +56,7 @@ const (
 	ConfigKeySlaveUser         = "devops.slave.user"
 	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
+	ConfigKeyDetectShell       = "devops.agent.detect.shell"
 )
 
 type AgentConfig struct {
@@ -70,6 +71,7 @@ type AgentConfig struct {
 	SlaveUser         string
 	CollectorOn       bool
 	TimeoutSec        int64
+	DetectShell       bool
 }
 
 type AgentEnv struct {
@@ -231,6 +233,7 @@ func LoadAgentConfig() error {
 	if err != nil {
 		timeout = 5
 	}
+	detectShell := conf.DefaultBool(ConfigKeyDetectShell, false)
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
@@ -255,6 +258,8 @@ func LoadAgentConfig() error {
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+	GAgentConfig.DetectShell = detectShell
+	logs.Info("DetectShell: ", GAgentConfig.DetectShell)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -273,6 +278,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
 	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
+	content.WriteString(ConfigKeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {

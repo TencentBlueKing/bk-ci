@@ -32,6 +32,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -194,14 +195,14 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
 		return nil
 	} else {
-		scriptFile, err := writeStartBuildAgentScript(buildInfo)
+		startScriptFile, err := writeStartBuildAgentScript(buildInfo)
 		if err != nil {
 			errMsg := "write worker start script failed: " + err.Error()
 			logs.Error(errMsg)
 			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
 			return err
 		}
-		pid, err := command.StartProcess(scriptFile, []string{}, workDir, goEnv, runUser)
+		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
@@ -224,6 +225,13 @@ func getEncodedBuildInfo(buildInfo *api.ThirdPartyBuildInfo) string {
 
 func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, error) {
 	logs.Info("write start build agent script to file")
+	// 套娃，多加一层脚本，使用exec新起进程，这样才会读取 .bash_profile
+	prepareScriptFile := fmt.Sprintf(
+		"%s/devops_agent_prepare_start_%s_%s_%s.sh",
+		systemutil.GetWorkDir(),
+		buildInfo.ProjectId,
+		buildInfo.BuildId,
+		buildInfo.VmSeqId)
 	scriptFile := fmt.Sprintf(
 		"%s/devops_agent_start_%s_%s_%s.sh",
 		systemutil.GetWorkDir(),
@@ -234,14 +242,11 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 	logs.Info("start agent script: ", scriptFile)
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	lines := []string{
-		"#!/bin/bash",
+		"#!" + getCurrentShell(),
 		"source /etc/profile",
-		"if [ -f ~/.bash_profile ]; then",
-		"  source ~/.bash_profile",
-		"fi",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -DAGENT_LOG_PREFIX=%s -jar %s %s",
-			config.GetJava(), scriptFile, agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -DAGENT_LOG_PREFIX=%s -jar %s %s",
+			config.GetJava(), scriptFile, prepareScriptFile, agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
@@ -249,7 +254,17 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 	if err != nil {
 		return "", err
 	} else {
-		return scriptFile, nil
+		newLines := []string{
+			"#!" + getCurrentShell(),
+			"exec " + getCurrentShell() + " -l " + scriptFile,
+		}
+		prepareScriptContent := strings.Join(newLines, "\n")
+		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), 0777)
+		if err != nil {
+			return "", err
+		} else {
+			return prepareScriptFile, nil
+		}
 	}
 }
 
@@ -270,4 +285,17 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 		logs.Error("send worker build finish failed: ", result.Message)
 	}
 	logs.Info("workerBuildFinish done")
+}
+
+func getCurrentShell() (shell string) {
+	if config.GAgentConfig.DetectShell {
+		shell = os.Getenv("SHELL")
+		if strings.TrimSpace(shell) == "" {
+			shell = "/bin/bash"
+		}
+	} else {
+		shell = "/bin/bash"
+	}
+	logs.Info("current shell: ", shell)
+	return
 }
