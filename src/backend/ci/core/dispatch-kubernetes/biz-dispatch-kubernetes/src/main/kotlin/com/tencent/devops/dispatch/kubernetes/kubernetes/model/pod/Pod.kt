@@ -121,6 +121,9 @@ object Pod {
                 )
             }
 
+            // TODO：测试用
+            con.imagePullPolicy("IfNotPresent")
+
             return listOf(con)
         }
     }
