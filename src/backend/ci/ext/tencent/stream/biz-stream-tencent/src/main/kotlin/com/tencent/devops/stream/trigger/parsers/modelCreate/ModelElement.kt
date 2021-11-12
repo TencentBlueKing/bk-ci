@@ -212,7 +212,7 @@ class ModelElement @Autowired constructor(
 
         // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
         if (inputMap["authType"] == null) {
-            inputMap["authUserId"] = gitBasicSetting.enableUserId
+            inputMap["authUserId"] = gitBasicSetting.authUserId
             inputMap["authType"] = STREAM_CHECK_AUTH_TYPE
         }
 

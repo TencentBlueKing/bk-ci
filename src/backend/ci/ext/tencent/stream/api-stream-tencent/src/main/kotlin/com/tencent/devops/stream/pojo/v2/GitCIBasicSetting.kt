@@ -61,7 +61,7 @@ data class GitCIBasicSetting(
     @ApiModelProperty("是否开启Mr锁定")
     val enableMrBlock: Boolean = true,
     @ApiModelProperty("Stream开启人")
-    val enableUserId: String,
+    val authUserId: String,
     @ApiModelProperty("Stream开启人所在事业群")
     var creatorBgName: String?,
     @ApiModelProperty("Stream开启人所在部门")

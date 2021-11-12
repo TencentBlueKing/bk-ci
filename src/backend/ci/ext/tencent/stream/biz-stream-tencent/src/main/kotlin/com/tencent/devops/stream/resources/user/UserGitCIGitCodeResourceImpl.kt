@@ -203,7 +203,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
             val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+            oauthService.getAndCheckOauthToken(setting.authUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken
         }

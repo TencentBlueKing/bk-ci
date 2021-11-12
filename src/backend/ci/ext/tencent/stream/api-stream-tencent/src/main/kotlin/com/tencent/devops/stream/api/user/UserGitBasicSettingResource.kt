@@ -96,14 +96,17 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("修改项目启动人")
     @POST
-    @Path("/{projectId}/user")
+    @Path("/{projectId}/reset/oauth")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam(value = "目标授权人", required = true)
+        @QueryParam("authUserId")
+        authUserId: String
     ): Result<Boolean>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")

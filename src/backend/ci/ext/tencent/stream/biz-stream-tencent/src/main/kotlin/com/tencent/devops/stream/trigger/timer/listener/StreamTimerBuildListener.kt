@@ -68,7 +68,7 @@ class StreamTimerBuildListener @Autowired constructor(
                     logger.warn("[$pipelineId]|git config not exist")
                     return
                 }
-                val gitTokenResult = client.get(ServiceOauthResource::class).gitGet(gitCIConfResult.data!!.enableUserId)
+                val gitTokenResult = client.get(ServiceOauthResource::class).gitGet(gitCIConfResult.data!!.authUserId)
                 if (gitTokenResult.isNotOk() || gitTokenResult.data == null) {
                     logger.warn("[$pipelineId]|get git token failed")
                     return

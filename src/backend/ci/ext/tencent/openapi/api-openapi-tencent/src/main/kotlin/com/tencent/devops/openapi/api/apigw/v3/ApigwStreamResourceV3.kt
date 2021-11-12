@@ -302,13 +302,16 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("刷新项目启动人")
     @POST
-    @Path("/{gitProjectId}/user")
+    @Path("/{gitProjectId}/reset/oauth")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
-        projectId: String
+        gitProjectId: String,
+        @ApiParam(value = "目标授权人", required = true)
+        @QueryParam("authUserId")
+        authUserId: String
     ): Result<Boolean>
 }

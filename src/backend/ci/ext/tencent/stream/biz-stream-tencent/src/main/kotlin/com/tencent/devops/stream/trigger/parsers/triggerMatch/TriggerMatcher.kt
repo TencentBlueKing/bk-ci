@@ -294,7 +294,7 @@ class TriggerMatcher @Autowired constructor(
                 // 反向进行三点比较可以比较出rebase的真实提交
                 val result = streamScmService.getCommitChangeFileListRetry(
                     token = null,
-                    userId = context.streamSetting.enableUserId,
+                    userId = context.streamSetting.authUserId,
                     gitProjectId = context.streamSetting.gitProjectId,
                     from = gitEvent.after,
                     to = gitEvent.before,

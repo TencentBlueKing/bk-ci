@@ -92,7 +92,7 @@ class StreamBasicSettingDao {
                         LocalDateTime.now(),
                         projectCode,
                         conf.enableMrBlock,
-                        conf.enableUserId,
+                        conf.authUserId,
                         conf.creatorBgName,
                         conf.creatorDeptName,
                         conf.creatorCenterName,
@@ -112,7 +112,7 @@ class StreamBasicSettingDao {
                         .set(UPDATE_TIME, now)
                         .set(PROJECT_CODE, projectCode)
                         .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
-                        .set(ENABLE_USER_ID, conf.enableUserId)
+                        .set(ENABLE_USER_ID, conf.authUserId)
                         .set(CREATOR_BG_NAME, conf.creatorBgName)
                         .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
                         .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
@@ -169,11 +169,12 @@ class StreamBasicSettingDao {
     fun updateProjectSetting(
         dslContext: DSLContext,
         gitProjectId: Long,
+        userId: String?,
         buildPushedBranches: Boolean?,
         buildPushedPullRequest: Boolean?,
         enableMrBlock: Boolean?,
         enableCi: Boolean?,
-        enableUserId: String?,
+        authUserId: String?,
         creatorBgName: String?,
         creatorDeptName: String?,
         creatorCenterName: String?
@@ -192,17 +193,20 @@ class StreamBasicSettingDao {
             if (enableCi != null) {
                 dsl.set(ENABLE_CI, enableCi)
             }
-            if (enableUserId != null) {
-                dsl.set(ENABLE_USER_ID, enableUserId)
+            if (authUserId != null) {
+                dsl.set(ENABLE_USER_ID, authUserId)
             }
-            if (enableUserId != null) {
+            if (authUserId != null) {
                 dsl.set(CREATOR_BG_NAME, creatorBgName)
             }
-            if (enableUserId != null) {
+            if (authUserId != null) {
                 dsl.set(CREATOR_DEPT_NAME, creatorDeptName)
             }
-            if (enableUserId != null) {
+            if (authUserId != null) {
                 dsl.set(CREATOR_CENTER_NAME, creatorCenterName)
+            }
+            if (authUserId != null) {
+                dsl.set(OAUTH_OPERATOR, userId)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(gitProjectId))
@@ -236,7 +240,7 @@ class StreamBasicSettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableMrBlock = conf.enableMrBlock,
-                    enableUserId = conf.enableUserId,
+                    authUserId = conf.enableUserId,
                     creatorBgName = conf.creatorBgName,
                     creatorDeptName = conf.creatorDeptName,
                     creatorCenterName = conf.creatorCenterName,
