@@ -71,7 +71,7 @@ class DockerHostUtils @Autowired constructor(
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
-        private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
+        private const val DOCKER_DRIFT_THRESHOLD_KEY = "dispatchdocker:drift-threshold-spKyQ86qdYhAkDDR"
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
