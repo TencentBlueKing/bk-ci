@@ -317,6 +317,7 @@ class QualityRuleCheckService @Autowired constructor(
         result.forEach {
             val rule = it.first
             val ruleId = HashUtil.decodeIdToLong(rule.hashId)
+            logger.info("ruleId is: $ruleId")
             val interceptResult = it.second
 
             with(buildCheckParams) {
@@ -329,7 +330,24 @@ class QualityRuleCheckService @Autowired constructor(
                         if (rule.opList != null) {
                             logger.info("do op list action: $buildId, $rule")
                             rule.opList!!.forEach { ruleOp ->
-                                doRuleOperation(buildCheckParams, resultList, ruleOp)
+                                val finalRule = qualityRuleBuildHisService.listRuleBuildHis(
+                                    listOf(ruleId)).firstOrNull()
+                                logger.info("finalRule is : $finalRule")
+                                if (!rule.gateKeepers.isNullOrEmpty() &&
+                                    finalRule?.status == RuleInterceptResult.WAIT) {
+                                    doRuleOperation(
+                                        this, resultList, QualityRule.RuleOp(
+                                            operation = RuleOperation.AUDIT,
+                                            notifyTypeList = ruleOp.notifyTypeList,
+                                            notifyGroupList = ruleOp.notifyGroupList,
+                                            notifyUserList = ruleOp.notifyUserList,
+                                            auditUserList = rule.gateKeepers,
+                                            auditTimeoutMinutes = ruleOp.auditTimeoutMinutes
+                                        )
+                                    )
+                                } else {
+                                    doRuleOperation(buildCheckParams, resultList, ruleOp)
+                                }
                             }
                         } else {
                             logger.info("op list is empty for rule and build: $buildId, $rule")
@@ -384,6 +402,7 @@ class QualityRuleCheckService @Autowired constructor(
                     buildNo = buildNo,
                     createTime = createTime,
                     resultList = resultList,
+                    auditNotifyTypeList = ruleOp.notifyTypeList ?: listOf(),
                     auditNotifyUserList = (ruleOp.auditUserList
                         ?: listOf()).toSet().map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
@@ -659,6 +678,7 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
+        auditNotifyTypeList: List<NotifyType>,
         auditNotifyUserList: List<String>,
         runtimeVariable: Map<String, String>?
     ) {
@@ -693,6 +713,7 @@ class QualityRuleCheckService @Autowired constructor(
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2,
             receivers = notifyUserSet,
+            notifyType = auditNotifyTypeList.map { it.name }.toMutableSet(),
             cc = mutableSetOf(triggerUserId),
             titleParams = mapOf(
                 "projectName" to projectName,
