@@ -34,5 +34,6 @@ enum class MsgType(private val type: String) {
     file("file"),
     emotion("emotion"),
     forward("forward"),
-    Event("Event")
+    Event("Event"),
+    markdown("markdown")
 }

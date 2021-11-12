@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
-import com.tencent.devops.common.api.constant.DESC
+import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
@@ -857,7 +857,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val initProjectCode =
             storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         val deleteAtomFileResult =
-            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(initProjectCode!!, atomCode)
+            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode!!, atomCode)
         if (deleteAtomFileResult.isNotOk()) {
             return deleteAtomFileResult
         }
@@ -942,10 +942,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val outputDataObj = outputDataMap[outputKey] as Map<String, Any>
             AtomOutput(
                 name = outputKey,
-                desc = if (outputDataObj[DESC] == null) {
+                desc = if (outputDataObj[OUTPUT_DESC] == null) {
                     null
                 } else {
-                    outputDataObj[DESC].toString()
+                    outputDataObj[OUTPUT_DESC].toString()
                 }
             )
         } ?: emptyList()

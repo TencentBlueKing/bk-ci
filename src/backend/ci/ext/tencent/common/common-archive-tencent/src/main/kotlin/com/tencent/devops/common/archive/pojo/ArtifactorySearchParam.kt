@@ -28,6 +28,7 @@
 package com.tencent.devops.common.archive.pojo
 
 data class ArtifactorySearchParam(
+    val userId: String,
     val projectId: String,
     val pipelineId: String,
     val buildId: String,
