@@ -37,6 +37,6 @@ object TraceTag {
     const val BIZIDTAG = "biz"
 
     fun buildBiz(): String {
-        return UUID.randomUUID().toString()
+        return "$BIZID-${UUID.randomUUID()}"
     }
 }
