@@ -196,16 +196,16 @@ class StreamBasicSettingDao {
             if (authUserId != null) {
                 dsl.set(ENABLE_USER_ID, authUserId)
             }
-            if (authUserId != null) {
+            if (creatorBgName != null) {
                 dsl.set(CREATOR_BG_NAME, creatorBgName)
             }
-            if (authUserId != null) {
+            if (creatorDeptName != null) {
                 dsl.set(CREATOR_DEPT_NAME, creatorDeptName)
             }
-            if (authUserId != null) {
+            if (creatorCenterName != null) {
                 dsl.set(CREATOR_CENTER_NAME, creatorCenterName)
             }
-            if (authUserId != null) {
+            if (userId != null) {
                 dsl.set(OAUTH_OPERATOR, userId)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
