@@ -43,7 +43,9 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
@@ -64,6 +66,7 @@ class DockerHostUtils @Autowired constructor(
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val dockerHostQpcService: DockerHostQpcService,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -248,45 +251,58 @@ class DockerHostUtils @Autowired constructor(
         specialIpSet: Set<String>,
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
-    ): Triple<String, Int, String> {
-        val dockerIp = dockerIpInfo.dockerIp
-
+    ): Pair<String, Int> {
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
-        val threshold = getDockerDriftThreshold()
+        val hostDriftLoad = getDockerDriftThreshold()
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.diskLoad > 90 ||
-            dockerIpInfo.diskIoLoad > 85 ||
-            dockerIpInfo.memLoad > threshold ||
-            dockerIpInfo.specialOn ||
+            dockerIpInfo.diskLoad > hostDriftLoad.disk ||
+            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
+            dockerIpInfo.memLoad > hostDriftLoad.memory ||
+            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
+            (dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp)) ||
             (dockerIpInfo.grayEnv != gray.isGray()) ||
-            (dockerIpInfo.usedNum > 40 && dockerIpInfo.memLoad > 60)) {
-            val pair = getAvailableDockerIpWithSpecialIps(
+            (dockerIpInfo.usedNum > hostDriftLoad.usedNum) ||
+            dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+            return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
                 dispatchMessage.vmSeqId,
                 specialIpSet
             )
-            return Triple(pair.first, pair.second, "")
         }
 
-        return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
+        return Pair(dockerIpInfo.dockerIp, dockerIpInfo.dockerHostPort)
     }
 
-    fun updateDockerDriftThreshold(threshold: Int) {
-        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
+    fun updateDockerDriftThreshold(hostDriftLoad: HostDriftLoad) {
+        redisOperation.set(
+            key = DOCKER_DRIFT_THRESHOLD_KEY,
+            value = JsonUtil.toJson(hostDriftLoad),
+            expired = false
+        )
     }
 
-    fun getDockerDriftThreshold(): Int {
+    fun getDockerDriftThreshold(): HostDriftLoad {
         val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
         return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
-            thresholdStr.toInt()
+            JsonUtil.to(thresholdStr, HostDriftLoad::class.java)
         } else {
-            90
+            HostDriftLoad(
+                cpu = 80,
+                memory = 70,
+                disk = 80,
+                diskIo = 80,
+                usedNum = 40
+            )
         }
     }
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
-        redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
+        redisOperation.set(
+            key = LOAD_CONFIG_KEY,
+            value = JsonUtil.toJson(loadConfigMap),
+            expired = false
+        )
     }
 
     fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
