@@ -28,10 +28,10 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -56,7 +56,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         logger.info("[${buildVariables.buildId}]| purePath=$purePath")
         val url = "/ms/artifactory/api/build/artifactories/file/archive" +
-                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
+            "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
 
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
@@ -73,8 +73,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val response = request(request, "上传自定义报告失败")
 
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") {
+            val obj = JsonUtil.getObjectMapper().readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "200") {
                 throw RemoteServiceException("上传流水线文件失败")
             }
         } catch (ignored: Exception) {

@@ -29,7 +29,6 @@ package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -134,17 +133,17 @@ class GitService @Autowired constructor(
 
                 OkhttpUtils.doHttp(request).use { response ->
                     val data = response.body()!!.string()
-                    val repoList = JsonParser().parse(data).asJsonArray
+                    val repoList = JsonUtil.getObjectMapper().readTree(data)
                     repoList.forEach {
-                        val obj = it.asJsonObject
-                        val lastActivityTime = obj["last_activity_at"].asString.removeSuffix("+0000")
+                        val obj = it
+                        val lastActivityTime = obj["last_activity_at"].asText().removeSuffix("+0000")
                         result.add(
                             Project(
-                                id = obj["id"].asString,
-                                name = obj["name"].asString,
-                                nameWithNameSpace = obj["name_with_namespace"].asString,
-                                sshUrl = obj["ssh_url_to_repo"].asString,
-                                httpUrl = obj["http_url_to_repo"].asString,
+                                id = obj["id"].asText(),
+                                name = obj["name"].asText(),
+                                nameWithNameSpace = obj["name_with_namespace"].asText(),
+                                sshUrl = obj["ssh_url_to_repo"].asText(),
+                                httpUrl = obj["http_url_to_repo"].asText(),
                                 lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
                                     LocalDateTime.parse(
                                         lastActivityTime
@@ -177,21 +176,23 @@ class GitService @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
-            val repoList = JsonParser().parse(data).asJsonArray
-            if (!repoList.isJsonNull) {
+            val repoList = JsonUtil.getObjectMapper().readTree(data)
+            if (!repoList.isNull) {
                 repoList.forEach {
-                    val project = it.asJsonObject
-                    val lastActivityTime = project["last_activity_at"].asString.removeSuffix("+0000")
+                    val project = it
+                    val lastActivityTime = project["last_activity_at"].asText().removeSuffix("+0000")
                     res.add(
                         Project(
-                            id = project["id"].asString,
-                            name = project["name"].asString,
-                            nameWithNameSpace = project["name_with_namespace"].asString,
-                            sshUrl = project["ssh_url_to_repo"].asString,
-                            httpUrl = project["http_url_to_repo"].asString,
+                            id = project["id"].asText(),
+                            name = project["name"].asText(),
+                            nameWithNameSpace = project["name_with_namespace"].asText(),
+                            sshUrl = project["ssh_url_to_repo"].asText(),
+                            httpUrl = project["http_url_to_repo"].asText(),
                             lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
-                                LocalDateTime.parse(lastActivityTime)) * 1000L
-                        ))
+                                LocalDateTime.parse(lastActivityTime)
+                            ) * 1000L
+                        )
+                    )
                 }
             }
         }
@@ -218,32 +219,32 @@ class GitService @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
-            val branList = JsonParser().parse(data).asJsonArray
-            if (!branList.isJsonNull) {
+            val branList = JsonUtil.getObjectMapper().readTree(data)
+            if (!branList.isNull) {
                 branList.forEach {
-                    val branch = it.asJsonObject
-                    val commit = branch["commit"].asJsonObject
-                    if (!branch.isJsonNull && !commit.isJsonNull) {
+                    val branch = it
+                    val commit = branch["commit"]
+                    if (!branch.isNull && !commit.isNull) {
                         res.add(
                             GitBranch(
-                                name = if (branch["name"].isJsonNull) "" else branch["name"].asString,
+                                name = if (branch["name"].isNull) "" else branch["name"].asText(),
                                 commit = GitBranchCommit(
-                                    id = if (commit["id"].isJsonNull) "" else commit["id"].asString,
-                                    message = if (commit["message"].isJsonNull) {
+                                    id = if (commit["id"].isNull) "" else commit["id"].asText(),
+                                    message = if (commit["message"].isNull) {
                                         ""
-                                    } else commit["message"].asString,
-                                    authoredDate = if (commit["authored_date"].isJsonNull) {
+                                    } else commit["message"].asText(),
+                                    authoredDate = if (commit["authored_date"].isNull) {
                                         ""
-                                    } else commit["authored_date"].asString,
-                                    authorEmail = if (commit["author_email"].isJsonNull) {
+                                    } else commit["authored_date"].asText(),
+                                    authorEmail = if (commit["author_email"].isNull) {
                                         ""
-                                    } else commit["author_email"].asString,
-                                    authorName = if (commit["author_name"].isJsonNull) {
+                                    } else commit["author_email"].asText(),
+                                    authorName = if (commit["author_name"].isNull) {
                                         ""
-                                    } else commit["author_name"].asString,
-                                    title = if (commit["title"].isJsonNull) {
+                                    } else commit["author_name"].asText(),
+                                    title = if (commit["title"].isNull) {
                                         ""
-                                    } else commit["title"].asString
+                                    } else commit["title"].asText()
                                 )
                             )
                         )
@@ -275,36 +276,36 @@ class GitService @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
-            val tagList = JsonParser().parse(data).asJsonArray
-            if (!tagList.isJsonNull) {
+            val tagList = JsonUtil.getObjectMapper().readTree(data)
+            if (!tagList.isNull) {
                 tagList.forEach {
-                    val tag = it.asJsonObject
-                    val commit = tag["commit"].asJsonObject
-                    if (!tag.isJsonNull && !commit.isJsonNull) {
+                    val tag = it
+                    val commit = tag["commit"]
+                    if (!tag.isNull && !commit.isNull) {
                         res.add(
                             GitTag(
-                                name = if (tag["name"].isJsonNull) {
+                                name = if (tag["name"].isNull) {
                                     ""
-                                } else tag["name"].asString,
-                                message = if (tag["message"].isJsonNull) {
+                                } else tag["name"].asText(),
+                                message = if (tag["message"].isNull) {
                                     ""
-                                } else tag["message"].asString,
+                                } else tag["message"].asText(),
                                 commit = GitTagCommit(
-                                    id = if (commit["id"].isJsonNull) {
+                                    id = if (commit["id"].isNull) {
                                         ""
-                                    } else commit["id"].asString,
-                                    message = if (commit["message"].isJsonNull) {
+                                    } else commit["id"].asText(),
+                                    message = if (commit["message"].isNull) {
                                         ""
-                                    } else commit["message"].asString,
-                                    authoredDate = if (commit["authored_date"].isJsonNull) {
+                                    } else commit["message"].asText(),
+                                    authoredDate = if (commit["authored_date"].isNull) {
                                         ""
-                                    } else commit["authored_date"].asString,
-                                    authorName = if (commit["author_name"].isJsonNull) {
+                                    } else commit["authored_date"].asText(),
+                                    authorName = if (commit["author_name"].isNull) {
                                         ""
-                                    } else commit["author_name"].asString,
-                                    authorEmail = if (commit["author_email"].isJsonNull) {
+                                    } else commit["author_name"].asText(),
+                                    authorEmail = if (commit["author_email"].isNull) {
                                         ""
-                                    } else commit["author_email"].asString
+                                    } else commit["author_email"].asText()
                                 )
                             )
                         )
@@ -415,7 +416,7 @@ class GitService @Autowired constructor(
         val apiUrl = if (repoUrl.isNullOrBlank()) {
             gitConfig.gitApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         }
         logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
@@ -536,7 +537,7 @@ class GitService @Autowired constructor(
                     // 把样例工程代码添加到用户的仓库
                     initRepositoryInfo(
                         userId = userId,
-                        sampleProjectPath = sampleProjectPath!!,
+                        sampleProjectPath = sampleProjectPath,
                         token = token,
                         tokenType = tokenType,
                         repositoryName = repositoryName,
@@ -976,8 +977,10 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String?
     ): GitMrInfo {
-        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
-            "/merge_request/$mrId")
+        val url = StringBuilder(
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
+                "/merge_request/$mrId"
+        )
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -1064,7 +1067,7 @@ class GitService @Autowired constructor(
         return if (repoUrl.isNullOrBlank()) {
             gitConfig.gitApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         }
     }
 

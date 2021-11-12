@@ -28,11 +28,11 @@
 package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -149,8 +149,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val responseContent = request(request, "归档插件文件失败")
         try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
+            val obj = JsonUtil.getObjectMapper().readTree(responseContent)
+            if (obj.has("code") && obj["code"].asText() != "200") throw RemoteServiceException("${obj["code"]}")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
             throw RemoteServiceException("AtomArchive fail: $responseContent")
@@ -181,8 +181,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPost(url, requestBody)
         val response = request(request, "upload file:$fileName fail")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") {
+            val obj = JsonUtil.getObjectMapper().readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "200") {
                 throw RemoteServiceException("upload file:$fileName fail")
             }
         } catch (ignored: Exception) {
