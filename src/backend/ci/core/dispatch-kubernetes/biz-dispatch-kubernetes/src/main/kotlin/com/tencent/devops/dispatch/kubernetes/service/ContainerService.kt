@@ -219,9 +219,9 @@ class ContainerService @Autowired constructor(
                             ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                         ),
                         command = listOf(
-                            "/bin/sh",
                             // TODO: 测试用
                             "sleep 300s",
+                            "/bin/sh",
                             "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
                         )
                     )
