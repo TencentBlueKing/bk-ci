@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.builds
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -58,7 +57,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -93,7 +91,6 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -110,7 +107,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
@@ -133,7 +129,6 @@ class PipelineBuildFacadeService(
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val buildStartupParamService: BuildStartupParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val paramFacadeService: ParamFacadeService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -201,22 +196,17 @@ class PipelineBuildFacadeService(
         if (useLatestParameters) {
             // 获取最后一次的构建id
             val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
-            if (lastTimeBuildInfo != null) {
-                val latestParamsStr = buildStartupParamService.getParam(lastTimeBuildInfo.buildId)
-                // 为空的时候不处理
-                if (latestParamsStr != null) {
-                    val latestParams =
-                        JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
-                    triggerContainer.params.forEach { param ->
-                        val realValue = latestParams[param.id]
-                        if (realValue != null) {
-                            // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
-                            // 当值是boolean类型的时候，需要转为boolean类型
-                            if (param.defaultValue is Boolean) {
-                                param.defaultValue = realValue.toString().toBoolean()
-                            } else {
-                                param.defaultValue = realValue
-                            }
+            if (lastTimeBuildInfo?.buildParameters?.isNotEmpty() == true) {
+                val latestParamsMap = lastTimeBuildInfo.buildParameters!!.associate { it.key to it.value }
+                triggerContainer.params.forEach { param ->
+                    val realValue = latestParamsMap[param.id]
+                    if (realValue != null) {
+                        // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                        // 当值是boolean类型的时候，需要转为boolean类型
+                        if (param.defaultValue is Boolean) {
+                            param.defaultValue = realValue.toString().toBoolean()
+                        } else {
+                            param.defaultValue = realValue
                         }
                     }
                 }
@@ -290,25 +280,7 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW,
             message = "用户（$userId) 无权限获取流水线($pipelineId)信息"
         )
-
-        return try {
-            val startupParam = buildStartupParamService.getParam(buildId)
-            if (startupParam == null || startupParam.isEmpty()) {
-                emptyList()
-            } else {
-                try {
-                    val map: Map<String, Any> = JsonUtil.toMap(startupParam)
-                    map.map { transform ->
-                        BuildParameters(transform.key, transform.value)
-                    }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
-                } catch (e: Exception) {
-                    logger.warn("Fail to convert the parameters($startupParam) to map of build($buildId)", e)
-                    throw e
-                }
-            }
-        } catch (e: NotFoundException) {
-            return emptyList()
-        }
+        return pipelineRuntimeService.getBuildParametersFromStartup(buildId)
     }
 
     fun retry(
@@ -439,8 +411,8 @@ class PipelineBuildFacadeService(
             } else {
                 // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
                 try {
-                    val startupParam = buildStartupParamService.getParam(buildId)
-                    if (startupParam != null && startupParam.isNotEmpty()) {
+                    val startupParam = pipelineRuntimeService.getBuildParametersFromStartup(buildId)
+                    if (startupParam.isNotEmpty()) {
                         startParamsWithType.addAll(
                             JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID }.map {
                                 BuildParameters(key = it.key, value = it.value)
@@ -457,17 +429,18 @@ class PipelineBuildFacadeService(
             // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
             pipelineTaskPauseService.resetElementWhenPauseRetry(buildId, model)
 
-            logger.info(
-                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                    "retryCount=${originVars[PIPELINE_RETRY_COUNT]}|fc=$failedContainer|skip=$skipFailedTask"
-            )
-
             // rebuild重试计数
-            val retryCount = if (originVars[PIPELINE_RETRY_COUNT] != null) {
-                originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            val originRetryCount = buildInfo.buildParameters?.firstOrNull { it.key == PIPELINE_RETRY_COUNT }?.value
+            val retryCount = if (originRetryCount != null) {
+                originRetryCount.toString().toInt() + 1
             } else {
                 1
             }
+
+            logger.info(
+                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
+                    "originRetryCount=$originRetryCount|fc=$failedContainer|skip=$skipFailedTask"
+            )
             startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount))
             startParamsWithType.add(BuildParameters(key = PIPELINE_RETRY_BUILD_ID, value = buildId))
 

@@ -33,10 +33,18 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("VM虚拟机配额")
 data class AddSharedProjectInfo(
-    @ApiModelProperty("工蜂项目ID", required = true)
-    val gitProjectId: String,
+    @Deprecated("普通项目也支持 , 请使用projectId")
+    @ApiModelProperty("工蜂项目ID", required = false)
+    val gitProjectId: String? = null,
     @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
     @ApiModelProperty("类型，预留", required = true)
-    val type: SharedEnvType
-)
+    val type: SharedEnvType,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String? = null
+) {
+    @SuppressWarnings("TooGenericExceptionThrown")
+    fun getFinalProjectId(): String {
+        return projectId ?: gitProjectId ?: throw RuntimeException("Project id must not null.")
+    }
+}

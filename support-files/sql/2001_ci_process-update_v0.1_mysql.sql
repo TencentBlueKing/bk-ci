@@ -19,7 +19,7 @@ BEGIN
                     AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
                     AND COLUMN_NAME = 'PARAM') THEN
         ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD COLUMN `PARAM` mediumtext NOT NULL AFTER BUILD_ID;
+            ADD COLUMN `PARAM` mediumtext NOT NULL COMMENT '参数' AFTER BUILD_ID;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -36,7 +36,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
                     AND COLUMN_NAME = 'BUILD_PARAMETERS') THEN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY
-            ADD COLUMN `BUILD_PARAMETERS` mediumtext NULL AFTER EXECUTE_TIME;
+            ADD COLUMN `BUILD_PARAMETERS` mediumtext NULL COMMENT '构建环境参数' AFTER EXECUTE_TIME;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -53,7 +53,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                     AND COLUMN_NAME = 'TASK_PARAMS') THEN
         ALTER TABLE T_PIPELINE_BUILD_TASK
-            ADD COLUMN `TASK_PARAMS` mediumtext NULL AFTER TASK_ID;
+            ADD COLUMN `TASK_PARAMS` mediumtext NULL COMMENT '任务参数集合' AFTER TASK_ID;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -69,7 +69,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                     AND COLUMN_NAME = 'ADDITIONAL_OPTIONS') THEN
         ALTER TABLE T_PIPELINE_BUILD_TASK
-            ADD COLUMN `ADDITIONAL_OPTIONS` mediumtext NULL AFTER CONTAINER_TYPE;
+            ADD COLUMN `ADDITIONAL_OPTIONS` mediumtext NULL COMMENT '其他选项' AFTER CONTAINER_TYPE;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -86,7 +86,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'NAME') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `NAME` mediumtext NULL AFTER RUN_TYPE;
+            ADD COLUMN `NAME` mediumtext NULL COMMENT '名称' AFTER RUN_TYPE;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -104,7 +104,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'SUCCESS_RECEIVER') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `SUCCESS_RECEIVER` mediumtext NULL AFTER NAME;
+            ADD COLUMN `SUCCESS_RECEIVER` mediumtext NULL COMMENT '成功接受者' AFTER NAME;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -121,7 +121,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'FAIL_RECEIVER') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `FAIL_RECEIVER` mediumtext NULL AFTER SUCCESS_RECEIVER;
+            ADD COLUMN `FAIL_RECEIVER` mediumtext NULL COMMENT '失败接受者' AFTER SUCCESS_RECEIVER;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -138,7 +138,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'SUCCESS_GROUP') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `SUCCESS_GROUP` mediumtext NULL AFTER FAIL_RECEIVER;
+            ADD COLUMN `SUCCESS_GROUP` mediumtext NULL COMMENT '成功接收者' AFTER FAIL_RECEIVER;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -155,7 +155,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'FAIL_GROUP') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `FAIL_GROUP` mediumtext NULL AFTER SUCCESS_GROUP;
+            ADD COLUMN `FAIL_GROUP` mediumtext NULL COMMENT '失败组' AFTER SUCCESS_GROUP;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -172,7 +172,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_VIEW'
                     AND COLUMN_NAME = 'FILTERS') THEN
         ALTER TABLE T_PIPELINE_VIEW
-            ADD COLUMN `FILTERS` mediumtext NULL AFTER LOGIC;
+            ADD COLUMN `FILTERS` mediumtext NULL COMMENT '过滤器' AFTER LOGIC;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -189,7 +189,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_VIEW_USER_SETTINGS'
                     AND COLUMN_NAME = 'SETTINGS') THEN
         ALTER TABLE T_PIPELINE_VIEW_USER_SETTINGS
-            ADD COLUMN `SETTINGS` mediumtext NULL AFTER PROJECT_ID;
+            ADD COLUMN `SETTINGS` mediumtext NULL COMMENT '属性配置表' AFTER PROJECT_ID;
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -286,7 +286,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
                     AND COLUMN_NAME = 'PIPELINE_ID') THEN
         ALTER TABLE T_PIPELINE_BUILD_VAR
-            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL AFTER `PROJECT_ID`;
+            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '流水线ID' AFTER `PROJECT_ID`;
     END IF;
 
 
@@ -306,7 +306,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                     AND COLUMN_NAME = 'ERROR_TYPE') THEN
         ALTER TABLE T_PIPELINE_BUILD_TASK
-            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL AFTER `TOTAL_TIME`;
+            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL COMMENT '错误类型' AFTER `TOTAL_TIME`;
     END IF;
 
 
@@ -316,7 +316,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                     AND COLUMN_NAME = 'ERROR_CODE') THEN
         ALTER TABLE T_PIPELINE_BUILD_TASK
-            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL AFTER `ERROR_TYPE`;
+            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL COMMENT '错误码' AFTER `ERROR_TYPE`;
     END IF;
 
 
@@ -346,7 +346,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
                     AND COLUMN_NAME = 'ERROR_TYPE') THEN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY
-            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL AFTER `RECOMMEND_VERSION`;
+            ADD COLUMN `ERROR_TYPE` int(11) DEFAULT NULL COMMENT '错误类型' AFTER `RECOMMEND_VERSION`;
     END IF;
 
 
@@ -356,7 +356,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
                     AND COLUMN_NAME = 'ERROR_CODE') THEN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY
-            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL AFTER `ERROR_TYPE`;
+            ADD COLUMN `ERROR_CODE` int(11) DEFAULT NULL COMMENT '错误码' AFTER `ERROR_TYPE`;
     END IF;
 
 
@@ -386,7 +386,7 @@ BEGIN
                     AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
                     AND COLUMN_NAME = 'PIPELINE_ID') THEN
         ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL;
+            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '流水线ID';
     END IF;
 
 
@@ -496,7 +496,7 @@ BEGIN
                         AND TABLE_NAME = 'T_TEMPLATE'
                         AND COLUMN_NAME = 'VERSION'
                         AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_TEMPLATE MODIFY COLUMN VERSION BIGINT(20) NOT NULL AUTO_INCREMENT;
+            ALTER TABLE T_TEMPLATE MODIFY COLUMN VERSION BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
         END IF;
     END IF;
 
@@ -511,7 +511,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
                         AND COLUMN_NAME = 'ID'
                         AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_PIPELINE_WEBHOOK MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+            ALTER TABLE T_PIPELINE_WEBHOOK MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
         END IF;
     END IF;
 
@@ -526,7 +526,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PIPELINE_TEMPLATE'
                         AND COLUMN_NAME = 'ID'
                         AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_PIPELINE_TEMPLATE MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+            ALTER TABLE T_PIPELINE_TEMPLATE MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
         END IF;
     END IF;
 
@@ -541,7 +541,7 @@ BEGIN
                         AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
                         AND COLUMN_NAME = 'ID'
                         AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_BUILD_STARTUP_PARAM MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+            ALTER TABLE T_BUILD_STARTUP_PARAM MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
         END IF;
     END IF;
 
