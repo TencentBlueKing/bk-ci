@@ -47,6 +47,7 @@ import io.kubernetes.client.openapi.models.V1Deployment
 import io.kubernetes.client.openapi.models.V1DeploymentList
 import io.kubernetes.client.openapi.models.V1Status
 import io.kubernetes.client.util.PatchUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -56,6 +57,10 @@ class DeploymentClient @Autowired constructor(
     private val dispatchBuildConfig: DispatchBuildConfig
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(DeploymentClient::class.java)
+    }
+
     private val volumeName = "config"
 
     fun create(
@@ -63,6 +68,8 @@ class DeploymentClient @Autowired constructor(
         containerName: String
     ): ApiResponse<V1Deployment> {
         val labels = getCoreLabels(containerName)
+
+        logger.info("DeploymentClient create containerName: $containerName buildContainer: $buildContainer")
 
         val deployment = with(buildContainer) {
             Deployment.deployment(

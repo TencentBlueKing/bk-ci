@@ -41,6 +41,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
 import io.kubernetes.client.openapi.models.V1ContainerStatus
+import kotlin.math.log
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -87,6 +88,9 @@ class ContainerClient @Autowired constructor(
         buildContainer: BuildContainer
     ): String {
         val containerName = "${dispatchMessage.userId}1574210195791"
+
+        logger.info("ContainerClient createContainer containerName: $containerName dispatchMessage: $dispatchMessage")
+
         when (buildContainer.type) {
             ContainerType.DEV -> {
                 val resp = deploymentClient.create(buildContainer, containerName)
