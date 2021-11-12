@@ -88,6 +88,7 @@ class EnvShareProjectDao {
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun batchSave(
         dslContext: DSLContext,
         userId: String,
@@ -117,7 +118,7 @@ class EnvShareProjectDao {
                     envId,
                     envName,
                     mainProjectId,
-                    it.gitProjectId,
+                    it.getFinalProjectId(),
                     it.name,
                     it.type.name,
                     userId,
@@ -125,7 +126,7 @@ class EnvShareProjectDao {
                     now
                 ).onDuplicateKeyUpdate()
                     .set(ENV_NAME, envName)
-                    .set(SHARED_PROJECT_NAME, it.gitProjectId)
+                    .set(SHARED_PROJECT_NAME, it.getFinalProjectId())
                     .set(TYPE, it.type.name)
                     .set(CREATOR, userId)
                     .set(UPDATE_TIME, now)
