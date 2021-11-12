@@ -51,7 +51,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Random
 
@@ -76,9 +75,6 @@ class DockerHostUtils @Autowired constructor(
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
-
-    @Value("\${dispatch.defaultAgentLessIp:127.0.0.1}")
-    val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,
@@ -127,13 +123,6 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerPair.first.isEmpty()) {
-            // agentless方案升级兼容
-            logger.info("defaultAgentLessIp: $defaultAgentLessIp")
-            if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
-                val defaultAgentLessIpList = defaultAgentLessIp.split(",")
-                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 80)
-            }
-
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
