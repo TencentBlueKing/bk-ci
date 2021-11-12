@@ -47,3 +47,9 @@ data class TriggerBuildResult(
     @ApiModelProperty("触发的构建详情页")
     val buildUrl: String
 )
+
+@ApiModel("App手动触发返回结果")
+data class AppTriggerBuildResult(
+    @ApiModelProperty("构建ID")
+    val id: String
+)

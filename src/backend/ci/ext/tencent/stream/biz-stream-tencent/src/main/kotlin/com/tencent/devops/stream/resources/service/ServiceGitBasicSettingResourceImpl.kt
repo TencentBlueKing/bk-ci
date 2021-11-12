@@ -72,7 +72,12 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         )
         val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
+            streamBasicSettingService.initGitCIConf(
+                userId = userId,
+                projectId = projectId,
+                gitProjectId = gitProjectId,
+                enabled = enabled
+            )
         } else {
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -166,14 +171,20 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, projectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        projectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableUserId = userId
+                userId = userId,
+                authUserId = authUserId
             )
         )
     }

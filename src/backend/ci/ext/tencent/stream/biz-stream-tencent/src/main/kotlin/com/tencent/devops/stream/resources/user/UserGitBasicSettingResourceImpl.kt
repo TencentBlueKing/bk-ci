@@ -101,14 +101,20 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, projectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        projectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableUserId = userId
+                userId = userId,
+                authUserId = authUserId
             )
         )
     }
