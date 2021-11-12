@@ -206,10 +206,15 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, gitProjectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        gitProjectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).updateEnableUser(
             userId = userId,
-            projectId = gitProjectId
+            projectId = "git_$gitProjectId",
+            authUserId = authUserId
         )
     }
 }
