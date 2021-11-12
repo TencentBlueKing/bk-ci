@@ -101,25 +101,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     ) {
         val detailUrl = vars["detailUrl"]
         weworkGroup.forEach {
-            if (markerDownFlag) {
-                wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), it)
-            } else {
-                val receiver = Receiver(ReceiverType.group, it)
-                val richtextContentList = mutableListOf<RichtextContent>()
-                richtextContentList.add(
-                    RichtextText(RichtextTextText(content))
-                )
-                if (detailFlag) {
-                    richtextContentList.add(
-                        RichtextView(
-                            RichtextViewLink(text = "查看详情", key = detailUrl!!, browser = 1)
-                        )
-                    )
-                }
-                val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                wechatWorkService.sendRichText(richtextMessage)
-            }
-
             if (it.startsWith("ww")) { // 应用号逻辑
                 sendByApp(it, content, markerDownFlag, detailFlag, detailUrl!!)
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
