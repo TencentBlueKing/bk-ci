@@ -479,7 +479,9 @@ class LambdaDataService @Autowired constructor(
                 channelCode = ChannelCode.valueOf(t.channel),
                 errorInfoList = null,
                 executeTime = t.executeTime ?: 0,
-                buildParameters = t.buildParameters?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> }
+                buildParameters = t.buildParameters?.let {
+                    self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                }
             )
         }
     }
