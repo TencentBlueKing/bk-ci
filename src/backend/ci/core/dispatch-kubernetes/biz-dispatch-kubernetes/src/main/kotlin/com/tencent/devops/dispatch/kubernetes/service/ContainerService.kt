@@ -219,7 +219,7 @@ class ContainerService @Autowired constructor(
                             ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                         ),
                         command = listOf(
-                            "/bin/sh",
+                            "/bin/bash",
                             "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
                         )
                     )
