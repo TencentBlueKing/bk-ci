@@ -21,7 +21,8 @@ spec:
         {{- include "common.tplvalues.render" (dict "value" .Values.dispatchKubernetes.podLabels "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      # 这里需要创建一个集群管理员权限的账户，先用固定的测试
+      serviceAccountName: bkci-kube-client-account
       {{- if .Values.dispatchKubernetes.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchKubernetes.hostAliases "context" $) | nindent 8 }}
       {{- end }}
