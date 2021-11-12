@@ -25,34 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.metadata.service
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.metadata.dao.MetadataDao
-import com.tencent.devops.process.pojo.Property
-import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Service
-class MetadataService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val metadataDao: MetadataDao,
-    private val client: Client
-) {
-    fun list(projectId: String, pipelineId: String, buildId: String): List<Property> {
-        val result = metadataDao.list(dslContext, buildId)
-        return result.map {
-            Property(it.metaDataId, it.metaDataValue)
-        }
-    }
+@Api(tags = ["SERVICE_ALLOC_ID"], description = "ID分配")
+@Path("/service/alloc/ids")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceAllocIdResource {
 
-    fun create(projectId: String, pipelineId: String, buildId: String, properties: List<Property>) {
-        val pairList = properties.map {
-            val id = client.get(ServiceAllocIdResource::class).generateSegmentId("METADATA").data
-            Triple(it.key, it.value, id)
-        }
-        metadataDao.batchCreate(dslContext, projectId, pipelineId, buildId, pairList)
-    }
+    @GET
+    @Path("/types/segment/tags/{bizTag}/generate")
+    @ApiOperation("按号段模式生成Id")
+    fun generateSegmentId(
+        @ApiParam("业务标签", required = true)
+        @PathParam("bizTag")
+        @BkField(minLength = 1, maxLength = 128)
+        bizTag: String
+    ): Result<Long?>
 }

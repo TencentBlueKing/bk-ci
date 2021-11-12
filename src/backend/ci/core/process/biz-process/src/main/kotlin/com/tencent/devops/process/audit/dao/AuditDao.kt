@@ -46,7 +46,8 @@ class AuditDao {
         userId: String,
         action: String,
         actionContent: String,
-        projectId: String
+        projectId: String,
+        id: Long? = null
     ): Long {
         with(TAuditResource.T_AUDIT_RESOURCE) {
             val record = dslContext.insertInto(
@@ -59,7 +60,8 @@ class AuditDao {
                 ACTION_CONTENT,
                 CREATED_TIME,
                 STATUS,
-                PROJECT_ID
+                PROJECT_ID,
+                ID
             ).values(
                 resourceType,
                 resourceId,
@@ -69,7 +71,8 @@ class AuditDao {
                 actionContent,
                 LocalDateTime.now(),
                 "1",
-                projectId
+                projectId,
+                id
             )
                 .returning(ID)
                 .fetchOne()!!

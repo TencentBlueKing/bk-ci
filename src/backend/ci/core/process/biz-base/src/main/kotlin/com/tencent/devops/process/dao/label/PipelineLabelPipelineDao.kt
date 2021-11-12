@@ -49,7 +49,8 @@ class PipelineLabelPipelineDao {
         projectId: String,
         pipelineId: String,
         labelId: Long,
-        userId: String
+        userId: String,
+        id: Long? = null
     ) {
         logger.info("Create pipeline-label for pipeline $pipelineId with label $labelId by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
@@ -59,14 +60,16 @@ class PipelineLabelPipelineDao {
                 PIPELINE_ID,
                 LABEL_ID,
                 CREATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
                     pipelineId,
                     labelId,
                     LocalDateTime.now(),
-                    userId
+                    userId,
+                    id
                 ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -76,27 +79,29 @@ class PipelineLabelPipelineDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        labelIds: Set<Long>,
+        pipelineLabelRels: List<Pair<Long, Long?>>,
         userId: String
     ) {
-        logger.info("Create pipeline-label for pipeline $pipelineId with labels $labelIds by user $userId")
+        logger.info("Create pipeline-label for pipeline $pipelineId with labels $pipelineLabelRels by user $userId")
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.batch(
-                labelIds.map {
+                pipelineLabelRels.map {
                     dslContext.insertInto(
                         this,
                         PROJECT_ID,
                         PIPELINE_ID,
                         LABEL_ID,
                         CREATE_TIME,
-                        CREATE_USER
+                        CREATE_USER,
+                        ID
                     )
                         .values(
                             projectId,
                             pipelineId,
-                            it,
+                            it.first,
                             LocalDateTime.now(),
-                            userId
+                            userId,
+                            it.second
                         ).onDuplicateKeyIgnore()
                 }
             ).execute()

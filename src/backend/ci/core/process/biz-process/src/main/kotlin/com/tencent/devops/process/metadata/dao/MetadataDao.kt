@@ -43,7 +43,8 @@ class MetadataDao {
         pipelineId: String,
         buildId: String,
         metaDataId: String,
-        metaDataValue: String
+        metaDataValue: String,
+        id: Long? = null
     ): Long {
         val now = LocalDateTime.now()
         with(TMetadata.T_METADATA) {
@@ -54,14 +55,16 @@ class MetadataDao {
                 BUILD_ID,
                 META_DATA_ID,
                 META_DATA_VALUE,
-                CREATE_TIME
+                CREATE_TIME,
+                ID
             ).values(
                 projectId,
                 pipelineId,
                 buildId,
                 metaDataId,
                 metaDataValue,
-                now
+                now,
+                id
             )
                 .returning(ID)
                 .fetchOne()
@@ -74,12 +77,12 @@ class MetadataDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        metaPairList: List<Pair<String, String>>
+        metaPairList: List<Triple<String, String, Long?>>
     ) {
         val now = LocalDateTime.now()
         with(TMetadata.T_METADATA) {
             val recordList = metaPairList.map {
-                TMetadataRecord(0L, projectId, pipelineId, buildId, it.first, it.second, now)
+                TMetadataRecord(it.third, projectId, pipelineId, buildId, it.first, it.second, now)
             }
             dslContext.batchInsert(recordList).execute()
         }

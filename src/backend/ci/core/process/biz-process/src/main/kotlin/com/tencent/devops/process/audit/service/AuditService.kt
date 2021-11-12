@@ -30,8 +30,10 @@ package com.tencent.devops.process.audit.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.audit.dao.AuditDao
 import com.tencent.devops.process.pojo.audit.AuditInfo
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -39,11 +41,13 @@ import org.springframework.stereotype.Service
 @Service
 class AuditService @Autowired constructor(
     private val auditDao: AuditDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) {
 
     fun createAudit(audit: com.tencent.devops.process.pojo.audit.Audit): Long {
         checkParam(audit)
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("AUDIT_RESOURCE").data
         return auditDao.create(
             dslContext = dslContext,
             resourceType = audit.resourceType,
@@ -52,7 +56,8 @@ class AuditService @Autowired constructor(
             userId = audit.userId,
             action = audit.action,
             actionContent = audit.actionContent,
-            projectId = audit.projectId
+            projectId = audit.projectId,
+            id = id
         )
     }
 

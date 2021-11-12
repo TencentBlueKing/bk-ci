@@ -49,7 +49,8 @@ class PipelineWebHookQueueDao {
         targetProjectId: Long,
         targetRepoName: String,
         targetBranch: String,
-        buildId: String
+        buildId: String,
+        id: Long? = null
     ) {
         with(T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.insertInto(
@@ -63,7 +64,8 @@ class PipelineWebHookQueueDao {
                 TARGET_REPO_NAME,
                 TARGET_BRANCH,
                 BUILD_ID,
-                CREATE_TIME
+                CREATE_TIME,
+                ID
             ).values(
                 projectId,
                 pipelineId,
@@ -74,7 +76,8 @@ class PipelineWebHookQueueDao {
                 targetRepoName,
                 targetBranch,
                 buildId,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                id
             ).execute()
         }
     }

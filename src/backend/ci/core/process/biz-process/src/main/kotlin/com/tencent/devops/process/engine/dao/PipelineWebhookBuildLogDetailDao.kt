@@ -61,7 +61,8 @@ class PipelineWebhookBuildLogDetailDao {
                     TASK_NAME,
                     SUCCESS,
                     TRIGGER_RESULT,
-                    CREATED_TIME
+                    CREATED_TIME,
+                    ID
                 ).values(
                     logId,
                     it.codeType,
@@ -73,7 +74,8 @@ class PipelineWebhookBuildLogDetailDao {
                     it.taskName,
                     it.success,
                     it.triggerResult,
-                    Timestamp(it.createdTime).toLocalDateTime()
+                    Timestamp(it.createdTime).toLocalDateTime(),
+                    it.id
                 )
             }
         }
