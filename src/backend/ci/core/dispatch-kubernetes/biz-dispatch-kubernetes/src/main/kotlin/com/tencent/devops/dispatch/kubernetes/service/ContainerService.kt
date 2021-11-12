@@ -188,8 +188,8 @@ class ContainerService @Autowired constructor(
         disk: ThreadLocal<String>
     ): OperateContainerResult {
 //        val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
-        val userName = containerPool.credential!!.user
-        val password = containerPool.credential.password
+        val userName = containerPool.credential?.user
+        val password = containerPool.credential?.password
 
         with(dispatchMessage) {
             val containerName = containerClient.createContainer(
