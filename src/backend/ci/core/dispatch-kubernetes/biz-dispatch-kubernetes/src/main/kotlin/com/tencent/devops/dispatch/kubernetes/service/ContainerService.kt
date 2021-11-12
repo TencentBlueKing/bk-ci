@@ -228,7 +228,7 @@ class ContainerService @Autowired constructor(
             printLogs(this, "下发创建构建机请求成功，containerName: $containerName 等待机器启动...")
 
             // TODO: 测试
-            Thread.sleep(100000000)
+            Thread.sleep(1000000)
 
             // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
             redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
