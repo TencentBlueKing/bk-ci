@@ -61,6 +61,7 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         if (machineNodeSwitch.toBoolean()) {
             var nodeEnvFlag = false
             try {
+                LoggerService.addFoldEndLine("handleAtomTarget envs:${System.getenv()}")
                 // 探测构建机上是否有node环境
                 CommonScriptUtils.execute("node -v")
                 nodeEnvFlag = true
