@@ -446,6 +446,8 @@ class QualityRuleCheckService @Autowired constructor(
                 indicator.metadataList.map { metadataMap[it.enName] }
             }
 
+            logger.info("QUALITY|filterMetadataList is|$filterMetadataList")
+
             val checkMetaList = mutableListOf<QualityHisMetadata>()
             if (!ruleTaskSteps.isNullOrEmpty() && filterMetadataList.isNotEmpty()) {
                 filterMetadataList.forEach { metadata ->
@@ -456,13 +458,15 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             }
 
+            logger.info("QUALITY|checkMetaList is|$checkMetaList")
+
             // 遍历所有基础数据
             var elementDetail = ""
             val result: String? = when (thresholdType) {
                 // int类型把所有基础数据累加
                 QualityDataType.INT -> {
                     var result: Int? = null
-                    for (it in filterMetadataList) {
+                    for (it in checkMetaList) {
                         // -1表示直接失败
                         if (DETAIL_NOT_RUN_VALUE == it?.value) {
                             result = null
@@ -485,7 +489,7 @@ class QualityRuleCheckService @Autowired constructor(
                 // float类型把所有基础数据累加
                 QualityDataType.FLOAT -> {
                     var result: BigDecimal? = null
-                    for (it in filterMetadataList) {
+                    for (it in checkMetaList) {
 
                         if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = BigDecimal(it.value)
@@ -518,7 +522,7 @@ class QualityRuleCheckService @Autowired constructor(
                     var result: Boolean? = null
                     val threshold = indicator.threshold.toBoolean()
                     logger.info("boolean threshold: $threshold")
-                    for (it in filterMetadataList) {
+                    for (it in checkMetaList) {
                         logger.info("each value: ${it?.value}")
                         if (it?.value != null &&
                             (it.value.toLowerCase() == "true" || it.value.toLowerCase() == "false")
