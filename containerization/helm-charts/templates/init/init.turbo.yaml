@@ -38,8 +38,8 @@ spec:
                 "deleted": false,
                 "link": "/console/turbo/",
                 "linkNew": "/turbo/",
-                "css_url": "http://{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.css",
-                "js_url": "http://{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
+                "css_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.css",
+                "js_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
               }' "http://{{ include "common.names.fullname" . }}-project/api/op/services/update/Turbo"
       restartPolicy: OnFailure
 {{ end }}
