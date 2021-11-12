@@ -567,7 +567,7 @@ class StreamScmService @Autowired constructor(
     private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
             val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-            oauthService.getAndCheckOauthToken(setting!!.authUserId).accessToken
+            oauthService.getAndCheckOauthToken(setting!!.enableUserId).accessToken
         } else {
             return oauthService.getAndCheckOauthToken(userId).accessToken
         }

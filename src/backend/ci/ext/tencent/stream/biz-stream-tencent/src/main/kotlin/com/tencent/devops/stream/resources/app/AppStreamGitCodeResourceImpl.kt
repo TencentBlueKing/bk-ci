@@ -76,6 +76,6 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(gitProjectId: Long): String {
         val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
-        return oauthService.getAndCheckOauthToken(setting.authUserId).accessToken
+        return oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
     }
 }

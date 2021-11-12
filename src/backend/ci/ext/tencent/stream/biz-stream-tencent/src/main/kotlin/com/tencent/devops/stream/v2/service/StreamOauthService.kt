@@ -68,7 +68,7 @@ class StreamOauthService @Autowired constructor(
     fun getGitCIEnableToken(
         gitProjectId: Long
     ): GitToken {
-        val userId = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.authUserId
+        val userId = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableUserId
             ?: throw RuntimeException("工蜂项目${gitProjectId}未开启Stream")
         return try {
             client.get(ServiceOauthResource::class).gitGet(userId).data!!

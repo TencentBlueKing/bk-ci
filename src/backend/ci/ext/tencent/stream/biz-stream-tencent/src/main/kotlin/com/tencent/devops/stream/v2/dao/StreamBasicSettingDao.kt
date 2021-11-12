@@ -92,7 +92,7 @@ class StreamBasicSettingDao {
                         LocalDateTime.now(),
                         projectCode,
                         conf.enableMrBlock,
-                        conf.authUserId,
+                        conf.enableUserId,
                         conf.creatorBgName,
                         conf.creatorDeptName,
                         conf.creatorCenterName,
@@ -112,7 +112,7 @@ class StreamBasicSettingDao {
                         .set(UPDATE_TIME, now)
                         .set(PROJECT_CODE, projectCode)
                         .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
-                        .set(ENABLE_USER_ID, conf.authUserId)
+                        .set(ENABLE_USER_ID, conf.enableUserId)
                         .set(CREATOR_BG_NAME, conf.creatorBgName)
                         .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
                         .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
@@ -240,7 +240,7 @@ class StreamBasicSettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableMrBlock = conf.enableMrBlock,
-                    authUserId = conf.enableUserId,
+                    enableUserId = conf.enableUserId,
                     creatorBgName = conf.creatorBgName,
                     creatorDeptName = conf.creatorDeptName,
                     creatorCenterName = conf.creatorCenterName,

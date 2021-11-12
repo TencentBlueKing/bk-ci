@@ -134,7 +134,7 @@ class StreamBasicSettingService @Autowired constructor(
                     gitHttpUrl = projectInfo.gitHttpsUrl ?: return@back,
                     gitSshUrl = projectInfo.gitSshUrl ?: return@back,
                     enableCi = enabled,
-                    authUserId = userId,
+                    enableUserId = userId,
                     buildPushedBranches = true,
                     buildPushedPullRequest = true,
                     enableMrBlock = true,
@@ -184,7 +184,7 @@ class StreamBasicSettingService @Autowired constructor(
             setting.creatorCenterName = projectInfo.centerName
             streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
-            val projectResult = client.get(ServiceTxUserResource::class).get(gitRepoConf.authUserId)
+            val projectResult = client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
             if (projectResult.isNotOk()) {
                 logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
                 return false
