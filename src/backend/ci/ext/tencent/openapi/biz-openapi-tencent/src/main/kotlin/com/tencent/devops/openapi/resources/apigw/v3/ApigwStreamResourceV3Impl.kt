@@ -230,7 +230,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         orderBy: GitCodeProjectsOrder?,
-        sort: GitCodeBranchesSort?,
+        sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>> {
         return client.get(ServiceGitCIProjectResource::class).getProjects(
             userId = userId,
