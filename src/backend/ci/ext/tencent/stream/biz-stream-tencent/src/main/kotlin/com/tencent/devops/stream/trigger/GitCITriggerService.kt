@@ -134,6 +134,7 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent.id = id
 
         if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
+            logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
             return true
         }
 
