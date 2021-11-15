@@ -34,11 +34,10 @@ import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-@Suppress("MaxLineLength","UnusedImports")
+@Suppress("MaxLineLength")
 @Service
 class TurboEngineConfigService @Autowired constructor(
     private val turboEngineConfigRepository: TurboEngineConfigRepository,

@@ -1,8 +1,19 @@
 package com.tencent.devops.turbo.config
 
-import com.tencent.devops.common.util.constants.*
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_CREATE
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_CREATE
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_PLUGIN_DATA
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
 import com.tencent.devops.turbo.component.TurboRecordConsumer
-import org.springframework.amqp.core.*
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.Queue
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.CustomExchange
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
