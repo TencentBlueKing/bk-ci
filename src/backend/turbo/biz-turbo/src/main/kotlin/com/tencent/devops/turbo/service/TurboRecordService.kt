@@ -38,7 +38,7 @@ import java.time.ZoneOffset
 import java.util.Base64
 import kotlin.reflect.full.memberProperties
 
-@Suppress("MaxLineLength")
+@Suppress("MaxLineLength","ComplexMethod")
 @Service
 class TurboRecordService @Autowired constructor(
     private val turboRecordRepository: TurboRecordRepository,

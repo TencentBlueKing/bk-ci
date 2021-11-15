@@ -8,6 +8,7 @@ import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("NestedBlockDepth")
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,

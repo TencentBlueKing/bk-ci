@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-@Suppress("MaxLineLength")
+@Suppress("MaxLineLength","UnusedImports")
 @Service
 class TurboEngineConfigService @Autowired constructor(
     private val turboEngineConfigRepository: TurboEngineConfigRepository,
