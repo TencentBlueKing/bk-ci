@@ -140,7 +140,7 @@ class ContainerService @Autowired constructor(
                         containerName = containerInfo.containerName
                     )
 
-                    if (statusResponse.data?.state?.terminated != null) {
+                    if (statusResponse.data == null) {
                         var containerChanged = false
                         // 查看构建性能配置是否变更
                         if (cpu.get() != containerInfo.cpu ||
