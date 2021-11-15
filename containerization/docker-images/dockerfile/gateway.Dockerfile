@@ -10,6 +10,8 @@ COPY ./ci/gateway /data/workspace/gateway
 COPY ./ci/support-files/templates /data/workspace/templates
 COPY ./ci/scripts /data/workspace/scripts
 COPY ./ci/frontend /data/workspace/frontend
+COPY ./ci/agent-package/script/docker_init.sh /data/dir/gateway/files/prod/
+COPY ./ci/agent-package/jar /data/dir/gateway/files/prod/jar
 
 RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone && \
