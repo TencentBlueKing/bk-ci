@@ -133,7 +133,7 @@ class ContainerClient @Autowired constructor(
         var max = MAX_WAIT
         while (state?.running == null && max != 0) {
             if (state?.terminated != null) {
-                logger.info("waitContainerStart containerName: $containerName error: ${e.message}")
+                logger.info("waitContainerStart containerName: $containerName state: $state")
                 return OperateContainerResult(containerName, false, state.terminated?.message)
             } else {
                 state = getContainerStatus(containerName).data?.state
