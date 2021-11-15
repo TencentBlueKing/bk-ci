@@ -230,8 +230,8 @@ class ContainerService @Autowired constructor(
             )
             printLogs(this, "下发创建构建机请求成功，containerName: $containerName 等待机器启动...")
 
-            // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
-            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
+            // 缓存创建容器信息，防止服务中断或重启引起的信息丢失 TODO: 测试用
+//            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
 
             val createContainerResult = containerClient.waitContainerStart(containerName)
 
