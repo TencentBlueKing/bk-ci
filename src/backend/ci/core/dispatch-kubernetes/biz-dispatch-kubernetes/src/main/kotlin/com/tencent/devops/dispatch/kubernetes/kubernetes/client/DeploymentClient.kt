@@ -219,10 +219,10 @@ class DeploymentClient @Autowired constructor(
             null,
             null,
             null,
-            mapOf(dispatchBuildConfig.label!! to containerName).toLabelSelector(),
+            getCoreLabels(containerName).toLabelSelector(),
             null, null, null, null, null
         )
     }
 
-    private fun getCoreLabels(containerName: String) = mapOf("container-name" to containerName)
+    private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.label!! to containerName)
 }
