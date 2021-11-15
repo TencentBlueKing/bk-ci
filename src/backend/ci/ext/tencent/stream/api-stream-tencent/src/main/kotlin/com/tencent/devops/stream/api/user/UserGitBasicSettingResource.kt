@@ -29,7 +29,9 @@ package com.tencent.devops.stream.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -103,4 +105,25 @@ interface UserGitBasicSettingResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取第三方构建机任务")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
+    fun listAgentBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
 }

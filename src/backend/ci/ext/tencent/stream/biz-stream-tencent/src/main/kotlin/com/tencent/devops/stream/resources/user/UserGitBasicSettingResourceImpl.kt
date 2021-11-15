@@ -27,9 +27,13 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
@@ -106,6 +110,31 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 enableUserId = userId
             )
         )
+    }
+
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        checkParam(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    private fun checkNodeId(nodeHashId: String) {
+        if (nodeHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
+        }
+    }
+
+    private fun checkProjectId(projectId: String) {
+        if (projectId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
+        }
     }
 
     private fun checkParam(userId: String) {
