@@ -238,13 +238,13 @@ class ContainerService @Autowired constructor(
             val createContainerResult = containerClient.waitContainerStart(containerName)
 
             // 创建完成移除缓存信息
-            redisUtils.removeCreatingContainer(containerName, userId)
+//            redisUtils.removeCreatingContainer(containerName, userId)
 
             if (createContainerResult.result) {
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                        "start deployment success, wait for agent startup..."
+                            "start deployment success, wait for agent startup..."
                 )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
@@ -313,7 +313,10 @@ class ContainerService @Autowired constructor(
                         SLAVE_ENVIRONMENT to "Kubernetes",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                     ),
-                    command = listOf("/bin/sh", dispatchBuildConfig.volumeConfigMapPath!!)
+                    command = listOf(
+                        "/bin/bash",
+                        "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
+                    )
                 )
             )
 
@@ -329,7 +332,7 @@ class ContainerService @Autowired constructor(
 
 //            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
             val startResult = containerClient.waitContainerStart(containerName)
-            redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
+//            redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
 
             if (startResult.result) {
                 // 启动成功
@@ -384,8 +387,8 @@ class ContainerService @Autowired constructor(
             // 下发删除，不管成功失败
             logger.info(
                 "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
-                    "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
-                    dispatchMessage.buildId
+                        "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
+                        dispatchMessage.buildId
             )
             containerClient.operateContainer(containerName, Action.DELETE, null).let {
                 if (!it.result) {
@@ -407,9 +410,9 @@ class ContainerService @Autowired constructor(
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(
                 "buildId: ${dispatchMessage.buildId}, " +
-                    "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
-                    "old image: $images, " +
-                    "new image: ${dispatchMessage.dispatchMessage}"
+                        "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                        "old image: $images, " +
+                        "new image: ${dispatchMessage.dispatchMessage}"
             )
             return true
         }

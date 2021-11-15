@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.client
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
@@ -87,7 +88,7 @@ class ContainerClient @Autowired constructor(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
     ): String {
-        val containerName = "${dispatchMessage.userId}1574210195791"
+        val containerName = "${dispatchMessage.userId}${System.currentTimeMillis()}"
 
         logger.info("ContainerClient createContainer containerName: $containerName dispatchMessage: $dispatchMessage")
 
