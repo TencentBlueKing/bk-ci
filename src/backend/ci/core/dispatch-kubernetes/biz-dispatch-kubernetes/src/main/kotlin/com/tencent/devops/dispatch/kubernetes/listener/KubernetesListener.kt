@@ -259,7 +259,7 @@ class KubernetesListener @Autowired constructor(
         containerNameList.filter { it.second != null }.forEach {
             val containerName = it.second
             try {
-                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud container,vmSeqId: ${it.first}, containerName:$containerName")
+                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop container,vmSeqId: ${it.first}, containerName:$containerName")
                 val result = containerService.stopContainer(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId ?: "",
