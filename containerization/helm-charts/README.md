@@ -209,7 +209,7 @@ $ helm uninstall bkci
 | `bkCiDockerRegistryUser`  | Docker仓库用户 | `""` |
 | `bkCiDockerUrl`  | Docker的web入口 | `""` |
 | `bkCiDocsUrl`  | 文档地址 | `""` |
-| `bkCiEnvironmentAgentCollectorOn`  | 第三方构建机状态上报 | `false` |
+| `bkCiEnvironmentAgentCollectorOn`  | 第三方构建机状态上报 | `true` |
 | `bkCiEsClusterName`  | ES的集群名 | `devops` |
 | `bkCiEsPassword`  | ES的密码 | `""` |
 | `bkCiEsRestAddr`  | ES的地址 | `""` |
@@ -228,7 +228,7 @@ $ helm uninstall bkci
 | `bkCiIamCallbackUser`  | 供iam系统发起回调时使用的用户名 | `"bk_iam"` |
 | `bkCiIamWebUrl`  | IAM SaaS入口url | `""` |
 | `bkCiInfluxdbAddr`  | influxdb地址 | `""` |
-| `bkCiInfluxdbDb`  | influxdb数据库 | `""` |
+| `bkCiInfluxdbDb`  | influxdb数据库 | `"agentMetrix"` |
 | `bkCiInfluxdbHost`  | influxdb的host | `""` |
 | `bkCiInfluxdbPassword`  | influxdb密码 | `""` |
 | `bkCiInfluxdbPort`  | influxdb端口 | `80` |
@@ -294,6 +294,7 @@ $ helm uninstall bkci
 | `bkRepoHost`  | 制品库地址 | `""` |
 | `bkSsmHost`  | 用户认证地址 | `""` |
 | `bkSsmPort`  | 用户认证端口 | `80` |
+| `bkCiNotifyWeworkSendChannel` | 通知渠道 | `weworkAgent` |
 
 ### 编译加速配置
 |参数|描述|默认值 |
@@ -301,6 +302,7 @@ $ helm uninstall bkci
 | `turbo.enabled`  | 是否开启编译加速 | `"false"` |
 | `turbo.config.tbs.rootpath`  | 编译加速的地址 | `""` |
 | `turbo.config.tbs.urltemplate`  | 编译加速的调用url | `"api/v1/{engine}/resource/{resource_type}"` |
+| `turbo.config.tbs.dashboard`  | 编译加速管理地址 | `""` |
 | `turbo.config.devops.rootpath`  | 蓝盾url | `""` |
 
 ### 代码检查配置

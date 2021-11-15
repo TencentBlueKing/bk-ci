@@ -55,13 +55,6 @@ spec:
           {{- if .Values.repository.resources }}
           resources: {{- toYaml .Values.repository.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.repository.resources.requests.cpu | quote }}
-              memory: {{ .Values.repository.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.repository.resources.limits.cpu | quote }}
-              memory: {{ .Values.repository.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80
@@ -87,7 +80,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 300
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
