@@ -80,7 +80,7 @@ class ContainerClient @Autowired constructor(
         return Result(
             status = result.statusCode,
             message = null,
-            data = result.data.items[0].status?.containerStatuses?.get(0)
+            data = result.data.items?.get(0)?.status?.containerStatuses?.get(0)
         )
     }
 

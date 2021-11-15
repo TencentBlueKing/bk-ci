@@ -230,15 +230,15 @@ class ContainerService @Autowired constructor(
             )
             printLogs(this, "下发创建构建机请求成功，containerName: $containerName 等待机器启动...")
 
-            // 缓存创建容器信息，防止服务中断或重启引起的信息丢失 TODO: 测试用
-//            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
+            // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
+            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
 
             logger.info("ready to waitContainerStart $containerName")
 
             val createContainerResult = containerClient.waitContainerStart(containerName)
 
             // 创建完成移除缓存信息
-//            redisUtils.removeCreatingContainer(containerName, userId)
+            redisUtils.removeCreatingContainer(containerName, userId)
 
             if (createContainerResult.result) {
                 // 启动成功
@@ -330,9 +330,9 @@ class ContainerService @Autowired constructor(
                 poolNo = poolNo.toString()
             )
 
-//            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
+            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
             val startResult = containerClient.waitContainerStart(containerName)
-//            redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
+            redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
 
             if (startResult.result) {
                 // 启动成功
