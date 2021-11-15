@@ -121,6 +121,7 @@ class ContainerClient @Autowired constructor(
         var state = try {
             getContainerStatus(containerName).data?.state
         } catch (e: Throwable) {
+            logger.info("waitContainerStart containerName: $containerName error: ${e.message}")
             return OperateContainerResult(containerName, false, e.message)
         }
 
@@ -129,6 +130,7 @@ class ContainerClient @Autowired constructor(
         var max = MAX_WAIT
         while (state?.running == null && max != 0) {
             if (state?.terminated != null) {
+                logger.info("waitContainerStart containerName: $containerName error: ${e.message}")
                 return OperateContainerResult(containerName, false, state.terminated?.message)
             } else {
                 state = getContainerStatus(containerName).data?.state
