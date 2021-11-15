@@ -32,20 +32,20 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 
 /**
 {
-    "object_kind": "tag_push",
-    "operation_kind": "create",
-    "ref": "refs/tags/v1.0.2",
-    "before": "1480a4610ca01dd10cb5bc3359a1b1ea568c09a1",
-    "after": "b96850262fabfa9a1d9d28fff9040621958379f9",
-    "user_id": 11323,
-    "user_name": "git_user1",
-    "project_id": 11452,
+    "object_kind":"tag_push",
+    "operation_kind":"create",
+    "ref":"refs/tags/v1.0.2",
+    "before":"1480a4610ca01dd10cb5bc3359a1b1ea568c09a1",
+    "after":"b96850262fabfa9a1d9d28fff9040621958379f9",
+    "user_id":11323,
+    "user_name":"git_user1",
+    "project_id":11452,
     "repository": {
-        "name": "z-413",
-        "url": "ssh://git@tencent.com/z-413/tencent.git",
-        "description": "",
-        "homepage": "xxx
-        "git_http_url":"xxx
+        "name":"z-413",
+        "url":"ssh://git@tencent.com/z-413/tencent.git",
+        "description":"",
+        "homepage":"https://tencent.com/z-413/tencent",
+        "git_http_url":"http://tencent.com/z-413/tencent.git",
         "git_ssh_url":"git@tencent.com:z-413/tencent.git",
         "visibility_level":0
     },
@@ -54,16 +54,20 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
             "id":"458ce39e1a28572597979ca6c7cdc6c338f6bd43",
             "message":"update",
             "timestamp":"2019-03-28T02:14:59+0000",
-            "url":"xxx",
+            "url":"https://git.example.tencent.com/release-test/xxx-framework/commit/458ce39e1a28572597979ca6c7cdc6c338f6bd43",
             "author":{
-                "name":"xuhaohe",
-                "email":"xuhaohe@tencent.com"
+            "name":"xuhaohe",
+            "email":"xuhaohe@tencent.com"
             },
-            "added":[],
-            "modified":[
-                "README.md"
+            "added":[
+
             ],
-            "removed":[]
+            "modified":[
+            "README.md"
+            ],
+            "removed":[
+
+            ]
         }
     ],
     "total_commits_count":1,
@@ -83,7 +87,7 @@ data class GitTagPushEvent(
     val repository: GitCommitRepository,
     val commits: List<GitCommit>?,
     val total_commits_count: Int,
-    val create_from: String?
+    val create_from: String
 ) : GitEvent() {
     companion object {
         const val classType = TGitObjectKind.OBJECT_KIND_TAG_PUSH
