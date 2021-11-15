@@ -46,8 +46,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_PROJECT"], description = "user-项目资源")
-@Path("/user/projects")
+@Api(tags = ["SERVICE_STREAM_PROJECT"], description = "service-项目资源")
+@Path("/service/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitCIProjectResource {
