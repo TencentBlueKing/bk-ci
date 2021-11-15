@@ -264,7 +264,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String
     ): Result<GitCIBasicSetting?>
@@ -282,7 +282,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @ApiParam(value = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
         @ApiParam("工蜂项目配置", required = true)
@@ -299,4 +299,19 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "工蜂项目URL", required = true)
         request: GitUserValidateRequest
     ): Result<GitUserValidateResult?>
+
+    @ApiOperation("刷新项目启动人")
+    @POST
+    @Path("/{gitProjectId}/reset/oauth")
+    fun updateEnableUser(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "目标授权人", required = true)
+        @QueryParam("authUserId")
+        authUserId: String
+    ): Result<Boolean>
 }

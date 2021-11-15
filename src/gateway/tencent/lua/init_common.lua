@@ -41,9 +41,6 @@ accessControlUtil = require("util.access_control_util")
 securityUtil = require("util.security_util")
 ciAuthUtil = require("util.ci_auth_util")
 
-math.randomseed(ngx.now() * 1000)
-uuid.seed()
-
 local ok_table = {status = 0, data = true}
 
 response_ok = json.encode(ok_table)
