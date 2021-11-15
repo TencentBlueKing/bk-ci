@@ -36,12 +36,16 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_LAST_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_LAST_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
@@ -115,6 +119,10 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
                     originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
+                startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
+                if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
+                    startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
+                }
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
@@ -128,6 +136,10 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
                     originEvent.commits?.get(0)?.author?.name ?: ""
+                startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
+                if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
+                    startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
+                }
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
