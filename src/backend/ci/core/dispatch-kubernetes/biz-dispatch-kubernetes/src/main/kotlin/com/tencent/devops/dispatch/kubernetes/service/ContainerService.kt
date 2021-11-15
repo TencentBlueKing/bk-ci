@@ -233,6 +233,8 @@ class ContainerService @Autowired constructor(
             // 缓存创建容器信息，防止服务中断或重启引起的信息丢失 TODO: 测试用
 //            redisUtils.setCreatingContainer(containerName, dispatchMessage.userId)
 
+            logger.info("ready to waitContainerStart $containerName")
+
             val createContainerResult = containerClient.waitContainerStart(containerName)
 
             // 创建完成移除缓存信息
