@@ -55,13 +55,6 @@ spec:
           {{- if .Values.gateway.resources }}
           resources: {{- toYaml .Values.gateway.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.gateway.resources.requests.cpu | quote }}
-              memory: {{ .Values.gateway.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.gateway.resources.limits.cpu | quote }}
-              memory: {{ .Values.gateway.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.config.bkCiHttpPort }}

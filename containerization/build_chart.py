@@ -34,7 +34,9 @@ default_value_dict = {
     'bkCiIamCallbackUser': 'bk_iam',
     'bkCiAppCode': 'bk_ci',
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
-    'bkCiInfluxdbDb':'agentMetrix'
+    'bkCiInfluxdbDb': 'agentMetrix',
+    'bkCiEnvironmentAgentCollectorOn': 'true',
+    'bkCiDocsUrl': 'https://docs.bkci.net/'
 }
 
 if os.path.isfile('./values.json'):
@@ -60,7 +62,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_PORT__': '{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
-    '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}'
+    '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
+    '__BK_CI_VERSION__':'{{ .Chart.AppVersion }}'
 }
 
 # 读取变量映射
@@ -114,7 +117,8 @@ for config_name in os.listdir(config_parent):
         config_file.close()
 
 # 生成网关的configmap
-gateway_envs = set()
+gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
+                   "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):

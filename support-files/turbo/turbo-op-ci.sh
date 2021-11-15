@@ -71,7 +71,7 @@ for i in $target; do
   printf "$fmt_ue4_download_url" "$BK_TURBO_PUBLIC_URL/clients/bk-booster-for-ue$i.zip" "$i"
 done
 )
-bk_turbo_install_cmd="curl -sSf $BK_TURBO_PUBLIC_URL/clients/install.sh | bash -s -- -r public"
+bk_turbo_install_cmd="curl -sSf ${BK_TURBO_PUBLIC_URL}/downloads/clients/install.sh | bash -s -- -r public"
 
 # 添加编译加速引擎.
 declare -A tpl_scene
@@ -110,6 +110,11 @@ tpl_scene["cc"]='{
                 "searchable" : true
             },
             "paramEnum" : [
+              {
+               "paramValue" : "tlinux2.4-gcc4.8.5",
+               "paramName" : "tlinux2.4-gcc4.8.5",
+               "visualRange" : []   
+              } 
             ],
             "displayed" : true,
             "defaultValue" : "",
@@ -137,7 +142,7 @@ tpl_scene["cc"]='{
             "paramName" : "cpu最低需求",
             "paramType" : "INPUT",
             "displayed" : false,
-            "defaultValue" : 32,
+            "defaultValue" : 2,
             "required" : false
         }
     ],
@@ -303,7 +308,8 @@ scene_add (){
   validate_by_regex scene "$patt_scene" || die "Usage: $usage"
   local api_url="/api/op/turboEngineConfig/"
   local req="${tpl_scene[$scene]}"
-  ci_api_helper "POST" "$api_url" "$req" | jq .
+  ci_api_helper "POST" "$api_url" "$req" 
+  sleep 1
 }
 scene_init (){
   local usage="scene init SCENE"
