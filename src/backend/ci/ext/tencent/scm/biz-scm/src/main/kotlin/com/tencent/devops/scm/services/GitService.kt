@@ -412,7 +412,7 @@ class GitService @Autowired constructor(
         logger.info("[$token] Start to get the user info by token")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/user?access_token=$token"
+            val url = "${gitConfig.gitApiUrl}/user?access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
