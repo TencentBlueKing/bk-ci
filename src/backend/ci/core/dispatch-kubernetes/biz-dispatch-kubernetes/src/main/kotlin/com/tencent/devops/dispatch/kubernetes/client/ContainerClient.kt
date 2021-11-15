@@ -80,7 +80,7 @@ class ContainerClient @Autowired constructor(
         return Result(
             status = result.statusCode,
             message = null,
-            data = result.data.items?.get(0)?.status?.containerStatuses?.get(0)
+            data = result.data?.items?.ifEmpty { null }?.get(0)?.status?.containerStatuses?.ifEmpty { null }?.get(0)
         )
     }
 
@@ -176,13 +176,13 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): OperateContainerResult {
         var replicas = try {
-            deploymentClient.list(containerName).data?.items?.get(0)?.spec?.replicas
+            deploymentClient.list(containerName).data?.items?.ifEmpty { null }?.get(0)?.spec?.replicas
         } catch (e: Throwable) {
             return OperateContainerResult(containerName, false, e.message)
         }
         var max = MAX_WAIT
         while (replicas != 0 && max != 0) {
-            replicas = deploymentClient.list(containerName).data?.items?.get(0)?.spec?.replicas
+            replicas = deploymentClient.list(containerName).data?.items?.ifEmpty { null }?.get(0)?.spec?.replicas
             Thread.sleep(1000)
             max--
         }
