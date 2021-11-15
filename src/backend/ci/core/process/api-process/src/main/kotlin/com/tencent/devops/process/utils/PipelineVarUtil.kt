@@ -36,8 +36,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_LAST_SHA
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_LAST_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
@@ -148,8 +148,8 @@ object PipelineVarUtil {
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
         "ci.sha" to PIPELINE_GIT_SHA,
         "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
-        "ci.last_sha" to PIPELINE_GIT_LAST_SHA,
-        "ci.last_sha_short" to PIPELINE_GIT_LAST_SHA_SHORT,
+        "ci.before_sha" to PIPELINE_GIT_BEFORE_SHA,
+        "ci.before_sha_short" to PIPELINE_GIT_BEFORE_SHA_SHORT,
         "ci.commit_message" to PIPELINE_GIT_COMMIT_MESSAGE,
         "ci.repo_url" to PIPELINE_GIT_REPO_URL,
         "ci.base_repo_url" to PIPELINE_GIT_BASE_REPO_URL,
