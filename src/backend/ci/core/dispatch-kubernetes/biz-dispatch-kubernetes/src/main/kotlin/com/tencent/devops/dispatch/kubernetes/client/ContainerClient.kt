@@ -61,9 +61,6 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): Result<V1ContainerStatus> {
         val result = podsClient.list(containerName)
-
-        logger.info("getContainerStatus result: $result")
-
         if (!result.isSuccessful()) {
             // 先不添加重试逻辑，看后续使用
             //           if (retryTime > 0) {
@@ -124,21 +121,15 @@ class ContainerClient @Autowired constructor(
         var state = try {
             getContainerStatus(containerName).data?.state
         } catch (e: Throwable) {
-            logger.info("waitContainerStart containerName: $containerName error: ${e.message}")
             return OperateContainerResult(containerName, false, e.message)
         }
-
-        logger.info("waitContainerStart containerName: $containerName state: $state")
 
         var max = MAX_WAIT
         while (state?.running == null && max != 0) {
             if (state?.terminated != null) {
-                logger.info("waitContainerStart containerName: $containerName state: $state")
                 return OperateContainerResult(containerName, false, state.terminated?.message)
             } else {
                 state = getContainerStatus(containerName).data?.state
-
-                logger.info("waitContainerStart containerName: $containerName state: $state")
             }
             Thread.sleep(1000)
             max--

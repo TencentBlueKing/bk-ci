@@ -327,7 +327,7 @@ class ContainerService @Autowired constructor(
                 poolNo = poolNo.toString()
             )
 
-            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
+//            redisUtils.setStartingContainer(containerName, dispatchMessage.userId)
             val startResult = containerClient.waitContainerStart(containerName)
             redisUtils.removeStartingContainer(containerName, dispatchMessage.userId)
 
