@@ -378,10 +378,10 @@ class StartActionTaskContainerCmd(
             // issues_5530 stop插件执行后会发送shutdown,无需构建机再跑endBuild逻辑,避免造成并发问题。
             // 若stop先到，endBuild未执行。则end插件就一直处于queue状态。导致暂停插件无法终止。
             if (endTask != null) {
-                taskBuildDetailService.taskEnd(
-                    buildId = endTask.buildId,
+                pipelineRuntimeService.updateTaskStatus(
+                    task = endTask!!,
                     buildStatus = BuildStatus.CANCELED,
-                    taskId = endTask.taskId,
+                    userId = "system"
                 )
             }
         }
