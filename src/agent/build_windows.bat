@@ -18,3 +18,5 @@ go build -o %WORK_DIR%\bin\devopsAgent.exe %WORK_DIR%\src\cmd\agent
 
 go build -o %WORK_DIR%\bin\upgrader.exe %WORK_DIR%\src\cmd\upgrader
 
+go build -o %WORK_DIR%\bin\installer.exe %WORK_DIR%\src\cmd\installer
+
