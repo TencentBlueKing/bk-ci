@@ -123,12 +123,17 @@ class ContainerClient @Autowired constructor(
         } catch (e: Throwable) {
             return OperateContainerResult(containerName, false, e.message)
         }
+
+        logger.info("waitContainerStart containerName: $containerName state: $state")
+
         var max = MAX_WAIT
         while (state?.running == null && max != 0) {
             if (state?.terminated != null) {
                 return OperateContainerResult(containerName, false, state.terminated?.message)
             } else {
                 state = getContainerStatus(containerName).data?.state
+
+                logger.info("waitContainerStart containerName: $containerName state: $state")
             }
             Thread.sleep(1000)
             max--
