@@ -61,6 +61,9 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): Result<V1ContainerStatus> {
         val result = podsClient.list(containerName)
+
+        logger.info("getContainerStatus result: $result")
+
         if (!result.isSuccessful()) {
             // 先不添加重试逻辑，看后续使用
             //           if (retryTime > 0) {
