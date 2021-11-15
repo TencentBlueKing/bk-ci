@@ -30,13 +30,10 @@ package com.tencent.devops.dispatch.kubernetes.resource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.TestResource
-import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import io.kubernetes.client.openapi.apis.CoreV1Api
 
 @RestResource
-class TestResourceImpl(
-
-) : TestResource {
+class TestResourceImpl() : TestResource {
     override fun getAllPods(): Result<List<String>>? {
         val podList = CoreV1Api().listPodForAllNamespaces(
             null,
@@ -53,6 +50,4 @@ class TestResourceImpl(
 
         return Result(podList.items.map { "${it.metadata?.namespace}:${it.metadata?.name}" })
     }
-
-
 }

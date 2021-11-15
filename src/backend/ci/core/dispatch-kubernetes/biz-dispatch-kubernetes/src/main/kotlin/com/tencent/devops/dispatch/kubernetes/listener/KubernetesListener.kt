@@ -27,33 +27,26 @@
 
 package com.tencent.devops.dispatch.kubernetes.listener
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.DockerVersion
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.config.DefaultImageConfig
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.kubernetes.dao.BuildDao
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.Credential
-import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.service.BuildHisService
 import com.tencent.devops.dispatch.kubernetes.service.ContainerService
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.DispatchUtils
 import com.tencent.devops.dispatch.kubernetes.utils.JobRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,15 +56,14 @@ import org.springframework.stereotype.Service
 class KubernetesListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val client: Client,
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val dispatchConfig: DispatchBuildConfig,
-    private val defaultImageConfig: DefaultImageConfig,
     private val jobUtils: JobRedisUtils,
     private val buildLogPrinter: BuildLogPrinter,
     private val containerService: ContainerService,
     private val buildHisService: BuildHisService,
-    private val buildDao: BuildDao
+    private val buildDao: BuildDao,
+    private val dispatchUtils: DispatchUtils
 ) : BuildListener {
 
     private val threadLocalCpu = ThreadLocal<Int>()
@@ -139,7 +131,7 @@ class KubernetesListener @Autowired constructor(
         threadLocalDisk.set(dispatchConfig.deploymentDisk)
 
         try {
-            val containerPool = getPool(dispatchMessage)
+            val containerPool = dispatchUtils.getPool(dispatchMessage)
             printLogs(dispatchMessage, "启动镜像：${containerPool.container}")
 
             val (lastIdleContainer, poolNo, containerChanged) = containerService.getIdleContainer(
@@ -322,60 +314,6 @@ class KubernetesListener @Autowired constructor(
         } catch (e: Throwable) {
             // 日志有问题就不打日志了，不能影响正常流程
             logger.error("", e)
-        }
-    }
-
-    private fun getPool(dispatchMessage: DispatchMessage): Pool {
-        val dispatchType = dispatchMessage.dispatchType as KubernetesDispatchType
-        val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
-            dispatchType.dockerBuildVersion
-        } else {
-            when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> {
-                    defaultImageConfig.getTLinux1_2CompleteUri()
-                }
-                DockerVersion.TLINUX2_2.value -> {
-                    defaultImageConfig.getTLinux2_2CompleteUri()
-                }
-                else -> {
-                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
-                }
-            }
-        }
-        logger.info(
-            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
-                    "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
-                    "|${dispatchType.credentialProject}"
-        )
-        var userName: String? = null
-        var password: String? = null
-        return if (dispatchType.imageType == ImageType.THIRD && !dispatchType.credentialId.isNullOrBlank()) {
-
-            val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                dispatchMessage.projectId
-            } else {
-                dispatchType.credentialProject!!
-            }
-            val ticketsMap = CommonUtils.getCredential(
-                client = client,
-                projectId = projectId,
-                credentialId = dispatchType.credentialId!!,
-                type = CredentialType.USERNAME_PASSWORD
-            )
-            userName = ticketsMap["v1"] as String
-            password = ticketsMap["v2"] as String
-            Pool(
-                container = dockerImage,
-                credential = Credential(
-                    user = userName,
-                    password = password
-                )
-            )
-        } else {
-            Pool(
-                container = dockerImage,
-                credential = null
-            )
         }
     }
 }

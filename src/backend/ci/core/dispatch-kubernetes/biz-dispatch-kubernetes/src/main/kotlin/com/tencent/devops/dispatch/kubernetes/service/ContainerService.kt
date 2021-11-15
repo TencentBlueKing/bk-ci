@@ -27,8 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -57,7 +55,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.Registry
 import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.DispatchUtils
 import com.tencent.devops.dispatch.kubernetes.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.kubernetes.utils.RedisUtils
 import com.tencent.devops.process.engine.common.VMUtils
@@ -69,7 +67,6 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
     private val redisUtils: RedisUtils,
     private val dispatchBuildConfig: DispatchBuildConfig,
@@ -78,7 +75,8 @@ class ContainerService @Autowired constructor(
     private val containerClient: ContainerClient,
     private val buildDao: BuildDao,
     private val buildHisDao: BuildHisDao,
-    private val buildContainerPoolNoDao: BuildContainerPoolNoDao
+    private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
+    private val dispatchUtils: DispatchUtils
 ) {
 
     companion object {
@@ -141,6 +139,9 @@ class ContainerService @Autowired constructor(
                     )
 
                     if (statusResponse.data == null) {
+
+                        logger.info("getIdleContainer get exist container: ${containerInfo.containerName}")
+
                         var containerChanged = false
                         // 查看构建性能配置是否变更
                         if (cpu.get() != containerInfo.cpu ||
@@ -405,7 +406,7 @@ class ContainerService @Autowired constructor(
 
     // 镜像是否变更
     private fun checkImageChanged(images: String, dispatchMessage: DispatchMessage): Boolean {
-        val containerPool: Pool = objectMapper.readValue(dispatchMessage.dispatchMessage)
+        val containerPool = dispatchUtils.getPool(dispatchMessage)
 
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(

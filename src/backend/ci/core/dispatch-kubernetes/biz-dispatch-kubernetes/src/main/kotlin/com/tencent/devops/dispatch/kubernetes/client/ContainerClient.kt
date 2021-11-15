@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.kubernetes.client
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
@@ -42,7 +41,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
 import io.kubernetes.client.openapi.models.V1ContainerStatus
-import kotlin.math.log
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
