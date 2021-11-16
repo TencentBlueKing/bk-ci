@@ -256,10 +256,10 @@ class RepositoryDao {
         }
     }
 
-    fun get(dslContext: DSLContext, repositoryId: Long, projectId: String): TRepositoryRecord {
+    fun get(dslContext: DSLContext, repositoryId: Long, projectId: String? = null): TRepositoryRecord {
         with(TRepository.T_REPOSITORY) {
             val query = dslContext.selectFrom(this).where(REPOSITORY_ID.eq(repositoryId))
-            if (projectId.isNotBlank()) {
+            if (!projectId.isNullOrBlank()) {
                 query.and(PROJECT_ID.eq(projectId))
             }
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException("代码库不存在")

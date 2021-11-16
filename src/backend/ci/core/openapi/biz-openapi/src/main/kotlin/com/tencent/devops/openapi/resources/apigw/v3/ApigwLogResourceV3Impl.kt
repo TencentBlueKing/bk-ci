@@ -96,7 +96,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
-            num = num,
+            num = num ?: 100,
             fromStart = fromStart,
             start = start,
             end = end,
