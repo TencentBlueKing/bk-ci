@@ -52,9 +52,9 @@ class SendCommitCheck @Autowired constructor(
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Your pipeline「%s」 is failed."
         private const val BUILD_GATE_REVIEW_DESC =
-            "Your pipeline「%s」gate access requirement is not met. review is needed."
+            "Pending: Gate access requirement is not met. Gatekeeper's approval is needed."
         private const val BUILD_MANUAL_REVIEW_DESC =
-            "Your pipeline「%s」stage access requirement is not met. review is needed."
+            "Pending: Pipeline approval is needed."
     }
 
     fun sendCommitCheck(
@@ -156,10 +156,10 @@ class SendCommitCheck @Autowired constructor(
         }
         return when (context.reviewType) {
             BuildReviewType.STAGE_REVIEW -> {
-                BUILD_MANUAL_REVIEW_DESC.format(pipelineName)
+                BUILD_MANUAL_REVIEW_DESC
             }
             BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
-                BUILD_GATE_REVIEW_DESC.format(pipelineName)
+                BUILD_GATE_REVIEW_DESC
             }
             // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
             BuildReviewType.TASK_REVIEW -> {
