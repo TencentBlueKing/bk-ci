@@ -90,7 +90,7 @@
     .uninstall{
         position: relative;
         cursor: pointer;
-        /deep/ .bk-tooltip {
+        ::v-deep .bk-tooltip {
             vertical-align: bottom;
         }
         &:after {
