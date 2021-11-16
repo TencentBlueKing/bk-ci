@@ -15,11 +15,12 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.listener.RtxCustomApi
-import com.tencent.devops.stream.listener.buildFinish.StreamFinishContext
-import com.tencent.devops.stream.listener.buildFinish.StreamFinishContextV1
-import com.tencent.devops.stream.listener.buildFinish.StreamFinishContextV2
-import com.tencent.devops.stream.listener.buildFinish.getGitCommitCheckState
-import com.tencent.devops.stream.listener.buildFinish.isSuccess
+import com.tencent.devops.stream.listener.StreamBuildListenerContext
+import com.tencent.devops.stream.listener.StreamFinishContextV1
+import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
+import com.tencent.devops.stream.listener.getBuildStatus
+import com.tencent.devops.stream.listener.getGitCommitCheckState
+import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
@@ -38,7 +39,7 @@ class SendNotify @Autowired constructor(
     }
 
     fun sendNotify(
-        context: StreamFinishContext
+        context: StreamBuildListenerContext
     ) {
         // v1 校验是否发送通知，v1发通知功能未有使用，直接下掉
         if (context is StreamFinishContextV1) {
@@ -48,7 +49,7 @@ class SendNotify @Autowired constructor(
         val build = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(
                 projectId = GitCommonUtils.getCiProjectId(context.requestEvent.gitProjectId),
-                buildId = setOf(context.buildFinishEvent.buildId),
+                buildId = setOf(context.buildEvent.buildId),
                 channelCode = ChannelCode.GIT
             ).data.let {
                 if (it.isNullOrEmpty()) {
@@ -57,10 +58,10 @@ class SendNotify @Autowired constructor(
                 it.first()
             }
 
-        sendNotifyV2(context as StreamFinishContextV2, build)
+        sendNotifyV2(context as StreamBuildListenerContextV2, build)
     }
 
-    private fun sendNotifyV2(context: StreamFinishContextV2, build: BuildHistory) {
+    private fun sendNotifyV2(context: StreamBuildListenerContextV2, build: BuildHistory) {
         with(context) {
             // 获取需要进行替换的variables
             val variables = client.get(ServiceVarResource::class)
@@ -86,7 +87,7 @@ class SendNotify @Autowired constructor(
     }
 
     private fun sendNotifyV2(
-        context: StreamFinishContextV2,
+        context: StreamBuildListenerContextV2,
         build: BuildHistory,
         notice: GitNotices,
         noticeVariables: Map<String, String>?,
@@ -177,7 +178,7 @@ class SendNotify @Autowired constructor(
 
     // 校验V2通知状态
     private fun checkStatus(
-        context: StreamFinishContextV2,
+        context: StreamBuildListenerContextV2,
         buildId: String,
         ifField: String?
     ): Boolean {
@@ -195,7 +196,7 @@ class SendNotify @Autowired constructor(
                 return !success
             }
             IfType.CANCELLED.name -> {
-                return context.buildStatus.isCancel()
+                return context.getBuildStatus().isCancel()
             }
             IfType.ALWAYS.name -> {
                 return true
