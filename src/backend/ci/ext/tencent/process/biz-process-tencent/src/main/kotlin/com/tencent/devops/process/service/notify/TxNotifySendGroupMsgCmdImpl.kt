@@ -172,6 +172,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(TxNotifySendGroupMsgCmdImpl::class.java)
         private const val roomPatten = "ww\\w" // ww 开头且接数字的正则表达式, 适用于应用号获取的roomid
-        private const val chatPatten = "^[A-Za-z0-9]+\$" // 数字和字母组成的群chatId正则表达式
+        private const val chatPatten = "^[A-Za-z0-9_]+\$" // 数字和字母组成的群chatId正则表达式
     }
 }
