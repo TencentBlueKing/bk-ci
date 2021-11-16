@@ -431,7 +431,24 @@ class QualityRuleCheckService @Autowired constructor(
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
-        val metadataMap = metadataList.associateBy { it.enName }
+        val checkMetaList = mutableListOf<QualityHisMetadata>()
+
+        logger.info("QUALITY|metadataList is|$metadataList")
+
+        metadataList.forEach {
+            val ruleTask = QualityRule.RuleTask(it.taskName, it.enName)
+            if (!ruleTaskSteps.isNullOrEmpty()) {
+                if (ruleTaskSteps.contains(ruleTask)) {
+                    checkMetaList.add(it)
+                }
+            } else {
+                checkMetaList.add(it)
+            }
+        }
+        val metadataMap = checkMetaList.map { it.enName to it }.toMap()
+
+        logger.info("QUALITY|checkMetaList is|$checkMetaList, metadataMap is|$metadataMap")
+
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -446,27 +463,13 @@ class QualityRuleCheckService @Autowired constructor(
                 indicator.metadataList.map { metadataMap[it.enName] }
             }
 
-            logger.info("QUALITY|filterMetadataList is|$filterMetadataList")
-
-            val checkMetaList = mutableListOf<QualityHisMetadata>()
-            if (!ruleTaskSteps.isNullOrEmpty() && filterMetadataList.isNotEmpty()) {
-                filterMetadataList.forEach { metadata ->
-                    val ruleTask = QualityRule.RuleTask(metadata?.taskName, metadata?.enName)
-                    if (ruleTask in ruleTaskSteps) {
-                        checkMetaList.add(metadata!!)
-                    }
-                }
-            }
-
-            logger.info("QUALITY|checkMetaList is|$checkMetaList")
-
             // 遍历所有基础数据
             var elementDetail = ""
             val result: String? = when (thresholdType) {
                 // int类型把所有基础数据累加
                 QualityDataType.INT -> {
                     var result: Int? = null
-                    for (it in checkMetaList) {
+                    for (it in filterMetadataList) {
                         // -1表示直接失败
                         if (DETAIL_NOT_RUN_VALUE == it?.value) {
                             result = null
@@ -489,7 +492,7 @@ class QualityRuleCheckService @Autowired constructor(
                 // float类型把所有基础数据累加
                 QualityDataType.FLOAT -> {
                     var result: BigDecimal? = null
-                    for (it in checkMetaList) {
+                    for (it in filterMetadataList) {
 
                         if (it?.value != null && NumberUtils.isCreatable(it.value)) {
                             val value = BigDecimal(it.value)
@@ -522,7 +525,7 @@ class QualityRuleCheckService @Autowired constructor(
                     var result: Boolean? = null
                     val threshold = indicator.threshold.toBoolean()
                     logger.info("boolean threshold: $threshold")
-                    for (it in checkMetaList) {
+                    for (it in filterMetadataList) {
                         logger.info("each value: ${it?.value}")
                         if (it?.value != null &&
                             (it.value.toLowerCase() == "true" || it.value.toLowerCase() == "false")
