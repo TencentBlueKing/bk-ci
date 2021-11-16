@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
+import com.tencent.devops.stream.pojo.v2.QualityElementInfo
+import org.springframework.util.AntPathMatcher
 
 @Component
 class ModelStage @Autowired constructor(
@@ -69,6 +71,8 @@ class ModelStage @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
     }
 
+    private val matcher = AntPathMatcher()
+
     fun createStage(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
@@ -76,7 +80,8 @@ class ModelStage @Autowired constructor(
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -98,6 +103,11 @@ class ModelStage @Autowired constructor(
                     finalStage = finalStage,
                     resources = resources
                 )
+            }
+
+            // 添加红线指标判断需要的数据
+            elementList.forEach { ele ->
+                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode()))
             }
         }
 
@@ -128,14 +138,16 @@ class ModelStage @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 event = event,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut,
                 position = ControlPointPosition.AFTER_POSITION,
                 event = event,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             )
         )
     }
@@ -145,7 +157,8 @@ class ModelStage @Autowired constructor(
         position: String,
         event: GitRequestEvent,
         pipeline: GitProjectPipeline,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
@@ -164,7 +177,8 @@ class ModelStage @Autowired constructor(
                 event = event,
                 position = position,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             )
         }
         return check
@@ -202,7 +216,8 @@ class ModelStage @Autowired constructor(
         event: GitRequestEvent,
         position: String,
         pipeline: GitProjectPipeline,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
         val operations = mapOf(
@@ -217,7 +232,7 @@ class ModelStage @Autowired constructor(
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
-                val (atomCode, stepName, mid) = getAtomCodeAndOther(rule)
+                var (atomCode, stepName, mid) = getAtomCodeAndOther(rule)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -235,9 +250,10 @@ class ModelStage @Autowired constructor(
 
                 // 步骤不为空时添加步骤参数
                 if (stepName != null) {
+                    atomCode = checkAndGetRealStepName(stepName, elementNames) ?: atomCode
                     taskSteps.add(
                         RuleCreateRequestV3.CreateRequestTask(
-                            taskName = stepName.removeSuffix("."),
+                            taskName = stepName.removeSuffix("*"),
                             indicatorEnName = enNameAndThreshold.first().trim()
                         )
                     )
@@ -307,8 +323,12 @@ class ModelStage @Autowired constructor(
 
     // 1、 <插件code>.<指标名><操作符><阈值>
     // 2、 <插件code>.<步骤名称>.<指标名><操作符><阈值>
-    private fun getAtomCodeAndOther(rule: String): Triple<String, String?, String> {
-        return when (rule.toCharArray().filter { it == '.' }.groupBy { it }.count()) {
+    fun getAtomCodeAndOther(rule: String): Triple<String, String?, String> {
+        return when (rule.toCharArray()
+            .filter { it == '.' }
+            .groupBy { it.toString() }
+            .ifEmpty { null }?.get(".")?.count()
+        ) {
             1 -> {
                 val index = rule.indexOfFirst { it == '.' }
                 return Triple(
@@ -329,5 +349,29 @@ class ModelStage @Autowired constructor(
                 throw QualityRulesException("gates rules format error: '.' number is wrong")
             }
         }
+    }
+
+    // 校验 当相同插件相同步骤名称匹配到多个时，系统无法判断以谁为准，将判定为失败
+    fun checkAndGetRealStepName(stepName: String, elementNames: MutableList<QualityElementInfo>?): String? {
+        if (elementNames.isNullOrEmpty()) {
+            return null
+        }
+        var matchTimes = 0
+        var atomCode: String? = null
+        elementNames.forEach {
+            if (matcher.match(stepName.replace("*", "**"), it.elementName)) {
+                matchTimes++
+                atomCode = it.atomCode
+            }
+            if (matchTimes >= 2) {
+                throw QualityRulesException(
+                    "there are multiple matches with the same step name $stepName of the same plug-in ${it.elementName}"
+                )
+            }
+        }
+        if (matchTimes < 1) {
+            throw QualityRulesException("there none matches with the step name $stepName")
+        }
+        return atomCode
     }
 }

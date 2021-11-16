@@ -73,7 +73,7 @@ class ModelContainer @Autowired constructor(
         projectCode: String,
         finalStage: Boolean = false,
         resources: Resources? = null
-    ) {
+    ): VMBuildContainer {
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
@@ -109,6 +109,7 @@ class ModelContainer @Autowired constructor(
             matrixControlOption = getMatrixControlOption(job, dispatchInfo)
         )
         containerList.add(vmContainer)
+        return vmContainer
     }
 
     private fun getMatrixControlOption(
@@ -160,26 +161,25 @@ class ModelContainer @Autowired constructor(
         containerList: MutableList<Container>,
         jobIndex: Int,
         finalStage: Boolean = false
-    ) {
-
-        containerList.add(
-            NormalContainer(
-                jobId = job.id,
-                containerId = null,
-                id = job.id,
-                name = job.name ?: "Job-${jobIndex + 1}",
-                elements = elementList,
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                enableSkip = false,
-                conditions = null,
-                canRetry = false,
-                jobControlOption = getJobControlOption(job, finalStage),
-                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
-            )
+    ): NormalContainer {
+        val normal = NormalContainer(
+            jobId = job.id,
+            containerId = null,
+            id = job.id,
+            name = job.name ?: "Job-${jobIndex + 1}",
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            enableSkip = false,
+            conditions = null,
+            canRetry = false,
+            jobControlOption = getJobControlOption(job, finalStage),
+            mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
         )
+        containerList.add(normal)
+        return normal
     }
 
     private fun getJobControlOption(
