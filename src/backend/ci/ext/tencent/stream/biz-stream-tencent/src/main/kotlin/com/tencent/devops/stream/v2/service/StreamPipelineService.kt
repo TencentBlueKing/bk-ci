@@ -184,12 +184,12 @@ class StreamPipelineService @Autowired constructor(
             val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
             logger.info("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
                 ", edit timerTrigger with $edited")
+            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
             return pipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
                 enabled = enabled
             ) == 1
-            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
         } catch (e: Exception) {
             logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
             return false
