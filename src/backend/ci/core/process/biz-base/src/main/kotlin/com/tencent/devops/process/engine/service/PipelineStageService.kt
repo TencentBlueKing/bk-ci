@@ -348,20 +348,32 @@ class PipelineStageService @Autowired constructor(
         with(buildStage) {
             logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
                 "inOrOut=$inOrOut|request=$qualityRequest")
-            val stageNextStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.SUCCEED
+            val (stageNextStatus, reviewType) = if (inOrOut) {
+                Pair(BuildStatus.QUEUE, BuildReviewType.QUALITY_CHECK_IN)
+            } else {
+                Pair(BuildStatus.SUCCEED, BuildReviewType.QUALITY_CHECK_OUT)
+            }
             pipelineBuildStageDao.updateStatus(
                 dslContext = dslContext, buildId = buildId, stageId = stageId,
                 buildStatus = stageNextStatus, controlOption = controlOption,
                 checkIn = checkIn, checkOut = checkOut
             )
-            val (source, actionType) = if (qualityRequest.pass) {
+            val (source, actionType, reviewStatus) = if (qualityRequest.pass) {
                 check.status = BuildStatus.QUALITY_CHECK_PASS.name
-                Pair(BS_QUALITY_PASS_STAGE, ActionType.REFRESH)
+                Triple(BS_QUALITY_PASS_STAGE, ActionType.REFRESH, BuildStatus.REVIEW_PROCESSED)
             } else {
                 check.status = BuildStatus.QUALITY_CHECK_FAIL.name
-                Pair(BS_QUALITY_ABORT_STAGE, ActionType.END)
+                Triple(BS_QUALITY_ABORT_STAGE, ActionType.END, BuildStatus.REVIEW_ABORT)
             }
             pipelineEventDispatcher.dispatch(
+                PipelineBuildReviewBroadCastEvent(
+                    source = "s(${buildStage.stageId}) waiting for REVIEW",
+                    projectId = buildStage.projectId, pipelineId = buildStage.pipelineId,
+                    buildId =  buildStage.buildId, userId = userId,
+                    reviewType = reviewType,
+                    status = reviewStatus.name,
+                    stageId = buildStage.stageId, taskId = null
+                ),
                 PipelineBuildStageEvent(
                     source = source, projectId = projectId,
                     pipelineId = pipelineId, userId = userId,
@@ -403,6 +415,7 @@ class PipelineStageService @Autowired constructor(
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 buildId =  stage.buildId, userId = userId,
                 reviewType = BuildReviewType.STAGE_REVIEW,
+                status = BuildStatus.REVIEWING.name,
                 stageId = stage.stageId, taskId = null
             ),
             PipelineBuildNotifyEvent(
@@ -476,7 +489,7 @@ class PipelineStageService @Autowired constructor(
                         source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
                         projectId = stage.projectId, pipelineId = stage.pipelineId,
                         buildId =  stage.buildId, userId = event.userId,
-                        reviewType = reviewType,
+                        reviewType = reviewType, status = BuildStatus.REVIEWING.name,
                         stageId = stage.stageId, taskId = null
                     )
                 )
