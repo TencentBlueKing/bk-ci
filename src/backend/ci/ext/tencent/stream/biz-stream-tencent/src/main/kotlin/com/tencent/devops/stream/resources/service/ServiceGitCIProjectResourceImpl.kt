@@ -25,32 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.resources.service
 
-import com.tencent.devops.stream.pojo.Repository
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.pojo.enums.GitCIProjectType
+import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.v2.service.StreamProjectService
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("蓝盾工蜂项目用户校验结果")
-data class GitUserValidateResult(
-    @ApiModelProperty("工蜂项目ID")
-    override val gitProjectId: Long,
-    @ApiModelProperty("工蜂项目名")
-    override val name: String,
-    @ApiModelProperty("工蜂项目url")
-    override val url: String,
-    @ApiModelProperty("homepage")
-    override val homepage: String,
-    @ApiModelProperty("gitHttpUrl")
-    override val gitHttpUrl: String,
-    @ApiModelProperty("gitSshUrl")
-    override val gitSshUrl: String,
-    @ApiModelProperty("蓝盾项目ID")
-    val projectCode: String,
-    @ApiModelProperty("蓝盾项目名")
-    val projectName: String,
-    @ApiModelProperty("Stream授权人")
-    val authUserId: String,
-    @ApiModelProperty("是否开启CI功能")
-    val enableCi: Boolean
-) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
+@RestResource
+class ServiceGitCIProjectResourceImpl @Autowired constructor(
+    private val streamProjectService: StreamProjectService
+) : ServiceGitCIProjectResource {
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<ProjectCIInfo>> {
+        return Result(streamProjectService.getProjectList(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
+        ).records)
+    }
+}

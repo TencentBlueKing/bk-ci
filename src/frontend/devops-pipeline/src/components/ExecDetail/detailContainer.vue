@@ -53,7 +53,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .head-tab {
+    ::v-deep .head-tab {
         font-size: 0;
         span {
             font-size: 14px;
@@ -75,7 +75,7 @@
         }
     }
 
-    /deep/ .head-tool {
+    ::v-deep .head-tool {
         cursor: pointer;
         font-size: 14px;
         margin-right: 15px;

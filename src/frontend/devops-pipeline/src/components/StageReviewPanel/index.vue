@@ -98,7 +98,7 @@
         padding: 23px 33px;
         font-size: 12px;
     }
-    /deep/ .review-subtitle {
+    ::v-deep .review-subtitle {
         display: block;
         margin: 24px 0 8px;
         font-size: 12px;
