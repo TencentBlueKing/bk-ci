@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -105,6 +107,13 @@ class ManualReviewTaskAtom(
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
         pipelineEventDispatcher.dispatch(
+            PipelineBuildReviewBroadCastEvent(
+                source = "ManualReviewTaskAtom",
+                projectId = projectCode, pipelineId = pipelineId,
+                buildId =  buildId, userId = task.starter,
+                reviewType = BuildReviewType.TASK_REVIEW,
+                stageId = task.stageId, taskId = taskId
+            ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
