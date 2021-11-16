@@ -156,7 +156,7 @@ class ModelContainer @Autowired constructor(
                     },
                     dependOnType = DependOnType.ID,
                     dependOnId = job.dependOn,
-                    prepareTimeout = job.queueTimeoutMinutes,
+                    prepareTimeout = job.runsOn.queueTimeoutMinutes,
                     continueWhenFailed = job.continueOnError
                 )
             } else {
@@ -166,7 +166,7 @@ class ModelContainer @Autowired constructor(
                     customCondition = job.ifField.toString(),
                     dependOnType = DependOnType.ID,
                     dependOnId = job.dependOn,
-                    prepareTimeout = job.queueTimeoutMinutes,
+                    prepareTimeout = job.runsOn.queueTimeoutMinutes,
                     continueWhenFailed = job.continueOnError
                 )
             }
@@ -175,7 +175,7 @@ class ModelContainer @Autowired constructor(
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
-                prepareTimeout = job.queueTimeoutMinutes,
+                prepareTimeout = job.runsOn.queueTimeoutMinutes,
                 continueWhenFailed = job.continueOnError
             )
         }
