@@ -472,7 +472,7 @@ class BkRepoClient constructor(
             if (!response.isSuccessful) {
                 val responseContent = response.body()!!.string()
                 logger.error("delete file failed, responseContent: $responseContent")
-                throw RemoteServiceException("delete file info failed: $responseContent", response.code())
+                throw RemoteServiceException("delete file failed: $responseContent", response.code())
             }
         }
     }
