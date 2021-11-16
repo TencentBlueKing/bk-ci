@@ -169,7 +169,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             projectIdType = it.projectIdType ?: "",
                             collected = favor,
                             weigHt = it.weight ?: 0,
-                            logoUrl = replaceUrl(url = it.logoUrl, replaceMap = map),
+                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = map),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
                             newWindowUrl = replaceUrl(newWindowUrl, map)
