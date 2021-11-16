@@ -372,6 +372,18 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
                 "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            val endTask = containerContext.containerTasks
+                .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
+                .getOrNull(0)
+            // issues_5530 stop插件执行后会发送shutdown,无需构建机再跑endBuild逻辑,避免造成并发问题。
+            // 若stop先到，endBuild未执行。则end插件就一直处于queue状态。导致暂停插件无法终止。
+            if (endTask != null && endTask.status != BuildStatus.RUNNING) {
+                pipelineRuntimeService.updateTaskStatus(
+                    task = endTask,
+                    buildStatus = BuildStatus.SUCCEED,
+                    userId = endTask.starter
+                )
+            }
         }
 
         // 终止打印终止原因
