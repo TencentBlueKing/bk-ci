@@ -171,6 +171,7 @@ class CheckPauseReviewStageCmd(
             userId = commandContext.event.userId,
             buildStage = commandContext.stage
         )
+
     }
 
     private fun qualityCheckInPass(commandContext: StageContext) {

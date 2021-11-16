@@ -92,6 +92,9 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
+    // 构建审核步骤广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT = "e.engine.pipeline.build.need.review"
+
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
 
