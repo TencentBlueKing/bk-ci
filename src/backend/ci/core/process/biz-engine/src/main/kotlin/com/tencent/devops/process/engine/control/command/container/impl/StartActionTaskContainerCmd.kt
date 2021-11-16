@@ -380,8 +380,8 @@ class StartActionTaskContainerCmd(
             if (endTask != null && endTask.status != BuildStatus.RUNNING) {
                 pipelineRuntimeService.updateTaskStatus(
                     task = endTask!!,
-                    buildStatus = BuildStatus.CANCELED,
-                    userId = "system"
+                    buildStatus = BuildStatus.SUCCEED,
+                    userId = endTask.starter
                 )
             }
         }

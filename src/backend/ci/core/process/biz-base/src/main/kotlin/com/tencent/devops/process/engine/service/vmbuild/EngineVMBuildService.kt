@@ -551,7 +551,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
                 .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
-            buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
             return if (task == null || task.status.isFinish()) {
                 LOG.warn("ENGINE|$buildId|Agent|$vmName|END_JOB|j($vmSeqId)|Task[${task?.taskName}] ${task?.status}")
                 false
