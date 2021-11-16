@@ -435,17 +435,20 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is|$metadataList")
 
-        metadataList.forEach {
+        metadataList.forEach { metadata ->
             if (!ruleTaskSteps.isNullOrEmpty()) {
                 ruleTaskSteps.forEach { ruleTask ->
-                    if ((ruleTask.indicatorEnName == it.enName) && it.taskName.startsWith(ruleTask.taskName ?: "")) {
-                        checkMetaList.add(it)
+                    if ((ruleTask.indicatorEnName == metadata.enName) &&
+                        metadata.taskName.startsWith(ruleTask.taskName ?: "")) {
+                        checkMetaList.add(metadata)
                     }
                 }
             } else {
-                checkMetaList.add(it)
+                checkMetaList.removeIf { it.enName == metadata.enName && it.elementType == metadata.elementType }
+                checkMetaList.add(metadata)
             }
         }
+
         val metadataMap = checkMetaList.map { it.enName to it }.toMap()
 
         logger.info("QUALITY|checkMetaList is|$checkMetaList, metadataMap is|$metadataMap")
