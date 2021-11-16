@@ -47,6 +47,7 @@ data class PipelineBuildReviewBroadCastEvent(
     override var delayMills: Int = 0,
     val buildId: String,
     val reviewType: BuildReviewType,
+    val status: String,
     val stageId: String?,
     val taskId: String?
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
