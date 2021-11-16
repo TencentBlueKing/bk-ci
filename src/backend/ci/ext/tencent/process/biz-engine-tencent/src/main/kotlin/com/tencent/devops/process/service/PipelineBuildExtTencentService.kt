@@ -71,7 +71,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
-
+    // 拼接build_url的完整路径
     fun getGitCiUrl(variable: Map<String, String>): String {
         return if (v2GitUrl != null) {
             "$v2GitUrl/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
