@@ -56,7 +56,10 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList()
+    val dependOn: List<String>? = emptyList(),
+    @ApiModelProperty(name = "queue-timeout-minutes")
+    @JsonProperty("queue-timeout-minutes")
+    val queueTimeoutMinutes: Int? = 10
 )
 
 data class Container(
@@ -83,6 +86,7 @@ data class Service(
 data class ServiceWith(
     val password: String? = ""
 )
+
 data class Strategy(
     val matrix: Any?,
     @ApiModelProperty(name = "fast-kill")

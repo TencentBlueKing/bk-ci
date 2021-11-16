@@ -513,7 +513,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         errorCodeEnum: ErrorCodeEnum?,
         errorMessage: String?
     ) {
-        if (event.retryTime > 60) {
+        if (event.retryTime > 6 * (event.queueTimeoutMinutes ?: 10)) {
             // 置为失败
             onFailBuild(
                 client = client,
