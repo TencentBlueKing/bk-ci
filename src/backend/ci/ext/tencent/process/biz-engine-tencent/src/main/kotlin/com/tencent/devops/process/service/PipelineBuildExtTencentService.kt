@@ -66,8 +66,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
         }
 
         extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
-        var afterGitCiUrl = getGitCiUrl(variable)
-        logger.info("before v2GitUrl is $v2GitUrl; after v2GitUrl is $afterGitCiUrl")
         extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap
     }
