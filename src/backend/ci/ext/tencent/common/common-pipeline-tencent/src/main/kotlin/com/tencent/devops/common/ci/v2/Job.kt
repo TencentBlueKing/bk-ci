@@ -56,10 +56,7 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList(),
-    @ApiModelProperty(name = "queue-timeout-minutes")
-    @JsonProperty("queue-timeout-minutes")
-    val queueTimeoutMinutes: Int? = 10
+    val dependOn: List<String>? = emptyList()
 )
 
 data class Container(
@@ -109,6 +106,9 @@ data class RunsOn(
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
+    @ApiModelProperty(name = "queue-timeout-minutes")
+    @JsonProperty("queue-timeout-minutes")
+    val queueTimeoutMinutes: Int? = 10,
     val needs: Map<String, String>? = null
 )
 
