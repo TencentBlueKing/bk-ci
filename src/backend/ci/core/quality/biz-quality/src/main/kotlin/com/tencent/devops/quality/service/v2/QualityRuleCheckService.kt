@@ -436,10 +436,11 @@ class QualityRuleCheckService @Autowired constructor(
         logger.info("QUALITY|metadataList is|$metadataList")
 
         metadataList.forEach {
-            val ruleTask = QualityRule.RuleTask(it.taskName, it.enName)
             if (!ruleTaskSteps.isNullOrEmpty()) {
-                if (ruleTaskSteps.contains(ruleTask)) {
-                    checkMetaList.add(it)
+                ruleTaskSteps.forEach { ruleTask ->
+                    if ((ruleTask.indicatorEnName == it.enName) && it.taskName.startsWith(ruleTask.taskName ?: "")) {
+                        checkMetaList.add(it)
+                    }
                 }
             } else {
                 checkMetaList.add(it)
