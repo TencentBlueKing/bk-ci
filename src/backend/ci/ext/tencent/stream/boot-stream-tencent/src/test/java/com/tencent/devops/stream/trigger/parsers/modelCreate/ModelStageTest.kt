@@ -12,25 +12,40 @@ internal class ModelStageTest {
     @Test
     fun getAtomCodeAndOther() {
         val (atomCode1, stepName1, mid1) = modelStage.getAtomCodeAndOther(
-            "qualityTest.quality123.caseCnt_total >= 1"
+            "qualityTest.quality123.caseCnt_total >= 1.12",
+            modelStage.operations
         )
         assert(
-            atomCode1 == "qualityTest" && stepName1 == "quality123" && mid1 == "caseCnt_total >= 1"
+            atomCode1 == "qualityTest" && stepName1 == "quality123" && mid1 == "caseCnt_total >= 1.12"
         )
 
         val (atomCode2, stepName2, mid2) = modelStage.getAtomCodeAndOther(
-            "qualityTest.quality*.caseCnt_total >= 1"
+            "qualityTest.quality*.caseCnt_total >= 1.12",
+            modelStage.operations
         )
         assert(
-            atomCode2 == "qualityTest" && stepName2 == "quality*" && mid2 == "caseCnt_total >= 1"
+            atomCode2 == "qualityTest" && stepName2 == "quality*" && mid2 == "caseCnt_total >= 1.12"
         )
 
         val (atomCode3, stepName3, mid3) = modelStage.getAtomCodeAndOther(
-            "qualityTest.caseCnt_total >= 1"
+            "qualityTest.caseCnt_total >= 1.12",
+            modelStage.operations
         )
         assert(
-            atomCode3 == "qualityTest" && stepName3 == null && mid3 == "caseCnt_total >= 1"
+            atomCode3 == "qualityTest" && stepName3 == null && mid3 == "caseCnt_total >= 1.12"
         )
+
+        var op = ""
+        run breaking@{
+            modelStage.operations.keys.forEach {
+                if (mid3.contains(it)) {
+                    op = it
+                    return@breaking
+                }
+            }
+        }
+
+        assert(op == ">=")
     }
 
     @Test

@@ -73,6 +73,15 @@ class ModelStage @Autowired constructor(
 
     private val matcher = AntPathMatcher()
 
+    // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+    val operations = mapOf(
+        QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+        QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+        QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+        QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+        QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
+    )
+
     fun createStage(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
@@ -211,6 +220,7 @@ class ModelStage @Autowired constructor(
      * 根据规则创建红线
      * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
      */
+    @Suppress("ComplexMethod")
     private fun createRules(
         stageCheck: StageCheck,
         event: GitRequestEvent,
@@ -219,20 +229,12 @@ class ModelStage @Autowired constructor(
         stageId: String,
         elementNames: MutableList<QualityElementInfo>?
     ): List<String>? {
-        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
-        val operations = mapOf(
-            QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
-            QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
-            QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
-            QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
-            QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
-        )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
         val taskSteps: MutableList<RuleCreateRequestV3.CreateRequestTask> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
-                var (atomCode, stepName, mid) = getAtomCodeAndOther(rule)
+                var (atomCode, stepName, mid) = getAtomCodeAndOther(rule, operations)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -323,8 +325,17 @@ class ModelStage @Autowired constructor(
 
     // 1、 <插件code>.<指标名><操作符><阈值>
     // 2、 <插件code>.<步骤名称>.<指标名><操作符><阈值>
-    fun getAtomCodeAndOther(rule: String): Triple<String, String?, String> {
-        return when (rule.toCharArray()
+    fun getAtomCodeAndOther(rule: String, operations: Map<String, QualityOperation>): Triple<String, String?, String> {
+        var op = ""
+        operations.keys.forEach {
+            if (rule.contains(it)) {
+                op = it
+            }
+        }
+        if (op.isBlank()) {
+            throw QualityRulesException("gates rules format error: no quality operations")
+        }
+        return when (rule.split(op).first().toCharArray()
             .filter { it == '.' }
             .groupBy { it.toString() }
             .ifEmpty { null }?.get(".")?.count()
@@ -338,11 +349,13 @@ class ModelStage @Autowired constructor(
                 )
             }
             2 -> {
-                val list = rule.split('.')
+                val firstIndex = rule.indexOfFirst { it == '.' }
+                val first = rule.substring(0 until firstIndex)
+                val second = rule.removePrefix("$first.").indexOfFirst { it == '.' } + first.length + 1
                 return Triple(
-                    list[0],
-                    list[1],
-                    list[2]
+                    first,
+                    rule.substring((firstIndex + 1) until second),
+                    rule.substring((second + 1) until rule.length)
                 )
             }
             else -> {
