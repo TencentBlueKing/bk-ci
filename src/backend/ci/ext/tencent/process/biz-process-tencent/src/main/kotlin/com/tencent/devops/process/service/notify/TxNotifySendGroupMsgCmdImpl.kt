@@ -155,7 +155,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             wechatWorkRobotService.send(msg.toJsonString())
         } else {
             val textContent = if (detailFlag) {
-                "$content\n查看详情: $detailUrl"
+                "$content\n\n查看详情: $detailUrl"
             } else content
             val msg = RobotTextSendMsg(
                 chatId = chatId,
