@@ -254,7 +254,7 @@ class ManualReviewTaskAtom(
     private fun beforePrint(
         task: PipelineBuildTask,
         taskParam: MutableMap<String, Any>,
-        manualActionUserId: String,
+        manualActionUserId: String
     ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
