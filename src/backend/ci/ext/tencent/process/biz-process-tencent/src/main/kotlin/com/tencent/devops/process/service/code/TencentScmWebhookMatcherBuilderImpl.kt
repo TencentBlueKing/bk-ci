@@ -59,5 +59,5 @@ class TencentScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
 
     override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 
-    override fun createP4WebHookMatcher(event: P4Event): ScmWebhookMatcher  = P4WebHookMatcher(event)
+    override fun createP4WebHookMatcher(event: P4Event): ScmWebhookMatcher = P4WebHookMatcher(event)
 }
