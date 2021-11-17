@@ -110,7 +110,7 @@ class ManualReviewTaskAtom(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
                 projectId = projectCode, pipelineId = pipelineId,
-                buildId =  buildId, userId = task.starter,
+                buildId = buildId, userId = task.starter,
                 reviewType = buildReviewType,
                 status = BuildStatus.REVIEWING.name,
                 stageId = task.stageId, taskId = taskId
@@ -172,7 +172,7 @@ class ManualReviewTaskAtom(
                     PipelineBuildReviewBroadCastEvent(
                         source = "tasks(${task.taskId}) reviewed with PROCESS",
                         projectId = task.projectId, pipelineId = task.pipelineId,
-                        buildId =  task.buildId, userId = manualActionUserId,
+                        buildId = task.buildId, userId = manualActionUserId,
                         reviewType = buildReviewType, status = BuildStatus.REVIEW_PROCESSED.name,
                         stageId = task.stageId, taskId = task.taskId
                     )
@@ -187,7 +187,7 @@ class ManualReviewTaskAtom(
                     PipelineBuildReviewBroadCastEvent(
                         source = "tasks(${task.taskId}) reviewed with ABORT",
                         projectId = task.projectId, pipelineId = task.pipelineId,
-                        buildId =  task.buildId, userId = manualActionUserId,
+                        buildId = task.buildId, userId = manualActionUserId,
                         reviewType = buildReviewType, status = BuildStatus.REVIEW_ABORT.name,
                         stageId = task.stageId, taskId = task.taskId
                     )
