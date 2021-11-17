@@ -99,6 +99,7 @@ data class GitPushEvent(
     val project_id: Long,
     val repository: GitCommitRepository,
     val commits: List<GitCommit>?,
+    val push_options: Map<String, String>?,
     val total_commits_count: Int
 ) : GitEvent() {
     companion object {

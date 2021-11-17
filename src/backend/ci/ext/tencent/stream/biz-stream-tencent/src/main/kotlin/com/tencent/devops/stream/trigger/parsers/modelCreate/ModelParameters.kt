@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -205,7 +206,15 @@ object ModelParameters {
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
         // putVariables2StartParams(yaml, gitBasicSetting, startParams)
-        val buildFormProperties = getBuildFormPropertyFromYmlVariable(yaml, startParams)
+        val buildFormProperties = if (originEvent is GitPushEvent) {
+            getBuildFormPropertyFromYmlVariable(
+                // 根据 push options 参数改变variables的值
+                variables = replaceVariablesByPushOptions(yaml.variables, originEvent.push_options),
+                startParams = startParams
+            )
+        } else {
+            getBuildFormPropertyFromYmlVariable(yaml.variables, startParams)
+        }
 
         startParams.forEach {
             result.add(
@@ -231,14 +240,14 @@ object ModelParameters {
     }
 
     private fun getBuildFormPropertyFromYmlVariable(
-        yaml: ScriptBuildYaml,
+        variables: Map<String, Variable>?,
         startParams: MutableMap<String, String>
     ): List<BuildFormProperty> {
-        if (yaml.variables == null) {
+        if (variables.isNullOrEmpty()) {
             return emptyList()
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
-        yaml.variables!!.forEach { (key, variable) ->
+        variables.forEach { (key, variable) ->
             buildFormProperties.add(
                 BuildFormProperty(
                     id = StreamYamlBuild.VARIABLE_PREFIX + key,
@@ -258,5 +267,24 @@ object ModelParameters {
             )
         }
         return buildFormProperties
+    }
+
+    private fun replaceVariablesByPushOptions(
+        variables: Map<String, Variable>?,
+        pushOptions: Map<String, String>?
+    ): Map<String, Variable>? {
+        if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
+            return variables
+        }
+        val result = variables.toMutableMap()
+        variables.forEach { (key, value) ->
+            if (key in pushOptions.keys) {
+                result[key] = Variable(
+                    value = pushOptions[key],
+                    readonly = value.readonly
+                )
+            }
+        }
+        return result
     }
 }
