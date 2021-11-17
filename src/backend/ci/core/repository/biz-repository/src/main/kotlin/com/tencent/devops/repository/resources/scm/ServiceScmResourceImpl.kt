@@ -185,7 +185,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         userName: String,
         event: String?,
         hookUrl: String?,
-        path: String?
+        includePaths: String?,
+        excludePaths: String?
     ): Result<Boolean> {
         logger.info("addWebHook|$projectName|$url|$type|$userName|$region|$event|$hookUrl")
         scmService.addWebHook(
@@ -199,7 +200,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
             userName = userName,
             event = event,
             hookUrl = hookUrl,
-            path = path
+            includePaths = includePaths,
+            excludePaths = excludePaths,
         )
         return Result(true)
     }

@@ -103,7 +103,11 @@ class CodeGitlabScmImpl constructor(
         }
     }
 
-    override fun addWebHook(hookUrl: String, path: String?) {
+    override fun addWebHook(
+        hookUrl: String,
+        includePaths: String?,
+        excludePaths: String?
+    ) {
         if (token.isEmpty()) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY),

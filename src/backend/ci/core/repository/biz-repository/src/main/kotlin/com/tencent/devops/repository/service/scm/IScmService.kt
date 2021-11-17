@@ -118,7 +118,8 @@ interface IScmService {
         userName: String,
         event: String? = null,
         hookUrl: String? = null,
-        path: String? = null
+        includePaths: String? = null,
+        excludePaths: String? = null
     )
 
     fun addCommitCheck(
