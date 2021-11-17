@@ -63,7 +63,8 @@ class ServiceNotifyResourceImpl @Autowired constructor(
             receivers = message.getReceivers(),
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.text,
-            message = message.title + "/n/n" + message.body
+            message = "${message.title}" +
+                "${message.body}"
         )
         weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
