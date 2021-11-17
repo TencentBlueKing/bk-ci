@@ -248,7 +248,7 @@
     .jump-link {
         vertical-align: sub;
     }
-    /deep/ .bk-table-row {
+    ::v-deep .bk-table-row {
         cursor: pointer;
     }
 </style>

@@ -424,7 +424,7 @@
         height: calc(100% - 32px);
     }
 
-    /deep/ .bk-tab-header {
+    ::v-deep .bk-tab-header {
         background-color: #fff;
         height: 32px;
         line-height: 32px;
@@ -455,10 +455,10 @@
             line-height: 32px;
         }
     }
-    /deep/ .bk-tab-section {
+    ::v-deep .bk-tab-section {
         padding: 0;
     }
-    /deep/ .bk-exception-text {
+    ::v-deep .bk-exception-text {
         margin-top: -40px;
     }
 </style>

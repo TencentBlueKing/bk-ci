@@ -240,7 +240,10 @@ interface ServiceScmResource {
         event: String?,
         @ApiParam("回调url", required = false)
         @QueryParam("hookUrl")
-        hookUrl: String? = null
+        hookUrl: String? = null,
+        @ApiParam("回调监听的路径,仅p4需要", required = false)
+        @QueryParam("path")
+        path: String? = null
     ): Result<Boolean>
 
     @ApiOperation("添加Git Commit Check")

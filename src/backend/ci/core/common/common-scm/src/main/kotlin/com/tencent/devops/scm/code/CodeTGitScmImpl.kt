@@ -155,7 +155,7 @@ class CodeTGitScmImpl constructor(
         }
     }
 
-    override fun addWebHook(hookUrl: String) {
+    override fun addWebHook(hookUrl: String, path: String?) {
         if (token.isEmpty()) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),

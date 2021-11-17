@@ -32,16 +32,19 @@ enum class ScmType {
     CODE_GIT,
     CODE_GITLAB,
     GITHUB,
-    CODE_TGIT;
+    CODE_TGIT,
+    CODE_P4
+    ;
 
     companion object {
         fun parse(type: ScmType): Short {
             return when (type) {
-                ScmType.CODE_SVN -> 1.toShort()
-                ScmType.CODE_GIT -> 2.toShort()
-                ScmType.CODE_GITLAB -> 3.toShort()
-                ScmType.GITHUB -> 4.toShort()
-                ScmType.CODE_TGIT -> 5.toShort()
+                CODE_SVN -> 1.toShort()
+                CODE_GIT -> 2.toShort()
+                CODE_GITLAB -> 3.toShort()
+                GITHUB -> 4.toShort()
+                CODE_TGIT -> 5.toShort()
+                CODE_P4 -> 6.toShort()
             }
         }
     }

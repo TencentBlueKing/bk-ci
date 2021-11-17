@@ -73,7 +73,8 @@ class MQPipelineCreateListener @Autowired constructor(
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                version = event.version
+                version = event.version,
+                userId = event.userId
             )
             watcher.stop()
         } finally {
