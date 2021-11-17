@@ -261,7 +261,7 @@ export default {
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
         for (const key in newParam) {
-            if (newParam.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                 Vue.set(atom, key, newParam[key])
             }
         }
@@ -270,7 +270,7 @@ export default {
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
             for (const key in newParam) {
-                if (newParam.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                     Vue.set(atom.data.input, key, newParam[key])
                 }
             }
@@ -290,7 +290,7 @@ export default {
     [UPDATE_ATOM_OUTPUT]: (state, { atom, newParam }) => {
         try {
             for (const key in newParam) {
-                if (newParam.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                     Vue.set(atom.data.output, key, newParam[key])
                 }
             }

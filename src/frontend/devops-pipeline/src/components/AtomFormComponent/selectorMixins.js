@@ -62,13 +62,15 @@ export default {
         urlParamKeys () {
             if (this.hasUrl) {
                 const paramKey = this.mergedOptionsConf.url.match(PLUGIN_URL_PARAM_REG)
-                return paramKey ? paramKey.map(key => key.replace(PLUGIN_URL_PARAM_REG, (...args) => {
-                    const [, s1, s2] = args
-                    return JSON.stringify({
-                        key: s1,
-                        optional: !!s2
-                    })
-                })).map(item => JSON.parse(item)) : []
+                return paramKey
+                    ? paramKey.map(key => key.replace(PLUGIN_URL_PARAM_REG, (...args) => {
+                        const [, s1, s2] = args
+                        return JSON.stringify({
+                            key: s1,
+                            optional: !!s2
+                        })
+                    })).map(item => JSON.parse(item))
+                    : []
             }
             return []
         },
@@ -82,7 +84,7 @@ export default {
         isLackParam () {
             return this.urlParamKeys.some(({ key, optional }) => {
                 if (optional) return false
-                if (this.atomValue.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(this.atomValue, key)) {
                     const keyModal = this.getAtomKeyModal(key)
                     if (!keyModal) {
                         return false

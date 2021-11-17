@@ -34,6 +34,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { getQueryParamList, debounce } from '../../utils/util'
+    import moment from 'moment'
 
     export default {
         name: 'filter-bar',
@@ -165,8 +166,9 @@
                     endTimeEndTime: undefined
                 }
                 if (!!value[0] && !!value[1]) {
-                    const startTime = Date.parse(new Date(value[0])) || ''
-                    const endTime = Date.parse(new Date(value[1])) || ''
+                    const startTime = moment(value[0]).valueOf() || ''
+                    const endTime = moment(value[1]).valueOf() || ''
+
                     newQuery.startTimeStartTime = [startTime]
                     newQuery.endTimeEndTime = [endTime]
                 }

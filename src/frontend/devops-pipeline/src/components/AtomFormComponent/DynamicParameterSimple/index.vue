@@ -74,8 +74,8 @@
                         const curValues = Object.values(value)
                         const rowAttrs = currentRowAttr.rowAttributes
                         rowAttrs.forEach((attr, index) => {
-                            attr['id'] = curKeys[index]
-                            attr['value'] = curValues[index]
+                            attr.id = curKeys[index]
+                            attr.value = curValues[index]
                         })
                         return currentRowAttr
                     })
