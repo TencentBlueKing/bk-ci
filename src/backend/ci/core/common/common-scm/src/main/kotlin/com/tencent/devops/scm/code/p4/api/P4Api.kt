@@ -69,7 +69,14 @@ class P4Api(
         P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
             val eventType = ITriggerEntry.TriggerType.fromString(event) ?: ITriggerEntry.TriggerType.CHANGE_COMMIT
-            val remainPaths = filterExistTrigger(p4Server = p4Server, path = path, eventType = eventType.name)
+            val eventScriptFileName = "${eventType.name.toLowerCase()}.sh"
+            val remainPaths = filterExistTrigger(
+                p4Server = p4Server,
+                path = path,
+                eventType = eventType,
+                eventScriptFileName = eventScriptFileName,
+                hookUrl = hookUrl
+            )
             if (remainPaths.isEmpty()) {
                 logger.info("The web hook url($hookUrl) and event($event),path($path) is already exist")
                 return
@@ -77,7 +84,6 @@ class P4Api(
             // 创建一个devops_trigger的depot
             createDevopsDepot(p4Server)
 
-            val eventScriptFileName = "${eventType.name.toLowerCase()}.sh"
             // 如果事件脚本不存在,则创建
             p4Server.listFiles(DEVOPS_P4_TRIGGER_DEPOT_NAME).filter { it.opStatus == FileSpecOpStatus.VALID }
                 .find { it.depotPathString == "//$DEVOPS_P4_TRIGGER_DEPOT_NAME/$eventScriptFileName" }
@@ -109,20 +115,34 @@ class P4Api(
         }
     }
 
-    private fun filterExistTrigger(p4Server: P4Server, path: String, eventType: String): Set<String> {
+    private fun filterExistTrigger(
+        p4Server: P4Server,
+        path: String,
+        eventType: ITriggerEntry.TriggerType,
+        eventScriptFileName: String,
+        hookUrl: String
+    ): Set<String> {
         val splitPaths = path.split(",")
         val remainPaths = mutableSetOf<String>()
         remainPaths.addAll(splitPaths)
+        val command = getTriggerCommand(eventType = eventType, eventScriptFileName, hookUrl = hookUrl)
         p4Server.getTriggers().forEach { entry ->
-            if (entry.name == DEVOPS_P4_TRIGGER_NAME &&
-                splitPaths.contains(entry.path) &&
-                entry.triggerType.name == eventType
-            ) {
+            if (isSameEvent(entry, splitPaths, eventType, command)) {
                 remainPaths.remove(entry.path)
             }
         }
         return remainPaths
     }
+
+    private fun isSameEvent(
+        entry: ITriggerEntry,
+        splitPaths: List<String>,
+        eventType: ITriggerEntry.TriggerType,
+        command: String
+    ) = entry.name == DEVOPS_P4_TRIGGER_NAME &&
+        splitPaths.contains(entry.path) &&
+        entry.triggerType.name == eventType.name &&
+        entry.command == command
 
     private fun createDevopsDepot(p4Server: P4Server) =
         p4Server.createDepot(

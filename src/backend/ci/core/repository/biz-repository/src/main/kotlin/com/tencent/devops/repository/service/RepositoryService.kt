@@ -1015,6 +1015,10 @@ class RepositoryService @Autowired constructor(
             repositoryCodeSvnDao.list(dslContext, svnRepoIds)
                 .map { it.repositoryId to it }.toMap()
 
+        val p4RepoIds = repositoryRecordList.filter { it.type == ScmType.CODE_P4.name }
+            .map { it.repositoryId }.toSet()
+        val p4RepoAuthMap = repositoryCodeP4Dao.list(dslContext, p4RepoIds)?.map { it.repositoryId to it }?.toMap()
+
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
@@ -1027,6 +1031,9 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_GITLAB.name -> {
                     RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
+                }
+                ScmType.CODE_P4.name -> {
+                    RepoAuthType.HTTP.name to p4RepoAuthMap?.get(it.repositoryId)?.credentialId
                 }
                 else -> {
                     val gitRepo = gitAuthMap?.get(it.repositoryId)
