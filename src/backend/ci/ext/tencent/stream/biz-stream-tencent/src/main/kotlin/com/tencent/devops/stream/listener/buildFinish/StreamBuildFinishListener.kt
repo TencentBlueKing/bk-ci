@@ -118,7 +118,7 @@ class StreamBuildFinishListener @Autowired constructor(
                 ?: throw OperationException("git ci pipeline not exist")
 
             val newBuildEvent = BuildEvent(
-                projectId = buildFinishEvent.buildId,
+                projectId = buildFinishEvent.projectId,
                 pipelineId = buildFinishEvent.pipelineId,
                 userId = buildFinishEvent.userId,
                 buildId = buildFinishEvent.buildId,

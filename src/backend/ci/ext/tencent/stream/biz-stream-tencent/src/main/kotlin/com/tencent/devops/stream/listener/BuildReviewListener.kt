@@ -79,7 +79,7 @@ class BuildReviewListener @Autowired constructor(
                 sendCommitCheck.sendCommitCheck(
                     StreamBuildStageListenerContextV2(
                         buildEvent = BuildEvent(
-                            projectId = buildReviewEvent.buildId,
+                            projectId = buildReviewEvent.projectId,
                             pipelineId = buildReviewEvent.pipelineId,
                             userId = buildReviewEvent.userId,
                             buildId = buildReviewEvent.buildId,
