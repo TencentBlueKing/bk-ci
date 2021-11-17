@@ -369,7 +369,7 @@ class PipelineStageService @Autowired constructor(
                 PipelineBuildReviewBroadCastEvent(
                     source = "s(${buildStage.stageId}) waiting for REVIEW",
                     projectId = buildStage.projectId, pipelineId = buildStage.pipelineId,
-                    buildId =  buildStage.buildId, userId = userId,
+                    buildId = buildStage.buildId, userId = userId,
                     reviewType = reviewType,
                     status = reviewStatus.name,
                     stageId = buildStage.stageId, taskId = null
@@ -413,7 +413,7 @@ class PipelineStageService @Autowired constructor(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
-                buildId =  stage.buildId, userId = userId,
+                buildId = stage.buildId, userId = userId,
                 reviewType = BuildReviewType.STAGE_REVIEW,
                 status = BuildStatus.REVIEWING.name,
                 stageId = stage.stageId, taskId = null
@@ -488,7 +488,7 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildReviewBroadCastEvent(
                         source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
                         projectId = stage.projectId, pipelineId = stage.pipelineId,
-                        buildId =  stage.buildId, userId = event.userId,
+                        buildId = stage.buildId, userId = event.userId,
                         reviewType = reviewType, status = BuildStatus.REVIEWING.name,
                         stageId = stage.stageId, taskId = null
                     )
