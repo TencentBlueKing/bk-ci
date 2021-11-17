@@ -32,7 +32,9 @@ import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource
 import io.kubernetes.client.openapi.models.V1Container
 import io.kubernetes.client.openapi.models.V1ContainerPort
 import io.kubernetes.client.openapi.models.V1EnvVar
+import io.kubernetes.client.openapi.models.V1HostPathVolumeSource
 import io.kubernetes.client.openapi.models.V1KeyToPath
+import io.kubernetes.client.openapi.models.V1NFSVolumeSource
 import io.kubernetes.client.openapi.models.V1ObjectMeta
 import io.kubernetes.client.openapi.models.V1PodSpec
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec
@@ -56,13 +58,16 @@ object Pod {
             if (container != null) {
                 spec.containers(container(container))
             }
-            if (volume != null) {
-                spec.volumes(volume(volume))
+            if (!volumes.isNullOrEmpty()) {
+                spec.volumes(volume(volumes))
             }
             if (nodeSelector != null) {
                 spec.nodeName(
                     nodeSelector.nodeName
                 )
+            }
+            if (restartPolicy != null) {
+                spec.restartPolicy(restartPolicy)
             }
             pods.spec(spec)
             return pods
@@ -134,24 +139,51 @@ object Pod {
     }
 
     private fun volume(
-        volume: Volume
-    ): List<V1Volume> {
-        return with(volume) {
-            listOf(
-                V1Volume()
-                    .name(name)
-                    .configMap(
-                        V1ConfigMapVolumeSource()
-                            .name(configMap.name)
-                            .items(
-                                listOf(
-                                    V1KeyToPath()
-                                        .key(configMap.key)
-                                        .path(configMap.path)
-                                )
+        volumes: List<Volume>
+    ): List<V1Volume>? {
+        return volumes.map {
+            when (it) {
+                is ConfigMapVolume -> {
+                    with(it) {
+                        V1Volume()
+                            .name(name)
+                            .configMap(
+                                V1ConfigMapVolumeSource()
+                                    .name(configMap.name)
+                                    .items(
+                                        listOf(
+                                            V1KeyToPath()
+                                                .key(configMap.key)
+                                                .path(configMap.path)
+                                        )
+                                    )
                             )
-                    )
-            )
+                    }
+                }
+                is HostPathVolume -> {
+                    with(it) {
+                        V1Volume()
+                            .name(name)
+                            .hostPath(
+                                V1HostPathVolumeSource()
+                                    .path(hostPath.path)
+                                    .type(hostPath.type)
+                            )
+                    }
+                }
+                is NfsVolume -> {
+                    with(it) {
+                        V1Volume()
+                            .name(name)
+                            .nfs(
+                                V1NFSVolumeSource()
+                                    .path(path)
+                                    .server(server)
+                            )
+                    }
+                }
+                else -> return null
+            }
         }
     }
 }

@@ -32,8 +32,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Ports
 data class PodData(
     val labels: Map<String, String>,
     val container: ContainerData?,
-    val volume: Volume?,
-    val nodeSelector: NodeSelector?
+    val volumes: List<Volume>?,
+    val nodeSelector: NodeSelector?,
+    val restartPolicy: String? = null
 )
 
 data class ContainerData(
@@ -53,15 +54,35 @@ data class VolumeMount(
     val name: String
 )
 
-data class Volume(
-    val name: String,
+interface Volume {
+    val name: String
+}
+
+class ConfigMapVolume(
+    override val name: String,
     val configMap: ConfigMap
-)
+) : Volume
+
+class HostPathVolume(
+    override val name: String,
+    val hostPath: HostPath
+) : Volume
+
+class NfsVolume(
+    override val name: String,
+    val server: String,
+    val path: String,
+) : Volume
 
 data class ConfigMap(
     val name: String,
     val key: String,
     val path: String
+)
+
+data class HostPath(
+    val path: String,
+    val type: String = "DirectoryOrCreate"
 )
 
 data class NodeSelector(

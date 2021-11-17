@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
 import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.CoreV1Api
+import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -68,5 +69,22 @@ class PodsClient @Autowired constructor(
             mapOf(dispatchBuildConfig.containerLabel!! to name).toLabelSelector(),
             null, null, null, null, null
         )
+    }
+
+
+    fun read(
+        podName: String
+    ): V1Pod? {
+        return try {
+            CoreV1Api().readNamespacedPod(
+                podName,
+                k8sConfig.nameSpace,
+                "true",
+                null,
+                null
+            )
+        } catch (ignore: Exception) {
+            return null
+        }
     }
 }

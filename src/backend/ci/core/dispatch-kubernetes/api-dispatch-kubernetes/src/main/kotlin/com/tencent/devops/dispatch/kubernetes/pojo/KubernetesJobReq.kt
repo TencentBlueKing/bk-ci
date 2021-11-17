@@ -24,9 +24,9 @@ data class KubernetesJobParam(
     var ipEnabled: Boolean? = true
 ) {
     data class NfsVolume(
-        val server: String? = null,
-        val path: String? = null,
-        val mountPath: String? = null
+        val server: String,
+        val path: String,
+        val mountPath: String
     )
 }
 

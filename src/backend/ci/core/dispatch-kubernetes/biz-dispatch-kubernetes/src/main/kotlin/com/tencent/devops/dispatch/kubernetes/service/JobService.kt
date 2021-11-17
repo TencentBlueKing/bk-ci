@@ -21,13 +21,11 @@ class JobService @Autowired constructor(
     fun createJob(userId: String, jobReq: KubernetesJobReq): KubernetesJobResp {
         val jobName = "${userId}${System.currentTimeMillis()}"
         // 获取创建调用方所在的节点
-        val nodeName = podsClient.list(jobReq.podNameSelector!!)
-            .items?.ifEmpty { null }?.get(0)?.spec?.nodeName
-            ?: CommonUtils.onFailure(
+        val nodeName = podsClient.read(jobReq.podNameSelector!!)?.spec?.nodeName ?: CommonUtils.onFailure(
                 ErrorCodeEnum.CREATE_JOB_ERROR.errorType,
                 ErrorCodeEnum.CREATE_JOB_ERROR.errorCode,
                 ErrorCodeEnum.CREATE_JOB_ERROR.formatErrorMessage,
-                KubernetesClientUtil.getClientFailInfo("获取Pod节点信息失败: 节点 ${jobReq.podNameSelector} 不存在")
+                KubernetesClientUtil.getClientFailInfo("获取Pod节点信息失败: pod ${jobReq.podNameSelector} 不存在")
             )
         val result = jobClient.create(jobName, jobReq, nodeName.toString())
         if (!result.isSuccessful()) {

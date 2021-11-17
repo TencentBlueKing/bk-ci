@@ -13,7 +13,7 @@ object Job {
         with(job) {
             return V1Job()
                 .apiVersion(apiVersion)
-                .kind("job")
+                .kind("Job")
                 .metadata(
                     V1ObjectMeta()
                         .name(name)
@@ -30,8 +30,8 @@ object Job {
             val spec = V1JobSpec()
                 .backoffLimit(backoffLimit)
                 .template(Pod.template(job.pod))
-            if (job.activeDeadlineSeconds != null) {
-                spec.activeDeadlineSeconds(activeDeadlineSeconds!!.toLong())
+            if (activeDeadlineSeconds != null) {
+                spec.activeDeadlineSeconds(activeDeadlineSeconds.toLong())
             }
             return spec
         }

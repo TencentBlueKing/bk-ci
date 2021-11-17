@@ -65,4 +65,7 @@ class DispatchBuildConfig {
 
     @Value("\${dispatch.build.volume.configMap.path:#{null}}")
     val volumeConfigMapPath: String? = null
+
+    @Value("\${dispatch.build.volume.hostPath.hostdir:#{null}}")
+    val volumeHostPathHostDir: String? = null
 }

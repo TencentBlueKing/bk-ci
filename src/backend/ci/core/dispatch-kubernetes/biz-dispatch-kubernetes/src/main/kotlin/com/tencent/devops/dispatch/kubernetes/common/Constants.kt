@@ -35,3 +35,8 @@ const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
 const val ENV_KEY_GATEWAY = "devops_gateway"
 
 const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+
+const val CONFIG_VOLUME_NAME = "config_volume"
+const val DATA_VOLUME_NAME = "data_volume"
+const val DATA_VOLUME_MOUNT_PATH = "/data"
+const val NFS_VOLUME_NAME_PREFIX = "nfs_volume"

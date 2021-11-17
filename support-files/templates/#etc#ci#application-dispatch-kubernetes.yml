@@ -48,6 +48,8 @@ dispatch:
       configMap:
         key: initsh.properties
         path: dispatch_kubernetes_init.sh
+      hostPath:
+        hostdir: /data/volume/bkci/dispatch-kubernetes
 
 pipeline:
   build:

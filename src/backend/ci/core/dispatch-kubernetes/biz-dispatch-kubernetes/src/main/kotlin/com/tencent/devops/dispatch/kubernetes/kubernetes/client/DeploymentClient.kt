@@ -28,18 +28,25 @@
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.google.gson.Gson
+import com.tencent.devops.dispatch.kubernetes.common.CONFIG_VOLUME_NAME
+import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_MOUNT_PATH
+import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_NAME
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.Deployment
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.DeploymentData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMap
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMapVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPath
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPathVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.Volume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesDataUtils
 import io.kubernetes.client.custom.V1Patch
 import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.AppsV1Api
@@ -54,16 +61,14 @@ import org.springframework.stereotype.Component
 @Component
 class DeploymentClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
-    private val dispatchBuildConfig: DispatchBuildConfig
+    private val dispatchBuildConfig: DispatchBuildConfig,
+    private val kubernetesDataUtils: KubernetesDataUtils
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeploymentClient::class.java)
-        //  为了方便将容器中创建的容器选取到同一个节点
-        private const val POD_LABEL_ENV = "HOSTNAME"
     }
 
-    private val volumeName = "config"
 
     fun create(
         buildContainer: BuildContainer,
@@ -91,23 +96,11 @@ class DeploymentClient @Autowired constructor(
                             memory = memory,
                             disk = disk,
                             ports = ports,
-                            env = getRealEnv(buildContainer.params?.env, containerName),
+                            env = buildContainer.params?.env,
                             commends = params?.command,
-                            volumeMounts = listOf(
-                                VolumeMount(
-                                    name = volumeName,
-                                    mountPath = dispatchBuildConfig.volumeMountPath!!
-                                )
-                            )
+                            volumeMounts = kubernetesDataUtils.getPodVolumeMount()
                         ),
-                        volume = Volume(
-                            name = volumeName,
-                            configMap = ConfigMap(
-                                name = k8sConfig.configMapName!!,
-                                key = dispatchBuildConfig.volumeConfigMapKey!!,
-                                path = dispatchBuildConfig.volumeConfigMapPath!!
-                            )
-                        ),
+                        volumes = kubernetesDataUtils.getPodVolume(),
                         nodeSelector = null
                     )
                 )
@@ -152,23 +145,11 @@ class DeploymentClient @Autowired constructor(
                             memory = null,
                             disk = null,
                             ports = null,
-                            env = getRealEnv(params?.env, containerName),
+                            env = params?.env,
                             commends = params?.command,
-                            volumeMounts = listOf(
-                                VolumeMount(
-                                    name = volumeName,
-                                    mountPath = dispatchBuildConfig.volumeMountPath!!
-                                )
-                            )
+                            volumeMounts = kubernetesDataUtils.getPodVolumeMount()
                         ),
-                        volume = Volume(
-                            name = volumeName,
-                            configMap = ConfigMap(
-                                name = k8sConfig.configMapName!!,
-                                key = dispatchBuildConfig.volumeConfigMapKey!!,
-                                path = dispatchBuildConfig.volumeConfigMapPath!!
-                            )
-                        ),
+                        volumes = kubernetesDataUtils.getPodVolume(),
                         nodeSelector = null
                     )
                 )
@@ -229,17 +210,4 @@ class DeploymentClient @Autowired constructor(
     }
 
     private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.containerLabel!! to containerName)
-
-
-    private fun getRealEnv(
-        env: Map<String, String>?,
-        containerName: String
-    ): Map<String, String> {
-        val realEnv = env?.toMutableMap()
-            .let {
-                it?.put(POD_LABEL_ENV, containerName)
-                it
-            } ?: mapOf(POD_LABEL_ENV to containerName)
-        return realEnv
-    }
 }
