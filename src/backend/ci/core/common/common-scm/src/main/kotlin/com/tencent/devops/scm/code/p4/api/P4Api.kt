@@ -218,7 +218,7 @@ class P4Api(
         // 新增触发器
         remainPaths.forEach { path ->
             val trigger = TriggerInfo(
-                name = DEVOPS_P4_TRIGGER_NAME,
+                name = "${DEVOPS_P4_TRIGGER_NAME}_$order",
                 type = eventType,
                 path = path,
                 command = getTriggerCommand(
