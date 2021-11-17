@@ -52,7 +52,7 @@ class SendCommitCheck @Autowired constructor(
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Your pipeline「%s」 is failed."
         private const val BUILD_GATE_REVIEW_DESC =
-            "Pending: Gate access requirement is not met. Gatekeeper's approval is needed."
+            "Pending: Gate access requirement is not met. Gatekeeper approval is needed."
         private const val BUILD_MANUAL_REVIEW_DESC =
             "Pending: Pipeline approval is needed."
     }
