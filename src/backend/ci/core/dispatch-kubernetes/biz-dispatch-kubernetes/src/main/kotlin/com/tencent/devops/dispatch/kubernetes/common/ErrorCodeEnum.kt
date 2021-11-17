@@ -54,5 +54,6 @@ enum class ErrorCodeEnum(
     KUBERNETES_INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2129018, "Dispatcher-kubernetes 异常，异常信息 - 接口请求超时"),
     CREATE_VM_USER_ERROR(ErrorType.USER, 2129003, "Dispatcher-kubernetes 异常，异常信息 - 用户操作异常"),
     GET_CREDENTIAL_FAIL(ErrorType.USER, 2129020, "Get credential failed"),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2129050, "已超过 Dispatcher-kubernetes 创建Job容器上限.")
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2129050, "已超过 Dispatcher-kubernetes 创建Job容器上限."),
+    CREATE_JOB_ERROR(ErrorType.SYSTEM, 2129051, "Dispatcher-kubernetes 异常, 创建Job容器失败")
 }

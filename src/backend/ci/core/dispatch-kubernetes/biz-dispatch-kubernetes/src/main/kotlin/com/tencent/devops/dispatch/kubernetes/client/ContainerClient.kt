@@ -59,7 +59,7 @@ class ContainerClient @Autowired constructor(
     fun getContainerStatus(
         containerName: String
     ): Result<V1ContainerStatus> {
-        val result = podsClient.list(containerName)
+        val result = podsClient.listWithHttpInfo(containerName)
         if (!result.isSuccessful()) {
             // 先不添加重试逻辑，看后续使用
             //           if (retryTime > 0) {

@@ -32,7 +32,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Ports
 data class PodData(
     val labels: Map<String, String>,
     val container: ContainerData?,
-    val volume: Volume?
+    val volume: Volume?,
+    val nodeSelector: NodeSelector?
 )
 
 data class ContainerData(
@@ -61,4 +62,8 @@ data class ConfigMap(
     val name: String,
     val key: String,
     val path: String
+)
+
+data class NodeSelector(
+    val nodeName: String
 )

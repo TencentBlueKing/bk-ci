@@ -59,6 +59,8 @@ class DeploymentClient @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeploymentClient::class.java)
+        //  为了方便将容器中创建的容器选取到同一个节点
+        private const val POD_LABEL_ENV = "HOSTNAME"
     }
 
     private val volumeName = "config"
@@ -89,7 +91,7 @@ class DeploymentClient @Autowired constructor(
                             memory = memory,
                             disk = disk,
                             ports = ports,
-                            env = params?.env,
+                            env = getRealEnv(buildContainer.params?.env, containerName),
                             commends = params?.command,
                             volumeMounts = listOf(
                                 VolumeMount(
@@ -105,7 +107,8 @@ class DeploymentClient @Autowired constructor(
                                 key = dispatchBuildConfig.volumeConfigMapKey!!,
                                 path = dispatchBuildConfig.volumeConfigMapPath!!
                             )
-                        )
+                        ),
+                        nodeSelector = null
                     )
                 )
             )
@@ -149,7 +152,7 @@ class DeploymentClient @Autowired constructor(
                             memory = null,
                             disk = null,
                             ports = null,
-                            env = params?.env,
+                            env = getRealEnv(params?.env, containerName),
                             commends = params?.command,
                             volumeMounts = listOf(
                                 VolumeMount(
@@ -165,7 +168,8 @@ class DeploymentClient @Autowired constructor(
                                 key = dispatchBuildConfig.volumeConfigMapKey!!,
                                 path = dispatchBuildConfig.volumeConfigMapPath!!
                             )
-                        )
+                        ),
+                        nodeSelector = null
                     )
                 )
             )
@@ -224,5 +228,18 @@ class DeploymentClient @Autowired constructor(
         )
     }
 
-    private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.label!! to containerName)
+    private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.containerLabel!! to containerName)
+
+
+    private fun getRealEnv(
+        env: Map<String, String>?,
+        containerName: String
+    ): Map<String, String> {
+        val realEnv = env?.toMutableMap()
+            .let {
+                it?.put(POD_LABEL_ENV, containerName)
+                it
+            } ?: mapOf(POD_LABEL_ENV to containerName)
+        return realEnv
+    }
 }

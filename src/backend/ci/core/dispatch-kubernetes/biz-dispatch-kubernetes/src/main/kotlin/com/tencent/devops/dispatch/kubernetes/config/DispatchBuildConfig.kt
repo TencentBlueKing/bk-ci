@@ -51,8 +51,11 @@ class DispatchBuildConfig {
     @Value("\${dispatch.build.container.registry.password:#{null}}")
     val registryPwd: String? = null
 
-    @Value("\${dispatch.build.label:#{null}}")
-    val label: String? = null
+    @Value("\${dispatch.build.label.container:#{null}}")
+    val containerLabel: String? = null
+
+    @Value("\${dispatch.build.label.job:#{null}}")
+    val jobLabel: String? = null
 
     @Value("\${dispatch.build.volumeMount.path:#{null}}")
     val volumeMountPath: String? = null

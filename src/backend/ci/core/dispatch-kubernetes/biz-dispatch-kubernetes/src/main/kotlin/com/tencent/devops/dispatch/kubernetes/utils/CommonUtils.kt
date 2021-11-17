@@ -182,6 +182,10 @@ object CommonUtils {
         }
     }
 
+    fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
+        throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
+    }
+
 //    fun generatePwd(): String {
 //        val secretSeed = arrayOf(
 //            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",

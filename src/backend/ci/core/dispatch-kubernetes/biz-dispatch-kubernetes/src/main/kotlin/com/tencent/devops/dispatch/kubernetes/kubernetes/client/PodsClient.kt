@@ -42,7 +42,7 @@ class PodsClient @Autowired constructor(
     private val dispatchBuildConfig: DispatchBuildConfig
 ) {
 
-    fun list(
+    fun listWithHttpInfo(
         name: String
     ): ApiResponse<V1PodList> {
         return CoreV1Api().listNamespacedPodWithHttpInfo(
@@ -51,7 +51,21 @@ class PodsClient @Autowired constructor(
             null,
             null,
             null,
-            mapOf(dispatchBuildConfig.label!! to name).toLabelSelector(),
+            mapOf(dispatchBuildConfig.containerLabel!! to name).toLabelSelector(),
+            null, null, null, null, null
+        )
+    }
+
+    fun list(
+        name: String
+    ): V1PodList {
+        return CoreV1Api().listNamespacedPod(
+            k8sConfig.nameSpace,
+            "true",
+            null,
+            null,
+            null,
+            mapOf(dispatchBuildConfig.containerLabel!! to name).toLabelSelector(),
             null, null, null, null, null
         )
     }

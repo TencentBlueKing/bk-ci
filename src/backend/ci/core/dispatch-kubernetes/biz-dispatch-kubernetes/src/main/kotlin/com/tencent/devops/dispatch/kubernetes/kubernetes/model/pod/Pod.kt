@@ -59,6 +59,11 @@ object Pod {
             if (volume != null) {
                 spec.volumes(volume(volume))
             }
+            if (nodeSelector != null) {
+                spec.nodeName(
+                    nodeSelector.nodeName
+                )
+            }
             pods.spec(spec)
             return pods
         }
