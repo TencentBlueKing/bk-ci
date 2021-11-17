@@ -201,7 +201,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
             event = event,
             hookUrl = hookUrl,
             includePaths = includePaths,
-            excludePaths = excludePaths,
+            excludePaths = excludePaths
         )
         return Result(true)
     }
