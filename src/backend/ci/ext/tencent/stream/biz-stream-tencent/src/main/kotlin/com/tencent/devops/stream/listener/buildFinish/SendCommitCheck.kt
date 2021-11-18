@@ -115,12 +115,7 @@ class SendCommitCheck @Autowired constructor(
                 gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
-                reportData = streamQualityService.getQualityGitMrResult(
-                    client = client,
-                    gitProjectId = streamSetting.gitProjectId,
-                    pipelineName = pipeline.displayName,
-                    event = buildEvent
-                ),
+                reportData = getGateRepoData(),
                 targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                     gitProjectId = streamSetting.gitProjectId,
@@ -129,6 +124,21 @@ class SendCommitCheck @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun StreamBuildListenerContextV2.getGateRepoData():
+            Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
+        if (this is StreamBuildStageListenerContextV2 &&
+            (reviewType == BuildReviewType.STAGE_REVIEW || reviewType == BuildReviewType.TASK_REVIEW)
+        ) {
+            return Pair(listOf(), mutableMapOf())
+        }
+        return streamQualityService.getQualityGitMrResult(
+            client = client,
+            gitProjectId = streamSetting.gitProjectId,
+            pipelineName = pipeline.displayName,
+            event = buildEvent
+        )
     }
 
     // 根据状态切换描述

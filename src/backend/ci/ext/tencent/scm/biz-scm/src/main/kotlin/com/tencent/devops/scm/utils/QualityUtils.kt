@@ -45,13 +45,16 @@ object QualityUtils {
         }
 
         // 生成报表
-        val statusLine = if (buildStatus.name == "SUCCEED") {
-            "<td style=\"color:#4CAF50;border:none;font-weight: bold;" +
-                    "padding-left:0;\">执行成功</td>"
-        } else if (buildStatus.isRunning()) {
-            "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">正在执行</td>"
-        } else {
-            "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
+        val statusLine = when {
+            buildStatus.name == "SUCCEED" -> {
+                "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
+            }
+            buildStatus == BuildStatus.REVIEWING -> {
+                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">等待审核</td>"
+            }
+            else -> {
+                "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
+            }
         }
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +

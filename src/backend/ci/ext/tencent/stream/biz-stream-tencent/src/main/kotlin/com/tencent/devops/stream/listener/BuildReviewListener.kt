@@ -3,7 +3,7 @@ package com.tencent.devops.stream.listener
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -84,7 +84,8 @@ class BuildReviewListener @Autowired constructor(
                             userId = buildReviewEvent.userId,
                             buildId = buildReviewEvent.buildId,
                             status = buildReviewEvent.status,
-                            startTime = streamBuild.createTime.timestamp()
+                            startTime = streamBuild.createTime.timestampmilli()
+
                         ),
                         requestEvent = requestEvent,
                         streamBuildEvent = buildEvent,
