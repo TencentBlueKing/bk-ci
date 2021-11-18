@@ -129,18 +129,4 @@ class TxPipelineEngineConfiguration {
             pipelineInfoDao = pipelineInfoDao,
             authResourceApi = authResourceApi
         )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
-    fun pipelineUrlBeanGitCI(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired client: Client
-    ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired client: Client
-    ) = TencentPipelineUrlBeanImpl(commonConfig, client)
 }
