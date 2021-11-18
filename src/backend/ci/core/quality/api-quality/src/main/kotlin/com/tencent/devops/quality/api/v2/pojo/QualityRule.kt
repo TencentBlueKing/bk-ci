@@ -98,7 +98,7 @@ data class QualityRule(
     )
 
     data class RuleTask(
-        @ApiModelProperty("任务节点名", required=false)
+        @ApiModelProperty("任务节点名", required = false)
         val taskName: String?,
         @ApiModelProperty("指标名", required = false)
         val indicatorEnName: String?
