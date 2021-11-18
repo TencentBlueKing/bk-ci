@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
-    api(project(":core:dispatch-docker:model-dispatch-docker"))
+package com.tencent.devops.buildless.common
 
-    api(project(":core:common:common-dispatch-sdk"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:log:api-log"))
-    api(project(":core:buildless:api-buildless"))
+import com.tencent.devops.common.api.pojo.ErrorType
+
+@Suppress("ALL")
+enum class ErrorCodeEnum(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String
+) {
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2127001, "Buildless 系统错误"),
+    CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127002, "创建容器异常"),
+    NO_IDLE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127003, "无可用空闲容器")
 }

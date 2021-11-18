@@ -26,16 +26,16 @@
  */
 
 dependencies {
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
-    api(project(":core:dispatch-docker:model-dispatch-docker"))
+    api(project(":core:buildless:api-buildless"))
 
-    api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:log:api-log"))
-    api(project(":core:buildless:api-buildless"))
+
+    api("com.github.docker-java:docker-java")
+    api("com.github.docker-java:docker-java-transport-okhttp")
+    implementation("com.github.oshi:oshi-core")
 }
