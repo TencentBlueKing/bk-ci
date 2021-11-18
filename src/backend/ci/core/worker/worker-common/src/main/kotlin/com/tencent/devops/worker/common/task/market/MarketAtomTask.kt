@@ -117,7 +117,7 @@ open class MarketAtomTask : ITask() {
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
-        val map = JsonUtil.toMutableMapSkipEmpty(data)
+        val map = JsonUtil.toMutableMap(data)
         logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
             "|workspace=${workspace.absolutePath}")
 
@@ -152,7 +152,7 @@ open class MarketAtomTask : ITask() {
         }
 
         // 解析输出字段模板
-        val props = JsonUtil.toMutableMapSkipEmpty(atomData.props!!)
+        val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
 
@@ -327,7 +327,7 @@ open class MarketAtomTask : ITask() {
             // 获取插件post操作入口参数
             var postEntryParam: String? = null
             if (additionalOptions != null) {
-                val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
+                val additionalOptionMap = JsonUtil.toMutableMap(additionalOptions)
                 val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }

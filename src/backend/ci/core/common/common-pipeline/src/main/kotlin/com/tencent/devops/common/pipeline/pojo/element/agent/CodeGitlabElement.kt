@@ -70,7 +70,7 @@ data class CodeGitlabElement(
     }
 
     override fun genTaskParams(): MutableMap<String, Any> {
-        val paramMap = JsonUtil.toMutableMapSkipEmpty(this)
+        val paramMap = JsonUtil.toMutableMap(this)
         if (gitPullMode != null) { // 这个是为了方便构建机用的是Map，在运行时可直接key使用
             paramMap[modeType] = gitPullMode.type.name
             paramMap[modeValue] = gitPullMode.value

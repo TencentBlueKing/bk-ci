@@ -139,13 +139,13 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .atom-property-panel {
+    ::v-deep .atom-property-panel {
         padding: 10px 50px;
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
             margin-right: 10px;
         }
     }
-    /deep/ .reference-var {
+    ::v-deep .reference-var {
         padding: 0;
     }
 </style>

@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.utils.BG_IEG_ID
+import org.apache.http.HttpStatus
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -50,7 +51,7 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import javax.servlet.http.HttpServletRequest
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "LongParameterList", "LongMethod")
 @Service
 class UserProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -101,7 +102,7 @@ class UserProjectServiceImpl @Autowired constructor(
                 )
             )
         } else {
-            return Result(405, "无限ID,获取服务信息失败")
+            return Result(HttpStatus.SC_METHOD_NOT_ALLOWED, "无限ID,获取服务信息失败")
         }
     }
 
@@ -124,8 +125,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
             val request = attributes?.request
             val bkToken = request?.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
-            logger.info("listService interface request :$request")
-            logger.info("listService interface bkToken :$bkToken")
+            val map = getReplaceMapByRequest()
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
@@ -136,10 +136,10 @@ class UserProjectServiceImpl @Autowired constructor(
                     val status = it.status
                     val favor = favorServices.contains(it.id)
                     val (newWindow, newWindowUrl) = getNewWindow(
-                        it,
-                        request,
-                        bkToken,
-                        userId
+                        tServiceRecord = it,
+                        request = request,
+                        bkToken = bkToken,
+                        userId = userId
                     )
                     services.add(
                         ServiceVO(
@@ -149,21 +149,30 @@ class UserProjectServiceImpl @Autowired constructor(
                             linkNew = it.linkNew ?: "",
                             status = status,
                             injectType = it.injectType ?: "",
-                            iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
-                            grayIframeUrl = it.grayIframeUrl ?: "",
-                            cssUrl = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
-                            jsUrl = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
-                            grayCssUrl = it.grayCssUrl ?: "",
-                            grayJsUrl = it.grayJsUrl ?: "",
+                            iframeUrl = replaceUrl(
+                                url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
+                                replaceMap = map
+                            ),
+                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = map),
+                            cssUrl = replaceUrl(
+                                url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
+                                replaceMap = map
+                            ),
+                            jsUrl = replaceUrl(
+                                url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
+                                replaceMap = map
+                            ),
+                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = map),
+                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = map),
                             showProjectList = it.showProjectList ?: false,
                             showNav = it.showNav ?: false,
                             projectIdType = it.projectIdType ?: "",
                             collected = favor,
                             weigHt = it.weight ?: 0,
-                            logoUrl = it.logoUrl,
+                            logoUrl = replaceUrl(url = it.logoUrl, replaceMap = map),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
-                            newWindowUrl = newWindowUrl
+                            newWindowUrl = replaceUrl(newWindowUrl, map)
 
                         )
                     )
@@ -256,5 +265,40 @@ class UserProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserProjectServiceImpl::class.java)
+        private val MAP = mapOf("http://" to "https://", ".oa.com" to ".woa.com")
+        private val regex = Regex("((http[s]?://)([-a-z0-9A-Z]+\\.)+([w]?oa\\.com)).*")
+    }
+
+    private fun getReplaceMapByRequest(): Map<String, String> {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        if (null != attributes) {
+            val request = attributes.request
+            request.getHeader("referer")?.let { referer ->
+                val replaceMap = MAP.toMutableMap()
+                if (referer.trim().startsWith("http://")) { // 如果此时用户访问的不是https，则不做https替换
+                    replaceMap.remove("http://")
+                }
+
+                if (referer.contains(".oa.com")) { // 如果访问是oa.com 则不做woa替换
+                    replaceMap.remove(".oa.com")
+                }
+                return replaceMap
+            }
+        }
+        return MAP
+    }
+
+    private fun replaceUrl(url: String, replaceMap: Map<String, String> = MAP): String {
+        var result = url
+        val matcher = regex.toPattern().matcher(url)
+        while (matcher.find()) {
+            var tmp = matcher.group(1)
+            replaceMap.forEach { replace -> tmp = tmp.replace(replace.key, replace.value) }
+
+            if (tmp != matcher.group(1)) {
+                result = result.replaceFirst(matcher.group(1), tmp)
+            }
+        }
+        return result
     }
 }

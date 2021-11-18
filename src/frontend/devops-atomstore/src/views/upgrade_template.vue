@@ -449,10 +449,10 @@
                 width: 100%;
             }
             .markdown-editor-show.info-value {
-                /deep/ .v-note-panel {
+                ::v-deep .v-note-panel {
                     border: none;
                 }
-                /deep/ .v-show-content {
+                ::v-deep .v-show-content {
                     background: #FAFBFD;
                 }
             }

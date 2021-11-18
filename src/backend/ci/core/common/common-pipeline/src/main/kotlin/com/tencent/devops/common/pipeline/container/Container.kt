@@ -59,7 +59,7 @@ interface Container {
      * 只存储Container相关的配置，elements不会存储。
      */
     fun genTaskParams(): MutableMap<String, Any> {
-        val configParams = JsonUtil.toMutableMapSkipEmpty(this)
+        val configParams = JsonUtil.toMutableMap(this)
         if (elements.isNotEmpty()) {
             configParams["elements"] = listOf<Element>() // ignore elements storage
         }

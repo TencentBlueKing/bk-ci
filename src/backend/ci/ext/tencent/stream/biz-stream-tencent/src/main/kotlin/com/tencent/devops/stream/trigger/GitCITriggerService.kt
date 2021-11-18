@@ -133,6 +133,11 @@ class GitCITriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
+        if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
+            logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
+            return true
+        }
+
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
         return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {

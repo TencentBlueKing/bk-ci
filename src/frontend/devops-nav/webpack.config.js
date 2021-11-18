@@ -45,7 +45,6 @@ const webpackBaseConfig = require('../webpack.base')
 const webpack = require('webpack')
 module.exports = (env = {}, argv) => {
     const isDev = argv.mode === 'development'
-    const urlPrefix = env && env.name ? env.name : ''
     const envDist = env && env.dist ? env.dist : 'frontend'
     const lsVersion = env && env.lsVersion ? env.lsVersion : 'dev' // 最后一个命令行参数为localStorage版本
     const dist = path.join(__dirname, `../${envDist}/console`)
@@ -90,6 +89,9 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
+            minify: {
+                removeComments: false
+            },
             DEVOPS_LS_VERSION: lsVersion
         }),
         new AssetPlugin(),
@@ -108,12 +110,14 @@ module.exports = (env = {}, argv) => {
             context: __dirname,
             manifest: require('./src/assets/static/manifest.json')
         }),
-        new CopyWebpackPlugin([
-            {
-                from: path.join(__dirname, './src/assets/static'),
-                to: `${dist}/static`
-            }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: path.join(__dirname, './src/assets/static'),
+                    to: `${dist}/static`
+                }
+            ]
+        })
     ]
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]

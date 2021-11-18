@@ -743,7 +743,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .atom-dialog-wrapper {
+    ::v-deep .atom-dialog-wrapper {
         .bk-form-item{
             .bk-label {
                 padding: 0;
@@ -770,11 +770,11 @@
                 width: 86px;
             }
         }
-        /deep/ .bk-dialog-header {
+        ::v-deep .bk-dialog-header {
             padding: 3px 24px 10px;
             border-bottom: 1px solid #e6e7ea;
         }
-        /deep/ .bk-dialog-body {
+        ::v-deep .bk-dialog-body {
             padding: 10px 35px 26px;
         }
         .delete-form-item {

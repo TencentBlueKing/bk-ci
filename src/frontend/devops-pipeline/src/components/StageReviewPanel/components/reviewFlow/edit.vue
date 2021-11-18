@@ -124,7 +124,7 @@
         }
     }
     .is-error {
-        /deep/ .devops-staff-input {
+        ::v-deep .devops-staff-input {
             border-color: #ff5656;
             color: #ff5656;
         }
@@ -133,7 +133,7 @@
         display: flex;
         align-items: center;
         font-size: 12px;
-        /deep/ .bk-icon {
+        ::v-deep .bk-icon {
             top: -1px;
             margin-right: 3px;
         }
