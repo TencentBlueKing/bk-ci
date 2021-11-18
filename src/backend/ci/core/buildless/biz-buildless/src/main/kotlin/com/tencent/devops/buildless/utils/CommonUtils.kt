@@ -27,10 +27,6 @@
 
 package com.tencent.devops.buildless.utils
 
-import com.github.dockerjava.api.model.AuthConfig
-import com.tencent.devops.buildless.config.DockerHostConfig
-import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.DatagramSocket
@@ -39,7 +35,6 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.Socket
 import java.net.UnknownHostException
-import java.util.ArrayList
 import java.util.Enumeration
 
 object CommonUtils {
@@ -195,33 +190,6 @@ object CommonUtils {
         } else {
             logger.error("image name invalid: $imageNameStr")
             throw Exception("image name invalid.")
-        }
-    }
-
-    fun getAuthConfig(
-        imageType: String?,
-        dockerHostConfig: DockerHostConfig,
-        imageName: String,
-        registryUser: String?,
-        registryPwd: String?
-    ): AuthConfig? {
-        return if (imageType == ImageType.THIRD.type) {
-            val (registryHost, _, _) = parseImage(imageName)
-            logger.info("registry host: $registryHost")
-            if (registryUser.isNullOrBlank()) {
-                AuthConfig().withRegistryAddress(registryHost)
-            } else {
-                logger.info("registryUser: $registryUser, registryPwd: $registryPwd")
-                AuthConfig()
-                    .withUsername(registryUser)
-                    .withPassword(registryPwd)
-                    .withRegistryAddress(registryHost)
-            }
-        } else {
-            AuthConfig()
-                .withUsername(dockerHostConfig.registryUsername)
-                .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
-                .withRegistryAddress(dockerHostConfig.registryUrl)
         }
     }
 }
