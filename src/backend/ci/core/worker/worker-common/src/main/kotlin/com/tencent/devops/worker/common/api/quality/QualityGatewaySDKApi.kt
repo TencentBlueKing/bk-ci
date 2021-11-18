@@ -38,5 +38,4 @@ interface QualityGatewaySDKApi : WorkerRestApiSDK {
         taskName: String,
         data: Map<String, String>
     ): Result<String>
-
 }
