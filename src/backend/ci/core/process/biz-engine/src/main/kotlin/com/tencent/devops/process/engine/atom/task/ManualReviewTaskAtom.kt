@@ -137,7 +137,7 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val buildId = task.buildId
         val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
-        val taskParam = JsonUtil.toMutableMapSkipEmpty(task.taskParams)
+        val taskParam = JsonUtil.toMutableMap(task.taskParams)
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
         if (manualAction.isBlank()) {
             return AtomResponse(BuildStatus.REVIEWING)

@@ -106,7 +106,7 @@ abstract class Element(
     open fun getTaskAtom(): String = ""
 
     open fun genTaskParams(): MutableMap<String, Any> {
-        return JsonUtil.toMutableMapSkipEmpty(this)
+        return JsonUtil.toMutableMap(this)
     }
 
     open fun cleanUp() {}
