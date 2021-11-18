@@ -66,6 +66,7 @@ import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
@@ -104,7 +105,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val projectExtPermissionService: ProjectExtPermissionService
+    private val projectExtPermissionService: ProjectExtPermissionService,
+    private val projectTagService: ProjectTagService
 ) : AbsProjectServiceImpl(
     projectPermissionService,
     dslContext,
@@ -122,8 +124,14 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
 
-    @Value("\${v3.tag:#{null}}")
+    @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
+
+    @Value("\${tag.pcg:#{null}}")
+    private var pcgTag: String = ""
+
+    @Value("\${dept.pcg:#{null}}")
+    private var deptPcg: String = ""
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
@@ -175,7 +183,22 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
-        return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+        try {
+            return tofService.getUserDeptDetail(userId, "")
+        } catch (e: OperationException) {
+            // stream场景下会传公共账号,tof不存在公共账号
+            logger.warn("getDeptInfo: $e")
+            return UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                centerId = "0",
+                centerName = "",
+                deptId = "0",
+                deptName = "",
+                groupId = "0",
+                groupName = ""
+            )
+        }
     }
 
     override fun createExtProjectInfo(
@@ -200,6 +223,12 @@ class TxProjectServiceImpl @Autowired constructor(
                 accessToken = newAccessToken!!,
                 projectCreateInfo = projectCreateInfo
             )
+        }
+
+        try {
+            routerTagCheckout(projectCreateInfo)
+        } catch (e: Exception) {
+            logger.warn("checkout routerTag fail:$e")
         }
 
         // 工蜂CI项目不会添加paas项目，但也需要广播
@@ -378,6 +407,14 @@ class TxProjectServiceImpl @Autowired constructor(
             checkManager = true
         )
         return true
+    }
+
+    // pcg项目直接将流量切换到pcg集群
+    private fun routerTagCheckout(projectCreateInfo: ProjectCreateInfo) {
+        if (!deptPcg.isNullOrEmpty() && projectCreateInfo.bgId == deptPcg.toLong()) {
+            logger.info("project create by pcg, checkout router to pcg ${projectCreateInfo.englishName}")
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, pcgTag)
+        }
     }
 
     companion object {

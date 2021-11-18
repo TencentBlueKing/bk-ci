@@ -304,7 +304,8 @@ class ExperienceAppService(
         if (experience.size == 0L) {
             executorService.submit {
                 val fileDetail =
-                    client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+                    client.get(ServiceArtifactoryResource::class)
+                        .show(experience.creator, projectId, artifactoryType, path).data
                 if (null != fileDetail) {
                     experienceDao.updateSize(dslContext, experience.id, fileDetail.size)
                     experience.size = fileDetail.size

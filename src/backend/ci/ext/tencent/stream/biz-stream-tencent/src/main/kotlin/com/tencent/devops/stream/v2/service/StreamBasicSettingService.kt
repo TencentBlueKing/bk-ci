@@ -57,20 +57,21 @@ class StreamBasicSettingService @Autowired constructor(
 
     fun updateProjectSetting(
         gitProjectId: Long,
+        userId: String? = null,
         buildPushedBranches: Boolean? = null,
         buildPushedPullRequest: Boolean? = null,
         enableMrBlock: Boolean? = null,
         enableCi: Boolean? = null,
-        enableUserId: String? = null
+        authUserId: String? = null
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
             logger.info("git repo not exists.")
             return false
         }
-        if (!enableUserId.isNullOrBlank()) {
+        if (!userId.isNullOrBlank()) {
             val projectResult =
-                client.get(ServiceTxUserResource::class).get(enableUserId)
+                client.get(ServiceTxUserResource::class).get(userId)
             if (projectResult.isNotOk()) {
                 logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
             } else {
@@ -83,16 +84,26 @@ class StreamBasicSettingService @Autowired constructor(
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
+            userId = userId,
             buildPushedBranches = buildPushedBranches,
             buildPushedPullRequest = buildPushedPullRequest,
             enableMrBlock = enableMrBlock,
             enableCi = enableCi,
-            enableUserId = enableUserId,
+            authUserId = authUserId,
             creatorBgName = setting.creatorBgName,
             creatorDeptName = setting.creatorDeptName,
             creatorCenterName = setting.creatorCenterName
         )
         return true
+    }
+
+    fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
+        streamBasicSettingDao.updateOauthSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            userId = userId,
+            oauthUserId = oauthUserId
+        )
     }
 
     fun getGitCIConf(gitProjectId: Long): GitCIBasicSetting? {
@@ -108,49 +119,39 @@ class StreamBasicSettingService @Autowired constructor(
         userId: String,
         projectId: String,
         gitProjectId: Long,
-        enabled: Boolean,
-        projectInfo: GitCIProjectInfo
+        enabled: Boolean
     ): Boolean {
-        val httpUrl = if (projectInfo.gitHttpUrl.startsWith("https://")) {
-            projectInfo.gitHttpUrl
-        } else {
-            val projectResult = requestGitProjectInfo(gitProjectId)
-            if (projectResult != null) {
-                if (projectResult.gitHttpsUrl?.startsWith("https://") == true) {
-                    projectResult.gitHttpsUrl
-                } else {
-                    projectInfo.gitHttpUrl
-                }
-            } else {
-                projectInfo.gitHttpUrl
-            }
-        } ?: projectInfo.gitHttpUrl
+        val projectInfo = requestGitProjectInfo(gitProjectId)
 
-        return saveGitCIConf(
-            userId,
-            GitCIBasicSetting(
-                gitProjectId = gitProjectId,
-                name = projectInfo.name,
-                url = projectInfo.gitSshUrl ?: "",
-                homepage = projectInfo.homepage ?: "",
-                gitHttpUrl = httpUrl,
-                gitSshUrl = projectInfo.gitSshUrl ?: "",
-                enableCi = enabled,
-                enableUserId = userId,
-                buildPushedBranches = true,
-                buildPushedPullRequest = true,
-                enableMrBlock = true,
-                projectCode = projectId,
-                createTime = null,
-                updateTime = null,
-                creatorCenterName = null,
-                creatorDeptName = null,
-                creatorBgName = null,
-                gitProjectDesc = projectInfo.description,
-                gitProjectAvatar = projectInfo.avatarUrl,
-                lastCiInfo = null
+        run back@{
+            return saveGitCIConf(
+                userId,
+                GitCIBasicSetting(
+                    gitProjectId = gitProjectId,
+                    name = projectInfo?.name ?: return@back,
+                    url = projectInfo.gitSshUrl ?: return@back,
+                    homepage = projectInfo.homepage ?: return@back,
+                    gitHttpUrl = projectInfo.gitHttpsUrl ?: return@back,
+                    gitSshUrl = projectInfo.gitSshUrl ?: return@back,
+                    enableCi = enabled,
+                    enableUserId = userId,
+                    buildPushedBranches = true,
+                    buildPushedPullRequest = true,
+                    enableMrBlock = true,
+                    projectCode = projectId,
+                    createTime = null,
+                    updateTime = null,
+                    creatorCenterName = null,
+                    creatorDeptName = null,
+                    creatorBgName = null,
+                    gitProjectDesc = projectInfo.description,
+                    gitProjectAvatar = projectInfo.avatarUrl,
+                    lastCiInfo = null
+                )
             )
-        )
+        }
+        logger.warn("initGitCIConf: $gitProjectId  info: $projectInfo")
+        throw RuntimeException("Create git ci project in devops failed, msg: get project info from git error")
     }
 
     fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
@@ -220,17 +221,19 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     fun updateProjectInfo(userId: String, projectInfo: GitCIProjectInfo) {
-        streamBasicSettingDao.updateInfoSetting(
-            dslContext = dslContext,
-            gitProjectId = projectInfo.gitProjectId,
-            gitProjectName = projectInfo.name,
-            url = projectInfo.gitSshUrl ?: "",
-            homePage = projectInfo.homepage ?: "",
-            httpUrl = projectInfo.gitHttpsUrl ?: "",
-            sshUrl = projectInfo.gitSshUrl ?: "",
-            desc = projectInfo.description,
-            avatar = projectInfo.avatarUrl
-        )
+        run back@{
+            streamBasicSettingDao.updateInfoSetting(
+                dslContext = dslContext,
+                gitProjectId = projectInfo.gitProjectId,
+                gitProjectName = projectInfo.name,
+                url = projectInfo.gitSshUrl ?: return@back,
+                homePage = projectInfo.homepage ?: return@back,
+                httpUrl = projectInfo.gitHttpsUrl ?: return@back,
+                sshUrl = projectInfo.gitSshUrl ?: return@back,
+                desc = projectInfo.description,
+                avatar = projectInfo.avatarUrl
+            )
+        }
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
         if (oldData.name != projectInfo.name) {
             try {

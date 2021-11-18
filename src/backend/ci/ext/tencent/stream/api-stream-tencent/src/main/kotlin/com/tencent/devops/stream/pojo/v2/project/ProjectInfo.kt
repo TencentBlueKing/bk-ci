@@ -59,6 +59,8 @@ data class ProjectCIInfo(
 data class CIInfo(
     @ApiModelProperty("是否开启STREAM")
     val enableCI: Boolean,
+    @ApiModelProperty("授权人")
+    val authUserId: String?,
     @ApiModelProperty("最后一次构建信息")
     val lastBuildMessage: String?,
     @ApiModelProperty("最后一次构建状态")

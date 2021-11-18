@@ -31,8 +31,10 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.stream.config.StreamPreTriggerConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitCommitRepository
+import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,11 +44,13 @@ import org.springframework.stereotype.Component
 class PreTrigger @Autowired constructor(
     private val config: StreamPreTriggerConfig,
     private val scmService: StreamScmService,
+    private val streamOauthService: StreamOauthService,
     private val gitBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTrigger::class.java)
         private const val DEVELOPER = 30
+        private val SKIP_CI_KEYS = setOf("skip ci", "ci skip", "no ci", "ci.skip")
     }
 
     // 开启研发商店插件的ci
@@ -64,13 +68,12 @@ class PreTrigger @Autowired constructor(
                     return
                 }
             }
-
-            val token = scmService.getToken(gitProjectId.toString()).accessToken
-            val giProjectInfo = scmService.getProjectInfoRetry(
-                token = token,
-                gitProjectId = gitProjectId.toString(),
-                useAccessToken = true
-            )
+            // TODO: 目前直接写死使用橘子的oauth去拿用户的名称，后续支持公共账号了再改成公共账号
+            val token = streamOauthService.getOauthToken("fayewang")?.accessToken
+            if (token.isNullOrBlank()) {
+                logger.warn("create from store atom get project members error: get token null")
+                return
+            }
             // 因为用户是 devops 所以需要修改
             val realUser = getRealUser(this, token)
             if (realUser.isNullOrBlank()) {
@@ -83,8 +86,7 @@ class PreTrigger @Autowired constructor(
                     userId = realUser,
                     projectId = GitCommonUtils.getCiProjectId(gitProjectId),
                     gitProjectId = gitProjectId,
-                    enabled = true,
-                    projectInfo = giProjectInfo
+                    enabled = true
                 )
             } catch (e: Throwable) {
                 logger.error("create from store atom error: ${e.message}")
@@ -92,8 +94,17 @@ class PreTrigger @Autowired constructor(
         }
     }
 
+    fun skipStream(event: GitPushEvent): Boolean {
+        event.push_options?.keys?.forEach {
+            if (it in SKIP_CI_KEYS) {
+                return true
+            }
+        }
+        return false
+    }
+
     private fun getRealUser(requestEvent: GitRequestEvent, token: String): String? {
-        val projectMember = scmService.getProjectMembersAllRetry(
+        val projectMember = scmService.getProjectMembersRetry(
             token = token,
             gitProjectId = requestEvent.gitProjectId.toString(),
             page = 1,
@@ -121,7 +132,7 @@ class PreTrigger @Autowired constructor(
             return false
         }
 
-        if (!repository.git_http_url.isBlank() && repository.git_http_url.startsWith(config.gitPrefix!!)) {
+        if (repository.git_http_url.isNotBlank() && repository.git_http_url.startsWith(config.gitPrefix!!)) {
             return true
         }
 

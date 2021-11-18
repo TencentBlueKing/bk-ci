@@ -62,6 +62,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -69,6 +70,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -87,7 +89,6 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -1645,7 +1646,7 @@ class PipelineBuildFacadeService(
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
                     "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, " +
-                            "please check if the plugin is installed."
+                        "please check if the plugin is installed."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),

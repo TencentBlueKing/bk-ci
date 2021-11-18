@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.CommitCheck
@@ -57,6 +56,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
@@ -83,11 +83,11 @@ class GitCITriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamStorageBean: StreamStorageBean,
     private val gitCISettingDao: StreamBasicSettingDao,
+    private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val rabbitTemplate: RabbitTemplate,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val streamScmService: StreamScmService,
-    private val triggerParameter: TriggerParameter,
     private val preTrigger: PreTrigger,
     private val mergeConflictCheck: MergeConflictCheck,
     private val yamlVersion: YamlVersion,
@@ -98,8 +98,6 @@ class GitCITriggerService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
-        private val channelCode = ChannelCode.GIT
-        private val ciFileExtensions = listOf(".yml", ".yaml")
         private const val ciFileExtensionYml = ".yml"
         private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
@@ -117,7 +115,7 @@ class GitCITriggerService @Autowired constructor(
             return false
         }
 
-        val gitRequestEvent = triggerParameter.saveGitRequestEvent(eventObject, event) ?: return true
+        val gitRequestEvent = TriggerParameter.getGitRequestEvent(eventObject, event) ?: return true
 
         // 做一些在接收到请求后做的预处理
         if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value) {
@@ -125,10 +123,19 @@ class GitCITriggerService @Autowired constructor(
         }
 
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
-        // 完全没创建过得项目不存记录
-        if (null == gitCIBasicSetting) {
+        // 没开启的就不存
+        if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
             return null
+        }
+
+        // 创建过项目的才保存记录继续后面的逻辑
+        val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
+        gitRequestEvent.id = id
+
+        if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
+            logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
+            return true
         }
 
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
@@ -298,9 +305,6 @@ class GitCITriggerService @Autowired constructor(
 
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
             var displayName = filePath
-            ciFileExtensions.forEach {
-                displayName = filePath.removeSuffix(it)
-            }
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
@@ -433,11 +437,6 @@ class GitCITriggerService @Autowired constructor(
             mrChangeSet = changeSet
         )
 
-        yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
-
-        // 为已存在的流水线设置名称
-        buildPipeline.displayName = displayName
-
         // 如果当前文件没有内容直接不触发
         if (originYaml.isBlank()) {
             logger.warn(
@@ -459,6 +458,11 @@ class GitCITriggerService @Autowired constructor(
                 )
             )
         }
+
+        yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
+
+        // 为已存在的流水线设置名称
+        buildPipeline.displayName = displayName
 
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)

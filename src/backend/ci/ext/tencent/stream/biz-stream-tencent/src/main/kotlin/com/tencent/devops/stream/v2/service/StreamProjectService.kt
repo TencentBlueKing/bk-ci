@@ -111,6 +111,7 @@ class StreamProjectService @Autowired constructor(
             val ciInfo = if (project?.lastCiInfo == null) {
                 CIInfo(
                     enableCI = project?.enableCi ?: false,
+                    authUserId = project?.enableUserId,
                     lastBuildId = null,
                     lastBuildStatus = null,
                     lastBuildPipelineId = null,
@@ -192,6 +193,7 @@ class StreamProjectService @Autowired constructor(
                     ciInfo = if (setting.lastCiInfo == null) {
                         CIInfo(
                             enableCI = setting.enableCi ?: false,
+                            authUserId = setting.enableUserId,
                             lastBuildId = null,
                             lastBuildStatus = null,
                             lastBuildPipelineId = null,

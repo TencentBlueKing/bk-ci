@@ -68,7 +68,7 @@ class ZhiyunService @Autowired constructor(
         val tmpFolder = Files.createTempDir()
         try {
             val matchFiles = bkRepoClient.downloadFileByPattern(
-                userId = "",
+                userId = zhiyunUploadParam.operator,
                 projectId = fileParams.projectId,
                 pipelineId = fileParams.pipelineId,
                 buildId = fileParams.buildId,

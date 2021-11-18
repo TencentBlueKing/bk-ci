@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
@@ -95,7 +96,8 @@ class StreamYamlBuild @Autowired constructor(
         normalizedYaml: String,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
-        isTimeTrigger: Boolean
+        isTimeTrigger: Boolean,
+        gitProjectInfo: GitCIProjectInfo? = null
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key
@@ -122,6 +124,9 @@ class StreamYamlBuild @Autowired constructor(
                 )
             }
 
+            // 改名时保存需要修改名称
+            realPipeline.displayName = pipeline.displayName
+
             // 如果是定时触发需要注册事件
             if (isTimeTrigger) {
                 streamTimerService.saveTimer(
@@ -132,7 +137,9 @@ class StreamYamlBuild @Autowired constructor(
                         crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                         gitProjectId = event.gitProjectId,
                         // 未填写则在每次触发拉默认分支
-                        branchs = yaml.triggerOn?.schedules?.branches,
+                        branchs = yaml.triggerOn?.schedules?.branches?.ifEmpty {
+                            listOf(gitProjectInfo?.defaultBranch!!)
+                        } ?: listOf(gitProjectInfo?.defaultBranch!!),
                         always = yaml.triggerOn?.schedules?.always ?: false,
                         channelCode = channelCode,
                         eventId = event.id!!,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.api.engine
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
@@ -49,6 +50,8 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
     fun heartbeat(): Result<HeartBeatInfo>
 
     fun timeout(): Result<Boolean>
+
+    fun submitError(errorInfo: ErrorInfo): Result<Boolean>
 
     fun getJobContext(): Map<String, String>
 

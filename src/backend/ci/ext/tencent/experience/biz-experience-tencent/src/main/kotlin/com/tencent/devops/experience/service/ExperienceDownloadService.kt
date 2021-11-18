@@ -160,7 +160,12 @@ class ExperienceDownloadService @Autowired constructor(
 
         val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
         if (!client.get(ServiceArtifactoryResource::class)
-                .check(experienceRecord.projectId, artifactoryType, experienceRecord.artifactoryPath).data!!
+                .check(
+                    experienceRecord.creator,
+                    experienceRecord.projectId,
+                    artifactoryType,
+                    experienceRecord.artifactoryPath
+                ).data!!
         ) {
             throw ErrorCodeException(
                 statusCode = 404,
@@ -188,7 +193,8 @@ class ExperienceDownloadService @Autowired constructor(
                     false
                 ).data!!.url
         }
-        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
+        val fileDetail = client.get(ServiceArtifactoryResource::class)
+            .show(experienceRecord.creator, projectId, artifactoryType, path).data!!
 
         addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
@@ -211,7 +217,9 @@ class ExperienceDownloadService @Autowired constructor(
         checkIfExpired(experienceRecord)
 
         val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class)
+                .check(experienceRecord.creator, projectId, artifactoryType, path).data!!
+        ) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -221,7 +229,7 @@ class ExperienceDownloadService @Autowired constructor(
 
         addDownloadRecord(experienceRecord, userId)
         return client.get(ServiceArtifactoryResource::class)
-            .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
+            .downloadUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
     }
 
     fun getQrCodeUrl(experienceHashId: String): String {

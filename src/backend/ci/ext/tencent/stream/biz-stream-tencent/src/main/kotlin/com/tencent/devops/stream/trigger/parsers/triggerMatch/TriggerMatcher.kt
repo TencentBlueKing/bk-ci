@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
@@ -27,6 +28,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMat
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
+    private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService
 ) {
 
@@ -272,7 +275,7 @@ class TriggerMatcher @Autowired constructor(
     private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {
             is GitPushEvent -> {
-                getCommitChangeSet(context.gitEvent)
+                getCommitChangeSet(context)
             }
             is GitMergeRequestEvent -> {
                 context.mrChangeSet
@@ -283,8 +286,37 @@ class TriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
+    private fun getCommitChangeSet(context: StreamTriggerContext): Set<String> {
+        val gitEvent = context.gitEvent as GitPushEvent
         val changeSet = mutableSetOf<String>()
+        if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            for (i in 1..10) {
+                // 反向进行三点比较可以比较出rebase的真实提交
+                val result = streamScmService.getCommitChangeFileListRetry(
+                    token = null,
+                    userId = context.streamSetting.enableUserId,
+                    gitProjectId = context.streamSetting.gitProjectId,
+                    from = gitEvent.after,
+                    to = gitEvent.before,
+                    straight = false,
+                    page = i,
+                    pageSize = 100
+                )
+                changeSet.addAll(result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else {
+                        it.newPath
+                    }
+                }
+                )
+                if (result.size < 100) {
+                    break
+                }
+            }
+            return changeSet
+        }
+
         gitEvent.commits?.forEach { commit ->
             changeSet.addAll(commit.added?.map { it }?.toSet() ?: emptySet())
             changeSet.addAll(commit.modified?.map { it }?.toSet() ?: emptySet())
