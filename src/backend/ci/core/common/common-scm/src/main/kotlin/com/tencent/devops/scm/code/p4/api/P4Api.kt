@@ -122,6 +122,7 @@ class P4Api(
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     private fun filterExistTrigger(
         p4Server: P4Server,
         includePaths: String?,
@@ -151,8 +152,7 @@ class P4Api(
         paths: Set<String>,
         eventType: ITriggerEntry.TriggerType,
         command: String
-    ) = entry.name == DEVOPS_P4_TRIGGER_NAME &&
-        paths.contains(entry.path) &&
+    ) = paths.contains(entry.path) &&
         entry.triggerType.name == eventType.name &&
         entry.command == command
 
