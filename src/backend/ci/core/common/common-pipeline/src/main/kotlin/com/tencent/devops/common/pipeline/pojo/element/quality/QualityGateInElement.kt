@@ -43,6 +43,8 @@ data class QualityGateInElement(
     var interceptTask: String? = null,
     @ApiModelProperty("拦截原子名称", required = false)
     var interceptTaskName: String? = null,
+    @ApiModelProperty("拦截原子id", required = false)
+    var interceptTaskId: String? = null,
     @ApiModelProperty("审核人", required = false)
     var reviewUsers: Set<String>? = null
 ) : Element(name, id, status) {
