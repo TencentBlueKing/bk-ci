@@ -29,6 +29,8 @@ package com.tencent.devops.dispatch.docker.client
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
+import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -191,6 +193,26 @@ class DockerHostClient @Autowired constructor(
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
     }
 
+    fun startBuildLessBuild(
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ) {
+        with(dockerHostBuildInfo) {
+            client.get(ServiceBuildlessResource::class).startBuild(
+                BuildlessBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo,
+                    agentId = agentId,
+                    secretKey = secretKey,
+                    buildType = buildType.name,
+                    containerId = ""
+                )
+            )
+        }
+    }
+
     fun startAgentLessBuild(
         agentLessDockerIp: String,
         agentLessDockerPort: Int,
@@ -246,21 +268,6 @@ class DockerHostClient @Autowired constructor(
         }
         LOG.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
-/*        var userName: String? = null
-        var password: String? = null
-        if (dispatchType.imageType == ImageType.THIRD) {
-            if (!dispatchType.credentialId.isNullOrBlank()) {
-                val ticketsMap = CommonUtils.getCredential(
-                    client = client,
-                    projectId = event.projectId,
-                    credentialId = dispatchType.credentialId!!,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-                userName = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-        }*/
-
         val requestBody = DockerHostBuildInfo(
             projectId = event.projectId,
             agentId = agentId,
@@ -286,7 +293,12 @@ class DockerHostClient @Autowired constructor(
             buildType = BuildType.AGENT_LESS
         )
 
-        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
+        // 测试
+        if (event.projectId == "test-sawyer2") {
+            startBuildLessBuild(requestBody)
+        } else {
+            dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
+        }
     }
 
     fun endBuild(
@@ -298,6 +310,24 @@ class DockerHostClient @Autowired constructor(
         dockerIp: String,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
+        if (clusterType == DockerHostClusterType.AGENT_LESS && projectId == "test-sawyer2") {
+            client.get(ServiceBuildlessResource::class).endBuild(
+                BuildlessBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    poolNo = 0,
+                    containerId = containerId,
+                    agentId = "",
+                    secretKey = "",
+                    buildType = ""
+                )
+            )
+
+            return
+        }
+
         val requestBody = DockerHostBuildInfo(
             projectId = projectId,
             agentId = "",
