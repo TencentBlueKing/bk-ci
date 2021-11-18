@@ -261,7 +261,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String,
+        elementId: String?,
         filterRuleList: List<QualityRule>,
         runtimeVariable: Map<String, String>?
     ): Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
@@ -430,7 +430,7 @@ class QualityRuleCheckService @Autowired constructor(
         controlPointName: String,
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
-        elementId: String,
+        elementId: String?,
         ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
