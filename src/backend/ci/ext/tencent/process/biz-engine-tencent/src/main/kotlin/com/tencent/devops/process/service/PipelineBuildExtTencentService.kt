@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -50,7 +51,8 @@ import java.util.Random
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : PipelineBuildExtService {
 
     @Value("\${gitci.v2GitUrl:#{null}}")
@@ -66,20 +68,13 @@ class PipelineBuildExtTencentService @Autowired constructor(
         }
 
         extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
-        extMap["ci.build_url"] = getGitCiUrl(variable)
+        extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = task.projectId, pipelineId = task.pipelineId, buildId = task.buildId
+        )
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
-    // 拼接build_url的完整路径
-    fun getGitCiUrl(variable: Map<String, String>): String {
-        return if (v2GitUrl != null) {
-            "$v2GitUrl/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
-                    "/#${variable[PROJECT_NAME]}"
-        } else {
-            ""
-        }
-    }
 
     fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {
