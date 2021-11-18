@@ -179,7 +179,7 @@ class DockerHostClient @Autowired constructor(
             containerHashId = dispatchMessage.containerHashId,
             customBuildEnv = dispatchMessage.customBuildEnv,
             dockerResource = getDockerResource(dispatchType),
-            qpcUniquePath = getQpcUniquePath(dispatchMessage.projectId)
+            qpcUniquePath = getQpcUniquePath(dispatchMessage)
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
@@ -530,7 +530,8 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
-    private fun getQpcUniquePath(projectId: String): String? {
+    private fun getQpcUniquePath(dispatchMessage: DispatchMessage): String? {
+        val projectId = dispatchMessage.projectId
         return if (projectId.startsWith("git_") &&
             dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
         ) {

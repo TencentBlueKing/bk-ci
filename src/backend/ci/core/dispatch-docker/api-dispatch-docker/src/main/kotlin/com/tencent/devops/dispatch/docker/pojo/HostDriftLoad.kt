@@ -25,25 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-
-@BkExceptionMapper
-class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RemoteServiceExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: RemoteServiceException): Response {
-        logger.error("Failed with remote service exception: ", exception)
-        return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
-    }
-}
+data class HostDriftLoad(
+    val memory: Int,
+    val cpu: Int,
+    val disk: Int,
+    val diskIo: Int,
+    val usedNum: Int
+)
