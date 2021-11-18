@@ -146,7 +146,7 @@ class SignServiceImpl @Autowired constructor(
             val archiveResult = try {
                 HttpRetryUtils.retryWhenRuntimeException(
                     retryTime = 5,
-                    retryPeriodMills = 500
+                    retryPeriodMills = 1000
                 ) {
                     archiveService.archive(
                         signedIpaFile = signedIpaFile,

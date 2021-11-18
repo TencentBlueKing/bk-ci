@@ -335,7 +335,7 @@ object LoggerService {
                 try {
                     HttpRetryUtils.retryWhenRuntimeException(
                         retryTime = 5,
-                        retryPeriodMills = 500
+                        retryPeriodMills = 1000
                     ) {
                         ArchiveUtils.archiveLogFile(
                             file = property.logFile,

@@ -63,7 +63,7 @@ object ArchiveUtils {
             try {
                 HttpRetryUtils.retryWhenRuntimeException(
                     retryTime = 5,
-                    retryPeriodMills = 500
+                    retryPeriodMills = 1000
                 ) {
                     api.uploadCustomize(
                         file = it,
@@ -91,7 +91,7 @@ object ArchiveUtils {
             try {
                 HttpRetryUtils.retryWhenRuntimeException(
                     retryTime = 5,
-                    retryPeriodMills = 500
+                    retryPeriodMills = 1000
                 ) {
                     api.uploadPipeline(
                         file = it,
