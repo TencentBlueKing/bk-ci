@@ -29,9 +29,3 @@ data class KubernetesJobParam(
         val mountPath: String
     )
 }
-
-data class Registry(
-    val host: String,
-    val username: String?,
-    val password: String?
-)

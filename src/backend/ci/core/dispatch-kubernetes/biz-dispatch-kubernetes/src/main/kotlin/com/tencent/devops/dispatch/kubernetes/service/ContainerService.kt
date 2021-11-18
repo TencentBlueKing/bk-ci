@@ -199,11 +199,7 @@ class ContainerService @Autowired constructor(
                     life = Life.BRIEF,
                     type = ContainerType.DEV,
                     image = containerPool.container!!,
-                    registry = if (userName != null && password != null) {
-                        Registry("", userName, password)
-                    } else {
-                        null
-                    },
+                    registry = Registry("", userName, password),
                     cpu = cpu.get(),
                     memory = memory.get(),
                     disk = disk.get(),

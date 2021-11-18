@@ -76,7 +76,7 @@ class JobClient @Autowired constructor(
                         labels = labels,
                         container = ContainerData(
                             imageName = jobName,
-                            image = image,
+                            image = "${registry?.host ?: ""}$image",
                             cpu = cpu?.toString(),
                             memory = memory,
                             disk = null,
