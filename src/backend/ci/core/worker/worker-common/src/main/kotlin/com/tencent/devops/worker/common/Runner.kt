@@ -102,7 +102,9 @@ object Runner {
                     taskId = "",
                     taskName = "",
                     atomCode = "",
-                    errorMsg = "请检查Agent运行帐号相关权限: ${ignore.message}",
+                    errorMsg = "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
+                        "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +
+                        "devops.slave.user配置的指定构建帐号（此选项非必须，是由用户设置),如果有可删除或者修改为正确的帐号",
                     errorType = ErrorType.USER.num,
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
