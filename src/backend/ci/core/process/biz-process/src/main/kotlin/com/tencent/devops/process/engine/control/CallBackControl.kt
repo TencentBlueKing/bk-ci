@@ -224,7 +224,7 @@ class CallBackControl @Autowired constructor(
             callbackClient.newCall(request).execute()
         } catch (e: Exception) {
             logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                "url=${callBack.callBackUrl}|${callBack.events}|$requestBody", e)
+                "url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
