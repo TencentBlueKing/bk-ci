@@ -448,7 +448,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is|$metadataList")
 
-        metadataList.forEach foreach@{ metadata ->
+        metadataList.forEach { metadata ->
             if (!ruleTaskSteps.isNullOrEmpty()) {
                 ruleTaskSteps.forEach { ruleTask ->
                     if ((ruleTask.indicatorEnName == metadata.enName) &&
@@ -457,9 +457,6 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 }
             } else {
-                if (elementId.isNotBlank() && metadata.taskId != elementId) {
-                    return@foreach
-                }
                 checkMetaList.add(metadata)
             }
         }
