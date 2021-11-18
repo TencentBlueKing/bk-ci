@@ -52,7 +52,7 @@ class HeartbeatControl @Autowired constructor(
 ) {
 
     companion object {
-        private const val TIMEOUT_IN_MS = 2 * 60 * 1000 // timeout in 2 minutes
+        private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
         private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
         private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }

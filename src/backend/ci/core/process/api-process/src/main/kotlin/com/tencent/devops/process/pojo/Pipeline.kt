@@ -93,6 +93,8 @@ data class Pipeline(
     var groupLabel: List<PipelineGroupLabels>? = null,
     @ApiModelProperty("最后自定义构建版本号", required = false)
     var latestBuildNumAlias: String? = null,
+    @ApiModelProperty("自定义构建号规则", required = false)
+    var buildNumRule: String? = null,
     @ApiModelProperty("编排详情", required = false)
     var model: Model? = null
 )

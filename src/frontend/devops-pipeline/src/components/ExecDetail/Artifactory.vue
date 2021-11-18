@@ -110,7 +110,7 @@
     .detail-artifactory-home {
         padding: 32px;
         height: calc(100% - 59px);
-        /deep/ .bk-table {
+        ::v-deep .bk-table {
             border: none;
             height: 100%;
             &::before {

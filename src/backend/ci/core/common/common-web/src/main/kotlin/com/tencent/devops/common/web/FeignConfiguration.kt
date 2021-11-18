@@ -68,12 +68,12 @@ class FeignConfiguration {
             if (!languageHeaderValue.isNullOrBlank()) {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
-            val bizId = request.getHeader(TraceTag.BIZID)
+            val bizId = request.getHeader(TraceTag.X_DEVOPS_RID)
             if (bizId.isNullOrEmpty()) {
                 if (MDC.get(TraceTag.BIZID).isNullOrEmpty()) {
-                    requestTemplate.header(TraceTag.BIZID, TraceTag.buildBiz()) // 设置trace请求头
+                    requestTemplate.header(TraceTag.X_DEVOPS_RID, TraceTag.buildBiz()) // 设置trace请求头
                 } else {
-                    requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
+                    requestTemplate.header(TraceTag.X_DEVOPS_RID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
                 }
             }
             val cookies = request.cookies

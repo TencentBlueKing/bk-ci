@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -35,8 +36,10 @@ import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import org.jooq.Condition
@@ -46,6 +49,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Repository
@@ -71,57 +75,67 @@ class PipelineBuildDao {
         channelCode: ChannelCode,
         parentBuildId: String?,
         parentTaskId: String?,
+        buildParameters: List<BuildParameters>,
         webhookType: String?,
         webhookInfo: String?,
         buildMsg: String?,
         buildNumAlias: String? = null
     ) {
-
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                BUILD_NUM,
-                PROJECT_ID,
-                PIPELINE_ID,
-                PARENT_BUILD_ID,
-                PARENT_TASK_ID,
-                START_TIME,
-                START_USER,
-                TRIGGER_USER,
-                STATUS,
-                TRIGGER,
-                TASK_COUNT,
-                FIRST_TASK_ID,
-                CHANNEL,
-                VERSION,
-                QUEUE_TIME,
-                WEBHOOK_TYPE,
-                WEBHOOK_INFO,
-                BUILD_MSG,
-                BUILD_NUM_ALIAS
-            ).values(
-                buildId,
-                buildNum,
-                projectId,
-                pipelineId,
-                parentBuildId,
-                parentTaskId,
-                LocalDateTime.now(),
-                startUser,
-                triggerUser,
-                status.ordinal,
-                trigger,
-                taskCount,
-                firstTaskId,
-                channelCode.name,
-                version,
-                LocalDateTime.now(),
-                webhookType,
-                webhookInfo,
-                buildMsg,
-                buildNumAlias
-            ).execute()
+        try {
+            with(T_PIPELINE_BUILD_HISTORY) {
+                dslContext.insertInto(
+                    this,
+                    BUILD_ID,
+                    BUILD_NUM,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    PARENT_BUILD_ID,
+                    PARENT_TASK_ID,
+                    START_TIME,
+                    START_USER,
+                    TRIGGER_USER,
+                    STATUS,
+                    TRIGGER,
+                    TASK_COUNT,
+                    FIRST_TASK_ID,
+                    CHANNEL,
+                    VERSION,
+                    QUEUE_TIME,
+                    BUILD_PARAMETERS,
+                    WEBHOOK_TYPE,
+                    WEBHOOK_INFO,
+                    BUILD_MSG,
+                    BUILD_NUM_ALIAS
+                ).values(
+                    buildId,
+                    buildNum,
+                    projectId,
+                    pipelineId,
+                    parentBuildId,
+                    parentTaskId,
+                    LocalDateTime.now(),
+                    startUser,
+                    triggerUser,
+                    status.ordinal,
+                    trigger,
+                    taskCount,
+                    firstTaskId,
+                    channelCode.name,
+                    version,
+                    LocalDateTime.now(),
+                    JsonUtil.toJson(buildParameters, formatted = false),
+                    webhookType,
+                    webhookInfo,
+                    buildMsg,
+                    buildNumAlias
+                ).execute()
+            }
+        } catch (t: Throwable) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_START_WITH_ERROR,
+                defaultMessage = "流水线启动准备失败: ${t.message}"
+            )
         }
     }
 
@@ -303,7 +317,6 @@ class PipelineBuildDao {
         buildId: String,
         buildStatus: BuildStatus,
         executeTime: Long?,
-        buildParameters: String?,
         recommendVersion: String?,
         remark: String? = null,
         errorInfoList: List<ErrorInfo>?
@@ -313,7 +326,6 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
 
             if (!remark.isNullOrBlank()) {
@@ -466,6 +478,7 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
+                buildParameters = t.buildParameters?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0
             )
@@ -824,10 +837,15 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateBuildParameters(dslContext: DSLContext, projectId: String, buildId: String, buildParameters: String) {
+    fun updateBuildParameters(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        buildParameters: List<BuildParameters>
+    ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
-                .set(BUILD_PARAMETERS, buildParameters)
+                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
