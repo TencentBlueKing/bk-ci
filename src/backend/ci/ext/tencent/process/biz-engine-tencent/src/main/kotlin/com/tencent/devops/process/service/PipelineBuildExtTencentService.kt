@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
@@ -51,9 +50,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
     private val pipelineContextService: PipelineContextService,
     private val pipelineUrlBean: PipelineUrlBean
 ) : PipelineBuildExtService {
-
-    @Value("\${gitci.v2GitUrl:#{null}}")
-    private val v2GitUrl: String? = null
 
     override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
