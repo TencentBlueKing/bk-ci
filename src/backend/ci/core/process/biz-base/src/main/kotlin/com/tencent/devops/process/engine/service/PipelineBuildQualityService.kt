@@ -390,6 +390,7 @@ class PipelineBuildQualityService(
         task: PipelineBuildTask,
         interceptTaskName: String?,
         interceptTask: String?,
+        interceptTaskId: String?,
         runVariables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter,
         position: String,
@@ -418,7 +419,7 @@ class PipelineBuildQualityService(
             interceptTaskName = interceptTaskName ?: "",
             startTime = LocalDateTime.now().timestamp(),
             taskId = interceptTask,
-            elementId = elementId,
+            elementId = interceptTaskId,
             position = position,
             templateId = templateId,
             runtimeVariable = runVariables
