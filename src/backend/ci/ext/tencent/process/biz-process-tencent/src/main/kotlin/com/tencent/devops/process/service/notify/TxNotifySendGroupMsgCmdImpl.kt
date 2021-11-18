@@ -104,7 +104,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (it.startsWith("ww")) { // 应用号逻辑
                 sendByApp(it, content, markerDownFlag, detailFlag, detailUrl!!)
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
-                sendByRobot(it, content, markerDownFlag)
+                sendByRobot(it, content, markerDownFlag, detailFlag, detailUrl!!)
             }
         }
     }
@@ -140,7 +140,9 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     private fun sendByRobot(
         chatId: String,
         content: String,
-        markerDownFlag: Boolean
+        markerDownFlag: Boolean,
+        detailFlag: Boolean,
+        detailUrl: String
     ) {
         logger.info("send group msg by robot: $chatId, $content")
         if (markerDownFlag) {
@@ -152,10 +154,13 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             )
             wechatWorkRobotService.send(msg.toJsonString())
         } else {
+            val textContent = if (detailFlag) {
+                "$content\n\n查看详情: $detailUrl"
+            } else content
             val msg = RobotTextSendMsg(
                 chatId = chatId,
                 text = MsgInfo(
-                    content = content
+                    content = textContent
                 )
             )
             wechatWorkRobotService.send(msg.toJsonString())
@@ -172,6 +177,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(TxNotifySendGroupMsgCmdImpl::class.java)
         private const val roomPatten = "ww\\w" // ww 开头且接数字的正则表达式, 适用于应用号获取的roomid
-        private const val chatPatten = "^[A-Za-z0-9]+\$" // 数字和字母组成的群chatId正则表达式
+        private const val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     }
 }

@@ -386,7 +386,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 22px;
-        /deep/ .bk-tab-header {
+        ::v-deep .bk-tab-header {
             background-color: #fff;
             height: 25px !important;
             line-height: 25px !important;
@@ -419,7 +419,7 @@
                 line-height: 25px !important;
             }
         }
-        /deep/ .bk-tab-section {
+        ::v-deep .bk-tab-section {
             padding: 0;
         }
     }

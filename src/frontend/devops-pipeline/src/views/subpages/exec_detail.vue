@@ -376,7 +376,7 @@
             position: relative;
             overflow: auto;
             height: 100%;
-            /deep/ .devops-stage-list {
+            ::v-deep .devops-stage-list {
                 padding-bottom: 25px;
             }
         }

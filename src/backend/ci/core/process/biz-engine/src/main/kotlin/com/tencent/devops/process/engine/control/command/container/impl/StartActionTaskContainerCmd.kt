@@ -396,15 +396,22 @@ class StartActionTaskContainerCmd(
                 executeCount = currentTask.executeCount ?: 1
             )
             containerContext.buildStatus = BuildStatus.CANCELED
-        } else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+        } else {
             containerContext.buildStatus = BuildStatus.PAUSE
-        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
-            containerContext.buildStatus = BuildStatus.RUNNING
             if (containerContext.event.actionType.isEnd()) {
                 // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
                 containerContext.event.actionType = ActionType.REFRESH
             }
         }
+//        else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+//            containerContext.buildStatus = BuildStatus.PAUSE
+//        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
+//            containerContext.buildStatus = BuildStatus.RUNNING
+//            if (containerContext.event.actionType.isEnd()) {
+//                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
+//                containerContext.event.actionType = ActionType.REFRESH
+//            }
+//        }
 
         return toDoTask
     }
