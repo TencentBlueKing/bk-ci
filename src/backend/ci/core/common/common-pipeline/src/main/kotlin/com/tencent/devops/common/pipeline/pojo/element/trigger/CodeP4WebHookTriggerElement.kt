@@ -72,6 +72,8 @@ data class CodeP4WebHookTriggerInput(
     val repositoryName: String? = null,
     @ApiModelProperty("includePaths", required = false)
     val includePaths: String?,
+    @ApiModelProperty("excludePaths", required = false)
+    val excludePaths: String?,
     @ApiModelProperty("eventType", required = false)
     val eventType: CodeEventType?
 )

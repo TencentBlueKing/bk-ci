@@ -80,9 +80,13 @@ class CodeP4ScmImpl(
         }
     }
 
-    override fun addWebHook(hookUrl: String, path: String?) {
-        logger.info("add p4 webhook|$url|$hookUrl|$path")
-        if (path == null) {
+    override fun addWebHook(
+        hookUrl: String,
+        includePaths: String?,
+        excludePaths: String?
+    ) {
+        logger.info("add p4 webhook|$url|$hookUrl|$includePaths|$excludePaths")
+        if (includePaths == null && excludePaths == null) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_EVENT_PATH_EMPTY),
                 ScmType.CODE_P4.name
@@ -96,7 +100,8 @@ class CodeP4ScmImpl(
                 password = password
             ).addWebHook(
                 hookUrl = hookUrl,
-                path = path,
+                includePaths = includePaths,
+                excludePaths = excludePaths,
                 event = event
             )
         } catch (ignored: Throwable) {

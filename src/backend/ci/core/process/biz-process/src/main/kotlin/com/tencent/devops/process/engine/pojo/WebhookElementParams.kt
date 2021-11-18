@@ -38,5 +38,6 @@ data class WebhookElementParams(
     val repositoryConfig: RepositoryConfig,
     val scmType: ScmType,
     val eventType: CodeEventType?,
-    val path: String?
+    val includePaths: String? = null,
+    val excludePaths: String? = null
 )

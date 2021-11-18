@@ -468,7 +468,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         projectId: String,
         repositoryConfig: RepositoryConfig,
         codeEventType: CodeEventType?,
-        path: String?
+        includePaths: String?,
+        excludePaths: String?
     ): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
@@ -487,7 +488,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             region = null,
             userName = credential.username,
             event = codeEventType?.name,
-            path = path
+            includePaths = includePaths,
+            excludePaths = excludePaths
         )
         return repo.projectName
     }

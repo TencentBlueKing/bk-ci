@@ -125,7 +125,8 @@ class PipelineWebhookService @Autowired constructor(
                         codeEventType = eventType,
                         repositoryConfig = repositoryConfig,
                         createPipelineFlag = true,
-                        path = path
+                        includePaths = includePaths,
+                        excludePaths = excludePaths
                     )
                 } catch (ignore: Exception) {
                     failedElementNames.add("- ${element.name}: ${ignore.message}")
@@ -158,7 +159,8 @@ class PipelineWebhookService @Autowired constructor(
         codeEventType: CodeEventType? = null,
         repositoryConfig: RepositoryConfig,
         createPipelineFlag: Boolean? = false,
-        path: String?
+        includePaths: String?,
+        excludePaths: String?
     ) {
         logger.info("save Webhook[$pipelineWebhook]")
         var continueFlag = true
@@ -177,7 +179,8 @@ class PipelineWebhookService @Autowired constructor(
                 pipelineWebhook = pipelineWebhook,
                 repositoryConfig = repositoryConfig,
                 codeEventType = codeEventType,
-                path = path
+                includePaths = includePaths,
+                excludePaths = excludePaths
             )
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
@@ -194,7 +197,8 @@ class PipelineWebhookService @Autowired constructor(
         pipelineWebhook: PipelineWebhook,
         repositoryConfig: RepositoryConfig,
         codeEventType: CodeEventType?,
-        path: String?
+        includePaths: String?,
+        excludePaths: String?
     ): String? {
         // 防止同一个仓库注册多个相同事件的webhook
         val redisLock = RedisLock(
@@ -223,7 +227,13 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
                 ScmType.CODE_P4 ->
-                    scmProxyService.addP4Webhook(pipelineWebhook.projectId, repositoryConfig, codeEventType, path)
+                    scmProxyService.addP4Webhook(
+                        projectId = pipelineWebhook.projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType,
+                        includePaths = includePaths,
+                        excludePaths = excludePaths
+                    )
                 else -> {
                     null
                 }
@@ -499,36 +509,57 @@ class PipelineWebhookService @Autowired constructor(
         if (element !is WebHookTriggerElement) {
             return null
         }
-        val (scmType, eventType, path) = when (element) {
+        val elementRepositoryConfig = RepositoryConfigUtils.buildConfig(element)
+        val realRepositoryConfig = with(elementRepositoryConfig) {
+            getRepositoryConfig(
+                repoHashId = repositoryHashId,
+                repoName = repositoryName,
+                repoType = repositoryType,
+                variable = variable
+            )
+        }
+        return when (element) {
             is CodeGitWebHookTriggerElement ->
-                Triple(ScmType.CODE_GIT, element.eventType, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_GIT,
+                    eventType = element.eventType
+                )
             is CodeGithubWebHookTriggerElement ->
-                Triple(ScmType.GITHUB, null, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.GITHUB,
+                    eventType = null
+                )
             is CodeGitlabWebHookTriggerElement ->
-                Triple(ScmType.CODE_GITLAB, element.eventType, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_GITLAB,
+                    eventType = element.eventType
+                )
             is CodeSVNWebHookTriggerElement ->
-                Triple(ScmType.CODE_SVN, null, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_SVN,
+                    eventType = null
+                )
             is CodeTGitWebHookTriggerElement ->
-                Triple(ScmType.CODE_TGIT, element.data.input.eventType, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_TGIT,
+                    eventType = element.data.input.eventType
+                )
             is CodeP4WebHookTriggerElement ->
-                Triple(ScmType.CODE_P4, element.data.input.eventType, element.data.input.includePaths)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_P4,
+                    eventType = element.data.input.eventType,
+                    includePaths = element.data.input.includePaths,
+                    excludePaths = element.data.input.excludePaths
+                )
             else ->
                 throw InvalidParamException("Unknown code element -> $element")
         }
-        val repositoryConfig = RepositoryConfigUtils.buildConfig(element)
-        return WebhookElementParams(
-            repositoryConfig = with(repositoryConfig) {
-                getRepositoryConfig(
-                    repoHashId = repositoryHashId,
-                    repoName = repositoryName,
-                    repoType = repositoryType,
-                    variable = variable
-                )
-            },
-            scmType = scmType,
-            eventType = eventType,
-            path = path
-        )
     }
 
     fun listWebhook(
