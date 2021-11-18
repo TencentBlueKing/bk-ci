@@ -128,9 +128,8 @@ class SendCommitCheck @Autowired constructor(
 
     private fun StreamBuildListenerContextV2.getGateRepoData():
             Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        if (this is StreamBuildStageListenerContextV2 &&
-            (reviewType == BuildReviewType.STAGE_REVIEW || reviewType == BuildReviewType.TASK_REVIEW)
-        ) {
+        // 中间阶段不由stream这边发红线的评论，quality发送
+        if (this is StreamBuildStageListenerContextV2) {
             return Pair(listOf(), mutableMapOf())
         }
         return streamQualityService.getQualityGitMrResult(
