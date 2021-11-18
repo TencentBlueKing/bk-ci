@@ -19,22 +19,6 @@ CREATE TABLE IF NOT EXISTS `T_BUILD_STARTUP_PARAM` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
--- Table structure for T_METADATA
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_METADATA` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(32) NOT NULL,
-  `PIPELINE_ID` varchar(34) NOT NULL,
-  `BUILD_ID` varchar(34) NOT NULL,
-  `META_DATA_ID` varchar(128) NOT NULL,
-  `META_DATA_VALUE` varchar(255) NOT NULL,
-  `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`ID`),
-  KEY `BUILD_ID` (`BUILD_ID`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ----------------------------
 -- Table structure for T_PIPELINE_BUILD_CONTAINER
 -- ----------------------------
 
