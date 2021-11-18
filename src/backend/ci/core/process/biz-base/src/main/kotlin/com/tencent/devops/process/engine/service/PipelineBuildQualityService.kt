@@ -418,6 +418,7 @@ class PipelineBuildQualityService(
             interceptTaskName = interceptTaskName ?: "",
             startTime = LocalDateTime.now().timestamp(),
             taskId = interceptTask,
+            elementId = task.taskId,
             position = position,
             templateId = templateId,
             runtimeVariable = runVariables

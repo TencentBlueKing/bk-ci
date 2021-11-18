@@ -211,6 +211,7 @@ class QualityRuleCheckService @Autowired constructor(
             System.currentTimeMillis(),
             "",
             "",
+            "",
             buildCheckParams.templateId,
             buildCheckParams.runtimeVariable
         )
@@ -235,7 +236,14 @@ class QualityRuleCheckService @Autowired constructor(
                 return@filter (containsInPipeline || containsInTemplate)
             }
 
-            val resultPair = doCheck(projectId, pipelineId, buildId, filterRuleList, runtimeVariable)
+            val resultPair = doCheck(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = buildCheckParams.elementId,
+                filterRuleList = filterRuleList,
+                runtimeVariable = runtimeVariable
+            )
             val resultList = resultPair.first
             val ruleInterceptList = resultPair.second
 
@@ -253,6 +261,7 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        elementId: String,
         filterRuleList: List<QualityRule>,
         runtimeVariable: Map<String, String>?
     ): Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
@@ -265,7 +274,11 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("start to check rule(${rule.name})")
 
             val result = checkIndicator(
-                rule.controlPoint.name, rule.indicators, metadataList, rule.taskSteps
+                rule.controlPoint.name,
+                rule.indicators,
+                metadataList,
+                elementId,
+                rule.taskSteps
             )
             val interceptRecordList = result.second
             val interceptResult = result.first
@@ -417,6 +430,7 @@ class QualityRuleCheckService @Autowired constructor(
         controlPointName: String,
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
+        elementId: String,
         ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
@@ -425,7 +439,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is|$metadataList")
 
-        metadataList.forEach { metadata ->
+        metadataList.forEach foreach@{ metadata ->
             if (!ruleTaskSteps.isNullOrEmpty()) {
                 ruleTaskSteps.forEach { ruleTask ->
                     if ((ruleTask.indicatorEnName == metadata.enName) &&
@@ -434,6 +448,9 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 }
             } else {
+                if (elementId.isNotBlank() && metadata.taskId != elementId) {
+                    return@foreach
+                }
                 checkMetaList.add(metadata)
             }
         }
@@ -460,6 +477,7 @@ class QualityRuleCheckService @Autowired constructor(
             val filterMetadataList = if (indicator.isScriptElementIndicator()) {
                 metadataList
                     .filter { indicator.enName == it.enName }
+                    .filter { it.taskId == elementId }
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
             } else {
                 indicator.metadataList.map { metadataMap[it.enName] }
