@@ -107,7 +107,6 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deleteMetadataByBuildId(context, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,

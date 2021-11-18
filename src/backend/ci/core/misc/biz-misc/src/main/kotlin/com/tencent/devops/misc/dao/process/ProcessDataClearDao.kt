@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.dao.process
 
-import com.tencent.devops.model.process.tables.TMetadata
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -51,6 +50,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("TooManyFunctions")
 class ProcessDataClearDao {
 
     fun deleteBuildTaskByBuildId(dslContext: DSLContext, buildId: String) {
@@ -110,14 +110,6 @@ class ProcessDataClearDao {
 
     fun deleteBuildHistoryByBuildId(dslContext: DSLContext, buildId: String) {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun deleteMetadataByBuildId(dslContext: DSLContext, buildId: String) {
-        with(TMetadata.T_METADATA) {
             dslContext.deleteFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .execute()
