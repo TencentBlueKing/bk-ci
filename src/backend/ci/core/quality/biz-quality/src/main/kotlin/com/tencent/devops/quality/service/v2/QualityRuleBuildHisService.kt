@@ -256,7 +256,7 @@ class QualityRuleBuildHisService constructor(
                 taskSteps = if (it.taskSteps.isNullOrBlank()) {
                     listOf()
                 } else {
-                    JsonUtil.to(it.taskSteps, object: TypeReference<List<QualityRule.RuleTask>>() {})
+                    JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
                 }
             )
             rule

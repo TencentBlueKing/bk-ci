@@ -452,7 +452,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         indicators.forEach { indicator ->
             if (!metadataMap.containsKey(indicator.enName) && metadataList.any { it.enName == indicator.enName &&
-                it.elementType == indicator.elementType}) {
+                it.elementType == indicator.elementType }) {
                 metadataMap[indicator.enName] = metadataList.last {
                     it.enName == indicator.enName && it.elementType == indicator.elementType
                 }
