@@ -27,6 +27,10 @@
 
 package com.tencent.devops.stream.v2.service
 
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.v2.dao.StreamPipelineBranchDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -80,5 +84,38 @@ class StreamPipelineBranchService @Autowired constructor(
         branch: String
     ): List<String> {
         return streamPipelineBranchDao.getBranchPipelines(dslContext, gitProjectId, branch).map { it.pipelineId }
+    }
+
+    fun getProjectBranches(
+        gitProjectId: Long,
+        pipelineId: String,
+        search: String?,
+        page: Int,
+        pageSize: Int,
+        orderBy: GitCodeBranchesOrder,
+        sort: GitCodeBranchesSort
+    ): Page<String> {
+        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        val count = streamPipelineBranchDao.getProjectPipelineCount(
+            dslContext, gitProjectId, pipelineId, search, limit, orderBy, sort
+        ).let {
+            if (it <= 0) {
+                return Page(0, 0, 0, emptyList())
+            }
+            it
+        }
+
+        val result = streamPipelineBranchDao.getProjectPipeline(
+            dslContext, gitProjectId, pipelineId, search, limit, orderBy, sort
+        )
+        return Page(
+            page = page,
+            pageSize = pageSize,
+            count = count.toLong(),
+            records = result.map {
+                it.branch
+            }
+        )
     }
 }

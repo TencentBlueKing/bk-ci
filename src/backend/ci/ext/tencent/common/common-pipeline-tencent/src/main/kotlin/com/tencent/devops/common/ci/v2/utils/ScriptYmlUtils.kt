@@ -74,6 +74,7 @@ import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
+import org.apache.commons.text.StringEscapeUtils
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -177,7 +178,7 @@ object ScriptYmlUtils {
                 if (realValue is List<*>) {
                     newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
                 } else {
-                    newValue = newValue!!.replace(matcher.group(), realValue.toString())
+                    newValue = newValue!!.replace(matcher.group(), StringEscapeUtils.escapeJava(realValue.toString()))
                 }
             }
         }
