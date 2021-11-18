@@ -235,7 +235,8 @@
                             type: this.$permissionResourceTypeMap.PROJECT
                         }, {
                             id: this.pipelineId,
-                            name: this.pipelineId
+                            name: this.pipelineId,
+                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
                         }]
                     }])
                     console.log('redirectUrl', redirectUrl)
