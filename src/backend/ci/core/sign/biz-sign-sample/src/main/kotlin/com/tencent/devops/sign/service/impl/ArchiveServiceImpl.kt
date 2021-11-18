@@ -59,8 +59,10 @@ class ArchiveServiceImpl @Autowired constructor(
         ipaSignInfo: IpaSignInfo,
         properties: MutableMap<String, String>?
     ): Boolean {
-        logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
-            "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
+        logger.info(
+            "uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
+                "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}"
+        )
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {
             "pipeline" -> FileTypeEnum.BK_ARCHIVE
             "custom" -> FileTypeEnum.BK_CUSTOM
@@ -88,12 +90,12 @@ class ArchiveServiceImpl @Autowired constructor(
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
                     logger.error("artifactory upload file failed. url:$url. response:$responseContent")
-                    return false
+                    throw RuntimeException("artifactory upload file failed. url:$url. response:$responseContent")
                 }
             }
         } catch (ignore: Throwable) {
             logger.error("artifactory upload file with error. url:$url", ignore)
-            return false
+            throw RuntimeException("artifactory upload file with error. url:$url", ignore)
         }
         return true
     }

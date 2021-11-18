@@ -35,6 +35,7 @@ dependencies {
     api(project(":core:sign:model-sign"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:worker:worker-common"))
     api("mysql:mysql-connector-java")
     api("org.json:json")
     api("com.googlecode.plist:dd-plist")
