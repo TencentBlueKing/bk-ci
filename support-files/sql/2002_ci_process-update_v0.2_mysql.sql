@@ -27,7 +27,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
                     AND COLUMN_NAME = 'CONDITIONS') THEN
         ALTER TABLE T_PIPELINE_BUILD_STAGE
-            ADD COLUMN `CONDITIONS` mediumtext COLLATE utf8mb4_bin;
+            ADD COLUMN `CONDITIONS` mediumtext COLLATE utf8mb4_bin COMMENT '状况';
     END IF;
 
 

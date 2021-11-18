@@ -17,7 +17,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PROJECT'
                         AND COLUMN_NAME = 'relation_id') THEN
         ALTER TABLE T_PROJECT
-            ADD COLUMN `relation_id` VARCHAR(32);
+            ADD COLUMN `relation_id` VARCHAR(32) COMMENT '关联系统Id';
     END IF;
 
     IF NOT EXISTS(SELECT 1
