@@ -84,7 +84,7 @@
         .bread-crumb {
             font-size: 12px;
             margin-bottom: 10px;
-            /deep/ .bk-breadcrumb-separator {
+            ::v-deep .bk-breadcrumb-separator {
                 font-size: 14px;
             }
             .bk-breadcrumb-item:last-child {
@@ -110,7 +110,7 @@
                 border-top: 1px solid #DCDEE5;
                 padding: 26px 0;
             }
-            /deep/ .bk-form {
+            ::v-deep .bk-form {
                 .bk-label {
                     color: #999;
                     min-height: 14px;

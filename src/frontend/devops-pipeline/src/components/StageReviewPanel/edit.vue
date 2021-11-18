@@ -175,7 +175,7 @@
         }
     }
     .stage-rule {
-        /deep/ .bk-form-content {
+        ::v-deep .bk-form-content {
             min-height: auto;
             line-height: 20px;
         }

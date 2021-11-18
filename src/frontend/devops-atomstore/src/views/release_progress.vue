@@ -727,10 +727,10 @@
             }
             .markdown-editor-show.info-value {
                 overflow-y: auto;
-                /deep/ .v-note-panel {
+                ::v-deep .v-note-panel {
                     border: none;
                 }
-                /deep/ .v-show-content {
+                ::v-deep .v-show-content {
                     background: #FAFBFD;
                 }
             }
@@ -787,7 +787,7 @@
                 margin-top: 40px;
             }
         }
-        /deep/ .bk-sideslider-wrapper {
+        ::v-deep .bk-sideslider-wrapper {
             top: 0;
             padding-bottom: 0;
             .bk-sideslider-content {

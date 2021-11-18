@@ -270,7 +270,7 @@ class PipelineBuildTaskDao {
                 taskType = taskType,
                 taskAtom = taskAtom,
                 status = BuildStatus.values()[status],
-                taskParams = JsonUtil.toMutableMapSkipEmpty(taskParams),
+                taskParams = JsonUtil.toMutableMap(taskParams),
                 additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
                 executeCount = executeCount ?: 1,
                 starter = starter,
