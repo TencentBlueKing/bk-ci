@@ -46,6 +46,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -404,7 +405,8 @@ class ExperienceService @Autowired constructor(
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
             logoUrl = logoUrl,
             size = fileSize,
-            scheme = scheme
+            scheme = scheme,
+            buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: ""
         )
 
         // 加上权限
