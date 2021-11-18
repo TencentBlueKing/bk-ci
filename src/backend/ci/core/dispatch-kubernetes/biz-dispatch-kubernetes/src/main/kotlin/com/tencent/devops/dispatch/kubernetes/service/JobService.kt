@@ -54,7 +54,7 @@ class JobService @Autowired constructor(
 
         val podStatus = result.data?.getFirstPod()?.status
         val podEvents = podStatus?.conditions
-            ?.filter { it.message.isNullOrBlank() && !it.reason.isNullOrBlank() }
+            ?.filter { !it.message.isNullOrBlank() && !it.reason.isNullOrBlank() }
             ?.map { condition ->
                 KubernetesJobStatusResp.PodResultEvent(
                     message = condition.message!!,
