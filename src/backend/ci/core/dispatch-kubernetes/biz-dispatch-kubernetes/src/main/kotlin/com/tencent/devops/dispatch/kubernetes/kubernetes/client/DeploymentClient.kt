@@ -28,21 +28,12 @@
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.google.gson.Gson
-import com.tencent.devops.dispatch.kubernetes.common.CONFIG_VOLUME_NAME
-import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_MOUNT_PATH
-import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_NAME
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.Deployment
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.DeploymentData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMap
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMapVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPath
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPathVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.Volume
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
@@ -68,7 +59,6 @@ class DeploymentClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DeploymentClient::class.java)
     }
-
 
     fun create(
         buildContainer: BuildContainer,
@@ -209,5 +199,5 @@ class DeploymentClient @Autowired constructor(
         )
     }
 
-    private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.containerLabel!! to containerName)
+    private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.workloadLabel!! to containerName)
 }

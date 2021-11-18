@@ -14,14 +14,14 @@ class SdkJobResourceImpl @Autowired constructor(
     private val jobService: JobService
 ) : SdkJobResource {
     override fun createJob(userId: String, jobReq: KubernetesJobReq): Result<KubernetesJobResp> {
-        return Result(jobService.createJob(jobReq))
+        return Result(jobService.createJob(userId, jobReq))
     }
 
     override fun getJobStatus(userId: String, jobName: String): Result<KubernetesJobStatusResp> {
         return Result(jobService.getJobStatus(jobName))
     }
 
-    override fun getJobLogs(userId: String, jobName: String, sinceTime: String): Result<String> {
+    override fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): Result<String?> {
         return Result(jobService.getJobLogs(jobName, sinceTime))
     }
 }

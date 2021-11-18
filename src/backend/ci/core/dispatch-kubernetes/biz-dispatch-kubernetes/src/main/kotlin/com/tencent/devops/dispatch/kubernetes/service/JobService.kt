@@ -6,8 +6,11 @@ import com.tencent.devops.dispatch.kubernetes.kubernetes.client.PodsClient
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesJobResp
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesJobStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.PodStatus
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstContainer
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstPod
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -19,14 +22,14 @@ class JobService @Autowired constructor(
 ) {
 
     fun createJob(userId: String, jobReq: KubernetesJobReq): KubernetesJobResp {
-        val jobName = "${userId}${System.currentTimeMillis()}"
+        val jobName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(userId)
         // 获取创建调用方所在的节点
         val nodeName = podsClient.read(jobReq.podNameSelector!!)?.spec?.nodeName ?: CommonUtils.onFailure(
-                ErrorCodeEnum.CREATE_JOB_ERROR.errorType,
-                ErrorCodeEnum.CREATE_JOB_ERROR.errorCode,
-                ErrorCodeEnum.CREATE_JOB_ERROR.formatErrorMessage,
-                KubernetesClientUtil.getClientFailInfo("获取Pod节点信息失败: pod ${jobReq.podNameSelector} 不存在")
-            )
+            ErrorCodeEnum.CREATE_JOB_ERROR.errorType,
+            ErrorCodeEnum.CREATE_JOB_ERROR.errorCode,
+            ErrorCodeEnum.CREATE_JOB_ERROR.formatErrorMessage,
+            KubernetesClientUtil.getClientFailInfo("获取Pod节点信息失败: pod ${jobReq.podNameSelector} 不存在")
+        )
         val result = jobClient.create(jobName, jobReq, nodeName.toString())
         if (!result.isSuccessful()) {
             CommonUtils.onFailure(
@@ -40,10 +43,44 @@ class JobService @Autowired constructor(
     }
 
     fun getJobStatus(jobName: String): KubernetesJobStatusResp {
-        TODO()
+        val result = podsClient.listWithHttpInfo(workloadOnlyLabel = jobName)
+        if (!result.isSuccessful()) {
+            return KubernetesJobStatusResp(
+                deleted = false,
+                status = PodStatus.FAILED.value,
+                pod_result = null
+            )
+        }
+
+        val podStatus = result.data?.getFirstPod()?.status
+        val podEvents = podStatus?.conditions
+            ?.filter { it.message.isNullOrBlank() && !it.reason.isNullOrBlank() }
+            ?.map { condition ->
+                KubernetesJobStatusResp.PodResultEvent(
+                    message = condition.message!!,
+                    reason = condition.reason!!,
+                    type = condition.type
+                )
+            }
+        return KubernetesJobStatusResp(
+            deleted = false,
+            status = PodStatus.getStatusFromK8s(podStatus?.phase).value,
+            pod_result = listOf(
+                KubernetesJobStatusResp.PodResult(
+                    ip = podStatus?.podIP,
+                    events = podEvents
+                )
+            )
+        )
     }
 
-    fun getJobLogs(jobName: String, sinceTime: String): String {
-        TODO()
+    fun getJobLogs(jobName: String, sinceTime: Int?): String? {
+        val pod = podsClient.list(workloadOnlyLabel = jobName)?.getFirstPod() ?: return null
+        val container = pod.getFirstContainer() ?: return null
+        return podsClient.logs(
+            podName = pod.metadata?.name ?: return null,
+            containerName = container.name,
+            since = sinceTime
+        )
     }
 }

@@ -34,6 +34,7 @@ import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -43,8 +44,12 @@ class PodsClient @Autowired constructor(
     private val dispatchBuildConfig: DispatchBuildConfig
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(PodsClient::class.java)
+    }
+
     fun listWithHttpInfo(
-        name: String
+        workloadOnlyLabel: String
     ): ApiResponse<V1PodList> {
         return CoreV1Api().listNamespacedPodWithHttpInfo(
             k8sConfig.nameSpace,
@@ -52,25 +57,29 @@ class PodsClient @Autowired constructor(
             null,
             null,
             null,
-            mapOf(dispatchBuildConfig.containerLabel!! to name).toLabelSelector(),
+            mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
             null, null, null, null, null
         )
     }
 
     fun list(
-        name: String
-    ): V1PodList {
-        return CoreV1Api().listNamespacedPod(
-            k8sConfig.nameSpace,
-            "true",
-            null,
-            null,
-            null,
-            mapOf(dispatchBuildConfig.containerLabel!! to name).toLabelSelector(),
-            null, null, null, null, null
-        )
+        workloadOnlyLabel: String
+    ): V1PodList? {
+        return try {
+            CoreV1Api().listNamespacedPod(
+                k8sConfig.nameSpace,
+                "true",
+                null,
+                null,
+                null,
+                mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
+                null, null, null, null, null
+            )
+        } catch (ignore: Exception) {
+            logger.info("PodsClient logs: |$workloadOnlyLabel| error: ${ignore.message}")
+            return null
+        }
     }
-
 
     fun read(
         podName: String
@@ -84,6 +93,31 @@ class PodsClient @Autowired constructor(
                 null
             )
         } catch (ignore: Exception) {
+            return null
+        }
+    }
+
+    fun logs(
+        podName: String,
+        containerName: String,
+        since: Int?
+    ): String? {
+        return try {
+            CoreV1Api().readNamespacedPodLog(
+                podName,
+                k8sConfig.nameSpace,
+                containerName,
+                null,
+                null,
+                null,
+                "true",
+                null,
+                since,
+                null,
+                null
+            )
+        } catch (ignore: Exception) {
+            logger.info("PodsClient logs: |$podName|$containerName|$since| error: ${ignore.message}")
             return null
         }
     }

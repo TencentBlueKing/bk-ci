@@ -20,3 +20,32 @@ data class KubernetesJobStatusResp(
         }
     }
 }
+
+enum class PodStatus(val value: String) {
+    // 创建中
+    PENDING("pending"),
+
+    // 运行中
+    RUNNING("running"),
+
+    // 成功
+    SUCCESSED("successed"),
+
+    // 失败
+    FAILED("failed");
+
+    companion object {
+        fun getStatusFromK8s(status: String?): PodStatus {
+            if (status == null || status == "Unknown") {
+                return FAILED
+            }
+            return when (status) {
+                "Failed" -> FAILED
+                "Succeeded" -> SUCCESSED
+                "Running" -> RUNNING
+                "Pending" -> PENDING
+                else -> FAILED
+            }
+        }
+    }
+}

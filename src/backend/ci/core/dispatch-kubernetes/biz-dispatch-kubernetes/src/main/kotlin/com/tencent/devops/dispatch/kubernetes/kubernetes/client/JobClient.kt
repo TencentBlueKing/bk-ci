@@ -1,18 +1,11 @@
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
-import com.tencent.devops.dispatch.kubernetes.common.CONFIG_VOLUME_NAME
-import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_MOUNT_PATH
-import com.tencent.devops.dispatch.kubernetes.common.DATA_VOLUME_NAME
 import com.tencent.devops.dispatch.kubernetes.common.NFS_VOLUME_NAME_PREFIX
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.job.Job
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.job.JobData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMap
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ConfigMapVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPath
-import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.HostPathVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.NfsVolume
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.NodeSelector
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
@@ -112,5 +105,5 @@ class JobClient @Autowired constructor(
         )
     }
 
-    private fun getCoreLabels(jobName: String) = mapOf(dispatchBuildConfig.jobLabel!! to jobName)
+    private fun getCoreLabels(jobName: String) = mapOf(dispatchBuildConfig.workloadLabel!! to jobName)
 }

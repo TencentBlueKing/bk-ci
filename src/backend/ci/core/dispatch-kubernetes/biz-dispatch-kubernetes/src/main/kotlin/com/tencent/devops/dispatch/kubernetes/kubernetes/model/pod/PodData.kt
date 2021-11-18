@@ -71,7 +71,7 @@ class HostPathVolume(
 class NfsVolume(
     override val name: String,
     val server: String,
-    val path: String,
+    val path: String
 ) : Volume
 
 data class ConfigMap(

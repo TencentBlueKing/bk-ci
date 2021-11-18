@@ -57,6 +57,6 @@ interface SdkJobResource {
         @PathParam("jobName")
         jobName: String,
         @QueryParam("sinceTime")
-        sinceTime: String
-    ): Result<String>
+        sinceTime: Int?
+    ): Result<String?>
 }

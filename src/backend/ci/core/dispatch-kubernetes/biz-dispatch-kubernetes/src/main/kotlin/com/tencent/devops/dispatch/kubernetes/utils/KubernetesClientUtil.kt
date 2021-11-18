@@ -28,6 +28,12 @@
 package com.tencent.devops.dispatch.kubernetes.utils
 
 import io.kubernetes.client.openapi.ApiResponse
+import io.kubernetes.client.openapi.models.V1Container
+import io.kubernetes.client.openapi.models.V1Deployment
+import io.kubernetes.client.openapi.models.V1DeploymentList
+import io.kubernetes.client.openapi.models.V1Pod
+import io.kubernetes.client.openapi.models.V1PodList
+import org.apache.commons.lang3.RandomUtils
 
 object KubernetesClientUtil {
 
@@ -40,4 +46,19 @@ object KubernetesClientUtil {
     fun <T> ApiResponse<T>.isSuccessful(): Boolean = statusCode in 200..299
 
     fun getClientFailInfo(message: String) = "Dispatch-kubernetes 异常信息 - $message"
+
+    fun getKubernetesWorkloadOnlyLabelValue(userId: String) =
+        "${userId}${System.currentTimeMillis()}-${RandomUtils.nextLong()}"
+
+    fun V1DeploymentList?.getFirstDeploy(): V1Deployment? {
+        return this?.items?.ifEmpty { null }?.get(0)
+    }
+
+    fun V1PodList?.getFirstPod(): V1Pod? {
+        return this?.items?.ifEmpty { null }?.get(0)
+    }
+
+    fun V1Pod?.getFirstContainer(): V1Container? {
+        return this?.spec?.containers?.ifEmpty { null }?.get(0)
+    }
 }

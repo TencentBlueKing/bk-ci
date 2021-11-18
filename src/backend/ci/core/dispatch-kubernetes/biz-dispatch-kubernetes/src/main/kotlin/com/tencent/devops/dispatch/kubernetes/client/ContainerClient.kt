@@ -39,6 +39,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstDeploy
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstPod
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
 import io.kubernetes.client.openapi.models.V1ContainerStatus
 import org.slf4j.LoggerFactory
@@ -78,7 +80,7 @@ class ContainerClient @Autowired constructor(
         return Result(
             status = result.statusCode,
             message = null,
-            data = result.data?.items?.ifEmpty { null }?.get(0)?.status?.containerStatuses?.ifEmpty { null }?.get(0)
+            data = result.data?.getFirstPod()?.status?.containerStatuses?.ifEmpty { null }?.get(0)
         )
     }
 
@@ -86,7 +88,7 @@ class ContainerClient @Autowired constructor(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
     ): String {
-        val containerName = "${dispatchMessage.userId}${System.currentTimeMillis()}"
+        val containerName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(dispatchMessage.userId)
 
         logger.info("ContainerClient createContainer containerName: $containerName dispatchMessage: $dispatchMessage")
 
@@ -174,13 +176,13 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): OperateContainerResult {
         var replicas = try {
-            deploymentClient.list(containerName).data?.items?.ifEmpty { null }?.get(0)?.spec?.replicas
+            deploymentClient.list(containerName).data?.getFirstDeploy()?.spec?.replicas
         } catch (e: Throwable) {
             return OperateContainerResult(containerName, false, e.message)
         }
         var max = MAX_WAIT
         while (replicas != 0 && max != 0) {
-            replicas = deploymentClient.list(containerName).data?.items?.ifEmpty { null }?.get(0)?.spec?.replicas
+            replicas = deploymentClient.list(containerName).data?.getFirstDeploy()?.spec?.replicas
             Thread.sleep(1000)
             max--
         }

@@ -30,7 +30,7 @@ data class KubernetesJobParam(
     )
 }
 
-data class Registry (
+data class Registry(
     val host: String,
     val username: String?,
     val password: String?
