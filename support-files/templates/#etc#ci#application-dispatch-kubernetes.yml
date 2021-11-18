@@ -39,7 +39,7 @@ dispatch:
         host: xx.artifactory.xxx
         userName: xxxx
         password: xxxx
-    label:  bkci-dispatch-kubenetes
+    label: bkci-dispatch-kubenetes
     volumeMount:
       path: /etc/config
     volume:
