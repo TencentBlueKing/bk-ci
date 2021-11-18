@@ -75,6 +75,8 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @Suppress("ComplexMethod")
@@ -164,13 +166,17 @@ object ModelParameters {
                 startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
                 startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_SOURCE_URL] = originEvent.object_attributes.source.http_url
                 startParams[PIPELINE_WEBHOOK_TARGET_URL] = originEvent.object_attributes.target.http_url
                 startParams[PIPELINE_GIT_MR_ID] = originEvent.object_attributes.id.toString()
                 startParams[PIPELINE_GIT_MR_IID] = originEvent.object_attributes.iid.toString()
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] = originEvent.object_attributes.last_commit.author.name
                 startParams[PIPELINE_GIT_MR_TITLE] = originEvent.object_attributes.title
-                startParams[PIPELINE_GIT_MR_DESC] = originEvent.object_attributes.description
+                if (originEvent.object_attributes.description.isNotBlank()) {
+                    startParams[PIPELINE_GIT_MR_DESC] = originEvent.object_attributes.description
+                }
                 startParams[PIPELINE_GIT_MR_PROPOSER] = originEvent.user.username
                 startParams[PIPELINE_GIT_MR_ACTION] = originEvent.object_attributes.action
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
