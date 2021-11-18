@@ -144,10 +144,10 @@
 <style lang="scss" scoped>
     .review-steps {
         margin: 25px 0 32px;
-        /deep/ .bk-step {
+        ::v-deep .bk-step {
             max-width: 367.56px;
         }
-        /deep/ .bk-devops-icon {
+        ::v-deep .bk-devops-icon {
             font-family: 'bk-devops' !important;
         }
     }

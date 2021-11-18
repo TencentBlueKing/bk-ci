@@ -81,8 +81,8 @@ class ApigwAtomResourceV3Impl @Autowired constructor(private val client: Client)
         return client.get(ServiceMarketAtomResource::class).getAtomPipelinesByCode(
             atomCode = atomCode,
             username = userId,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
         )
     }
 

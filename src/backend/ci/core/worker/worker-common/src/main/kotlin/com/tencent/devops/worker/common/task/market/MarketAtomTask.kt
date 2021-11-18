@@ -117,7 +117,7 @@ open class MarketAtomTask : ITask() {
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
-        val map = JsonUtil.toMutableMapSkipEmpty(data)
+        val map = JsonUtil.toMutableMap(data)
         logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
             "|workspace=${workspace.absolutePath}")
 
@@ -152,7 +152,7 @@ open class MarketAtomTask : ITask() {
         }
 
         // 解析输出字段模板
-        val props = JsonUtil.toMutableMapSkipEmpty(atomData.props!!)
+        val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
 
@@ -277,7 +277,13 @@ open class MarketAtomTask : ITask() {
         try {
             // 下载atom执行文件
             LoggerService.addFoldStartLine("[Install plugin]")
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
+            atomExecuteFile = downloadAtomExecuteFile(
+                projectId = buildVariables.projectId,
+                atomFilePath = atomData.pkgPath!!,
+                atomCreateTime = atomData.createTime,
+                workspace = atomTmpSpace,
+                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            )
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -317,7 +323,7 @@ open class MarketAtomTask : ITask() {
             // 获取插件post操作入口参数
             var postEntryParam: String? = null
             if (additionalOptions != null) {
-                val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
+                val additionalOptionMap = JsonUtil.toMutableMap(additionalOptions)
                 val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }
@@ -870,7 +876,13 @@ open class MarketAtomTask : ITask() {
         }
     }
 
-    private fun downloadAtomExecuteFile(atomFilePath: String, workspace: File): File {
+    private fun downloadAtomExecuteFile(
+        projectId: String,
+        atomFilePath: String,
+        atomCreateTime: Long,
+        workspace: File,
+        isVmBuildEnv: Boolean
+    ): File {
         try {
             // 取插件文件名
             val lastFx = atomFilePath.lastIndexOf("/")
@@ -879,7 +891,13 @@ open class MarketAtomTask : ITask() {
             } else {
                 File(workspace, atomFilePath)
             }
-            atomApi.downloadAtom(atomFilePath, file)
+            atomApi.downloadAtom(
+                projectId = projectId,
+                atomFilePath = atomFilePath,
+                atomCreateTime = atomCreateTime,
+                file = file,
+                isVmBuildEnv = isVmBuildEnv
+            )
             return file
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)

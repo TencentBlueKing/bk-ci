@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.dao.process
 
-import com.tencent.devops.model.process.tables.TBuildStartupParam
 import com.tencent.devops.model.process.tables.TMetadata
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
@@ -109,15 +108,6 @@ class ProcessDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
-    fun deleteBuildStartupParamByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
-        with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
                 .execute()
         }

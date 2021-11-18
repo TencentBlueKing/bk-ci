@@ -1161,6 +1161,7 @@ class PipelineListFacadeService @Autowired constructor(
             if (pipelineSettingRecord != null) {
                 it.pipelineDesc = pipelineSettingRecord.desc
                 it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.runLockType)
+                it.buildNumRule = pipelineSettingRecord.buildNumRule
             }
         }
 

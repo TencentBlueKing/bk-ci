@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -83,5 +85,34 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
 
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
+    }
+
+    override fun setShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean> {
+        checkParam(userId, projectId, envHashId)
+        envService.setShareEnv(userId, projectId, envHashId, sharedProjects.sharedProjects)
+        return Result(true)
+    }
+
+    private fun checkParam(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ) {
+        if (userId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (projectId.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
     }
 }

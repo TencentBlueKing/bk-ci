@@ -125,6 +125,9 @@
 </script>
 
 <style lang="scss">
+    .header {
+        pointer-events: auto;
+    }
     .atom-control-option {
         position: relative;
         .atom-checkbox-list-item {

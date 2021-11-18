@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -68,6 +69,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
@@ -215,6 +217,7 @@ class BuildCancelControl @Autowired constructor(
                         containerBuildStatus == BuildStatus.PREPARE_ENV ||
                         dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
                     ) {
+                        val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                         pipelineRuntimeService.updateContainerStatus(
                             projectId = event.projectId,
                             buildId = event.buildId,
@@ -222,7 +225,13 @@ class BuildCancelControl @Autowired constructor(
                             containerId = containerId,
                             startTime = null,
                             endTime = LocalDateTime.now(),
-                            buildStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
+                            buildStatus = switchedStatus
+                        )
+                        containerBuildDetailService.updateContainerStatus(
+                            projectId = event.projectId,
+                            buildId = event.buildId,
+                            containerId = containerId,
+                            buildStatus = switchedStatus
                         )
                         // 构建机关机
                         if (container is VMBuildContainer) {

@@ -235,7 +235,7 @@
     .manage-version-offline, .version-detail {
         padding: 20px;
     }
-    /deep/ .bk-sideslider-content {
+    ::v-deep .bk-sideslider-content {
         max-height: calc(100% - 60px) !important;
     }
 </style>

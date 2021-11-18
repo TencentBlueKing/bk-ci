@@ -112,17 +112,20 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        buildNum: Int = 0
+        buildNum: Int = 0,
+        buildNumAlias: String? = null
     ): Int {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
             if (buildNum == 0) {
                 dslContext.update(this)
                     .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
                     .set(BUILD_NUM, buildNum)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
         }
@@ -446,10 +449,6 @@ class PipelineBuildSummaryDao {
             baseStep.fetch()
         }
     }
-
-    /**
-     * 获取PipelineInfo与BuildSummary Join后的表
-     */
 
     /**
      * 1：新构建时都先进入排队，计数
