@@ -346,7 +346,7 @@ object LoggerService {
                     }
                     property.logStorageMode = LogStorageMode.ARCHIVED
                 } catch (e: Exception) {
-                    logger.info("archiveLogFile| retry fail with message: ${e.message}")
+                    logger.error("archiveLogFile| retry fail with message: ${e.message}")
                 }
                 archivedCount++
             }

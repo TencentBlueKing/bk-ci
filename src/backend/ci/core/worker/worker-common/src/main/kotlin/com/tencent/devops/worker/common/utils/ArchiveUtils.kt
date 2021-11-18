@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.nio.file.FileSystems
@@ -47,6 +48,7 @@ import java.nio.file.attribute.BasicFileAttributes
 object ArchiveUtils {
 
     private val api = ApiFactory.create(ArchiveSDKApi::class)
+    private val logger = LoggerFactory.getLogger(ArchiveUtils::class.java)
     private const val MAX_FILE_COUNT = 100
 
     fun archiveCustomFiles(
@@ -58,7 +60,21 @@ object ArchiveUtils {
     ): Int {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
-            api.uploadCustomize(file = it, destPath = destPath, buildVariables = buildVariables, token = token)
+            try {
+                HttpRetryUtils.retryWhenRuntimeException(
+                    retryTime = 5,
+                    retryPeriodMills = 500
+                ) {
+                    api.uploadCustomize(
+                        file = it,
+                        destPath = destPath,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("uploadCustomize| retry fail with message: ${e.message}")
+            }
             LoggerService.addNormalLine("${index + 1}/$size file(s) finished")
         }
         return size
@@ -72,7 +88,20 @@ object ArchiveUtils {
     ): Int {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
-            api.uploadPipeline(file = it, buildVariables = buildVariables, token = token)
+            try {
+                HttpRetryUtils.retryWhenRuntimeException(
+                    retryTime = 5,
+                    retryPeriodMills = 500
+                ) {
+                    api.uploadPipeline(
+                        file = it,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("uploadPipeline| retry fail with message: ${e.message}")
+            }
             LoggerService.addNormalLine("${index + 1}/$size file(s) finished")
         }
         return size
