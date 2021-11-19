@@ -57,9 +57,9 @@ object QualityUtils {
         return if (gatewayIds.isEmpty() || gatewayIds.any { element.name.toLowerCase().contains(it.toLowerCase()) }) {
             val id = "T-${UUIDUtil.generate()}"
             if (isBefore) {
-                QualityGateInElement("质量红线(准入)", id, null, element.getAtomCode(), element.name, element.id)
+                QualityGateInElement("质量红线(准入)", id, null, element.getAtomCode(), element.name)
             } else {
-                QualityGateOutElement("质量红线(准出)", id, null, element.getAtomCode(), element.name, element.id)
+                QualityGateOutElement("质量红线(准出)", id, null, element.getAtomCode(), element.name)
             }
         } else {
             null

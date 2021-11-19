@@ -68,7 +68,6 @@ class QualityGateInTaskAtom @Autowired constructor(
             task = task,
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
-            interceptTaskId = param.interceptTaskId,
             runVariables = runVariables,
             buildLogPrinter = buildLogPrinter,
             position = ControlPointPosition.BEFORE_POSITION,

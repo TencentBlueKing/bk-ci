@@ -38,7 +38,6 @@ data class BuildCheckParams(
     val interceptTaskName: String,
     val startTime: Long,
     val taskId: String,
-    val elementId: String?,
     val position: String,
     val templateId: String?,
     val stageId: String?,
