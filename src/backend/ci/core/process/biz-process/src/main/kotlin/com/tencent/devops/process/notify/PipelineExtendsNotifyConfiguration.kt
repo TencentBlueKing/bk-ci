@@ -52,10 +52,6 @@ import org.springframework.context.annotation.Configuration
 class PipelineExtendsNotifyConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(PipelineUrlBean::class)
-    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
-
-    @Bean
     @ConditionalOnMissingBean(name = ["pipelineMonitorExchange"])
     fun pipelineMonitorExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, true, false)
