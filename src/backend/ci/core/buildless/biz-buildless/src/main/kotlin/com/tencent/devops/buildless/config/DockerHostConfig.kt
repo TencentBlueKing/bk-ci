@@ -65,19 +65,4 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.downloadDockerAgentUrl}")
     var downloadDockerAgentUrl: String? = null
-
-    @Value("\${dockerCli.landunEnv}")
-    var landunEnv: String? = null
-
-    @Value("\${dockerCli.localImageCacheDays}")
-    var localImageCacheDays: Int = 7
-
-    @Value("\${dockerhost.mode:#{null}}")
-    var dockerhostMode: String? = null
-
-    @Value("\${dockerhost.dispatch.urlPrefix:ms/dispatch-docker}")
-    var dispatchUrlPrefix: String? = "ms/dispatch-docker"
-
-    @Value("\${dockerhost.gatewayHeaderTag:#{null}}")
-    var gatewayHeaderTag: String? = null
 }
