@@ -169,14 +169,14 @@ class ModelElement @Autowired constructor(
                 else -> linux
             }
         }
-        return if (checkRunPlugIn || step.name == "runTest@1.*") {
+        return if (checkRunPlugIn || step.name == "runTest@2.*") {
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
                 name = step.name ?: "run",
                 id = step.id,
                 atomCode = runPlugInAtomCode ?: "runTest",
-                version = runPlugInVersion ?: "1.*",
+                version = runPlugInVersion ?: "2.*",
                 data = data,
                 additionalOptions = additionalOptions
             )
