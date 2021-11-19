@@ -34,6 +34,8 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.git.isDeleteBranch
+import com.tencent.devops.stream.pojo.git.isDeleteTag
 import org.slf4j.LoggerFactory
 
 object TriggerParameter {
@@ -49,8 +51,7 @@ object TriggerParameter {
                 return GitRequestEventHandle.createPushEvent(event, e)
             }
             is GitTagPushEvent -> {
-                if (event.total_commits_count <= 0) {
-                    logger.info("Git web hook no commit(${event.total_commits_count})")
+                if (!tagPushEventFilter(event)) {
                     return null
                 }
                 return GitRequestEventHandle.createTagPushEvent(event, e)
@@ -72,14 +73,22 @@ object TriggerParameter {
     }
 
     private fun pushEventFilter(event: GitPushEvent): Boolean {
-        // 放开删除分支操作为了流水线删除功能
-        if (event.operation_kind == TGitPushOperationKind.DELETE.value &&
-            event.action_kind == TGitPushActionKind.DELETE_BRANCH.value
-        ) {
+        if (event.isDeleteBranch()) {
             return true
         }
         if (event.total_commits_count <= 0) {
-            logger.info("Git web hook no commit(${event.total_commits_count})")
+            logger.info("Git push web hook no commit(${event.total_commits_count})")
+            return false
+        }
+        return true
+    }
+
+    private fun tagPushEventFilter(event: GitTagPushEvent): Boolean {
+        if (event.isDeleteTag()) {
+            return true
+        }
+        if (event.total_commits_count <= 0) {
+            logger.info("Git tag web hook no commit(${event.total_commits_count})")
             return false
         }
         return true

@@ -30,25 +30,9 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 
-/**
- * model
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TriggerOn(
-    val push: PushRule?,
-    val tag: TagRule?,
-    val mr: MrRule?,
-    val schedules: SchedulesRule? = null,
-    val delete: DeleteRule?
-)
+data class DeleteRule(
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTriggerOn(
-    val push: Any?,
-    val tag: Any?,
-    val mr: Any?,
-    val schedules: SchedulesRule?,
-    val delete: DeleteRule?
+    val delete: List<String>
 )

@@ -57,6 +57,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
+import com.tencent.devops.stream.pojo.git.isDeleteBranch
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
@@ -225,7 +226,7 @@ class GitCITriggerService @Autowired constructor(
             )
         }
         // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
-        if (gitRequestEvent.isDeleteBranch()) {
+        if (event is GitPushEvent && event.isDeleteBranch()) {
             return true
         }
 

@@ -68,9 +68,13 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.git.isDeleteBranch
+import com.tencent.devops.stream.pojo.git.isDeleteTag
 
 @Suppress("ComplexMethod")
 object ModelParameters {
+
+    private const val DELETE_EVENT = "delete"
 
     fun createPipelineParams(
         yaml: ScriptBuildYaml,
@@ -112,7 +116,11 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
-                startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = if (originEvent.isDeleteBranch()) {
+                    DELETE_EVENT
+                } else {
+                    GitPushEvent.classType
+                }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
                     originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
@@ -125,7 +133,11 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
-                startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = if (originEvent.isDeleteTag()) {
+                    DELETE_EVENT
+                } else {
+                    GitTagPushEvent.classType
+                }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
                     originEvent.commits?.get(0)?.author?.name ?: ""
                 GitUtils.getProjectName(originEvent.repository.git_http_url)

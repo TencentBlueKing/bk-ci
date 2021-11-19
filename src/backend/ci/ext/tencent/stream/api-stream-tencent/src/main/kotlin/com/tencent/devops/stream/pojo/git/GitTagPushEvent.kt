@@ -29,6 +29,9 @@ package com.tencent.devops.stream.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitTagPushActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitTagPushOperationKind
 
 /**
 {
@@ -74,6 +77,7 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitTagPushEvent(
     val operation_kind: String,
+    val action_kind: String?,
     val ref: String,
     val before: String,
     val after: String,
@@ -88,4 +92,19 @@ data class GitTagPushEvent(
     companion object {
         const val classType = TGitObjectKind.OBJECT_KIND_TAG_PUSH
     }
+}
+
+fun GitTagPushEvent.isDeleteTag(): Boolean {
+    // 工蜂web端删除
+    if (action_kind == TGitTagPushActionKind.DELETE_TAG.value) {
+        return true
+    }
+    // 发送到工蜂的客户端删除
+    if (action_kind == TGitTagPushActionKind.CLIENT_PUSH.value &&
+        operation_kind == TGitTagPushOperationKind.DELETE.value &&
+        after.filter { it != '0' }.isBlank()
+    ) {
+        return true
+    }
+    return false
 }

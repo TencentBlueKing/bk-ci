@@ -38,7 +38,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.isDeleteBranch
+import com.tencent.devops.stream.pojo.git.isDeleteBranch
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -111,7 +111,7 @@ class PipelineDelete @Autowired constructor(
         }
 
         // 直接删除分支
-        if (gitRequestEvent.isDeleteBranch()) {
+        if (event is GitPushEvent && event.isDeleteBranch()) {
             val pipelines = streamPipelineBranchService.getBranchPipelines(
                 gitRequestEvent.gitProjectId,
                 gitRequestEvent.branch
