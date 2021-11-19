@@ -63,13 +63,13 @@ class ModelElement @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao
 ) {
 
-    @Value("\${XXX.xxx:#{false}}")
-    private val checkRunPlugIn: Boolean = false
+    @Value("\${stream.marketRun.enable:#{false}}")
+    private val marketRunTask: Boolean = false
 
-    @Value("\${XXX.xxx:#{null}}")
+    @Value("\${stream.marketRun.atomCode:#{null}}")
     private val runPlugInAtomCode: String? = null
 
-    @Value("\${XXX.xxx:#{null}}")
+    @Value("\${stream.marketRun.atomVersion:#{null}}")
     private val runPlugInVersion: String? = null
 
     companion object {
@@ -169,14 +169,14 @@ class ModelElement @Autowired constructor(
                 else -> linux
             }
         }
-        return if (checkRunPlugIn || step.name == "runTest@2.*") {
+        return if (marketRunTask) {
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
                 name = step.name ?: "run",
                 id = step.id,
-                atomCode = runPlugInAtomCode ?: "runTest",
-                version = runPlugInVersion ?: "2.*",
+                atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
+                version = runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
                 data = data,
                 additionalOptions = additionalOptions
             )
