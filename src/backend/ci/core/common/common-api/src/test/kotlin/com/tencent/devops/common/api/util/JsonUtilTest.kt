@@ -117,10 +117,10 @@ class JsonUtilTest {
 
         val mutableMap = JsonUtil.toMutableMap(mt)
         Assert.assertNotNull(mutableMap)
-        Assert.assertNotNull(mutableMap["emptyKey"])
-        Assert.assertNotNull(mutableMap["str_array"])
+        Assert.assertNull(mutableMap["emptyKey"])
+        Assert.assertNull(mutableMap["str_array"])
         Assert.assertEquals(mutableMap["a"], "1")
-        Assert.assertEquals(mutableMap["emptyKey"], "")
+        Assert.assertEquals(mutableMap["emptyKey"], null)
         mutableMap["a"] = "2"
         Assert.assertEquals(mutableMap["a"], "2")
         println(mutableMap)
