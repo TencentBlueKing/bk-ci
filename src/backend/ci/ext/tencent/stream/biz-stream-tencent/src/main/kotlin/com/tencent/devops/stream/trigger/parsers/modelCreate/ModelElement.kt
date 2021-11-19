@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -62,13 +63,13 @@ class ModelElement @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao
 ) {
 
-    // @Value("\${XXX.xxx:#{null}}")
+    @Value("\${XXX.xxx:#{false}}")
     private val checkRunPlugIn: Boolean = false
 
-    // @Value("\${XXX.xxx:#{null}}")
+    @Value("\${XXX.xxx:#{null}}")
     private val runPlugInAtomCode: String? = null
 
-    // @Value("\${XXX.xxx:#{null}}")
+    @Value("\${XXX.xxx:#{null}}")
     private val runPlugInVersion: String? = null
 
     companion object {
