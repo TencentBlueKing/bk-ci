@@ -86,8 +86,8 @@
                 memberCount: 0,
                 memberList: [],
                 memberType: {
-                    'ADMIN': 'Owner',
-                    'DEVELOPER': 'Developer'
+                    ADMIN: 'Owner',
+                    DEVELOPER: 'Developer'
                 },
                 permissionMap: {
                     atom: [
@@ -125,8 +125,8 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail',
-                'userInfo': 'getUserInfo'
+                detail: 'getDetail',
+                userInfo: 'getUserInfo'
             }),
 
             storeType () {

@@ -108,7 +108,7 @@
             }
         },
         watch: {
-            'isShowCheckDialog': function (val) {
+            isShowCheckDialog: function (val) {
                 if (val) {
                     this.requestCheckData()
                 }

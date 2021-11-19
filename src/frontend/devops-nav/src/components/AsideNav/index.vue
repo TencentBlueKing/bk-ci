@@ -50,6 +50,7 @@
     export default class AsideNav extends Vue {
         @Prop({ default: '' })
         headerTitle: string
+
         @Prop({ required: true })
         nav: Object
 

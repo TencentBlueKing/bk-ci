@@ -2,7 +2,7 @@
     <section style="pointer-events: all; position: relative" v-bkloading="{ isLoading }">
         <div :class="['ace-fullscreen', { 'active': isFullScreen }]" :alt="$t('editPage.isFullScreen')" :title="$t('editPage.isFullScreen')"
             @click="setFullScreen">
-            <i class="devops-icon" :class="isFullScreen ? &quot;icon-un-full-screen&quot; : &quot;icon-full-screen&quot;"></i>
+            <i class="devops-icon" :class="isFullScreen ? 'icon-un-full-screen' : 'icon-full-screen'"></i>
         </div>
         <ace
             class="ace-wrapper"
@@ -13,7 +13,8 @@
             :full-screen="isFullScreen"
             @input="handleScriptInput"
             :height="height"
-            width="100%">
+            width="100%"
+        >
         </ace>
     </section>
 </template>
@@ -32,7 +33,7 @@
         props: {
             lang: {
                 type: String,
-                default: 'sh'
+                default: 'shell'
             },
             default: String,
             bashConf: {
@@ -59,6 +60,7 @@
             }
         },
         mounted () {
+            console.log(this.lang)
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
             this.height = Math.max(clientHeight - top - 180, 360)
@@ -78,7 +80,7 @@
                             return response.data
                         case response.data && response.data.record && typeof response.data.record === 'string':
                             return response.data.record
-                        default:
+                        default: {
                             const path = dataPath.split('.')
                             let result = response
                             let pos = 0
@@ -92,6 +94,7 @@
                             } else {
                                 throw Error(this.$t('editPage.failToGetData'))
                             }
+                        }
                     }
                 } catch (e) {
                     console.error(e)

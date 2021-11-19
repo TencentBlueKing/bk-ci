@@ -29,7 +29,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             })
         }
     }

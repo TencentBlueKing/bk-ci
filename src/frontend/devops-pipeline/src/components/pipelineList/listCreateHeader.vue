@@ -47,17 +47,17 @@
                 showOrderType: false,
                 orderList: [
                     {
-                        'id': 'NAME',
-                        'name': this.$t('newlist.orderByAlpha')
+                        id: 'NAME',
+                        name: this.$t('newlist.orderByAlpha')
                     }, {
-                        'id': 'CREATE_TIME',
-                        'name': this.$t('newlist.orderByCreateTime')
+                        id: 'CREATE_TIME',
+                        name: this.$t('newlist.orderByCreateTime')
                     }, {
-                        'id': 'UPDATE_TIME',
-                        'name': this.$t('newlist.orderByUpdateTime')
+                        id: 'UPDATE_TIME',
+                        name: this.$t('newlist.orderByUpdateTime')
                     }, {
-                        'id': 'LAST_EXEC_TIME',
-                        'name': this.$t('newlist.orderByExecuteTime')
+                        id: 'LAST_EXEC_TIME',
+                        name: this.$t('newlist.orderByExecuteTime')
                     }
                 ]
             }

@@ -137,10 +137,10 @@
                 detailLoading: false,
                 detail: {},
                 releaseMap: {
-                    'NEW': this.$t('store.新上架'),
-                    'INCOMPATIBILITY_UPGRADE': this.$t('store.非兼容式升级'),
-                    'COMPATIBILITY_UPGRADE': this.$t('store.兼容式功能更新'),
-                    'COMPATIBILITY_FIX': this.$t('store.兼容式问题修正')
+                    NEW: this.$t('store.新上架'),
+                    INCOMPATIBILITY_UPGRADE: this.$t('store.非兼容式升级'),
+                    COMPATIBILITY_UPGRADE: this.$t('store.兼容式功能更新'),
+                    COMPATIBILITY_FIX: this.$t('store.兼容式问题修正')
                 }
             }
         },
