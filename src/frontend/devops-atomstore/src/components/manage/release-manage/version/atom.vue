@@ -137,10 +137,10 @@
                 detailLoading: false,
                 detail: {},
                 releaseMap: {
-                    'NEW': this.$t('store.新上架'),
-                    'INCOMPATIBILITY_UPGRADE': this.$t('store.非兼容式升级'),
-                    'COMPATIBILITY_UPGRADE': this.$t('store.兼容式功能更新'),
-                    'COMPATIBILITY_FIX': this.$t('store.兼容式问题修正')
+                    NEW: this.$t('store.新上架'),
+                    INCOMPATIBILITY_UPGRADE: this.$t('store.非兼容式升级'),
+                    COMPATIBILITY_UPGRADE: this.$t('store.兼容式功能更新'),
+                    COMPATIBILITY_FIX: this.$t('store.兼容式问题修正')
                 }
             }
         },
@@ -235,7 +235,7 @@
     .manage-version-offline, .version-detail {
         padding: 20px;
     }
-    /deep/ .bk-sideslider-content {
+    ::v-deep .bk-sideslider-content {
         max-height: calc(100% - 60px) !important;
     }
 </style>

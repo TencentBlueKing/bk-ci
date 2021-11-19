@@ -23,8 +23,10 @@
     export default class EmptyTips extends Vue {
         @Prop({ default: false })
         showLock
+
         @Prop()
         title
+
         @Prop()
         desc
     }

@@ -144,7 +144,7 @@ export function getAtomOutputObj (output = {}) {
     try {
         const outputObj = {}
         for (const key in output) {
-            if (output.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(output, key)) {
                 outputObj[key] = output[key].type
             }
         }

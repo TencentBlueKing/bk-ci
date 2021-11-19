@@ -38,7 +38,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -140,10 +140,10 @@ class DockerHostBuildResourceApi constructor(
             dockerHostPort = port.toInt(),
             capacity = 100,
             usedNum = containerNum,
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad(),
+            averageCpuLoad = SystemInfoUtil.getAverageCpuLoad(),
+            averageMemLoad = SystemInfoUtil.getAverageMemLoad(),
+            averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
+            averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad(),
             enable = true,
             grayEnv = null,
             specialOn = null,

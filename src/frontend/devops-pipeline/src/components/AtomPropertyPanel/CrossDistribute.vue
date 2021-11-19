@@ -37,8 +37,8 @@
                     const res = await this.$ajax.get(url)
                     if (res.data && res.data.length > 0) {
                         for (let i = 0; i < res.data.length; i++) {
-                            if (res.data[i]['projectCode'] !== this.projectId && res.data[i]['approvalStatus'] === 2) {
-                                tmpList.push(Object.assign({}, { id: res.data[i]['projectCode'], name: res.data[i]['projectName'] }))
+                            if (res.data[i].projectCode !== this.projectId && res.data[i].approvalStatus === 2) {
+                                tmpList.push(Object.assign({}, { id: res.data[i].projectCode, name: res.data[i].projectName }))
                             }
                         }
                         this.newModel.targetProjectId.list = tmpList

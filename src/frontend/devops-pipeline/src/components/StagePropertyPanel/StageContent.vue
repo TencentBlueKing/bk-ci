@@ -77,7 +77,7 @@
                 'updateStage'
             ]),
             handleStageChange (name, value) {
-                if (!this.stage.hasOwnProperty(name)) {
+                if (!Object.prototype.hasOwnProperty.call(this.stage, name)) {
                     Vue.set(this.stage, name, value)
                 }
                 this.updateStage({

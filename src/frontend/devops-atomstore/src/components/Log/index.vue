@@ -11,7 +11,6 @@
 </template>
 
 <script>
-    import '@/components/Log/log.min.css'
 
     export default {
         name: 'pipeline-log',
@@ -57,11 +56,16 @@
         beforeDestroy () {
             this._destroyLog()
         },
-        mounted () {
-            import(/* webpackChunkName: 'log' */'@/components/Log/log.min.js').then(res => {
-                this.SodaLog = res
-                this.buildNo && this.renderLog(this.buildNo)
-            })
+        async mounted () {
+            if (!window.SodaLog) {
+                await import('@/components/Log/log.min.css')
+                await import(
+                    /* webpackChunkName: 'log' */
+                    '@/components/Log/log.min.js'
+                )
+                this.SodaLog = window.SodaLog
+            }
+            this.buildNo && this.renderLog(this.buildNo)
         },
         methods: {
             renderLog (buildNo) {

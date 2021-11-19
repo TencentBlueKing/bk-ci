@@ -67,7 +67,7 @@
 
         computed: {
             ...mapGetters({
-                'historyPageStatus': 'pipelines/getHistoryPageStatus'
+                historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
             ...mapState('atom', [
                 'isPropertyPanelVisible'
@@ -121,26 +121,28 @@
                 const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
-                const btns = hasNoPermission ? [{
-                    theme: 'primary',
-                    size: 'normal',
-                    handler: this.changeProject,
-                    text: this.$t('changeProject')
-                }, {
-                    theme: 'success',
-                    size: 'normal',
-                    handler: this.toApplyPermission,
-                    text: this.$t('applyPermission')
-                }] : [{
-                    theme: 'primary',
-                    size: 'normal',
-                    disabled: this.executeStatus,
-                    loading: this.executeStatus,
-                    handler: () => {
-                        !this.executeStatus && bus.$emit('trigger-excute')
-                    },
-                    text: this.$t('history.startBuildTips')
-                }]
+                const btns = hasNoPermission
+                    ? [{
+                        theme: 'primary',
+                        size: 'normal',
+                        handler: this.changeProject,
+                        text: this.$t('changeProject')
+                    }, {
+                        theme: 'success',
+                        size: 'normal',
+                        handler: this.toApplyPermission,
+                        text: this.$t('applyPermission')
+                    }]
+                    : [{
+                        theme: 'primary',
+                        size: 'normal',
+                        disabled: this.executeStatus,
+                        loading: this.executeStatus,
+                        handler: () => {
+                            !this.executeStatus && bus.$emit('trigger-excute')
+                        },
+                        text: this.$t('history.startBuildTips')
+                    }]
                 return {
                     title,
                     desc,
@@ -235,7 +237,8 @@
                             type: this.$permissionResourceTypeMap.PROJECT
                         }, {
                             id: this.pipelineId,
-                            name: this.pipelineId
+                            name: this.pipelineId,
+                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
                         }]
                     }])
                     console.log('redirectUrl', redirectUrl)
@@ -280,7 +283,7 @@
                 if (queryArr.includes('trigger')) await this.handleRemoteMethod()
                 if (queryArr.length) {
                     const newQuery = {}
-                    queryArr.map(item => {
+                    queryArr.forEach(item => {
                         if (['status', 'materialAlias'].includes(item)) {
                             newQuery[item] = pathQuery[item].split(',')
                         } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
@@ -292,13 +295,13 @@
                         }
                     })
 
-                    searchKeyArr.map(val => {
+                    searchKeyArr.forEach(val => {
                         const newItem = this.filterData.filter(item => item.id === val)
                         if (newItem[0]) {
                             newItem[0].values = [{ id: pathQuery[val] }]
                             if (val === 'trigger') {
                                 newItem[0].values = []
-                                pathQuery[val].split(',').map(item => {
+                                pathQuery[val].split(',').forEach(item => {
                                     newItem[0].values.push({
                                         id: item,
                                         value: this.triggerList.find(val => val.id === item) && this.triggerList.find(val => val.id === item).value

@@ -68,21 +68,23 @@
             return {
                 isInstalling: false,
                 toolTip: {
-                    content: !this.card.availableFlag ? `${this.$t('editPage.notWorkAtCur')}${this.card.agentTypeScope.length ? `，${this.$t('editPage.onlySupport')}` : ''}${this.card.agentTypeScope.map((item) => {
-                        let res = ''
-                        switch (item) {
-                            case 'DOCKER':
-                                res = this.$t('editPage.devnet')
-                                break
-                            case 'IDC':
-                                res = 'IDC CVM'
-                                break
-                            case 'PUBLIC_DEVCLOUD':
-                                res = 'DevCloud'
-                                break
-                        }
-                        return res
-                    }).join('，')}` : '',
+                    content: !this.card.availableFlag
+                        ? `${this.$t('editPage.notWorkAtCur')}${this.card.agentTypeScope.length ? `，${this.$t('editPage.onlySupport')}` : ''}${this.card.agentTypeScope.map((item) => {
+                            let res = ''
+                            switch (item) {
+                                case 'DOCKER':
+                                    res = this.$t('editPage.devnet')
+                                    break
+                                case 'IDC':
+                                    res = 'IDC CVM'
+                                    break
+                                case 'PUBLIC_DEVCLOUD':
+                                    res = 'DevCloud'
+                                    break
+                            }
+                            return res
+                        }).join('，')}`
+                        : '',
                     appendTo: () => this.$refs.card
                 }
             }
@@ -130,13 +132,13 @@
     .select-card {
         padding: 20px 15px 18px;
         position: relative;
-        /deep/ .tippy-popper {
+        ::v-deep .tippy-popper {
             display: none;
             transition: display 200ms;
         }
         &:hover {
             background: #fafbfd;
-            .card-link, &.disable /deep/ .tippy-popper {
+            .card-link, &.disable ::v-deep .tippy-popper {
                 display: block;
             }
         }

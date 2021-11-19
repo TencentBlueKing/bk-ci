@@ -102,8 +102,7 @@ function iframeUtil (router: any) {
             theme: theme || type,
             title,
             subTitle: content,
-            subHeader: subHeader ? eventBus.$createElement('p', {
-            }, subHeader) : null,
+            subHeader: subHeader ? eventBus.$createElement('p', {}, subHeader) : null,
             confirmFn: () => {
                 utilMap.leaveConfirmOrder(iframeBox.contentWindow)
             },

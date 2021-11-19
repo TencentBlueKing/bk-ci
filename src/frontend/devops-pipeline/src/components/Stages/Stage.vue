@@ -509,11 +509,13 @@
                                 ...element,
                                 id: `e-${hashID(32)}`
                             })),
-                            jobControlOption: container.jobControlOption ? {
-                                ...container.jobControlOption,
-                                dependOnType: 'ID',
-                                dependOnId: []
-                            } : undefined
+                            jobControlOption: container.jobControlOption
+                                ? {
+                                    ...container.jobControlOption,
+                                    dependOnType: 'ID',
+                                    dependOnId: []
+                                }
+                                : undefined
                         }))
 
                     }
@@ -533,8 +535,9 @@
 </script>
 
 <style lang='scss'>
+    @use "sass:math";
     @import 'Stage';
-    $addIconTop: $stageEntryHeight / 2 - $addBtnSize / 2;
+    $addIconTop: math.div($stageEntryHeight, 2) - math.div($addBtnSize, 2);
 
     .pipeline-drag {
         cursor: url('../../images/grab.cur'), default;
@@ -550,8 +553,8 @@
 
         .stage-review-logo {
             position: absolute;
-            left: -$reviewIconSize / 2;
-            top: ($stageEntryHeight - $reviewIconSize) / 2;
+            left: math.div(-$reviewIconSize, 2);
+            top: math.div(($stageEntryHeight - $reviewIconSize), 2);
             z-index: 3;
         }
 
@@ -678,7 +681,7 @@
         .add-connector {
             stroke-dasharray: 4,4;
             top: 7px;
-            left: $addBtnSize / 2;
+            left: math.div($addBtnSize, 2);
         }
 
         .append-stage {
@@ -718,8 +721,8 @@
 
         &:last-child {
             .stage-connector {
-                width: $StageMargin / 2;
-                right: -$StageMargin / 2;
+                width: math.div($StageMargin, 2);
+                right: math.div(-$StageMargin, 2);
                 .connector-angle {
                     display: none;
                 }
@@ -727,10 +730,10 @@
         }
         .stage-connector {
             position: absolute;
-            width: $StageMargin - $reviewIconSize / 2;
+            width: $StageMargin - math.div($reviewIconSize, 2);
             height: $stageConnectorSize;
-            right: - $StageMargin + $reviewIconSize / 2;
-            top: $stageEntryHeight / 2 - 1;
+            right: - $StageMargin + math.div($reviewIconSize, 2);
+            top: math.div($stageEntryHeight, 2) - 1;
             color: $primaryColor;
             background-color: $primaryColor;
 
@@ -739,8 +742,8 @@
                 width: $dotR;
                 height: $dotR;
                 position: absolute;
-                left: -$dotR / 2;
-                top: - ($dotR / 2 - 1);
+                left: math.div(-$dotR, 2);
+                top: - (math.div($dotR, 2) - 1);
                 background-color: $primaryColor;
                 border-radius: 50%;
             }

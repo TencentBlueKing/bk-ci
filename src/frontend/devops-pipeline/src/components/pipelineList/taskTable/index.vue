@@ -208,10 +208,10 @@
             },
             getStatusTips (status) {
                 const statusTipsMap = {
-                    'SUCCEED': this.$t('newlist.success'),
-                    'FAILED': this.$t('newlist.failed'),
-                    'CANCELED': this.$t('newlist.cancel'),
-                    'STAGE_SUCCESS': this.$t('newlist.stageSuccess')
+                    SUCCEED: this.$t('newlist.success'),
+                    FAILED: this.$t('newlist.failed'),
+                    CANCELED: this.$t('newlist.cancel'),
+                    STAGE_SUCCESS: this.$t('newlist.stageSuccess')
                 }
                 return statusTipsMap[status] || ''
             }

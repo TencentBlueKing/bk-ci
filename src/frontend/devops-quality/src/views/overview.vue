@@ -147,11 +147,11 @@
                     { icon: 'minus-circle', name: '红线拦截次数', label: 'interceptCount', value: '0' }
                 ],
                 indexHandlerConf: {
-                    'LT': '<',
-                    'LE': '<=',
-                    'GT': '>',
-                    'GE': '>=',
-                    'EQ': '='
+                    LT: '<',
+                    LE: '<=',
+                    GT: '>',
+                    GE: '>=',
+                    EQ: '='
                 },
                 loading: {
                     isLoading: false,
@@ -366,7 +366,7 @@
 
                     this.interceptRecordList.splice(0, this.interceptRecordList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.interceptRecordList.push(item)
                         })
                         this.totalInterceptRecor = res.count
@@ -407,8 +407,8 @@
                 })
             },
             handleRemark (indicators) {
-                let tips = ``
-                indicators.map((item, index) => {
+                let tips = ''
+                indicators.forEach((item, index) => {
                     const isWrap = index === (indicators.length - 1) ? '' : '\n'
                     const actualVal = item.actualValue === undefined ? 'null' : item.actualValue
                     tips += `${item.indicatorName}=${actualVal}，期望${this.indexHandlerConf[item.operation]}${item.value}${isWrap}`

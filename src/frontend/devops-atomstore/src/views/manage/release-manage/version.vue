@@ -39,7 +39,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             })
         },
 
@@ -115,7 +115,7 @@
         .version-main {
             height: 100%;
         }
-        /deep/ .show-version {
+        ::v-deep .show-version {
             .version-button {
                 margin-bottom: 3.2vh;
             }

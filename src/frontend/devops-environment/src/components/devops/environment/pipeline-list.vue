@@ -66,10 +66,10 @@
                     limit: 10
                 },
                 statusMap: {
-                    'QUEUE': this.$t('environment.nodeInfo.queuing'),
-                    'RUNNING': this.$t('environment.nodeInfo.running'),
-                    'DONE': this.$t('environment.nodeInfo.succeed'),
-                    'FAIL': this.$t('environment.nodeInfo.fail')
+                    QUEUE: this.$t('environment.nodeInfo.queuing'),
+                    RUNNING: this.$t('environment.nodeInfo.running'),
+                    DONE: this.$t('environment.nodeInfo.succeed'),
+                    FAIL: this.$t('environment.nodeInfo.fail')
                 }
             }
         },

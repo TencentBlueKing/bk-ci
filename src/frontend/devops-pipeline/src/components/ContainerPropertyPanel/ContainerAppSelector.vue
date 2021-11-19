@@ -62,19 +62,23 @@
             },
             appList () {
                 const selectedList = this.envs ? Object.keys(this.envs) : []
-                return this.isLoading ? [] : Object.keys(this.apps).map(app => ({
-                    id: app,
-                    name: app,
-                    disalbed: selectedList.indexOf(app) > -1
-                }))
+                return this.isLoading
+                    ? []
+                    : Object.keys(this.apps).map(app => ({
+                        id: app,
+                        name: app,
+                        disalbed: selectedList.indexOf(app) > -1
+                    }))
             },
             
             versionList () {
                 const { app, apps } = this
-                return apps[app] ? apps[app].versions.map(version => ({
-                    id: version,
-                    name: version
-                })) : []
+                return apps[app]
+                    ? apps[app].versions.map(version => ({
+                        id: version,
+                        name: version
+                    }))
+                    : []
             }
         },
         methods: {
