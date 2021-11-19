@@ -49,7 +49,7 @@ class GitCIPipelineUrlBeanImpl constructor(
             .data ?: return ""
         val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
 
-        if (null != needShortUrl && needShortUrl == false){
+        if (null != needShortUrl && needShortUrl == false) {
             return url
         }
 
