@@ -114,13 +114,15 @@
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
-                return Array.isArray(opts) ? opts.filter(opt => {
-                    if (!uniqueMap[opt.key]) {
-                        uniqueMap[opt.key] = 1
-                        return true
-                    }
-                    return false
-                }).map(opt => ({ id: opt.key, name: opt.value })) : []
+                return Array.isArray(opts)
+                    ? opts.filter(opt => {
+                        if (!uniqueMap[opt.key]) {
+                            uniqueMap[opt.key] = 1
+                            return true
+                        }
+                        return false
+                    }).map(opt => ({ id: opt.key, name: opt.value }))
+                    : []
             },
 
             getSelectorDefaultVal ({ valueType, value = '' }) {

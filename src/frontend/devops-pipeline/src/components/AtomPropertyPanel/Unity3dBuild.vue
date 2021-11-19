@@ -33,17 +33,17 @@
             commonModel () {
                 const { debug, rootDir, executeMethod } = this.atomPropsModel
                 return {
-                    'row': { debug, rootDir, executeMethod }
+                    row: { debug, rootDir, executeMethod }
                 }
             },
             beloneKeys () {
                 return {
-                    'ANDROID': [
+                    ANDROID: [
                         'certId',
                         'apkPath',
                         'apkName'
                     ],
-                    'IPHONE': [
+                    IPHONE: [
                         'enableBitCode',
                         'xcodeProjectName'
                     ]
@@ -87,7 +87,7 @@
                 if (len > 0) {
                     const arr = this.filter(element.platform, platform)
                     arr && (key = arr[0])
-                    key && this.beloneKeys[key].map(propKey => {
+                    key && this.beloneKeys[key].forEach(propKey => {
                         this.deletePropKey({
                             element,
                             propKey

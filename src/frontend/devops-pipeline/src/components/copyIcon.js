@@ -3,7 +3,7 @@ import createLocale from '../../../locale'
 const { i18n } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 const locale = i18n.locale
 const messages = i18n.messages[locale]
-const message = messages['copySuc']
+const message = messages.copySuc
 
 function copyTxt (value) {
     const input = document.createElement('input')

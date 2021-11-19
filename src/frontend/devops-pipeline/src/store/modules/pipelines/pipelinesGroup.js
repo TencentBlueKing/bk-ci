@@ -52,7 +52,7 @@ const mutations = {
     },
     // 删除某个标签分组
     removeTagGroupById (state, { groupId }) {
-        state.tagGroupList.map((item, index) => {
+        state.tagGroupList.forEach((item, index) => {
             if (item.id === groupId) {
                 state.tagGroupList.splice(index, 1)
             }
@@ -60,7 +60,7 @@ const mutations = {
     },
     // 修改某个分组名称
     modifyTagGroupById (state, { id, name }) {
-        state.tagGroupList.map((item, index) => {
+        state.tagGroupList.forEach((item, index) => {
             if (item.id === id) {
                 state.tagGroupList[index].name = name
             }

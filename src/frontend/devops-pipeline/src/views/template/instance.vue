@@ -341,7 +341,7 @@
                     this.curTplParamsList.splice(0, this.curTplParamsList.length)
                     this.targetTplParamsList.splice(0, this.targetTplParamsList.length)
 
-                    curData.params && curData.params.map((item, index) => {
+                    curData.params && curData.params.forEach((item) => {
                         const temp = {
                             key: item.id,
                             value: item.defaultValue
@@ -349,7 +349,7 @@
                         this.curParamsList.push(temp)
                     })
 
-                    targetData.params && targetData.params.map((item, index) => {
+                    targetData.params && targetData.params.forEach((item) => {
                         const temp = {
                             key: item.id,
                             value: item.defaultValue
@@ -357,7 +357,7 @@
                         this.targetParamsList.push(temp)
                     })
 
-                    curContainer.templateParams && curContainer.templateParams.map((item, param) => {
+                    curContainer.templateParams && curContainer.templateParams.forEach((item) => {
                         const temp = {
                             key: item.id,
                             value: item.defaultValue
@@ -365,7 +365,7 @@
                         this.curTplParamsList.push(temp)
                     })
 
-                    targetContainer.templateParams && targetContainer.templateParams.map((item, param) => {
+                    targetContainer.templateParams && targetContainer.templateParams.forEach((item) => {
                         const temp = {
                             key: item.id,
                             value: item.defaultValue

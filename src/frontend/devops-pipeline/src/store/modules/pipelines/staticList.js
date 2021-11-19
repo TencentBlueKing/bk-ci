@@ -29,17 +29,17 @@ const state = {
         // 'ABORTED': 'error',
         // 'SKIPPED': 'skipped',
         // 'KNOWNED_FAILURE': 'known_error'
-        'SUCCEED': 'success',
-        'FAILED': 'error',
-        'CANCELED': 'cancel',
-        'STAGE_SUCCESS': 'stage_success',
-        'RUNNING': 'running',
-        'REVIEWING': 'reviewing',
-        'HEARTBEAT_TIMEOUT': 'timeout',
-        'REVIEWING_ABORT': 'error',
-        'QUEUE': 'queue',
-        'QUEUE_TIMEOUT': 'queue_timeout',
-        'EXEC_TIMEOUT': 'exec_timeout'
+        SUCCEED: 'success',
+        FAILED: 'error',
+        CANCELED: 'cancel',
+        STAGE_SUCCESS: 'stage_success',
+        RUNNING: 'running',
+        REVIEWING: 'reviewing',
+        HEARTBEAT_TIMEOUT: 'timeout',
+        REVIEWING_ABORT: 'error',
+        QUEUE: 'queue',
+        QUEUE_TIMEOUT: 'queue_timeout',
+        EXEC_TIMEOUT: 'exec_timeout'
     }
 }
 

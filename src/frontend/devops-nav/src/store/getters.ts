@@ -5,7 +5,7 @@ import { EMPTY_PROJECT } from './constants'
 const getters: GetterTree<RootState, any> = {
     getCollectServices: (state: RootState) => {
         return state.services.reduce((collects: any, service: any) => {
-            Array.isArray(service.children) && service.children.map((child: any) => {
+            Array.isArray(service.children) && service.children.forEach((child: any) => {
                 if (child.collected) {
                     collects.push(child)
                 }

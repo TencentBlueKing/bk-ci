@@ -67,7 +67,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             projectId () {
                 return this.$route.params.projectId
