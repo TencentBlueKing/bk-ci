@@ -211,7 +211,6 @@ class QualityRuleCheckService @Autowired constructor(
             System.currentTimeMillis(),
             "",
             "",
-            "",
             buildCheckParams.templateId,
             buildCheckParams.runtimeVariable
         )
@@ -240,7 +239,6 @@ class QualityRuleCheckService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                elementId = buildCheckParams.elementId,
                 filterRuleList = filterRuleList,
                 runtimeVariable = runtimeVariable
             )
@@ -261,7 +259,6 @@ class QualityRuleCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        elementId: String?,
         filterRuleList: List<QualityRule>,
         runtimeVariable: Map<String, String>?
     ): Pair<List<RuleCheckSingleResult>, List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>> {
@@ -277,7 +274,6 @@ class QualityRuleCheckService @Autowired constructor(
                 rule.controlPoint.name,
                 rule.indicators,
                 metadataList,
-                elementId,
                 rule.taskSteps
             )
             val interceptRecordList = result.second
@@ -430,7 +426,6 @@ class QualityRuleCheckService @Autowired constructor(
         controlPointName: String,
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
-        elementId: String?,
         ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
@@ -439,7 +434,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         logger.info("QUALITY|metadataList is|$metadataList")
 
-        metadataList.forEach foreach@{ metadata ->
+        metadataList.forEach { metadata ->
             if (!ruleTaskSteps.isNullOrEmpty()) {
                 ruleTaskSteps.forEach { ruleTask ->
                     if ((ruleTask.indicatorEnName == metadata.enName) &&
@@ -448,9 +443,6 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                 }
             } else {
-                if (!elementId.isNullOrBlank() && metadata.taskId == elementId) {
-                    return@foreach
-                }
                 checkMetaList.add(metadata)
             }
         }
@@ -475,10 +467,9 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
             val filterMetadataList = if (indicator.isScriptElementIndicator()) {
-                metadataList
-                    .filter { indicator.enName == it.enName }
-                    .filter { it.taskId == elementId }
+                listOf(metadataList
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+                    .findLast { indicator.enName == it.enName })
             } else {
                 indicator.metadataList.map { metadataMap[it.enName] }
             }
