@@ -63,13 +63,13 @@ class ModelElement @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao
 ) {
 
-    @Value("\${XXX.xxx:#{null}}")
+    // @Value("\${XXX.xxx:#{null}}")
     private val checkRunPlugIn: Boolean = false
 
-    @Value("\${XXX.xxx:#{null}}")
+    // @Value("\${XXX.xxx:#{null}}")
     private val runPlugInAtomCode: String? = null
 
-    @Value("\${XXX.xxx:#{null}}")
+    // @Value("\${XXX.xxx:#{null}}")
     private val runPlugInVersion: String? = null
 
     companion object {
