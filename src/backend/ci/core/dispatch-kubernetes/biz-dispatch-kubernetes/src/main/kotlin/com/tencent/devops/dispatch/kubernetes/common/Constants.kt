@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.common
 
-const val SLAVE_ENVIRONMENT = "devops.slave.environment"
+const val BUILD_NODE_ENVIRONMENT = "devops.build.node.environment"
 
 const val ENV_KEY_PROJECT_ID = "devops_project_id"
 const val ENV_KEY_AGENT_ID = "devops_agent_id"

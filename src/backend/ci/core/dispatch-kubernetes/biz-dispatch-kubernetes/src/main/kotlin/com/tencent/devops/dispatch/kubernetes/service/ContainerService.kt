@@ -39,7 +39,7 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
+import com.tencent.devops.dispatch.kubernetes.common.BUILD_NODE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.PipelineBuildConfig
 import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
@@ -212,7 +212,7 @@ class ContainerService @Autowired constructor(
                             ENV_KEY_AGENT_SECRET_KEY to secretKey,
                             ENV_KEY_GATEWAY to gateway,
                             "TERM" to "xterm-256color",
-                            SLAVE_ENVIRONMENT to "Kubernetes",
+                            BUILD_NODE_ENVIRONMENT to "Kubernetes",
                             ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                         ),
                         command = listOf(
@@ -307,7 +307,7 @@ class ContainerService @Autowired constructor(
                         ENV_KEY_AGENT_SECRET_KEY to secretKey,
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Kubernetes",
+                        BUILD_NODE_ENVIRONMENT to "Kubernetes",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                     ),
                     command = listOf(
