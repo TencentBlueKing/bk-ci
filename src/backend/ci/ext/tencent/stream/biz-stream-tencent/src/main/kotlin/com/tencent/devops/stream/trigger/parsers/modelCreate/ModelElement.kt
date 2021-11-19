@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -61,6 +62,15 @@ class ModelElement @Autowired constructor(
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitCISettingDao: GitCISettingDao
 ) {
+
+    @Value("\${XXX.xxx:#{null}}")
+    private val checkRunPlugIn: Boolean = false
+
+    @Value("\${XXX.xxx:#{null}}")
+    private val runPlugInAtomCode: String? = null
+
+    @Value("\${XXX.xxx:#{null}}")
+    private val runPlugInVersion: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
@@ -101,29 +111,7 @@ class ModelElement @Autowired constructor(
             // bash
             val element: Element = when {
                 step.run != null -> {
-                    val linux = LinuxScriptElement(
-                        name = step.name ?: "run",
-                        id = step.id,
-                        scriptType = BuildScriptType.SHELL,
-                        script = step.run!!,
-                        continueNoneZero = false,
-                        additionalOptions = additionalOptions
-                    )
-                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
-                        linux
-                    } else {
-                        when (job.runsOn.agentSelector!!.first()) {
-                            "linux" -> linux
-                            "macos" -> linux
-                            "windows" -> WindowsScriptElement(
-                                name = step.name ?: "run",
-                                id = step.id,
-                                scriptType = BuildScriptType.BAT,
-                                script = step.run!!
-                            )
-                            else -> linux
-                        }
-                    }
+                    makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
                     makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
@@ -151,6 +139,48 @@ class ModelElement @Autowired constructor(
         }
 
         return elementList
+    }
+
+    private fun makeRunElement(
+        step: Step,
+        job: Job,
+        additionalOptions: ElementAdditionalOptions
+    ): Element {
+        val linux = LinuxScriptElement(
+            name = step.name ?: "run",
+            id = step.id,
+            scriptType = BuildScriptType.SHELL,
+            script = step.run!!,
+            continueNoneZero = false,
+            additionalOptions = additionalOptions
+        )
+        val runElement = if (job.runsOn.agentSelector.isNullOrEmpty()) {
+            linux
+        } else {
+            when (job.runsOn.agentSelector!!.first()) {
+                "linux" -> linux
+                "macos" -> linux
+                "windows" -> WindowsScriptElement(
+                    name = step.name ?: "run",
+                    id = step.id,
+                    scriptType = BuildScriptType.BAT,
+                    script = step.run!!
+                )
+                else -> linux
+            }
+        }
+        return if (checkRunPlugIn || step.name == "runTest@1.*") {
+            val data = mutableMapOf<String, Any>()
+            data["input"] = mapOf("script" to step.run)
+            MarketBuildAtomElement(
+                name = step.name ?: "run",
+                id = step.id,
+                atomCode = runPlugInAtomCode ?: "runTest",
+                version = runPlugInVersion ?: "1.*",
+                data = data,
+                additionalOptions = additionalOptions
+            )
+        } else runElement
     }
 
     private fun makeCheckoutElement(
