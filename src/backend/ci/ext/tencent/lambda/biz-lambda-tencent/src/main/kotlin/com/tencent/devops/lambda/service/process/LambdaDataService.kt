@@ -153,20 +153,6 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
-        return if (!task.taskAtom.isNullOrBlank()) {
-            task.taskAtom
-        } else {
-            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
-            if (taskParams.keys.contains("atomCode")) {
-                taskParams["atomCode"] as String
-            } else {
-                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
-                ""
-            }
-        }
-    }
-
     private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
         try {
             val startTime = task.startTime?.timestampmilli() ?: 0
