@@ -111,7 +111,6 @@ class StreamProjectService @Autowired constructor(
             val ciInfo = if (project?.lastCiInfo == null) {
                 CIInfo(
                     enableCI = project?.enableCi ?: false,
-                    authUserId = project?.enableUserId,
                     lastBuildId = null,
                     lastBuildStatus = null,
                     lastBuildPipelineId = null,
@@ -130,6 +129,10 @@ class StreamProjectService @Autowired constructor(
                 webUrl = it.webUrl,
                 avatarUrl = it.avatarUrl,
                 description = it.description,
+                buildPushedBranches = project?.buildPushedBranches,
+                buildPushedPullRequest = project?.buildPushedPullRequest,
+                enableMrBlock = project?.enableMrBlock,
+                authUserId = project?.enableUserId,
                 ciInfo = ciInfo
             )
         }
@@ -190,10 +193,13 @@ class StreamProjectService @Autowired constructor(
                     webUrl = setting.homePage,
                     avatarUrl = setting.gitProjectAvatar,
                     description = setting.gitProjectDesc,
+                    buildPushedBranches = setting.buildPushedBranches,
+                    buildPushedPullRequest = setting.buildPushedPullRequest,
+                    enableMrBlock = setting.enableMrBlock,
+                    authUserId = setting.enableUserId,
                     ciInfo = if (setting.lastCiInfo == null) {
                         CIInfo(
                             enableCI = setting.enableCi ?: false,
-                            authUserId = setting.enableUserId,
                             lastBuildId = null,
                             lastBuildStatus = null,
                             lastBuildPipelineId = null,
