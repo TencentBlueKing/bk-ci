@@ -146,7 +146,6 @@ class StreamBuildFinishListener @Autowired constructor(
                     v2GitSetting.gitProjectId,
                     CIInfo(
                         enableCI = v2GitSetting.enableCi,
-                        authUserId = v2GitSetting.enableUserId,
                         lastBuildMessage = triggerMessageUtil.getEventMessageTitle(
                             requestEvent,
                             gitProjectId
