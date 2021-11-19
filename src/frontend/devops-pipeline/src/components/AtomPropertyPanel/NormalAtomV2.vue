@@ -126,9 +126,11 @@
                 try {
                     const { [this.appIdPropsKey]: ccAppId, ...restProps } = this.atomPropsModel.input
                     return {
-                        ...(ccAppId ? {
-                            [this.appIdPropsKey]: ccAppId
-                        } : {}),
+                        ...(ccAppId
+                            ? {
+                                [this.appIdPropsKey]: ccAppId
+                            }
+                            : {}),
                         ...restProps
                     }
                 } catch (e) {
@@ -149,9 +151,9 @@
                         props: {}
                     }
                 })
-                Object.keys(this.inputProps).map(key => {
+                Object.keys(this.inputProps).forEach(key => {
                     const prop = this.inputProps[key]
-                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap['rootProps']
+                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
                     group.props[key] = prop
                 })
                 return groupMap
@@ -178,7 +180,7 @@
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
                     // 新增字段，已添加插件读取默认值
                     const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
-                        if (atomDefaultValue.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(atomDefaultValue, key)) {
                             res[key] = this.element.data.input[key]
                         }
                         return res

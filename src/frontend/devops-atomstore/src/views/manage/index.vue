@@ -39,30 +39,36 @@
                         { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
                         { label: this.$t('store.协作审批'), name: 'approval' },
                         { label: this.$t('store.基本信息'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
-                        { label: this.$t('store.基本设置'),
-                          name: 'setting',
-                          children: [
-                              { label: this.$t('store.成员管理'), name: 'member' },
-                              { label: this.$t('store.私有配置'), name: 'private' },
-                              { label: this.$t('store.apiSettingManage'), name: 'api' }
-                          ],
-                          showChildTab: true }
+                        {
+                            label: this.$t('store.基本设置'),
+                            name: 'setting',
+                            children: [
+                                { label: this.$t('store.成员管理'), name: 'member' },
+                                { label: this.$t('store.私有配置'), name: 'private' },
+                                { label: this.$t('store.apiSettingManage'), name: 'api' }
+                            ],
+                            showChildTab: true
+                        }
                     ],
                     image: [
                         { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
                         { label: this.$t('store.基本信息'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
-                        { label: this.$t('store.基本设置'),
-                          name: 'setting',
-                          children: [
-                              { label: this.$t('store.成员管理'), name: 'member' }
-                          ],
-                          showChildTab: true }
+                        {
+                            label: this.$t('store.基本设置'),
+                            name: 'setting',
+                            children: [
+                                { label: this.$t('store.成员管理'), name: 'member' }
+                            ],
+                            showChildTab: true
+                        }
                     ],
                     template: [
-                        { label: this.$t('store.基本设置'),
-                          name: 'setting',
-                          children: [],
-                          showChildTab: true }
+                        {
+                            label: this.$t('store.基本设置'),
+                            name: 'setting',
+                            children: [],
+                            showChildTab: true
+                        }
                     ]
                 }
             }
@@ -70,7 +76,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             }),
 
             storeType () {

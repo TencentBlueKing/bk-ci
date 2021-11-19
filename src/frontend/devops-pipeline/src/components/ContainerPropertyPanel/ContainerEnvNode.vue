@@ -130,10 +130,11 @@
                 return this.showAgentType && this.agentType === 'ID'
             },
             agentTypeList () {
-                return this.isAgentId ? [
-                    { label: this.$t('editPage.selectSlave'), value: 'ID' },
-                    { label: this.$t('editPage.inputSlave'), value: 'NAME' }
-                ]
+                return this.isAgentId
+                    ? [
+                        { label: this.$t('editPage.selectSlave'), value: 'ID' },
+                        { label: this.$t('editPage.inputSlave'), value: 'NAME' }
+                    ]
                     : [
                         { label: this.$t('editPage.selectEnv'), value: 'ID' },
                         { label: this.$t('editPage.inputEnv'), value: 'NAME' }

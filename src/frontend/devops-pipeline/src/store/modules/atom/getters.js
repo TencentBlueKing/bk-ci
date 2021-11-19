@@ -77,7 +77,7 @@ export default {
             }
         })
 
-        atomCodeList.map(atomCode => {
+        atomCodeList.forEach(atomCode => {
             const atom = atomMap[atomCode]
             const parent = atomTree[atom.classifyCode]
             if (parent && Array.isArray(parent.children)) {
@@ -89,7 +89,7 @@ export default {
             }
         })
 
-        Object.keys(atomTree).map(classify => { // 按disable排序
+        Object.keys(atomTree).forEach(classify => { // 按disable排序
             if (atomTree[classify] && Array.isArray(atomTree[classify].children)) {
                 atomTree[classify].children.sort((a, b) => a.disabled - b.disabled)
             }
@@ -120,10 +120,12 @@ export default {
     },
     getAppEnvs: state => os => {
         const containerModal = state.containerModalMap[os]
-        return Array.isArray(containerModal.apps) ? containerModal.apps.reduce((appEnvs, app) => {
-            appEnvs[app.name] = app.env
-            return appEnvs
-        }, {}) : {}
+        return Array.isArray(containerModal.apps)
+            ? containerModal.apps.reduce((appEnvs, app) => {
+                appEnvs[app.name] = app.env
+                return appEnvs
+            }, {})
+            : {}
     },
     getBuildResourceTypeList: state => os => {
         try {
@@ -140,10 +142,12 @@ export default {
     },
     getContainerApps: state => os => {
         const containerModal = state.containerModalMap[os]
-        return containerModal ? containerModal.apps.reduce((apps, item) => {
-            apps[item.name] = item
-            return apps
-        }, {}) : {}
+        return containerModal
+            ? containerModal.apps.reduce((apps, item) => {
+                apps[item.name] = item
+                return apps
+            }, {})
+            : {}
     },
     osList: state => {
         return state.containerTypeList.filter(type => type !== 'TRIGGER').map(type => {
@@ -290,11 +294,13 @@ export default {
         return container && container.dispatchType && container.dispatchType.buildType === 'ESXi'
     },
     getElements: state => container => {
-        return container && Array.isArray(container.elements) ? container.elements.map(element => {
-            return Object.assign(element, {
-                atomCode: element.atomCode && element['@type'] !== element.atomCode ? element.atomCode : element['@type']
+        return container && Array.isArray(container.elements)
+            ? container.elements.map(element => {
+                return Object.assign(element, {
+                    atomCode: element.atomCode && element['@type'] !== element.atomCode ? element.atomCode : element['@type']
+                })
             })
-        }) : []
+            : []
     },
     getElement: state => (container, index) => {
         const element = container && Array.isArray(container.elements) ? container.elements[index] : null

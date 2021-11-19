@@ -91,10 +91,14 @@
         methods: {
             dataInputConfig (param) {
                 return {
-                    options: param.type === 'BOOLEAN' ? booleanList : param.type === 'ENUM' ? param.options.map(item => ({
-                        id: item.key,
-                        name: item.key
-                    })) : [],
+                    options: param.type === 'BOOLEAN'
+                        ? booleanList
+                        : param.type === 'ENUM'
+                            ? param.options.map(item => ({
+                                id: item.key,
+                                name: item.key
+                            }))
+                            : [],
                     handleChange: this.handleParamChange
                 }
             },

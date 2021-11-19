@@ -115,7 +115,7 @@
                     this.parameters = values.map((value) => {
                         const modelId = value.id
                         const originModel = this.parameters.find(x => x.id === modelId)
-                        if (!originModel) return
+                        if (!originModel) return undefined
                         const currentModel = JSON.parse(JSON.stringify(originModel))
                         const paramModels = currentModel.paramModels
                         const values = value.values

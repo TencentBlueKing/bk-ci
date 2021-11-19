@@ -420,7 +420,7 @@
                         paramIdKey: `paramIdKey-${this.paramIdCount++}`
                     }
                     if (this.settingKey === 'templateParams') {
-                        Object.assign(param, { 'required': false })
+                        Object.assign(param, { required: false })
                     }
                     globalParams.splice(index + 1, 0, param)
                 } else {
@@ -488,7 +488,7 @@
 
             handleProperties (key, value, index) {
                 const properties = {}
-                value.map(val => {
+                value.forEach(val => {
                     properties[val.key] = val.value
                 })
                 this.handleUpdateParam(key, properties, index)
@@ -548,13 +548,15 @@
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
-                return Array.isArray(opts) ? opts.filter(opt => {
-                    if (!uniqueMap[opt.key]) {
-                        uniqueMap[opt.key] = 1
-                        return true
-                    }
-                    return false
-                }).map(opt => ({ id: opt.key, name: opt.value })) : []
+                return Array.isArray(opts)
+                    ? opts.filter(opt => {
+                        if (!uniqueMap[opt.key]) {
+                            uniqueMap[opt.key] = 1
+                            return true
+                        }
+                        return false
+                    }).map(opt => ({ id: opt.key, name: opt.value }))
+                    : []
             }
         }
     }

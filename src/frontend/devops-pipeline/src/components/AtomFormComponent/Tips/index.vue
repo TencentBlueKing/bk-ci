@@ -68,7 +68,7 @@
 
             handleDeepValue (reg, str) {
                 return str.replace(reg, (str, key) => {
-                    const exisParamKey = this.paramValues.hasOwnProperty(key)
+                    const exisParamKey = Object.prototype.hasOwnProperty.call(this.paramValues, key)
                     const value = exisParamKey ? this.paramValues[key] : str
                     if (exisParamKey) this.list.push(key)
                     return value

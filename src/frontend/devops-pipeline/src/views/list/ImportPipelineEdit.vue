@@ -47,11 +47,13 @@
                     to: {
                         name: 'pipelinesList'
                     }
-                }, ...(this.pipeline ? [{
-                    selectedValue: this.pipeline.name
-                }, {
-                    selectedValue: this.$t('edit')
-                }] : [])]
+                }, ...(this.pipeline
+                    ? [{
+                        selectedValue: this.pipeline.name
+                    }, {
+                        selectedValue: this.$t('edit')
+                    }]
+                    : [])]
             }
         },
         created () {
