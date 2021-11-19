@@ -55,9 +55,9 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         return client.get(UserCredentialResource::class).list(
             userId = userId,
             projectId = projectId,
-            credentialTypesString = credentialTypesString,
-            page = page,
-            pageSize = pageSize,
+            credentialTypesString = credentialTypesString ?: "",
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             keyword = null
         )
     }

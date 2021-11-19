@@ -44,7 +44,7 @@
                                 {{ output.description }}
                             </div>
                         </bk-popover>
-                        <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
+                        <copy-icon :value="bkVarWrapper(namespace ? `${namespace}_${key}` : key)"></copy-icon>
                     </p>
                 </div>
             </div>
@@ -123,9 +123,9 @@
                         props: {}
                     }
                 })
-                Object.keys(this.inputProps).map(key => {
+                Object.keys(this.inputProps).forEach(key => {
                     const prop = this.inputProps[key]
-                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap['rootProps']
+                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
                     group.props[key] = prop
                 })
                 return groupMap

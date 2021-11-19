@@ -230,11 +230,13 @@
                             ...element,
                             id: `e-${hashID(32)}`
                         })),
-                        jobControlOption: copyContainer.jobControlOption ? {
-                            ...copyContainer.jobControlOption,
-                            dependOnType: 'ID',
-                            dependOnId: []
-                        } : undefined
+                        jobControlOption: copyContainer.jobControlOption
+                            ? {
+                                ...copyContainer.jobControlOption,
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            }
+                            : undefined
                     }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)
@@ -251,6 +253,7 @@
 </script>
 
 <style lang="scss">
+    @use "sass:math";
     @import "./Stage";
     .devops-stage-container {
         text-align: left;
@@ -263,8 +266,8 @@
             width: $smalldotR;
             height: $smalldotR;
             position: absolute;
-            right: -$smalldotR / 2;
-            top: $itemHeight / 2 - ($smalldotR / 2 - 1);
+            right: math.div(-$smalldotR, 2);
+            top: math.div($itemHeight, 2) - (math.div($smalldotR, 2) - 1);
             background: $primaryColor;
             border-radius: 50%;
         }
@@ -276,7 +279,7 @@
             font-size: 13px;
             color: $primaryColor;
             left: -10px;
-            top: $itemHeight / 2 - 13px / 2 + 1;
+            top: math.div($itemHeight, 2) - math.div(13px, 2) + 1;
             z-index: 2;
         }
 
@@ -357,7 +360,7 @@
 
         .connect-line {
             position: absolute;
-            top: $itemHeight / 2 - 4;
+            top: math.div($itemHeight, 2) - 4;
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;
@@ -374,13 +377,13 @@
             &.first-connect-line {
                 height: 76px;
                 width: $svgWidth;
-                top: -$stageEntryHeight / 2 - 2 - 16px;
+                top: math.div(-$stageEntryHeight, 2) - 2 - 16px;
                 &.left {
-                    left: -$svgWidth - $addBtnSize / 2 + 4;
+                    left: -$svgWidth - math.div($addBtnSize, 2) + 4;
                 }
                 &.right {
                     left: auto;
-                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
+                    right: -$addIconLeftMargin - $containerMargin - math.div($addBtnSize, 2);
 
                 }
             }

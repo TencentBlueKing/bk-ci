@@ -23,6 +23,7 @@
     export default class DevopsFormItem extends Vue {
         @Prop()
         errorMsg: string = ''
+
         @Prop()
         isError: boolean = false
     }

@@ -38,10 +38,10 @@
 
         mounted () {
             const { currentPage, pageSize, scrollBoxClassName } = this
+            const scrollTable = document.querySelector(`.${scrollBoxClassName}`)
             const len = currentPage * pageSize
             this.queryList(1, len)
 
-            const scrollTable = document.querySelector(`.${scrollBoxClassName}`)
             this.throttleScroll = throttle(this.handleScroll, 500)
             if (scrollTable) {
                 scrollTable.addEventListener('scroll', this.throttleScroll)
@@ -69,7 +69,6 @@
             handleScroll (e) {
                 const { target } = e
                 const { hasNext, setScrollTop, scrollLoadMore, isLoadingMore } = this
-
                 setScrollTop(e.target.scrollTop)
                 const offset = e.target.scrollHeight - (e.target.offsetHeight + e.target.scrollTop)
                 if (offset <= SCROLL_THRESHOLD && hasNext && !isLoadingMore) { // scroll to end
@@ -80,14 +79,15 @@
             async fetchData (page = 1, pageSize = this.pageSize) {
                 const res = await this.dataFetcher(page, pageSize)
                 if (res) {
-                    this.list = page === 1 ? res.records : [
-                        ...this.list,
-                        ...res.records
-                    ]
+                    this.list = page === 1
+                        ? res.records
+                        : [
+                            ...this.list,
+                            ...res.records
+                        ]
 
                     this.currentPage = Math.ceil(this.list.length / pageSize)
-
-                    this.hasNext = this.currentPage < res.totalPages
+                    this.hasNext = this.list.length < res.count
                     this.totals = res.count
                     return res
                 }

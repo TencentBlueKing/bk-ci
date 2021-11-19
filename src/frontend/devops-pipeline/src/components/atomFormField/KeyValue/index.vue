@@ -45,7 +45,7 @@
         methods: {
             handleParamChange (name, value) {
                 const newItem = { key: name, value: value }
-                this.paramList.map((item, index) => {
+                this.paramList.forEach((item) => {
                     if (item.key.toString() === name) {
                         // this.paramList.splice(index, 1, newItem)
                         Object.assign(item, newItem)

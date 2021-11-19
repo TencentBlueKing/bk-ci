@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dockerhost.cron
 
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -36,9 +36,9 @@ class SystemInfoRunner {
 
     @Scheduled(cron = "0/5 * * * * ?")
     fun startCollect() {
-        SigarUtil.pushMem()
-        SigarUtil.pushCpu()
-        SigarUtil.pushDisk()
-        SigarUtil.pushDiskIOUtil()
+        SystemInfoUtil.pushMem()
+        SystemInfoUtil.pushCpu()
+        SystemInfoUtil.pushDisk()
+        SystemInfoUtil.pushDiskIOUtil()
     }
 }

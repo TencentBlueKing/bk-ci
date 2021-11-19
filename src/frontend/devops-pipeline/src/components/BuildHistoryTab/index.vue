@@ -1,7 +1,7 @@
 <template>
     <div>
         <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
-        <infinite-scroll v-else class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
+        <infinite-scroll v-else class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" :page-size="pageSize" :scroll-box-class-name="scrollBoxCls" v-slot="slotProps">
             <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
             <build-history-table v-if="!slotProps.isLoading" :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="isEmptyList ? emptyTipsConfig : null" :show-log="showLog"></build-history-table>
             <bk-dialog
@@ -14,7 +14,6 @@
                 <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
             </bk-dialog>
         </infinite-scroll>
-
     </div>
 </template>
 
@@ -56,6 +55,7 @@
                 shownColumns: initShownColumns,
                 tempColumns: initShownColumns,
                 hasNoPermission: false,
+                pageSize: 24,
                 currentPipelineVersion: '',
                 currentBuildNo: '',
                 currentBuildNum: '',
@@ -67,11 +67,14 @@
 
         computed: {
             ...mapGetters({
-                'historyPageStatus': 'pipelines/getHistoryPageStatus'
+                historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
             ...mapState('atom', [
                 'isPropertyPanelVisible'
             ]),
+            scrollBoxCls () {
+                return 'bkdevops-pipeline-history'
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -118,26 +121,28 @@
                 const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
-                const btns = hasNoPermission ? [{
-                    theme: 'primary',
-                    size: 'normal',
-                    handler: this.changeProject,
-                    text: this.$t('changeProject')
-                }, {
-                    theme: 'success',
-                    size: 'normal',
-                    handler: this.toApplyPermission,
-                    text: this.$t('applyPermission')
-                }] : [{
-                    theme: 'primary',
-                    size: 'normal',
-                    disabled: this.executeStatus,
-                    loading: this.executeStatus,
-                    handler: () => {
-                        !this.executeStatus && bus.$emit('trigger-excute')
-                    },
-                    text: this.$t('history.startBuildTips')
-                }]
+                const btns = hasNoPermission
+                    ? [{
+                        theme: 'primary',
+                        size: 'normal',
+                        handler: this.changeProject,
+                        text: this.$t('changeProject')
+                    }, {
+                        theme: 'success',
+                        size: 'normal',
+                        handler: this.toApplyPermission,
+                        text: this.$t('applyPermission')
+                    }]
+                    : [{
+                        theme: 'primary',
+                        size: 'normal',
+                        disabled: this.executeStatus,
+                        loading: this.executeStatus,
+                        handler: () => {
+                            !this.executeStatus && bus.$emit('trigger-excute')
+                        },
+                        text: this.$t('history.startBuildTips')
+                    }]
                 return {
                     title,
                     desc,
@@ -165,6 +170,8 @@
         },
 
         async created () {
+            const { pageSize } = this
+            this.pageSize = document.body.scrollHeight > 42 * pageSize ? Math.ceil(document.body.scrollHeight / 42) : pageSize
             await this.handlePathQuery()
         },
 
@@ -230,7 +237,8 @@
                             type: this.$permissionResourceTypeMap.PROJECT
                         }, {
                             id: this.pipelineId,
-                            name: this.pipelineId
+                            name: this.pipelineId,
+                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
                         }]
                     }])
                     console.log('redirectUrl', redirectUrl)
@@ -275,7 +283,7 @@
                 if (queryArr.includes('trigger')) await this.handleRemoteMethod()
                 if (queryArr.length) {
                     const newQuery = {}
-                    queryArr.map(item => {
+                    queryArr.forEach(item => {
                         if (['status', 'materialAlias'].includes(item)) {
                             newQuery[item] = pathQuery[item].split(',')
                         } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
@@ -287,13 +295,13 @@
                         }
                     })
 
-                    searchKeyArr.map(val => {
+                    searchKeyArr.forEach(val => {
                         const newItem = this.filterData.filter(item => item.id === val)
                         if (newItem[0]) {
                             newItem[0].values = [{ id: pathQuery[val] }]
                             if (val === 'trigger') {
                                 newItem[0].values = []
-                                pathQuery[val].split(',').map(item => {
+                                pathQuery[val].split(',').forEach(item => {
                                     newItem[0].values.push({
                                         id: item,
                                         value: this.triggerList.find(val => val.id === item) && this.triggerList.find(val => val.id === item).value
