@@ -47,9 +47,8 @@ class ThirdPartyAgentConfiguration {
 
     @Bean
     fun agentGrayUtils(
-        @Autowired redisOperation: RedisOperation,
-        @Autowired gray: Gray
-    ) = AgentGrayUtils(redisOperation, gray)
+        @Autowired redisOperation: RedisOperation
+    ) = AgentGrayUtils(redisOperation)
 
     @Bean
     fun thirdPartyAgentHeartbeatUtils(
