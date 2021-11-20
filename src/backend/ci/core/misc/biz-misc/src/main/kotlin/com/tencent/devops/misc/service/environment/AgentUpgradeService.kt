@@ -28,11 +28,12 @@
 package com.tencent.devops.misc.service.environment
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,7 @@ class AgentUpgradeService @Autowired constructor(
     private val agentGrayUtils: AgentGrayUtils,
     private val dslContext: DSLContext,
     private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
-    private val gray: Gray
+    private val client: Client
 ) {
 
     fun updateCanUpgradeAgentList() {
@@ -78,9 +79,6 @@ class AgentUpgradeService @Autowired constructor(
         currentMasterVersion: String?,
         maxParallelCount: Int
     ): List<TEnvironmentThirdpartyAgentRecord> {
-
-        val grayProjects = gray.grayProjectSet(redisOperation)
-        val gray = gray.isGray()
         val importOKAgents = environmentThirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
             status = setOf(AgentStatus.IMPORT_OK)
@@ -88,21 +86,20 @@ class AgentUpgradeService @Autowired constructor(
         val needUpgradeAgents = importOKAgents.filter {
             when {
                 it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
-                gray && grayProjects.contains(it.projectId) -> {
+                checkProjectRouter(it.projectId) ->
                     it.version != currentVersion || it.masterVersion != currentMasterVersion
-                }
-                !gray && !grayProjects.contains(it.projectId) -> {
-                    it.version != currentVersion || it.masterVersion != currentMasterVersion
-                }
                 else -> false
             }
         }
-
         return if (needUpgradeAgents.size > maxParallelCount) {
             needUpgradeAgents.subList(0, maxParallelCount)
         } else {
             needUpgradeAgents
         }
+    }
+
+    private fun checkProjectRouter(projectId: String): Boolean {
+        return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
     }
 
     fun setMaxParallelUpgradeCount(count: Int) {
