@@ -25,24 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.annotation
+package com.tencent.devops.environment
 
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.common.web.validation.BkFieldValidator
-import javax.validation.Constraint
-import javax.validation.Payload
-import kotlin.reflect.KClass
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
-@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
-@Constraint(validatedBy = [BkFieldValidator::class])
-@Suppress("LongParameterList")
-annotation class BkField(
-    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
-    val required: Boolean = true, // 是否必须
-    val minLength: Int = -1, // 最小长度，-1代表不校验
-    val maxLength: Int = -1, // 最大长度，-1代表不校验
-    val message: String = "parameter is not valid", // 默认错误提示信息
-    val groups: Array<KClass<*>> = [], // 约束注解在验证时所属的组别
-    val payload: Array<KClass<out Payload>> = [] // 给约束条件指定严重级别
-)
+class TpaLock(redisOperation: RedisOperation, key: String) :
+    RedisLock(redisOperation = redisOperation, lockKey = "lock:tpa:$key", expiredTimeInSeconds = 30)

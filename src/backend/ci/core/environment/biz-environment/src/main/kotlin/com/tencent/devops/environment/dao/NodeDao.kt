@@ -178,16 +178,6 @@ class NodeDao {
         }
     }
 
-    fun listDevCloudNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(NODE_IP.`in`(ips))
-                .and(NODE_TYPE.eq(NodeType.DEVCLOUD.name))
-                .fetch()
-        }
-    }
-
     fun listAllByIds(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
@@ -314,21 +304,6 @@ class NodeDao {
                 .where(NODE_ID.eq(id))
                 .and(NODE_STATUS.eq(expectStatus.statusName))
                 .execute()
-        }
-    }
-
-    fun getMaxNodeStringId(
-        dslContext: DSLContext,
-        projectId: String,
-        id: Long
-    ): TNodeRecord? {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(NODE_ID.ne(id))
-                .and(PROJECT_ID.eq(projectId))
-                .orderBy(CREATED_TIME.desc())
-                .limit(1)
-                .fetchOne()
         }
     }
 
