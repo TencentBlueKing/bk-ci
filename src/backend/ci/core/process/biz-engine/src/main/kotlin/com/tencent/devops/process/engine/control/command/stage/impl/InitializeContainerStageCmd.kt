@@ -25,19 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.builds
+package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.process.engine.control.command.CmdFlowState
+import com.tencent.devops.process.engine.control.command.stage.StageCmd
+import com.tencent.devops.process.engine.control.command.stage.StageContext
+import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@RestResource
-class BuildTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : BuildTaskResource {
-    override fun getAllBuildTask(buildId: String): Result<List<PipelineBuildTaskInfo>> {
-        return Result(pipelineTaskService.getAllBuildTaskInfo(buildId))
+/**
+ * Stage下发Container事件命令处理
+ */
+@Service
+class InitializeContainerStageCmd(
+    private val pipelineStageService: PipelineStageService,
+    private val pipelineContainerService: PipelineContainerService,
+
+    private val pipelineEventDispatcher: PipelineEventDispatcher
+) : StageCmd {
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(InitializeContainerStageCmd::class.java)
+    }
+
+    override fun canExecute(commandContext: StageContext): Boolean {
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+    }
+
+    override fun execute(commandContext: StageContext) {
+        val stage = commandContext.stage
+        val event = commandContext.event
+
+        commandContext.cmdFlowState = CmdFlowState.CONTINUE
     }
 }

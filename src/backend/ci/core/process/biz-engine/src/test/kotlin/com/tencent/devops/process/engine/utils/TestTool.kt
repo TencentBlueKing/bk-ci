@@ -72,7 +72,8 @@ object TestTool {
                 ),
                 mutexGroup = null
             ),
-            cost = containerCost
+            cost = containerCost,
+            matrixGroupId = null
         )
     }
 

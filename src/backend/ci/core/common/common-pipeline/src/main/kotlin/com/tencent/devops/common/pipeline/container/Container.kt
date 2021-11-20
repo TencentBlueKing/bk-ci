@@ -38,7 +38,8 @@ import io.swagger.annotations.ApiModel
 @JsonSubTypes(
     JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
     JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
-    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
+    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType),
+    JsonSubTypes.Type(value = MatrixGroupContainer::class, name = MatrixGroupContainer.classType)
 )
 interface Container {
     var id: String? // seq id
@@ -54,6 +55,7 @@ interface Container {
     var executeCount: Int?
     val jobId: String? // 用户自定义id
     var containPostTaskFlag: Boolean? // 是否包含post任务
+    val matrixFlag: Boolean? // 是否为构建矩阵
 
     /**
      * 只存储Container相关的配置，elements不会存储。

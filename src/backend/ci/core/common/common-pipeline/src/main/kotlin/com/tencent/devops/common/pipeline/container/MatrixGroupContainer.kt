@@ -27,46 +27,26 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-普通任务容器")
-data class NormalContainer(
+@ApiModel("流水线模型-构建矩阵容器")
+data class MatrixGroupContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override var name: String = "",
+    override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("容器状态", required = false, hidden = true)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var startEpoch: Long? = null,
+    @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("原子运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
-    @ApiModelProperty("允许可跳过", required = false)
-    @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
-    val enableSkip: Boolean? = false,
-    @ApiModelProperty("触发条件", required = false)
-    @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
-    val conditions: List<NameAndValue>? = null,
-    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
-    override var canRetry: Boolean? = null,
-    override var containerId: String? = null,
-    @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
-    @Deprecated(message = "do not use")
-    val maxQueueMinutes: Int = 60,
-    @ApiModelProperty("无构建环境-运行最长时间(分钟)", required = false)
-    @Deprecated(message = "@see JobControlOption.timeout")
-    val maxRunningMinutes: Int = 1440,
-    @ApiModelProperty("流程控制选项", required = true)
-    var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("互斥组", required = false)
-    var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
@@ -75,12 +55,46 @@ data class NormalContainer(
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
+    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    override var canRetry: Boolean? = null,
+    @ApiModelProperty("构建容器ID", required = false, hidden = true)
+    override var containerId: String? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false
+    override var matrixFlag: Boolean = true,
+    @ApiModelProperty("分裂策略映射（变量名到所有可取值数组的映射）", required = false)
+    val strategyMap: Map<String, List<String>>? = null,
+    @ApiModelProperty("分裂策略JSON对象", required = false)
+    val strategyJson: String? = null,
+    @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
+    val includeCase: List<Map<String, String>>? = null,
+    @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
+    val excludeCase: List<Map<String, String>>? = null,
+    @ApiModelProperty("分裂后的容器集合", required = false)
+    var containers: MutableList<VMBuildContainer>? = null,
+    @ApiModelProperty("构建机环境变量", required = false)
+    val buildEnv: Map<String, String>? = null,
+    @ApiModelProperty("用户自定义环境变量", required = false)
+    val customBuildEnv: Map<String, String>? = null,
+    @ApiModelProperty("构建机环境选择", required = false)
+    val dispatchType: DispatchType? = null,
+    @ApiModelProperty("流程控制选项", required = true)
+    var jobControlOption: JobControlOption? = null,
+    @ApiModelProperty("互斥组", required = false)
+    var mutexGroup: MutexGroup? = null,
+    @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
+    val fastKill: Boolean? = false,
+    @ApiModelProperty("Job运行的最大并发量", required = false)
+    val maxConcurrency: String? = null
 ) : Container {
     companion object {
-        const val classType = "normal"
+        const val classType = "matrixGroup"
     }
+
+    @ApiModelProperty("nfs挂载开关", required = false, hidden = true)
+    var nfsSwitch: Boolean? = null
+        get() {
+            return if (null == field) true else field
+        }
 
     override fun getClassType() = classType
 }

@@ -41,7 +41,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
@@ -76,7 +76,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 dispatchBroadCastEvent(task, ActionType.START)
             }
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
@@ -157,7 +157,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
         try {
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = atomResponse.buildStatus,
@@ -165,7 +165,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.taskEnd(
+            val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,
@@ -173,6 +173,23 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
+            updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+                pipelineTaskService.updateTaskStatusInfo(
+                    transactionContext = null,
+                    buildId = task.buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
+                if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                    buildLogPrinter.addLine(
+                        buildId = task.buildId,
+                        message = updateTaskStatusInfo.message!!,
+                        tag = updateTaskStatusInfo.taskId,
+                        jobId = updateTaskStatusInfo.containerHashId,
+                        executeCount = updateTaskStatusInfo.executeCount
+                    )
+                }
+            }
             measureService?.postTaskData(
                 task = task,
                 startTime = task.startTime?.timestampmilli() ?: startTime,

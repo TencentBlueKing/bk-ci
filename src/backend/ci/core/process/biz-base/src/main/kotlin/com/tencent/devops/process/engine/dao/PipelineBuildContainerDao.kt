@@ -60,6 +60,7 @@ class PipelineBuildContainerDao {
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
+                    MATRIX_GROUP_ID,
                     CONTAINER_TYPE,
                     SEQ,
                     STATUS,
@@ -74,6 +75,7 @@ class PipelineBuildContainerDao {
                         buildContainer.pipelineId,
                         buildContainer.buildId,
                         buildContainer.stageId,
+                        buildContainer.matrixGroupId,
                         buildContainer.containerType,
                         buildContainer.seq,
                         buildContainer.status.ordinal,
@@ -88,11 +90,11 @@ class PipelineBuildContainerDao {
         logger.info("save the buildContainer=$buildContainer, result=${count == 1}")
     }
 
-    fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildContainer>) {
+    fun batchSave(dslContext: DSLContext, containerList: Collection<PipelineBuildContainer>) {
         val records =
             mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
         with(T_PIPELINE_BUILD_CONTAINER) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.insertInto(this)
                         .set(PROJECT_ID, it.projectId)
@@ -100,6 +102,7 @@ class PipelineBuildContainerDao {
                         .set(BUILD_ID, it.buildId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(SEQ, it.seq)
                         .set(STATUS, it.status.ordinal)
@@ -120,16 +123,17 @@ class PipelineBuildContainerDao {
         dslContext.batch(records).execute()
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildContainerRecord>) {
+    fun batchUpdate(dslContext: DSLContext, containerList: List<TPipelineBuildContainerRecord>) {
         val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_CONTAINER) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.update(this)
                         .set(PROJECT_ID, it.projectId)
                         .set(PIPELINE_ID, it.pipelineId)
+                        .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
-                        .set(SEQ, it.seq)
+                        .set(CONTAINER_ID, it.containerId)
                         .set(STATUS, it.status)
                         .set(START_TIME, it.startTime)
                         .set(END_TIME, it.endTime)
@@ -137,14 +141,31 @@ class PipelineBuildContainerDao {
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, it.conditions)
                         .where(BUILD_ID.eq(it.buildId)
-                            .and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
+                            .and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
                 )
             }
         }
         dslContext.batch(records).execute()
     }
 
-    fun get(
+    fun getBySeqId(
+        dslContext: DSLContext,
+        buildId: String,
+        stageId: String?,
+        containerSeqId: Int
+    ): TPipelineBuildContainerRecord? {
+
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            if (stageId.isNullOrBlank()) {
+                query.and(SEQ.eq(containerSeqId)).fetchAny()
+            } else {
+                query.and(STAGE_ID.eq(stageId)).and(SEQ.eq(containerSeqId)).fetchAny()
+            }
+        }
+    }
+
+    fun getByContainerId(
         dslContext: DSLContext,
         buildId: String,
         stageId: String?,
@@ -165,7 +186,7 @@ class PipelineBuildContainerDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        containerId: String,
+        containerSeqId: Int,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         buildStatus: BuildStatus
@@ -191,7 +212,7 @@ class PipelineBuildContainerDao {
             }
 
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
-                .and(CONTAINER_ID.eq(containerId)).execute()
+                .and(SEQ.eq(containerSeqId)).execute()
         }
     }
 
@@ -238,6 +259,7 @@ class PipelineBuildContainerDao {
                 stageId = stageId,
                 containerType = containerType,
                 containerId = containerId,
+                matrixGroupId = matrixGroupId,
                 seq = seq,
                 status = BuildStatus.values()[status],
                 startTime = startTime,

@@ -42,7 +42,9 @@ data class VMBuildContainer(
     override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
     override var elements: List<Element> = listOf(),
+    @ApiModelProperty("容器状态", required = false, hidden = true)
     override var status: String? = null,
+    @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var systemElapsed: Long? = null,
@@ -93,7 +95,11 @@ data class VMBuildContainer(
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
-    override var containPostTaskFlag: Boolean? = null
+    override var containPostTaskFlag: Boolean? = null,
+    @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
+    override var matrixFlag: Boolean? = false,
+    @ApiModelProperty("所在构建矩阵组的jobId", required = false)
+    var matrixGroupId: String? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"

@@ -38,6 +38,8 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,6 +50,8 @@ class HeartbeatControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -85,12 +89,13 @@ class HeartbeatControl @Autowired constructor(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
-            stageId = null, containerId = event.containerId)
-            ?: run {
-                LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
-                return
-            }
+        val container = pipelineContainerService.getContainer(
+            buildId = event.buildId,
+            stageId = null, containerSeqId = event.containerId
+        ) ?: run {
+            LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
+            return
+        }
 
         // 心跳监测是定时的消息处理，当流水线当前结束，在此时间点内又进行重试，会导致上一次的心跳监测消息处理误判，增加次数判断
         if (container.executeCount != event.executeCount) {
@@ -101,7 +106,7 @@ class HeartbeatControl @Autowired constructor(
 
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask = pipelineRuntimeService.getRunningTask(container.buildId)
+        val runningTask = pipelineTaskService.getRunningTask(container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true

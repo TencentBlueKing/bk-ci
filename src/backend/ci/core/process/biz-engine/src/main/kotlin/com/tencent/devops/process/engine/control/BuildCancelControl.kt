@@ -48,6 +48,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -67,6 +68,7 @@ class BuildCancelControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineMQEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val containerBuildDetailService: ContainerBuildDetailService,
@@ -189,7 +191,7 @@ class BuildCancelControl @Autowired constructor(
             stage.containers.forEach C@{ container ->
                 val stageId = stage.id ?: ""
                 val containerId = container.id ?: ""
-                val pipelineContainer = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+                val pipelineContainer = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
                     LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
                     return@C
                 }
@@ -208,10 +210,10 @@ class BuildCancelControl @Autowired constructor(
                         dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
                     ) {
                         val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
-                        pipelineRuntimeService.updateContainerStatus(
+                        pipelineContainerService.updateContainerStatus(
                             buildId = event.buildId,
                             stageId = stageId,
-                            containerId = containerId,
+                            containerSeqId = containerId,
                             startTime = null,
                             endTime = LocalDateTime.now(),
                             buildStatus = switchedStatus
