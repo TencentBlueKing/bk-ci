@@ -488,10 +488,27 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
         val errorType = ErrorType.getErrorType(result.errorType)
         val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
-        taskBuildDetailService.taskEnd(
+        val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
             buildId = buildId, taskId = result.elementId, buildStatus = buildStatus,
             errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
         )
+        updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+            pipelineTaskService.updateTaskStatusInfo(
+                transactionContext = null,
+                buildId = buildId,
+                taskId = updateTaskStatusInfo.taskId,
+                taskStatus = updateTaskStatusInfo.buildStatus,
+            )
+            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = updateTaskStatusInfo.message,
+                    tag = updateTaskStatusInfo.taskId,
+                    jobId = updateTaskStatusInfo.containerHashId,
+                    executeCount = updateTaskStatusInfo.executeCount
+                )
+            }
+        }
         // 重置前置暂停插件暂停状态位
         pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
         val task = pipelineRuntimeService.completeClaimBuildTask(

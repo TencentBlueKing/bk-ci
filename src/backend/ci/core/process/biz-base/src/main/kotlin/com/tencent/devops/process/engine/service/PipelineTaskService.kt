@@ -91,7 +91,6 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelinePauseExtService: PipelinePauseExtService

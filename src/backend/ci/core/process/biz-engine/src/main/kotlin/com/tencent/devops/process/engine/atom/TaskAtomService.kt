@@ -165,7 +165,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
-            pipelineBuildDetailService.taskEnd(
+            val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,
@@ -173,6 +173,23 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
+            updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+                pipelineTaskService.updateTaskStatusInfo(
+                    transactionContext = null,
+                    buildId = task.buildId,
+                    taskId = updateTaskStatusInfo.taskId,
+                    taskStatus = updateTaskStatusInfo.buildStatus
+                )
+                if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                    buildLogPrinter.addLine(
+                        buildId = task.buildId,
+                        message = updateTaskStatusInfo.message!!,
+                        tag = updateTaskStatusInfo.taskId,
+                        jobId = updateTaskStatusInfo.containerHashId,
+                        executeCount = updateTaskStatusInfo.executeCount
+                    )
+                }
+            }
             measureService?.postTaskData(
                 task = task,
                 startTime = task.startTime?.timestampmilli() ?: startTime,

@@ -31,7 +31,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -45,7 +44,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -58,8 +56,6 @@ import java.util.concurrent.TimeUnit
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineTaskService: PipelineTaskService,
-    private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -273,23 +269,6 @@ class TaskBuildDetailService(
             buildStatus = BuildStatus.RUNNING,
             operation = "taskEnd"
         )
-        updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineTaskService.updateTaskStatusInfo(
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus,
-                transactionContext = dslContext
-            )
-            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
-                buildLogPrinter.addLine(
-                    buildId = buildId,
-                    message = updateTaskStatusInfo.message,
-                    tag = updateTaskStatusInfo.taskId,
-                    jobId = updateTaskStatusInfo.containerHashId,
-                    executeCount = updateTaskStatusInfo.executeCount
-                )
-            }
-        }
         return updateTaskStatusInfos
     }
 
