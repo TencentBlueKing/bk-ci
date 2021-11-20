@@ -28,24 +28,18 @@
 package com.tencent.devops.environment.pojo.enums
 
 enum class NodeType(val typeName: String) {
-    CC("CC"),
     CMDB("CMDB"),
-    BCSVM("BCS虚拟机"),
     DEVCLOUD("DevCloud虚拟机"),
     THIRDPARTY("第三方构建机"),
-    TSTACK("TStack虚拟机"),
     OTHER("其他"),
     UNKNOWN("未知");
 
     companion object {
         fun getTypeName(nodeType: String): String {
             return when (nodeType) {
-                CC.name -> CC.typeName
                 CMDB.name -> CMDB.typeName
-                BCSVM.name -> BCSVM.typeName
                 DEVCLOUD.name -> DEVCLOUD.typeName
                 THIRDPARTY.name -> THIRDPARTY.typeName
-                TSTACK.name -> TSTACK.typeName
                 OTHER.name -> OTHER.typeName
                 else -> UNKNOWN.typeName
             }
@@ -53,12 +47,9 @@ enum class NodeType(val typeName: String) {
 
         fun parseByTypeName(typeName: String): NodeType {
             return when (typeName) {
-                CC.typeName -> CC
                 CMDB.typeName -> CMDB
-                BCSVM.typeName -> BCSVM
                 DEVCLOUD.typeName -> DEVCLOUD
                 THIRDPARTY.typeName -> THIRDPARTY
-                TSTACK.typeName -> TSTACK
                 OTHER.typeName -> OTHER
                 else -> UNKNOWN
             }
