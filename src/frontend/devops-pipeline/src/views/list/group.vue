@@ -160,7 +160,7 @@
         },
         components: {
             'empty-tips': imgemptyTips,
-            'logo': Logo
+            logo: Logo
         },
         data () {
             return {
@@ -217,7 +217,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             hasGroup () {
                 return (!this.tagGroupList.length || this.tagGroupList.length < 1)
@@ -570,7 +570,7 @@
                     const group = this.tagGroupList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
-                    if (!group.labels[this.addTagIndex].hasOwnProperty('groupId')) {
+                    if (!Object.prototype.hasOwnProperty.call(group.labels[this.addTagIndex], 'groupId')) {
                         this.$store.commit('pipelines/resetTag', {
                             groupIndex: this.addTagGroupIndex,
                             boolean: false

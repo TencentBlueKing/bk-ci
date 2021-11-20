@@ -133,7 +133,7 @@
                         return listMap
                     }, {})
 
-                    valueArray.map(value => {
+                    valueArray.forEach(value => {
                         if (typeof value !== 'undefined' && value !== '' && !listMap[value]) {
                             this.list.splice(0, 0, {
                                 id: value,

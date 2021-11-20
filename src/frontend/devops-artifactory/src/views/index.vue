@@ -56,8 +56,8 @@
         },
         computed: {
             ...mapGetters({
-                'curNodeOnTree': 'artifactory/getCurNodeOnTree',
-                'sideMenuList': 'artifactory/getSideMenuList'
+                curNodeOnTree: 'artifactory/getCurNodeOnTree',
+                sideMenuList: 'artifactory/getSideMenuList'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -104,7 +104,7 @@
                 const {
                     list
                 } = this.sideMenuList[0]
-                list.map(item => {
+                list.forEach(item => {
                     if (val && item.params !== undefined && item.params.type === val) {
                         item.isSelected = true
                         item.isOpen = true
@@ -259,7 +259,7 @@
                 let path = ''
                 let target = list
                 roadMap = convertStrToNumArr(roadMap, ',')
-                roadMap.map((_pathItem, index) => {
+                roadMap.forEach((_pathItem, index) => {
                     const _target = target[_pathItem]
 
                     path = _target.fullPath || ''

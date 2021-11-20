@@ -22,7 +22,7 @@ import store from './store'
 
 import './assets/scss/index.scss'
 window.Pages = window.Pages || {}
-window.Pages['codelib'] = {
+window.Pages.codelib = {
     title: 'codelib',
     routes,
     store

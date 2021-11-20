@@ -255,7 +255,7 @@
             },
             cancel () {
                 this.$router.push({
-                    'name': 'credentialList'
+                    name: 'credentialList'
                 })
             },
             getTypeDesc (type) {
@@ -266,10 +266,10 @@
                 this.$validator.validateAll().then(async (result) => {
                     if (result) {
                         const credential = {
-                            'credentialId': this.localConfig.credentialId,
-                            'credentialRemark': this.localConfig.credentialRemark,
-                            'credentialType': this.localConfig.credentialType,
-                            'credentialName': this.localConfig.credentialName
+                            credentialId: this.localConfig.credentialId,
+                            credentialRemark: this.localConfig.credentialRemark,
+                            credentialType: this.localConfig.credentialType,
+                            credentialName: this.localConfig.credentialName
                         }
                         for (const key in this.newModel) {
                             Object.assign(credential, { [key]: this.localConfig.credential[key] })
@@ -300,7 +300,7 @@
                             })
                             if (theme === 'success') {
                                 this.$router.push({
-                                    'name': 'credentialList'
+                                    name: 'credentialList'
                                 })
                             }
                         }
@@ -311,7 +311,7 @@
                 this.$router.push({
                     name: 'createCredentialWithType',
                     params: {
-                        'type': id
+                        type: id
                     }
                 })
                 this.newModel = this.getTicketByType(id)

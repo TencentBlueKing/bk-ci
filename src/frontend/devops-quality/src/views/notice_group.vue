@@ -181,7 +181,7 @@
 
                     this.noticeGroupList.splice(0, this.noticeGroupList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.noticeGroupList.push(item)
                         })
                     }
@@ -320,7 +320,7 @@
                     }, `确定删除通知组(${row.name})？`)
 
                     this.$bkInfo({
-                        title: `删除`,
+                        title: '删除',
                         subHeader: content,
                         confirmFn: async () => {
                             let message, theme

@@ -219,7 +219,7 @@
                 const chartDatas = []
                 const chartLabels = []
                 const backgroundColors = []
-                dailyStatisticList.map((statis) => {
+                dailyStatisticList.forEach((statis) => {
                     const val = statis.dailySuccessRate
                     const isEmpty = [0, undefined, null].includes(val)
                     const isUndefinedOrNull = [undefined, null].includes(val)

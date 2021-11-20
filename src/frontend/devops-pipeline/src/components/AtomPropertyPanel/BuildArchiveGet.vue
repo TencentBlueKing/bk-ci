@@ -80,7 +80,7 @@
                     const buildNoList = []
                     if (res.data) {
                         for (let i = 0; i < res.data.length; i++) {
-                            buildNoList.push(Object.assign({}, { id: res.data[i]['key'], name: res.data[i]['key'] }))
+                            buildNoList.push(Object.assign({}, { id: res.data[i].key, name: res.data[i].key }))
                         }
                         this.newModel.buildNo.list = buildNoList
                     }

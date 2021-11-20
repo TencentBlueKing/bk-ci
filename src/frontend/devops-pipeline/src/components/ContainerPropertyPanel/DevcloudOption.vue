@@ -82,7 +82,7 @@
                     const needShow = res.data.needShow || false
                     this.changeShowPerformance(needShow)
                     if (needShow) {
-                        this.selectValue = this.value || res.data['default']
+                        this.selectValue = this.value || res.data.default
                     }
                     this.optionList = res.data.dockerResourceOptionsMaps || []
                     this.optionList = this.optionList.map(item => {

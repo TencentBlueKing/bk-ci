@@ -373,7 +373,7 @@
                 return getContainerApps(baseOS)
             },
             nfsSwitch () {
-                return !this.container.hasOwnProperty('nfsSwitch') || this.container['nfsSwitch']
+                return !Object.prototype.hasOwnProperty.call(this.container, 'nfsSwitch') || this.container.nfsSwitch
             },
             isShowNFSDependencies () {
                 if (this.buildResourceType === 'MACOS') return false
@@ -558,7 +558,7 @@
                 const { errors } = this
 
                 if (addErrors && addErrors.length) {
-                    addErrors.map(e => {
+                    addErrors.forEach(e => {
                         if (errors && errors.items.every(err => err.field !== e.field)) {
                             errors.add({
                                 field: e.field,
@@ -613,7 +613,7 @@
             },
             handleContainerAppChange (preApp, curApp, version = '') {
                 const { container: { buildEnv }, getAppDefaultVersion } = this
-                if (preApp !== curApp && buildEnv.hasOwnProperty(preApp)) {
+                if (preApp !== curApp && Object.prototype.hasOwnProperty.call(buildEnv, preApp)) {
                     delete buildEnv[preApp]
                 }
                 const defaultAppVer = getAppDefaultVersion(curApp)

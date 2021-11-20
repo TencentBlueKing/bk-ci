@@ -28,9 +28,11 @@ const validMixins = {
             'isPropertyPanelVisible'
         ]),
         errorFields () {
-            return this.errors && Array.isArray(this.errors.items) ? [
-                ...this.errors.items
-            ] : []
+            return this.errors && Array.isArray(this.errors.items)
+                ? [
+                    ...this.errors.items
+                ]
+                : []
         }
     },
     watch: {

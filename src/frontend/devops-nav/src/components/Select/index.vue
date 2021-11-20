@@ -208,21 +208,26 @@
         }
 
         get filterOptions () {
-            return this.searchValue ? this.finalOptions.filter((option: any) => {
+            return this.searchValue
+? this.finalOptions.filter((option: any) => {
                 const name = this.searchIgnoreCase ? option.name.toLowerCase() : option.name
                 const keyword = this.searchIgnoreCase ? this.searchValue.toLowerCase() : this.searchValue
                 return name.indexOf(keyword) > -1
-            }) : this.finalOptions
+            })
+: this.finalOptions
         }
+
         get optionMap () {
             return this.finalOptions.reduce((optionMap, option: any) => {
                 optionMap[option.id] = option
                 return optionMap
             }, {})
         }
+
         get enabledOptions () {
             return this.finalOptions.filter((option: any) => !option.disabled)
         }
+
         get highlightOption () {
             const filterOptions = this.filterOptions
             if (this.searchable && filterOptions.length) {
@@ -230,39 +235,47 @@
             }
             return null
         }
+
         get selectedOptions () {
             if (this.multiple) {
                 return this.selected.map(id => this.optionMap[id])
             }
             return this.optionMap[this.selected] || {}
         }
+
         get selectedName () {
             if (this.multiple) {
                 return this.selectedOptions.map(option => option.name).join(',')
             }
             return this.selectedOptions.name
         }
+
         get isUnselected () {
             if (this.multiple) {
                 return !this.selected.length
             }
             return this.selected === ''
         }
+
         get unmatchedCount () {
             return this.finalOptions.filter((option: any) => option.unmatched).length
         }
+
         get localPlaceholder () {
             return this.placeholder || ''
         }
+
         get dropdownActive () {
             return !(this.disabled || this.loading || this.readonly)
         }
+
         get popoverStyle () {
             return {
                 width: (this.popoverWidth ? this.popoverWidth : this.defaultWidth) + 'px',
                 minWidth: (this.popoverMinWidth ? this.popoverMinWidth : this.defaultWidth) + 'px'
             }
         }
+
         get isAllSelected () {
             return this.selected.length > 0 && this.enabledOptions.length === this.selected.length
         }
@@ -288,10 +301,12 @@
             }
             this.$emit('toggle', focus)
         }
+
         @Watch('dropdownActive')
         handleWatchDropDownActive () {
             this.setDropdownState()
         }
+
         @Watch('searchValue')
         handleWatchSearchValue (val) {
             this.resetHighlightIndex()
@@ -321,10 +336,12 @@
                 })
             }
         }
+
         @Watch('searchable')
         handleWatchSearchable (searchable) {
             this.resetHighlightIndex()
         }
+
         @Watch('highlightIndex')
         handleWatchHighlightIndex (newIndex, oldIndex) {
             this.calcListScrollPosition(newIndex, oldIndex)
