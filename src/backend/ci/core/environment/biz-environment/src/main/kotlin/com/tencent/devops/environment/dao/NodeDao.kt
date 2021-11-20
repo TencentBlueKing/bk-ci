@@ -109,7 +109,7 @@ class NodeDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.`in`( NodeType.CMDB.name, NodeType.OTHER.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.OTHER.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
