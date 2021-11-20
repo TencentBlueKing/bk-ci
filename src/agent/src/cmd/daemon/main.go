@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 /*
@@ -113,6 +114,7 @@ func doCheckAndLaunchAgent() {
 	workDir := systemutil.GetWorkDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
+	defer func() { _ = agentLock.Unlock() }() // #1613 fix open too many files
 	ok, err := agentLock.TryLock()
 	if err != nil {
 		logs.Error("try to get agent.lock failed: %v", err)
@@ -122,7 +124,6 @@ func doCheckAndLaunchAgent() {
 		return
 	}
 	logs.Warn("agent is not available, will launch it")
-	_ = agentLock.Unlock()
 
 	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
 	if err != nil {
