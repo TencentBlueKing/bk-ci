@@ -59,7 +59,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
-import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -86,6 +85,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
@@ -204,10 +204,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     ): Boolean {
         // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
         // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
-        var startUpVMTask = pipelineRuntimeService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
+        var startUpVMTask = pipelineTaskService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
 
         if (startUpVMTask == null) {
-            val buildTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+            val buildTasks = pipelineTaskService.listContainerBuildTasks(buildId, vmSeqId)
             if (buildTasks.isNotEmpty()) {
                 startUpVMTask = buildTasks[0]
             }
@@ -220,7 +220,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         // 如果是完成状态，则更新构建机启动插件的状态
         if (buildStatus.isFinish()) {
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = startUpVMTask,
                 userId = startUpVMTask.starter,
                 buildStatus = buildStatus,
@@ -231,7 +231,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
             if (!startUpVMTask.status.isFinish()) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
-                pipelineRuntimeService.updateContainerStatus(
+                pipelineContainerService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
                     containerId = startUpVMTask.containerId,
@@ -295,7 +295,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
 
-        val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+        val allTasks = pipelineTaskService.listContainerBuildTasks(buildId, vmSeqId)
         val queueTasks: MutableList<PipelineBuildTask> = mutableListOf()
         val runningTasks: MutableList<PipelineBuildTask> = mutableListOf()
         var isContainerFailed = false
@@ -569,7 +569,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
      */
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
 
-        val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+        val task = pipelineTaskService.listContainerBuildTasks(buildId, vmSeqId)
             .filter { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }.firstOrNull()
 
         return if (task == null) {
@@ -600,7 +600,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     @Suppress("UNCHECKED_CAST")
     private fun sendElementData(buildId: String, result: BuildTaskResult) {
         try {
-            val task: PipelineBuildTask by lazy { pipelineRuntimeService.getBuildTask(buildId, result.taskId)!! }
+            val task: PipelineBuildTask by lazy { pipelineTaskService.getBuildTask(buildId, result.taskId)!! }
             measureService?.postTaskData(
                 task = task,
                 startTime = task.startTime?.timestampmilli() ?: 0L,

@@ -64,6 +64,8 @@ class InitializeContainerStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
+        val stage = commandContext.stage
+        val event = commandContext.event
 
 
         commandContext.cmdFlowState = CmdFlowState.CONTINUE

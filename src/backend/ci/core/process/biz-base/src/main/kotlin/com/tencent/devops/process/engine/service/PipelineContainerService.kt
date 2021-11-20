@@ -29,13 +29,17 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.service.BuildVariableService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +54,7 @@ import org.springframework.stereotype.Service
 class PipelineContainerService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao,
     private val buildVariableService: BuildVariableService,
     private val stageBuildDetailService: StageBuildDetailService,
@@ -66,5 +70,56 @@ class PipelineContainerService @Autowired constructor(
             return pipelineBuildContainerDao.convert(result)
         }
         return null
+    }
+
+    fun listContainers(buildId: String, stageId: String? = null): List<PipelineBuildContainer> {
+        val list = pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
+        val result = mutableListOf<PipelineBuildContainer>()
+        if (list.isNotEmpty()) {
+            list.forEach {
+                result.add(pipelineBuildContainerDao.convert(it)!!)
+            }
+        }
+        return result
+    }
+
+    fun listByBuildId(buildId: String, stageId: String? = null): Collection<TPipelineBuildContainerRecord> {
+        return pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
+    }
+
+    fun batchSave(transactionContext: DSLContext?, taskList: Collection<PipelineBuildContainer>) {
+        return pipelineBuildContainerDao.batchSave(transactionContext ?: dslContext, taskList)
+    }
+
+    fun batchUpdate(transactionContext: DSLContext?, taskList: List<TPipelineBuildContainerRecord>) {
+        return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, taskList)
+    }
+
+    fun updateContainerStatus(
+        buildId: String,
+        stageId: String,
+        containerSeqId: String,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+        buildStatus: BuildStatus
+    ) {
+        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerSeqId|stageId=$stageId")
+        pipelineBuildContainerDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            containerSeqId = containerSeqId.toInt(),
+            buildStatus = buildStatus,
+            startTime = startTime,
+            endTime = endTime
+        )
+    }
+
+    fun deletePipelineBuildContainers(transactionContext: DSLContext?, projectId: String, pipelineId: String): Int {
+        return pipelineBuildContainerDao.deletePipelineBuildContainers(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 }

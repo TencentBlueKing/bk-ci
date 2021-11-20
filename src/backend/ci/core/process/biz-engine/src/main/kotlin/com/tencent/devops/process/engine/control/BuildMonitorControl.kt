@@ -55,6 +55,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -72,6 +73,7 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -124,7 +126,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
 
-        val containers = pipelineRuntimeService.listContainers(event.buildId) // #5090 ==0 是为了兼容旧的监控事件
+        val containers = pipelineContainerService.listContainers(event.buildId) // #5090 ==0 是为了兼容旧的监控事件
             .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS

@@ -41,11 +41,11 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
-import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -56,7 +56,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val taskBuildDetailService: TaskBuildDetailService,
-    private val pipelineBuildTaskService: PipelineBuildTaskService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
@@ -64,7 +64,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
-        val taskRecord = pipelineRuntimeService.getBuildTask(event.buildId, event.taskId)
+        val taskRecord = pipelineTaskService.getBuildTask(event.buildId, event.taskId)
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             redisLock.lock()
@@ -90,7 +90,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
-            pipelineBuildTaskService.updateTaskParam(task.buildId, task.taskId, newElement)
+            pipelineTaskService.updateTaskParamWithElement(task.buildId, task.taskId, newElement)
             logger.info("update task param success | ${task.buildId}| ${task.taskId} ")
         }
 
@@ -129,7 +129,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     private fun taskCancel(task: PipelineBuildTask, userId: String) {
         logger.info("${task.buildId}|task cancel|${task.taskId}|CANCELED")
         // 修改插件状态位运行
-        pipelineRuntimeService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
+        pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
         taskBuildDetailService.taskCancel(
@@ -182,7 +182,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         logger.info("ENGINE|${current.buildId}]|PAUSE|${current.stageId}]|j(${current.containerId}|${current.taskId}")
 
         // 将启动和结束任务置为排队。用于启动构建机
-        val taskRecords = pipelineRuntimeService.getAllBuildTask(current.buildId)
+        val taskRecords = pipelineTaskService.getAllBuildTask(current.buildId)
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.containerId == current.containerId && task.stageId == current.stageId) {
@@ -202,12 +202,12 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         startAndEndTask.forEach {
-            pipelineRuntimeService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
+            pipelineTaskService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
             logger.info("update|${current.buildId}|${it.taskId}|task status from ${it.status} to ${BuildStatus.QUEUE}")
         }
 
         // 修改容器状态位运行
-        pipelineRuntimeService.updateContainerStatus(
+        pipelineContainerService.updateContainerStatus(
             buildId = current.buildId,
             stageId = current.stageId,
             containerId = current.containerId,

@@ -210,7 +210,7 @@ class BuildCancelControl @Autowired constructor(
                         dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
                     ) {
                         val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
-                        pipelineRuntimeService.updateContainerStatus(
+                        pipelineContainerService.updateContainerStatus(
                             buildId = event.buildId,
                             stageId = stageId,
                             containerId = containerId,

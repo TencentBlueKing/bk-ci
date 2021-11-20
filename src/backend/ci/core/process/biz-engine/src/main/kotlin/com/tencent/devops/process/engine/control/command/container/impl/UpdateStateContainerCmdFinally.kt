@@ -37,7 +37,9 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -46,7 +48,8 @@ import java.time.LocalDateTime
 @Service
 class UpdateStateContainerCmdFinally(
     private val mutexControl: MutexControl,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineTaskService: PipelineTaskService,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
@@ -107,7 +110,7 @@ class UpdateStateContainerCmdFinally(
             endTime = LocalDateTime.now()
         }
 
-        pipelineRuntimeService.updateContainerStatus(
+        pipelineContainerService.updateContainerStatus(
             buildId = event.buildId,
             stageId = event.stageId,
             containerId = event.containerId,
@@ -118,7 +121,7 @@ class UpdateStateContainerCmdFinally(
 
         if (buildStatus == BuildStatus.SKIP) {
             commandContext.containerTasks.forEach { task ->
-                pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
+                pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
             containerBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)

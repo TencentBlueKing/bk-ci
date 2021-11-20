@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,6 +65,7 @@ class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val mutexControl: MutexControl
 ) {
@@ -134,7 +136,7 @@ class ContainerControl @Autowired constructor(
         }
 
         // 已按任务序号递增排序，如未排序要注意
-        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
+        val containerTasks = pipelineTaskService.listContainerBuildTasks(buildId, containerId)
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
 
         val context = ContainerContext(

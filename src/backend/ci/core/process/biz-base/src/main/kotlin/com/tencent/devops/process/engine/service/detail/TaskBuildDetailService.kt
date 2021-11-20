@@ -46,6 +46,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -58,7 +59,7 @@ import java.util.concurrent.TimeUnit
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
@@ -274,7 +275,7 @@ class TaskBuildDetailService(
             operation = "taskEnd"
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineRuntimeService.updateTaskStatusInfo(
+            pipelineTaskService.updateTaskStatusInfo(
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
                 taskStatus = updateTaskStatusInfo.buildStatus,

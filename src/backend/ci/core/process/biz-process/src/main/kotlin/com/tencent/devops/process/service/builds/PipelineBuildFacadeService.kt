@@ -90,6 +90,7 @@ import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -124,6 +125,7 @@ class PipelineBuildFacadeService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
@@ -1759,7 +1761,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val tasks = pipelineRuntimeService.getRunningTask(buildId)
+            val tasks = pipelineTaskService.getRunningTask(buildId)
 
             tasks.forEach { task ->
                 val taskId = task["taskId"] ?: ""
@@ -1820,7 +1822,7 @@ class PipelineBuildFacadeService(
         var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
-            val startUpVMTask = pipelineRuntimeService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
+            val startUpVMTask = pipelineTaskService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
             if (startUpVMTask?.status?.isRunning() == true) {
                 msg = "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
             } else {

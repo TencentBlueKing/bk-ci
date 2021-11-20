@@ -91,10 +91,10 @@ class PipelineBuildStageDao {
         logger.info("save the buildStage=$buildStage, result=${count == 1}")
     }
 
-    fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
+    fun batchSave(dslContext: DSLContext, containerList: Collection<PipelineBuildStage>) {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.insertInto(this)
                         .set(PROJECT_ID, it.projectId)
@@ -122,10 +122,10 @@ class PipelineBuildStageDao {
         dslContext.batch(records).execute()
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
+    fun batchUpdate(dslContext: DSLContext, containerList: List<TPipelineBuildStageRecord>) {
         val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.update(this)
                         .set(PROJECT_ID, it.projectId)

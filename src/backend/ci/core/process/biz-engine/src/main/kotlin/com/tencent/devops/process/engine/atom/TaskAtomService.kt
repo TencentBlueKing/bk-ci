@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
@@ -55,7 +56,7 @@ import org.springframework.stereotype.Service
 @Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
@@ -76,7 +77,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 dispatchBroadCastEvent(task, ActionType.START)
             }
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
@@ -157,7 +158,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
         try {
             // 更新状态
-            pipelineRuntimeService.updateTaskStatus(
+            pipelineTaskService.updateTaskStatus(
                 task = task,
                 userId = task.starter,
                 buildStatus = atomResponse.buildStatus,
