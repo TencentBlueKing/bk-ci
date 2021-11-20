@@ -84,26 +84,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 type = NodeType.THIRDPARTY,
                 userId = userId
             )
-            val maxNodeRecord = nodeDao.getMaxNodeStringId(dslContext = context, projectId = projectId, id = nodeId)
-            logger.info("maxNodeRecord: $maxNodeRecord")
-            val maxNodeRecordId = if (maxNodeRecord == null) {
-                0
-            } else {
-                val nodeStringId = maxNodeRecord.nodeStringId
-                if (nodeStringId == null) {
-                    0
-                } else {
-                    val split = nodeStringId.split("_")
-                    if (split.size < 3) {
-                        logger.warn("Unknown node string id format($nodeStringId)")
-                        0
-                    } else {
-                        split[2].toInt()
-                    }
-                }
-            }
-            logger.info("maxNodeRecordId: $maxNodeRecordId")
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${maxNodeRecordId + 1}"
+
+            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${initIp}"
             logger.info("nodeStringId: $nodeStringId")
             nodeDao.insertNodeStringIdAndDisplayName(
                 dslContext = context,
