@@ -52,7 +52,8 @@ class OpNodeService @Autowired constructor(
         nodes.forEach {
             if (it.displayName.isNullOrBlank()) {
                 val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
-                logger.info("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId] Start to flush node display name")
+                logger.info("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
+                                " Start to flush node display name")
                 val count = nodeDao.updateDisplayName(
                     dslContext = dslContext,
                     nodeId = it.nodeId,
@@ -60,7 +61,8 @@ class OpNodeService @Autowired constructor(
                     userId = "system"
                 )
                 if (count != 1) {
-                    logger.warn("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId] Fail to update the node display name - $count")
+                    logger.warn("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
+                                    " Fail to update the node display name - $count")
                     return@forEach
                 }
                 updateCnt++
