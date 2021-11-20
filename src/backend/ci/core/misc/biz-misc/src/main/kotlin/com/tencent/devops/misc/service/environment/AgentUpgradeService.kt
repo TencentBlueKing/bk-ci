@@ -56,8 +56,14 @@ class AgentUpgradeService @Autowired constructor(
             return
         }
 
-        val currentVersion = redisOperation.get(agentGrayUtils.getAgentVersionKey())
-        val currentMasterVersion = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
+        val currentVersion = redisOperation.get(
+            key = agentGrayUtils.getAgentVersionKey(),
+            isDistinguishCluster = true
+        )
+        val currentMasterVersion = redisOperation.get(
+            key = agentGrayUtils.getAgentMasterVersionKey(),
+            isDistinguishCluster = true
+        )
         if (currentMasterVersion.isNullOrBlank() || currentVersion.isNullOrBlank()) {
             logger.warn("invalid server agent version")
             return
