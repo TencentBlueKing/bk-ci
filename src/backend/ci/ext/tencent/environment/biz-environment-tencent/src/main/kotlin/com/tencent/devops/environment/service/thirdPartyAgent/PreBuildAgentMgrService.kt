@@ -85,7 +85,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                 userId = userId
             )
 
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${initIp}"
+            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_$initIp"
             logger.info("nodeStringId: $nodeStringId")
             nodeDao.insertNodeStringIdAndDisplayName(
                 dslContext = context,
@@ -114,7 +114,11 @@ class PreBuildAgentMgrService @Autowired constructor(
                 secretKey = secretKey,
                 createdUser = userId,
                 gateway = gateway,
-                link = if (os == OS.WINDOWS) { agentUrlService.genAgentUrl(agentRecord) } else { agentUrlService.genAgentInstallUrl(agentRecord) },
+                link = if (os == OS.WINDOWS) {
+                    agentUrlService.genAgentUrl(agentRecord)
+                } else {
+                    agentUrlService.genAgentInstallUrl(agentRecord)
+                },
                 script = agentUrlService.genAgentInstallScript(agentRecord),
                 ip = agentRecord.ip,
                 hostName = agentRecord.hostname,
@@ -133,7 +137,9 @@ class PreBuildAgentMgrService @Autowired constructor(
     }
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
-        return thirdPartyAgentDao.listPreBuildAgent(dslContext, userId, projectId, os ?: OS.LINUX).filter { it.nodeId != null }.map {
+        return thirdPartyAgentDao.listPreBuildAgent(
+            dslContext, userId, projectId, os ?: OS.LINUX
+        ).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
                 agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId
                 projectId = it.projectId,
@@ -141,7 +147,11 @@ class PreBuildAgentMgrService @Autowired constructor(
                 secretKey = SecurityUtil.decrypt(it.secretKey),
                 createdUser = it.createdUser,
                 gateway = it.gateway,
-                link = if (os == OS.WINDOWS) { agentUrlService.genAgentUrl(it) } else { agentUrlService.genAgentInstallUrl(it) },
+                link = if (os == OS.WINDOWS) {
+                    agentUrlService.genAgentUrl(it)
+                } else {
+                    agentUrlService.genAgentInstallUrl(it)
+                },
                 script = agentUrlService.genAgentInstallScript(it),
                 ip = it.ip,
                 hostName = it.hostname,
