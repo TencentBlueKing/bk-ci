@@ -98,7 +98,7 @@ class ImportService @Autowired constructor(
             condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
             exception = PermissionForbiddenException(
                 message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
-            ),
+            )
         )
 
         LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
