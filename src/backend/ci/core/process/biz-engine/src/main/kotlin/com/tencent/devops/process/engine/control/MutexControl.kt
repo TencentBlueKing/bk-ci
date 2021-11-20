@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +50,7 @@ import java.util.concurrent.TimeUnit
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineContainerService: PipelineContainerService
 ) {
 
     companion object {
@@ -346,7 +347,7 @@ class MutexControl @Autowired constructor(
         if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
             return false
         }
-        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = containerId)
+        val container = pipelineContainerService.getContainer(buildId, stageId = null, containerId = containerId)
         return container == null || container.status.isFinish()
     }
 }

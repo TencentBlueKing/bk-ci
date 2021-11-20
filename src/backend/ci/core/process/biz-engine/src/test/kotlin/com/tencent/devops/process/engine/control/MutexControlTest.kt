@@ -65,12 +65,13 @@ class MutexControlTest {
         containerType = "vmBuild",
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
-        controlOption = null
+        controlOption = null,
+        matrixGroupId = null
     )
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
-        pipelineRuntimeService = mock()
+        pipelineContainerService = mock()
     )
 
     @Test

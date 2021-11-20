@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -53,11 +54,12 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
-    val redisOperation: RedisOperation,
-    val taskBuildDetailService: TaskBuildDetailService,
-    val pipelineBuildTaskService: PipelineBuildTaskService,
-    val pipelineRuntimeService: PipelineRuntimeService,
-    val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val redisOperation: RedisOperation,
+    private val taskBuildDetailService: TaskBuildDetailService,
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
@@ -144,7 +146,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             jobId = task.containerId,
             executeCount = task.executeCount ?: 1
         )
-        val containerRecord = pipelineRuntimeService.getContainer(
+        val containerRecord = pipelineContainerService.getContainer(
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId

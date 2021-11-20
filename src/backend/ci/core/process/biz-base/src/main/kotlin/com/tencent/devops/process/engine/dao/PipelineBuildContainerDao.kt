@@ -60,6 +60,7 @@ class PipelineBuildContainerDao {
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
+                    MATRIX_GROUP_ID,
                     CONTAINER_TYPE,
                     SEQ,
                     STATUS,
@@ -74,6 +75,7 @@ class PipelineBuildContainerDao {
                         buildContainer.pipelineId,
                         buildContainer.buildId,
                         buildContainer.stageId,
+                        buildContainer.matrixGroupId,
                         buildContainer.containerType,
                         buildContainer.seq,
                         buildContainer.status.ordinal,
@@ -100,6 +102,7 @@ class PipelineBuildContainerDao {
                         .set(BUILD_ID, it.buildId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(SEQ, it.seq)
                         .set(STATUS, it.status.ordinal)
@@ -128,6 +131,7 @@ class PipelineBuildContainerDao {
                     dslContext.update(this)
                         .set(PROJECT_ID, it.projectId)
                         .set(PIPELINE_ID, it.pipelineId)
+                        .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(SEQ, it.seq)
                         .set(STATUS, it.status)
@@ -238,6 +242,7 @@ class PipelineBuildContainerDao {
                 stageId = stageId,
                 containerType = containerType,
                 containerId = containerId,
+                matrixGroupId = matrixGroupId,
                 seq = seq,
                 status = BuildStatus.values()[status],
                 startTime = startTime,

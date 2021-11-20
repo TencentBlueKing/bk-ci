@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildMatrixGroupEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,17 +60,16 @@ import org.springframework.stereotype.Service
  * @version 1.0
  */
 @Service
-class ContainerControl @Autowired constructor(
+class MatrixGroupControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineContainerService: PipelineContainerService,
     private val buildVariableService: BuildVariableService,
     private val mutexControl: MutexControl
 ) {
 
     companion object {
         private const val CACHE_SIZE = 500L
-        private val LOG = LoggerFactory.getLogger(ContainerControl::class.java)
+        private val LOG = LoggerFactory.getLogger(MatrixGroupControl::class.java)
     }
 
     private val commandCache: LoadingCache<Class<out ContainerCmd>, ContainerCmd> = CacheBuilder.newBuilder()
@@ -82,7 +81,7 @@ class ContainerControl @Autowired constructor(
             }
         )
 
-    fun handle(event: PipelineBuildContainerEvent) {
+    fun handle(event: PipelineBuildMatrixGroupEvent) {
         val watcher = Watcher(id = "ENGINE|ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
         with(event) {
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
@@ -90,18 +89,18 @@ class ContainerControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 watcher.start("getContainer")
-                val container = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
-                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
-                    return
-                }
-                // 防止关键信息传入错误信息，做一次更正
-                val fixEvent = this.copy(
-                    stageId = container.stageId,
-                    pipelineId = container.pipelineId,
-                    containerType = container.containerType,
-                    projectId = container.projectId
-                )
-                container.execute(watcher, fixEvent)
+//                val groupContainers = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+//                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
+//                    return
+//                }
+//                // 防止关键信息传入错误信息，做一次更正
+//                val fixEvent = this.copy(
+//                    stageId = container.stageId,
+//                    pipelineId = container.pipelineId,
+//                    containerType = container.containerType,
+//                    projectId = container.projectId
+//                )
+//                container.execute(watcher, fixEvent)
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()

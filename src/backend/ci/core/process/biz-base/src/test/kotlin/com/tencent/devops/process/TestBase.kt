@@ -229,7 +229,8 @@ open class TestBase {
                 ),
                 mutexGroup = null
             ),
-            cost = containerCost
+            cost = containerCost,
+            matrixGroupId = null
         )
     }
 

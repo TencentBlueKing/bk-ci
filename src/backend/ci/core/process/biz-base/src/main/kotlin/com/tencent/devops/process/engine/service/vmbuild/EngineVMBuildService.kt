@@ -66,6 +66,7 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -99,6 +100,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
+    private val pipelineContainerService: PipelineContainerService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -142,7 +144,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
-                    val container = pipelineRuntimeService.getContainer(buildId, s.id, vmSeqId)
+                    val container = pipelineContainerService.getContainer(buildId, s.id, vmSeqId)
                         ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
                     // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
                     if (container.status.isFinish()) {
@@ -323,7 +325,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
-            val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = vmSeqId)
+            val container = pipelineContainerService.getContainer(buildId, stageId = null, containerId = vmSeqId)
             if (container == null || container.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)

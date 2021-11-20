@@ -89,6 +89,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -123,6 +124,7 @@ class PipelineBuildFacadeService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
@@ -1833,7 +1835,7 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
+        val container = pipelineContainerService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
         if (container != null) {
             val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件

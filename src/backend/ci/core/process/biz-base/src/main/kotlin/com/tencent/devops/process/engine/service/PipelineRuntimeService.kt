@@ -413,14 +413,6 @@ class PipelineRuntimeService @Autowired constructor(
         return result
     }
 
-    fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
-        val result = pipelineBuildContainerDao.get(dslContext, buildId, stageId, containerId)
-        if (result != null) {
-            return pipelineBuildContainerDao.convert(result)
-        }
-        return null
-    }
-
     fun listContainers(buildId: String, stageId: String? = null): List<PipelineBuildContainer> {
         val list = pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
         val result = mutableListOf<PipelineBuildContainer>()
@@ -1048,7 +1040,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 containerType = container.getClassType(),
                                 seq = context.containerSeq,
                                 status = BuildStatus.QUEUE,
-                                controlOption = controlOption
+                                controlOption = controlOption,
+                                matrixGroupId = null
                             )
                         )
                     }

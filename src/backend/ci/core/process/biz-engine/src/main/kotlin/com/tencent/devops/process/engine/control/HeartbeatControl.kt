@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,6 +49,7 @@ class HeartbeatControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -85,7 +87,7 @@ class HeartbeatControl @Autowired constructor(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
+        val container = pipelineContainerService.getContainer(buildId = event.buildId,
             stageId = null, containerId = event.containerId)
             ?: run {
                 LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
