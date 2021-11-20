@@ -35,7 +35,7 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
-
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/astaxie/beego/logs"
 	"github.com/gofrs/flock"
@@ -142,7 +142,8 @@ func GetHostName() string {
 	return name
 }
 
-func GetAgentIp() string {
+// GetAgentIp 返回本机IP，但允许忽略指定的IP ignoreIps, 如果所有IP都命中ignoreIps，则最终会返回127.0.0.1或者真正通信的IP
+func GetAgentIp(ignoreIps []string) string {
 	defaultIp := "127.0.0.1"
 	ip, err := getLocalIp()
 	if err == nil {
@@ -178,6 +179,10 @@ func GetAgentIp() string {
 			}
 
 			logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
+			if util.Contains(ignoreIps, ipNet.IP.String()) {
+				logs.Info("skipIp=%s", ipNet.IP)
+				continue
+			}
 			if ip == ipNet.IP.String() {
 				return ip // 匹配到该通信IP是真正的网卡IP
 			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
@@ -234,7 +239,7 @@ func CheckProcess(name string) bool {
 	return true
 }
 
-// 网关初始化顺序在前, 上报与devops网关通信的网卡ip
+// getLocalIp 网关初始化顺序在前, 上报与devops网关通信的网卡ip
 func getLocalIp() (string, error) {
 	gateway := DevopsGateway
 	if !strings.HasPrefix(gateway, "http") {
