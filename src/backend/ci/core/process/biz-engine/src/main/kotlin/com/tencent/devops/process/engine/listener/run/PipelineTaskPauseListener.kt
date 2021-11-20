@@ -149,7 +149,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         val containerRecord = pipelineContainerService.getContainer(
             buildId = task.buildId,
             stageId = task.stageId,
-            containerId = task.containerId
+            containerSeqId = task.containerId
         )
 
         // 刷新stage状态
@@ -210,7 +210,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         pipelineContainerService.updateContainerStatus(
             buildId = current.buildId,
             stageId = current.stageId,
-            containerId = current.containerId,
+            containerSeqId = current.containerId,
             buildStatus = BuildStatus.QUEUE
         )
     }

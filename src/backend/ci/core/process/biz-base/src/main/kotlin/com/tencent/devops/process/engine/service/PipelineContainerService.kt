@@ -63,8 +63,13 @@ class PipelineContainerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineContainerService::class.java)
     }
 
-    fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
-        val result = pipelineBuildContainerDao.get(dslContext, buildId, stageId, containerId)
+    fun getContainer(buildId: String, stageId: String?, containerSeqId: String): PipelineBuildContainer? {
+        // #4518 防止出错暂时保留两个字段的兼容查询
+        val result = try {
+            pipelineBuildContainerDao.getBySeqId(dslContext, buildId, stageId, containerSeqId.toInt())
+        } catch (ignore: Throwable) {
+            pipelineBuildContainerDao.getByContainerId(dslContext, buildId, stageId, containerSeqId)
+        }
         if (result != null) {
             return pipelineBuildContainerDao.convert(result)
         }

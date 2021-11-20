@@ -69,8 +69,11 @@ class BuildingHeartBeatUtils @Autowired constructor(
     }
 
     fun dispatchHeartbeatEvent(buildInfo: BuildInfo, containerId: String) {
-        val ctr = pipelineContainerService.getContainer(buildInfo.buildId, stageId = null, containerId = containerId)
-            ?: return
+        val ctr = pipelineContainerService.getContainer(
+            buildId = buildInfo.buildId,
+            stageId = null,
+            containerSeqId = containerId
+        ) ?: return
         pipelineEventDispatcher.dispatch(
             PipelineContainerAgentHeartBeatEvent(
                 source = "buildVMStarted",

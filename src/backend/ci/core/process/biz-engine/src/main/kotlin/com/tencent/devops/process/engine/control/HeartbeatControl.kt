@@ -89,12 +89,13 @@ class HeartbeatControl @Autowired constructor(
             return
         }
 
-        val container = pipelineContainerService.getContainer(buildId = event.buildId,
-            stageId = null, containerId = event.containerId)
-            ?: run {
-                LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
-                return
-            }
+        val container = pipelineContainerService.getContainer(
+            buildId = event.buildId,
+            stageId = null, containerSeqId = event.containerId
+        ) ?: run {
+            LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
+            return
+        }
 
         // 心跳监测是定时的消息处理，当流水线当前结束，在此时间点内又进行重试，会导致上一次的心跳监测消息处理误判，增加次数判断
         if (container.executeCount != event.executeCount) {

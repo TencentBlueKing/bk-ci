@@ -234,7 +234,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 pipelineContainerService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
-                    containerId = startUpVMTask.containerId,
+                    containerSeqId = startUpVMTask.containerId,
                     startTime = LocalDateTime.now(),
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING

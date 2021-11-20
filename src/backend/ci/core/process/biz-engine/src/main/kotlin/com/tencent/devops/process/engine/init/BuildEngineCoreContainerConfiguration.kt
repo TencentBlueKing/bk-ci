@@ -73,7 +73,6 @@ class BuildEngineCoreContainerConfiguration {
     @Bean
     fun pipelineBuildMatrixGroupQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_MATRIX_GROUP)
 
-
     @Bean
     fun pipelineBuildMatrixGroupQueueBind(
         @Autowired pipelineBuildContainerQueue: Queue,

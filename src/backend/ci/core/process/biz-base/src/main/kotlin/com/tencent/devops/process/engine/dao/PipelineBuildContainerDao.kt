@@ -133,7 +133,7 @@ class PipelineBuildContainerDao {
                         .set(PIPELINE_ID, it.pipelineId)
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
-                        .set(SEQ, it.seq)
+                        .set(CONTAINER_ID, it.containerId)
                         .set(STATUS, it.status)
                         .set(START_TIME, it.startTime)
                         .set(END_TIME, it.endTime)
@@ -141,14 +141,31 @@ class PipelineBuildContainerDao {
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, it.conditions)
                         .where(BUILD_ID.eq(it.buildId)
-                            .and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
+                            .and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
                 )
             }
         }
         dslContext.batch(records).execute()
     }
 
-    fun get(
+    fun getBySeqId(
+        dslContext: DSLContext,
+        buildId: String,
+        stageId: String?,
+        containerSeqId: Int
+    ): TPipelineBuildContainerRecord? {
+
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            if (stageId.isNullOrBlank()) {
+                query.and(SEQ.eq(containerSeqId)).fetchAny()
+            } else {
+                query.and(STAGE_ID.eq(stageId)).and(SEQ.eq(containerSeqId)).fetchAny()
+            }
+        }
+    }
+
+    fun getByContainerId(
         dslContext: DSLContext,
         buildId: String,
         stageId: String?,
@@ -169,7 +186,7 @@ class PipelineBuildContainerDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        containerId: String,
+        containerSeqId: Int,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         buildStatus: BuildStatus
@@ -195,7 +212,7 @@ class PipelineBuildContainerDao {
             }
 
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
-                .and(CONTAINER_ID.eq(containerId)).execute()
+                .and(SEQ.eq(containerSeqId)).execute()
         }
     }
 

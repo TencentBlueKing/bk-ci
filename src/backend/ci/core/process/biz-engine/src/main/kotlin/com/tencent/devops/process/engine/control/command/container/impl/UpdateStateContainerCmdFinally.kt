@@ -112,7 +112,7 @@ class UpdateStateContainerCmdFinally(
         pipelineContainerService.updateContainerStatus(
             buildId = event.buildId,
             stageId = event.stageId,
-            containerId = event.containerId,
+            containerSeqId = event.containerId,
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime

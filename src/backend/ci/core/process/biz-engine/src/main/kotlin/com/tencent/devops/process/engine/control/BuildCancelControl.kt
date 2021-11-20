@@ -213,7 +213,7 @@ class BuildCancelControl @Autowired constructor(
                         pipelineContainerService.updateContainerStatus(
                             buildId = event.buildId,
                             stageId = stageId,
-                            containerId = containerId,
+                            containerSeqId = containerId,
                             startTime = null,
                             endTime = LocalDateTime.now(),
                             buildStatus = switchedStatus

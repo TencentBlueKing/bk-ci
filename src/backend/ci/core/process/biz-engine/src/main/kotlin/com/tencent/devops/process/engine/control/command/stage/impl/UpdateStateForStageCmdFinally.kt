@@ -278,7 +278,7 @@ class UpdateStateForStageCmdFinally(
                 pipelineContainerService.updateContainerStatus(
                     buildId = c.buildId,
                     stageId = c.stageId,
-                    containerId = c.containerId,
+                    containerSeqId = c.containerId,
                     endTime = LocalDateTime.now(),
                     buildStatus = stageStatus
                 )

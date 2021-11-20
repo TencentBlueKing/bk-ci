@@ -332,8 +332,9 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
+            // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致
             if (c.containerId.isNullOrBlank()) {
-                c.containerId = UUIDUtil.generate()
+                c.containerId = modelContainerIdGenerator.getNextId()
             }
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank()) {

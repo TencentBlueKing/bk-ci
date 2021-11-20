@@ -92,7 +92,11 @@ class ContainerControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 watcher.start("getContainer")
-                val container = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
+                val container = pipelineContainerService.getContainer(
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerSeqId = containerId
+                ) ?: run {
                     LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
                     return
                 }

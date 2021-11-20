@@ -28,19 +28,10 @@
 package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
-import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
-import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -52,6 +43,7 @@ import org.springframework.stereotype.Service
 class InitializeContainerStageCmd(
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
+
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -67,8 +59,6 @@ class InitializeContainerStageCmd(
         val stage = commandContext.stage
         val event = commandContext.event
 
-
         commandContext.cmdFlowState = CmdFlowState.CONTINUE
     }
-
 }

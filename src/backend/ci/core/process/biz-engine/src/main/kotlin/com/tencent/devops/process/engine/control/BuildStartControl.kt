@@ -291,7 +291,7 @@ class BuildStartControl @Autowired constructor(
                     pipelineContainerService.updateContainerStatus(
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.id!!,
+                        containerSeqId = container.id!!,
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
