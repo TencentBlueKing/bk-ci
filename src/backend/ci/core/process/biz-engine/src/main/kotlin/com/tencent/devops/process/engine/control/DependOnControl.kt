@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

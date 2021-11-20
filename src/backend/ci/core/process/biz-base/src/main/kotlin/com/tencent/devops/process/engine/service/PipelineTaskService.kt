@@ -226,7 +226,7 @@ class PipelineTaskService @Autowired constructor(
         transactionContext: DSLContext?,
         buildId: String,
         taskId: String,
-        taskParam: String,
+        taskParam: String
     ): Int {
         return pipelineBuildTaskDao.updateTaskParam(
             dslContext = transactionContext ?: dslContext,
