@@ -43,19 +43,16 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("TooManyFunctions")
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
-    private val slaveGatewayService: SlaveGatewayService,
-    private val agentPipelineService: AgentPipelineService
+    private val slaveGatewayService: SlaveGatewayService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
         return Result(true)
     }
 

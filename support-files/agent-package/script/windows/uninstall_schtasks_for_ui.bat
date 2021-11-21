@@ -1,13 +1,11 @@
 @echo off
 
-REM 反注册[计划任务] 与install_schtasks_for_ui.bat相对应
 echo start uninstall devops daemon schtasks...
 cd /d %~dp0
 set work_dir=%CD%
-set agent_id=##agentId##
+set agent_id=dnmrrvme
 set service_name=devops_agent_%agent_id%
 
-REM 如果查到之前已经使用install.bat脚本注册到win服务，则先进行停服并删除，再将任务从「计划任务」中删除，并最终停止所有agent进程
 sc query %service_name%
 
 if ERRORLEVEL 1 GOTO :delete_schtasks
