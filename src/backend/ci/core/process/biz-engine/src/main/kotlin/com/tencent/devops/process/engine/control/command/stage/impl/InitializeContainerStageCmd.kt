@@ -28,11 +28,14 @@
 package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.container.MatrixGroupContainer
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -41,9 +44,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class InitializeContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
+    private val buildDetailService: BaseBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
-
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -65,6 +67,20 @@ class InitializeContainerStageCmd(
     }
 
     private fun generateMatrixGroup(commandContext: StageContext): Int {
+        val event = commandContext.event
+        var newCount = 0
+        val model = buildDetailService.getBuildModel(event.buildId) ?: return newCount
+
+        // #4518 根据当前上下文对每一个构建矩阵进行裂变
+        model.stages.forEach { stage ->
+            if (stage.id == commandContext.stage.stageId) {
+                stage.containers.forEach { container ->
+                    if (container is MatrixGroupContainer) {
+
+                    }
+                }
+            }
+        }
         return 0
     }
 }

@@ -96,7 +96,8 @@ class PipelineContainerService @Autowired constructor(
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
-        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerSeqId|stageId=$stageId")
+        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|" +
+            "containerSeqId=$containerSeqId|stageId=$stageId")
         pipelineBuildContainerDao.updateStatus(
             dslContext = dslContext,
             buildId = buildId,
