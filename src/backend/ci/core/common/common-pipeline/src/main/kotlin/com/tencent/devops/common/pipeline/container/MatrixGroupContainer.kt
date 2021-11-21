@@ -60,7 +60,7 @@ data class MatrixGroupContainer(
     @ApiModelProperty("构建容器ID", required = false, hidden = true)
     override var containerId: String? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean = true,
+    override var matrixGroupFlag: Boolean = true,
     @ApiModelProperty("分裂策略映射（变量名到所有可取值数组的映射）", required = false)
     val strategyMap: Map<String, List<String>>? = null,
     @ApiModelProperty("分裂策略JSON对象", required = false)
@@ -70,7 +70,11 @@ data class MatrixGroupContainer(
     @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
     val excludeCase: List<Map<String, String>>? = null,
     @ApiModelProperty("分裂后的容器集合", required = false)
-    var containers: MutableList<VMBuildContainer>? = null,
+    var groupContainers: MutableList<VMBuildContainer>? = null,
+    @ApiModelProperty("正在运行的数量", required = false)
+    var totalCount: Int? = null,
+    @ApiModelProperty("正在运行的数量", required = false)
+    var runningCount: Int? = null,
     @ApiModelProperty("构建机环境变量", required = false)
     val buildEnv: Map<String, String>? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)

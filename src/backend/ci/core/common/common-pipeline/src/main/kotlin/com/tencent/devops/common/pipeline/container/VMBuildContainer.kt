@@ -97,7 +97,7 @@ data class VMBuildContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false,
+    override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("所在构建矩阵组的jobId", required = false)
     var matrixGroupId: String? = null
 ) : Container {

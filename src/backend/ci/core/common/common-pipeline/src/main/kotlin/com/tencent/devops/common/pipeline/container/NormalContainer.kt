@@ -76,7 +76,7 @@ data class NormalContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false
+    override var matrixGroupFlag: Boolean? = false
 ) : Container {
     companion object {
         const val classType = "normal"
