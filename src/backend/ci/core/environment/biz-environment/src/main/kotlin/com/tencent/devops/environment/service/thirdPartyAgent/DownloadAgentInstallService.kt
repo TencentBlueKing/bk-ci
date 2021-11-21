@@ -53,7 +53,8 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("TooManyFunctions", "LongMethod")
 class DownloadAgentInstallService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
@@ -73,6 +74,7 @@ class DownloadAgentInstallService @Autowired constructor(
     fun downloadInstallScript(agentId: String): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
+
         /**
          * agent_url
          * jre_url
@@ -228,25 +230,21 @@ class DownloadAgentInstallService @Autowired constructor(
         val file = File(agentPackage, "script/${agentRecord.os.toLowerCase()}")
         val scripts = file.listFiles()
         val map = getAgentReplaceProperties(agentRecord)
-        return scripts?.map {
+        return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
-            map.forEach { (key, value) ->
-                content = content.replace("##$key##", value)
-            }
+            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
-        }?.toMap() ?: emptyMap()
+        } ?: emptyMap()
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val file = File(agentPackage, "config").listFiles()
         val map = getAgentReplaceProperties(agentRecord)
-        return file?.filter { it.isFile }?.map {
+        return file?.filter { it.isFile }?.associate {
             var content = it.readText(Charsets.UTF_8)
-            map.forEach { (key, value) ->
-                content = content.replace("##$key##", value)
-            }
+            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
-        }?.toMap() ?: emptyMap()
+        } ?: emptyMap()
     }
 
     fun downloadJre(agentId: String, eTag: String?): Response {
@@ -316,6 +314,52 @@ class DownloadAgentInstallService @Autowired constructor(
             throw FileNotFoundException("The file is not exist")
         }
         return file
+    }
+
+    /**
+     * 为指定[agentHashId]的agent生成并下载安装该台agent所需要的动态脚本和配置批次文件
+     */
+    fun downloadInstallAgentBatchFile(agentHashId: String): Response {
+        logger.info("Trying to gen the new agent batch.zip from($agentHashId)")
+        val record = getAgentRecord(agentHashId)
+
+        return Response.ok(StreamingOutput { output ->
+            val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+
+            if (!certFilePath.isNullOrBlank()) {
+                val certFile = File(certFilePath)
+                if (certFile.exists() && certFile.isFile) {
+                    zipOut.putArchiveEntry(ZipArchiveEntry(certFile, CERT_FILE_NAME))
+                    IOUtils.copy(FileInputStream(certFile), zipOut)
+                    zipOut.closeArchiveEntry()
+                }
+            }
+
+            getGoAgentScriptFiles(record).forEach { (name, content) ->
+                logger.info("zip the script files ($name)")
+                val entry = ZipArchiveEntry(name)
+                val bytes = content.toByteArray()
+                entry.size = bytes.size.toLong()
+                entry.unixMode = AGENT_FILE_MODE
+                zipOut.putArchiveEntry(entry)
+                IOUtils.copy(ByteArrayInputStream(bytes), zipOut)
+                zipOut.closeArchiveEntry()
+            }
+
+            getPropertyFile(record).forEach { (name, content) ->
+                logger.info("zip the properties files ($name)")
+                val entry = ZipArchiveEntry(name)
+                val bytes = content.toByteArray()
+                entry.size = bytes.size.toLong()
+                zipOut.putArchiveEntry(entry)
+                IOUtils.copy(ByteArrayInputStream(bytes), zipOut)
+                zipOut.closeArchiveEntry()
+            }
+
+            zipOut.close()
+        }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = batch.zip")
+            .build()
     }
 
     companion object {

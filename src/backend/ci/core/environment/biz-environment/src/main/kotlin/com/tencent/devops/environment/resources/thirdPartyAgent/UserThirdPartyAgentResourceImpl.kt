@@ -55,8 +55,6 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val importService: ImportService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
-        checkUserId(userId)
-        checkProjectId(projectId)
         return Result(true)
     }
 

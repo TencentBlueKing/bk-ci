@@ -31,7 +31,10 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -44,6 +47,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeWebsocketService
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -58,6 +62,7 @@ class ImportService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
+    private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService
@@ -66,6 +71,41 @@ class ImportService @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(ImportService::class.java)
         private val badStatus = setOf(AgentStatus.IMPORT_EXCEPTION.status, AgentStatus.UN_IMPORT.status)
+    }
+
+    /**
+     * 利用上一次安装包[agentHashId]的ID来生成新的agent并返回hashId
+     */
+    fun generateAgentByOtherAgentId(agentHashId: String): String {
+        val agentLongId = HashUtil.decodeIdToLong(agentHashId)
+        val parentAgent = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = agentLongId)
+            ?: throw NotFoundException("The install key($agentHashId) is not exist")
+        val userId = parentAgent.createdUser
+        val projectId = parentAgent.projectId
+
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+            )
+        }
+
+        val os = OS.valueOf(parentAgent.os)
+        val zoneName = null
+        val gateway = slaveGatewayService.getGateway(zoneName)
+        val fileGateway = slaveGatewayService.getFileGateway(zoneName)
+        LOG.info("Generate agent($os) info of project($projectId) with gateway $gateway by user($userId)")
+        val secretKey = ApiUtil.randomSecretKey()
+        val id = thirdPartyAgentDao.add(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            os = os,
+            secretKey = SecurityUtil.encrypt(secretKey),
+            gateway = gateway,
+            fileGateway = fileGateway
+        )
+
+        return HashUtil.encodeLongId(id)
     }
 
     fun importAgent(userId: String, projectId: String, agentId: String) {

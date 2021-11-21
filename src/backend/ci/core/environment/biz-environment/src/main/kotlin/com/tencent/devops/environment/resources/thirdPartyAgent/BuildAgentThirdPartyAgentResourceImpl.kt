@@ -50,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 @RestResource
+@Suppress("ReturnCount", "ThrowsCount", "MagicNumber")
 class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
