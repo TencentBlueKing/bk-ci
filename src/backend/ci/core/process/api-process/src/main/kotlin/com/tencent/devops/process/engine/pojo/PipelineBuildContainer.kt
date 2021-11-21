@@ -36,6 +36,7 @@ data class PipelineBuildContainer(
     val buildId: String,
     val stageId: String,
     val containerId: String,
+    val matrixGroupFlag: Boolean?,
     val matrixGroupId: String?,
     val containerType: String,
     val seq: Int,

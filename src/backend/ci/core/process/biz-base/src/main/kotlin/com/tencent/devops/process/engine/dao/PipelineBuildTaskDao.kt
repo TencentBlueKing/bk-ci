@@ -255,6 +255,23 @@ class PipelineBuildTaskDao {
         }
     }
 
+    fun deleteBuildTasksByContainerSeqId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerSeqId: String
+    ): Int {
+        return with(T_PIPELINE_BUILD_TASK) {
+            dslContext.delete(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(CONTAINER_ID.eq(containerSeqId))
+                .execute()
+        }
+    }
+
     fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask? {
         return with(tPipelineBuildTaskRecord) {
             PipelineBuildTask(

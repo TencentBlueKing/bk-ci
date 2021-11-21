@@ -48,7 +48,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService

@@ -60,6 +60,7 @@ class PipelineBuildContainerDao {
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
+                    MATRIX_GROUP_FLAG,
                     MATRIX_GROUP_ID,
                     CONTAINER_TYPE,
                     SEQ,
@@ -75,6 +76,7 @@ class PipelineBuildContainerDao {
                         buildContainer.pipelineId,
                         buildContainer.buildId,
                         buildContainer.stageId,
+                        buildContainer.matrixGroupFlag,
                         buildContainer.matrixGroupId,
                         buildContainer.containerType,
                         buildContainer.seq,
@@ -102,6 +104,7 @@ class PipelineBuildContainerDao {
                         .set(BUILD_ID, it.buildId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(MATRIX_GROUP_FLAG, it.matrixGroupFlag)
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(SEQ, it.seq)
@@ -165,6 +168,7 @@ class PipelineBuildContainerDao {
         }
     }
 
+    @Deprecated("逐步切换至SEQ ID做查询")
     fun getByContainerId(
         dslContext: DSLContext,
         buildId: String,
@@ -230,6 +234,24 @@ class PipelineBuildContainerDao {
         }
     }
 
+    fun listBuildContainerInMatrixGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String? = null
+    ): Collection<TPipelineBuildContainerRecord> {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            val conditionStep = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(MATRIX_GROUP_ID.isNotNull)
+            if (!stageId.isNullOrBlank()) {
+                conditionStep.and(STAGE_ID.eq(stageId))
+            }
+            conditionStep.orderBy(SEQ.asc()).fetch()
+        }
+    }
+
     fun deletePipelineBuildContainers(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             dslContext.delete(this)
@@ -259,6 +281,7 @@ class PipelineBuildContainerDao {
                 stageId = stageId,
                 containerType = containerType,
                 containerId = containerId,
+                matrixGroupFlag = matrixGroupFlag,
                 matrixGroupId = matrixGroupId,
                 seq = seq,
                 status = BuildStatus.values()[status],

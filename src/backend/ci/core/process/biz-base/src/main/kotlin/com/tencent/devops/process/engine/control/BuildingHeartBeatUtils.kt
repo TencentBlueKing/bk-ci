@@ -33,7 +33,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

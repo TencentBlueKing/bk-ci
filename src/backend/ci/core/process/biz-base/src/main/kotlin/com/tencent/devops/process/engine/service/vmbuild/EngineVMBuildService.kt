@@ -501,7 +501,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 transactionContext = null,
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus,
+                taskStatus = updateTaskStatusInfo.buildStatus
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(

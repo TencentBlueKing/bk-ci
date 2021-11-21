@@ -56,9 +56,15 @@ class InitializeContainerStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
-        val stage = commandContext.stage
-        val event = commandContext.event
-
+        // 在下发构建机任务前进行构建矩阵计算
+        val count = generateMatrixGroup(commandContext)
+        LOG.info("ENGINE|${commandContext.stage.buildId}|MATRIX_CONTAINER_INIT|" +
+            "s(${commandContext.stage.stageId})|newContainerCount=$count")
+        commandContext.latestSummary = "from_s(${commandContext.stage.stageId}) generateNew($count)"
         commandContext.cmdFlowState = CmdFlowState.CONTINUE
+    }
+
+    private fun generateMatrixGroup(commandContext: StageContext): Int {
+        return 0
     }
 }

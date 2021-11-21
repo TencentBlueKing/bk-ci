@@ -27,17 +27,10 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
-import com.tencent.devops.process.service.BuildVariableService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,13 +44,9 @@ import org.springframework.stereotype.Service
 @Service
 @Suppress("TooManyFunctions", "LongParameterList")
 class PipelineContainerService @Autowired constructor(
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineBuildContainerDao: PipelineBuildContainerDao,
-    private val buildVariableService: BuildVariableService,
-    private val stageBuildDetailService: StageBuildDetailService,
-    private val client: Client
+    private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineContainerService::class.java)
@@ -125,5 +114,31 @@ class PipelineContainerService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+    }
+
+    fun deleteTasksInMatrixGroupContainer(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        val allGroupContainers = pipelineBuildContainerDao.listBuildContainerInMatrixGroup(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|allGroupContainers=$allGroupContainers")
+        var count = 0
+        allGroupContainers.forEach {
+            count += pipelineTaskService.deleteTasksByContainerSeqId(
+                dslContext = transactionContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                containerSeqId = it.seq
+            )
+        }
+        logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|deleteTaskCount=$count")
     }
 }
