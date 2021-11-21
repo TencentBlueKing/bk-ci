@@ -33,7 +33,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
@@ -52,40 +51,34 @@ func DoUpgradeAgent() error {
 		logs.Error("get total lock failed, exit", err.Error())
 		return errors.New("get total lock failed")
 	}
-
-	logs.Info("wait 10 seconds for agent to stop")
-	time.Sleep(10 * time.Second)
-
-	// GO_20190807 版非windows agent做重装升级替换daemon，其他只替换devopsAgent
-	currentAgentVersion := config.GAgentEnv.AgentVersion
-	if !systemutil.IsWindows() && currentAgentVersion == "GO_20190807" {
-		err := UninstallAgent()
-		if err != nil {
-			return errors.New("uninstall agent failed")
-		}
-
-		fileutil.TryRemoveFile(systemutil.GetWorkDir() + "/agent.zip")
-		api.DownloadAgentInstallScript(systemutil.GetWorkDir() + "/" + config.GetInstallScript())
-
-		totalLock.Unlock()
-		logs.Info(totalLock.Unlock())
-		err = InstallAgent()
-		if err != nil {
-			logs.Error("install agent failed: ", err)
-			return errors.New("install agent failed")
-		}
-
-		logs.Info("reinstall agent done, upgrade process exiting")
-		return nil
-	} else {
-		err = replaceAgentFile()
-		if err != nil {
-			logs.Error("replace agent file failed: ", err.Error())
-			return errors.New("replace agent file failed")
-		}
-		tryKillAgentProcess()
-		totalLock.Unlock()
+    defer func() { totalLock.Unlock() }()
+	serr := StopAgent()
+	if serr != nil {
+		logs.Error("stop agent failed: ", err.Error())
+		return err
 	}
+
+	logs.Info("wait 5 seconds for agent to stop")
+	time.Sleep(5 * time.Second)
+
+	err = replaceAgentFile(config.GetClienAgentFile())
+	if err != nil {
+		logs.Error("replace agent file failed: ", err.Error())
+		return errors.New("replace agent file failed: " + err.Error())
+	}
+
+	err = replaceAgentFile(config.GetClientDaemonFile()) // 如果daemon进程仍然存在，则会替换失败，但以下也会退出
+
+	if err != nil {
+		logs.Error("replace daemon file failed: ", err.Error())
+	}
+
+	err2 := StartAgent()
+	if err2 != nil {
+		logs.Error("start daemon failed: ", err.Error())
+		return err2
+	}
+	logs.Info("agent start done")
 	logs.Info("agent upgrade done, upgrade process exiting")
 	return nil
 }
@@ -167,10 +160,10 @@ func StartAgent() error {
 	return nil
 }
 
-func replaceAgentFile() error {
-	logs.Info("replace agent file")
-	src := systemutil.GetUpgradeDir() + "/" + config.GetClienAgentFile()
-	dst := systemutil.GetWorkDir() + "/" + config.GetClienAgentFile()
+func replaceAgentFile(fileName string) error {
+	logs.Info("replace agent file: ", fileName)
+	src := systemutil.GetUpgradeDir() + "/" + fileName
+	dst := systemutil.GetWorkDir() + "/" + fileName
 	_, err := fileutil.CopyFile(src, dst, true)
 	return err
 }

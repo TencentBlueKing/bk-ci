@@ -56,6 +56,7 @@ const (
 	ConfigKeySlaveUser         = "devops.slave.user"
 	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
+	ConfigKeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 )
 
 type AgentConfig struct {
@@ -70,6 +71,7 @@ type AgentConfig struct {
 	SlaveUser         string
 	CollectorOn       bool
 	TimeoutSec        int64
+	IgnoreLocalIps    string
 }
 
 type AgentEnv struct {
@@ -100,7 +102,7 @@ func Init() {
 
 func LoadAgentEnv() {
 	GAgentEnv = new(AgentEnv)
-	GAgentEnv.AgentIp = systemutil.GetAgentIp()
+	GAgentEnv.AgentIp = systemutil.GetAgentIp([]string{})
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.SlaveVersion = DetectWorkerVersion()
@@ -232,6 +234,11 @@ func LoadAgentConfig() error {
 		timeout = 5
 	}
 
+	ignoreLocalIps := strings.TrimSpace(conf.String(ConfigKeyIgnoreLocalIps))
+	if len(ignoreLocalIps) == 0 {
+		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
+	}
+
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
@@ -255,6 +262,8 @@ func LoadAgentConfig() error {
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
+	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -262,7 +271,6 @@ func LoadAgentConfig() error {
 func (a *AgentConfig) SaveConfig() error {
 	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
-	systemutil.IsWindows()
 	content := bytes.Buffer{}
 	content.WriteString(ConfigKeyProjectId + "=" + GAgentConfig.ProjectId + "\n")
 	content.WriteString(ConfigKeyAgentId + "=" + GAgentConfig.AgentId + "\n")
@@ -273,6 +281,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
 	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
+	content.WriteString(ConfigKeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
