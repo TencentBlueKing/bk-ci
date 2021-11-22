@@ -61,12 +61,16 @@
     export default class User extends Vue {
         @Prop()
         username: string
+
         @Prop()
         avatarUrl: string
+
         @Prop()
         chineseName: string
+
         @Prop()
         bkpaasUserId: string
+
         show: boolean = false
 
         @Action togglePopupShow
@@ -103,6 +107,7 @@
                 return []
             }
         }
+
         logout (): void {
           window.location.href = window.getLoginUrl()
         }

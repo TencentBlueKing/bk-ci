@@ -366,9 +366,9 @@
                 'projectList'
             ]),
             ...mapGetters({
-                'curNodeOnTree': 'artifactory/getCurNodeOnTree',
-                'curDialogTree': 'artifactory/getCurDialogTree',
-                'sideMenuList': 'artifactory/getSideMenuList'
+                curNodeOnTree: 'artifactory/getCurNodeOnTree',
+                curDialogTree: 'artifactory/getCurDialogTree',
+                sideMenuList: 'artifactory/getSideMenuList'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -940,7 +940,7 @@
                 }, `删除${lastClickItem.folder ? '文件夹' : '文件'} ${lastClickItem.name}`)
 
                 this.$bkInfo({
-                    title: `确认`,
+                    title: '确认',
                     content,
                     confirmFn: async () => {
                         const {
@@ -955,7 +955,7 @@
                             theme = res ? 'success' : 'error'
                             if (res) {
                                 this.refreshFolder()
-                                message = res ? `删除成功` : `删除失败`
+                                message = res ? '删除成功' : '删除失败'
                             }
                         } catch (err) {
                             if (err.code === 403) { // 没有权限新建or编辑

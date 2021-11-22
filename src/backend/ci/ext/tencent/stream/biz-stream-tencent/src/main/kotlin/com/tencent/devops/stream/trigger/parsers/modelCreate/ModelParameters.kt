@@ -148,7 +148,10 @@ object ModelParameters {
                 }
                 // TODO 工蜂暂时未提供tag message字段，待支持后再增加
 //                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
-                startParams[PIPELINE_GIT_TAG_FROM] = originEvent.create_from
+                if (!originEvent.create_from.isNullOrBlank()) {
+                    startParams[PIPELINE_GIT_TAG_FROM] = originEvent.create_from!!
+                }
+
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
@@ -174,8 +177,8 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_MR_IID] = originEvent.object_attributes.iid.toString()
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] = originEvent.object_attributes.last_commit.author.name
                 startParams[PIPELINE_GIT_MR_TITLE] = originEvent.object_attributes.title
-                if (originEvent.object_attributes.description.isNotBlank()) {
-                    startParams[PIPELINE_GIT_MR_DESC] = originEvent.object_attributes.description
+                if (!originEvent.object_attributes.description.isNullOrBlank()) {
+                    startParams[PIPELINE_GIT_MR_DESC] = originEvent.object_attributes.description!!
                 }
                 startParams[PIPELINE_GIT_MR_PROPOSER] = originEvent.user.username
                 startParams[PIPELINE_GIT_MR_ACTION] = originEvent.object_attributes.action
