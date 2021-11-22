@@ -127,6 +127,10 @@ data class StagePauseCheck(
                 group.params = null
             }
         }
+        if (init) {
+            status = null
+            checkTimes = null
+        }
     }
 
     /**
