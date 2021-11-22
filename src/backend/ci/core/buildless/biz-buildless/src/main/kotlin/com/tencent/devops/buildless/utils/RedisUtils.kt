@@ -36,8 +36,12 @@ class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
-    fun addBuildlessPoolContainer(containerId: String) =
-        redisOperation.hset(buildlessPoolKey(), containerId, ContainerStatus.IDLE.name)
+    fun setBuildlessPoolContainer(
+        containerId: String,
+        status: ContainerStatus = ContainerStatus.IDLE
+    ) {
+        redisOperation.hset(buildlessPoolKey(), containerId, status.name)
+    }
 
     fun getIdleContainer(): String? {
         val keys = redisOperation.hkeys(buildlessPoolKey())

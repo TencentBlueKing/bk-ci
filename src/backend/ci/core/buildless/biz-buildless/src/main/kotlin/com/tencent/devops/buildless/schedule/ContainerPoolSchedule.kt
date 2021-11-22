@@ -45,7 +45,7 @@ class ContainerPoolSchedule @Autowired constructor(
         if (coreSize > 10) return
         for (i in 1..(10 - coreSize)) {
             val containerId = buildlessService.createBuildlessPoolContainer()
-            redisUtils.addBuildlessPoolContainer(containerId)
+            redisUtils.setBuildlessPoolContainer(containerId)
         }
     }
 }

@@ -45,6 +45,7 @@ import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CommonUtils
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.DockerEnv
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
@@ -138,6 +139,8 @@ class BuildlessService(
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .exec()
 
+            logger.info("Success start container: $containerId")
+            redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
             return containerId
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
@@ -155,12 +158,14 @@ class BuildlessService(
         val volumeApps = Volume(dockerHostConfig.volumeApps)
         val volumeInit = Volume(dockerHostConfig.volumeInit)
         val volumeSleep = Volume(dockerHostConfig.volumeSleep)
+        val volumeLogs = Volume(dockerHostConfig.volumeLogs)
 
         val gateway = dockerHostConfig.gateway
         val binds = Binds(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
             Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathLogs, volumeLogs)
         )
 
         val container = httpLongDockerCli.createContainerCmd(imageName)
