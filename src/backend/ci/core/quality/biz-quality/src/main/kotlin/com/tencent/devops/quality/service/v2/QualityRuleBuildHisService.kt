@@ -86,7 +86,8 @@ class QualityRuleBuildHisService constructor(
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
+                    .forEach {
                     val requestIndicator = indicatorMap[it.enName]
                     checkThresholdType(requestIndicator!!, it)
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
@@ -143,6 +144,9 @@ class QualityRuleBuildHisService constructor(
 
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
+            if (it.indicatorIds.isNullOrBlank()) {
+                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error: ${it.indicatorIds}")
+            }
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
         }
 
@@ -218,6 +222,14 @@ class QualityRuleBuildHisService constructor(
     @Suppress("NestedBlockDepth")
     private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
         ruleRequestList.forEach { request ->
+            if (request.indicators.isEmpty()) {
+                throw QualityOpConfigException("quality rule indicators is empty")
+            }
+
+            if (request.indicators.any { it.atomCode.isBlank() || it.enName.isBlank() }) {
+                throw QualityOpConfigException("quality rule indicator config has error")
+            }
+
             request.opList?.forEach { op ->
                 if (op.operation == RuleOperation.END) {
                     if (op.notifyTypeList.isNullOrEmpty()) {
@@ -233,10 +245,6 @@ class QualityRuleBuildHisService constructor(
                     if (op.auditUserList.isNullOrEmpty()) {
                         throw QualityOpConfigException("auditUserList is empty for operation audit")
                     }
-                }
-
-                if (request.indicators.isEmpty()) {
-                    throw QualityOpConfigException("quality rule indicators is empty")
                 }
             }
         }
