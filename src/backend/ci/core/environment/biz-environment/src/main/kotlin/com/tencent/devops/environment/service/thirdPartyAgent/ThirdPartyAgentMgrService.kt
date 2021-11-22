@@ -799,7 +799,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         // #4686 优化导入流程之后构建机启动会自动导入，此web的导入界面需要继续展示让用户可见，以使之保持用户现有操作习惯，
         var fromStatus = AgentStatus.fromStatus(record.status)
         if (fromStatus == AgentStatus.IMPORT_OK) {
-            fromStatus =  AgentStatus.UN_IMPORT_OK
+            fromStatus = AgentStatus.UN_IMPORT_OK
         }
         return ThirdPartyAgentStatusWithInfo(
             status = fromStatus,
