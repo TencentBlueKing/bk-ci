@@ -44,7 +44,7 @@ class TencentPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        needShortUrl: Boolean?
+        needShortUrl: Boolean
     ): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
