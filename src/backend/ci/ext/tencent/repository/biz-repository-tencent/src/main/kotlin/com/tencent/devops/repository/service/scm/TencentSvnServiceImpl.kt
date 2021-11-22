@@ -55,7 +55,11 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
             filePath = filePath,
             reversion = reversion,
             credential1 = URLEncoder.encode(credential1, "UTF-8"),
-            credential2 = URLEncoder.encode(credential2, "UTF-8")
+            credential2 = if (credential2 == null) {
+                null
+            } else {
+                URLEncoder.encode(credential2, "UTF-8")
+            }
         ).data ?: ""
     }
 
