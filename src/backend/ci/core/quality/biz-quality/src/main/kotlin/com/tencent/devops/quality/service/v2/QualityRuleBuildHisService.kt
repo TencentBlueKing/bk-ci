@@ -145,7 +145,7 @@ class QualityRuleBuildHisService constructor(
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
             if (it.indicatorIds.isNullOrBlank()) {
-                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error: ${it.indicatorIds}")
+                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error ${it.indicatorIds}")
             }
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
         }
