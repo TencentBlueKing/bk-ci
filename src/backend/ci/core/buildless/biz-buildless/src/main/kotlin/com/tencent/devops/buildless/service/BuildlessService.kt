@@ -161,15 +161,16 @@ class BuildlessService(
         val volumeLogs = Volume(dockerHostConfig.volumeLogs)
 
         val gateway = dockerHostConfig.gateway
+        val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
         val binds = Binds(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
             Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathLogs, volumeLogs)
+            Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
         )
 
         val container = httpLongDockerCli.createContainerCmd(imageName)
-            .withName("$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}")
+            .withName(containerName)
             .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
