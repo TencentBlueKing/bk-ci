@@ -67,18 +67,25 @@ func DoInstallAgent() error {
 	logs.Info(fmt.Sprintf("download %s end", sourceZipFile))
 
 	logs.Info(fmt.Sprintf("unzip %s to %s start", sourceZipFile, workDir))
-	err3 := fileutil.Unzip(sourceZipFile, workDir)
-	if err3 != nil {
-		logs.Error("unzip batch.zip failed", err3)
+	errUnzip := fileutil.Unzip(sourceZipFile, workDir)
+	if errUnzip != nil {
+		logs.Error("unzip batch.zip failed", errUnzip)
 		return errors.New(fmt.Sprintf("unzip %s fail", sourceZipFile))
 	}
 	logs.Info(fmt.Sprintf("unzip %s to %s end", sourceZipFile, workDir))
 
+	logs.Info("uninstall agent start")
+	errU := UninstallAgent()
+	if errU != nil {
+		logs.Error("uninstall agent failed: ", errU.Error())
+		return errU
+	}
+
 	logs.Info("install agent start")
-	err2 := InstallAgent()
-	if err2 != nil {
-		logs.Error("install agent failed: ", err.Error())
-		return err2
+	errI := InstallAgent()
+	if errI != nil {
+		logs.Error("install agent failed: ", errI.Error())
+		return errI
 	}
 	logs.Info("install agent done")
 	return nil

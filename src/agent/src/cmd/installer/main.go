@@ -59,11 +59,6 @@ func main() {
 		return
 	}
 
-	if ok := systemutil.CheckProcess(agentProcess); !ok {
-		logs.Warn("devopsAgent process already running, exit install")
-		return
-	}
-
 	action := flag.String("action", "", "action, install or uninstall")
 	flag.Parse()
 	logs.Info("installer start, action: ", *action)
