@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.timer.configuration
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
@@ -68,14 +69,14 @@ class StreamTriggerConfiguration {
         schedulerManager: SchedulerManager,
         streamTimerService: StreamTimerService,
         redisOperation: RedisOperation,
-        gray: Gray
+        client: Client
     ): StreamJobBean {
         return StreamJobBean(
             streamEventDispatcher = streamEventDispatcher,
             schedulerManager = schedulerManager,
             streamTimerService = streamTimerService,
             redisOperation = redisOperation,
-            gray = gray
+            client = client
         )
     }
 
