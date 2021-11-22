@@ -24,25 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package systemutil
+package installer
 
 import (
-	"net"
 	"testing"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/installer"
 )
 
-func Test_IP(t *testing.T) {
-	a := net.IPv4(192, 168, 1, 1)
-	println(a.IsGlobalUnicast())
-
-	a = net.IPv4(10, 10, 1, 1)
-	println(a.IsGlobalUnicast())
-
-	a = net.IPv4(127, 0, 0, 1)
-	println(a.IsGlobalUnicast())
-}
-
-func Test_GetAgentIp(t *testing.T) {
-	t.Log(systemutil.GetAgentIp([]string{}))
+func Test_DoInstallAgent_01(t *testing.T) {
+	err := DoInstallAgent()
+	if err != nil {
+		t.Error("err: ", err.Error())
+	}
+	t.Log("done")
 }

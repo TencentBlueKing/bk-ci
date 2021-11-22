@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,13 +34,15 @@ import (
 	"runtime"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrader"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/installer"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"github.com/astaxie/beego/logs"
 )
 
 const (
-	upgraderProcess = "upgrade"
+	installerProcess = "installer"
+	agentProcess  = "agent"
+	daemonProcess = "daemon"
 )
 
 func main() {
@@ -51,32 +54,32 @@ func main() {
 		}
 	}()
 
-	if ok := systemutil.CheckProcess(upgraderProcess); !ok {
-		logs.Warn("get process lock failed, exit")
+	if ok := systemutil.CheckProcess(installerProcess); !ok {
+		logs.Warn("get installer process lock failed, exit")
 		return
 	}
 
-	action := flag.String("action", "upgrade", "action, upgrade or uninstall")
+	action := flag.String("action", "", "action, install or uninstall")
 	flag.Parse()
-	logs.Info("upgrader start, action: ", *action)
+	logs.Info("installer start, action: ", *action)
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
-	if config.ActionUpgrade == *action {
-		err := upgrader.DoUpgradeAgent()
+	if config.ActionInstall == *action {
+		err := installer.DoInstallAgent()
 		if err != nil {
-			logs.Error("upgrade agent failed: " + err.Error())
+			logs.Error("install new agent failed: " + err.Error())
 			systemutil.ExitProcess(1)
 		}
 	} else if config.ActionUninstall == *action {
-		err := upgrader.DoUninstallAgent()
+		err := installer.DoUninstallAgent()
 		if err != nil {
-			logs.Error("upgrade agent failed")
+			logs.Error("uninstall agent failed")
 			systemutil.ExitProcess(1)
 		}
 	} else {
-		logs.Error("unsupport action")
+		logs.Error("unsupported action: ", *action)
 		systemutil.ExitProcess(1)
 	}
 	systemutil.ExitProcess(0)
@@ -84,7 +87,7 @@ func main() {
 
 func initLog() {
 	logConfig := make(map[string]string)
-	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsUpgrader.log"
+	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsInstaller.log"
 	logConfig["perm"] = "0666"
 	jsonConfig, _ := json.Marshal(logConfig)
 	logs.SetLogger(logs.AdapterFile, string(jsonConfig))
