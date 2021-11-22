@@ -190,4 +190,12 @@ class AgentGrayUtils constructor(
     fun getMaxParallelUpgradeCount(): Int {
         return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
     }
+
+    fun getParallelUpgradeCountKey(): String {
+        return PARALLEL_UPGRADE_COUNT
+    }
+
+    fun getDefaultParallelUpgradeCount(): Int {
+        return DEFAULT_PARALLEL_UPGRADE_COUNT
+    }
 }
