@@ -2,7 +2,7 @@
 
 cd /d %~dp0
 set workspace=%CD%
-set agent_id=dnmrrvme
+set agent_id=##agentId##
 set service_name=devops_agent_%agent_id%
 
 schtasks /query | findstr %service_name%

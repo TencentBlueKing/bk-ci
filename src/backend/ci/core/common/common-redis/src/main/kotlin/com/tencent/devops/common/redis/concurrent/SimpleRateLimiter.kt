@@ -35,7 +35,7 @@ class SimpleRateLimiter(private val redisOperation: RedisOperation) {
      * 在[seconds]秒内，获取锁[lockKey]数量不超过[bucketSize]，否则返回false
      */
     fun acquire(bucketSize: Int, lockKey: String, seconds: Long = 60): Boolean {
-        return if (redisOperation.increment(lockKey, 1) ?: 1 <= bucketSize) {
+        return if ((redisOperation.increment(lockKey, 1) ?: 1) <= bucketSize) {
             redisOperation.expire(lockKey, seconds)
             true
         } else {
