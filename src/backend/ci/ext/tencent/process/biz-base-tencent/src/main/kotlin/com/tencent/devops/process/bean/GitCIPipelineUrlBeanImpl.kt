@@ -46,7 +46,7 @@ class GitCIPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        needShortUrl: Boolean?
+        needShortUrl: Boolean
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         val project = client.getScm(ServiceGitCiResource::class)
