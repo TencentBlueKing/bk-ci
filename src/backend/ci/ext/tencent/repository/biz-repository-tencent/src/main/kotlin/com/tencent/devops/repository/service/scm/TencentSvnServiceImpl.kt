@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.SvnFileInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Primary
 @Service
@@ -54,7 +55,11 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
             filePath = filePath,
             reversion = reversion,
             credential1 = credential1,
-            credential2 = credential2
+            credential2 = if (credential2 == null) {
+                null
+            } else {
+                URLEncoder.encode(credential2, "UTF-8")
+            }
         ).data ?: ""
     }
 
