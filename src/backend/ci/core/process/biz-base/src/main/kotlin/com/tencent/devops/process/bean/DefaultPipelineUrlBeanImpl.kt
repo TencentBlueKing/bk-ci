@@ -35,7 +35,7 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        needShortUrl: Boolean?
+        needShortUrl: Boolean
     ): String {
         return "${HomeHostUtil
             .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
