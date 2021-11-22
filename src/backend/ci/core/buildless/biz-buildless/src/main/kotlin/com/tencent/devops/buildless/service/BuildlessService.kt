@@ -128,7 +128,7 @@ class BuildlessService(
                     "$ENV_KEY_PROJECT_ID=${dockerHostBuildInfo.projectId}",
                     "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
                     "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}",
-                    "$ENV_KEY_GATEWAY=${DockerEnv.getGatway()}",
+                    "$ENV_KEY_GATEWAY=${dockerHostConfig.gateway}",
                     "TERM=xterm-256color",
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
@@ -155,7 +155,7 @@ class BuildlessService(
         val volumeApps = Volume(dockerHostConfig.volumeApps)
         val volumeInit = Volume(dockerHostConfig.volumeInit)
 
-        val gateway = DockerEnv.getGatway()
+        val gateway = dockerHostConfig.gateway
         val binds = Binds(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),

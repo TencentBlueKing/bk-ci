@@ -65,4 +65,7 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.downloadDockerAgentUrl}")
     var downloadDockerAgentUrl: String? = null
+
+    @Value("\${gateway:#{null}")
+    var gateway: String? = null
 }
