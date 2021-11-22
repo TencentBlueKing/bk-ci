@@ -142,10 +142,10 @@ class DownloadAgentInstallService @Autowired constructor(
                 zipOut.closeArchiveEntry()
             }
 
-            zipSingleFile(record, goAgentFile, "devopsAgent", zipOut)
-            zipSingleFile(record, goDaemonFile, "devopsDaemon", zipOut)
-            zipSingleFile(record, goInstallerFile, "installer", zipOut)
-            zipSingleFile(record, goUpgraderFile, "upgrader", zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goAgentFile, fileName = "devopsAgent", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goDaemonFile, fileName = "devopsDaemon", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goInstallerFile, fileName = "tmp/installer", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goUpgraderFile, fileName = "tmp/upgrader", zipOut = zipOut)
 
             scriptFiles.forEach { (name, content) ->
                 val entry = ZipArchiveEntry(name)
@@ -172,13 +172,8 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    private fun zipSingleFile(
-        record: TEnvironmentThirdpartyAgentRecord,
-        goAgentFile: File,
-        fileName: String,
-        zipOut: ArchiveOutputStream
-    ) {
-        val finalFilename = if (record.os == OS.WINDOWS.name) {
+    private fun zipBinaryFile(os: String, goAgentFile: File, fileName: String, zipOut: ArchiveOutputStream) {
+        val finalFilename = if (os == OS.WINDOWS.name) {
             "$fileName.exe"
         } else {
             fileName

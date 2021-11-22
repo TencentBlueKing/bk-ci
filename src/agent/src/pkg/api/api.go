@@ -120,7 +120,7 @@ func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, e
 	return httputil.NewHttpClient().Put(url).Body(response).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func DownloadAgentInstallBatchZip(saveFile string) err error {
+func DownloadAgentInstallBatchZip(saveFile string) error {
 	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
 		config.GAgentConfig.BatchInstallKey))
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
