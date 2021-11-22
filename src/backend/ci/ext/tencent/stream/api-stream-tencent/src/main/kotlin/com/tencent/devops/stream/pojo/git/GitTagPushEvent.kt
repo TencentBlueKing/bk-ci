@@ -87,7 +87,7 @@ data class GitTagPushEvent(
     val repository: GitCommitRepository,
     val commits: List<GitCommit>?,
     val total_commits_count: Int,
-    val create_from: String
+    val create_from: String? // 来自客户端的操作该值为空
 ) : GitEvent() {
     companion object {
         const val classType = TGitObjectKind.OBJECT_KIND_TAG_PUSH
