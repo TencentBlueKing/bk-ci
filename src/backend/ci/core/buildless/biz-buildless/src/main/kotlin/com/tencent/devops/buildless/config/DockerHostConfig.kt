@@ -45,11 +45,17 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeInit:/data/init.sh}")
     var volumeInit: String? = null
 
+    @Value("\${dockerCli.volumeSleep:/data/sleep.sh}")
+    var volumeSleep: String? = null
+
     @Value("\${dockerCli.hostPathApps:#{null}}")
     var hostPathApps: String? = null
 
     @Value("\${dockerCli.hostPathInit:#{null}}")
     var hostPathInit: String? = null
+
+    @Value("\${dockerCli.hostPathSleep:#{null}}")
+    var hostPathSleep: String? = null
 
     @Value("\${dockerCli.memoryLimitBytes:34359738368}")
     var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G

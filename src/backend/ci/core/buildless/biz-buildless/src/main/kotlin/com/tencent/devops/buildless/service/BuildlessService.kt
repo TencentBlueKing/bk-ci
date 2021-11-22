@@ -154,11 +154,13 @@ class BuildlessService(
 
         val volumeApps = Volume(dockerHostConfig.volumeApps)
         val volumeInit = Volume(dockerHostConfig.volumeInit)
+        val volumeSleep = Volume(dockerHostConfig.volumeSleep)
 
         val gateway = dockerHostConfig.gateway
         val binds = Binds(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
         )
 
         val container = httpLongDockerCli.createContainerCmd(imageName)
