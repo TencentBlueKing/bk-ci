@@ -31,12 +31,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.quartz.Job
