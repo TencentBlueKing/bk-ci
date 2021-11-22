@@ -31,6 +31,7 @@ import (
 )
 
 const ActionUpgrade = "upgrade"
+const ActionInstall = "install"
 const ActionUninstall = "uninstall"
 const CertFilePath = ".cert"
 
