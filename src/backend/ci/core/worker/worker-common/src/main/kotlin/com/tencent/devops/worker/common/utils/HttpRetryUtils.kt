@@ -84,19 +84,4 @@ object HttpRetryUtils {
             retry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
         }
     }
-
-    @Throws(RuntimeException::class)
-    fun <T> retryWhenRuntimeException(retryTime: Int = 100, retryPeriodMills: Long = 500, action: () -> T): T {
-        return try {
-            action()
-        } catch (re: RuntimeException) {
-            if (retryTime - 1 < 0) {
-                throw re
-            }
-            if (retryPeriodMills > 0) {
-                Thread.sleep(retryPeriodMills)
-            }
-            retryWhenRuntimeException(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
-        }
-    }
 }

@@ -333,7 +333,7 @@ object LoggerService {
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 try {
-                    HttpRetryUtils.retryWhenRuntimeException(
+                    HttpRetryUtils.retry(
                         retryTime = 5,
                         retryPeriodMills = 1000
                     ) {

@@ -144,7 +144,7 @@ class SignServiceImpl @Autowired constructor(
 
             // 归档IPA包
             val archiveResult = try {
-                HttpRetryUtils.retryWhenRuntimeException(
+                HttpRetryUtils.retry(
                     retryTime = 5,
                     retryPeriodMills = 1000
                 ) {

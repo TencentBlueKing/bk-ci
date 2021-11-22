@@ -61,7 +61,7 @@ object ArchiveUtils {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
             try {
-                HttpRetryUtils.retryWhenRuntimeException(
+                HttpRetryUtils.retry(
                     retryTime = 5,
                     retryPeriodMills = 1000
                 ) {
@@ -89,7 +89,7 @@ object ArchiveUtils {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
             try {
-                HttpRetryUtils.retryWhenRuntimeException(
+                HttpRetryUtils.retry(
                     retryTime = 5,
                     retryPeriodMills = 1000
                 ) {
