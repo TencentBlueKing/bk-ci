@@ -26,8 +26,8 @@
  */
 
 dependencies {
+    api(project(":core:worker:worker-api-sdk"))
     api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:worker:worker-common"))
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
@@ -36,8 +36,6 @@ dependencies {
     api(project(":ext:tencent:dispatch:api-dispatch-bcs"))
     api("me.cassiano:ktlint-html-reporter")
     api("com.github.shyiko:ktlint")
-    api("com.tencent.bkrepo:api-generic")
-    api("com.tencent.bkrepo:api-repository")
 }
 
 plugins {

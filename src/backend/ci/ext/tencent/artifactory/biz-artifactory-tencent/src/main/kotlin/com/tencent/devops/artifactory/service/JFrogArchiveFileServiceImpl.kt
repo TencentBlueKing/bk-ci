@@ -178,7 +178,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return httpResponse.body()!!.byteStream()
     }
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, local: Boolean?) {
         logger.info("downloadFile filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
