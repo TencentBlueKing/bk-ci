@@ -25,22 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:common:common-job"))
-    api(project(":ext:tencent:common:common-gcloud"))
-    api(project(":core:process:biz-engine"))
-    api(project(":ext:tencent:process:biz-base-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent")) // 版本体验依赖
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent")) // 生成短链接(发短信，推送镜像到第三方，人工审核）
-    api(project(":ext:tencent:plugin:api-plugin-tencent")) // wetest插件
-    api(project(":ext:tencent:image:api-image-tencent")) // 推送镜像到第三方
-    api("org.apache.poi:poi")
-    api("org.apache.poi:poi-ooxml")
+package com.tencent.devops.process.config
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.bean.GitCIPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.TencentPipelineUrlBeanImpl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+/**
+ * 流水线引擎初始化配置类
+ *
+ * @version 1.0
+ */
+
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class TxPipelineUrlBeanConfiguration {
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
+    fun pipelineUrlBeanGitCI(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun pipelineUrlBean(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = TencentPipelineUrlBeanImpl(commonConfig, client)
 }

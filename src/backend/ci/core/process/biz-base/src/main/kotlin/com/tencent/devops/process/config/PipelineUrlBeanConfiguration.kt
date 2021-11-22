@@ -25,19 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
-
+package com.tencent.devops.process.config
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.process.bean.DefaultPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.PipelineUrlBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
-    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
+/**
+ * 流水线引擎初始化配置类
+ *
+ * @version 1.0
+ */
 
-    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class PipelineUrlBeanConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(PipelineUrlBean::class)
+    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
 }
