@@ -7,4 +7,4 @@ set work_dir=%CD%
 
 echo work_dir %work_dir%
 
-tmp/installer -action install
+tmp\installer -action install
