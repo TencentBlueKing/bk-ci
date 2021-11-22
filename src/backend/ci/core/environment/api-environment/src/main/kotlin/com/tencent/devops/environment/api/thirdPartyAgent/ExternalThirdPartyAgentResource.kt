@@ -87,7 +87,7 @@ interface ExternalThirdPartyAgentResource {
 
     @ApiOperation("生成并下载新的批次安装所需要的文件")
     @GET
-    @Path("/batch/{agentHashId}/batch_zip")
+    @Path("/{agentHashId}/batch_zip")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadNewInstallAgentBatchFile(
         @ApiParam("agentHashId 化身 install Key", required = true)

@@ -35,6 +35,7 @@ import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.utils.IOUtils
@@ -113,8 +114,10 @@ class DownloadAgentInstallService @Autowired constructor(
         logger.info("Trying to download the agent($agentId)")
 
         val jarFiles = getGoAgentJarFiles(record.os)
-        val goDaemonFile = getGoDaemonFile(record.os)
-        val goAgentFile = getGoAgentFile(record.os)
+        val goDaemonFile = getGoFile(record.os, "devopsDaemon")
+        val goAgentFile = getGoFile(record.os, "devopsAgent")
+        val goInstallerFile = getGoFile(record.os, "installer")
+        val goUpgraderFile = getGoFile(record.os, "upgrader")
         val packageFiles = getAgentPackageFiles(record.os)
         val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
@@ -139,27 +142,10 @@ class DownloadAgentInstallService @Autowired constructor(
                 zipOut.closeArchiveEntry()
             }
 
-            val goAgentFileName = if (record.os == OS.WINDOWS.name) {
-                "devopsAgent.exe"
-            } else {
-                "devopsAgent"
-            }
-            val devopsAgentEntry = ZipArchiveEntry(goAgentFile, goAgentFileName)
-            devopsAgentEntry.unixMode = AGENT_FILE_MODE
-            zipOut.putArchiveEntry(devopsAgentEntry)
-            IOUtils.copy(FileInputStream(goAgentFile), zipOut)
-            zipOut.closeArchiveEntry()
-
-            val goDaemonFileName = if (record.os == OS.WINDOWS.name) {
-                "devopsDaemon.exe"
-            } else {
-                "devopsDaemon"
-            }
-            val devopsDaemonEntry = ZipArchiveEntry(goDaemonFile, goDaemonFileName)
-            devopsDaemonEntry.unixMode = AGENT_FILE_MODE
-            zipOut.putArchiveEntry(devopsDaemonEntry)
-            IOUtils.copy(FileInputStream(goDaemonFile), zipOut)
-            zipOut.closeArchiveEntry()
+            zipBinaryFile(os = record.os, goAgentFile = goAgentFile, fileName = "devopsAgent", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goDaemonFile, fileName = "devopsDaemon", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goInstallerFile, fileName = "tmp/installer", zipOut = zipOut)
+            zipBinaryFile(os = record.os, goAgentFile = goUpgraderFile, fileName = "tmp/upgrader", zipOut = zipOut)
 
             scriptFiles.forEach { (name, content) ->
                 val entry = ZipArchiveEntry(name)
@@ -186,6 +172,19 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
+    private fun zipBinaryFile(os: String, goAgentFile: File, fileName: String, zipOut: ArchiveOutputStream) {
+        val finalFilename = if (os == OS.WINDOWS.name) {
+            "$fileName.exe"
+        } else {
+            fileName
+        }
+        val devopsAgentEntry = ZipArchiveEntry(goAgentFile, finalFilename)
+        devopsAgentEntry.unixMode = AGENT_FILE_MODE
+        zipOut.putArchiveEntry(devopsAgentEntry)
+        IOUtils.copy(FileInputStream(goAgentFile), zipOut)
+        zipOut.closeArchiveEntry()
+    }
+
     fun downloadAgent(agentId: String): Response {
         val agentRecord = getAgentRecord(agentId)
         return downloadGoAgent(agentId, agentRecord)
@@ -200,30 +199,17 @@ class DownloadAgentInstallService @Autowired constructor(
         return listOf(agentJar, jreFile)
     }
 
-    private fun getGoDaemonFile(os: String): File {
+    private fun getGoFile(os: String, fileName: String): File {
         val daemonFileName = when (os) {
-            OS.WINDOWS.name -> "upgrade/devopsDaemon.exe"
-            OS.MACOS.name -> "upgrade/devopsDaemon_macos"
-            else -> "upgrade/devopsDaemon_linux"
+            OS.WINDOWS.name -> "upgrade/$fileName.exe"
+            OS.MACOS.name -> "upgrade/${fileName}_macos"
+            else -> "upgrade/${fileName}_linux"
         }
         val daemonFile = File(agentPackage, daemonFileName)
         if (!daemonFile.exists()) {
-            throw NotFoundException("go daemon file not exists")
+            throw NotFoundException("go $fileName file not exists")
         }
         return daemonFile
-    }
-
-    private fun getGoAgentFile(os: String): File {
-        val agentFileName = when (os) {
-            OS.WINDOWS.name -> "upgrade/devopsAgent.exe"
-            OS.MACOS.name -> "upgrade/devopsAgent_macos"
-            else -> "upgrade/devopsAgent_linux"
-        }
-        val agentFile = File(agentPackage, agentFileName)
-        if (!agentFile.exists()) {
-            throw NotFoundException("go agent file not exists")
-        }
-        return agentFile
     }
 
     private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
