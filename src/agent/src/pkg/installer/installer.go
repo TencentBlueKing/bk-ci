@@ -59,7 +59,7 @@ func DoInstallAgent() error {
 	workDir := systemutil.GetWorkDir()
 	sourceZipFile := workDir + "/batch.zip"
 	logs.Info("download batch.zip start")
-	_, err1 := api.DownloadAgentInstallBatchZip(sourceZipFile)
+	err1 := api.DownloadAgentInstallBatchZip(sourceZipFile)
 	if err1 != nil {
 		logs.Error("download batch.zip failed", err1)
 		return errors.New(fmt.Sprintf("download %s fail", sourceZipFile))
@@ -74,12 +74,13 @@ func DoInstallAgent() error {
 	}
 	logs.Info(fmt.Sprintf("unzip %s to %s end", sourceZipFile, workDir))
 
+	logs.Info("install agent start")
 	err2 := InstallAgent()
 	if err2 != nil {
 		logs.Error("install agent failed: ", err.Error())
 		return err2
 	}
-	logs.Info("Download batch.zip done")
+	logs.Info("install agent done")
 	return nil
 }
 
