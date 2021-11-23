@@ -29,6 +29,7 @@ package com.tencent.devops.monitoring.services
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.monitoring.pojo.GrafanaMessage
 import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -60,14 +61,45 @@ class GrafanaWebhookService @Autowired constructor(
 
     /**
      * grafana回调接口
+     * {
+    "templateCode":"GRAFANA_ALERTING",
+    "receivers":[ "jiananzhang", "fitzcao", "irwinsun"],
+    "notifyType":["RTX"],
+    "titleParams":{
+    "title":"当前权限中心请求接口慢"
+    },
+    "bodyParams":{
+    "data":"当前权限中心请求接口慢",
+    "url":"http://opdata.devops.oa.com/d/0yz8Wy7Zz/v2-process-jian-kong"
+    }
+    }
      */
     fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
         logger.info("the grafanaNotification is:$grafanaNotification")
         // 只有处于alerting告警状态的信息才发送监控消息
         if ("Alerting".equals(grafanaNotification.state, true)) {
             val message = grafanaNotification.message
-            val grafanaMessage = JsonUtil.to(message, SendNotifyMessageTemplateRequest::class.java) // 转换消息内容json串
-            val notifyMessage = (grafanaMessage.bodyParams ?: emptyMap()).toMutableMap()
+            val grafanaMessage = try {
+                JsonUtil.to(message, GrafanaMessage::class.java)
+            } catch (e: Exception) {
+                JsonUtil.to(message, SendNotifyMessageTemplateRequest::class.java)
+            }
+            val sendMessage = when (grafanaMessage) {
+                is SendNotifyMessageTemplateRequest -> {
+                    grafanaMessage
+                }
+                is GrafanaMessage -> {
+                    SendNotifyMessageTemplateRequest(
+                        templateCode = "GRAFANA_ALERTING",
+                        receivers = grafanaMessage.notifyReceivers ?: mutableSetOf(),
+                        notifyType = mutableSetOf(grafanaMessage.notifyType?.name ?: "RTX"),
+                        titleParams = mapOf(),
+                        bodyParams = mapOf("data" to grafanaMessage.notifyMessage)
+                    )
+                }
+                else -> return Result(data = false)
+            }
+            val notifyMessage = (sendMessage.bodyParams ?: emptyMap()).toMutableMap()
             val evalMatches = grafanaNotification.evalMatches
             val busiDataList = mutableListOf<NocNoticeBusData>()
             if (null != evalMatches && evalMatches.isNotEmpty()) {
@@ -81,7 +113,7 @@ class GrafanaWebhookService @Autowired constructor(
                 notifyMessage["data"] += "）"
             }
             return client.get(ServiceNotifyMessageTemplateResource::class)
-                .sendNotifyMessageByTemplate(grafanaMessage.copy(bodyParams = notifyMessage))
+                .sendNotifyMessageByTemplate(sendMessage.copy(bodyParams = notifyMessage))
         }
         return Result(data = false, message = "只有处于alerting告警状态的信息才发送监控消息")
     }
