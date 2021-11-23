@@ -248,7 +248,7 @@ class P4Api(
                     name = name,
                     type = triggerType,
                     path = entry.path,
-                    command = command,
+                    command = entry.command,
                     order = index
                 )
             }
