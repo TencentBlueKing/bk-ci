@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.common.pipeline.container.matrix
 
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-构建矩阵容器")
-data class MatrixGroupContainer(
+@ApiModel("流水线模型-虚拟机构建矩阵")
+data class VMBuildMatrixGroupContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
@@ -61,37 +65,42 @@ data class MatrixGroupContainer(
     override var containerId: String? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
     override var matrixGroupFlag: Boolean = true,
-    @ApiModelProperty("分裂策略映射（变量名到所有可取值数组的映射）", required = false)
-    val strategyMap: Map<String, List<String>>? = null,
-    @ApiModelProperty("分裂策略JSON对象", required = false)
-    val strategyJson: String? = null,
+    @ApiModelProperty("构建机环境变量", required = false)
+    val buildEnv: Map<String, String>? = null,
+    @ApiModelProperty("用户自定义环境变量", required = false)
+    val customBuildEnv: Map<String, String>? = null,
+    @ApiModelProperty("流程控制选项", required = true)
+    var jobControlOption: JobControlOption? = null,
+    @ApiModelProperty("互斥组", required = false)
+    var mutexGroup: MutexGroup? = null,
+    // ---灵活控制构建环境的占位符---
+    // 如果前端指定了baseOS和dispatchType则直接沿用，否则基于runsOn生成他们
+    @ApiModelProperty("VM基础操作系统", required = false)
+    val baseOS: VMBaseOS? = null,
+    @ApiModelProperty("构建机环境选择", required = false)
+    val dispatchType: DispatchType? = null,
+    @ApiModelProperty("自定义编译环境", required = true)
+    val runsOn: String,
+    // ---构建矩阵特有参数---
+    @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
+    val strategyStr: String,
     @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
     val includeCase: List<Map<String, String>>? = null,
     @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
     val excludeCase: List<Map<String, String>>? = null,
+    @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
+    val fastKill: Boolean? = false,
+    @ApiModelProperty("Job运行的最大并发量", required = false)
+    val maxConcurrency: Int? = null,
     @ApiModelProperty("分裂后的容器集合", required = false)
     var groupContainers: MutableList<VMBuildContainer>? = null,
     @ApiModelProperty("正在运行的数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("正在运行的数量", required = false)
-    var runningCount: Int? = null,
-    @ApiModelProperty("构建机环境变量", required = false)
-    val buildEnv: Map<String, String>? = null,
-    @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>? = null,
-    @ApiModelProperty("构建机环境选择", required = false)
-    val dispatchType: DispatchType? = null,
-    @ApiModelProperty("流程控制选项", required = true)
-    var jobControlOption: JobControlOption? = null,
-    @ApiModelProperty("互斥组", required = false)
-    var mutexGroup: MutexGroup? = null,
-    @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
-    val fastKill: Boolean? = false,
-    @ApiModelProperty("Job运行的最大并发量", required = false)
-    val maxConcurrency: String? = null
+    var runningCount: Int? = null
 ) : Container {
     companion object {
-        const val classType = "matrixGroup"
+        const val classType = "vmBuildMatrixGroup"
     }
 
     @ApiModelProperty("nfs挂载开关", required = false, hidden = true)

@@ -37,11 +37,12 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.MatrixGroupContainer
+import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -740,7 +741,13 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         return@nextContainer
                     }
-                } else if (container is MatrixGroupContainer) {
+                } else if (container is VMBuildMatrixGroupContainer) {
+                    // #4518 如果构建矩阵没有配置任何策略则直接跳过不做分裂
+                    if (!ContainerUtils.isMatrixGroupContainerEnable(container)) {
+                        context.containerSeq++
+                        return@nextContainer
+                    }
+                } else if (container is NormalMatrixGroupContainer) {
                     // #4518 如果构建矩阵没有配置任何策略则直接跳过不做分裂
                     if (!ContainerUtils.isMatrixGroupContainerEnable(container)) {
                         context.containerSeq++
@@ -779,7 +786,7 @@ class PipelineRuntimeService @Autowired constructor(
                     #4518 整合组装Task和刷新已有Container的逻辑
                     构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container !is MatrixGroupContainer) {
+                if (container !is VMBuildMatrixGroupContainer) {
                     // --- 第3层循环：Element遍历处理 ---
                     needUpdateStage = prepareBuildContainerTasks(
                         container = container,

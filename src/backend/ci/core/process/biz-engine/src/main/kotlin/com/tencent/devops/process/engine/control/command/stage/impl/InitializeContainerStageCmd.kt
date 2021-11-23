@@ -28,12 +28,10 @@
 package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.container.MatrixGroupContainer
+import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import org.slf4j.LoggerFactory
@@ -75,7 +73,7 @@ class InitializeContainerStageCmd(
         model.stages.forEach { stage ->
             if (stage.id == commandContext.stage.stageId) {
                 stage.containers.forEach { container ->
-                    if (container is MatrixGroupContainer) {
+                    if (container is VMBuildMatrixGroupContainer) {
 
                     }
                 }
