@@ -41,6 +41,8 @@ import (
 	"github.com/kardianos/service"
 )
 
+const daemonProcess = "daemon"
+
 func main() {
 	runtime.GOMAXPROCS(4)
 
@@ -69,6 +71,11 @@ func main() {
 		DisplayName:      "displayName",
 		Description:      "description",
 		WorkingDirectory: "C:/data/landun",
+	}
+
+	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+		logs.Info("get process lock failed, exit")
+		return
 	}
 
 	daemonProgram := &program{}

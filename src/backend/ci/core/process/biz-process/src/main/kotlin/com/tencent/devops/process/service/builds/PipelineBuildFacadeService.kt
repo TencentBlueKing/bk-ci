@@ -62,6 +62,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -69,6 +70,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -87,7 +89,6 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -292,7 +293,8 @@ class PipelineBuildFacadeService(
         skipFailedTask: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        checkManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
@@ -337,7 +339,7 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
 
-            if (!readyToBuildPipelineInfo.canManualStartup) {
+            if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -609,12 +611,14 @@ class PipelineBuildFacadeService(
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
             startParams.forEach { (key, value, valueType, readOnly) ->
-                startParamsWithType.add(BuildParameters(
-                    key,
-                    value,
-                    valueType,
-                    readOnly
-                ))
+                startParamsWithType.add(
+                    BuildParameters(
+                        key,
+                        value,
+                        valueType,
+                        readOnly
+                    )
+                )
             }
 
             return pipelineBuildService.startPipeline(
@@ -1628,7 +1632,7 @@ class PipelineBuildFacadeService(
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
                     "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, " +
-                            "please check if the plugin is installed."
+                        "please check if the plugin is installed."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
@@ -1811,10 +1815,16 @@ class PipelineBuildFacadeService(
         vmSeqId: String,
         simpleResult: SimpleResult
     ) {
-        // success do nothing just log
+        var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+        // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
-            logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
-            return
+            val startUpVMTask = pipelineRuntimeService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
+            if (startUpVMTask?.status?.isRunning() == true) {
+                msg = "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
+            } else {
+                logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
+                return
+            }
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
@@ -1827,7 +1837,6 @@ class PipelineBuildFacadeService(
         if (container != null) {
             val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
-                val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
                 logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildContainerEvent(

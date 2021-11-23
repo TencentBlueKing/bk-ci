@@ -25,19 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.scm.utils.code.svn
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
+import org.junit.Assert
+import org.junit.Test
 
-class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
-    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
+class SvnUtilsTest {
 
-    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    @Test
+    fun getSvnFilePath() {
+        var url = "http://svn.example.com/demo/trunk/aaa"
+        var filePath = "/trunk/aaa/test.java"
+        var expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "/test.java")
+
+        filePath = "/trunk/bbb/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/bbb/test.java")
+
+        url = "http://svn.example.com/demo/"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+
+        url = "http://svn.example.com/demo/trunk/aaa/bbb"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
     }
 }

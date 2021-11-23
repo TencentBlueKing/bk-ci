@@ -27,38 +27,46 @@
 package config
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+    "github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const ActionUpgrade = "upgrade"
+const ActionInstall = "install"
 const ActionUninstall = "uninstall"
 const CertFilePath = ".cert"
 
 const (
-	ScriptFileInstallWindows   = "install.bat"
-	ScriptFileInstallLinux     = "install.sh"
-	ScriptFileUninstallWindows = "uninstall.bat"
-	ScriptFileUnistallLinux    = "uninstall.sh"
-	ScriptFileStartWindows     = "start.bat"
-	ScriptFileStartLinux       = "start.sh"
-	ScriptFileStopWindows      = "stop.bat"
-	ScriptFileStopLinux        = "stop.sh"
+    ScriptFileInstallWindows   = "install.bat"
+    ScriptFileInstallLinux     = "install.sh"
+    ScriptFileUninstallWindows = "uninstall.bat"
+    ScriptFileUnistallLinux    = "uninstall.sh"
+    ScriptFileStartWindows     = "start.bat"
+    ScriptFileStartLinux       = "start.sh"
+    ScriptFileStopWindows      = "stop.bat"
+    ScriptFileStopLinux        = "stop.sh"
 )
 
 const (
-	AgentFileClientWindows = "devopsAgent.exe"
-	AgentFileClientLinux   = "devopsAgent"
-	AgentFileServerWindows = "devopsAgent.exe"
-	AgentFileServerLinux   = "devopsAgent_linux"
-	AgentFileServerMacos   = "devopsAgent_macos"
+    AgentFileClientWindows = "devopsAgent.exe"
+    AgentFileClientLinux   = "devopsAgent"
+    AgentFileServerWindows = "devopsAgent.exe"
+    AgentFileServerLinux   = "devopsAgent_linux"
+    AgentFileServerMacos   = "devopsAgent_macos"
 
-	UpgraderFileClientWindows = "upgrader.exe"
-	UpgraderFileClientLinux   = "upgrader"
-	UpgraderFileServerWindows = "upgrader.exe"
-	UpgraderFileServerLinux   = "upgrader_linux"
-	UpgraderFileServerMacOs   = "upgrader_macos"
+    DaemonFileServerWindows = "devopsDaemon.exe"
+    DaemonFileServerLinux   = "devopsDaemon_linux"
+	DaemonFileServerMacos   = "devopsDaemon_macos"
 
-	WorkAgentFile = "worker-agent.jar"
+    DaemonFileClientWindows = "devopsDaemon.exe"
+    DaemonFileClientLinux   = "devopsDaemon"
+
+    UpgraderFileClientWindows = "upgrader.exe"
+    UpgraderFileClientLinux   = "upgrader"
+    UpgraderFileServerWindows = "upgrader.exe"
+    UpgraderFileServerLinux   = "upgrader_linux"
+    UpgraderFileServerMacOs   = "upgrader_macos"
+
+    WorkAgentFile = "worker-agent.jar"
 )
 
 // Auth Header
@@ -97,69 +105,87 @@ const AgentStatusImportException = "IMPORT_EXCEPTION"
 const AgentStatusDelete = "DELETE"
 
 func GetServerAgentFile() string {
-	if systemutil.IsWindows() {
-		return AgentFileServerWindows
-	} else if systemutil.IsMacos() {
-		return AgentFileServerMacos
-	} else {
-		return AgentFileServerLinux
-	}
+    if systemutil.IsWindows() {
+        return AgentFileServerWindows
+    } else if systemutil.IsMacos() {
+        return AgentFileServerMacos
+    } else {
+        return AgentFileServerLinux
+    }
 }
 
 func GetServerUpgraderFile() string {
-	if systemutil.IsWindows() {
-		return UpgraderFileServerWindows
-	} else if systemutil.IsMacos() {
-		return UpgraderFileServerMacOs
-	} else {
-		return UpgraderFileServerLinux
-	}
+    if systemutil.IsWindows() {
+        return UpgraderFileServerWindows
+    } else if systemutil.IsMacos() {
+        return UpgraderFileServerMacOs
+    } else {
+        return UpgraderFileServerLinux
+    }
 }
 
 func GetClienAgentFile() string {
-	if systemutil.IsWindows() {
-		return AgentFileClientWindows
-	} else {
-		return AgentFileClientLinux
-	}
+    if systemutil.IsWindows() {
+        return AgentFileClientWindows
+    } else {
+        return AgentFileClientLinux
+    }
 }
 
 func GetClientUpgraderFile() string {
-	if systemutil.IsWindows() {
-		return UpgraderFileClientWindows
-	} else {
-		return UpgraderFileClientLinux
-	}
+    if systemutil.IsWindows() {
+        return UpgraderFileClientWindows
+    } else {
+        return UpgraderFileClientLinux
+    }
+}
+
+func GetServerDaemonFile() string {
+    if systemutil.IsWindows() {
+        return DaemonFileServerWindows
+    } else if systemutil.IsMacos() {
+        return DaemonFileServerMacos
+    } else {
+        return DaemonFileServerLinux
+    }
+}
+
+func GetClientDaemonFile() string {
+    if systemutil.IsWindows() {
+        return DaemonFileClientWindows
+    } else {
+        return DaemonFileClientLinux
+    }
 }
 
 func GetInstallScript() string {
-	if systemutil.IsWindows() {
-		return ScriptFileInstallWindows
-	} else {
-		return ScriptFileInstallLinux
-	}
+    if systemutil.IsWindows() {
+        return ScriptFileInstallWindows
+    } else {
+        return ScriptFileInstallLinux
+    }
 }
 
 func GetUninstallScript() string {
-	if systemutil.IsWindows() {
-		return ScriptFileUninstallWindows
-	} else {
-		return ScriptFileUnistallLinux
-	}
+    if systemutil.IsWindows() {
+        return ScriptFileUninstallWindows
+    } else {
+        return ScriptFileUnistallLinux
+    }
 }
 
 func GetStartScript() string {
-	if systemutil.IsWindows() {
-		return ScriptFileStartWindows
-	} else {
-		return ScriptFileStartLinux
-	}
+    if systemutil.IsWindows() {
+        return ScriptFileStartWindows
+    } else {
+        return ScriptFileStartLinux
+    }
 }
 
 func GetStopScript() string {
-	if systemutil.IsWindows() {
-		return ScriptFileStopWindows
-	} else {
-		return ScriptFileStopLinux
-	}
+    if systemutil.IsWindows() {
+        return ScriptFileStopWindows
+    } else {
+        return ScriptFileStopLinux
+    }
 }

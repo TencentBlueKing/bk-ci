@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BcsClusterService @Autowired constructor(
+class EnvProjectConfigService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectConfigDao: ProjectConfigDao
 ) {
