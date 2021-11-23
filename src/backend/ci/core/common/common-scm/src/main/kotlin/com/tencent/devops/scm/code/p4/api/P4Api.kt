@@ -144,7 +144,7 @@ class P4Api(
         includePaths: String?,
         excludePaths: String?,
         eventType: TriggerType,
-        command: String,
+        command: String
     ): Set<String> {
         val paths = mutableSetOf<String>()
         if (!includePaths.isNullOrBlank()) {
