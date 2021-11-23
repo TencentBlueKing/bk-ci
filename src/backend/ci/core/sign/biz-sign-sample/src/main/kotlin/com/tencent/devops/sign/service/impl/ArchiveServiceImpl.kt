@@ -90,10 +90,12 @@ class ArchiveServiceImpl @Autowired constructor(
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
                     logger.error("artifactory upload file failed. url:$url. response:$responseContent")
+                    return false
                 }
             }
         } catch (ignore: Throwable) {
             logger.error("artifactory upload file with error. url:$url", ignore)
+            return false
         }
         return true
     }
