@@ -241,17 +241,11 @@ class DockerHostUtils @Autowired constructor(
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
     ): Pair<String, Int> {
-        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
-        val hostDriftLoad = getDockerDriftThreshold()
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.diskLoad > hostDriftLoad.disk ||
-            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
-            dockerIpInfo.memLoad > hostDriftLoad.memory ||
-            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
-            (dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp)) ||
-            (dockerIpInfo.grayEnv != gray.isGray()) ||
-            (dockerIpInfo.usedNum > hostDriftLoad.usedNum) ||
-            dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+            dockerIpInfo.grayEnv != gray.isGray() ||
+            overload(dockerIpInfo) ||
+            specialIpCheck(dockerIpInfo, specialIpSet) ||
+            qpcWhiteListCheck(dispatchMessage)) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
@@ -261,6 +255,49 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair(dockerIpInfo.dockerIp, dockerIpInfo.dockerHostPort)
+    }
+
+    private fun overload(
+        dockerIpInfo: TDispatchPipelineDockerIpInfoRecord
+    ): Boolean {
+        // 查看当前IP负载是否超载
+        val hostDriftLoad = getDockerDriftThreshold()
+        if (dockerIpInfo.diskLoad > hostDriftLoad.disk ||
+            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
+            dockerIpInfo.memLoad > hostDriftLoad.memory ||
+            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
+            dockerIpInfo.usedNum > hostDriftLoad.usedNum
+        ) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun specialIpCheck(
+        dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
+        specialIpSet: Set<String>
+    ): Boolean {
+        // 上次构建IP已开启专机独享并不在项目专机列表中，此时会漂移
+        if ((dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp))) {
+            return true
+        }
+
+        // 配置了专机，但上次构建IP不在专机列表中，漂移
+        if (specialIpSet.isNotEmpty() && !specialIpSet.contains(dockerIpInfo.dockerIp)) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun qpcWhiteListCheck(dispatchMessage: DispatchMessage): Boolean {
+        // 配置大仓代码优化的，随机调度
+        if (dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+            return true
+        }
+
+        return false
     }
 
     fun updateDockerDriftThreshold(hostDriftLoad: HostDriftLoad) {
