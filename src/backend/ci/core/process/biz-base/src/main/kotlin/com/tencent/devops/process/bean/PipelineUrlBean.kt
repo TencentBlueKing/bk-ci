@@ -25,32 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.redis.concurrent
+package com.tencent.devops.process.bean
 
-import com.tencent.devops.common.redis.RedisOperation
-
-class SimpleRateLimiter(private val redisOperation: RedisOperation) {
+interface PipelineUrlBean {
 
     /**
-     * 在[seconds]秒内，获取锁[lockKey]数量不超过[bucketSize]，否则返回false
+     * 生成构建详情访问链接
      */
-    fun acquire(bucketSize: Int, lockKey: String, seconds: Long = 60): Boolean {
-        return if ((redisOperation.increment(lockKey, 1) ?: 1) <= bucketSize) {
-            redisOperation.expire(lockKey, seconds)
-            true
-        } else {
-            release(lockKey)
-            redisOperation.expire(lockKey, seconds)
-            false
-        }
-    }
+    fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        needShortUrl: Boolean = true
+    ): String
 
     /**
-     * 释放获得的锁[lockKey]
+     * 生成手机侧的构建详情访问链接
      */
-    fun release(lockKey: String) {
-        if (redisOperation.hasKey(lockKey)) {
-            redisOperation.increment(lockKey, -1)
-        }
-    }
+    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
 }

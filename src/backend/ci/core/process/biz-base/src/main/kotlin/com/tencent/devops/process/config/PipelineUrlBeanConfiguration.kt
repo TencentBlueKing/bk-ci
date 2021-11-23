@@ -25,32 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.redis.concurrent
+package com.tencent.devops.process.config
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.bean.DefaultPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.PipelineUrlBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-class SimpleRateLimiter(private val redisOperation: RedisOperation) {
+/**
+ * 流水线扩展通知配置
+ */
+@Configuration
+class PipelineUrlBeanConfiguration {
 
-    /**
-     * 在[seconds]秒内，获取锁[lockKey]数量不超过[bucketSize]，否则返回false
-     */
-    fun acquire(bucketSize: Int, lockKey: String, seconds: Long = 60): Boolean {
-        return if ((redisOperation.increment(lockKey, 1) ?: 1) <= bucketSize) {
-            redisOperation.expire(lockKey, seconds)
-            true
-        } else {
-            release(lockKey)
-            redisOperation.expire(lockKey, seconds)
-            false
-        }
-    }
-
-    /**
-     * 释放获得的锁[lockKey]
-     */
-    fun release(lockKey: String) {
-        if (redisOperation.hasKey(lockKey)) {
-            redisOperation.increment(lockKey, -1)
-        }
-    }
+    @Bean
+    @ConditionalOnMissingBean(PipelineUrlBean::class)
+    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
 }
