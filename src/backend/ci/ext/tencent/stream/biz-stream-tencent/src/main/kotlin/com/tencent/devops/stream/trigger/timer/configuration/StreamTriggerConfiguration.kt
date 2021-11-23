@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.listener.StreamTimerBuildListener
