@@ -61,18 +61,6 @@ class GrafanaWebhookService @Autowired constructor(
 
     /**
      * grafana回调接口
-     * {
-    "templateCode":"GRAFANA_ALERTING",
-    "receivers":[ "jiananzhang", "fitzcao", "irwinsun"],
-    "notifyType":["RTX"],
-    "titleParams":{
-    "title":"当前权限中心请求接口慢"
-    },
-    "bodyParams":{
-    "data":"当前权限中心请求接口慢",
-    "url":"http://opdata.devops.oa.com/d/0yz8Wy7Zz/v2-process-jian-kong"
-    }
-    }
      */
     fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
         logger.info("the grafanaNotification is:$grafanaNotification")
