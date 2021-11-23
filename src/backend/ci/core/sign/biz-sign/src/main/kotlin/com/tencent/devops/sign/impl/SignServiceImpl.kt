@@ -48,7 +48,7 @@ import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
-import com.tencent.devops.worker.common.utils.HttpRetryUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

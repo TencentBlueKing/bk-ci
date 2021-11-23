@@ -37,7 +37,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.HttpRetryUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 
 object EngineService {
