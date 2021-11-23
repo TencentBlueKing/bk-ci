@@ -2,8 +2,8 @@
 set -e
 devopsCallbackUrl=$1
 P4PORT=$2
-CHANGE=$3
-event_type=$4
+event_type=$3
+CHANGE=$4
 TRIGGER_TYPE=CHANGE
 
 echo "Running devops commit_change.sh\n\n"
