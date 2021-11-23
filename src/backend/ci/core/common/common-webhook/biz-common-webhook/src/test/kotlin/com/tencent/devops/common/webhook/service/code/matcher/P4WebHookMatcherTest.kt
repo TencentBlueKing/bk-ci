@@ -36,7 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
-import com.tencent.devops.common.webhook.service.code.handler.p4.P4ChangeCommitTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.p4.P4ChangeTriggerHandler
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.CodeP4Repository
@@ -63,7 +63,7 @@ class P4WebHookMatcherTest {
 
     @Before
     fun setUp() {
-        CodeWebhookHandlerRegistrar.register(P4ChangeCommitTriggerHandler(client))
+        CodeWebhookHandlerRegistrar.register(P4ChangeTriggerHandler(client))
     }
 
     @Test

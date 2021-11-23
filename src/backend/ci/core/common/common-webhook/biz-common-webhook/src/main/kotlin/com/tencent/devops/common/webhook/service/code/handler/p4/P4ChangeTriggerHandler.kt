@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeCommitEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeEvent
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -47,29 +47,29 @@ import com.tencent.devops.scm.pojo.BK_REPO_P4_WEBHOOK_CHANGE
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
-class P4ChangeCommitTriggerHandler(
+class P4ChangeTriggerHandler(
     private val client: Client
-) : CodeWebhookTriggerHandler<P4ChangeCommitEvent> {
-    override fun eventClass(): Class<P4ChangeCommitEvent> {
-        return P4ChangeCommitEvent::class.java
+) : CodeWebhookTriggerHandler<P4ChangeEvent> {
+    override fun eventClass(): Class<P4ChangeEvent> {
+        return P4ChangeEvent::class.java
     }
 
-    override fun getUrl(event: P4ChangeCommitEvent) = event.p4Port
+    override fun getUrl(event: P4ChangeEvent) = event.p4Port
 
-    override fun getUsername(event: P4ChangeCommitEvent) = ""
+    override fun getUsername(event: P4ChangeEvent) = ""
 
-    override fun getRevision(event: P4ChangeCommitEvent) = event.change.toString()
+    override fun getRevision(event: P4ChangeEvent) = event.change.toString()
 
-    override fun getRepoName(event: P4ChangeCommitEvent) = event.p4Port
+    override fun getRepoName(event: P4ChangeEvent) = event.p4Port
 
-    override fun getBranchName(event: P4ChangeCommitEvent) = ""
+    override fun getBranchName(event: P4ChangeEvent) = ""
 
-    override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
+    override fun getEventType(event: P4ChangeEvent): CodeEventType = event.eventType
 
-    override fun getMessage(event: P4ChangeCommitEvent) = ""
+    override fun getMessage(event: P4ChangeEvent) = ""
 
     override fun getWebhookFilters(
-        event: P4ChangeCommitEvent,
+        event: P4ChangeEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
@@ -83,7 +83,7 @@ class P4ChangeCommitTriggerHandler(
             )
             val eventTypeFilter = EventTypeFilter(
                 pipelineId = pipelineId,
-                triggerOnEventType = getEventType(),
+                triggerOnEventType = getEventType(event),
                 eventType = webHookParams.eventType
             )
             val pathFilter = object : WebhookFilter {
@@ -111,7 +111,7 @@ class P4ChangeCommitTriggerHandler(
     }
 
     override fun retrieveParams(
-        event: P4ChangeCommitEvent,
+        event: P4ChangeEvent,
         projectId: String?,
         repository: Repository?
     ): Map<String, Any> {
