@@ -160,7 +160,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            checkManualStartup = true
         )
     }
 
