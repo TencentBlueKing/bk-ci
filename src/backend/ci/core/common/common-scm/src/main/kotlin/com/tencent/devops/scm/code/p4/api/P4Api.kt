@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.code.p4.api
 
 import com.perforce.p4java.admin.ITriggerEntry
+import com.perforce.p4java.admin.ITriggerEntry.TriggerType
 import com.perforce.p4java.core.IDepot
 import com.perforce.p4java.core.file.FileSpecOpStatus
 import com.tencent.devops.scm.code.p4.P4Client
@@ -74,7 +75,7 @@ class P4Api(
     ) {
         P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
-            val eventType = ITriggerEntry.TriggerType.fromString(event) ?: ITriggerEntry.TriggerType.CHANGE_COMMIT
+            val eventType = triggerTypeValueOf(event) ?: TriggerType.CHANGE_COMMIT
             val (eventScriptFileName, command) = getTriggerFileAndCommand(
                 eventType = eventType,
                 hookUrl = hookUrl
@@ -87,8 +88,10 @@ class P4Api(
                 command = command,
             )
             if (remainPaths.isEmpty()) {
-                logger.info("The web hook url($hookUrl) and event($event)," +
-                    "includePaths($includePaths),excludePaths($excludePaths) is already exist")
+                logger.info(
+                    "The web hook url($hookUrl) and event($event)," +
+                        "includePaths($includePaths),excludePaths($excludePaths) is already exist"
+                )
                 return
             }
             // 创建一个devops_trigger的depot
@@ -112,6 +115,17 @@ class P4Api(
         }
     }
 
+    private fun triggerTypeValueOf(event: String?): TriggerType? {
+        if (event != null) {
+            TriggerType.values().forEach { tt ->
+                if (tt.name == event) {
+                    return tt
+                }
+            }
+        }
+        return null
+    }
+
     fun getChangelistFiles(change: Int): List<P4FileSpec> {
         return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
@@ -129,7 +143,7 @@ class P4Api(
         p4Server: P4Server,
         includePaths: String?,
         excludePaths: String?,
-        eventType: ITriggerEntry.TriggerType,
+        eventType: TriggerType,
         command: String,
     ): Set<String> {
         val paths = mutableSetOf<String>()
@@ -150,7 +164,7 @@ class P4Api(
     private fun isSameEvent(
         entry: ITriggerEntry,
         paths: Set<String>,
-        eventType: ITriggerEntry.TriggerType,
+        eventType: TriggerType,
         command: String
     ) = paths.contains(entry.path) &&
         entry.triggerType.name == eventType.name &&
@@ -193,21 +207,21 @@ class P4Api(
     }
 
     private fun getTriggerFileAndCommand(
-        eventType: ITriggerEntry.TriggerType,
+        eventType: TriggerType,
         hookUrl: String
     ): Pair<String, String> {
         val baseCommand = "%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/{0}% $hookUrl $p4port ${eventType.name}"
         return when (eventType) {
-            ITriggerEntry.TriggerType.CHANGE_COMMIT,
-            ITriggerEntry.TriggerType.PUSH_SUBMIT,
-            ITriggerEntry.TriggerType.CHANGE_CONTENT,
-            ITriggerEntry.TriggerType.PUSH_CONTENT,
-            ITriggerEntry.TriggerType.PUSH_COMMIT,
-            ITriggerEntry.TriggerType.FIX_ADD,
-            ITriggerEntry.TriggerType.FIX_DELETE,
-            ITriggerEntry.TriggerType.FORM_COMMIT,
-            ITriggerEntry.TriggerType.SHELVE_COMMIT,
-            ITriggerEntry.TriggerType.SHELVE_DELETE
+            TriggerType.CHANGE_COMMIT,
+            TriggerType.PUSH_SUBMIT,
+            TriggerType.CHANGE_CONTENT,
+            TriggerType.PUSH_CONTENT,
+            TriggerType.PUSH_COMMIT,
+            TriggerType.FIX_ADD,
+            TriggerType.FIX_DELETE,
+            TriggerType.FORM_COMMIT,
+            TriggerType.SHELVE_COMMIT,
+            TriggerType.SHELVE_DELETE
             -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(baseCommand, eventScriptFileName)
@@ -224,7 +238,7 @@ class P4Api(
     private fun addTriggers(
         p4Server: P4Server,
         remainPaths: Set<String>,
-        eventType: ITriggerEntry.TriggerType,
+        eventType: TriggerType,
         command: String
     ) {
         // p4触发器是按照顺序更新的,所以再次获取p4触发器数量，然后再增加
