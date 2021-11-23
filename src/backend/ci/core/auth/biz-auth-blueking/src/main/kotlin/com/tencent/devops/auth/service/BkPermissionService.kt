@@ -5,7 +5,9 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
+import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.auth.api.AuthPermission
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -17,6 +19,7 @@ class BkPermissionService @Autowired constructor(
     private val iamCacheService: IamCacheService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
+        if (isAdmin(userId)) return true
         return super.validateUserActionPermission(userId, action)
     }
 
@@ -26,6 +29,7 @@ class BkPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        if (isAdmin(userId)) return true
         return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
@@ -37,6 +41,7 @@ class BkPermissionService @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        if (isAdmin(userId)) return true
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
             action = action,
@@ -53,6 +58,12 @@ class BkPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
+        logger.info("getUserResourceByAction $userId $action $projectCode")
+        if (isAdmin(userId)) {
+            logger.info("getUserResourceByAction $userId is admin")
+            return arrayListOf("*")
+        }
+
         return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
@@ -62,6 +73,24 @@ class BkPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
+        if (isAdmin(userId)) {
+            val permissionMap = mutableMapOf<AuthPermission, List<String>>()
+            actions.forEach {
+                permissionMap[AuthPermission.get(it)] = arrayListOf("*")
+                return permissionMap
+            }
+        }
         return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
+    }
+
+    private fun isAdmin(userId: String): Boolean {
+        if (userId == "admin") {
+            return true
+        }
+        return false
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(BkPermissionService::class.java)
     }
 }

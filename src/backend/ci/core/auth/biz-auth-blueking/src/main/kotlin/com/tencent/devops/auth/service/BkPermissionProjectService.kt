@@ -38,4 +38,11 @@ class BkPermissionProjectService @Autowired constructor(
     override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
         return emptyList()
     }
+
+    override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
+        if (userId == "admin") {
+            return true
+        }
+        return super.isProjectUser(userId, projectCode, group)
+    }
 }
