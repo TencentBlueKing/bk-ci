@@ -82,7 +82,7 @@ class GrafanaWebhookService @Autowired constructor(
                         receivers = grafanaMessage.notifyReceivers ?: mutableSetOf(),
                         notifyType = mutableSetOf(grafanaMessage.notifyType?.name ?: "RTX"),
                         titleParams = mapOf(),
-                        bodyParams = mapOf("data" to grafanaMessage.notifyMessage)
+                        bodyParams = mapOf("data" to grafanaMessage.notifyMessage, "url" to "来自Grafana的预警信息")
                     )
                 }
                 else -> return Result(data = false)
