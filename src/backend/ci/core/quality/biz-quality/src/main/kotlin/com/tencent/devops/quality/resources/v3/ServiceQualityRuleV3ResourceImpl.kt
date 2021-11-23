@@ -35,6 +35,8 @@ import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
+import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
+import com.tencent.devops.quality.service.v2.QualityIndicatorService
 import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
 import com.tencent.devops.quality.service.v2.QualityRuleCheckService
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
-    private val qualityRuleCheckService: QualityRuleCheckService
+    private val qualityRuleCheckService: QualityRuleCheckService,
+    private val qualityIndicatorService: QualityIndicatorService
 ) : ServiceQualityRuleResource {
     override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
         return Result(qualityRuleCheckService.checkBuildHis(buildCheckParams))
@@ -55,5 +58,9 @@ class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
         ruleList: List<RuleCreateRequestV3>
     ): Result<List<RuleCreateResponseV3>> {
         return Result(qualityRuleBuildHisService.serviceCreate(userId, projectId, pipelineId, ruleList))
+    }
+
+    override fun upsertIndicator(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Result<Boolean> {
+        return Result(qualityIndicatorService.userCreate(userId, projectId, indicatorCreate))
     }
 }
