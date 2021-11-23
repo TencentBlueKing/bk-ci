@@ -54,7 +54,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
 
     fun getBranchName(event: T): String
 
-    fun getEventType(): CodeEventType? = null
+    fun getEventType(): CodeEventType
 
     fun getEventType(event: T): CodeEventType? = null
 

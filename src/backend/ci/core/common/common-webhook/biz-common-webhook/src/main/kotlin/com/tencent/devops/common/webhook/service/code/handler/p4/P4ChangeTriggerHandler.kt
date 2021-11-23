@@ -64,6 +64,12 @@ class P4ChangeTriggerHandler(
 
     override fun getBranchName(event: P4ChangeEvent) = ""
 
+    @Deprecated(
+        message = "p4 use getEventType(event: P4ChangeEvent)",
+        replaceWith = ReplaceWith("@see getEventType(event)")
+    )
+    override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
+
     override fun getEventType(event: P4ChangeEvent): CodeEventType = event.eventType
 
     override fun getMessage(event: P4ChangeEvent) = ""
