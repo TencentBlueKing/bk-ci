@@ -57,7 +57,10 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
+import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.git.isDeleteBranch
+import com.tencent.devops.stream.pojo.git.isDeleteEvent
+import com.tencent.devops.stream.pojo.git.isDeleteTag
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
@@ -215,6 +218,8 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
+        // 特殊事件走特殊处理，目前只有删除
+
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         if (event is GitPushEvent || event is GitMergeRequestEvent && !isFork) {
             pipelineDelete.checkAndDeletePipeline(
@@ -227,7 +232,8 @@ class GitCITriggerService @Autowired constructor(
         }
 
         // 特殊触发例如删除，不继续往下走，而是走特殊的处理逻辑
-        if (event is GitPushEvent && event.isDeleteBranch()) {
+        // TODO: 后续重构时这种特殊逻辑应该是TriggerService的一个子类
+        if (event.isDeleteEvent()) {
             return true
         }
 

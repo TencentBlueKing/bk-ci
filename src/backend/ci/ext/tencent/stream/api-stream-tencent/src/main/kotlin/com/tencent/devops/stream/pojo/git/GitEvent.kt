@@ -82,3 +82,6 @@ data class GitProject(
     val namespace: String,
     val visibility_level: Int
 )
+
+fun GitEvent.isDeleteEvent() = (this is GitPushEvent && this.isDeleteBranch()) ||
+    (this is GitTagPushEvent && this.isDeleteTag())
