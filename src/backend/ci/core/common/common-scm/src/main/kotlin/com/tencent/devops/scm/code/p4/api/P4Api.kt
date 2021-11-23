@@ -85,7 +85,7 @@ class P4Api(
                 includePaths = includePaths,
                 excludePaths = excludePaths,
                 eventType = eventType,
-                command = command,
+                command = command
             )
             if (remainPaths.isEmpty()) {
                 logger.info(
