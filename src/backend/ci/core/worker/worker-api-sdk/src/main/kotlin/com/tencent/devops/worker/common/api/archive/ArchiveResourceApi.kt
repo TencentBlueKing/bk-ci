@@ -126,7 +126,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
-            throw ignored
         }
     }
 
