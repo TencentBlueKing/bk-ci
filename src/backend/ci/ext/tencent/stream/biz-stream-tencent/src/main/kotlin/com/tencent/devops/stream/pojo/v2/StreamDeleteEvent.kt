@@ -25,30 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger
+package com.tencent.devops.stream.pojo.v2
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-
-interface YamlTriggerInterface<T> {
-
-    fun triggerBuild(
-        context: StreamTriggerContext
-    ): Boolean
-
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
-}
+data class StreamDeleteEvent(
+    val gitProjectId: Long,
+    val pipelineId: String,
+    val userId: String,
+    val eventId: Long,
+    val originYaml: String,
+    val types: List<String>
+)

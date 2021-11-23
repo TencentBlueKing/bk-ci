@@ -25,30 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
-interface YamlTriggerInterface<T> {
+// TODO:  统一的上下文参数，除了消息队列，逐步替代stream触发中的所有参数传递对象
+// Stream 触发构建时的上下文参数
+interface StreamContext {
+    // gitWebHook过来的事件原文
+    val gitEvent: GitEvent
 
-    fun triggerBuild(
-        context: StreamTriggerContext
-    ): Boolean
+    // stream 当前对git event 做了预处理的部分数据
+    val requestEvent: GitRequestEvent
 
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
+    // stream 项目的设置
+    val streamSetting: GitCIBasicSetting
 }
+
+data class StreamRequestContext(
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting
+) : StreamContext
+
+data class StreamTriggerContext(
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting,
+    // 用来构建的流水线
+    val pipeline: GitProjectPipeline,
+    // yaml原文配置
+    val originYaml: String,
+    // 变更文件列表
+    val mrChangeSet: Set<String>?
+) : StreamContext

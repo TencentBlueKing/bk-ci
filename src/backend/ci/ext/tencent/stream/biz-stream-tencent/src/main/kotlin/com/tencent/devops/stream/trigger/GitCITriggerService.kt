@@ -58,7 +58,6 @@ import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.git.isDeleteBranch
-import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
@@ -68,6 +67,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParamet
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -225,26 +225,13 @@ class GitCITriggerService @Autowired constructor(
                 gitToken = gitToken
             )
         }
-        // TODO:对于这种只是为了做一些非构建的特殊操作，后续可以抽出一层在构建逻辑前单独维护
+
+        // 特殊触发例如删除，不继续往下走，而是走特殊的处理逻辑
         if (event is GitPushEvent && event.isDeleteBranch()) {
             return true
         }
 
-        // 获取指定目录下所有yml文件
-        val yamlPathList = if (isFork) {
-            getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent)
-        } else {
-            getCIYamlList(gitToken, gitRequestEvent, mrEvent)
-        }.toMutableList()
-        // 兼容旧的根目录yml文件
-        val isCIYamlExist = if (isFork) {
-            isCIYamlExist(forkGitToken!!, gitRequestEvent, mrEvent)
-        } else {
-            isCIYamlExist(gitToken, gitRequestEvent, mrEvent)
-        }
-        if (isCIYamlExist) {
-            yamlPathList.add(ciFileName)
-        }
+        val yamlPathList = getYamlPathList(isFork, forkGitToken, gitRequestEvent, mrEvent, gitToken)
 
         logger.info(
             "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
@@ -485,6 +472,31 @@ class GitCITriggerService @Autowired constructor(
             )
         }
         streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
+    }
+
+    private fun getYamlPathList(
+        isFork: Boolean,
+        forkGitToken: String?,
+        gitRequestEvent: GitRequestEvent,
+        mrEvent: Boolean,
+        gitToken: String
+    ): MutableList<String> {
+        // 获取指定目录下所有yml文件
+        val yamlPathList = if (isFork) {
+            getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent)
+        } else {
+            getCIYamlList(gitToken, gitRequestEvent, mrEvent)
+        }.toMutableList()
+        // 兼容旧的根目录yml文件
+        val isCIYamlExist = if (isFork) {
+            isCIYamlExist(forkGitToken!!, gitRequestEvent, mrEvent)
+        } else {
+            isCIYamlExist(gitToken, gitRequestEvent, mrEvent)
+        }
+        if (isCIYamlExist) {
+            yamlPathList.add(ciFileName)
+        }
+        return yamlPathList
     }
 
     private fun dispatchStreamTrigger(event: StreamTriggerEvent) {

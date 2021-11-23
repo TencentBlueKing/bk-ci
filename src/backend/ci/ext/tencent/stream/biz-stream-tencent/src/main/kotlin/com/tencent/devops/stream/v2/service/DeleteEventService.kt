@@ -25,30 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger
+package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
+import com.tencent.devops.stream.v2.dao.DeleteEventDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-interface YamlTriggerInterface<T> {
+@Service
+class DeleteEventService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val deleteEventDao: DeleteEventDao
+) {
 
-    fun triggerBuild(
-        context: StreamTriggerContext
-    ): Boolean
+    fun saveDeleteEvent(
+        streamDeleteEvent: StreamDeleteEvent
+    ) {
+        deleteEventDao.save(dslContext, streamDeleteEvent)
+    }
 
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
+    fun getDeleteEvent(
+        pipelineId: String
+    ): StreamDeleteEvent? {
+        val result = deleteEventDao.get(dslContext, pipelineId) ?: return null
+        return with(result) {
+            StreamDeleteEvent(
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                userId = creator,
+                eventId = eventId,
+                originYaml = originYaml,
+                types = JsonUtil.to(types, object : TypeReference<List<String>>() {})
+            )
+        }
+    }
 
-    fun checkYamlSchema(userId: String, yaml: String): Result<String>
+    fun deleteDeleteEvent(
+        pipelineId: String
+    ): Boolean {
+        return deleteEventDao.delete(dslContext, pipelineId) > 0
+    }
 }

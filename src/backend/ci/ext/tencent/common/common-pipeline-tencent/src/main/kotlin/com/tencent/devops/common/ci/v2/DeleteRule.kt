@@ -33,6 +33,14 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DeleteRule(
+    val types: List<String>
+) {
+    companion object {
+        val typeSet = setOf("branch", "tag")
+    }
+}
 
-    val delete: List<String>
-)
+
+fun DeleteRule.check(): Boolean {
+    return !(types.toSet() subtract DeleteRule.typeSet).isNotEmpty()
+}

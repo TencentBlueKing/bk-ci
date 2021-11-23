@@ -3,7 +3,9 @@ package com.tencent.devops.stream.trigger.parsers.triggerMatch
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.check
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -22,12 +24,14 @@ import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.isMr
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
+import com.tencent.devops.stream.trigger.pojo.TriggerResult
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +41,8 @@ import org.springframework.stereotype.Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
     private val streamScmService: StreamScmService,
-    private val streamTimerService: StreamTimerService
+    private val streamTimerService: StreamTimerService,
+    private val streamDeleteEventService: DeleteEventService
 ) {
 
     companion object {
@@ -94,10 +99,14 @@ class TriggerMatcher @Autowired constructor(
         val gitRequestEvent = context.requestEvent
 
         // 判断是否是默认分支上的push，来判断是否注册定时任务
-        val isTime = if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value &&
-            gitRequestEvent.branch == gitProjectInfo.defaultBranch
-        ) {
+        val isTime = if (gitRequestEvent.isDefaultBranchTrigger(gitProjectInfo.defaultBranch)) {
             isSchedulesMatch(triggerOn, targetBranch, gitRequestEvent, context.pipeline)
+        } else {
+            false
+        }
+
+        val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(gitProjectInfo.defaultBranch)) {
+            isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)
         } else {
             false
         }
@@ -130,7 +139,7 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return TriggerResult(isTrigger, isTime)
+        return TriggerResult(isTrigger, isTime, isDelete)
     }
 
     // 判断是否注册定时任务来看是修改还是删除
@@ -153,6 +162,29 @@ class TriggerMatcher @Autowired constructor(
         } else {
             if (triggerOn.schedules?.cron.isNullOrBlank()) {
                 logger.info("The schedules cron is invalid($eventBranch)")
+                return false
+            }
+        }
+        return true
+    }
+
+    // 判断是否注册默认分支的删除任务
+    private fun isDeleteMatch(
+        deleteRule: DeleteRule?,
+        gitRequestEvent: GitRequestEvent,
+        pipeline: GitProjectPipeline
+    ): Boolean {
+        if (deleteRule == null) {
+            if (pipeline.pipelineId.isBlank()) {
+                return false
+            } else {
+                streamDeleteEventService.getDeleteEvent(pipeline.pipelineId) ?: return false
+                streamDeleteEventService.deleteDeleteEvent(pipeline.pipelineId)
+                return false
+            }
+        } else {
+            if (deleteRule.types.isEmpty() || !deleteRule.check()) {
+                logger.warn("${gitRequestEvent.gitProjectId} delete event ${gitRequestEvent.id} error: format error")
                 return false
             }
         }
@@ -271,6 +303,10 @@ class TriggerMatcher @Autowired constructor(
         )
         return true
     }
+
+    private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =
+        objectKind == TGitObjectKind.PUSH.value && branch == defaultBranch
+
 
     private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {
