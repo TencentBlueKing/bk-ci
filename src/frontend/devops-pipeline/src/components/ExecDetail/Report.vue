@@ -148,7 +148,7 @@
         width: 100%;
         text-align: center;
     }
-    /deep/ .bk-table {
+    ::v-deep .bk-table {
         border: none;
         height: 100%;
         &::before {

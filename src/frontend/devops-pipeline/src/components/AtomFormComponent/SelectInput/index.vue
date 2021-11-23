@@ -219,17 +219,15 @@
 
                     if (this.hasGroup) {
                         options = options.filter(item => item.children.length)
-                        this.optionList = options.map(item => {
+                        this.optionList = options.forEach(item => {
                             if (isObject(item)) {
                                 return {
                                     ...item,
-                                    children: item.children.map(child => {
-                                        return {
-                                            ...child,
-                                            id: child[paramId],
-                                            name: child[paramName]
-                                        }
-                                    })
+                                    children: item.children.map(child => ({
+                                        ...child,
+                                        id: child[paramId],
+                                        name: child[paramName]
+                                    }))
                                 }
                             }
                         })

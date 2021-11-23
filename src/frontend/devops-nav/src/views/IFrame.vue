@@ -29,7 +29,7 @@
     import eventBus from '../utils/eventBus'
     import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
     import { State, Getter } from 'vuex-class'
-    import * as cookie from 'js-cookie'
+    import cookie from 'js-cookie'
 
     Component.registerHooks([
         'beforeRouteEnter',
@@ -136,6 +136,7 @@
                 this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
             }
         }
+
         onLoad () {
             this.isLoading = false
             if (this.$refs.iframeEle) {

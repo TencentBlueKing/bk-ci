@@ -908,6 +908,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             userId,
             MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
+        doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
@@ -918,6 +919,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
         return Result(true)
     }
+
+    abstract fun doCancelReleaseBus(userId: String, atomId: String)
 
     abstract fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte
 

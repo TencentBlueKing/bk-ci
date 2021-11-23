@@ -101,29 +101,6 @@ interface ServiceBuildResource {
         errorMsg: String? = null
     ): Result<Boolean>
 
-    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
-    @ApiOperation("Notify process that the vm startup for the build")
-    @PUT
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
-    @Path("/{projectId}/{pipelineId}/{buildId}/vmStarted")
-    fun vmStarted(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("VM SEQ ID", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam("VM NAME", required = true)
-        @QueryParam("vmName")
-        vmName: String
-    ): Result<Boolean>
-
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
     @GET
     // @Path("/builds/{buildId}/basic")
