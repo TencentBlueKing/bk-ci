@@ -1570,7 +1570,7 @@ class PipelineRuntimeService @Autowired constructor(
             if (taskRecord != null) {
                 with(taskRecord) {
                     if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        val taskParam = JsonUtil.toMutableMap(taskParams)
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         val result = pipelineBuildTaskDao.updateTaskParam(
@@ -1610,7 +1610,7 @@ class PipelineRuntimeService @Autowired constructor(
             if (taskRecord != null) {
                 with(taskRecord) {
                     if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        val taskParam = JsonUtil.toMutableMap(taskParams)
                         taskParam[BS_MANUAL_ACTION] = params.status.toString()
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""

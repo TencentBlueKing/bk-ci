@@ -36,12 +36,12 @@
                 if (this.element['@type'] === 'reportArchiveService') {
                     const { nodeId, fileDir, indexFile, reportName } = this.newModel
                     return {
-                        'row': { nodeId, fileDir, indexFile, reportName }
+                        row: { nodeId, fileDir, indexFile, reportName }
                     }
                 } else {
                     const { fileDir, indexFile, reportName } = this.newModel
                     return {
-                        'row': { fileDir, indexFile, reportName }
+                        row: { fileDir, indexFile, reportName }
                     }
                 }
             }

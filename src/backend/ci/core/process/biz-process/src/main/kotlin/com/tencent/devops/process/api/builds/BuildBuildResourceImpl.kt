@@ -174,7 +174,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
-        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId))
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, true))
     }
 
     companion object {

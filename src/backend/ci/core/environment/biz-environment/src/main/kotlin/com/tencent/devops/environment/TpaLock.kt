@@ -25,17 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.environment
 
-interface PipelineUrlBean {
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-    /**
-     * 生成构建详情访问链接
-     */
-    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
-
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
-}
+class TpaLock(redisOperation: RedisOperation, key: String) :
+    RedisLock(redisOperation = redisOperation, lockKey = "lock:tpa:$key", expiredTimeInSeconds = 30)
