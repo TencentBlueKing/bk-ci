@@ -98,6 +98,11 @@ class QualityRuleBuildHisService constructor(
                 }
             }
 
+            if (indicatorIds.isEmpty()) {
+                val indicatorNameSet = ruleRequest.indicators.map { it.enName }.toList()
+                throw OperationException("${ruleRequest.name} $indicatorNameSet indicator is not exist")
+            }
+
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
             val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, ruleRequest, indicatorIds)
 
@@ -224,10 +229,6 @@ class QualityRuleBuildHisService constructor(
         ruleRequestList.forEach { request ->
             if (request.indicators.isEmpty()) {
                 throw QualityOpConfigException("quality rule indicators is empty")
-            }
-
-            if (request.indicators.any { it.atomCode.isBlank() || it.enName.isBlank() }) {
-                throw QualityOpConfigException("quality rule indicator config has error")
             }
 
             request.opList?.forEach { op ->
