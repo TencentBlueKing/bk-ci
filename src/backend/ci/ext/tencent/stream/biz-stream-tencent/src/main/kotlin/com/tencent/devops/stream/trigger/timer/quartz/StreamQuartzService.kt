@@ -27,14 +27,15 @@
 
 package com.tencent.devops.stream.trigger.timer.quartz
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.quartz.Job
@@ -133,7 +134,7 @@ class StreamJobBean(
     private val schedulerManager: SchedulerManager,
     private val streamTimerService: StreamTimerService,
     private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val client: Client
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -152,18 +153,11 @@ class StreamJobBean(
             return
         }
 
-        if (gray.isGray()) {
-            // 灰度环境只加载灰度项目的流水线
-            if (!gray.isGrayProject(streamTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${streamTimer.projectId} is prod, discard!")
-                return
-            }
-        } else {
-            // 生产环境只加载生产项目的流水线
-            if (gray.isGrayProject(streamTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${streamTimer.projectId} is gray, discard!")
-                return
-            }
+        val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
+            .checkProjectRouter(streamTimer.projectId).data ?: return
+        if (!projectRouterTagCheck) {
+            logger.warn("timePipeline ${streamTimer.projectId} router tag is not this cluster")
+            return
         }
 
         var find = false
