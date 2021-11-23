@@ -16,6 +16,7 @@
     export default class SvgLogo extends Vue {
         @Prop()
         name
+
         @Prop({ default: 32 })
         size
     }

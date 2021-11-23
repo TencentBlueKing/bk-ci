@@ -65,7 +65,7 @@ const mutations = {
         type,
         oAuth
     }) => {
-        Vue.set(state, `tGitOAuth`, oAuth)
+        Vue.set(state, 'tGitOAuth', oAuth)
     }
 }
 

@@ -120,7 +120,7 @@
                     })
 
                     this.envList.splice(0, this.envList.length)
-                    res.map(item => {
+                    res.forEach(item => {
                         this.envList.push(item)
                     })
                 } catch (err) {

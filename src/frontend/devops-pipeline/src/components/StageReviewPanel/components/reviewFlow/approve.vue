@@ -67,8 +67,8 @@
             computedReviewSteps () {
                 const getStatus = (item, index) => {
                     const statusMap = {
-                        'ABORT': 'error',
-                        'PROCESS': 'done'
+                        ABORT: 'error',
+                        PROCESS: 'done'
                     }
                     let status = statusMap[item.status]
 

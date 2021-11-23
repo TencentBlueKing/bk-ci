@@ -17,7 +17,7 @@
                 const { vmNames = [], baseOS = '', elements = [] } = container
                 let iconProps = {}
                 switch (true) {
-                    case container.systemElapsed !== undefined || container.elementElapsed !== undefined:
+                    case container.systemElapsed !== undefined || container.elementElapsed !== undefined: {
                         const systemElapsed = convertElapsed(container.systemElapsed)
                         const elementElapsed = convertElapsed(container.elementElapsed)
                         const elapsedSum = systemElapsed + elementElapsed
@@ -26,6 +26,7 @@
                         return (
                             <i v-bk-tooltips={{ content: `${this.$t('editPage.userTime')}：${convertMStoString(elementElapsed)} + ${this.$t('editPage.systemTime')}： ${convertMStoString(systemElapsed)}` }}>{lt1Hour ? coverTimer(elapsedSum) : '>1h'}</i>
                         )
+                    }
                     case container.isError:
                         iconProps = {
                             class: 'devops-icon icon-exclamation-triangle-shape is-danger'
