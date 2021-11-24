@@ -168,14 +168,19 @@ class StreamProjectService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            val res = redisOperation.get(getProjectListKey(userId)) ?: return null
+            logger.warn("STREAM|gitProjects|stream scm service is unavailable.|userId=$userId")
+            val res = redisOperation.get(getProjectListKey(userId))
+            if (res.isNullOrEmpty()) {
+                logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
+                return null
+            }
             JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
         } ?: return null
         // 每次成功访问工蜂接口就刷新redis
         val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
         updateLock.lock()
         try {
-            logger.info("STREAM|gitProjects|userId=$userId")
+            logger.info("STREAM|gitProjects|update redis|userId=$userId")
             val newRedisValue = gitProjects.map {
                 GitCodeProjectSimpleInfo(
                     id = it.id,
