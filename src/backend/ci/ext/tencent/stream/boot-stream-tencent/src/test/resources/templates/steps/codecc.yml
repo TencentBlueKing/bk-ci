@@ -86,9 +86,14 @@ parameters:
   - name: accessToken
     type: string
     default: 'I0LKBI5NEJMVA7819Q16'
+  - name: iftest
+    type: string
+    default: true
 
 steps:
-  - uses: CodeccCheckAtomDebug@4.*
+  - if: ${{ parameters.iftest }} == true
+    uses: CodeccCheckAtomDebug@4.*
+    id: step-77lAxqm
     name: 腾讯代码分析(官方-代码分析工作组)
     with:
         beAutoLang: false # 不自动检测项目语言
