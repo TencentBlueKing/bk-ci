@@ -33,7 +33,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.pojo.quality.QualityReportBroadCastEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
@@ -97,7 +98,7 @@ class QualityRuleCheckService @Autowired constructor(
     private val qualityCacheService: QualityCacheService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val qualityUrlBean: QualityUrlBean,
-    private val eventDispatcher: EventDispatcher<QualityReportBroadCastEvent>
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
@@ -242,8 +243,10 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 异步后续的处理
             executors.execute {
-                eventDispatcher.dispatch(
-                    QualityReportBroadCastEvent(
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildQualityBroadCastEvent(
+                        source = "quality_check_finish",
+                        userId = buildCheckParams.runtimeVariable?.get("BK_CI_START_USER_ID") ?: "",
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId
