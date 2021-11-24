@@ -32,6 +32,5 @@ data class StreamDeleteEvent(
     val pipelineId: String,
     val userId: String,
     val eventId: Long,
-    val originYaml: String,
-    val types: List<String>
+    val originYaml: String
 )

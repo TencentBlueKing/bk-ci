@@ -95,7 +95,6 @@ data class GitPushEvent(
     }
 }
 
-
 fun GitPushEvent.isDeleteBranch(): Boolean {
     // 工蜂web端删除
     if (action_kind == TGitPushActionKind.DELETE_BRANCH.value) {

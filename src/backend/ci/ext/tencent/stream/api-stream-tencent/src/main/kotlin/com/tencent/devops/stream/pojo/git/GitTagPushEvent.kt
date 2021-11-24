@@ -30,7 +30,6 @@ package com.tencent.devops.stream.pojo.git
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitTagPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitTagPushOperationKind
 
 /**

@@ -51,6 +51,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
+import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
@@ -211,7 +212,8 @@ object ScriptYmlUtils {
 
     private fun checkTriggerOn(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if (preScriptBuildYaml.triggerOn?.schedules?.branches?.size != null &&
-            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES) {
+            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES
+        ) {
             throw YamlFormatException("定时任务的最大执行分支数不能超过: $MAX_SCHEDULES_BRANCHES")
         }
     }
@@ -245,7 +247,8 @@ object ScriptYmlUtils {
         }
         yamlMap.forEach { (t, _) ->
             if (t != formatTrigger && t != "extends" && t != "version" &&
-                t != "resources" && t != "name" && t != "on") {
+                t != "resources" && t != "name" && t != "on"
+            ) {
                 throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
             }
         }
@@ -538,6 +541,7 @@ object ScriptYmlUtils {
         var tagRule: TagRule? = null
         var mrRule: MrRule? = null
         var schedulesRule: SchedulesRule? = null
+        var deleteRule: DeleteRule? = null
 
         if (preTriggerOn.push != null) {
             val push = preTriggerOn.push
@@ -634,11 +638,24 @@ object ScriptYmlUtils {
             }
         }
 
+        if (preTriggerOn.delete != null) {
+            val delete = preTriggerOn.delete
+            try {
+                deleteRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(delete),
+                    DeleteRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn schedulesRule failed.", e)
+            }
+        }
+
         return TriggerOn(
             push = pushRule,
             tag = tagRule,
             mr = mrRule,
-            schedules = schedulesRule
+            schedules = schedulesRule,
+            delete = deleteRule
         )
     }
 

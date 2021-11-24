@@ -64,6 +64,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -83,6 +84,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val yamlBuildV2: StreamYamlBuild,
     private val tokenService: StreamGitTokenService,
+    private val deleteEventService: DeleteEventService,
     private val streamStorageBean: StreamStorageBean
 ) : YamlTriggerInterface<YamlObjects> {
 

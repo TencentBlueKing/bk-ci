@@ -27,11 +27,8 @@
 
 package com.tencent.devops.stream.v2.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.model.stream.Tables
 import com.tencent.devops.model.stream.Tables.T_STREAM_DELETE_EVENT
 import com.tencent.devops.model.stream.tables.records.TStreamDeleteEventRecord
-import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
 import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -52,7 +49,6 @@ class DeleteEventDao {
                     GIT_PROJECT_ID,
                     EVENT_ID,
                     ORIGIN_YAML,
-                    TYPES,
                     CREATE_TIME,
                     CREATOR
                 ).values(
@@ -60,7 +56,6 @@ class DeleteEventDao {
                     gitProjectId,
                     eventId,
                     originYaml,
-                    JsonUtil.toJson(types),
                     LocalDateTime.now(),
                     userId
                 ).onDuplicateKeyUpdate()
@@ -68,7 +63,6 @@ class DeleteEventDao {
                     .set(CREATOR, userId)
                     .set(EVENT_ID, eventId)
                     .set(ORIGIN_YAML, originYaml)
-                    .set(TYPES, JsonUtil.toJson(types))
                     .execute()
             }
         }
@@ -77,6 +71,12 @@ class DeleteEventDao {
     fun get(dslContext: DSLContext, pipelineId: String): TStreamDeleteEventRecord? {
         return with(T_STREAM_DELETE_EVENT) {
             dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetchAny()
+        }
+    }
+
+    fun list(dslContext: DSLContext, gitProjectId: Long): List<TStreamDeleteEventRecord> {
+        return with(T_STREAM_DELETE_EVENT) {
+            dslContext.selectFrom(this).where(GIT_PROJECT_ID.eq(gitProjectId)).fetch()
         }
     }
 

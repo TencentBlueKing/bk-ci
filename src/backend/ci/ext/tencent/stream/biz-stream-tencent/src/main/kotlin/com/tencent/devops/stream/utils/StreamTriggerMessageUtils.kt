@@ -17,7 +17,8 @@ import org.springframework.stereotype.Component
 @Component
 class StreamTriggerMessageUtils @Autowired constructor(
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val gitRequestEventHandle: GitRequestEventHandle
 ) {
 
     companion object {
@@ -68,13 +69,13 @@ class StreamTriggerMessageUtils @Autowired constructor(
         val messageTitle = if (event != null) {
             when (event) {
                 is GitMergeRequestEvent -> {
-                    getEventMessageTitle(GitRequestEventHandle.createMergeEvent(event, ""), gitProjectId)
+                    getEventMessageTitle(gitRequestEventHandle.createMergeEvent(event, ""), gitProjectId)
                 }
                 is GitTagPushEvent -> {
-                    getEventMessageTitle(GitRequestEventHandle.createTagPushEvent(event, ""), gitProjectId)
+                    getEventMessageTitle(gitRequestEventHandle.createTagPushEvent(event, ""), gitProjectId)
                 }
                 is GitPushEvent -> {
-                    getEventMessageTitle(GitRequestEventHandle.createPushEvent(event, ""), gitProjectId)
+                    getEventMessageTitle(gitRequestEventHandle.createPushEvent(event, ""), gitProjectId)
                 }
                 else -> {
                     ""

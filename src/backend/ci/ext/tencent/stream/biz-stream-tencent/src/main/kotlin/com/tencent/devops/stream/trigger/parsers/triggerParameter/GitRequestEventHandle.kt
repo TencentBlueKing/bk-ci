@@ -32,18 +32,39 @@ import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.git.GitCommit
+import com.tencent.devops.stream.pojo.git.GitCommitAuthor
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.git.isDeleteBranch
+import com.tencent.devops.stream.pojo.git.isDeleteTag
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.joda.time.DateTime
 import java.text.SimpleDateFormat
 import java.util.Date
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object GitRequestEventHandle {
+@Component
+class GitRequestEventHandle @Autowired constructor(
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamScmService: StreamScmService
+) {
 
     fun createPushEvent(gitPushEvent: GitPushEvent, e: String): GitRequestEvent {
-        val latestCommit = getLatestCommit(gitPushEvent.after, gitPushEvent.commits)
+        val latestCommit = if (gitPushEvent.isDeleteBranch()) {
+            getLatestCommit(
+                gitPushEvent.before,
+                gitPushEvent.project_id
+            )
+        } else {
+            getLatestCommit(
+                gitPushEvent.after,
+                gitPushEvent.commits
+            )
+        }
         return GitRequestEvent(
             id = null,
             objectKind = TGitObjectKind.PUSH.value,
@@ -53,7 +74,11 @@ object GitRequestEventHandle {
             sourceGitProjectId = null,
             branch = gitPushEvent.ref.removePrefix("refs/heads/"),
             targetBranch = null,
-            commitId = gitPushEvent.after,
+            commitId = if (gitPushEvent.isDeleteBranch()) {
+                gitPushEvent.before
+            } else {
+                gitPushEvent.after
+            },
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             userId = gitPushEvent.user_name,
@@ -96,7 +121,17 @@ object GitRequestEventHandle {
     }
 
     fun createTagPushEvent(gitTagPushEvent: GitTagPushEvent, e: String): GitRequestEvent {
-        val latestCommit = getLatestCommit(null, gitTagPushEvent.commits)
+        val latestCommit = if (gitTagPushEvent.isDeleteTag()) {
+            getLatestCommit(
+                gitTagPushEvent.before,
+                gitTagPushEvent.project_id
+            )
+        } else {
+            getLatestCommit(
+                gitTagPushEvent.after,
+                gitTagPushEvent.commits
+            )
+        }
         return GitRequestEvent(
             id = null,
             objectKind = TGitObjectKind.TAG_PUSH.value,
@@ -106,7 +141,11 @@ object GitRequestEventHandle {
             sourceGitProjectId = null,
             branch = gitTagPushEvent.ref.removePrefix("refs/tags/"),
             targetBranch = null,
-            commitId = gitTagPushEvent.after,
+            commitId = if (gitTagPushEvent.isDeleteTag()) {
+                gitTagPushEvent.before
+            } else {
+                gitTagPushEvent.after
+            },
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             userId = gitTagPushEvent.user_name,
@@ -119,58 +158,84 @@ object GitRequestEventHandle {
         )
     }
 
-    fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-        return GitRequestEvent(
-            id = null,
-            objectKind = TGitObjectKind.MANUAL.value,
-            operationKind = "",
-            extensionAction = null,
-            gitProjectId = triggerBuildReq.gitProjectId,
-            sourceGitProjectId = null,
-            branch = getBranchName(triggerBuildReq.branch),
-            targetBranch = null,
-            commitId = triggerBuildReq.commitId ?: "",
-            commitMsg = triggerBuildReq.customCommitMsg,
-            commitTimeStamp = getCommitTimeStamp(null),
-            userId = userId,
-            totalCommitCount = 0,
-            mergeRequestId = null,
-            event = "",
-            description = triggerBuildReq.description,
-            mrTitle = "",
-            gitEvent = null
-        )
+    companion object {
+        fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
+            return GitRequestEvent(
+                id = null,
+                objectKind = TGitObjectKind.MANUAL.value,
+                operationKind = "",
+                extensionAction = null,
+                gitProjectId = triggerBuildReq.gitProjectId,
+                sourceGitProjectId = null,
+                branch = getBranchName(triggerBuildReq.branch),
+                targetBranch = null,
+                commitId = triggerBuildReq.commitId ?: "",
+                commitMsg = triggerBuildReq.customCommitMsg,
+                commitTimeStamp = getCommitTimeStamp(null),
+                userId = userId,
+                totalCommitCount = 0,
+                mergeRequestId = null,
+                event = "",
+                description = triggerBuildReq.description,
+                mrTitle = "",
+                gitEvent = null
+            )
+        }
+
+        fun createScheduleTriggerEvent(
+            streamTimerEvent: StreamTimerBuildEvent,
+            buildBranch: String,
+            buildCommit: String,
+            buildCommitMessage: String
+        ): GitRequestEvent {
+            return GitRequestEvent(
+                id = null,
+                objectKind = TGitObjectKind.SCHEDULE.value,
+                operationKind = null,
+                extensionAction = null,
+                gitProjectId = streamTimerEvent.gitProjectId,
+                sourceGitProjectId = null,
+                branch = buildBranch,
+                targetBranch = null,
+                commitId = buildCommit,
+                commitMsg = buildCommitMessage,
+                commitTimeStamp = getCommitTimeStamp(null),
+                userId = streamTimerEvent.userId,
+                totalCommitCount = 0,
+                mergeRequestId = null,
+                event = "",
+                description = null,
+                mrTitle = null,
+                gitEvent = null
+            )
+        }
+
+        private fun getCommitTimeStamp(commitTimeStamp: String?): String {
+            return if (commitTimeStamp.isNullOrBlank()) {
+                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                formatter.format(Date())
+            } else {
+                val time = DateTime.parse(commitTimeStamp)
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                sdf.format(time.toDate())
+            }
+        }
+
+        private fun getBranchName(ref: String): String {
+            return when {
+                ref.startsWith("refs/heads/") ->
+                    ref.removePrefix("refs/heads/")
+                ref.startsWith("refs/tags/") ->
+                    ref.removePrefix("refs/tags/")
+                else -> ref
+            }
+        }
     }
 
-    fun createScheduleTriggerEvent(
-        streamTimerEvent: StreamTimerBuildEvent,
-        buildBranch: String,
-        buildCommit: String,
-        buildCommitMessage: String
-    ): GitRequestEvent {
-        return GitRequestEvent(
-            id = null,
-            objectKind = TGitObjectKind.SCHEDULE.value,
-            operationKind = null,
-            extensionAction = null,
-            gitProjectId = streamTimerEvent.gitProjectId,
-            sourceGitProjectId = null,
-            branch = buildBranch,
-            targetBranch = null,
-            commitId = buildCommit,
-            commitMsg = buildCommitMessage,
-            commitTimeStamp = getCommitTimeStamp(null),
-            userId = streamTimerEvent.userId,
-            totalCommitCount = 0,
-            mergeRequestId = null,
-            event = "",
-            description = null,
-            mrTitle = null,
-            gitEvent = null
-        )
-    }
-
-    private fun getLatestCommit(commitId: String?, commits: List<GitCommit>?): GitCommit? {
+    private fun getLatestCommit(
+        commitId: String?,
+        commits: List<GitCommit>?
+    ): GitCommit? {
         if (commitId == null) {
             return if (commits.isNullOrEmpty()) {
                 null
@@ -186,24 +251,27 @@ object GitRequestEventHandle {
         return null
     }
 
-    private fun getCommitTimeStamp(commitTimeStamp: String?): String {
-        return if (commitTimeStamp.isNullOrBlank()) {
-            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-            formatter.format(Date())
-        } else {
-            val time = DateTime.parse(commitTimeStamp)
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-            sdf.format(time.toDate())
-        }
-    }
-
-    private fun getBranchName(ref: String): String {
-        return when {
-            ref.startsWith("refs/heads/") ->
-                ref.removePrefix("refs/heads/")
-            ref.startsWith("refs/tags/") ->
-                ref.removePrefix("refs/tags/")
-            else -> ref
+    private fun getLatestCommit(
+        commitId: String,
+        gitProjectId: Long
+    ): GitCommit? {
+        return streamScmService.getCommitInfo(
+            streamGitTokenService.getToken(gitProjectId),
+            gitProjectId.toString(),
+            commitId
+        )?.let {
+            GitCommit(
+                id = it.id,
+                message = it.message,
+                timestamp = it.committed_date,
+                author = GitCommitAuthor(
+                    name = it.author_name,
+                    email = it.author_email
+                ),
+                modified = null,
+                added = null,
+                removed = null
+            )
         }
     }
 }

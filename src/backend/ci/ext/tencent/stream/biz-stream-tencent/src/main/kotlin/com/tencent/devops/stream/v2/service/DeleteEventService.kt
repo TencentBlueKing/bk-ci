@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import com.tencent.devops.stream.v2.dao.DeleteEventDao
 import org.jooq.DSLContext
@@ -57,8 +55,22 @@ class DeleteEventService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = creator,
                 eventId = eventId,
-                originYaml = originYaml,
-                types = JsonUtil.to(types, object : TypeReference<List<String>>() {})
+                originYaml = originYaml
+            )
+        }
+    }
+
+    fun listDeleteEvent(
+        gitProjectId: Long
+    ): List<StreamDeleteEvent> {
+        val result = deleteEventDao.list(dslContext, gitProjectId).ifEmpty { return emptyList() }
+        return result.map {
+            StreamDeleteEvent(
+                gitProjectId = gitProjectId,
+                pipelineId = it.pipelineId,
+                userId = it.creator,
+                eventId = it.eventId,
+                originYaml = it.originYaml
             )
         }
     }

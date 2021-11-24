@@ -8,6 +8,7 @@ import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.check
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.ci.v2.getTypesObjectKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
@@ -23,6 +24,7 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.git.isDeleteEvent
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
@@ -80,12 +82,19 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return match(
-            context = context,
-            gitProjectInfo = gitProjectInfo,
-            triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-            changeSet = getChangeSet(context)
-        )
+        return if (context.gitEvent.isDeleteEvent()) {
+            deleteEventMatch(
+                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
+                objectKind = context.requestEvent.objectKind
+            )
+        } else {
+            match(
+                context = context,
+                gitProjectInfo = gitProjectInfo,
+                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
+                changeSet = getChangeSet(context)
+            )
+        }
     }
 
     fun match(
@@ -140,6 +149,19 @@ class TriggerMatcher @Autowired constructor(
         }
 
         return TriggerResult(isTrigger, isTime, isDelete)
+    }
+
+    fun deleteEventMatch(
+        triggerOn: TriggerOn,
+        objectKind: String
+    ): TriggerResult {
+        val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
+            ?: return TriggerResult(trigger = false, timeTrigger = false, deleteTrigger = false)
+        return if (objectKind in deleteObjectKinds) {
+            TriggerResult(trigger = true, timeTrigger = false, deleteTrigger = false)
+        } else {
+            TriggerResult(trigger = false, timeTrigger = false, deleteTrigger = false)
+        }
     }
 
     // 判断是否注册定时任务来看是修改还是删除
@@ -306,7 +328,6 @@ class TriggerMatcher @Autowired constructor(
 
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =
         objectKind == TGitObjectKind.PUSH.value && branch == defaultBranch
-
 
     private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {

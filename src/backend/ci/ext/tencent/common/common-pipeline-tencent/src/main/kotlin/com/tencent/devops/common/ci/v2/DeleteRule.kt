@@ -29,6 +29,7 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,5 +43,15 @@ data class DeleteRule(
 
 
 fun DeleteRule.check(): Boolean {
-    return !(types.toSet() subtract DeleteRule.typeSet).isNotEmpty()
+    return (types.toSet() subtract DeleteRule.typeSet).isEmpty()
+}
+
+fun DeleteRule.getTypesObjectKind(): List<TGitObjectKind> {
+    return types.map {
+        when (it) {
+            "branch" -> TGitObjectKind.PUSH
+            "tag" -> TGitObjectKind.TAG_PUSH
+            else -> TGitObjectKind.PUSH
+        }
+    }
 }

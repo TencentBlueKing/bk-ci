@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
@@ -37,8 +35,13 @@ import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.git.isDeleteBranch
 import com.tencent.devops.stream.pojo.git.isDeleteTag
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object TriggerParameter {
+@Component
+class TriggerParameter @Autowired constructor(
+    private val gitRequestEventHandle: GitRequestEventHandle
+) {
 
     private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
 
@@ -48,13 +51,13 @@ object TriggerParameter {
                 if (!pushEventFilter(event)) {
                     return null
                 }
-                return GitRequestEventHandle.createPushEvent(event, e)
+                return gitRequestEventHandle.createPushEvent(event, e)
             }
             is GitTagPushEvent -> {
                 if (!tagPushEventFilter(event)) {
                     return null
                 }
-                return GitRequestEventHandle.createTagPushEvent(event, e)
+                return gitRequestEventHandle.createTagPushEvent(event, e)
             }
             is GitMergeRequestEvent -> {
                 // 目前不支持Mr信息更新的触发
@@ -65,7 +68,7 @@ object TriggerParameter {
                     return null
                 }
 
-                return GitRequestEventHandle.createMergeEvent(event, e)
+                return gitRequestEventHandle.createMergeEvent(event, e)
             }
         }
         logger.info("event invalid: $event")

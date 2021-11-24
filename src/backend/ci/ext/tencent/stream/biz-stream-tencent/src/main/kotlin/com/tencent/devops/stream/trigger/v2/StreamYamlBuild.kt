@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -242,8 +241,7 @@ class StreamYamlBuild @Autowired constructor(
                     pipelineId = realPipeline.pipelineId,
                     userId = event.userId,
                     eventId = event.id!!,
-                    originYaml = originYaml,
-                    types = yaml.triggerOn?.delete?.types ?: DeleteRule.typeSet.toList()
+                    originYaml = originYaml
                 )
             )
         }
