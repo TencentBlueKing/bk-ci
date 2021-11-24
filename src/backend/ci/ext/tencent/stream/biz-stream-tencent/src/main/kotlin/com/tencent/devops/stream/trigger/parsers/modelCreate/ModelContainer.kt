@@ -69,6 +69,8 @@ class ModelContainer @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+    @Value("\${container.defaultImage:#{null}}")
+    val defaultImage: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelContainer::class.java)
@@ -230,7 +232,7 @@ class ModelContainer @Autowired constructor(
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
             var containerPool = Pool(
-                container = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
+                container = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
                 credential = Credential(
                     user = "",
                     password = ""
