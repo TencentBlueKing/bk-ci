@@ -100,7 +100,7 @@ interface ArchiveFileService {
     /**
      * 下载文件
      */
-    fun downloadFile(userId: String, filePath: String, response: HttpServletResponse)
+    fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, local: Boolean? = false)
 
     /**
      * 下载文件到本地

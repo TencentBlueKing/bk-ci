@@ -70,6 +70,9 @@ interface BuildFileResource {
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
+        @ApiParam("本地文件", required = false)
+        @QueryParam("local")
+        local: Boolean?,
         @Context
         response: HttpServletResponse
     )

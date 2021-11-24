@@ -285,7 +285,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
-                var logoUrl = it["LOGO_URL"] as? String
+                // 社区版插件归档bkrepo后删除local参数
+                var logoUrl = (it["LOGO_URL"] as? String)?.plus("&local=true")
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
                     logoUrl = RegexUtils.trimProtocol(logoUrl)
                 }
