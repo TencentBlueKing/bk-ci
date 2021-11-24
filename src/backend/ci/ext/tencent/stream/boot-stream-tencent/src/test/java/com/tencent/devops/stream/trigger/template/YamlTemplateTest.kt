@@ -44,20 +44,20 @@ class YamlTemplateTest {
 
     @Test
     fun testAllTemplate() {
-//        replace("all.yml")
+        replace("all.yml")
     }
 
     @Test
     fun testExtendsTemplate() {
-//        replace("extends.yml")
+        replace("extends.yml")
     }
 
     @Test
     fun testUserTemplate() {
         replace("user.yml")
-//        replace("stepss.yml")
-//        replace("jobs.yml")
-//        replace("stages.yml")
+        replace("stepss.yml")
+        replace("jobs.yml")
+        replace("stages.yml")
     }
 
     private fun replace(testYaml: String) {
