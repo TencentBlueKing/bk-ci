@@ -341,4 +341,53 @@ class QualityRuleBuildHisService constructor(
         }
         return true
     }
+
+    fun listRuleBuildHis(ruleBuildIds: Collection<Long>): List<QualityRule> {
+        val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
+        return allRule.map {
+            val rule = QualityRule(
+                hashId = HashUtil.encodeLongId(it.id),
+                name = it.ruleName,
+                desc = it.ruleDesc,
+                indicators = listOf(),
+                controlPoint = QualityRule.RuleControlPoint(
+                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                ),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
+                operation = RuleOperation.END,
+                notifyTypeList = null,
+                notifyUserList = null,
+                notifyGroupList = null,
+                auditUserList = null,
+                auditTimeoutMinutes = null,
+                gatewayId = it.gatewayId,
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
+                },
+                status = if (!it.status.isNullOrBlank()) {
+                    RuleInterceptResult.valueOf(it.status)
+                } else {
+                    null
+                },
+                gateKeepers = if (it.gateKeepers.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.gateKeepers.split(",")
+                },
+                stageId = it.stageId
+            )
+            rule
+        }
+    }
 }

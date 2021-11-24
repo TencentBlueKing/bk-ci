@@ -83,7 +83,7 @@
         .bread-crumb {
             font-size: 12px;
             margin-bottom: 10px;
-            /deep/ .bk-breadcrumb-separator {
+            ::v-deep .bk-breadcrumb-separator {
                 font-size: 14px;
             }
             .bk-breadcrumb-item:last-child {
@@ -153,7 +153,7 @@
                 }
             }
         }
-        .detail-link /deep/ .bk-link-text {
+        .detail-link ::v-deep .bk-link-text {
             display: flex;
             align-items: center;
             svg {
@@ -162,7 +162,7 @@
         }
     }
 
-    /deep/ .bk-divider {
+    ::v-deep .bk-divider {
         font-size: 0;
     }
 </style>

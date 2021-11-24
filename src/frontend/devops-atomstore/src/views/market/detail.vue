@@ -44,7 +44,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'markerQuey': 'getMarketQuery', 'detail': 'getDetail' }),
+            ...mapGetters('store', { markerQuey: 'getMarketQuery', detail: 'getDetail' }),
 
             detailCode () {
                 return this.$route.params.code

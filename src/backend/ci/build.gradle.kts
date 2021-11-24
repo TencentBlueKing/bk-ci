@@ -22,7 +22,7 @@ allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.6.0") +
+    version = (System.getProperty("ci_version") ?: "1.7.0") +
         if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
@@ -35,6 +35,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
+            dependency("org.apache.commons:commons-text:${Versions.CommonText}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
             dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")

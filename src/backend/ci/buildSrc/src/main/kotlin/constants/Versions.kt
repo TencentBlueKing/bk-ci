@@ -2,6 +2,7 @@ object Versions {
     const val HashIds = "1.0.3"
     const val Jaxrs = "2.0"
     const val CommonExec = "1.3"
+    const val CommonText = "1.9"
     const val Vmware = "5.1"
     const val BouncyCastle = "1.46"
     const val Dom4j = "1.6.1"

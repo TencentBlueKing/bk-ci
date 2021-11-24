@@ -87,7 +87,7 @@
         },
         computed: {
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -116,7 +116,7 @@
                 }
             },
             handleCurrentFilter () {
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     const res = this.currentFilter.groups.find(iitem => (iitem.id === item.id))
                     if (res) {
                         Object.assign(this.currentFilter, { [item.id]: res.labels })
@@ -129,7 +129,7 @@
             async filterCommit () {
                 let labels = []
                 let labelIds = ''
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     if (this.currentFilter[item.id] && this.currentFilter[item.id].length > 0) {
                         labels = labels.concat(this.currentFilter[item.id])
                     }
@@ -149,7 +149,7 @@
                     filterByCreator: [],
                     groups: []
                 }
-                this.tagGroupList.map(item => {
+                this.tagGroupList.forEach(item => {
                     Object.assign(this.currentFilter, { [item.id]: [] })
                 })
             },
