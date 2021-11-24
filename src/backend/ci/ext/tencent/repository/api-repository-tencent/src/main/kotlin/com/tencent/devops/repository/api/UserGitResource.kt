@@ -140,6 +140,12 @@ interface UserGitResource {
         redirectUrlType: RedirectUrlTypeEnum?,
         @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
-        redirectUrl: String?
+        redirectUrl: String?,
+        @ApiParam(value = "工蜂项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long? = null,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = false
     ): Result<AuthorizeResult>
 }

@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.stream.pojo.v2.project.GitProjectInfoWithProject
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -64,7 +64,7 @@ interface UserGitCIGitCodeResource {
         @ApiParam(value = "工蜂项目路径/id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
-    ): Result<GitCIProjectInfo?>
+    ): Result<GitProjectInfoWithProject?>
 
     @ApiOperation("获取工蜂项目下所有触发人信息")
     @GET

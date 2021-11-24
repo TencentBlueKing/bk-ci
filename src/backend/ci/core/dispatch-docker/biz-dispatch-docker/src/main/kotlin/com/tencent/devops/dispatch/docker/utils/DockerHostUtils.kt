@@ -43,13 +43,14 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Random
 
@@ -64,18 +65,16 @@ class DockerHostUtils @Autowired constructor(
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val dockerHostQpcService: DockerHostQpcService,
     private val dslContext: DSLContext
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
-        private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
+        private const val DOCKER_DRIFT_THRESHOLD_KEY = "dispatchdocker:drift-threshold-spKyQ86qdYhAkDDR"
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
-
-    @Value("\${dispatch.defaultAgentLessIp:127.0.0.1}")
-    val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,
@@ -124,13 +123,6 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerPair.first.isEmpty()) {
-            // agentless方案升级兼容
-            logger.info("defaultAgentLessIp: $defaultAgentLessIp")
-            if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
-                val defaultAgentLessIpList = defaultAgentLessIp.split(",")
-                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 80)
-            }
-
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
@@ -248,45 +240,58 @@ class DockerHostUtils @Autowired constructor(
         specialIpSet: Set<String>,
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
-    ): Triple<String, Int, String> {
-        val dockerIp = dockerIpInfo.dockerIp
-
+    ): Pair<String, Int> {
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
-        val threshold = getDockerDriftThreshold()
+        val hostDriftLoad = getDockerDriftThreshold()
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.diskLoad > 90 ||
-            dockerIpInfo.diskIoLoad > 85 ||
-            dockerIpInfo.memLoad > threshold ||
-            dockerIpInfo.specialOn ||
+            dockerIpInfo.diskLoad > hostDriftLoad.disk ||
+            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
+            dockerIpInfo.memLoad > hostDriftLoad.memory ||
+            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
+            (dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp)) ||
             (dockerIpInfo.grayEnv != gray.isGray()) ||
-            (dockerIpInfo.usedNum > 40 && dockerIpInfo.memLoad > 60)) {
-            val pair = getAvailableDockerIpWithSpecialIps(
+            (dockerIpInfo.usedNum > hostDriftLoad.usedNum) ||
+            dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+            return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
                 dispatchMessage.vmSeqId,
                 specialIpSet
             )
-            return Triple(pair.first, pair.second, "")
         }
 
-        return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
+        return Pair(dockerIpInfo.dockerIp, dockerIpInfo.dockerHostPort)
     }
 
-    fun updateDockerDriftThreshold(threshold: Int) {
-        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
+    fun updateDockerDriftThreshold(hostDriftLoad: HostDriftLoad) {
+        redisOperation.set(
+            key = DOCKER_DRIFT_THRESHOLD_KEY,
+            value = JsonUtil.toJson(hostDriftLoad),
+            expired = false
+        )
     }
 
-    fun getDockerDriftThreshold(): Int {
+    fun getDockerDriftThreshold(): HostDriftLoad {
         val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
         return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
-            thresholdStr.toInt()
+            JsonUtil.to(thresholdStr, HostDriftLoad::class.java)
         } else {
-            90
+            HostDriftLoad(
+                cpu = 80,
+                memory = 70,
+                disk = 80,
+                diskIo = 80,
+                usedNum = 40
+            )
         }
     }
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
-        redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
+        redisOperation.set(
+            key = LOAD_CONFIG_KEY,
+            value = JsonUtil.toJson(loadConfigMap),
+            expired = false
+        )
     }
 
     fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {

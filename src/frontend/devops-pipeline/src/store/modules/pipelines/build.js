@@ -24,7 +24,7 @@ import {
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
-const pluginPrefix = `plugin/api`
+const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {

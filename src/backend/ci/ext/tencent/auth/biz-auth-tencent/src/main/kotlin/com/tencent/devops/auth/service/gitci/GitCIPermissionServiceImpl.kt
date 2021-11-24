@@ -81,8 +81,8 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         if (!checkListOrViewAction(action)) {
             val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
             if (checkOauth == null) {
-                logger.warn("GitCICertPermissionServiceImpl $userId oauth is empty")
-                throw OauthForbiddenException("oauth is empty")
+                logger.warn("GitCICertPermissionServiceImpl $userId oauth is required")
+                throw OauthForbiddenException("OAUTH is required.")
             }
         }
         logger.info("GitCI validate user:$userId projectId: $projectCode gitProjectId: $gitProjectId")

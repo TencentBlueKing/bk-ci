@@ -18,7 +18,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'enable_idc') THEN
         ALTER TABLE T_PROJECT
-            ADD COLUMN `enable_idc` bit(1) DEFAULT NULL AFTER `enable_external`;
+            ADD COLUMN `enable_idc` bit(1) DEFAULT NULL COMMENT '是否支持IDC构建机' AFTER `enable_external`;
     END IF;
 
 
@@ -28,7 +28,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'CHANNEL') THEN
         ALTER TABLE T_PROJECT
-            ADD COLUMN `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS' AFTER `enabled`;
+            ADD COLUMN `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS' COMMENT '项目渠道' AFTER `enabled`;
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -47,7 +47,7 @@ BEGIN
                     AND TABLE_NAME = 'T_SERVICE'
                     AND COLUMN_NAME = 'logo_url') THEN
         ALTER TABLE T_SERVICE
-            ADD COLUMN `logo_url` varchar(256) DEFAULT NULL AFTER `gray_js_url`;
+            ADD COLUMN `logo_url` varchar(256) DEFAULT NULL COMMENT 'LOGO URL地址' AFTER `gray_js_url`;
     END IF;
 
 
@@ -57,7 +57,7 @@ BEGIN
                     AND TABLE_NAME = 'T_SERVICE'
                     AND COLUMN_NAME = 'web_socket') THEN
         ALTER TABLE T_SERVICE
-            ADD COLUMN `web_socket` text AFTER `logo_url`;
+            ADD COLUMN `web_socket` text COMMENT '支持webSocket的页面' AFTER `logo_url`;
     END IF;
 
 
@@ -77,7 +77,7 @@ BEGIN
                     AND TABLE_NAME = 'T_SERVICE_TYPE'
                     AND COLUMN_NAME = 'english_title') THEN
         ALTER TABLE T_SERVICE_TYPE
-            ADD COLUMN `english_title` varchar(64) DEFAULT NULL AFTER `title`;
+            ADD COLUMN `english_title` varchar(64) DEFAULT NULL COMMENT '英文邮件标题' AFTER `title`;
     END IF;
 
 
@@ -87,7 +87,7 @@ BEGIN
                     AND TABLE_NAME = 'T_ACTIVITY'
                     AND COLUMN_NAME = 'ENGLISH_NAME') THEN
         ALTER TABLE T_ACTIVITY
-            ADD COLUMN `ENGLISH_NAME` varchar(128) DEFAULT NULL AFTER `NAME`;
+            ADD COLUMN `ENGLISH_NAME` varchar(128) DEFAULT NULL COMMENT '英文名' AFTER `NAME`;
     END IF;
 
 
@@ -96,12 +96,12 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_SERVICE'
                     AND COLUMN_NAME = 'gray_iframe_url') THEN
-        ALTER TABLE T_SERVICE MODIFY COLUMN `iframe_url` varchar(255) DEFAULT NULL;
-        ALTER TABLE T_SERVICE MODIFY COLUMN `css_url` varchar(255) DEFAULT NULL;
-        ALTER TABLE T_SERVICE MODIFY COLUMN `js_url` varchar(255) DEFAULT NULL;
-        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_css_url` varchar(255) DEFAULT NULL;
-        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_js_url` varchar(255) DEFAULT NULL;
-        ALTER TABLE T_SERVICE ADD COLUMN `gray_iframe_url` varchar(255) DEFAULT NULL AFTER `weight`;
+        ALTER TABLE T_SERVICE MODIFY COLUMN `iframe_url` varchar(255) DEFAULT NULL COMMENT 'iframe Url地址';
+        ALTER TABLE T_SERVICE MODIFY COLUMN `css_url` varchar(255) DEFAULT NULL COMMENT 'css Url地址';
+        ALTER TABLE T_SERVICE MODIFY COLUMN `js_url` varchar(255) DEFAULT NULL COMMENT 'js Url地址';
+        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_css_url` varchar(255) DEFAULT NULL COMMENT '灰度css Url地址';
+        ALTER TABLE T_SERVICE MODIFY COLUMN `gray_js_url` varchar(255) DEFAULT NULL COMMENT '灰度js Url地址';
+        ALTER TABLE T_SERVICE ADD COLUMN `gray_iframe_url` varchar(255) DEFAULT NULL COMMENT '灰度iframe Url地址' AFTER `weight`;
     END IF;
 
 
@@ -111,7 +111,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'project_name'
                     AND COLLATION_NAME= 'utf8mb4_general_ci') THEN
-        ALTER TABLE T_PROJECT MODIFY COLUMN `project_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;
+        ALTER TABLE T_PROJECT MODIFY COLUMN `project_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '项目名称';
     END IF;
 
     COMMIT;

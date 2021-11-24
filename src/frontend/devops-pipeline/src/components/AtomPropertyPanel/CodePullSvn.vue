@@ -44,7 +44,7 @@
             triggerContainer () {
                 let trigger = []
                 if (this.pipelineStages.length) {
-                    this.pipelineStages.map(stage => {
+                    this.pipelineStages.forEach(stage => {
                         if (this.isTriggerContainer(stage)) {
                             trigger = stage
                         }
@@ -172,12 +172,12 @@
             },
             setSvnVersionState () {
                 if (this.isThirdParty) {
-                    this.newModel.svnVersion && this.newModel.svnVersion.list.map(item => {
+                    this.newModel.svnVersion && this.newModel.svnVersion.list.forEach(item => {
                         item.disabled = false
                     })
                 } else {
                     this.handleUpdateElement('svnVersion', 'V_1_8')
-                    this.newModel.svnVersion && this.newModel.svnVersion.list.map(item => {
+                    this.newModel.svnVersion && this.newModel.svnVersion.list.forEach(item => {
                         item.disabled = true
                     })
                 }

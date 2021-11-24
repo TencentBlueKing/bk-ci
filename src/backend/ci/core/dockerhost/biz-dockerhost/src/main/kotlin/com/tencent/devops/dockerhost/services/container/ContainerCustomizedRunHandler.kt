@@ -125,7 +125,7 @@ class ContainerCustomizedRunHandler(
                 doFinally(buildId, vmSeqId, registryUser, formatImageName!!)
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 
