@@ -252,6 +252,7 @@ class QualityRuleCheckService @Autowired constructor(
                         buildId = buildId
                     )
                 )
+                logger.info("QUALITY|quality rule broadcast finish.")
                 checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
             }
 

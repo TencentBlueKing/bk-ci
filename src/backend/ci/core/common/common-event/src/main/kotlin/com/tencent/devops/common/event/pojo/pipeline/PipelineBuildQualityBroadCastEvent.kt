@@ -24,14 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.event.pojo.quality
+package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
 @Event(exchange = MQ.EXCHANGE_RULE_CHECK_FINISH_FANOUT)
-data class QualityReportBroadCastEvent(
-    val projectId: String,
-    val pipelineId: String,
+data class PipelineBuildQualityBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0,
     val buildId: String
-)
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
