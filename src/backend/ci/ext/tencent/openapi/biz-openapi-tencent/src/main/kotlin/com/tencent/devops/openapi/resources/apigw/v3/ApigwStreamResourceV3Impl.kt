@@ -17,9 +17,14 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
+import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -206,10 +211,35 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, gitProjectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        gitProjectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).updateEnableUser(
             userId = userId,
-            projectId = gitProjectId
+            projectId = "git_$gitProjectId",
+            authUserId = authUserId
+        )
+    }
+
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<ProjectCIInfo>> {
+        return client.get(ServiceGitCIProjectResource::class).getProjects(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = pageSize,
+            orderBy = orderBy,
+            sort = sort
         )
     }
 }

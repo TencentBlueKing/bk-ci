@@ -15,9 +15,13 @@ import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
+import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -302,13 +306,43 @@ interface ApigwStreamResourceV3 {
 
     @ApiOperation("刷新项目启动人")
     @POST
-    @Path("/{gitProjectId}/user")
+    @Path("/{gitProjectId}/reset/oauth")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
-        projectId: String
+        gitProjectId: String,
+        @ApiParam(value = "目标授权人", required = true)
+        @QueryParam("authUserId")
+        authUserId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取工蜂项目与STREAM关联列表")
+    @GET
+    @Path("/{type}/list")
+    fun getProjects(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目列表类型", required = false)
+        @PathParam("type")
+        type: GitCIProjectType?,
+        @ApiParam("搜索条件，模糊匹配path,name", required = false)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("排序条件", required = false)
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序类型", required = false)
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Result<List<ProjectCIInfo>>
 }

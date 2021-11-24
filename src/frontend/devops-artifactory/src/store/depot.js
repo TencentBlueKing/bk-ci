@@ -1,7 +1,7 @@
 import Vue from 'vue'
 const vue = new Vue()
 
-const IMAGE_PREFIX = `/image/api/user/image`
+const IMAGE_PREFIX = '/image/api/user/image'
 export const state = {
     // 公共镜像
     imageLibrary: {

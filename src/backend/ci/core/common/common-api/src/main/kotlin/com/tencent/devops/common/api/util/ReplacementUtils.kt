@@ -56,10 +56,10 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                // 先处理${} 单个花括号的情况
-                val lineTmp = parseTemplate(line, replacement, contextMap)
-                // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
+                // 先处理${{}} 双花括号的情况
+                val lineTmp = parseWithDoubleCurlyBraces(line, replacement, contextMap)
+                // 再处理${} 单个花括号的情况
+                parseTemplate(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {

@@ -30,7 +30,11 @@ package com.tencent.devops.stream.resources.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceGitOauthResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
@@ -51,7 +55,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: GitCIV2PermissionService,
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val client: Client
 ) : ServiceGitBasicSettingResource {
 
     companion object {
@@ -148,7 +153,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             gitSshUrl = setting.gitSshUrl,
             projectCode = projectCode,
             projectName = projectInfo.nameWithNamespace,
-            enableCi = setting.enableCi
+            enableCi = setting.enableCi,
+            authUserId = setting.enableUserId
         ))
     }
 
@@ -171,15 +177,37 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, projectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        projectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableUserId = userId
+                userId = userId,
+                authUserId = authUserId
             )
+        )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): Result<AuthorizeResult> {
+        return client.get(ServiceGitOauthResource::class).isOAuth(
+            userId = userId,
+            redirectUrlType = redirectUrlType,
+            redirectUrl = redirectUrl,
+            gitProjectId = gitProjectId,
+            refreshToken = refreshToken
         )
     }
 

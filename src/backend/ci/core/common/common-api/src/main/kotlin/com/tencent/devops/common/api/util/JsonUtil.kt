@@ -177,18 +177,18 @@ object JsonUtil {
      * 将对象转可修改的Map,
      * 注意：会忽略掉值为空串和null的属性
      */
+    @Deprecated("不建议使用，建议使用toMutableMap")
     fun toMutableMapSkipEmpty(bean: Any): MutableMap<String, Any> {
         if (ReflectUtil.isNativeType(bean)) {
             return mutableMapOf()
         }
         return if (bean is String) {
-            skipEmptyObjectMapper.readValue<MutableMap<String, Any>>(
-                bean.toString(),
-                object : TypeReference<MutableMap<String, Any>>() {})
+            skipEmptyObjectMapper.readValue(bean.toString(), object : TypeReference<MutableMap<String, Any>>() {})
         } else {
-            skipEmptyObjectMapper.readValue<MutableMap<String, Any>>(
+            skipEmptyObjectMapper.readValue(
                 skipEmptyObjectMapper.writeValueAsString(bean),
-                object : TypeReference<MutableMap<String, Any>>() {})
+                object : TypeReference<MutableMap<String, Any>>() {}
+            )
         }
     }
 
@@ -197,10 +197,20 @@ object JsonUtil {
      * 注意：会忽略掉值为null的属性
      */
     fun toMap(bean: Any): Map<String, Any> {
+        return toMutableMap(bean, false)
+    }
+
+    /**
+     * 将对象转不可修改的Map
+     * 注意：会忽略掉值为null的属性, 不会忽略空串和空数组/列表对象
+     * 历史包袱：腾讯内部增加了[skipEmpty]=true参数默认会忽略空串和空数组/列表对象 此为腾讯内部有较多的插件对参数判断过于简单，依赖于
+     * 对空串的null判断，所以如果将skipEmpty设置为false，会出现兼容问题，先暂时继续保留
+     */
+    fun toMutableMap(bean: Any, skipEmpty: Boolean = true): MutableMap<String, Any> {
         return when {
-            ReflectUtil.isNativeType(bean) -> mapOf()
+            ReflectUtil.isNativeType(bean) -> mutableMapOf()
             bean is String -> to(bean)
-            else -> to(getObjectMapper().writeValueAsString(bean))
+            else -> to((if (skipEmpty) skipEmptyObjectMapper else getObjectMapper()).writeValueAsString(bean))
         }
     }
 
