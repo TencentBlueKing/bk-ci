@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.pojo.quality.QualityReportBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
@@ -47,7 +49,6 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -60,11 +61,9 @@ import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
-import com.tencent.devops.quality.pojo.QualityReportMessage
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
-import com.tencent.devops.quality.service.QualityReportMQService
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -98,7 +97,7 @@ class QualityRuleCheckService @Autowired constructor(
     private val qualityCacheService: QualityCacheService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val qualityUrlBean: QualityUrlBean,
-    private val qualityReportMQService: QualityReportMQService
+    private val eventDispatcher: EventDispatcher<QualityReportBroadCastEvent>
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
@@ -243,8 +242,14 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 异步后续的处理
             executors.execute {
+                eventDispatcher.dispatch(
+                    QualityReportBroadCastEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId
+                    )
+                )
                 checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
-                qualityReportMQService.sendMqMsg(QualityReportMessage(projectId, pipelineId, buildId))
             }
 
             // 记录结果

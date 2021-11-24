@@ -24,25 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.quality.resources
+package com.tencent.devops.common.event.pojo.quality
 
-import com.tencent.devops.quality.constant.QUEUE_QUALITY_REPORT
-import com.tencent.devops.quality.constant.ROUTE_REPORT
-import com.tencent.devops.quality.pojo.QualityReportMessage
-import com.tencent.devops.quality.service.QualityReportMQService
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-@Service
-class QualityReportMQServiceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
-): QualityReportMQService {
-    private val logger = LoggerFactory.getLogger(QualityReportMQServiceImpl::class.java)
-
-    override fun sendMqMsg(qualityReportMessage: QualityReportMessage) {
-        logger.info("QUALITY|send mq msg: $qualityReportMessage")
-        rabbitTemplate.convertAndSend(QUEUE_QUALITY_REPORT, ROUTE_REPORT, qualityReportMessage)
-    }
-}
+@Event(exchange = MQ.EXCHANGE_RULE_CHECK_FINISH_FANOUT)
+data class QualityReportBroadCastEvent(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String
+)
