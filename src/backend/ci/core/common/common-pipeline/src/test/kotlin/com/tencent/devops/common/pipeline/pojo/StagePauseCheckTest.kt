@@ -2,15 +2,20 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
 import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import javax.swing.text.html.parser.Element
 import org.junit.Assert
@@ -43,13 +48,14 @@ internal class StagePauseCheckTest {
     }
 
     @Test
+    @Suppress("ALL")
     fun genContainer() {
         val vmContainer = VMBuildMatrixGroupContainer(
             id = "1",
             name = "构建矩阵demo",
             elements = listOf(
                 MarketBuildAtomElement(
-                    name = "市场插件",
+                    name = "有编译环境市场插件",
                     atomCode = "checkout",
                     version = "1.*",
                     data = mapOf()
@@ -61,7 +67,7 @@ internal class StagePauseCheckTest {
                     continueNoneZero = false
                 )
             ),
-            status = BuildStatus.FAILED.name,
+            status = BuildStatus.SUCCEED.name,
             startEpoch = 1551807007986,
             executeCount = 1,
             jobId = "myMatrix1",
@@ -76,7 +82,39 @@ internal class StagePauseCheckTest {
             runsOn = "#stream保留字段#",
             includeCase = listOf(mapOf("var1" to "a"), mapOf("var2" to "2")),
             excludeCase = listOf(mapOf("var2" to "1")),
-            groupContainers = mutableListOf(),
+            groupContainers = mutableListOf(
+                VMBuildContainer(
+                    id = "10001",
+                    name = "构建矩阵demo",
+                    elements = listOf(
+                        MatrixStatusElement(
+                            name = "有编译环境市场插件",
+                            id = "e-8104cd612def4e7caa448ee116fa8560",
+                            status = BuildStatus.SUCCEED.name,
+                            executeCount = 1,
+                            elapsed = 123
+                        ),
+                        MatrixStatusElement(
+                            name = "内置脚本插件",
+                            id = "e-1536cd612def4e7caa448ee116fa8560",
+                            status = BuildStatus.SUCCEED.name,
+                            executeCount = 1,
+                            elapsed = 321
+                        )
+                    ),
+                    status = BuildStatus.SUCCEED.name,
+                    startEpoch = 1551807007986,
+                    executeCount = 1,
+                    canRetry = true,
+                    containerId = "c-9de5cd612def4e7caa448ee116fa8560",
+                    matrixGroupFlag = true,
+                    buildEnv = mapOf("variables.var1" to "aaa", "variables.var2" to "bbb"),
+                    customBuildEnv = mapOf("e1" to "123", "e2" to "321"),
+                    mutexGroup = null,
+                    baseOS = VMBaseOS.ALL,
+                    matrixGroupId = "c-9de5cd612def4e7caa448ee116fa8560"
+                )
+            ),
             totalCount = 10, // 3*3 + 2 - 1
             runningCount = 1,
             buildEnv = mapOf("variables.var1" to "aaa", "variables.var2" to "bbb"),
@@ -89,13 +127,20 @@ internal class StagePauseCheckTest {
         val normalContainer = NormalMatrixGroupContainer(
             id = "2",
             name = "构建矩阵demo",
-            elements = listOf(),
-            status = BuildStatus.FAILED.name,
+            elements = listOf(
+                MarketBuildLessAtomElement(
+                    name = "无有编译环境市场插件",
+                    atomCode = "JobScriptExecutionA",
+                    version = "1.*",
+                    data = mapOf()
+                )
+            ),
+            status = BuildStatus.SUCCEED.name,
             startEpoch = 1551807007986,
             executeCount = 1,
             jobId = "myMatrix2",
             canRetry = true,
-            containerId = "c-9de5cd612def4e7caa448ee116fa8560",
+            containerId = "c-4512cd612def4e7caa448ee116fa8560",
             matrixGroupFlag = true,
             strategyStr = """
                 m1: [a,b,c]
@@ -103,27 +148,50 @@ internal class StagePauseCheckTest {
             """,
             includeCase = listOf(mapOf("m3" to "1"), mapOf("m3" to "2")),
             excludeCase = listOf(mapOf("m2" to "1")),
-            groupContainers = mutableListOf(),
+            groupContainers = mutableListOf(
+                NormalContainer(
+                    id = "2",
+                    name = "构建矩阵demo",
+                    elements = listOf(
+                        MatrixStatusElement(
+                            name = "无有编译环境市场插件",
+                            id = "e-2314cd612def4e7caa448ee116fa8560",
+                            status = BuildStatus.SUCCEED.name,
+                            executeCount = 1,
+                            elapsed = 234
+                        )
+                    ),
+                    status = BuildStatus.SUCCEED.name,
+                    startEpoch = 1551807007986,
+                    executeCount = 1,
+                    jobId = "myMatrix2",
+                    canRetry = true,
+                    containerId = "c-3124cd612def4e7caa448ee116fa8560",
+                    matrixGroupFlag = true,
+                    mutexGroup = null,
+                    matrixGroupId = "c-4512cd612def4e7caa448ee116fa8560"
+                )
+            ),
             totalCount = 10, // 3*3 + 2 - 1
             runningCount = 1,
             mutexGroup = null,
             fastKill = true,
             maxConcurrency = 50
         )
+        val triggerContainer = TriggerContainer(
+            id = "0",
+            name = "触发构建",
+            elements = listOf(ManualTriggerElement(name = "手动触发"))
+        )
+
         val model = Model(
             name = "构建矩阵样例",
             desc = null,
             stages = listOf(
-                Stage(
-                    containers = listOf(TriggerContainer(
-                        id = "0",
-                        name = "手动触发",
-                        elements = listOf(ManualTriggerElement)
-                    ))
-                )
+                Stage(id = "stage-1", name = "stage-1", containers = listOf(triggerContainer)),
+                Stage(id = "stage-2", name = "stage-2", containers = listOf(vmContainer, normalContainer))
             )
         )
-
         println(JsonUtil.toJson(model))
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.container.matrix
 
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -79,7 +80,7 @@ data class NormalMatrixGroupContainer(
     @ApiModelProperty("Job运行的最大并发量", required = false)
     val maxConcurrency: Int? = null,
     @ApiModelProperty("分裂后的容器集合", required = false)
-    var groupContainers: MutableList<VMBuildContainer>? = null,
+    var groupContainers: MutableList<NormalContainer>? = null,
     @ApiModelProperty("正在运行的数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("正在运行的数量", required = false)
