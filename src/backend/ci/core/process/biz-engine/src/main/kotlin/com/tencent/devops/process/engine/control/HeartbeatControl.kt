@@ -142,7 +142,7 @@ class HeartbeatControl @Autowired constructor(
                 userId = event.userId,
                 buildId = container.buildId,
                 stageId = container.stageId,
-                containerId = container.containerId,
+                containerId = container.seq.toString(),
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
                 reason = "Agent心跳超时/Agent Dead，请检查构建机状态",

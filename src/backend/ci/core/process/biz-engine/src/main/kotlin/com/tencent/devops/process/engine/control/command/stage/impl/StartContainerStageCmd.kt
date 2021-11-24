@@ -200,7 +200,7 @@ class StartContainerStageCmd(
                 stageId = container.stageId,
                 previousStageStatus = commandContext.previousStageStatus,
                 containerType = container.containerType,
-                containerId = container.containerId,
+                containerId = container.seq.toString(),
                 actionType = actionType,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,

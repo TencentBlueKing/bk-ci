@@ -211,7 +211,7 @@ class BuildMonitorControl @Autowired constructor(
                     userId = userId,
                     buildId = buildId,
                     stageId = stageId,
-                    containerId = containerId,
+                    containerId = seq.toString(),
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job timeout($minute) min!",
