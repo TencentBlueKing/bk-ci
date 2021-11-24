@@ -68,7 +68,7 @@
             setExp (lines) {
                 if (lines.length) {
                     const times = []
-                    lines && lines.map(item => {
+                    lines && lines.forEach(item => {
                         const li = item.split(' ')
                         times.push(`${this.prezero(li[2])}:${this.prezero(li[1])}`)
                         this.selectedWeek = li[5].split(',').map(i => Number(i))
@@ -92,7 +92,7 @@
                             return
                         }
                         times = normalTime.split(',')
-                        times && times.map(time => {
+                        times && times.forEach(time => {
                             const mul = time.split(':')
                             if (mul.length === 2) {
                                 val.push(`0 ${Number(mul[1])} ${Number(mul[0])} ? * ${weekStr}`)

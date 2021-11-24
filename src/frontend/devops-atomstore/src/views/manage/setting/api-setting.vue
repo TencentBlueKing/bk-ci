@@ -65,10 +65,10 @@
             statusFilter (val) {
                 const local = window.devops || {}
                 const statusMap = {
-                    'WAIT': local.$t('store.待审批'),
-                    'PASS': local.$t('store.通过'),
-                    'REFUSE': local.$t('store.拒绝'),
-                    'CANCEL': local.$t('store.取消')
+                    WAIT: local.$t('store.待审批'),
+                    PASS: local.$t('store.通过'),
+                    REFUSE: local.$t('store.拒绝'),
+                    CANCEL: local.$t('store.取消')
                 }
                 return statusMap[val]
             }
@@ -99,7 +99,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             })
         },
 
@@ -200,8 +200,8 @@
 
             levelFormatter (row, column, cellValue, index) {
                 const levelMap = {
-                    'NORMAL': this.$t('store.普通'),
-                    'SENSITIVE': this.$t('store.敏感')
+                    NORMAL: this.$t('store.普通'),
+                    SENSITIVE: this.$t('store.敏感')
                 }
                 return levelMap[cellValue]
             }
