@@ -34,6 +34,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -42,7 +43,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class InitializeContainerStageCmd(
-    private val buildDetailService: BaseBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
@@ -67,7 +68,7 @@ class InitializeContainerStageCmd(
     private fun generateMatrixGroup(commandContext: StageContext): Int {
         val event = commandContext.event
         var newCount = 0
-        val model = buildDetailService.getBuildModel(event.buildId) ?: return newCount
+        val model = containerBuildDetailService.getBuildModel(event.buildId) ?: return newCount
 
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
         model.stages.forEach { stage ->
