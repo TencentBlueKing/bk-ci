@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -249,7 +248,8 @@ class QualityRuleCheckService @Autowired constructor(
                         userId = buildCheckParams.runtimeVariable?.get("BK_CI_START_USER_ID") ?: "",
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        buildId = buildId
+                        buildId = buildId,
+                        ruleIds = ruleInterceptList.map { HashUtil.decodeIdToLong(it.first.hashId) }
                     )
                 )
                 logger.info("QUALITY|quality rule broadcast finish.")

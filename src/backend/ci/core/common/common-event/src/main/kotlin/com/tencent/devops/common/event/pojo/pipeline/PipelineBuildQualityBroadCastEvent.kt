@@ -38,5 +38,6 @@ data class PipelineBuildQualityBroadCastEvent(
     override val userId: String,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0,
-    val buildId: String
+    val buildId: String,
+    val ruleIds: List<Long>?
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceQualityInterceptResource {
 
     @ApiOperation("获取执行历史")
-    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/rule/{ruleIds}/history")
     @GET
     fun listHistory(
         @ApiParam("项目ID", required = true)
@@ -65,7 +65,10 @@ interface ServiceQualityInterceptResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("红线ID列表", required = false)
+        @PathParam("ruleIds")
+        ruleIds: List<Long>?
     ): Result<List<QualityRuleIntercept>>
 
     @ApiOperation("获取拦截记录")

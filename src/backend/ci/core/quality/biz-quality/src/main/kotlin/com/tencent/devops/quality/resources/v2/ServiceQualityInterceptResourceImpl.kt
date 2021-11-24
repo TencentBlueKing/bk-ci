@@ -46,9 +46,10 @@ class ServiceQualityInterceptResourceImpl @Autowired constructor(
     override fun listHistory(
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        ruleIds: List<Long>?
     ): Result<List<QualityRuleIntercept>> {
-        return Result(historyService.serviceListByBuildId(projectId, pipelineId, buildId))
+        return Result(historyService.serviceListByBuildId(projectId, pipelineId, buildId, ruleIds))
     }
 
     override fun list(

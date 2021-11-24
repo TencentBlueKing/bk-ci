@@ -200,13 +200,13 @@ class QualityHistoryService @Autowired constructor(
         )
     }
 
-    fun serviceListByBuildId(projectId: String, pipelineId: String, buildId: String): List<QualityRuleIntercept> {
+    fun serviceListByBuildId(projectId: String, pipelineId: String, buildId: String, ruleIds: Collection<Long>?): List<QualityRuleIntercept> {
         return historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).map {
+        ).filter { ruleIds?.contains(it.ruleId) ?: true }.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
