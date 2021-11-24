@@ -62,7 +62,8 @@ class StreamBasicSettingService @Autowired constructor(
         buildPushedPullRequest: Boolean? = null,
         enableMrBlock: Boolean? = null,
         enableCi: Boolean? = null,
-        authUserId: String? = null
+        authUserId: String? = null,
+        enableCommitCheck: Boolean? = null
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
@@ -92,7 +93,8 @@ class StreamBasicSettingService @Autowired constructor(
             authUserId = authUserId,
             creatorBgName = setting.creatorBgName,
             creatorDeptName = setting.creatorDeptName,
-            creatorCenterName = setting.creatorCenterName
+            creatorCenterName = setting.creatorCenterName,
+            enableCommitCheck = enableCommitCheck
         )
         return true
     }
