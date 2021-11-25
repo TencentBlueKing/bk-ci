@@ -17,6 +17,6 @@ class ServiceAllocIdResourceImpl @Autowired constructor(
         if (result.status != Status.SUCCESS) {
             return Result(null)
         }
-        return Result(segmentService.getId(bizTag).id)
+        return Result(result.id)
     }
 }
