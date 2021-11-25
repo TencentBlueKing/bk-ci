@@ -186,6 +186,9 @@ class LambdaDataService @Autowired constructor(
                             costTime = buildContainer.cost.toLong(),
                             executeCount = buildContainer.executeCount,
                             conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
+                            errorType = task.errorType,
+                            errorCode = task.errorCode,
+                            errorMsg = task.errorMsg,
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
@@ -226,10 +229,14 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
+
+                val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
+
                 val dataPlatTaskDetail = DataPlatTaskDetail(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     projectEnglishName = task.projectId,
+                    containerType = dispatchType["buildType"].toString(),
                     type = "task",
                     itemId = task.taskId,
                     atomCode = task.atomCode,
@@ -522,7 +529,8 @@ class LambdaDataService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo,
-                startUser = startUser
+                startUser = startUser,
+                channel = channel
             )
         }
     }

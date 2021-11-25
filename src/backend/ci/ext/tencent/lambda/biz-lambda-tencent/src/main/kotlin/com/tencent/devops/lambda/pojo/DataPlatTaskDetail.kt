@@ -33,6 +33,7 @@ data class DataPlatTaskDetail(
     val buildId: String,
     val type: String,
     val projectEnglishName: String,
+    val containerType: String,
     val itemId: String,
     val atomCode: String,
     val taskParams: JSONObject?,

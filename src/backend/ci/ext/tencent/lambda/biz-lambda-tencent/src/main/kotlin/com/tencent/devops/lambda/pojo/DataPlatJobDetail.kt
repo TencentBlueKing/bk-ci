@@ -43,5 +43,8 @@ data class DataPlatJobDetail(
     val costTime: Long,
     val executeCount: Int?,
     val conditions: JSONObject?,
-    val washTime: String
+    val washTime: String,
+    val errorType: Int?,
+    val errorCode: Int?,
+    val errorMsg: String?,
 )
