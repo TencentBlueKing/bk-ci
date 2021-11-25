@@ -38,9 +38,7 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
-import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.api.expression.ExpressionException
-import com.tencent.devops.common.api.expression.GrammarAnalysis
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.ci.v2.MrRule
@@ -80,8 +78,6 @@ import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
-import java.io.BufferedWriter
-import java.io.StringWriter
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -219,7 +215,7 @@ object ScriptYmlUtils {
                                 val realValue = settingMap[it.str] ?: it.str
                                 if (realValue is List<*>) {
                                     // ["test"]->[test]
-                                    JsonUtil.toJson(realValue).replace("\"","")
+                                    JsonUtil.toJson(realValue).replace("\"", "")
                                         .replace("[ ", "[")
                                         .replace(" ]", "]")
                                 } else {
@@ -241,7 +237,7 @@ object ScriptYmlUtils {
             }
             line = newValueLines.readLine()
         }
-        val a= resultValue.toString()
+        val a = resultValue.toString()
         return resultValue.toString()
     }
 

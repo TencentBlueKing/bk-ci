@@ -62,7 +62,7 @@ class YamlTemplateTest {
     }
 
     @Test
-    fun checkReplaceError(){
+    fun checkReplaceError() {
         checkLongParameters()
     }
 
