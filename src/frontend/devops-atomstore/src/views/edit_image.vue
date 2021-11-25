@@ -490,7 +490,7 @@
         height: 400px;
         overflow: auto;
         background: black;
-        /deep/ .CodeMirror {
+        ::v-deep .CodeMirror {
             font-family: Consolas, "Courier New", monospace;
             line-height: 1.5;
             padding: 10px;

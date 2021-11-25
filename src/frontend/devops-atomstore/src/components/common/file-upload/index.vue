@@ -34,7 +34,7 @@
     </div>
 </template>
 <script>
-    import * as cookie from 'js-cookie'
+    import cookie from 'js-cookie'
 
     const CSRFToken = cookie.get('backend_csrftoken')
     export default {
