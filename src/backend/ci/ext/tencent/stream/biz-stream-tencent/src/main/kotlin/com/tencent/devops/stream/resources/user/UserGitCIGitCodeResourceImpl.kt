@@ -51,6 +51,7 @@ import com.tencent.devops.stream.pojo.v2.project.GitProjectInfoWithProject
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamProjectService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -64,7 +65,9 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val streamProjectService: StreamProjectService
 ) : UserGitCIGitCodeResource {
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserGitCIGitCodeResourceImpl::class.java)
+    }
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitProjectInfoWithProject?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
@@ -106,11 +109,13 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             useAccessToken = true
         ) ?: run {
+            logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
             val setting = try {
                 streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
             } catch (e: NumberFormatException) {
                 streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
             } ?: return null
+            logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
             GitCIProjectInfo(
                 gitProjectId = setting.gitProjectId,
                 name = setting.name,
