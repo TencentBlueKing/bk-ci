@@ -51,6 +51,7 @@ object CommandLineUtils {
         val result = StringBuilder()
 
         val cmdLine = CommandLine.parse(command)
+        logger.info("COMMON|command:$command|cmdLine:$cmdLine")
         val executor = CommandLineExecutor()
         if (workspace != null) {
             executor.workingDirectory = workspace
