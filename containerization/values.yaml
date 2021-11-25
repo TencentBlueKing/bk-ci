@@ -41,6 +41,10 @@ mysql:
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
     rootPassword: root
+  livenessProbe:
+    initialDelaySeconds: 60  
+  readinessProbe:
+    initialDelaySeconds: 20 
   primary:
     persistence:
       size: 10Gi
