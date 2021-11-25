@@ -174,7 +174,7 @@ class StreamProjectService @Autowired constructor(
                 logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
                 return null
             }
-            JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
+            return JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
         } ?: return null
         // 每次成功访问工蜂接口就刷新redis
         val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
