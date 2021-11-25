@@ -32,59 +32,59 @@ import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 
 /**
 {
-    "object_kind":"merge_request",
-    "user":{
-        "name":"aaronxsheng",
-        "username":"aaronxsheng",
-        "avatar_url":null
+    "object_kind": "merge_request",
+    "user": {
+        "name": "git_user2",
+        "username": "git_user2",
+        "avatar_url": "https://blog.bobo.com.cn/s/blog_6e572cd60101qls0.html"
     },
-    "object_attributes":{
-        "id":238207,
-        "target_branch":"master",
-        "source_branch":"v1.0.0",
-        "source_project_id":48138,
-        "author_id":14451,
-        "assignee_id":14451,
-        "title":"ddd2",
-        "created_at":"2018-11-26T06:57:58+0000",
-        "updated_at":"2018-11-26T06:57:58+0000",
-        "st_commits":null,
-        "st_diffs":null,
-        "milestone_id":null,
-        "state":"opened" / "closed",
-        "merge_status":"unchecked",
-        "target_project_id":48138,
-        "iid":3,
-        "description":"ddd",
-        "source":{
-            "name":"aaron-git-test",
-            "ssh_url":"xxx
-            "http_url":"xxx
-            "web_url":"xxx
-            "namespace":"aaronxsheng",
-            "visibility_level":0
+    "object_attributes": {
+        "id": 23,
+        "target_branch": "master",
+        "source_branch": "fenzhi01",
+        "source_project_id": 2,
+        "author_id": 3,
+        "assignee_id": 4,
+        "title": "agree",
+        "created_at": "2018-03-13T09:51:06+0000",
+        "updated_at": "2018-03-13T09:51:06+0000",
+        "st_commits": null,
+        "st_diffs": null,
+        "milestone_id": null,
+        "state": "opened",
+        "merge_status": "unchecked",
+        "target_project_id": 14,
+        "iid": 1,
+        "description": "",
+        "source": {
+            "name": "rename",
+            "ssh_url": "ssh://git@tencent.com/z-413/rename.git",
+            "http_url": "http://tencent.com/z-413/rename.git",
+            "web_url": "https://tencent.com/z-413/rename",
+            "visibility_level": 20,
+            "namespace": "z-413"
         },
-        "target":{
-            "name":"aaron-git-test",
-            "ssh_url":"xxx
-            "http_url":"xxx
-            "web_url":"xxx
-            "namespace":"aaronxsheng",
-            "visibility_level":0
+        "target": {
+            "name": "rename",
+            "ssh_url": "ssh://git@tencent.com/z-413/rename.git",
+            "http_url": "http://tencent.com/z-413/rename.git",
+            "web_url": "https://tencent.com/z-413/rename",
+            "visibility_level": 20,
+            "namespace": "z-413"
         },
-        "last_commit":{
-            "id":"1663cbea34521a3c8097046716306d2fbdd9cfea",
-            "message":"ddd",
-            "timestamp":"2018-11-19T08:41:32+0000",
-            "url":"xxx
-            "author":{
-                "name":"aaronxsheng",
-                "email":"aaronxsheng@tencent.com"
+        "last_commit": {
+            "id": "1480a4610ca01dd10cb5bc30d83151eab98c09a1",
+            "message": "fixed readme",
+            "timestamp": "2012-01-03T23:36:29+02:00",
+            "url": "https://tencent.com/z-413/rename/commits/da1480a4610ca01dd10cb5bc30d83151eab98c09a1",
+            "author": {
+                "name": "alex",
+                "email": "alex@tencent.com"
             }
         },
-        "url":"xxx
-        "action":"open" / "close",
-        "extension_action":"push-update"
+        "url": "https://tencent.com/rename/merge_requests/1",
+        "action": "open",
+        "extension_action": "open"
     }
 }
 */

@@ -42,7 +42,10 @@ import com.tencent.devops.dockerhost.services.container.ContainerCustomizedRunHa
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
 import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageCpuLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskIOLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageMemLoad
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -237,11 +240,11 @@ class DockerService @Autowired constructor(
     fun getDockerHostLoad(): DockerHostLoad {
         return DockerHostLoad(
             usedContainerNum = dockerHostBuildService.getContainerNum(),
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad()
-            )
+            averageCpuLoad = getAverageCpuLoad(),
+            averageMemLoad = getAverageMemLoad(),
+            averageDiskLoad = getAverageDiskLoad(),
+            averageDiskIOLoad = getAverageDiskIOLoad()
+        )
     }
 
     fun getContainerStatus(containerId: String): Boolean {

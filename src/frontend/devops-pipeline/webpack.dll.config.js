@@ -33,13 +33,18 @@ module.exports = (env = {}, argv) => {
             'echarts/lib/component/tooltip',
             'echarts/lib/component/title',
             'echarts/lib/component/legend',
-            'jquery',
+            'vue-i18n',
             'moment'
         ],
         output: {
             filename: '[name].dll.js',
             library: 'lib',
             path: path.join(__dirname, 'dist')
+        },
+        resolve: {
+            fallback: {
+                'path': false
+            }
         },
         module: {
             rules: [
@@ -55,17 +60,23 @@ module.exports = (env = {}, argv) => {
                 },
                 {
                     test: /\.(png|jpg|gif)$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10000,
-                        name: '[name].[ext]?[hash]'
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8 * 1024 // 4kb
+                        }
+                    },
+                    generator: {
+                        filename: '[name].[ext]?[hash]'
                     }
                 },
                 {
                     test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 10000
+                    type: 'asset',
+                    parser: {
+                        dataUrlCondition: {
+                            maxSize: 8 * 1024 // 4kb
+                        }
                     }
                 },
                 {

@@ -361,7 +361,16 @@ class GitCiService {
                     )
                 }
                 val data = response.body()!!.string()
-                return Result(JsonUtil.to(data, GitCodeFileInfo::class.java))
+                val result = try {
+                    JsonUtil.to(data, GitCodeFileInfo::class.java)
+                } catch (e: Throwable) {
+                    logger.info("[url=$url]|getFileInfo to data error: ${e.message}")
+                    throw CustomException(
+                        status = Response.Status.BAD_REQUEST,
+                        message = "File format error"
+                    )
+                }
+                return Result(result)
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")

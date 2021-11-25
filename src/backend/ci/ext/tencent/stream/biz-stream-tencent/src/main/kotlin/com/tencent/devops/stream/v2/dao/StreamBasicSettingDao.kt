@@ -169,11 +169,12 @@ class StreamBasicSettingDao {
     fun updateProjectSetting(
         dslContext: DSLContext,
         gitProjectId: Long,
+        userId: String?,
         buildPushedBranches: Boolean?,
         buildPushedPullRequest: Boolean?,
         enableMrBlock: Boolean?,
         enableCi: Boolean?,
-        enableUserId: String?,
+        authUserId: String?,
         creatorBgName: String?,
         creatorDeptName: String?,
         creatorCenterName: String?
@@ -192,17 +193,20 @@ class StreamBasicSettingDao {
             if (enableCi != null) {
                 dsl.set(ENABLE_CI, enableCi)
             }
-            if (enableUserId != null) {
-                dsl.set(ENABLE_USER_ID, enableUserId)
+            if (authUserId != null) {
+                dsl.set(ENABLE_USER_ID, authUserId)
             }
-            if (enableUserId != null) {
+            if (creatorBgName != null) {
                 dsl.set(CREATOR_BG_NAME, creatorBgName)
             }
-            if (enableUserId != null) {
+            if (creatorDeptName != null) {
                 dsl.set(CREATOR_DEPT_NAME, creatorDeptName)
             }
-            if (enableUserId != null) {
+            if (creatorCenterName != null) {
                 dsl.set(CREATOR_CENTER_NAME, creatorCenterName)
+            }
+            if (userId != null) {
+                dsl.set(OAUTH_OPERATOR, userId)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(gitProjectId))
@@ -299,6 +303,17 @@ class StreamBasicSettingDao {
                 baseStep.where(ID.`in`(gitProjectIdList))
             }
             return baseStep.fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun updateOauthSetting(dslContext: DSLContext, gitProjectId: Long, userId: String, oauthUserId: String) {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            dslContext.update(this)
+                .set(ENABLE_USER_ID, oauthUserId)
+                .set(OAUTH_OPERATOR, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 

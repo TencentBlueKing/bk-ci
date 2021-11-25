@@ -27,11 +27,15 @@
 
 package com.tencent.devops.stream.v2.dao
 
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.stream.tables.TStreamPipelineBranch
 import com.tencent.devops.model.stream.tables.records.TStreamPipelineBranchRecord
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -172,5 +176,72 @@ class StreamPipelineBranchDao {
                 .and(BRANCH.eq(branches))
                 .fetch()
         }
+    }
+
+    fun getProjectPipelineCount(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        search: String?,
+        limit: SQLLimit,
+        orderBy: GitCodeBranchesOrder,
+        sort: GitCodeBranchesSort
+    ): Int {
+        with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
+            return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
+                .groupBy(BRANCH)
+                .count()
+        }
+    }
+
+    fun getProjectPipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        search: String?,
+        limit: SQLLimit,
+        orderBy: GitCodeBranchesOrder,
+        sort: GitCodeBranchesSort
+    ): List<TStreamPipelineBranchRecord> {
+        with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
+            return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
+                .groupBy(BRANCH)
+                .offset(limit.offset)
+                .limit(limit.limit)
+                .fetch()
+        }
+    }
+
+    private fun TStreamPipelineBranch.projectPipelineDsl(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        search: String?,
+        orderBy: GitCodeBranchesOrder,
+        sort: GitCodeBranchesSort
+    ): SelectConditionStep<TStreamPipelineBranchRecord> {
+        val dsl = dslContext.selectFrom(this)
+            .where(GIT_PROJECT_ID.eq(gitProjectId))
+            .and(PIPELINE_ID.eq(pipelineId))
+        if (!search.isNullOrBlank()) {
+            dsl.and(BRANCH.like("%$search%"))
+        }
+        val order = when (orderBy) {
+            GitCodeBranchesOrder.NAME -> {
+                BRANCH
+            }
+            GitCodeBranchesOrder.UPDATE -> {
+                UPDATE_TIME
+            }
+        }
+        when (sort) {
+            GitCodeBranchesSort.ASC -> {
+                dsl.orderBy(order.asc())
+            }
+            GitCodeBranchesSort.DESC -> {
+                dsl.orderBy(order.desc())
+            }
+        }
+        return dsl
     }
 }

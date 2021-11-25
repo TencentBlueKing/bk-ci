@@ -309,7 +309,7 @@ class StreamScmService @Autowired constructor(
         ).data
     }
 
-    fun getProjectMembersAllRetry(
+    fun getProjectMembersRetry(
         token: String,
         gitProjectId: String,
         page: Int?,
@@ -320,7 +320,8 @@ class StreamScmService @Autowired constructor(
             log = "getProjectMembersRetry: [$gitProjectId|$page|$pageSize|$search]",
             apiErrorCode = ErrorCodeEnum.GET_GIT_PROJECT_MEMBERS_ERROR,
             action = {
-                client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                client.getScm(ServiceGitCiResource::class).getMembers(
+                    token = token,
                     gitProjectId = gitProjectId,
                     page = page ?: 1,
                     pageSize = pageSize ?: 20,
