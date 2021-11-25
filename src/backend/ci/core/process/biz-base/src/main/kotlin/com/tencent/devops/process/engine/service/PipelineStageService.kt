@@ -367,7 +367,7 @@ class PipelineStageService @Autowired constructor(
             }
             pipelineEventDispatcher.dispatch(
                 PipelineBuildReviewBroadCastEvent(
-                    source = "s(${buildStage.stageId}) waiting for REVIEW",
+                    source = "s(${buildStage.stageId}) has been reviewed",
                     projectId = buildStage.projectId, pipelineId = buildStage.pipelineId,
                     buildId = buildStage.buildId, userId = userId,
                     reviewType = reviewType,
@@ -477,24 +477,27 @@ class PipelineStageService @Autowired constructor(
                 "inOrOut=$inOrOut|response=$result|ruleIds=${check.ruleIds}")
             check.checkTimes = result.checkTimes
 
-            // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
-            if (result.success) {
+            val qualityStatus = if (result.success) {
                 BuildStatus.QUALITY_CHECK_PASS
             } else if (result.failEnd) {
                 BuildStatus.QUALITY_CHECK_FAIL
             } else {
-                // # 5533 增加红线待审核的消息
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildReviewBroadCastEvent(
-                        source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
-                        projectId = stage.projectId, pipelineId = stage.pipelineId,
-                        buildId = stage.buildId, userId = event.userId,
-                        reviewType = reviewType, status = BuildStatus.REVIEWING.name,
-                        stageId = stage.stageId, taskId = null
-                    )
-                )
                 BuildStatus.QUALITY_CHECK_WAIT
             }
+
+            // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
+            // #5533 增加红线待审核的消息
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildReviewBroadCastEvent(
+                    source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
+                    projectId = stage.projectId, pipelineId = stage.pipelineId,
+                    buildId = stage.buildId, userId = event.userId,
+                    reviewType = reviewType, status = qualityStatus.name,
+                    stageId = stage.stageId, taskId = null,
+                    ruleIds = check.ruleIds
+                )
+            )
+            return qualityStatus
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
                 "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)
