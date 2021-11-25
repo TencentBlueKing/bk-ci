@@ -310,6 +310,14 @@ class StreamBasicSettingService @Autowired constructor(
                     pathWithNamespace = projectResult.pathWithNamespace ?: "",
                     nameWithNamespace = projectResult.nameWithNamespace
                 )
+            } else {
+                // 说明存量数据在工蜂处已丢失
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = "",
+                    nameWithNamespace = ""
+                )
             }
         } catch (t: Throwable) {
             logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
