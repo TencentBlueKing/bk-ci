@@ -244,8 +244,17 @@ class DockerHostUtils @Autowired constructor(
         if (!dockerIpInfo.enable ||
             dockerIpInfo.grayEnv != gray.isGray() ||
             overload(dockerIpInfo) ||
-            specialIpCheck(dockerIpInfo, specialIpSet) ||
-            qpcWhiteListCheck(dispatchMessage)) {
+            specialIpCheck(dockerIpInfo, specialIpSet)) {
+            return getAvailableDockerIpWithSpecialIps(
+                dispatchMessage.projectId,
+                dispatchMessage.pipelineId,
+                dispatchMessage.vmSeqId,
+                specialIpSet
+            )
+        }
+
+        // 配置代码缓存集群，不用关注漂移
+        if (dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
@@ -265,9 +274,12 @@ class DockerHostUtils @Autowired constructor(
         if (dockerIpInfo.diskLoad > hostDriftLoad.disk ||
             dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
             dockerIpInfo.memLoad > hostDriftLoad.memory ||
-            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
-            dockerIpInfo.usedNum > hostDriftLoad.usedNum
+            dockerIpInfo.cpuLoad > hostDriftLoad.cpu
         ) {
+            return true
+        }
+
+        if (dockerIpInfo.usedNum > hostDriftLoad.usedNum) {
             return true
         }
 
@@ -285,15 +297,6 @@ class DockerHostUtils @Autowired constructor(
 
         // 配置了专机，但上次构建IP不在专机列表中，漂移
         if (specialIpSet.isNotEmpty() && !specialIpSet.contains(dockerIpInfo.dockerIp)) {
-            return true
-        }
-
-        return false
-    }
-
-    private fun qpcWhiteListCheck(dispatchMessage: DispatchMessage): Boolean {
-        // 配置大仓代码优化的，随机调度
-        if (dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
             return true
         }
 
