@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.service.ExperienceBaseService
@@ -77,6 +78,15 @@ class ServiceExperienceResourceImpl @Autowired constructor(
 
     override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
         return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
+    }
+
+    override fun listForBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<ExperienceInfoForBuild>> {
+        return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -137,7 +137,8 @@ class ExperienceDao {
         logoUrl: String,
         size: Long,
         scheme: String,
-        buildId: String
+        buildId: String,
+        pipelineId: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -173,6 +174,7 @@ class ExperienceDao {
                 SIZE,
                 SCHEME,
                 BUILD_ID,
+                PIPELINE_ID,
             ).values(
                 projectId,
                 name,
@@ -203,7 +205,8 @@ class ExperienceDao {
                 logoUrl,
                 size,
                 scheme,
-                buildId
+                buildId,
+                pipelineId
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -476,6 +479,21 @@ class ExperienceDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun listForBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 }

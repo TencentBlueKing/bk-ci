@@ -68,6 +68,7 @@ import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
+import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperiencePermission
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
@@ -83,6 +84,7 @@ import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -406,7 +408,8 @@ class ExperienceService @Autowired constructor(
             logoUrl = logoUrl,
             size = fileSize,
             scheme = scheme,
-            buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: ""
+            buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
+            pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
 
         // 加上权限
@@ -810,6 +813,39 @@ class ExperienceService @Autowired constructor(
                 versionTitle = experienceRecord.versionTitle,
                 categoryId = experienceRecord.category,
                 productOwner = objectMapper.readValue(experienceRecord.productOwner)
+            )
+        }
+    }
+
+    fun listForBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<ExperienceInfoForBuild> {
+        // 判断是否有权限
+        if (!client.get(ServiceBuildPermissionResource::class)
+                .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
+        ) {
+            throw ErrorCodeException(
+                defaultMessage = "用户没有流水线执行权限",
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+            )
+        }
+
+        // 返回信息
+        return experienceDao.listForBuild(dslContext, projectId, pipelineId, buildId).map {
+            val encodeLongId = HashUtil.encodeLongId(it.id)
+            ExperienceInfoForBuild(
+                experienceName = it.experienceName,
+                versionTitle = it.versionTitle,
+                remark = it.remark,
+                scheme = if (it.platform == "ANDROID") {
+                    "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$encodeLongId"
+                } else {
+                    "bkdevopsapp://app/experience/expDetail/$encodeLongId"
+                },
+                experienceId = encodeLongId
             )
         }
     }
