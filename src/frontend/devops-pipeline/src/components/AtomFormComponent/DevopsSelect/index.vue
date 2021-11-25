@@ -1,6 +1,18 @@
 <template>
     <div class="select-input" v-bk-clickoutside="handleBlur">
-        <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
+        <input
+            ref="inputArea"
+            class="bk-form-input"
+            v-bind="restProps"
+            v-model="displayName"
+            :disabled="disabled || loading"
+            :title="value"
+            autocomplete="off"
+            @focus="handleFocus"
+            @keypress.enter.prevent="handleEnterOption"
+            @keydown.up.prevent="handleKeyup"
+            @keydown.down.prevent="handleKeydown"
+            @keydown.tab.prevent="handleBlur" />
         <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
         <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
         <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
@@ -13,7 +25,12 @@
                         <div class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
-                            :class="{ active: child.id === value, selected: selectedPointer === childIndex && selectedGroupPointer === index }"
+                            :class="{
+                                active: child.id === value,
+                                selected: selectedPointer === childIndex
+                                    && selectedGroupPointer === index
+                                    && !isMultiple
+                            }"
                             :disabled="child.disabled"
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
@@ -22,8 +39,21 @@
                     </li>
                 </template>
                 <template v-else>
-                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: selectedPointer === index }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
+                    <li
+                        v-for="(item, index) in filteredList"
+                        :key="item.id"
+                        :class="{
+                            'option-item': true,
+                            active: !isMultiple ? item.id === value : value.includes(item.id),
+                            selected: selectedPointer === index && !isMultiple
+                        }"
+                        :title="item.name"
+                        :disabled="item.disabled"
+                        @click.stop="selectOption(item)"
+                        @mouseover="setSelectPointer(index)"
+                    >
                         {{ item.name }}
+                        <i v-if="isMultiple && value.includes(item.id)" class="devops-icon icon-check-1"></i>
                     </li>
                 </template>
             </ul>
@@ -51,7 +81,8 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                selectedMap: {}
             }
         },
         computed: {
@@ -61,6 +92,9 @@
             },
             hasGroup () {
                 return this.mergedOptionsConf && this.mergedOptionsConf.hasGroup
+            },
+            isMultiple () {
+                return this.mergedOptionsConf && this.mergedOptionsConf.multiple
             },
             filteredList () {
                 const { displayName, optionList } = this
@@ -75,7 +109,7 @@
             queryParams (newQueryParams, oldQueryParams) {
                 if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.debounceGetOptionList()
-                    this.handleChange(this.name, '')
+                    this.handleChange(this.name, this.isMultiple ? [] : '')
                     this.displayName = ''
                 }
             },
@@ -87,6 +121,16 @@
             },
             isLoading (isLoading) {
                 this.loading = isLoading
+            },
+            selectedMap (obj) {
+                const keyArr = []
+                const params = []
+                for (const key in obj) {
+                    keyArr.push(obj[key])
+                    params.push(key)
+                }
+                this.displayName = keyArr.join(',')
+                this.handleChange(this.name, params)
             }
         },
         created () {
@@ -123,7 +167,7 @@
                             })
                             result.push({
                                 ...item,
-                                children: noSensiveKeyword ? children.filter(child => child.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : children
+                                children: (noSensiveKeyword && !this.isMultiple) ? children.filter(child => child.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : children
                             })
                         }
                         return result
@@ -144,18 +188,29 @@
                     }
                 })
 
-                return noSensiveKeyword ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
+                return (noSensiveKeyword && !this.isMultiple) ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
             },
             selectOption ({ id, name, disabled = false }) {
                 if (disabled) return
-                this.handleChange(this.name, id)
-                this.$nextTick(() => {
-                    this.handleBlur()
-                })
+                if (!this.isMultiple) {
+                    this.handleChange(this.name, id)
+                    this.$nextTick(() => {
+                        this.handleBlur()
+                    })
+                } else {
+                    if (Object.prototype.hasOwnProperty.call(this.selectedMap, id)) {
+                        this.$delete(this.selectedMap, id)
+                    } else {
+                        this.selectedMap = {
+                            ...this.selectedMap,
+                            [id]: name
+                        }
+                    }
+                }
             },
 
             clearValue () {
-                this.handleChange(this.name, '')
+                this.handleChange(this.name, this.isMultiple ? [] : '')
                 this.displayName = ''
                 this.$refs.inputArea.focus()
             },
@@ -203,18 +258,44 @@
                     return val
                 }
                 if (this.hasGroup) {
-                    for (let i = 0; i < this.optionList.length; i++) {
-                        const option = this.optionList[i]
-                        const matchVal = option.children.find(child => child.id === val)
-                        console.log(matchVal)
-                        if (matchVal) {
-                            return matchVal.name
+                    if (typeof val === 'string') {
+                        for (let i = 0; i < this.optionList.length; i++) {
+                            const option = this.optionList[i]
+                            const matchVal = option.children.find(child => child.id === val)
+                            if (matchVal) {
+                                return matchVal.name
+                            }
                         }
+                    } else {
+                        const valArr = []
+                        val.forEach(id => {
+                            for (let i = 0; i < this.optionList.length; i++) {
+                                const option = this.optionList[i]
+                                option.children.forEach(child => {
+                                    if (child.id === id) {
+                                        valArr.push(option.name)
+                                    }
+                                })
+                            }
+                        })
+                        return valArr.join(',')
                     }
                 } else {
-                    const option = this.optionList.find(option => option.id === val)
-                    if (option) {
-                        return option.name
+                    if (typeof val === 'string') {
+                        const option = this.optionList.find(option => option.id === val)
+                        if (option) {
+                            return option.name
+                        }
+                    } else {
+                        const valArr = []
+                        val.forEach(id => {
+                            this.optionList.forEach(option => {
+                                if (option.id === id) {
+                                    valArr.push(option.name)
+                                }
+                            })
+                        })
+                        return valArr.join(',')
                     }
                 }
                 return ''
@@ -238,6 +319,18 @@
                 } finally {
                     if (this.value) {
                         this.displayName = this.getDisplayName(this.value)
+                    }
+                    if (this.isMultiple && this.value) {
+                        this.value.forEach(id => {
+                            this.optionList.forEach(option => {
+                                if (option.id === id) {
+                                    this.selectedMap = {
+                                        ...this.selectedMap,
+                                        [id]: option.name
+                                    }
+                                }
+                            })
+                        })
                     }
                     this.loading = false
                 }
@@ -309,6 +402,12 @@
                     color: #999;
 
                 }
+                .option-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
                 .option-item,
                 .option-group-item {
                     line-height: 36px;
