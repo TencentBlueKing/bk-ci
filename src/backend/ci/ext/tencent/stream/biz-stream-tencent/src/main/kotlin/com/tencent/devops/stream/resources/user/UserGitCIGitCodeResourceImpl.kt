@@ -104,11 +104,13 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     }
 
     private fun getProjectInfo(gitProjectId: String): GitCIProjectInfo? {
-        return streamScmService.getProjectInfo(
-            token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
-            gitProjectId = gitProjectId,
-            useAccessToken = true
-        ) ?: run {
+        return try {
+            streamScmService.getProjectInfo(
+                token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
+                gitProjectId = gitProjectId,
+                useAccessToken = true
+            )
+        } catch (e: Exception) {
             logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
             val setting = try {
                 streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
@@ -129,7 +131,6 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 description = setting.gitProjectDesc,
                 avatarUrl = setting.gitProjectAvatar
             )
-
         }
     }
 
