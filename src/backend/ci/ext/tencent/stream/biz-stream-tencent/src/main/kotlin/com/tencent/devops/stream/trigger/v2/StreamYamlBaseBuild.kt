@@ -166,8 +166,10 @@ class StreamYamlBaseBuild @Autowired constructor(
         // 修改流水线并启动构建，需要加锁保证事务性
         var buildId = ""
         try {
-            logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
+            logger.info(
+                "GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
+            )
             buildId = startupPipelineBuild(
                 processClient = processClient,
                 model = model,
@@ -176,14 +178,16 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 pipelineName = pipeline.displayName
             )
-            logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+            logger.info(
+                "GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
+            )
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 成功构建的添加 流水线-分支 记录
             if (!event.isFork() &&
                 (event.objectKind == TGitObjectKind.PUSH.value ||
-                event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
+                        event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
             ) {
                 streamPipelineBranchService.saveOrUpdate(
                     gitProjectId = gitCIBasicSetting.gitProjectId,
@@ -191,8 +195,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     branch = event.branch
                 )
             }
-            // 推送启动构建消息,当人工触发时不推送构建消息
-            if (CommitCheckUtils.needSendCheck(event)) {
+            if (CommitCheckUtils.needSendCheck(event, gitCIBasicSetting)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
                     description = triggerMessageUtil.getCommitCheckDesc(
@@ -219,7 +222,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         } catch (e: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
@@ -242,11 +245,15 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         } finally {
             if (buildId.isNotEmpty()) {
-                kafkaClient.send(STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(StreamBuildInfo(
-                    buildId = buildId,
-                    streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
-                    washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                )))
+                kafkaClient.send(
+                    STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(
+                        StreamBuildInfo(
+                            buildId = buildId,
+                            streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
+                            washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        )
+                    )
+                )
             }
         }
 
@@ -285,8 +292,10 @@ class StreamYamlBaseBuild @Autowired constructor(
                 return true
             }
         } catch (e: Exception) {
-            logger.error("get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
-                "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}")
+            logger.error(
+                "get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
+                        "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}"
+            )
             return true
         }
         return false
