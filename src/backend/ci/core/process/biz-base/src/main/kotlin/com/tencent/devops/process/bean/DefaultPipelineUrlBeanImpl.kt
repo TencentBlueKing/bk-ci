@@ -25,29 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.process.bean
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentUpgradeResource {
-
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
+class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
+    override fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        needShortUrl: Boolean
+    ): String {
+        return "${HomeHostUtil
+            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+        return "${HomeHostUtil
+            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 }

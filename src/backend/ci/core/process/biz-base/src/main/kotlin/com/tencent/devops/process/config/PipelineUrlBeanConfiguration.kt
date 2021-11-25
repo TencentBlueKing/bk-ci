@@ -25,41 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron.environment
+package com.tencent.devops.process.config
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.bean.DefaultPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.PipelineUrlBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@Component
-@Suppress("ALL", "UNUSED")
-class AgentUpgrdeJob @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val updateService: AgentUpgradeService
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
-        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
-    }
+/**
+ * 流水线扩展通知配置
+ */
+@Configuration
+class PipelineUrlBeanConfiguration {
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
-    fun updateCanUpgradeAgentList() {
-        logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateService.updateCanUpgradeAgentList()
-        } catch (ignore: Throwable) {
-            logger.warn("update can upgrade agent list failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
+    @Bean
+    @ConditionalOnMissingBean(PipelineUrlBean::class)
+    fun pipelineUrlBean(@Autowired commonConfig: CommonConfig) = DefaultPipelineUrlBeanImpl(commonConfig)
 }

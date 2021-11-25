@@ -399,7 +399,9 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         page: Int,
         pageSize: Int
     ): List<QueryNodeInfo> {
-        logger.info("queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId, repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize")
+        logger.info("queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId, " +
+            "repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata, " +
+            "page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
