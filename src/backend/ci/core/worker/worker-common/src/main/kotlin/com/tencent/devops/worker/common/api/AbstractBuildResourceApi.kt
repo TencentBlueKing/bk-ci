@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.ArchiveUtils
 import io.undertow.util.StatusCodes
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -53,13 +54,14 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import java.io.File
-import java.io.FileOutputStream
 import java.net.ConnectException
 import java.net.HttpRetryException
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.net.UnknownHostException
+import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -181,18 +183,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             LoggerService.addNormalLine(response.body()!!.string())
             throw RemoteServiceException("获取文件失败")
         }
-        if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
+        val dest = destPath.toPath()
+        if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
         LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-
-        response.body()!!.byteStream().use { bs ->
-            val buf = ByteArray(BYTE_ARRAY_SIZE)
-            var len = bs.read(buf)
-            FileOutputStream(destPath).use { fos ->
-                while (len != -1) {
-                    fos.write(buf, 0, len)
-                    len = bs.read(buf)
-                }
-            }
+        val body = response.body() ?: return
+        val contentLength = body.contentLength()
+        if (contentLength != -1L) {
+            LoggerService.addNormalLine("download ${dest.fileName} " +
+                ArchiveUtils.humanReadableByteCountBin(contentLength))
+        }
+        body.byteStream().use { bs ->
+            Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
         }
     }
 
@@ -203,9 +204,8 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val EMPTY = ""
         private const val DEFAULT_RETRY_TIME = 5
         private const val sleepTimeMills = 5000L
-        private const val BYTE_ARRAY_SIZE = 4096
         private const val CONNECT_TIMEOUT = 5L
-        private const val READ_TIMEOUT = 1500L
+        private const val READ_TIMEOUT = 60L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!

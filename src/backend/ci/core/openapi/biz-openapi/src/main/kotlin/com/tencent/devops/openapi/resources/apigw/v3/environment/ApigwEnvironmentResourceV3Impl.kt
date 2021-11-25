@@ -36,6 +36,7 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentResourceV3
 import org.slf4j.LoggerFactory
@@ -128,10 +129,27 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         sortBy: String?,
         sortDirection: String?
     ): Result<List<AgentPipelineRef>> {
-        logger.info("listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
-            " sortBy: $sortBy, sortDirection: $sortDirection")
-        return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(userId, projectId, nodeHashId,
-            sortBy, sortDirection)
+        logger.info(
+            "listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
+                    " sortBy: $sortBy, sortDirection: $sortDirection"
+        )
+        return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(
+            userId, projectId, nodeHashId,
+            sortBy, sortDirection
+        )
+    }
+
+    override fun setShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean> {
+        logger.info(
+            "setShareEnv , userId:$userId , projectId:$projectId , " +
+                    "envHashId:$envHashId , sharedProjects:$sharedProjects"
+        )
+        return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }
 
     companion object {

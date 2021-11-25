@@ -530,6 +530,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
             return
         }
+        log(buildLogPrinter, event, "retry: ${event.retryTime + 1} | $errorMessage")
+
         event.retryTime += 1
         event.delayMills = 10000
         pipelineEventDispatcher.dispatch(event)

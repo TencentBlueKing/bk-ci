@@ -17,18 +17,40 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-function assetsPlugin (options) {
-    // Configure your plugin with options...
-}
-  
-assetsPlugin.prototype.apply = function (compiler) {
-    compiler.plugin('compilation', (compilation) => {
-        compilation.plugin('html-webpack-plugin-before-html-processing', data => {
-            const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
-            data.html = `${data.html.slice(0, assetsPos)} <script type='text/javascript' src='${data.assets.js[0]}'></script><script type='text/javascript'>window.jsAssets = ${JSON.stringify(data.assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
-            return data
+// If your plugin is direct dependent to the html webpack plugin:
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+class assetsPlugin {
+    apply (compiler) {
+        compiler.hooks.compilation.tap('assetsPlugin', async (compilation) => {
+            console.log('The compiler is starting a new compilation...')
+            let assets
+            // Static Plugin interface |compilation |HOOK NAME | register listener
+            await HtmlWebpackPlugin.getHooks(compilation).beforeAssetTagGeneration.tapAsync(
+                'assetsPlugin', // <-- Set a meaningful name here for stacktraces
+                (data, cb) => {
+                    // Manipulate the content
+                    assets = data.assets
+                    
+                    // Tell webpack to move on
+                    cb(null, data)
+                }
+            )
+
+            HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
+                'assetsPlugin', // <-- Set a meaningful name here for stacktraces
+                (data, cb) => {
+                    // Manipulate the content
+                    const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
+                    if (assetsPos > -1) {
+                        data.html = `${data.html.slice(0, assetsPos)} <script type='text/javascript' src='${assets.js[0]}'></script><script type='text/javascript'>window.jsAssets = ${JSON.stringify(assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
+                    }
+                    // Tell webpack to move on
+                    cb(null, data)
+                }
+            )
         })
-    })
+    }
 }
 
 module.exports = assetsPlugin

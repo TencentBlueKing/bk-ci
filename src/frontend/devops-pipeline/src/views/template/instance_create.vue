@@ -267,7 +267,7 @@
                 const { $store, loading } = this
                 const params = []
 
-                pipeline.map(item => {
+                pipeline.forEach(item => {
                     params.push({
                         id: item
                     })
@@ -331,7 +331,7 @@
 
             handlePipelineParams (data) {
                 this.pipelineNameList.splice(0, this.pipelineNameList.length)
-                this.hashVal.map((item, index) => {
+                this.hashVal.forEach((item, index) => {
                     const pipelineItem = {
                         pipelineId: data[item].pipelineId,
                         pipelineName: data[item].pipelineName,

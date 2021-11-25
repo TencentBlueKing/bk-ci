@@ -45,7 +45,7 @@ object PropertyUtil {
         var properties = propertiesMap[propertyFileName]
         if (properties == null) {
             // 缓存中没有该配置文件则实时去加载
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream("/$propertyFileName")
+            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
             properties = Properties()
             properties.load(fileInputStream)
             propertiesMap[propertyFileName] = properties

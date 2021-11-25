@@ -75,9 +75,9 @@ class BuildArchiveGetTask : ITask() {
         var count = 0
 
         LoggerService.addNormalLine("archive get notFoundContinue: $notFoundContinue")
-        srcPaths.split(",").map {
+        val files = srcPaths.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
-        }.forEach { srcPath ->
+        }.filter { it.isNotBlank() }.flatMap { srcPath ->
 
             logger.info("[$buildId]|pipelineId=$pipelineId|srcPath=$srcPath")
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
@@ -89,7 +89,7 @@ class BuildArchiveGetTask : ITask() {
                 customFilePath = srcPath
             )
 
-            fileList.forEach { fileUrl ->
+            fileList.map { fileUrl ->
                 val decodeUrl = URLDecoder.decode(fileUrl, "UTF-8")
                 val lastFx = decodeUrl.lastIndexOf("/")
                 val file = if (lastFx > 0) {
@@ -98,29 +98,32 @@ class BuildArchiveGetTask : ITask() {
                     File(destPath, decodeUrl)
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo!")
-                val token = RepoServiceFactory.getInstance().getRepoToken(
-                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                    projectId = buildVariables.projectId,
-                    repoName = "pipeline",
-                    path = fileUrl,
-                    type = TokenType.DOWNLOAD,
-                    expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
-                )
-                archiveGetResourceApi.downloadPipelineFile(
-                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                    projectId = buildVariables.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    uri = fileUrl,
-                    destPath = file,
-                    isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType),
-                    token = token
-                )
-                count++
+                fileUrl to file
             }
         }
-
+        count = files.size
         LoggerService.addNormalLine("total $count file(s) found")
+        files.forEachIndexed { index, (fileUrl, file) ->
+            val token = RepoServiceFactory.getInstance().getRepoToken(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
+                repoName = "pipeline",
+                path = fileUrl,
+                type = TokenType.DOWNLOAD,
+                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+            )
+            archiveGetResourceApi.downloadPipelineFile(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                uri = fileUrl,
+                destPath = file,
+                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType),
+                token = token
+            )
+            LoggerService.addNormalLine("${index + 1}/$count finished")
+        }
         if (count == 0 && notFoundContinue == "false") throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,

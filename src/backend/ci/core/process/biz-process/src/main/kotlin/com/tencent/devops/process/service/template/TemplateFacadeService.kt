@@ -82,6 +82,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -274,7 +275,8 @@ class TemplateFacadeService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在")
+                defaultMessage = "流水线编排不存在"
+            )
 
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
@@ -333,19 +335,22 @@ class TemplateFacadeService @Autowired constructor(
             if (instanceSize > 0) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除")
+                    defaultMessage = "模板还存在实例，不允许删除"
+                )
             }
             if (template.type == TemplateType.CUSTOMIZE.name && template.storeFlag == true) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH,
-                    defaultMessage = "已关联到研发商店，请先下架再删除")
+                    defaultMessage = "已关联到研发商店，请先下架再删除"
+                )
             }
             if (template.type == TemplateType.CUSTOMIZE.name &&
                 templateDao.isExistInstalledTemplate(context, templateId)
             ) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL,
-                    defaultMessage = "已安装到其他项目下使用，不能删除")
+                    defaultMessage = "已安装到其他项目下使用，不能删除"
+                )
             }
             templatePipelineDao.deleteByTemplateId(context, templateId)
             templateDao.delete(context, templateId)
@@ -377,7 +382,8 @@ class TemplateFacadeService @Autowired constructor(
                 logger.warn("There are $instanceSize pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除")
+                    defaultMessage = "模板还存在实例，不允许删除"
+                )
             }
             templatePipelineDao.deleteByVersion(dslContext = dslContext, templateId = templateId, version = version)
             templateDao.delete(dslContext, templateId, setOf(version)) == 1
@@ -475,7 +481,8 @@ class TemplateFacadeService @Autowired constructor(
             logger.warn("Fail to get the template setting - [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
-                defaultMessage = "流水线模板设置不存在")
+                defaultMessage = "流水线模板设置不存在"
+            )
         }
         val hasPermission = hasManagerPermission(projectId, userId)
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
@@ -903,7 +910,8 @@ class TemplateFacadeService @Autowired constructor(
             val templateIdList = mutableSetOf<String>()
             val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
 
-            val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+            val settings =
+                pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
             templates.forEach { record ->
                 val templateId = record["templateId"] as String
                 val type = record["templateType"] as String
@@ -1019,11 +1027,7 @@ class TemplateFacadeService @Autowired constructor(
             template!!.createdTime.timestampmilli(),
             template!!.creator
         )
-        val model: Model = if (isConstrainedFlag) {
-            objectMapper.readValue(latestTemplate.template)
-        } else {
-            objectMapper.readValue(template!!.template)
-        }
+        val model: Model = objectMapper.readValue(template!!.template)
         model.name = setting.name
         model.desc = setting.desc
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
@@ -1111,7 +1115,8 @@ class TemplateFacadeService @Autowired constructor(
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                        defaultMessage = "流水线编排不存在")
+                        defaultMessage = "流水线编排不存在"
+                    )
             ),
             template
         )
@@ -1365,12 +1370,14 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
 
-        return TemplateOperationRet(0, TemplateOperationMessage(
-            successPipelines = successPipelines,
-            failurePipelines = failurePipelines,
-            failureMessages = messages,
-            successPipelinesId = successPipelinesId
-        ), "")
+        return TemplateOperationRet(
+            0, TemplateOperationMessage(
+                successPipelines = successPipelines,
+                failurePipelines = failurePipelines,
+                failureMessages = messages,
+                successPipelinesId = successPipelinesId
+            ), ""
+        )
     }
 
     /**
@@ -1827,7 +1834,9 @@ class TemplateFacadeService @Autowired constructor(
         templateId: String,
         page: Int?,
         pageSize: Int?,
-        searchKey: String?
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
     ): TemplateInstancePage {
         logger.info("LIST_TEMPLATE[$projectId|$userId|$templateId|$page|$pageSize]|$searchKey")
 
@@ -1839,7 +1848,9 @@ class TemplateFacadeService @Autowired constructor(
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                 page = page,
                 pageSize = pageSize,
-                searchKey = searchKey
+                searchKey = searchKey,
+                sortType = sortType,
+                desc = desc
             )
         val associatePipelines = instancePage.records
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
@@ -1879,11 +1890,21 @@ class TemplateFacadeService @Autowired constructor(
                 status = templatePipelineStatus
             )
         }
-
+        val sortTemplatePipelines = templatePipelines.sortedWith(Comparator { a, b ->
+            when (sortType) {
+                TemplateSortTypeEnum.PIPELINE_NAME -> {
+                    a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
+                }
+                TemplateSortTypeEnum.STATUS -> {
+                    b.status.name.compareTo(a.status.name)
+                }
+                else -> 0
+            }
+        })
         return TemplateInstancePage(
             projectId = projectId,
             templateId = templateId,
-            instances = templatePipelines,
+            instances = if (desc == true) sortTemplatePipelines.reversed() else sortTemplatePipelines,
             latestVersion = TemplateVersion(
                 version = latestVersion.version,
                 versionName = latestVersion.versionName,
@@ -1978,7 +1999,8 @@ class TemplateFacadeService @Autowired constructor(
                 if (param.id == template.id) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.PIPELINE_PARAM_CONSTANTS_DUPLICATE,
-                        defaultMessage = "流水线变量参数和常量重名")
+                        defaultMessage = "流水线变量参数和常量重名"
+                    )
                 }
             }
         }
@@ -2159,13 +2181,15 @@ class TemplateFacadeService @Autowired constructor(
         val templateInfos = templateDao.listTemplateReferenceByProjects(dslContext, templateCode, projectIds)
         val templateList = mutableListOf<PipelineTemplateInfo>()
         templateInfos.forEach {
-            templateList.add(PipelineTemplateInfo(
-                projectId = it.projectId,
-                templateId = it.id,
-                templateName = it.templateName,
-                versionName = it.versionName,
-                srcTemplateId = it.srcTemplateId
-            ))
+            templateList.add(
+                PipelineTemplateInfo(
+                    projectId = it.projectId,
+                    templateId = it.id,
+                    templateName = it.templateName,
+                    versionName = it.versionName,
+                    srcTemplateId = it.srcTemplateId
+                )
+            )
         }
         return templateList
     }

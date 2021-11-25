@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -37,7 +38,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.HttpRetryUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 
 object EngineService {
@@ -133,6 +134,20 @@ object EngineService {
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to report timeout")
+        }
+    }
+
+    fun submitError(errorInfo: ErrorInfo) {
+        var retryCount = 0
+        val result = HttpRetryUtils.retry {
+            if (retryCount > 0) {
+                logger.warn("retry|time=$retryCount|submitError")
+            }
+            retryCount++
+            buildApi.submitError(errorInfo)
+        }
+        if (result.isNotOk()) {
+            throw RemoteServiceException("Failed to submit error")
         }
     }
 }
