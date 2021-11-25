@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -43,15 +44,20 @@ import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.pojo.v2.project.GitProjectInfoWithProject
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamProjectService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIGitCodeResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
     private val client: Client,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
@@ -63,11 +69,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
-        val projectInfo = streamScmService.getProjectInfo(
-            token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
-            gitProjectId = gitProjectId,
-            useAccessToken = true
-        ) ?: return Result(null)
+        val projectInfo = getProjectInfo(gitProjectId) ?: return Result(null)
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
@@ -95,6 +97,34 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                     routerTag = routerTag
                 )
             )
+        }
+    }
+
+    private fun getProjectInfo(gitProjectId: String): GitCIProjectInfo? {
+        return streamScmService.getProjectInfo(
+            token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
+            gitProjectId = gitProjectId,
+            useAccessToken = true
+        ) ?: run {
+            val setting = try {
+                streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
+            } catch (e: NumberFormatException) {
+                streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
+            } ?: return null
+            GitCIProjectInfo(
+                gitProjectId = setting.gitProjectId,
+                name = setting.name,
+                homepage = setting.homepage,
+                gitHttpUrl = setting.gitHttpUrl.replace("https", "http"),
+                gitHttpsUrl = setting.gitHttpUrl,
+                gitSshUrl = setting.gitSshUrl,
+                nameWithNamespace = setting.nameWithNamespace,
+                pathWithNamespace = setting.pathWithNamespace,
+                defaultBranch = "master",
+                description = setting.gitProjectDesc,
+                avatarUrl = setting.gitProjectAvatar
+            )
+
         }
     }
 

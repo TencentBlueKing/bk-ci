@@ -92,7 +92,9 @@ class StreamBasicSettingService @Autowired constructor(
             authUserId = authUserId,
             creatorBgName = setting.creatorBgName,
             creatorDeptName = setting.creatorDeptName,
-            creatorCenterName = setting.creatorCenterName
+            creatorCenterName = setting.creatorCenterName,
+            pathWithNamespace = setting.pathWithNamespace,
+            nameWithNamespace = setting.nameWithNamespace
         )
         return true
     }
@@ -146,7 +148,9 @@ class StreamBasicSettingService @Autowired constructor(
                     creatorBgName = null,
                     gitProjectDesc = projectInfo.description,
                     gitProjectAvatar = projectInfo.avatarUrl,
-                    lastCiInfo = null
+                    lastCiInfo = null,
+                    pathWithNamespace = projectInfo.pathWithNamespace,
+                    nameWithNamespace = projectInfo.nameWithNamespace
                 )
             )
         }
@@ -166,7 +170,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
             val projectResult =
@@ -214,6 +218,22 @@ class StreamBasicSettingService @Autowired constructor(
         return count
     }
 
+    fun fixProjectNameSpace(): Int {
+        var count = 0
+        var currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        while (currProjects.isNotEmpty()) {
+            currProjects.forEach {
+                refreshNameSpace(it)
+                count++
+            }
+            logger.info("fixProjectNameSpace project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        }
+        logger.info("fixProjectNameSpace finished count: $count")
+        return count
+    }
+
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long) {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
@@ -231,7 +251,9 @@ class StreamBasicSettingService @Autowired constructor(
                 httpUrl = projectInfo.gitHttpsUrl ?: return@back,
                 sshUrl = projectInfo.gitSshUrl ?: return@back,
                 desc = projectInfo.description,
-                avatar = projectInfo.avatarUrl
+                avatar = projectInfo.avatarUrl,
+                pathWithNamespace = projectInfo.pathWithNamespace,
+                nameWithNamespace = projectInfo.nameWithNamespace
             )
         }
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
@@ -275,6 +297,22 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             }
             idList
+        }
+    }
+
+    private fun refreshNameSpace(it: TGitBasicSettingRecord) {
+        try {
+            val projectResult = requestGitProjectInfo(it.id)
+            if (projectResult != null) {
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = projectResult.pathWithNamespace ?: "",
+                    nameWithNamespace = projectResult.nameWithNamespace
+                )
+            }
+        } catch (t: Throwable) {
+            logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
         }
     }
 

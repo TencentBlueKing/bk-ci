@@ -19,4 +19,8 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
     override fun fixProjectInfo(): Result<Int> {
         return Result(streamBasicSettingService.fixProjectInfo())
     }
+
+    override fun fixProjectNameSpace(): Result<Int> {
+        return Result(streamBasicSettingService.fixProjectNameSpace())
+    }
 }

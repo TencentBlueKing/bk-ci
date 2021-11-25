@@ -36,4 +36,9 @@ interface OpGitCIBasicSettingResource {
     @GET
     @Path("/fixInfo")
     fun fixProjectInfo(): Result<Int>
+
+    @ApiOperation("填充存量流水线的带有所有者的项目名称")
+    @GET
+    @Path("/fixNameSpace")
+    fun fixProjectNameSpace(): Result<Int>
 }
