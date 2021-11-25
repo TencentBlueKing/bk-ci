@@ -1,0 +1,53 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_resource_creator_actions",
+      "data": {
+        "config": [
+          {
+            "id": "project",
+            "actions": [
+              {
+                "id": "project_view",
+                "required": true
+              }
+            ],
+            "sub_resource_types": [
+              {
+                "id": "group",
+                "actions": [
+                  {
+                    "id": "quality_group_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "quality_group_enable",
+                    "required": false
+                  },
+                  {
+                    "id": "quality_group_delete",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "rule",
+                "actions": [
+                  {
+                    "id": "quality_rule_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "quality_rule_delete",
+                    "required": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
