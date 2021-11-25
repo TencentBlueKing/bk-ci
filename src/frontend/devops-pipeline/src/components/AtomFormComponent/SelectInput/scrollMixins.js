@@ -122,16 +122,42 @@ export default {
                 }
             }
         },
-        handleEnterOption () {
-            let option = {}
-            if (this.hasGroup) {
-                option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
+        handleEnterOption (isMultiple = false) {
+            const name = this.displayName
+            this.handleBlur()
+            if (!isMultiple) {
+                let option = {}
+                if (this.hasGroup) {
+                    option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
+                } else {
+                    option = this.filteredList[this.selectedPointer]
+                }
+                if (option && !option.disabled && !isMultiple) {
+                    this.handleChange(this.name, option.id)
+                    this.handleBlur()
+                    this.displayName = option.name
+                }
             } else {
-                option = this.filteredList[this.selectedPointer]
-            }
-            if (option && !option.disabled) {
-                this.handleChange(this.name, option.id)
-                this.handleBlur()
+                if (name) {
+                    if (this.hasGroup) {
+                        this.filteredList.forEach(item => {
+                            item.children.forEach(child => {
+                                if (child.name === name) {
+                                    this.handleChange(this.name, [child.id])
+                                    this.displayName = child.name
+                                }
+                            })
+                        })
+                    } else {
+                        this.filteredList.forEach(item => {
+                            console.log(item, 'ttt')
+                            if (item.name === name) {
+                                this.handleChange(this.name, [item.id])
+                                this.displayName = item.name
+                            }
+                        })
+                    }
+                }
             }
         }
     }

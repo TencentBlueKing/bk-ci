@@ -9,7 +9,7 @@
             :title="value"
             autocomplete="off"
             @focus="handleFocus"
-            @keypress.enter.prevent="handleEnterOption"
+            @keypress.enter.prevent="handleEnterOption(isMultiple)"
             @keydown.up.prevent="handleKeyup"
             @keydown.down.prevent="handleKeydown"
             @keydown.tab.prevent="handleBlur" />
@@ -212,11 +212,12 @@
             clearValue () {
                 this.handleChange(this.name, this.isMultiple ? [] : '')
                 this.displayName = ''
+                this.selectedMap = {}
                 this.$refs.inputArea.focus()
             },
 
             isEnvVar (str) {
-                return /^\$(\{[^\}\s]+\}|\w+)$/.test(str)
+                return /^\$(\{[^\},\s]+\}{1,2}|\w+)$/.test(str)
             },
 
             handleBlur () {
@@ -226,7 +227,19 @@
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-                if (this.isEnvVar(this.displayName)) {
+
+                let nameArr = []
+                let isMultipleEnvVar = false
+                if (this.isMultiple) {
+                    nameArr = this.displayName.split(',')
+                    isMultipleEnvVar = nameArr.every(i => {
+                        return this.isEnvVar(i.trim())
+                    })
+                }
+
+                if (isMultipleEnvVar) {
+                    this.handleChange(this.name, nameArr)
+                } else if (this.isEnvVar(this.displayName)) {
                     this.handleChange(this.name, this.displayName.trim())
                 } else if (this.isEnvVar(this.value)) {
                     this.displayName = this.value
@@ -254,6 +267,14 @@
                 this.adjustViewPort()
             },
             getDisplayName (val) {
+                let isMultipleEnvVar = false
+                if (this.isMultiple && val && Array.isArray(val)) {
+                    isMultipleEnvVar = val.every(i => this.isEnvVar(i))
+                }
+                if (isMultipleEnvVar) {
+                    return val.join(',')
+                }
+
                 if (this.isEnvVar(val)) {
                     return val
                 }
@@ -321,6 +342,7 @@
                         this.displayName = this.getDisplayName(this.value)
                     }
                     if (this.isMultiple && this.value) {
+                        if (typeof this.value === 'string') this.value = this.value.split(',')
                         this.value.forEach(id => {
                             this.optionList.forEach(option => {
                                 if (option.id === id) {
