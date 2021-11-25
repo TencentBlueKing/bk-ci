@@ -221,7 +221,8 @@ class P4Api(
             TriggerType.FIX_DELETE,
             TriggerType.FORM_COMMIT,
             TriggerType.SHELVE_COMMIT,
-            TriggerType.SHELVE_DELETE
+            TriggerType.SHELVE_DELETE,
+            TriggerType.CHANGE_SUBMIT
             -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(baseCommand, eventScriptFileName)

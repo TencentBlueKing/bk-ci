@@ -50,6 +50,7 @@ enum class CodeEventType {
     CHANGE_COMMIT,
     PUSH_SUBMIT,
     CHANGE_CONTENT,
+    CHANGE_SUBMIT,
     PUSH_CONTENT,
     PUSH_COMMIT,
     FIX_ADD,
