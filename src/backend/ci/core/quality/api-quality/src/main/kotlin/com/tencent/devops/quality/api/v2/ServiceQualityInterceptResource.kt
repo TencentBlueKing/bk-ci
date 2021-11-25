@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -54,7 +55,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceQualityInterceptResource {
 
     @ApiOperation("获取执行历史")
-    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/rule/{ruleIds}/history")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
     @GET
     fun listHistory(
         @ApiParam("项目ID", required = true)
@@ -65,9 +66,24 @@ interface ServiceQualityInterceptResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
+        buildId: String
+    ): Result<List<QualityRuleIntercept>>
+
+    @ApiOperation("获取红线执行历史")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
+    @POST
+    fun listRuleHistory(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
         buildId: String,
-        @ApiParam("红线ID列表", required = false)
-        @PathParam("ruleIds")
+        @ApiParam("红线ID", required = false)
+        @QueryParam("ruleIds")
         ruleIds: List<Long>?
     ): Result<List<QualityRuleIntercept>>
 

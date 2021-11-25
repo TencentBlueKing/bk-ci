@@ -66,7 +66,7 @@ object QualityUtils {
         // value：指标、预期、结果、状态
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
         client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId, null).data?.forEach { ruleIntercept ->
+                .listHistory(projectId, pipelineId, buildId).data?.forEach { ruleIntercept ->
             ruleIntercept.resultMsg.forEach { interceptItem ->
                 val indicator = client.get(ServiceQualityIndicatorResource::class)
                         .get(projectId, interceptItem.indicatorId).data
