@@ -39,7 +39,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.dao.PipelineWebHookQueueDao
 import com.tencent.devops.process.engine.pojo.PipelineWebHookQueue
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_QUEUE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
