@@ -61,6 +61,7 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
@@ -69,6 +70,9 @@ class ModelContainer @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+    // 公共镜像默认从配置获取
+    @Value("\${container.defaultImage:#{null}}")
+    val defaultImage: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelContainer::class.java)
@@ -230,7 +234,7 @@ class ModelContainer @Autowired constructor(
         // 公共docker构建机
         if (job.runsOn.poolName == "docker") {
             var containerPool = Pool(
-                container = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
+                container = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
                 credential = Credential(
                     user = "",
                     password = ""
