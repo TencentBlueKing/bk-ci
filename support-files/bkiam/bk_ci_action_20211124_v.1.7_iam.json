@@ -1,0 +1,27 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "all_action",
+        "name": "项目所有权限",
+        "name_en": "All action",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

@@ -7,7 +7,9 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -23,7 +25,9 @@ class BkPermissionProjectService @Autowired constructor(
     override val iamConfiguration: IamConfiguration,
     override val deptService: DeptService,
     override val groupService: AuthGroupService,
-    override val iamCacheService: IamCacheService
+    override val iamCacheService: IamCacheService,
+    val authProjectApi: AuthProjectApi,
+    val projectAuthServiceCode: BluekingV3ProjectAuthServiceCode
 ) : AbsPermissionProjectService(
     permissionRoleService = permissionRoleService,
     permissionRoleMemberService = permissionRoleMemberService,
@@ -43,6 +47,6 @@ class BkPermissionProjectService @Autowired constructor(
         if (userId == "admin") {
             return true
         }
-        return super.isProjectUser(userId, projectCode, group)
+        return authProjectApi.isProjectUser(userId, projectAuthServiceCode, projectCode, group)
     }
 }

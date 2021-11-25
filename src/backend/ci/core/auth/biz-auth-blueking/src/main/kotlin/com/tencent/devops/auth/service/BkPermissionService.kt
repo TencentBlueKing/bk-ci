@@ -5,8 +5,9 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
-import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.ActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -30,7 +31,8 @@ class BkPermissionService @Autowired constructor(
         resourceType: String?
     ): Boolean {
         if (isAdmin(userId)) return true
-        return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
+        val useAction = buildAction(action, resourceType ?: AuthResourceType.PIPELINE_DEFAULT.value)
+        return super.validateUserResourcePermission(userId, useAction, projectCode, resourceType)
     }
 
     override fun validateUserResourcePermissionByRelation(
@@ -42,9 +44,11 @@ class BkPermissionService @Autowired constructor(
         relationResourceType: String?
     ): Boolean {
         if (isAdmin(userId)) return true
+        val useAction = buildAction(action, resourceType)
+
         return super.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action = useAction,
             projectCode = projectCode,
             resourceCode = resourceCode,
             resourceType = resourceType,
@@ -63,8 +67,8 @@ class BkPermissionService @Autowired constructor(
             logger.info("getUserResourceByAction $userId is admin")
             return arrayListOf("*")
         }
-
-        return super.getUserResourceByAction(userId, action, projectCode, resourceType)
+        val useAction = buildAction(action, resourceType)
+        return super.getUserResourceByAction(userId, useAction, projectCode, resourceType)
     }
 
     override fun getUserResourcesByActions(
@@ -80,7 +84,13 @@ class BkPermissionService @Autowired constructor(
                 return permissionMap
             }
         }
-        return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
+
+        val userActions = mutableListOf<String>()
+        actions.forEach {
+            userActions.add(buildAction(it, resourceType))
+        }
+
+        return super.getUserResourcesByActions(userId, userActions, projectCode, resourceType)
     }
 
     private fun isAdmin(userId: String): Boolean {
@@ -88,6 +98,18 @@ class BkPermissionService @Autowired constructor(
             return true
         }
         return false
+    }
+
+    private fun buildAction(action: String, resourceType: String): String {
+        // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+        return if (!action.contains("_")) {
+            ActionUtils.buildAction(
+                authResourceType = AuthResourceType.get(resourceType),
+                permission = AuthPermission.get(action)
+            )
+        } else {
+            action
+        }
     }
 
     companion object {
