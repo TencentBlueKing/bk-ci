@@ -241,10 +241,20 @@ class DockerHostUtils @Autowired constructor(
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
     ): Pair<String, Int> {
+        // 检测IP是否活跃以及负载情况
         if (!dockerIpInfo.enable ||
             dockerIpInfo.grayEnv != gray.isGray() ||
-            overload(dockerIpInfo) ||
-            specialIpCheck(dockerIpInfo, specialIpSet)) {
+            overload(dockerIpInfo)) {
+            return getAvailableDockerIpWithSpecialIps(
+                dispatchMessage.projectId,
+                dispatchMessage.pipelineId,
+                dispatchMessage.vmSeqId,
+                specialIpSet
+            )
+        }
+
+        // 校验专机
+        if (specialIpCheck(dockerIpInfo, specialIpSet)) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
@@ -273,13 +283,12 @@ class DockerHostUtils @Autowired constructor(
         val hostDriftLoad = getDockerDriftThreshold()
         if (dockerIpInfo.diskLoad > hostDriftLoad.disk ||
             dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
-            dockerIpInfo.memLoad > hostDriftLoad.memory ||
-            dockerIpInfo.cpuLoad > hostDriftLoad.cpu
+            dockerIpInfo.memLoad > hostDriftLoad.memory
         ) {
             return true
         }
 
-        if (dockerIpInfo.usedNum > hostDriftLoad.usedNum) {
+        if (dockerIpInfo.usedNum > hostDriftLoad.usedNum || dockerIpInfo.cpuLoad > hostDriftLoad.cpu) {
             return true
         }
 
