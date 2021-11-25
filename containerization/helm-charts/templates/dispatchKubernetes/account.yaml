@@ -5,9 +5,8 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: bkci-kube-client-account
-    apiGroup: ""
-    namespace: {{ .Release.Namespace }}
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: cluster-admin
-  apiGroup: ""
+  apiGroup: rbac.authorization.k8s.io
