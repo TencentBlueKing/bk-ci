@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpTxPipelineResourceImpl @Autowired constructor(
-    val pipelineInfoDao : TxPipelineInfoDao,
+    val pipelineInfoDao: TxPipelineInfoDao,
     val dslContext: DSLContext,
     val client: Client
 ) : OpTxPipelineResource {
