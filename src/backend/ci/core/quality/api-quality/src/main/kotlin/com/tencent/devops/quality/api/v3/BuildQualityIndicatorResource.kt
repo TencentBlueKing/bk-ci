@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,36 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.resources.v3
+package com.tencent.devops.quality.api.v3
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
-import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
-import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
-import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
-import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
-import com.tencent.devops.quality.service.v2.QualityIndicatorService
-import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
-import com.tencent.devops.quality.service.v2.QualityRuleCheckService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.*
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
-    private val qualityRuleBuildHisService: QualityRuleBuildHisService,
-    private val qualityRuleCheckService: QualityRuleCheckService
-) : ServiceQualityRuleResource {
-    override fun check(buildCheckParams: BuildCheckParamsV3): Result<RuleCheckResult> {
-        return Result(qualityRuleCheckService.checkBuildHis(buildCheckParams))
-    }
+@Api(tags = ["BUILD_INDICATOR_V3"], description = "构建-质量红线指标")
+@Path("/build/indicator/v3")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildQualityIndicatorResource {
 
-    override fun create(
+    @ApiOperation("创建红线指标")
+    @Path("/project/{projectId}/upsertIndicator")
+    @POST
+    fun upsertIndicator(
+        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @PathParam("projectId")
         projectId: String,
-        pipelineId: String,
-        ruleList: List<RuleCreateRequestV3>
-    ): Result<List<RuleCreateResponseV3>> {
-        return Result(qualityRuleBuildHisService.serviceCreate(userId, projectId, pipelineId, ruleList))
-    }
+        @ApiParam("指标请求报文", required = true)
+        indicatorCreate: IndicatorCreate
+    ): Result<Boolean>
 }

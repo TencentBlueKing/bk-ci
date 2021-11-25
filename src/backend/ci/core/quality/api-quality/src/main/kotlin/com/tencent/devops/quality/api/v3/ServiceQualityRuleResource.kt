@@ -76,17 +76,4 @@ interface ServiceQualityRuleResource {
         @ApiParam("规则内容", required = true)
         ruleList: List<RuleCreateRequestV3>
     ): Result<List<RuleCreateResponseV3>>
-
-    @ApiOperation("创建红线指标")
-    @Path("/project/{projectId}/upsertIndicator")
-    @POST
-    fun upsertIndicator(
-        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("指标请求报文", required = true)
-        indicatorCreate: IndicatorCreate
-    ): Result<Boolean>
 }
