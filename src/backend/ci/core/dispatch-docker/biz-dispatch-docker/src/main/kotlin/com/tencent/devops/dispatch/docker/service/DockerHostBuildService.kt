@@ -293,16 +293,18 @@ class DockerHostBuildService @Autowired constructor(
                         buildId = timeoutBuildList[i].buildId,
                         vmSeqId = timeoutBuildList[i].vmSeqId,
                         containerId = timeoutBuildList[i].containerId,
-                        dockerIp = timeoutBuildList[i].dockerIp
+                        dockerIp = timeoutBuildList[i].dockerIp,
+                        clusterType = DockerHostClusterType.valueOf(dockerIpInfo.clusterName)
                     )
 
-                    pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
                     LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
                             " buildId:(${timeoutBuildList[i].buildId}), " +
                             "poolNo:(${timeoutBuildList[i].poolNo})")
                 }
             } catch (ignore: Exception) {
                 LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
+            } finally {
+                pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
             }
         }
     }
