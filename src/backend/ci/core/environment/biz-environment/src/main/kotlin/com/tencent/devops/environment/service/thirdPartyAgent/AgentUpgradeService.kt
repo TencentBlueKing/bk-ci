@@ -25,14 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.environment
+package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,20 +44,28 @@ class AgentUpgradeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val agentGrayUtils: AgentGrayUtils,
     private val dslContext: DSLContext,
-    private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
-    private val gray: Gray
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val client: Client
 ) {
 
     fun updateCanUpgradeAgentList() {
-        val maxParallelCount = redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
+        val maxParallelCount = redisOperation.get(
+            key = agentGrayUtils.getParallelUpgradeCountKey()
+        )?.toInt() ?: agentGrayUtils.getDefaultParallelUpgradeCount()
         if (maxParallelCount < 1) {
             logger.warn("parallel count set to zero")
             agentGrayUtils.setCanUpgradeAgents(listOf())
             return
         }
 
-        val currentVersion = redisOperation.get(agentGrayUtils.getAgentVersionKey())
-        val currentMasterVersion = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
+        val currentVersion = redisOperation.get(
+            key = agentGrayUtils.getAgentVersionKey(),
+            isDistinguishCluster = true
+        )
+        val currentMasterVersion = redisOperation.get(
+            key = agentGrayUtils.getAgentMasterVersionKey(),
+            isDistinguishCluster = true
+        )
         if (currentMasterVersion.isNullOrBlank() || currentVersion.isNullOrBlank()) {
             logger.warn("invalid server agent version")
             return
@@ -78,26 +87,18 @@ class AgentUpgradeService @Autowired constructor(
         currentMasterVersion: String?,
         maxParallelCount: Int
     ): List<TEnvironmentThirdpartyAgentRecord> {
-
-        val grayProjects = gray.grayProjectSet(redisOperation)
-        val gray = gray.isGray()
-        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(
+        val importOKAgents = thirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
             status = setOf(AgentStatus.IMPORT_OK)
         ).toSet()
         val needUpgradeAgents = importOKAgents.filter {
             when {
                 it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
-                gray && grayProjects.contains(it.projectId) -> {
+                checkProjectRouter(it.projectId) ->
                     it.version != currentVersion || it.masterVersion != currentMasterVersion
-                }
-                !gray && !grayProjects.contains(it.projectId) -> {
-                    it.version != currentVersion || it.masterVersion != currentMasterVersion
-                }
                 else -> false
             }
         }
-
         return if (needUpgradeAgents.size > maxParallelCount) {
             needUpgradeAgents.subList(0, maxParallelCount)
         } else {
@@ -105,17 +106,19 @@ class AgentUpgradeService @Autowired constructor(
         }
     }
 
+    private fun checkProjectRouter(projectId: String): Boolean {
+        return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
+    }
+
     fun setMaxParallelUpgradeCount(count: Int) {
-        redisOperation.set(PARALLEL_UPGRADE_COUNT, count.toString())
+        agentGrayUtils.setMaxParallelUpgradeCount(count)
     }
 
     fun getMaxParallelUpgradeCount(): Int {
-        return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
+        return agentGrayUtils.getMaxParallelUpgradeCount()
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(AgentUpgradeService::class.java)
-        private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
-        private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 }
