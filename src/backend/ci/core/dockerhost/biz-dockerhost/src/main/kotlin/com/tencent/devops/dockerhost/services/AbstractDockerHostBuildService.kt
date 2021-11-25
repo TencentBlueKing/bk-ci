@@ -360,6 +360,7 @@ abstract class AbstractDockerHostBuildService constructor(
                 poolNo = poolNo
             )?.data
 
+            // 针对白名单项目做bazel cache处理
             if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
                 val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
                 CommandLineUtils.execute(
