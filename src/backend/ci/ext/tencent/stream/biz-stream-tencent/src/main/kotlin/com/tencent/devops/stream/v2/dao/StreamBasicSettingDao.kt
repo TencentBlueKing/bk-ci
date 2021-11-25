@@ -269,7 +269,7 @@ class StreamBasicSettingDao {
                     } else {
                         null
                     },
-                    nameWithNamespace = conf.nameWithNameSpace,
+                    nameWithNamespace = conf.nameWithNameSpace ?: "",
                     pathWithNamespace = conf.pathWithNameSpace
                 )
             }
@@ -313,7 +313,7 @@ class StreamBasicSettingDao {
                     } else {
                         null
                     },
-                    nameWithNamespace = conf.nameWithNameSpace,
+                    nameWithNamespace = conf.nameWithNameSpace ?: "",
                     pathWithNamespace = conf.pathWithNameSpace
                 )
             }
