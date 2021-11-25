@@ -49,7 +49,7 @@ object ArtifactApiFactory {
         return clazz.java.newInstance() as T
     }
 
-    private class Realm() : AbstractBuildResourceApi() {
+    private class Realm : AbstractBuildResourceApi() {
         fun getRealm(): String {
             val path = "/ms/artifactory/api/build/artifactories/conf/realm"
             val request = buildGet(path)
