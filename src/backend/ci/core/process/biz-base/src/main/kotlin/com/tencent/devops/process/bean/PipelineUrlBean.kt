@@ -32,7 +32,12 @@ interface PipelineUrlBean {
     /**
      * 生成构建详情访问链接
      */
-    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        needShortUrl: Boolean = true
+    ): String
 
     /**
      * 生成手机侧的构建详情访问链接
