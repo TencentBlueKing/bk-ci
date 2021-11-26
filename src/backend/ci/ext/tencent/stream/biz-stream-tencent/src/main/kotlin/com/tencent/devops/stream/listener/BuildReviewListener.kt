@@ -28,7 +28,8 @@ class BuildReviewListener @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamPipelineService: StreamPipelineService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val sendCommitCheck: SendCommitCheck
+    private val sendCommitCheck: SendCommitCheck,
+    private val sendQualityMrComment: SendQualityMrComment
 ) {
 
     companion object {
@@ -73,27 +74,30 @@ class BuildReviewListener @Autowired constructor(
         val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
             ?: throw OperationException("git ci pipeline not exist")
 
+        val context = StreamBuildStageListenerContextV2(
+            buildEvent = BuildEvent(
+                projectId = buildReviewEvent.projectId,
+                pipelineId = buildReviewEvent.pipelineId,
+                userId = buildReviewEvent.userId,
+                buildId = buildReviewEvent.buildId,
+                status = buildReviewEvent.status,
+                startTime = streamBuild.createTime.timestampmilli()
+            ),
+            requestEvent = requestEvent,
+            streamBuildEvent = buildEvent,
+            pipeline = pipeline,
+            streamSetting = v2GitSetting,
+            reviewType = buildReviewEvent.reviewType
+        )
+
         when (buildReviewEvent.reviewType) {
             BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
                 // 推送构建消息
-                sendCommitCheck.sendCommitCheck(
-                    StreamBuildStageListenerContextV2(
-                        buildEvent = BuildEvent(
-                            projectId = buildReviewEvent.projectId,
-                            pipelineId = buildReviewEvent.pipelineId,
-                            userId = buildReviewEvent.userId,
-                            buildId = buildReviewEvent.buildId,
-                            status = buildReviewEvent.status,
-                            startTime = streamBuild.createTime.timestampmilli()
-
-                        ),
-                        requestEvent = requestEvent,
-                        streamBuildEvent = buildEvent,
-                        pipeline = pipeline,
-                        streamSetting = v2GitSetting,
-                        reviewType = buildReviewEvent.reviewType
-                    )
-                )
+                sendCommitCheck.sendCommitCheck(context)
+            }
+            // TODO: 红线检查完了的事件
+            TODO() -> {
+                sendQualityMrComment.sendMrComment(context)
             }
             // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
             BuildReviewType.TASK_REVIEW -> {

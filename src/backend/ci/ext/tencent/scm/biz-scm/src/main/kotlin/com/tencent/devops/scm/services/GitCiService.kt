@@ -37,6 +37,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
@@ -412,6 +414,35 @@ class GitCiService {
             }
             val data = response.body()?.string() ?: return emptyList()
             return JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+        }
+    }
+
+    fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        message: String
+    ) {
+        logger.info("$gitProjectId|$mrId|addMrComment")
+        try {
+            GitApi().addMRComment(
+                gitCIUrl,
+                token,
+                gitProjectId,
+                mrId,
+                message
+            )
+        } catch (e: Exception) {
+            logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
+            val code = if (e is GitApiException) {
+                e.code
+            } else {
+                Response.Status.BAD_REQUEST.statusCode
+            }
+            throw CustomException(
+                status = Response.Status.fromStatusCode(code),
+                message = "($code)${e.message}"
+            )
         }
     }
 

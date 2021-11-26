@@ -203,4 +203,8 @@ class ServiceGitCiResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun addMrComment(token: String, gitProjectId: String, mrId: Long, message: String) {
+        gitCiService.addMrComment(token, gitProjectId, mrId, message)
+    }
 }

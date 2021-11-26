@@ -556,6 +556,18 @@ class StreamScmService @Autowired constructor(
         )
     }
 
+    fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        message: String
+    ) {
+        logger.info("addMrComment: [$gitProjectId|$mrId]")
+        client.getScm(ServiceGitCiResource::class).addMrComment(
+            token, gitProjectId, mrId, message
+        )
+    }
+
     private fun getTriggerBranch(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")

@@ -45,6 +45,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -304,4 +305,20 @@ interface ServiceGitCiResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ChangeFileInfo>>
+
+    @ApiOperation("添加mr评论")
+    @POST
+    @Path("/addMrComment")
+    fun addMrComment(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "mrId")
+        @QueryParam("mrId")
+        mrId: Long,
+        message: String
+    )
 }

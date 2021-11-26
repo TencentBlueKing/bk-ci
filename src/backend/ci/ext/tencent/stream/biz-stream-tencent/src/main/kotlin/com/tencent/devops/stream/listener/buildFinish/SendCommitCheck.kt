@@ -139,7 +139,8 @@ class SendCommitCheck @Autowired constructor(
             client = client,
             gitProjectId = streamSetting.gitProjectId,
             pipelineName = pipeline.displayName,
-            event = buildEvent
+            event = buildEvent,
+            ruleIds = null
         )
     }
 
