@@ -191,7 +191,7 @@ class StreamProjectService @Autowired constructor(
                 )
             }
             redisOperation.set(
-                getProjectListKey(userId),
+                getProjectListKey("$userId-$realPage-$realPageSize"),
                 JsonUtil.toJson(newRedisValue),
                 TimeUnit.MINUTES.toSeconds(60)
             )
