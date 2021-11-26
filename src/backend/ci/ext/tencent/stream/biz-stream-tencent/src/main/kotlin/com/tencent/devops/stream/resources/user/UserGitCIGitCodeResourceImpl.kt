@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
