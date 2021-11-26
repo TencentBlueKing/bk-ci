@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildReviewListener @Autowired constructor(
+class BuildReviewCheckListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
@@ -35,7 +35,7 @@ class BuildReviewListener @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildReviewListener::class.java)
+        private val logger = LoggerFactory.getLogger(BuildReviewCheckListener::class.java)
     }
 
     @RabbitListener(
