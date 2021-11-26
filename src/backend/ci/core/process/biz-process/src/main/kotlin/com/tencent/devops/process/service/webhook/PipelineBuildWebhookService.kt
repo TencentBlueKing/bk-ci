@@ -219,8 +219,8 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
 
             watcher.start("webhookTriggerPipelineBuild")
             pipelines.forEach outside@{ pipeline ->
-                val projectId = pipeline.projectId
-                val pipelineId = pipeline.pipelineId
+                val projectId = pipeline.first
+                val pipelineId = pipeline.second
                 try {
                     logger.info("pipelineId is $pipelineId")
                     val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {

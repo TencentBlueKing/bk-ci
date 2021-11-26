@@ -222,15 +222,15 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getWebhookPipelines(name: String, type: String): Set<PipelineWebhook> {
+    fun getWebhookPipelines(name: String, type: String): Set<Pair<String, String>> {
         val records = pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
             repositoryType = getWebhookScmType(type).name
         )
-        val pipelineWebhookSet = mutableSetOf<PipelineWebhook>()
+        val pipelineWebhookSet = mutableSetOf<Pair<String, String>>()
         records?.forEach {
-            pipelineWebhookSet.add(pipelineWebhookDao.convert(it))
+            pipelineWebhookSet.add(Pair(it.value1(), it.value2()))
         }
         return pipelineWebhookSet
     }
