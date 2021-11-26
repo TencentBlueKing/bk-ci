@@ -37,6 +37,7 @@ import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
+import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@SuppressWarnings("ThrowsCount")
 class ServiceExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceBaseService: ExperienceBaseService,
@@ -89,12 +91,26 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
     }
 
-    private fun checkParam(userId: String, projectId: String) {
+    override fun edit(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        experience: ExperienceUpdate
+    ): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.edit(userId, projectId, experienceHashId, experience)
+        return Result(true)
+    }
+
+    private fun checkParam(userId: String, projectId: String, experienceHashId: String = "default") {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
         if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (experienceHashId.isBlank()) {
+            throw ParamBlankException("Invalid experienceHashId")
         }
     }
 

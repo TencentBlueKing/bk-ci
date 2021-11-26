@@ -6,6 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
+import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.openapi.api.apigw.v3.ApigwExperienceResourceV3
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -24,5 +25,14 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
         buildId: String
     ): Result<List<ExperienceInfoForBuild>> {
         return client.get(ServiceExperienceResource::class).listForBuild(userId, projectId, pipelineId, buildId)
+    }
+
+    override fun edit(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        experience: ExperienceUpdate
+    ): Result<Boolean> {
+        return client.get(ServiceExperienceResource::class).edit(userId, projectId, experienceHashId, experience)
     }
 }
