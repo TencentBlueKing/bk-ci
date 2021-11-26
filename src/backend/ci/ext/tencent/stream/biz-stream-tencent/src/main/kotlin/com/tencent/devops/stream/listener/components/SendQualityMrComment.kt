@@ -71,7 +71,7 @@ class SendQualityMrComment @Autowired constructor(
                     status = buildEvent.status,
                     startTime = null
                 ),
-                ruleIds = buildEvent.ruleIds
+                ruleIds = context.qualityRuleIds
             )
             if (reportData.first.isEmpty() || reportData.second.isEmpty()) {
                 logger.warn("qualityCheckListener ${buildEvent.buildId} reportData is null $reportData")

@@ -43,9 +43,10 @@ object QualityUtils {
             "SUCCEED" -> {
                 "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
             }
-            // TODO: 根据真正的状态修改
-            BuildStatus.RUNNING.name -> {
-                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">等待审核</td>"
+            BuildStatus.QUALITY_CHECK_WAIT.name,
+            BuildStatus.QUALITY_CHECK_FAIL.name,
+            BuildStatus.QUALITY_CHECK_PASS.name -> {
+                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">执行中</td>"
             }
             else -> {
                 "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
@@ -53,14 +54,15 @@ object QualityUtils {
         }
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
-                "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
+                "<td style=\"border:none;padding-left:0;\">" +
+                "<a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
                 "<td style=\"border:none;padding-right: 0;\">状态：</td>" +
                 statusLine +
                 "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
                 "<td style=\"border:none;padding-right: 0\">任务耗时：</td>" +
                 "<td style=\"border:none;padding-left:0;\">${
-                    if (status == BuildStatus.RUNNING.name) {
+                    if (status.isRunning()) {
                         "--"
                     } else {
                         timeCost
@@ -76,7 +78,7 @@ object QualityUtils {
         body.append("<th style=\"text-align:left;\">预期</th>")
         body.append("<th style=\"text-align:left;\"></th>")
         body.append("</tr>")
-        resultData.forEach { elementName, result ->
+        resultData.forEach { (elementName, result) ->
             result.forEachIndexed { index, list ->
                 body.append("<tr>")
                 if (index == 0) body.append("<td>$elementName</td>") else body.append("<td></td>")
@@ -94,5 +96,12 @@ object QualityUtils {
         body.append("</table>")
 
         return title + body.toString()
+    }
+
+    private fun String.isRunning() = when (this) {
+        BuildStatus.QUALITY_CHECK_WAIT.name,
+        BuildStatus.QUALITY_CHECK_FAIL.name,
+        BuildStatus.QUALITY_CHECK_PASS.name -> true
+        else -> false
     }
 }
