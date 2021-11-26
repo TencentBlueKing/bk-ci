@@ -47,7 +47,6 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -239,7 +238,9 @@ class QualityRuleCheckService @Autowired constructor(
             val ruleInterceptList = resultPair.second
 
             // 异步后续的处理
-            executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
+            executors.execute {
+                checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
+            }
 
             // 记录结果
             val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
