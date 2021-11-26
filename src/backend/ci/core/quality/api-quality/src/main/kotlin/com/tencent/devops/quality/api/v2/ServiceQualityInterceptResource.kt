@@ -84,7 +84,7 @@ interface ServiceQualityInterceptResource {
         buildId: String,
         @ApiParam("红线ID", required = false)
         @QueryParam("ruleIds")
-        ruleIds: List<Long>?
+        ruleIds: List<String>?
     ): Result<List<QualityRuleIntercept>>
 
     @ApiOperation("获取拦截记录")
