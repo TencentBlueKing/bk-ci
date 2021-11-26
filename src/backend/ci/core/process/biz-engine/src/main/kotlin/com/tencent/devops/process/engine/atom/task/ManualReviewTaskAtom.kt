@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewCheckBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -107,7 +107,7 @@ class ManualReviewTaskAtom(
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
         pipelineEventDispatcher.dispatch(
-            PipelineBuildReviewBroadCastEvent(
+            PipelineBuildReviewCheckBroadCastEvent(
                 source = "ManualReviewTaskAtom",
                 projectId = projectCode, pipelineId = pipelineId,
                 buildId = buildId, userId = task.starter,
@@ -169,7 +169,7 @@ class ManualReviewTaskAtom(
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
-                    PipelineBuildReviewBroadCastEvent(
+                    PipelineBuildReviewCheckBroadCastEvent(
                         source = "tasks(${task.taskId}) reviewed with PROCESS",
                         projectId = task.projectId, pipelineId = task.pipelineId,
                         buildId = task.buildId, userId = manualActionUserId,
@@ -184,7 +184,7 @@ class ManualReviewTaskAtom(
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
-                    PipelineBuildReviewBroadCastEvent(
+                    PipelineBuildReviewCheckBroadCastEvent(
                         source = "tasks(${task.taskId}) reviewed with ABORT",
                         projectId = task.projectId, pipelineId = task.pipelineId,
                         buildId = task.buildId, userId = manualActionUserId,

@@ -37,8 +37,8 @@ import com.tencent.devops.common.event.enums.ActionType
  * @author irwinsun
  * @version 1.0
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT)
-data class PipelineBuildReviewBroadCastEvent(
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_CHECK_FANOUT)
+data class PipelineBuildReviewCheckBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
@@ -49,5 +49,6 @@ data class PipelineBuildReviewBroadCastEvent(
     val reviewType: BuildReviewType,
     val status: String,
     val stageId: String?,
-    val taskId: String?
+    val taskId: String?,
+    val ruleIds: List<String>? = null  // stage的准入准出才有该红线ID集合
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
