@@ -37,4 +37,10 @@ data class GitCodeProjectSimpleInfo(
     @JsonProperty("path_with_namespace")
     @ApiModelProperty(name = "path_with_namespace")
     val pathWithNamespace: String?,
+    @JsonProperty("description")
+    @ApiModelProperty(name = "description")
+    val description: String?,
+    @JsonProperty("avatar_url")
+    @ApiModelProperty(name = "avatar_url")
+    val avatarUrl: String?
 )

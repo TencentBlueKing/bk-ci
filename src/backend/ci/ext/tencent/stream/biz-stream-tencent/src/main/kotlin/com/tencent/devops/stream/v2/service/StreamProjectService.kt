@@ -131,7 +131,7 @@ class StreamProjectService @Autowired constructor(
                 httpsUrlToRepo = it.httpsUrlToRepo,
                 webUrl = it.webUrl,
                 avatarUrl = it.avatarUrl,
-                description = it.description ?: "",
+                description = it.description,
                 ciInfo = ciInfo
             )
         }
@@ -187,7 +187,9 @@ class StreamProjectService @Autowired constructor(
             val newRedisValue = gitProjects.map {
                 GitCodeProjectSimpleInfo(
                     id = it.id,
-                    pathWithNamespace = it.pathWithNamespace
+                    pathWithNamespace = it.pathWithNamespace,
+                    description = it.description,
+                    avatarUrl = it.avatarUrl
                 )
             }
             redisOperation.set(
