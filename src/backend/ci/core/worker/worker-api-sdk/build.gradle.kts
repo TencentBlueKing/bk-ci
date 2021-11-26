@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api("com.google.code.gson:gson")
     api(project(":core:worker:worker-common"))
     api(project(":core:artifactory:api-artifactory-store"))
     api("com.tencent.bkrepo:api-generic")

@@ -29,8 +29,8 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -103,8 +103,9 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0")
+                throw RemoteServiceException("上传自定义文件失败")
         } catch (e: Exception) {
             logger.error(e.message ?: "")
             throw TaskExecuteException(
@@ -163,10 +164,12 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0")
+                throw RemoteServiceException("上传流水线文件失败")
         } catch (e: Exception) {
-            logger.error(e.message ?: "")
+            LoggerService.addErrorLine(e.message ?: "")
+            throw RemoteServiceException("上传流水线文件失败: $response")
         }
     }
 

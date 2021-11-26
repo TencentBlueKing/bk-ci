@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -110,11 +110,12 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         )
         val responseContent = request(request, "上传自定义报告失败")
         try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(responseContent)
+            if (obj.has("code") && obj["code"].asText() != "0")
+                throw RemoteServiceException("上传自定义报告失败")
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
-            throw RuntimeException("report archive fail: $responseContent")
+            throw RemoteServiceException("report archive fail: $responseContent")
         }
     }
 
