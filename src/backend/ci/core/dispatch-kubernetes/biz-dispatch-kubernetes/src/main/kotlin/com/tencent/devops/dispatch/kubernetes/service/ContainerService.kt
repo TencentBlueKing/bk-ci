@@ -271,14 +271,13 @@ class ContainerService @Autowired constructor(
                 )
                 return createContainerResult
             } else {
-                // 清除构建异常容器，并重新置构建池为空闲
+                // 清除构建异常容器，并删除构建资源池
                 clearExceptionContainer(this, containerName)
-                buildDao.updateStatus(
+                buildDao.delete(
                     dslContext = dslContext,
                     pipelineId = pipelineId,
                     vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    status = ContainerStatus.IDLE.status
+                    poolNo = poolNo
                 )
                 buildHisDao.updateContainerName(dslContext, buildId, vmSeqId, containerName, executeCount ?: 1)
                 return createContainerResult
