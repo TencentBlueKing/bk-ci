@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
@@ -67,6 +68,7 @@ interface LogService {
         start: Long,
         end: Long,
         debug: Boolean,
+        logType: LogType,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -77,6 +79,7 @@ interface LogService {
         buildId: String,
         start: Long,
         debug: Boolean,
+        logType: LogType,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -87,6 +90,7 @@ interface LogService {
         buildId: String,
         end: Long,
         debug: Boolean,
+        logType: LogType,
         size: Int?,
         tag: String?,
         subTag: String?,
@@ -108,6 +112,7 @@ interface LogService {
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -119,6 +124,7 @@ interface LogService {
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -129,6 +135,7 @@ interface LogService {
     fun queryInitLogsPage(
         buildId: String,
         debug: Boolean,
+        logType: LogType,
         tag: String?,
         subTag: String?,
         jobId: String?,
