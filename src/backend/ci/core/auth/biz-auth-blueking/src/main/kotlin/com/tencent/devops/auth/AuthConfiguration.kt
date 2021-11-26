@@ -34,6 +34,8 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
@@ -69,11 +71,11 @@ class AuthConfiguration {
     fun iamEsbService() = IamEsbService()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(PermissionService::class)
     fun permissionService() = BkAuthPermissionService()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(PermissionProjectService::class)
     fun permissionProjectService() = BkAuthPermissionProjectService()
 
     @Bean
