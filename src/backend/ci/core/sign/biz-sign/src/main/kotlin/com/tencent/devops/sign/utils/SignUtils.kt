@@ -403,7 +403,11 @@ object SignUtils {
         codeSignPath: String,
         codesignExternalStr: String? = ""
     ) {
-        val cmd = "$codeSignPath -f -s '$cerName' $codesignExternalStr --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+        val cmd = if (codesignExternalStr.isNullOrBlank()) {
+            "$codeSignPath -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+        } else {
+            "$codeSignPath -f -s '$cerName' $codesignExternalStr --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+        }
         logger.info("[codesignFile by entitlements] $cmd")
         runtimeExec(cmd)
     }
