@@ -77,7 +77,9 @@ data class GitCIBasicSetting(
     @ApiModelProperty("带有所有者的项目路径")
     val pathWithNamespace: String?,
     @ApiModelProperty("项目最后一次构建的CI信息")
-    val lastCiInfo: CIInfo?
+    val lastCiInfo: CIInfo?,
+    @ApiModelProperty("项目下构建是否发送commitCheck")
+    val enableCommitCheck: Boolean = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾工蜂页面修改配置")

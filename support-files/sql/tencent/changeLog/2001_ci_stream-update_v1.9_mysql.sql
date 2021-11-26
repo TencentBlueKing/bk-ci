@@ -21,6 +21,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
+                    AND COLUMN_NAME = 'ENABLE_COMMIT_CHECK') THEN
+        ALTER TABLE T_GIT_BASIC_SETTING ADD COLUMN `ENABLE_COMMIT_CHECK` bit(1) NOT NULL DEFAULT 1 COMMENT '项目中的构建是否发送commitcheck';
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_GIT_BASIC_SETTING'

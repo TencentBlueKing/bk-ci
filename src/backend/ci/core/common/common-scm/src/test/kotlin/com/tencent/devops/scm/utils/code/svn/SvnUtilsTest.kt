@@ -25,17 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.scm.utils.code.svn
 
-interface PipelineUrlBean {
+import org.junit.Assert
+import org.junit.Test
 
-    /**
-     * 生成构建详情访问链接
-     */
-    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+class SvnUtilsTest {
 
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    @Test
+    fun getSvnFilePath() {
+        var url = "http://svn.example.com/demo/trunk/aaa"
+        var filePath = "/trunk/aaa/test.java"
+        var expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "/test.java")
+
+        filePath = "/trunk/bbb/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/bbb/test.java")
+
+        url = "http://svn.example.com/demo/"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+
+        url = "http://svn.example.com/demo/trunk/aaa/bbb"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+    }
 }

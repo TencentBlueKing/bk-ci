@@ -25,29 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.environment.service.thirdPartyAgent
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentUpgradeResource {
-
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
+@Component
+@Suppress("ALL", "UNUSED")
+class AgentUpgrdeJob @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val updateService: AgentUpgradeService
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
+        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
     }
 
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
+    fun updateCanUpgradeAgentList() {
+        logger.info("updateCanUpgradeAgentList")
+        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            updateService.updateCanUpgradeAgentList()
+        } catch (ignore: Throwable) {
+            logger.warn("update can upgrade agent list failed", ignore)
+        } finally {
+            lock.unlock()
+        }
     }
 }

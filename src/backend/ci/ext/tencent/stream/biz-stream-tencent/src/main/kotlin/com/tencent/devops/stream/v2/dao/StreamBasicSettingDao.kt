@@ -190,6 +190,7 @@ class StreamBasicSettingDao {
         creatorBgName: String?,
         creatorDeptName: String?,
         creatorCenterName: String?,
+        enableCommitCheck: Boolean?,
         pathWithNamespace: String?,
         nameWithNamespace: String
     ) {
@@ -221,6 +222,9 @@ class StreamBasicSettingDao {
             }
             if (userId != null) {
                 dsl.set(OAUTH_OPERATOR, userId)
+            }
+            if (enableCommitCheck != null) {
+                dsl.set(ENABLE_COMMIT_CHECK, enableCommitCheck)
             }
             if (pathWithNamespace != null) {
                 dsl.set(PATH_WITH_NAME_SPACE, pathWithNamespace)
@@ -269,6 +273,7 @@ class StreamBasicSettingDao {
                     } else {
                         null
                     },
+                    enableCommitCheck = conf.enableCommitCheck,
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
                     pathWithNamespace = conf.pathWithNameSpace
                 )
