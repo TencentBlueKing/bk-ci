@@ -40,13 +40,23 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.constant.*
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.api.archive.pojo.*
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
+import com.tencent.devops.worker.common.api.archive.pojo.QueryData
+import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -57,7 +67,8 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
-import java.util.*
+import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 

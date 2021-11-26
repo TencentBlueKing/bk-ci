@@ -41,7 +41,12 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.api.archive.*
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
+import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.MultipartBody
