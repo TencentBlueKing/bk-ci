@@ -111,7 +111,7 @@ class MQConfiguration @Autowired constructor() {
      */
     @Bean
     fun pipelineBuildReviewFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, true, false)
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_CHECK_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
