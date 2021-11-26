@@ -37,7 +37,6 @@ import org.jooq.Record2
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
 
 @Suppress("ALL")
 @Repository
