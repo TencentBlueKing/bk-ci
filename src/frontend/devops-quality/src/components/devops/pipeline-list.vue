@@ -227,7 +227,7 @@
             },
             selectAll (selection) {
                 if (selection.length) {
-                    selection.map(item => {
+                    selection.forEach(item => {
                         if (!this.localSelected.includes(item.pipelineId)) {
                             this.localSelected.push(item.pipelineId)
                         }

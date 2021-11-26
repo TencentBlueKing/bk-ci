@@ -354,7 +354,7 @@
                         this.nodeSelectConf.unselected = true
                     }
 
-                    this.importNodeList.filter(item => {
+                    this.importNodeList.forEach(item => {
                         if (item.isChecked && !item.isEixtEnvNode) curCount++
                     })
 
@@ -406,13 +406,13 @@
                     })
 
                     this.nodeList.splice(0, this.nodeList.length)
-                    res.map(item => {
+                    res.forEach(item => {
                         this.nodeList.push(item)
                     })
 
                     if (this.importNodeList.length) {
-                        this.nodeList.filter(vv => {
-                            this.importNodeList.filter(kk => {
+                        this.nodeList.forEach(vv => {
+                            this.importNodeList.forEach(kk => {
                                 if (vv.nodeHashId === kk.nodeHashId) {
                                     kk.isChecked = true
                                     kk.isEixtEnvNode = true
@@ -512,14 +512,14 @@
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)
                     })
 
-                    this.importNodeList.filter(kk => {
-                        this.nodeList.filter(vv => {
+                    this.importNodeList.forEach(kk => {
+                        this.nodeList.forEach(vv => {
                             if (vv.nodeHashId === kk.nodeHashId) {
                                 kk.isChecked = true
                                 kk.isEixtEnvNode = true
@@ -768,7 +768,7 @@
                 this.nodeDialogLoading.isLoading = true
                 this.nodeSelectConf.importText = `${this.$t('environment.nodeType.importing')}...`
 
-                nodeArr.map(item => {
+                nodeArr.forEach(item => {
                     params.push(item)
                 })
 
