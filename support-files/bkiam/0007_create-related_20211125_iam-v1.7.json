@@ -9,7 +9,7 @@
             "id": "project",
             "actions": [
               {
-                "id": "project_view",
+                "id": "quality_group_create",
                 "required": true
               }
             ],
