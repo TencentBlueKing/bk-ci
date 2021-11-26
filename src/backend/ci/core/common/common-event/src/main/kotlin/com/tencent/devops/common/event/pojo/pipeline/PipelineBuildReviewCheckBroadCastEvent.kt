@@ -50,5 +50,5 @@ data class PipelineBuildReviewCheckBroadCastEvent(
     val status: String,
     val stageId: String?,
     val taskId: String?,
-    val ruleIds: List<String>? = null  // stage的准入准出才有该红线ID集合
+    val ruleIds: List<String>? = null // stage的准入准出才有该红线ID集合
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
