@@ -480,60 +480,67 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
-        val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
-
-        val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
-            .withHour(23)
-            .withMinute(59)
-            .withSecond(0)
+        val endDate = if (experience.expireDate != null) {
+            LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate!!), ZoneId.systemDefault())
+                .withHour(23)
+                .withMinute(59)
+                .withSecond(0)
+        } else {
+            experienceRecord.endDate
+        }
 
         experienceDao.update(
             dslContext = dslContext,
             id = experienceRecord.id,
-            name = experience.name,
+            name = experience.name ?: experienceRecord.name,
             remark = experience.remark,
             endDate = endDate,
             experienceGroups = "[]",
             innerUsers = "[]",
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
-            enableWechatGroup = experience.enableWechatGroups,
+            enableWechatGroup = experience.enableWechatGroups ?: experienceRecord.enableWechatGroups,
             wechatGroups = experience.wechatGroups ?: "",
             updator = userId,
             experienceName = experience.experienceName ?: projectId,
-            versionTitle = experience.versionTitle ?: experience.name,
+            versionTitle = experience.versionTitle ?: experienceRecord.versionTitle,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
         )
 
         // 更新组
-        experienceGroupDao.deleteByRecordId(
-            dslContext,
-            experienceRecord.id,
-            experience.experienceGroups.map { HashUtil.decodeIdToLong(it) }.toSet()
-        )
-        experience.experienceGroups.forEach {
+        experience.experienceGroups?.let { groups ->
+            experienceGroupDao.deleteByRecordId(
+                dslContext,
+                experienceRecord.id,
+                groups.map { HashUtil.decodeIdToLong(it) }.toSet()
+            )
+        }
+        experience.experienceGroups?.forEach {
             experienceGroupDao.create(dslContext, experienceRecord.id, HashUtil.decodeIdToLong(it))
         }
 
         // 更新内部成员
-        experienceInnerDao.deleteByRecordId(dslContext, experienceRecord.id, experience.innerUsers)
-        experience.innerUsers.forEach {
+        experience.innerUsers?.let { experienceInnerDao.deleteByRecordId(dslContext, experienceRecord.id, it) }
+        experience.innerUsers?.forEach {
             experienceInnerDao.create(dslContext, experienceRecord.id, it)
         }
 
         // 更新外部人员
-        experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, experience.outerUsers)
-        experience.outerUsers.forEach {
+        experience.outerUsers?.let { experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, it) }
+        experience.outerUsers?.forEach {
             experienceOuterDao.create(dslContext, experienceRecord.id, it)
         }
 
+        val isPublic = experience.experienceGroups
+            ?.let { isPublicGroupAndCheck(it) }
+            ?: experienceBaseService.isPublic(HashUtil.decodeIdToLong(experienceHashId), false)
         if (isPublic) {
             onlinePublicExperience(
                 projectId = projectId,
                 size = experienceRecord.size,
                 experienceName = experience.experienceName ?: projectId,
                 categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
-                expireDate = experience.expireDate,
+                expireDate = experience.expireDate ?: experienceRecord.endDate.timestamp(),
                 experienceId = experienceRecord.id,
                 platform = PlatformEnum.valueOf(experienceRecord.platform),
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
