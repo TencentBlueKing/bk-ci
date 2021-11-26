@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityBroadCastEvent
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
@@ -96,8 +94,7 @@ class QualityRuleCheckService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val qualityCacheService: QualityCacheService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
-    private val qualityUrlBean: QualityUrlBean,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val qualityUrlBean: QualityUrlBean
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
@@ -242,17 +239,6 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 异步后续的处理
             executors.execute {
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildQualityBroadCastEvent(
-                        source = "quality_check_finish",
-                        userId = buildCheckParams.runtimeVariable?.get("BK_CI_START_USER_ID") ?: "",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        ruleIds = ruleInterceptList.map { HashUtil.decodeIdToLong(it.first.hashId) }
-                    )
-                )
-                logger.info("QUALITY|quality rule broadcast finish.")
                 checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
             }
 
