@@ -8,7 +8,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.listener.buildFinish.SendCommitCheck
+import com.tencent.devops.stream.listener.components.SendCommitCheck
+import com.tencent.devops.stream.listener.components.SendQualityMrComment
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.jooq.DSLContext

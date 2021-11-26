@@ -1,4 +1,4 @@
-package com.tencent.devops.stream.listener.buildFinish.notify
+package com.tencent.devops.stream.listener.notify
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
@@ -14,7 +14,6 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
-import com.tencent.devops.stream.listener.RtxCustomApi
 import com.tencent.devops.stream.listener.StreamBuildListenerContext
 import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.listener
+package com.tencent.devops.stream.listener.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 

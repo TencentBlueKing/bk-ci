@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.listener.buildFinish
+package com.tencent.devops.stream.listener
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -45,13 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.listener.BuildEvent
-import com.tencent.devops.stream.listener.StreamBuildEvent
-import com.tencent.devops.stream.listener.StreamFinishContextV1
-import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
-import com.tencent.devops.stream.listener.buildFinish.notify.SendNotify
-import com.tencent.devops.stream.listener.getBuildStatus
-import com.tencent.devops.stream.listener.isV2
+import com.tencent.devops.stream.listener.components.SendCommitCheck
+import com.tencent.devops.stream.listener.notify.SendNotify
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService

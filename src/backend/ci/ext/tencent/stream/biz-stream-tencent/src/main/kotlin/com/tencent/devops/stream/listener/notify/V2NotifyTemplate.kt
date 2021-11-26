@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.listener
+package com.tencent.devops.stream.listener.notify
 
 // v2 Gitci的默认通知模板
 object V2NotifyTemplate {

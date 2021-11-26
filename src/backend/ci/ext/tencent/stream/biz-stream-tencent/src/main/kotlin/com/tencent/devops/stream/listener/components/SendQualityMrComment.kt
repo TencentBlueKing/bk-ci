@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.listener
+package com.tencent.devops.stream.listener.components
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.stream.listener.BuildEvent
+import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
+import com.tencent.devops.stream.listener.utils.QualityUtils
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamQualityService
 import com.tencent.devops.stream.v2.service.StreamScmService
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -43,7 +45,6 @@ import org.springframework.stereotype.Component
 @Component
 class SendQualityMrComment @Autowired constructor(
     private val client: Client,
-    private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val tokenService: StreamGitTokenService,
     private val streamScmService: StreamScmService,
