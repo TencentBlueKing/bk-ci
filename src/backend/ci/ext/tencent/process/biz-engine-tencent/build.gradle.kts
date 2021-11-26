@@ -36,6 +36,7 @@ dependencies {
     api(project(":ext:tencent:common:common-job"))
     api(project(":ext:tencent:common:common-gcloud"))
     api(project(":core:process:biz-engine"))
+    api(project(":ext:tencent:process:biz-base-tencent"))
     api(project(":ext:tencent:experience:api-experience-tencent")) // 版本体验依赖
     api(project(":ext:tencent:artifactory:api-artifactory-tencent")) // 生成短链接(发短信，推送镜像到第三方，人工审核）
     api(project(":ext:tencent:plugin:api-plugin-tencent")) // wetest插件

@@ -29,49 +29,64 @@ package com.tencent.devops.stream.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 
 /**
- * {
- *   "object_kind":"push",
- *   "before":"9d1861bd3ae32cda2a92479962712065aae19cf2",
- *   "after":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
- *   "ref":"refs/heads/test",
- *   "checkout_sha":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
- *   "user_name":"rdeng",
- *   "user_id":11648,
- *   "user_email":"rdeng@tencent.com",
- *   "project_id":46619,
- *   "repository":{
- *    　"name":"maven-hello-world",
- *      "description":"",
- *      "homepage":"xxx
- *      "git_http_url":"xxx
- *      "git_ssh_url":"xxx
- *      "url":"xxx
- *      "visibility_level":0
- *    },
- *    "commits":[
- *       {
- *         "id":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
- *         "message":"Test webhook",
- *         "timestamp":"2018-03-16T06:50:11+0000",
- *         "url":"xxx
- *         "author":{
- *           "name":"rdeng",
- *           "email":"rdeng@tencent.com"
- *         },
- *         "added":[
- *
- *         ],
- *         "modified":[
- *           "test.txt"
- *         ],
- *         "removed":[
- *         ]
- *       }
- *     ],
- *   "total_commits_count":1
- * }
+{
+    "object_kind": "push",
+    "operation_kind": "create",
+    "action_kind": "client push",
+    "before": "b96850262fabfa9a8a9d28fff9040621958379f9",
+    "after": "e99db09904cfa385a129305e7660395f161950a",
+    "ref": "refs/heads/master",
+    "user_id": 11323,
+    "user_name": "git_user1",
+    "user_email": "git_user1@tencent.com",
+    "project_id": 165245,
+    "repository": {
+        "name": "z-test",
+        "url": "git@tencent.com:test/z-test.git",
+        "description": "",
+        "homepage": "https://tencent.com/test/z-test",
+        "git_http_url":"http://tencent.com/test/z-test.git",
+        "git_ssh_url":"git@tencent.com:test/z-test.git",
+        "visibility_level":0
+    },
+    "commits": [
+        {
+            "id": "b96850262fabfa9a8a9d28fff9040621958379f9",
+            "message": "fix readme",
+            "timestamp": "2015-03-13T09:52:25+0000",
+            "url": "https://tencent.com/test/z-test/commit/b96850262fabfa9a8a9d28fff9040621958379f9",
+            "author": {
+            "name": "alex",
+            "email": "alex@tencent.com"
+        },
+            "added":[],
+            "modified":[
+            "README.md"
+            ],
+            "removed":[]
+        },
+        {
+            "id": "1480a4610ca01dd10cb5bc30d8a1b1ea568c09a1",
+            "message": "update readme",
+            "timestamp": "2015-03-13T09:51:06+0000",
+            "url": "https://tencent.com/test/z-test/commit/b96850262fabfa9a8a9d28fff9040621958379f9",
+            "author": {
+            "name": "Bob",
+            "email": "Bob@tencent.com"
+        },
+            "added":[],
+            "modified":[
+            "README.md"
+            ],
+            "removed":[]
+        }
+    ],
+    "total_commits_count": 2
+}
  */
 @Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -86,9 +101,40 @@ data class GitPushEvent(
     val project_id: Long,
     val repository: GitCommitRepository,
     val commits: List<GitCommit>?,
+    val push_options: Map<String, String>?,
     val total_commits_count: Int
 ) : GitEvent() {
     companion object {
         const val classType = TGitObjectKind.OBJECT_KIND_PUSH
     }
+}
+
+fun GitPushEvent.isDeleteBranch(): Boolean {
+    // 工蜂web端删除
+    if (action_kind == TGitPushActionKind.DELETE_BRANCH.value) {
+        return true
+    }
+    // 发送到工蜂的客户端删除
+    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
+        operation_kind == TGitPushOperationKind.DELETE.value &&
+        after.filter { it != '0' }.isBlank()
+    ) {
+        return true
+    }
+    return false
+}
+
+fun GitPushEvent.isCreateBranch(): Boolean {
+    // 工蜂web端创建分支
+    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
+        return true
+    }
+    // 发送到工蜂的客户端创建
+    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
+        operation_kind == TGitPushOperationKind.CREAT.value &&
+        before.filter { it != '0' }.isBlank()
+    ) {
+        return true
+    }
+    return false
 }

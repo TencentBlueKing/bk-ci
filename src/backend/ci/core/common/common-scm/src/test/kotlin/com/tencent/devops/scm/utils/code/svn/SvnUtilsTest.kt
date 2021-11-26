@@ -25,34 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.api
+package com.tencent.devops.scm.utils.code.svn
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import org.junit.Assert
+import org.junit.Test
 
-@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
-@Path("/op/thirdPartyAgent")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpThirdPartyAgentUpgradeResource {
+class SvnUtilsTest {
 
-    @ApiOperation("设置agent最大并发升级数量")
-    @POST
-    @Path("/agents/setMaxParallelUpgradeCount")
-    fun setMaxParallelUpgradeCount(
-        @ApiParam("maxParallelUpgradeCount", required = true)
-        maxParallelUpgradeCount: Int
-    ): Result<Boolean>
+    @Test
+    fun getSvnFilePath() {
+        var url = "http://svn.example.com/demo/trunk/aaa"
+        var filePath = "/trunk/aaa/test.java"
+        var expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "/test.java")
 
-    @ApiOperation("获取agent最大并发升级数量")
-    @POST
-    @Path("/agents/getMaxParallelUpgradeCount")
-    fun getMaxParallelUpgradeCount(): Result<Int?>
+        filePath = "/trunk/bbb/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/bbb/test.java")
+
+        url = "http://svn.example.com/demo/"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+
+        url = "http://svn.example.com/demo/trunk/aaa/bbb"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+    }
 }

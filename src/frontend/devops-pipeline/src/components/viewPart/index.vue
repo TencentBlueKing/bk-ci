@@ -223,7 +223,7 @@
                     })
 
                     this.partList.splice(0, this.partList.length)
-                    res.records.map(item => {
+                    res.records.forEach(item => {
                         item.display = false
                         this.partList.push(item)
                     })

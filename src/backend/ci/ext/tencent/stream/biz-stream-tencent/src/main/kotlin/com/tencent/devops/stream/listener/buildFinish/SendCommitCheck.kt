@@ -25,6 +25,7 @@ import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
+import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamQualityService
@@ -60,7 +61,7 @@ class SendCommitCheck @Autowired constructor(
     fun sendCommitCheck(
         context: StreamBuildListenerContext
     ) {
-        // 当人工触发时不推送CommitCheck消息
+        // 当人工触发时不推送CommitCheck消息, 此处与下面重复是为了兼容V1
         if (!context.requestEvent.sendCommitCheck()) {
             return
         }
@@ -68,7 +69,9 @@ class SendCommitCheck @Autowired constructor(
         try {
             when (context) {
                 is StreamBuildListenerContextV2 -> {
-                    sendCommitCheckV2(context)
+                    if (CommitCheckUtils.needSendCheck(context.requestEvent, context.streamSetting)) {
+                        sendCommitCheckV2(context)
+                    }
                 }
                 is StreamFinishContextV1 -> {
                     sendCommitCheckV1(context)

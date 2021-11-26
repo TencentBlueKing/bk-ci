@@ -118,19 +118,19 @@
                 if (val) {
                     val.forEach(stage => {
                         const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
-                        if (!stage.hasOwnProperty('runStage')) {
+                        if (!Object.prototype.hasOwnProperty.call(stage, 'runStage')) {
                             Vue.set(stage, 'runStage', !stageDisabled)
                         }
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
-                                if (!container.hasOwnProperty('runContainer')) {
+                                if (!Object.prototype.hasOwnProperty.call(container, 'runContainer')) {
                                     Vue.set(container, 'runContainer', !containerDisabled)
                                 }
 
                                 container.elements.forEach(element => {
                                     const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
-                                    if (!element.hasOwnProperty('canElementSkip')) {
+                                    if (!Object.prototype.hasOwnProperty.call(element, 'canElementSkip')) {
                                         Vue.set(element, 'canElementSkip', !isSkipEle)
                                     }
                                 })

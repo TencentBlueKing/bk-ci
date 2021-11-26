@@ -59,8 +59,10 @@ class ArchiveServiceImpl @Autowired constructor(
         ipaSignInfo: IpaSignInfo,
         properties: MutableMap<String, String>?
     ): Boolean {
-        logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
-            "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
+        logger.info(
+            "uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
+                "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}"
+        )
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {
             "pipeline" -> FileTypeEnum.BK_ARCHIVE
             "custom" -> FileTypeEnum.BK_CUSTOM
