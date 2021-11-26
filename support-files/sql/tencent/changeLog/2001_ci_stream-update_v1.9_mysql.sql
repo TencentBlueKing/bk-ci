@@ -33,10 +33,18 @@ BEGIN
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
-                        AND COLUMN_NAME = 'PATH_WITH_NAME_SPACE' AND COLUMN_NAME = 'NAME_WITH_NAME_SPACE') THEN
+                        AND COLUMN_NAME = 'PATH_WITH_NAME_SPACE') THEN
     ALTER TABLE T_GIT_BASIC_SETTING
-            ADD COLUMN `PATH_WITH_NAME_SPACE` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '带有所有者的项目路径',
-            ADD COLUMN `NAME_WITH_NAME_SPACE` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '带有所有者的项目名称';
+            ADD COLUMN `PATH_WITH_NAME_SPACE` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '带有名空间的项目路径';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
+                        AND COLUMN_NAME = 'NAME_WITH_NAME_SPACE') THEN
+    ALTER TABLE T_GIT_BASIC_SETTING
+            ADD COLUMN `NAME_WITH_NAME_SPACE` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '带有名空间的项目名称';
     END IF;
     COMMIT;
 END <CI_UBF>
