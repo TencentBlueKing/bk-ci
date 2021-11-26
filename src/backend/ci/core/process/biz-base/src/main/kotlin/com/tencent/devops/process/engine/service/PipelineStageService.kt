@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewCheckBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -366,7 +366,7 @@ class PipelineStageService @Autowired constructor(
                 Triple(BS_QUALITY_ABORT_STAGE, ActionType.END, BuildStatus.REVIEW_ABORT)
             }
             pipelineEventDispatcher.dispatch(
-                PipelineBuildReviewBroadCastEvent(
+                PipelineBuildReviewCheckBroadCastEvent(
                     source = "s(${buildStage.stageId}) has been reviewed",
                     projectId = buildStage.projectId, pipelineId = buildStage.pipelineId,
                     buildId = buildStage.buildId, userId = userId,
@@ -410,7 +410,7 @@ class PipelineStageService @Autowired constructor(
         val group = stage.checkIn?.groupToReview() ?: return
 
         pipelineEventDispatcher.dispatch(
-            PipelineBuildReviewBroadCastEvent(
+            PipelineBuildReviewCheckBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 buildId = stage.buildId, userId = userId,
@@ -488,7 +488,7 @@ class PipelineStageService @Autowired constructor(
             // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
             // #5533 增加红线待审核的消息
             pipelineEventDispatcher.dispatch(
-                PipelineBuildReviewBroadCastEvent(
+                PipelineBuildReviewCheckBroadCastEvent(
                     source = "s(${stage.stageId}) quality check for with${reviewType}",
                     projectId = stage.projectId, pipelineId = stage.pipelineId,
                     buildId = stage.buildId, userId = event.userId,

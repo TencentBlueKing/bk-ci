@@ -38,7 +38,7 @@ import com.tencent.devops.common.event.enums.ActionType
  * @version 1.0
  */
 @Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT)
-data class PipelineBuildReviewBroadCastEvent(
+data class PipelineBuildReviewCheckBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
