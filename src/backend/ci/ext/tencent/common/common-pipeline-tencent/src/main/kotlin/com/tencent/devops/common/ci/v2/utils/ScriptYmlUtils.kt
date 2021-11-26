@@ -188,6 +188,15 @@ object ScriptYmlUtils {
             }
         }
         // 替换if中没有加括号的
+        val resultValue = replaceIfParameters(newValue, settingMap)
+        return resultValue.toString()
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun replaceIfParameters(
+        newValue: String?,
+        settingMap: Map<String, Any?>
+    ): StringBuffer {
         val newValueLines = BufferedReader(StringReader(newValue!!))
         val resultValue = StringBuffer()
         var line = newValueLines.readLine()
@@ -208,24 +217,9 @@ object ScriptYmlUtils {
                 }
                 // 替换变量
                 val items = mutableListOf<Word>()
-                originItems.forEach { it ->
+                originItems.forEach {
                     if (it.symbol == "ident") {
-                        items.add(Word(
-                            if (it.str.startsWith(PARAMETERS_PREFIX)) {
-                                val realValue = settingMap[it.str] ?: it.str
-                                if (realValue is List<*>) {
-                                    // ["test"]->[test]
-                                    JsonUtil.toJson(realValue).replace("\"", "")
-                                        .replace("[ ", "[")
-                                        .replace(" ]", "]")
-                                } else {
-                                    StringEscapeUtils.escapeJava(realValue.toString())
-                                }
-                            } else {
-                                it.str
-                            },
-                            it.symbol)
-                        )
+                        items.add(Word(replaceParameters(it, settingMap), it.symbol))
                     } else {
                         items.add(Word(it.str, it.symbol))
                     }
@@ -237,8 +231,24 @@ object ScriptYmlUtils {
             }
             line = newValueLines.readLine()
         }
-        val a = resultValue.toString()
-        return resultValue.toString()
+        return resultValue
+    }
+
+    private fun replaceParameters(
+        it: Word,
+        settingMap: Map<String, Any?>
+    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+        val realValue = settingMap[it.str] ?: it.str
+        if (realValue is List<*>) {
+            // ["test"]->[test]
+            JsonUtil.toJson(realValue).replace("\"", "")
+                .replace("[ ", "[")
+                .replace(" ]", "]")
+        } else {
+            StringEscapeUtils.escapeJava(realValue.toString())
+        }
+    } else {
+        it.str
     }
 
     private fun formatYamlCustom(yamlStr: String): String {
@@ -267,7 +277,8 @@ object ScriptYmlUtils {
 
     private fun checkTriggerOn(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if (preScriptBuildYaml.triggerOn?.schedules?.branches?.size != null &&
-            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES) {
+            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES
+        ) {
             throw YamlFormatException("定时任务的最大执行分支数不能超过: $MAX_SCHEDULES_BRANCHES")
         }
     }
@@ -301,7 +312,8 @@ object ScriptYmlUtils {
         }
         yamlMap.forEach { (t, _) ->
             if (t != formatTrigger && t != "extends" && t != "version" &&
-                t != "resources" && t != "name" && t != "on") {
+                t != "resources" && t != "name" && t != "on"
+            ) {
                 throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
             }
         }
