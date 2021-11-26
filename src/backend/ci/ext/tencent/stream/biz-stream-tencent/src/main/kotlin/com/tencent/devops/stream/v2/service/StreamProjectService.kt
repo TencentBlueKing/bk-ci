@@ -131,7 +131,7 @@ class StreamProjectService @Autowired constructor(
                 httpsUrlToRepo = it.httpsUrlToRepo,
                 webUrl = it.webUrl,
                 avatarUrl = it.avatarUrl,
-                description = it.description,
+                description = it.description ?: "",
                 ciInfo = ciInfo
             )
         }
@@ -168,8 +168,11 @@ class StreamProjectService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            logger.warn("STREAM|gitProjects|stream scm service is unavailable.|userId=$userId")
-            val res = redisOperation.get(getProjectListKey(userId))
+            logger.warn(
+                "STREAM|gitProjects|stream scm service is unavailable.|userId=$userId|" +
+                    "realPage=$realPage|realPageSize=$realPageSize"
+            )
+            val res = redisOperation.get(getProjectListKey("$userId-$realPage-$realPageSize"))
             if (res.isNullOrEmpty()) {
                 logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
                 return null
@@ -177,10 +180,10 @@ class StreamProjectService @Autowired constructor(
             return JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
         } ?: return null
         // 每次成功访问工蜂接口就刷新redis
-        val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
+        val updateLock = RedisLock(redisOperation, getProjectListLockKey("$userId-$realPage-$realPageSize"), 10)
         updateLock.lock()
         try {
-            logger.info("STREAM|gitProjects|update redis|userId=$userId")
+            logger.info("STREAM|gitProjects|update redis|userId=$userId|realPage=$realPage|realPageSize=$realPageSize")
             val newRedisValue = gitProjects.map {
                 GitCodeProjectSimpleInfo(
                     id = it.id,
