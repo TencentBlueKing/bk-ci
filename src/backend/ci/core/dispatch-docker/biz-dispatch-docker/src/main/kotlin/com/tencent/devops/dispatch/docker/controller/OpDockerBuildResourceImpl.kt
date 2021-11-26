@@ -34,8 +34,8 @@ import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService)
-    : OpDockerBuildResource {
+class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) :
+    OpDockerBuildResource {
 
     override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
         dockerHostBuildService.enable(pipelineId, vmSeqId, enable)

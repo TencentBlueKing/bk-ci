@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 
 enum class JobQuotaVmType(val displayName: String) {
     DOCKER_VM("Docker on VM"),
+    KUBERNETES("kubernetes"),
     DOCKER_DEVCLOUD("Docker on DevCloud"),
     MACOS_DEVCLOUD("MacOS on DevCloud"),
     OTHER("私有构建机或集群"),
