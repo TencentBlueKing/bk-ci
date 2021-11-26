@@ -102,6 +102,18 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun offline(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.updateOnline(userId, projectId, experienceHashId, false)
+        return Result(true)
+    }
+
+    override fun online(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.updateOnline(userId, projectId, experienceHashId, true)
+        return Result(true)
+    }
+
     private fun checkParam(userId: String, projectId: String, experienceHashId: String = "default") {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

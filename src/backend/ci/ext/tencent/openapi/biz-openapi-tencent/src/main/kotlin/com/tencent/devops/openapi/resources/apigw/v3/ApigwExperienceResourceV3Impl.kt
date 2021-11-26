@@ -35,4 +35,12 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         return client.get(ServiceExperienceResource::class).edit(userId, projectId, experienceHashId, experience)
     }
+
+    override fun offline(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+        return client.get(ServiceExperienceResource::class).offline(userId, projectId, experienceHashId)
+    }
+
+    override fun online(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+        return client.get(ServiceExperienceResource::class).online(userId, projectId, experienceHashId)
+    }
 }

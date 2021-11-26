@@ -160,4 +160,34 @@ interface ServiceExperienceResource {
         @ApiParam("发布详情", required = true)
         experience: ExperienceUpdate
     ): Result<Boolean>
+
+    @ApiOperation("下架体验")
+    @Path("/{projectId}/{experienceHashId}/offline")
+    @PUT
+    fun offline(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("发布HashId", required = false)
+        @PathParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("上架体验")
+    @Path("/{projectId}/{experienceHashId}/online")
+    @PUT
+    fun online(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("发布HashId", required = false)
+        @PathParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Boolean>
 }
