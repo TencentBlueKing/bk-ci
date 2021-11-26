@@ -177,7 +177,8 @@ class StreamBasicSettingDao {
         authUserId: String?,
         creatorBgName: String?,
         creatorDeptName: String?,
-        creatorCenterName: String?
+        creatorCenterName: String?,
+        enableCommitCheck: Boolean?
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -207,6 +208,9 @@ class StreamBasicSettingDao {
             }
             if (userId != null) {
                 dsl.set(OAUTH_OPERATOR, userId)
+            }
+            if (enableCommitCheck != null) {
+                dsl.set(ENABLE_COMMIT_CHECK, enableCommitCheck)
             }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(gitProjectId))
@@ -250,7 +254,8 @@ class StreamBasicSettingDao {
                         JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
                     } else {
                         null
-                    }
+                    },
+                    enableCommitCheck = conf.enableCommitCheck
                 )
             }
         }
