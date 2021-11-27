@@ -80,8 +80,8 @@ class QualityHisMetadataService @Autowired constructor(
                     detail = it.detail,
                     type = it.type,
                     elementType = callback.elementType,
-                    taskId = "",
-                    taskName = "",
+                    taskId = callback.taskId,
+                    taskName = callback.taskName,
                     msg = it.msg,
                     value = it.value,
                     extra = it.extra
