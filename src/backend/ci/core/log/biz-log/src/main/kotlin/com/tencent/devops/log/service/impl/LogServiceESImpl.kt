@@ -170,6 +170,7 @@ class LogServiceESImpl constructor(
     override fun queryInitLogs(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -183,6 +184,7 @@ class LogServiceESImpl constructor(
                 buildId = buildId,
                 index = index,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -202,6 +204,7 @@ class LogServiceESImpl constructor(
         start: Long,
         end: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -226,6 +229,7 @@ class LogServiceESImpl constructor(
                 val query = getQuery(
                     buildId = buildId,
                     debug = debug,
+                    logType = logType,
                     tag = tag,
                     subTag = subTag,
                     jobId = jobId,
@@ -293,6 +297,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         start: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -307,6 +312,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 start = start,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -323,6 +329,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         end: Long,
         debug: Boolean,
+        logType: LogType?,
         size: Int?,
         tag: String?,
         subTag: String?,
@@ -338,6 +345,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 end = end,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -366,6 +374,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(
             buildId = buildId,
             debug = false,
+            logType = null,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -432,6 +441,7 @@ class LogServiceESImpl constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -445,6 +455,7 @@ class LogServiceESImpl constructor(
             val result = doGetEndLogs(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -466,6 +477,7 @@ class LogServiceESImpl constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -478,6 +490,7 @@ class LogServiceESImpl constructor(
             val result = doGetEndLogs(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -495,6 +508,7 @@ class LogServiceESImpl constructor(
     override fun queryInitLogsPage(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -519,6 +533,7 @@ class LogServiceESImpl constructor(
             queryLogs = doQueryInitLogsPage(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -530,6 +545,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -584,6 +600,7 @@ class LogServiceESImpl constructor(
     private fun doQueryInitLogsPage(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
@@ -612,6 +629,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(
             buildId = buildId,
             debug = debug,
+            logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -640,11 +658,11 @@ class LogServiceESImpl constructor(
         do {
             searchResponse.hits.hits.forEach { searchHit ->
                 val sourceMap = searchHit.sourceAsMap
-                val logType = sourceMap["logType"].toString()
+                val type = sourceMap["logType"].toString()
                 val logLine = LogLine(
                     sourceMap["lineNo"].toString().toLong(),
                     sourceMap["timestamp"].toString().toLong(),
-                    if (logType == LogType.LOG.name) sourceMap["message"].toString() else "",
+                    if (type == LogType.LOG.name) sourceMap["message"].toString() else "",
                     Constants.DEFAULT_PRIORITY_NOT_DELETED
                 )
                 queryLogs.logs.add(logLine)
@@ -662,6 +680,7 @@ class LogServiceESImpl constructor(
     private fun doGetEndLogs(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -689,6 +708,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -699,6 +719,7 @@ class LogServiceESImpl constructor(
             val query = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -758,6 +779,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         index: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
@@ -785,6 +807,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -796,6 +819,7 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -858,6 +882,7 @@ class LogServiceESImpl constructor(
         index: String,
         start: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -890,6 +915,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -900,6 +926,7 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -982,6 +1009,7 @@ class LogServiceESImpl constructor(
         end: Long,
         size: Int,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1014,6 +1042,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -1035,6 +1064,7 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -1114,6 +1144,7 @@ class LogServiceESImpl constructor(
         index: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1121,7 +1152,7 @@ class LogServiceESImpl constructor(
         start: Long? = null,
         end: Long? = null
     ): Long {
-        val query = getQuery(buildId, debug, tag, subTag, jobId, executeCount)
+        val query = getQuery(buildId, debug, logType, tag, subTag, jobId, executeCount)
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
@@ -1307,6 +1338,7 @@ class LogServiceESImpl constructor(
     private fun getQuery(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1321,6 +1353,9 @@ class LogServiceESImpl constructor(
         }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))
+        }
+        if (logType != null) {
+            query.must(QueryBuilders.matchQuery("logType", logType.name).operator(Operator.AND))
         }
         if (!debug) {
             query.mustNot(QueryBuilders.matchQuery("logType", LogType.DEBUG.name).operator(Operator.AND))
