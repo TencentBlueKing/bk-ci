@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -95,8 +96,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "200") {
+            val obj = JsonParser.parseString(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException("上传自定义文件失败")
             }
         } catch (ignored: Exception) {
@@ -121,9 +122,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "200")
-                throw RemoteServiceException("上传流水线文件失败")
+            val obj = JsonParser.parseString(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
         }

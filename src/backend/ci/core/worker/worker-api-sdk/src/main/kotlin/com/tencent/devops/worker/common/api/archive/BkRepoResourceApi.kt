@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.collect.Maps
+import com.google.gson.JsonParser
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
@@ -36,18 +37,26 @@ import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.constant.*
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.api.archive.pojo.*
-import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
+import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.api.archive.pojo.QueryData
+import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -57,7 +66,8 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
-import java.util.*
+import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 
@@ -119,12 +129,12 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("http request failed, code: ${response.code()}, responseContent: $responseContent")
-                throw RemoteServiceException("http request failed", response.code())
+                throw RuntimeException("http request failed")
             }
 
             val responseData = objectMapper.readValue<BkRepoResponse<List<BkRepoAccessToken>>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RemoteServiceException("request failed: ${responseData.message}")
+                throw RuntimeException("request failed: ${responseData.message}")
             }
 
             return responseData.data!![0].token
@@ -149,12 +159,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val response = request(request, "上传文件失败")
         try {
-            val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0")
-                throw RemoteServiceException("上传文件失败")
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
         } catch (e: Exception) {
-            LoggerService.addErrorLine(e.message ?: "")
-            throw RemoteServiceException("上传文件失败: $response")
+            logger.error(e.message ?: "")
         }
     }
 
@@ -249,7 +257,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = false
     ) {
-        logger.info("upload file >>> ${file.name}")
+        AbstractBuildResourceApi.logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$destFullPath"
         val request = buildPut(
             path = url,
@@ -259,12 +267,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val response = request(request, "上传文件失败")
         try {
-            val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0")
-                throw RemoteServiceException("上传文件失败")
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
         } catch (e: Exception) {
-            LoggerService.addErrorLine(e.message ?: "")
-            throw RemoteServiceException("上传文件失败: $response")
+            AbstractBuildResourceApi.logger.error(e.message ?: "")
         }
     }
 
@@ -398,7 +404,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             "page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        val ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
             val filePathRule = Rule.NestedRule(
                 filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(),
@@ -419,7 +425,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                     .toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
-        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }
@@ -448,12 +454,12 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("query failed, responseContent: $responseContent")
-                throw RemoteServiceException("query failed", response.code())
+                throw RuntimeException("query failed")
             }
 
             val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RemoteServiceException("query failed: ${responseData.message}")
+                throw RuntimeException("query failed: ${responseData.message}")
             }
 
             return responseData.data!!.records
