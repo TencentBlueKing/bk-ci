@@ -131,5 +131,4 @@ object StoreMessageCode {
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
     const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
     const val USER_CHANGE_TEST_PROJECT_FAIL = "2120909" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
-    const val USER_CONVERT_ENCRYPTED_DATA_FAIL = "2120910" // 研发商店：转换加密数据需要的服务配置项错误，请检查：{0}
 }

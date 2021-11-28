@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpEncryptedConvertResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreEnvVarService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,19 +53,12 @@ class OpEncryptedConvertResourceImpl @Autowired constructor(
 
     override fun convertEncryptedData(): Result<Boolean> {
         if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
-                params = arrayOf("aes.oldKey or aes.newKey is not config"),
-                defaultMessage = "Convert failed because of config: " +
-                    "aes.oldKey or aes.newKey is not defined"
-            )
+            throw OperationException("Convert failed because of config: " +
+                "aes.oldKey or aes.newKey is not defined")
         }
         if (newKey != aesKey) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_CONVERT_ENCRYPTED_DATA_FAIL,
-                params = arrayOf("The values of aes.aesKey and  aes.newKey are inconsistent"),
-                defaultMessage = "Convert failed because of config: " +
-                    "The values of aes.aesKey and  aes.newKey are inconsistent"
+            throw OperationException("Convert failed because of config: " +
+                "The values of aes.aesKey and  aes.newKey are inconsistent"
             )
         }
         storeEnvVarService.convertEncryptedEnvVar(oldKey!!, newKey!!)
