@@ -86,7 +86,8 @@ class QualityRuleBuildHisService constructor(
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
+                    .forEach {
                     val requestIndicator = indicatorMap[it.enName]
                     checkThresholdType(requestIndicator!!, it)
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
@@ -95,6 +96,11 @@ class QualityRuleBuildHisService constructor(
                         requestIndicator.threshold
                     ))
                 }
+            }
+
+            if (indicatorIds.isEmpty()) {
+                val indicatorNameSet = ruleRequest.indicators.map { it.enName }.toList()
+                throw OperationException("${ruleRequest.name} $indicatorNameSet indicator is not exist")
             }
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
@@ -143,6 +149,9 @@ class QualityRuleBuildHisService constructor(
 
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
+            if (it.indicatorIds.isNullOrBlank()) {
+                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error ${it.indicatorIds}")
+            }
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
         }
 
@@ -218,6 +227,10 @@ class QualityRuleBuildHisService constructor(
     @Suppress("NestedBlockDepth")
     private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
         ruleRequestList.forEach { request ->
+            if (request.indicators.isEmpty()) {
+                throw QualityOpConfigException("quality rule indicators is empty")
+            }
+
             request.opList?.forEach { op ->
                 if (op.operation == RuleOperation.END) {
                     if (op.notifyTypeList.isNullOrEmpty()) {
@@ -233,10 +246,6 @@ class QualityRuleBuildHisService constructor(
                     if (op.auditUserList.isNullOrEmpty()) {
                         throw QualityOpConfigException("auditUserList is empty for operation audit")
                     }
-                }
-
-                if (request.indicators.isEmpty()) {
-                    throw QualityOpConfigException("quality rule indicators is empty")
                 }
             }
         }

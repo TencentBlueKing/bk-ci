@@ -56,6 +56,8 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
 
     fun getEventType(): CodeEventType
 
+    fun getEventType(event: T): CodeEventType? = null
+
     fun getHookSourceUrl(event: T): String? = null
 
     fun getHookTargetUrl(event: T): String? = null
