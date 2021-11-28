@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.dao
 import com.tencent.devops.model.ticket.tables.TCredential
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.service.CredentialHelper
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -37,6 +38,8 @@ import org.springframework.stereotype.Repository
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
 
 @Suppress("ALL")
 @Repository
@@ -214,6 +217,28 @@ class CredentialDao {
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
+        }
+    }
+
+    fun convertEncryptedCredentials(dslContext: DSLContext, credentialHelper: CredentialHelper): Int {
+        with(TCredential.T_CREDENTIAL) {
+            var count = 0
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TCredentialRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this)
+                    .fetch().forEach {
+                        val update = transactionContext.update(this)
+                            .set(CREDENTIAL_V1, credentialHelper.convertEncryptedWithNewKey(it.credentialV1))
+                            .set(CREDENTIAL_V2, credentialHelper.convertEncryptedWithNewKey(it.credentialV2))
+                            .set(CREDENTIAL_V3, credentialHelper.convertEncryptedWithNewKey(it.credentialV3))
+                            .set(CREDENTIAL_V4, credentialHelper.convertEncryptedWithNewKey(it.credentialV4))
+                        update.where(CREDENTIAL_ID.eq(it.credentialId))
+                        updates.add(update)
+                        count++
+                    }
+            }
+            return count
         }
     }
 

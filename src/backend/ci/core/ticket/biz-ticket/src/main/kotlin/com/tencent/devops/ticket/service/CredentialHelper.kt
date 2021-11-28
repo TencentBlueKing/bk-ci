@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -49,6 +50,12 @@ class CredentialHelper {
 
     @Value("\${credential.aes-key}")
     private val aesKey = "C/R%3{?OS}IeGT21"
+
+    @Value("\${credential.oldKey:#{null}}")
+    private var oldKey: String? = null
+
+    @Value("\${credential.newKey:#{null}}")
+    private var newKey: String? = null
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
@@ -143,5 +150,21 @@ class CredentialHelper {
             return null
         }
         return AESUtil.encrypt(aesKey, credential!!)
+    }
+
+    fun convertEncryptedWithNewKey(originValue: String): String {
+        if (oldKey.isNullOrBlank() || newKey.isNullOrBlank()) {
+            throw OperationException(
+                message = "Convert github access token failed because of config: " +
+                    "aes.oldKey or aes.newKey is not defined"
+            )
+        }
+        if (newKey != aesKey) {
+            throw OperationException(
+                message = "Convert github access token failed because of config: " +
+                    "The values of credential.aesKey and  credential.newKey are inconsistent"
+            )
+        }
+        return AESUtil.encrypt(newKey!!, AESUtil.decrypt(oldKey!!, originValue))
     }
 }

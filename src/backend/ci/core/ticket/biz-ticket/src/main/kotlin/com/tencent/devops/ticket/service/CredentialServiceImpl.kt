@@ -565,6 +565,18 @@ class CredentialServiceImpl @Autowired constructor(
         return SQLPage(count, result)
     }
 
+    override fun convertEncryptedCredentials(): Int {
+        logger.info("Start to covert encrypted credential.")
+        return try {
+            val count = credentialDao.convertEncryptedCredentials(dslContext, credentialHelper)
+            logger.info("Finish converting count: $count")
+            return count
+        } catch (e: Exception) {
+            logger.error("Failed to covert encrypted credential with error: ", e)
+            0
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
         private const val CREDENTIAL_ID_MAX_SIZE = 40

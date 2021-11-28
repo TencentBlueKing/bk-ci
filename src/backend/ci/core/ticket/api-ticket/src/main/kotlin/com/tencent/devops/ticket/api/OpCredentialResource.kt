@@ -75,8 +75,13 @@ interface OpCredentialResource {
         keyword: String?
     ): Result<Page<CredentialWithPermission>>
 
-    @ApiOperation("使用新的AES秘钥对存量加密数据进行转换")
+    @ApiOperation("使用新的AES秘钥对存量加密证书进行转换")
     @PUT
-    @Path("/encrypted/convert")
-    fun convertEncryptedData(): Result<Boolean>
+    @Path("/encryptedCert/convert")
+    fun convertEncryptedCert(): Result<Boolean>
+
+    @ApiOperation("使用新的AES秘钥对存量加密凭证进行转换")
+    @PUT
+    @Path("/encryptedCredential/convert")
+    fun convertEncryptedCredential(): Result<Boolean>
 }

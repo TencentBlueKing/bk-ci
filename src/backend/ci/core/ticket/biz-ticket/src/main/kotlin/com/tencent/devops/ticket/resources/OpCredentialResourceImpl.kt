@@ -67,7 +67,11 @@ class OpCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    override fun convertEncryptedData(): Result<Boolean> {
+    override fun convertEncryptedCert(): Result<Boolean> {
         return Result(certService.convertEncryptedCert())
+    }
+
+    override fun convertEncryptedCredential(): Result<Boolean> {
+        return Result(credentialService.convertEncryptedCredentials())
     }
 }

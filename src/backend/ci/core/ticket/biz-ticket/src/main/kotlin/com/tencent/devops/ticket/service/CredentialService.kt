@@ -88,4 +88,6 @@ interface CredentialService {
     fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>?
 
     fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential>
+
+    fun convertEncryptedCredentials(): Int
 }
