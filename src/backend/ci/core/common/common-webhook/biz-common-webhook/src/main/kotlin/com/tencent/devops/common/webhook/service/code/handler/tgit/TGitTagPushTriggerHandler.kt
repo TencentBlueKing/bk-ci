@@ -65,7 +65,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getRevision(event: GitTagPushEvent): String {
-        return event.commits[0].id
+        return event.commits?.get(0)?.id ?: ""
     }
 
     override fun getRepoName(event: GitTagPushEvent): String {
@@ -77,7 +77,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getMessage(event: GitTagPushEvent): String {
-        return event.commits[0].message
+        return event.commits?.get(0)?.message ?: ""
     }
 
     override fun retrieveParams(
@@ -91,7 +91,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = event.total_commits_count
         startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.user_name
         startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = event.create_from ?: ""
-        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits))
+        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits ?: emptyList()))
         return startParams
     }
 
