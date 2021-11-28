@@ -25,27 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.loader
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.param.ScmWebhookElementParams
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
-class SvnWebHookStartParam(
-    private val matcher: SvnWebHookMatcher
-) : ScmWebhookStartParams<CodeSVNWebHookTriggerElement> {
+object WebhookElementParamsRegistrar {
+    private val logger = LoggerFactory.getLogger(WebhookElementParamsRegistrar::class.java)
 
-    override fun getStartParams(element: CodeSVNWebHookTriggerElement): Map<String, Any> {
-        val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_SVN_WEBHOOK_RELATIVE_PATH] = element.relativePath ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS] = element.excludePaths ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
-        startParams.putAll(matcher.retrieveParams())
-        return startParams
+    private val webhookElementParamsMaps = ConcurrentHashMap<String, ScmWebhookElementParams<*>>()
+
+    /**
+     * 注册webhook事件启动参数处理类
+     */
+    fun register(webhookElementParams: ScmWebhookElementParams<out WebHookTriggerElement>) {
+        logger.info("[REGISTER]| ${webhookElementParams.javaClass} for ${webhookElementParams.elementClass()}")
+        webhookElementParamsMaps[webhookElementParams.elementClass().canonicalName] = webhookElementParams
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : WebHookTriggerElement> getService(element: T): ScmWebhookElementParams<T> {
+        return (webhookElementParamsMaps[element::class.qualifiedName] as ScmWebhookElementParams<T>?)
+            ?: throw IllegalArgumentException("${element::class.qualifiedName} service is not found")
     }
 }

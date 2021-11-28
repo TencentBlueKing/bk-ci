@@ -25,39 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
 
-class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTriggerElement> {
+class SvnWebhookElementParams : ScmWebhookElementParams<CodeSVNWebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
+        return CodeSVNWebHookTriggerElement::class.java
+    }
 
     override fun getWebhookElementParams(
-        element: CodeGithubWebHookTriggerElement,
+        element: CodeSVNWebHookTriggerElement,
         variables: Map<String, String>
-    ): WebHookParams? {
+    ): WebHookParams {
         val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables
             )
         )
+        params.pathFilterType = element.pathFilterType
+        params.relativePath = EnvUtils.parseEnv(element.relativePath ?: "", variables)
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""
         } else {
-            EnvUtils.parseEnv(element.excludeUsers!!, variables)
+            EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
-        if (element.branchName == null) {
-            return null
+        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
         }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.eventType = element.eventType
-        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.codeType = CodeType.GITHUB
+        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
+        params.codeType = CodeType.SVN
         return params
     }
 }

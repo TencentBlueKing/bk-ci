@@ -25,32 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.loader
+package com.tencent.devops.common.webhook.service.code.param
 
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 
-object CodeWebhookHandlerRegistrar {
-    private val logger = LoggerFactory.getLogger(CodeWebhookHandlerRegistrar::class.java)
+interface ScmWebhookElementParams<T : WebHookTriggerElement> {
 
-    private val webhookHandlerMaps = ConcurrentHashMap<String, CodeWebhookTriggerHandler<*>>()
+    fun elementClass(): Class<T>
 
-    /**
-     * 注册[CodeWebhookTriggerHandler]webhook事件处理器
-     */
-    fun register(codeWebhookTriggerHandler: CodeWebhookTriggerHandler<out CodeWebhookEvent>) {
-        logger.info("[REGISTER]| ${codeWebhookTriggerHandler.javaClass} for ${codeWebhookTriggerHandler.eventClass()}")
-        webhookHandlerMaps[codeWebhookTriggerHandler.eventClass().canonicalName] = codeWebhookTriggerHandler
-    }
-
-    /**
-     * 读取指定[CodeWebhookTriggerHandler]webhook事件处理器
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T : CodeWebhookEvent> getHandler(webhookEvent: T): CodeWebhookTriggerHandler<T> {
-        return (webhookHandlerMaps[webhookEvent::class.qualifiedName] as CodeWebhookTriggerHandler<T>?)
-            ?: throw IllegalArgumentException("${webhookEvent::class.qualifiedName} handler is not found")
-    }
+    fun getWebhookElementParams(
+        element: T,
+        variables: Map<String, String>
+    ): WebHookParams?
 }

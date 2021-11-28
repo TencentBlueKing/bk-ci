@@ -25,20 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
+import org.springframework.stereotype.Service
 
-class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTriggerElement> {
+@Service
+class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTriggerElement> {
 
-    @SuppressWarnings("ComplexMethod")
+    override fun elementClass(): Class<CodeGithubWebHookTriggerElement> {
+        return CodeGithubWebHookTriggerElement::class.java
+    }
+
     override fun getWebhookElementParams(
-        element: CodeGitlabWebHookTriggerElement,
+        element: CodeGithubWebHookTriggerElement,
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
@@ -47,33 +51,18 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 variables = variables
             )
         )
-        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
-            ""
-        } else {
-            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
-        }
         params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
             ""
         } else {
-            EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
+            EnvUtils.parseEnv(element.excludeUsers!!, variables)
         }
         if (element.branchName == null) {
             return null
         }
         params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.codeType = CodeType.GITLAB
         params.eventType = element.eventType
-        params.block = element.block ?: false
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.pathFilterType = element.pathFilterType
-        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
-        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
-        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
-        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
-        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
-        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
-        params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
-        params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
+        params.codeType = CodeType.GITHUB
         return params
     }
 }

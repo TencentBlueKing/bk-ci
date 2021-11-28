@@ -25,18 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
 
-class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
+class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
+        return CodeGitWebHookTriggerElement::class.java
+    }
+
     override fun getWebhookElementParams(
-        element: CodeP4WebHookTriggerElement,
+        element: CodeGitWebHookTriggerElement,
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
@@ -45,11 +49,32 @@ class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerEleme
                 variables = variables
             )
         )
-        with(element.data.input) {
-            params.eventType = eventType
-            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.codeType = CodeType.P4
-            return params
+        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
+        if (element.branchName == null) {
+            return null
+        }
+        params.block = element.block ?: false
+        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.eventType = element.eventType
+        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.pathFilterType = element.pathFilterType
+        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
+        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
+        params.codeType = CodeType.GIT
+        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
+        params.webhookQueue = element.webhookQueue ?: false
+        params.includeCrState = if (element.includeCrState.isNullOrEmpty()) {
+            ""
+        } else {
+            element.includeCrState!!.joinToString(",")
+        }
+        return params
     }
 }

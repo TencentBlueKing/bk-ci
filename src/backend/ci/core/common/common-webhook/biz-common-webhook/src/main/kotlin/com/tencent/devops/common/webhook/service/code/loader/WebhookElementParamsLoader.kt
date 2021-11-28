@@ -27,30 +27,22 @@
 
 package com.tencent.devops.common.webhook.service.code.loader
 
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.param.ScmWebhookElementParams
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.stereotype.Service
 
-object CodeWebhookHandlerRegistrar {
-    private val logger = LoggerFactory.getLogger(CodeWebhookHandlerRegistrar::class.java)
+@Service
+class WebhookElementParamsLoader : BeanPostProcessor {
 
-    private val webhookHandlerMaps = ConcurrentHashMap<String, CodeWebhookTriggerHandler<*>>()
-
-    /**
-     * 注册[CodeWebhookTriggerHandler]webhook事件处理器
-     */
-    fun register(codeWebhookTriggerHandler: CodeWebhookTriggerHandler<out CodeWebhookEvent>) {
-        logger.info("[REGISTER]| ${codeWebhookTriggerHandler.javaClass} for ${codeWebhookTriggerHandler.eventClass()}")
-        webhookHandlerMaps[codeWebhookTriggerHandler.eventClass().canonicalName] = codeWebhookTriggerHandler
+    override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any {
+        return bean
     }
 
-    /**
-     * 读取指定[CodeWebhookTriggerHandler]webhook事件处理器
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T : CodeWebhookEvent> getHandler(webhookEvent: T): CodeWebhookTriggerHandler<T> {
-        return (webhookHandlerMaps[webhookEvent::class.qualifiedName] as CodeWebhookTriggerHandler<T>?)
-            ?: throw IllegalArgumentException("${webhookEvent::class.qualifiedName} handler is not found")
+    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
+        if (bean is ScmWebhookElementParams<out WebHookTriggerElement>) {
+            WebhookElementParamsRegistrar.register(bean)
+        }
+        return bean
     }
 }

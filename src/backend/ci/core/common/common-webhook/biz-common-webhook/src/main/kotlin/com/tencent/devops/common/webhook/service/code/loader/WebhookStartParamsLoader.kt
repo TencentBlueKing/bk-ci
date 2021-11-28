@@ -25,11 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code
+package com.tencent.devops.common.webhook.service.code.loader
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.param.ScmWebhookStartParams
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.stereotype.Service
 
-interface ScmWebhookStartParams<in T : WebHookTriggerElement> {
+@Service
+class WebhookStartParamsLoader : BeanPostProcessor {
 
-    fun getStartParams(element: T): Map<String, Any>
+    override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any {
+        return bean
+    }
+
+    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
+        if (bean is ScmWebhookStartParams<out WebHookTriggerElement>) {
+            WebhookStartParamsRegistrar.register(bean)
+        }
+        return bean
+    }
 }

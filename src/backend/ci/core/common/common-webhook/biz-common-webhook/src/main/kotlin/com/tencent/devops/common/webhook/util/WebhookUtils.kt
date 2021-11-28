@@ -30,16 +30,16 @@ package com.tencent.devops.common.webhook.util
 import com.google.common.base.Splitter
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
 import java.util.regex.Pattern
 
 object WebhookUtils {

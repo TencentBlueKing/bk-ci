@@ -25,20 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
 
-class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerElement> {
+class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
+        return CodeP4WebHookTriggerElement::class.java
+    }
+
     override fun getWebhookElementParams(
-        element: CodeTGitWebHookTriggerElement,
+        element: CodeP4WebHookTriggerElement,
         variables: Map<String, String>
-    ): WebHookParams? {
+    ): WebHookParams {
         val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
@@ -46,31 +50,9 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             )
         )
         with(element.data.input) {
-            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
-                ""
-            } else {
-                EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
-            }
-            if (branchName == null) {
-                return null
-            }
-            params.block = block ?: false
-            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
             params.eventType = eventType
-            params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
-            params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
-            params.codeType = CodeType.GIT
-            params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
-            params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
-            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
-            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
-            params.includeCrState = if (includeCrState.isNullOrEmpty()) {
-                ""
-            } else {
-                includeCrState!!.joinToString(",")
-            }
+            params.codeType = CodeType.P4
             return params
         }
     }

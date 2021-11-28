@@ -25,36 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_INCLUDE_PATHS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_P4PORT
 
-class GithubWebHookStartParam(
-    private val params: WebHookParams,
-    private val matcher: GithubWebHookMatcher
-) : ScmWebhookStartParams<CodeGithubWebHookTriggerElement> {
+class P4WebHookStartParam : ScmWebhookStartParams<CodeP4WebHookTriggerElement> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(GithubWebHookStartParam::class.java)
+    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
+        return CodeP4WebHookTriggerElement::class.java
     }
 
-    override fun getStartParams(element: CodeGithubWebHookTriggerElement): Map<String, Any> {
+    override fun getElementStartParams(
+        projectId: String,
+        element: CodeP4WebHookTriggerElement,
+        repo: Repository,
+        matcher: ScmWebhookMatcher,
+        variables: Map<String, String>,
+        params: WebHookParams,
+        matchResult: ScmWebhookMatcher.MatchResult
+    ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
-        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
-        startParams.putAll(matcher.retrieveParams())
+        with(element.data.input) {
+            startParams[BK_REPO_P4_WEBHOOK_P4PORT] = repo.url
+            startParams[BK_REPO_P4_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
+            startParams[BK_REPO_P4_WEBHOOK_INCLUDE_PATHS] = includePaths ?: ""
+            startParams.putAll(
+                matcher.retrieveParams(
+                    projectId = projectId,
+                    repository = repo
+                )
+            )
+        }
+
         return startParams
     }
 }
