@@ -97,7 +97,8 @@ class StreamYamlBuild @Autowired constructor(
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
-        gitProjectInfo: GitCIProjectInfo? = null
+        gitProjectInfo: GitCIProjectInfo? = null,
+        params: Map<String, Any>? = null
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key

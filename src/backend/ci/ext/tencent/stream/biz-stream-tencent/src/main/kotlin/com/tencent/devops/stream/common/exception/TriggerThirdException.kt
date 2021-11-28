@@ -2,7 +2,7 @@ package com.tencent.devops.stream.common.exception
 
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 class TriggerThirdException(
