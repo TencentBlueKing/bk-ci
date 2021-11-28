@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.collect.Maps
-import com.google.gson.JsonParser
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
@@ -37,6 +36,7 @@ import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -129,12 +129,12 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("http request failed, code: ${response.code()}, responseContent: $responseContent")
-                throw RuntimeException("http request failed")
+                throw RemoteServiceException("http request failed: $responseContent", response.code())
             }
 
             val responseData = objectMapper.readValue<BkRepoResponse<List<BkRepoAccessToken>>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("request failed: ${responseData.message}")
+                throw RemoteServiceException("request failed: ${responseData.message}")
             }
 
             return responseData.data!![0].token
@@ -159,8 +159,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val response = request(request, "上传文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -267,10 +267,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val response = request(request, "上传文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
         } catch (e: Exception) {
-            AbstractBuildResourceApi.logger.error(e.message ?: "")
+            logger.error(e.message ?: "")
         }
     }
 
@@ -454,12 +454,12 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("query failed, responseContent: $responseContent")
-                throw RuntimeException("query failed")
+                throw RemoteServiceException("query failed: $responseContent", response.code())
             }
 
             val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("query failed: ${responseData.message}")
+                throw RemoteServiceException("query failed: ${responseData.message}")
             }
 
             return responseData.data!!.records
