@@ -50,66 +50,70 @@ class BuildReviewCheckListener @Autowired constructor(
         ))]
     )
     fun buildReviewAndCheckListener(buildReviewEvent: PipelineBuildReviewCheckBroadCastEvent) {
-        // stream目前没有人工审核插件
-        if (buildReviewEvent.reviewType == BuildReviewType.TASK_REVIEW) {
-            return
-        }
-
-        logger.info("buildReviewListener buildReviewEvent: $buildReviewEvent")
-        val streamBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildReviewEvent.buildId)
-        val buildEvent = streamBuild?.let {
-            StreamBuildEvent(
-                id = it.id,
-                eventId = it.eventId,
-                pipelineId = it.pipelineId,
-                version = it.version,
-                normalizedYaml = it.normalizedYaml
-            )
-        } ?: return
-        val requestEvent = gitRequestEventDao.getWithEvent(dslContext, buildEvent.eventId) ?: return
-        val pipelineId = buildEvent.pipelineId
-
-        val gitProjectId = requestEvent.gitProjectId
-        val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-            ?: throw OperationException("git ci all projectCode not exist")
-
-        val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
-            ?: throw OperationException("git ci pipeline not exist")
-
-        val context = StreamBuildStageListenerContextV2(
-            buildEvent = BuildEvent(
-                projectId = buildReviewEvent.projectId,
-                pipelineId = buildReviewEvent.pipelineId,
-                userId = buildReviewEvent.userId,
-                buildId = buildReviewEvent.buildId,
-                status = buildReviewEvent.status,
-                startTime = streamBuild.createTime.timestampmilli()
-            ),
-            requestEvent = requestEvent,
-            streamBuildEvent = buildEvent,
-            pipeline = pipeline,
-            streamSetting = v2GitSetting,
-            reviewType = buildReviewEvent.reviewType,
-            qualityRuleIds = buildReviewEvent.ruleIds
-        )
-
-        when (buildReviewEvent.reviewType) {
-            BuildReviewType.STAGE_REVIEW -> {
-                // 推送构建消息
-                sendCommitCheck.sendCommitCheck(context)
+        try {
+            // stream目前没有人工审核插件
+            if (buildReviewEvent.reviewType == BuildReviewType.TASK_REVIEW) {
+                return
             }
-            BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
-                // 凡是检查有结果了都推送评论
-                sendQualityMrComment.sendMrComment(context)
-                // 如果是待把关的状态则发生审核消息
-                if (buildReviewEvent.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+
+            logger.info("buildReviewListener buildReviewEvent: $buildReviewEvent")
+            val streamBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildReviewEvent.buildId)
+            val buildEvent = streamBuild?.let {
+                StreamBuildEvent(
+                    id = it.id,
+                    eventId = it.eventId,
+                    pipelineId = it.pipelineId,
+                    version = it.version,
+                    normalizedYaml = it.normalizedYaml
+                )
+            } ?: return
+            val requestEvent = gitRequestEventDao.getWithEvent(dslContext, buildEvent.eventId) ?: return
+            val pipelineId = buildEvent.pipelineId
+
+            val gitProjectId = requestEvent.gitProjectId
+            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+                ?: throw OperationException("git ci all projectCode not exist")
+
+            val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
+                ?: throw OperationException("git ci pipeline not exist")
+
+            val context = StreamBuildStageListenerContextV2(
+                buildEvent = BuildEvent(
+                    projectId = buildReviewEvent.projectId,
+                    pipelineId = buildReviewEvent.pipelineId,
+                    userId = buildReviewEvent.userId,
+                    buildId = buildReviewEvent.buildId,
+                    status = buildReviewEvent.status,
+                    startTime = streamBuild.createTime.timestampmilli()
+                ),
+                requestEvent = requestEvent,
+                streamBuildEvent = buildEvent,
+                pipeline = pipeline,
+                streamSetting = v2GitSetting,
+                reviewType = buildReviewEvent.reviewType,
+                qualityRuleIds = buildReviewEvent.ruleIds
+            )
+
+            when (buildReviewEvent.reviewType) {
+                BuildReviewType.STAGE_REVIEW -> {
+                    // 推送构建消息
                     sendCommitCheck.sendCommitCheck(context)
                 }
+                BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
+                    // 凡是检查有结果了都推送评论
+                    sendQualityMrComment.sendMrComment(context)
+                    // 如果是待把关的状态则发生审核消息
+                    if (buildReviewEvent.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+                        sendCommitCheck.sendCommitCheck(context)
+                    }
+                }
+                // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
+                BuildReviewType.TASK_REVIEW -> {
+                    logger.warn("buildReviewListener event not match: ${buildReviewEvent.reviewType}")
+                }
             }
-            // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
-            BuildReviewType.TASK_REVIEW -> {
-                logger.warn("buildReviewListener event not match: ${buildReviewEvent.reviewType}")
-            }
+        } catch (e: Exception) {
+            logger.warn("buildReviewAndCheckListener error: ${e.message}")
         }
     }
 }

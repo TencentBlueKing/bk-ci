@@ -564,7 +564,10 @@ class StreamScmService @Autowired constructor(
     ) {
         logger.info("addMrComment: [$gitProjectId|$mrId]")
         client.getScm(ServiceGitCiResource::class).addMrComment(
-            token, gitProjectId, mrId, message
+            token = token,
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            message = message
         )
     }
 

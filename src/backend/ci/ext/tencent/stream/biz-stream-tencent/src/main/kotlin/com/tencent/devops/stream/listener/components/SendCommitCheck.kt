@@ -132,11 +132,8 @@ class SendCommitCheck @Autowired constructor(
                     },
                     userId = buildEvent.userId
                 ),
-                mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
-                    gitEvent.object_attributes.id
-                } else {
-                    null
-                },
+                // 由stage event红线评论发送
+                mergeRequestId = null,
                 buildId = buildEvent.buildId,
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),

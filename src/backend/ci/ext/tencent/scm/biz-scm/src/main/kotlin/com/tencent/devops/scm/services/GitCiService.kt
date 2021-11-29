@@ -426,11 +426,11 @@ class GitCiService {
         logger.info("$gitProjectId|$mrId|addMrComment")
         try {
             GitApi().addMRComment(
-                gitCIUrl,
-                token,
-                gitProjectId,
-                mrId,
-                message
+                host = gitCIUrl,
+                token = token,
+                projectName = gitProjectId,
+                requestId = mrId,
+                message = message
             )
         } catch (e: Exception) {
             logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
