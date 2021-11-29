@@ -29,6 +29,7 @@ package com.tencent.devops.stream.listener.components
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.listener.BuildEvent
 import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
@@ -56,6 +57,9 @@ class SendQualityMrComment @Autowired constructor(
     }
 
     fun sendMrComment(context: StreamBuildStageListenerContextV2) {
+        if (context.requestEvent.objectKind != TGitObjectKind.MERGE_REQUEST.value) {
+            return
+        }
         with(context) {
             val token = tokenService.getToken(requestEvent.gitProjectId)
 
