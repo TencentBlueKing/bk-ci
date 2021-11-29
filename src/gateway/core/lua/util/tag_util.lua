@@ -93,7 +93,7 @@ function _M:get_tag(ns_config)
     end
 
     -- 根据ngx.var.project路由
-    if useProjectTag == false and useServiceTag == false then
+    if useProjectTag == false and useServiceTag == false and devops_project then
         local project_local_cache_key = 'tag_local_cache_key_project_' .. devops_project
         local project_local_cache_value = tag_cache:get(project_local_cache_key)
         if project_local_cache_value ~= nil then
