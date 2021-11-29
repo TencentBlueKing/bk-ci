@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.pojo.enums
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
 /*

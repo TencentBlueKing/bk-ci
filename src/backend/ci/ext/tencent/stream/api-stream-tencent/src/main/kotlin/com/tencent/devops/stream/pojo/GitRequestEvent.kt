@@ -27,9 +27,9 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
