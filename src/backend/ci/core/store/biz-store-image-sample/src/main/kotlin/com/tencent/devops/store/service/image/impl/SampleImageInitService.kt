@@ -66,7 +66,7 @@ class SampleImageInitService @Autowired constructor(
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        val projectCode = imageInitRequest?.projectCode ?: "Demo"
+        val projectCode = imageInitRequest?.projectCode ?: "demo"
         val userId = imageInitRequest?.userId ?: "admin"
         val imageCode = imageInitRequest?.imageCode ?: "bkci"
         val accessToken = imageInitRequest?.accessToken ?: ""
