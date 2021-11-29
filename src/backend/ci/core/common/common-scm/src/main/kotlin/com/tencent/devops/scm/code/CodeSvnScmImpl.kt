@@ -137,7 +137,11 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun addWebHook(hookUrl: String) {
+    override fun addWebHook(
+        hookUrl: String,
+        includePaths: String?,
+        excludePaths: String?
+    ) {
         logger.info("[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
             "|AddWebHookSVN|repo=$projectName")
         try {
