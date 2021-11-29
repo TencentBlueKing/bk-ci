@@ -119,12 +119,7 @@ class SendCommitCheck @Autowired constructor(
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 reportData = getGateRepoData(),
-                targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
-                    homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    gitProjectId = streamSetting.gitProjectId,
-                    pipelineId = pipeline.pipelineId,
-                    buildId = buildEvent.buildId
-                )
+                targetUrl = getTargetUrl(context)
             )
         }
     }
@@ -201,6 +196,31 @@ class SendCommitCheck @Autowired constructor(
         }
     }
 
+    private fun getTargetUrl(
+        context: StreamBuildListenerContextV2
+    ): String {
+        var checkIn: Boolean
+        var checkOut: Boolean
+        with(context) {
+            if (context !is StreamBuildStageListenerContextV2) {
+                checkIn = false
+                checkOut = false
+            } else {
+                val pair = context.reviewType.isCheckInOrOut()
+                checkIn = pair.first
+                checkOut = pair.second
+            }
+            return GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = streamSetting.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                buildId = buildEvent.buildId,
+                openCheckIn = checkIn,
+                openCheckOut = checkOut
+            )
+        }
+    }
+
     private fun getReviewInfo(context: StreamBuildListenerContextV2): Pair<String, String> {
         val model = try {
             client.get(ServiceBuildResource::class).getBuildDetail(
@@ -247,3 +267,19 @@ class SendCommitCheck @Autowired constructor(
 
 // 当人工触发时不推送CommitCheck消息
 private fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+
+private fun BuildReviewType.isCheckInOrOut(): Pair<Boolean, Boolean> {
+    return when (this) {
+        // 人工审核目前只在checkIn
+        BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN -> {
+            Pair(true, false)
+        }
+        BuildReviewType.QUALITY_CHECK_OUT -> {
+            Pair(false, true)
+        }
+        // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
+        BuildReviewType.TASK_REVIEW -> {
+            Pair(false, false)
+        }
+    }
+}
