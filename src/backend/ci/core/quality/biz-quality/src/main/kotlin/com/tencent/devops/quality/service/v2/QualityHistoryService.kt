@@ -226,7 +226,7 @@ class QualityHistoryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         ruleIds: Collection<String>?
-    ) : List<QualityRuleIntercept> {
+    ): List<QualityRuleIntercept> {
         return historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
