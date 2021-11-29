@@ -25,16 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.process.config
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.bean.GitCIPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.TencentPipelineUrlBeanImpl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+/**
+ * 流水线引擎初始化配置类
+ *
+ * @version 1.0
+ */
 
-object CommitCheckUtils {
-    // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
-    fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
-//        val event = request.gitEvent ?: return false
-        return gitCIBasicSetting.enableCommitCheck && request.objectKind != TGitObjectKind.MANUAL.value
-    }
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class TxPipelineUrlBeanConfiguration {
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
+    fun pipelineUrlBeanGitCI(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = GitCIPipelineUrlBeanImpl(commonConfig, client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun pipelineUrlBean(
+        @Autowired commonConfig: CommonConfig,
+        @Autowired client: Client
+    ) = TencentPipelineUrlBeanImpl(commonConfig, client)
 }

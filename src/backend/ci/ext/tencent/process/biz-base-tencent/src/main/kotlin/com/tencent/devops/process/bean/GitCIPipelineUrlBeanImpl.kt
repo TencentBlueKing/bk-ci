@@ -27,37 +27,50 @@
 
 package com.tencent.devops.process.bean
 
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.scm.api.ServiceGitCiResource
+import org.springframework.beans.factory.annotation.Value
 
-class TencentPipelineUrlBeanImpl constructor(
+class GitCIPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
     private val client: Client
 ) : PipelineUrlBean {
 
-    companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
-        private const val TTL = 24 * 3600 * 3
-    }
-
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
     override fun genBuildDetailUrl(
         projectCode: String,
         pipelineId: String,
         buildId: String,
         needShortUrl: Boolean
     ): String {
-        val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
-        return "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
+        val project = client.getScm(ServiceGitCiResource::class)
+            .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
+            .data ?: return ""
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
+
+        if (null != needShortUrl && needShortUrl == false) {
+            return url
+        }
+
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-        logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        return "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| outHost=$devopsOuterHostGateWay")
+        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
             "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
-//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+    }
+
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(GitCIPipelineUrlBeanImpl::class.java)
+        private const val TTL = 24 * 3600 * 3
     }
 }
