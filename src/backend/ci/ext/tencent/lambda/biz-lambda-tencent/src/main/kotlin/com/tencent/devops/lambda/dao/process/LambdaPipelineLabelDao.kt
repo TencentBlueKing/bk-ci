@@ -24,28 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.pojo
+package com.tencent.devops.lambda.dao.process
 
-import org.json.simple.JSONObject
+import com.tencent.devops.model.process.tables.TPipelineLabel
+import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-data class DataPlatJobDetail(
-    val pipelineId: String,
-    val buildId: String,
-    val containerType: String,
-    val projectEnglishName: String,
-    val stageId: String,
-    val containerId: String,
-    val jobParams: JSONObject,
-    val status: String,
-    val seq: String,
-    val startTime: String?,
-    val endTime: String?,
-    val costTime: Long,
-    val executeCount: Int?,
-    val conditions: JSONObject?,
-    val washTime: String,
-    val errorType: Int?,
-    val errorCode: Int?,
-    val errorMsg: String?,
-    val baseOS: String?,
-)
+@Repository
+class LambdaPipelineLabelDao {
+
+    fun getLables(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Result<out Record>? {
+        val a = TPipelineLabel.T_PIPELINE_LABEL.`as`("a")
+        val b = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("b")
+
+        return dslContext.select(
+            a.NAME.`as`("name")
+        ).from(b).join(a).on(b.LABEL_ID.eq(a.ID)).where(b.PIPELINE_ID.eq(pipelineId)).fetch()
+    }
+}

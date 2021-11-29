@@ -55,6 +55,7 @@ import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIS
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
@@ -89,6 +90,7 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
+    private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient
 ) {
 
@@ -189,6 +191,7 @@ class LambdaDataService @Autowired constructor(
                             errorType = task.errorType,
                             errorCode = task.errorCode,
                             errorMsg = task.errorMsg,
+                            baseOS = taskParamMap["baseOS"] as String,
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
@@ -230,13 +233,10 @@ class LambdaDataService @Autowired constructor(
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
 
-                val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
-
                 val dataPlatTaskDetail = DataPlatTaskDetail(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     projectEnglishName = task.projectId,
-                    containerType = dispatchType["buildType"].toString(),
                     type = "task",
                     itemId = task.taskId,
                     atomCode = task.atomCode,
@@ -491,6 +491,12 @@ class LambdaDataService @Autowired constructor(
             } else {
                 Duration.between(startTime, endTime).toMillis()
             }
+
+            val labelList = mutableListOf<String>()
+            lambdaPipelineLabelDao.getLables(dslContext, pipelineId)?.forEach {label ->
+                labelList.add(label["name"] as String)
+            }
+
             DataPlatBuildHistory(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 templateId = templateCache.get(pipelineId),
@@ -530,7 +536,8 @@ class LambdaDataService @Autowired constructor(
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo,
                 startUser = startUser,
-                channel = channel
+                channel = channel,
+                labels = labelList
             )
         }
     }

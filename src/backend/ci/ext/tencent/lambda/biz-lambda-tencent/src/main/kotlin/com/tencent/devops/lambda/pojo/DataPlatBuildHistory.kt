@@ -99,6 +99,7 @@ data class DataPlatBuildHistory(
     @ApiModelProperty("启动用户", required = false)
     var startUser: String?,
     @ApiModelProperty("渠道", required = false)
-    var channel: String?
-
+    var channel: String?,
+    @ApiModelProperty("流水线标签", required = false)
+    var labels: List<String>?
 )
