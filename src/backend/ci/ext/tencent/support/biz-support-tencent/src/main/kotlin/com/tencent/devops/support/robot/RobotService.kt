@@ -81,7 +81,7 @@ class RobotService @Autowired constructor(
             // 如为进入机器人单聊, 直接返回空包
             return true
         }
-        if (robotCallBack.content.contains("会话ID")) {
+        if (robotCallBack.content.contains("会话ID") || robotCallBack.content.contains("群ID")) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
                 text = MsgInfo(

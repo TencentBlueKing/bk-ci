@@ -25,47 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.stream.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工蜂CI查询代码库项目信息")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCIProjectInfo(
-    @ApiModelProperty("项目ID", name = "id")
+data class GitCodeProjectSimpleInfo(
     @JsonProperty("id")
-    val gitProjectId: Long,
-    @ApiModelProperty("项目名称", name = "name")
-    @JsonProperty("name")
-    val name: String,
-    @ApiModelProperty("页面地址", name = "web_url")
-    @JsonProperty("web_url")
-    val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true, name = "http_url_to_repo")
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接", name = "https_url_to_repo")
-    @JsonProperty("https_url_to_repo")
-    val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl", name = "ssh_url_to_repo")
-    @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?,
-    @ApiModelProperty("带有名空间的项目名称", name = "name_with_namespace")
-    @JsonProperty("name_with_namespace")
-    val nameWithNamespace: String,
-    @ApiModelProperty("带有名空间的项目路径", name = "path_with_namespace")
+    @ApiModelProperty(name = "id")
+    val id: Long?,
     @JsonProperty("path_with_namespace")
+    @ApiModelProperty(name = "path_with_namespace")
     val pathWithNamespace: String?,
-    @ApiModelProperty("项目的默认分支", name = "default_branch")
-    @JsonProperty("default_branch")
-    val defaultBranch: String?,
-    @ApiModelProperty("项目的描述信息", name = "description")
     @JsonProperty("description")
+    @ApiModelProperty(name = "description")
     val description: String?,
-    @ApiModelProperty("项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
+    @ApiModelProperty(name = "avatar_url")
     val avatarUrl: String?
 )

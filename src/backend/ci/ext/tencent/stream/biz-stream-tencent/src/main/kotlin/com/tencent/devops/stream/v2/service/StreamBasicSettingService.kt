@@ -27,7 +27,10 @@
 
 package com.tencent.devops.stream.v2.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.common.exception.GitCINoEnableException
@@ -37,6 +40,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -49,10 +53,42 @@ class StreamBasicSettingService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val tokenService: StreamGitTokenService,
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
+    }
+
+    fun listAgentBuilds(
+        user: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentBuildDetail> {
+        val agentBuilds =
+            client.get(UserThirdPartyAgentResource::class).listAgentBuilds(
+                userId = user,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                page = page,
+                pageSize = pageSize
+            )
+        if (agentBuilds.isNotOk()) {
+            logger.error("get agent builds list in devops failed, msg: ${agentBuilds.message}")
+            throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
+        }
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        val pipelines = pipelineResourceDao.getPipelinesInIds(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineIds = agentBuilds.data!!.records.map { it.pipelineId }.toList().distinct()
+        ).map { it.pipelineId to it }.toMap()
+        val agentBuildDetails = agentBuilds.data!!.records.map {
+            it.copy(pipelineName = pipelines[it.pipelineId]?.displayName ?: it.pipelineName)
+        }
+        return agentBuilds.data!!.copy(records = agentBuildDetails)
     }
 
     fun updateProjectSetting(
@@ -94,7 +130,9 @@ class StreamBasicSettingService @Autowired constructor(
             creatorBgName = setting.creatorBgName,
             creatorDeptName = setting.creatorDeptName,
             creatorCenterName = setting.creatorCenterName,
-            enableCommitCheck = enableCommitCheck
+            enableCommitCheck = enableCommitCheck,
+            pathWithNamespace = setting.pathWithNamespace,
+            nameWithNamespace = setting.nameWithNamespace
         )
         return true
     }
@@ -148,7 +186,9 @@ class StreamBasicSettingService @Autowired constructor(
                     creatorBgName = null,
                     gitProjectDesc = projectInfo.description,
                     gitProjectAvatar = projectInfo.avatarUrl,
-                    lastCiInfo = null
+                    lastCiInfo = null,
+                    pathWithNamespace = projectInfo.pathWithNamespace,
+                    nameWithNamespace = projectInfo.nameWithNamespace
                 )
             )
         }
@@ -168,7 +208,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
             val projectResult =
@@ -216,6 +256,22 @@ class StreamBasicSettingService @Autowired constructor(
         return count
     }
 
+    fun fixProjectNameSpace(): Int {
+        var count = 0
+        var currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        while (currProjects.isNotEmpty()) {
+            currProjects.forEach {
+                refreshNameSpace(it)
+                count++
+            }
+            logger.info("fixProjectNameSpace project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        }
+        logger.info("fixProjectNameSpace finished count: $count")
+        return count
+    }
+
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long) {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
@@ -233,7 +289,9 @@ class StreamBasicSettingService @Autowired constructor(
                 httpUrl = projectInfo.gitHttpsUrl ?: return@back,
                 sshUrl = projectInfo.gitSshUrl ?: return@back,
                 desc = projectInfo.description,
-                avatar = projectInfo.avatarUrl
+                avatar = projectInfo.avatarUrl,
+                pathWithNamespace = projectInfo.pathWithNamespace,
+                nameWithNamespace = projectInfo.nameWithNamespace
             )
         }
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
@@ -277,6 +335,30 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             }
             idList
+        }
+    }
+
+    private fun refreshNameSpace(it: TGitBasicSettingRecord) {
+        try {
+            val projectResult = requestGitProjectInfo(it.id)
+            if (projectResult != null) {
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = projectResult.pathWithNamespace ?: "",
+                    nameWithNamespace = projectResult.nameWithNamespace
+                )
+            } else {
+                // 说明存量数据在工蜂处已丢失
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = "",
+                    nameWithNamespace = ""
+                )
+            }
+        } catch (t: Throwable) {
+            logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
         }
     }
 
