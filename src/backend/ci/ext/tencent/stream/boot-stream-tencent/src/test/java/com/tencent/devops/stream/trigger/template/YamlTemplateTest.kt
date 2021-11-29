@@ -70,7 +70,7 @@ class YamlTemplateTest {
         var flag = true
         val longParametersTest = BufferedReader(
             StringReader(
-                replace("longParametersTest.yml")
+                replace("longParametersTest.yml", true)
             )
         )
         val longParametersTestCompare = BufferedReader(
@@ -91,7 +91,7 @@ class YamlTemplateTest {
         assert(flag)
     }
 
-    private fun replace(testYaml: String): String {
+    private fun replace(testYaml: String, printYaml: Boolean = false): String {
         val sb = getStrFromResource(testYaml)
 
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
@@ -113,8 +113,12 @@ class YamlTemplateTest {
         ).replace()
         val aa = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val result = JsonUtil.toJson(aa)
-        println(result)
         val cc = YamlUtil.toYaml(aa)
+        if (printYaml) {
+            println(cc)
+        } else {
+            println(result)
+        }
         return cc
     }
 
