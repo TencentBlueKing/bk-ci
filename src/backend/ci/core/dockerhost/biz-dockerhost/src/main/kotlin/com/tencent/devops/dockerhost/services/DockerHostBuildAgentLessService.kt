@@ -161,6 +161,7 @@ class DockerHostBuildAgentLessService(
                     "$ENV_KEY_AGENT_SECRET_KEY=$secretKey",
                     "$ENV_KEY_GATEWAY=$gateway",
                     "TERM=xterm-256color",
+                    "landun_env=" + (dockerHostConfig.landunEnv ?: "prod"),
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
