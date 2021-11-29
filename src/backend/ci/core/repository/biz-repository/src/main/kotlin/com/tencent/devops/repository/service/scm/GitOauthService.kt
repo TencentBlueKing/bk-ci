@@ -46,6 +46,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
@@ -58,8 +59,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Service
 @Suppress("ALL")
@@ -141,7 +140,13 @@ class GitOauthService @Autowired constructor(
         )
     }
 
-    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String?): AuthorizeResult {
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
             if (redirectUrl.isNullOrEmpty()) {
@@ -152,12 +157,17 @@ class GitOauthService @Autowired constructor(
             }
         }
         val authParams = mapOf(
+            "gitProjectId" to gitProjectId?.toString(),
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
             "redirectUrl" to redirectUrl,
             "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
         )
-        val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(authParams))
+        val accessToken = if (refreshToken == true) {
+            null
+        } else {
+            getAccessToken(userId)
+        } ?: return AuthorizeResult(403, getAuthUrl(authParams))
         logger.info("isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
     }
@@ -168,18 +178,27 @@ class GitOauthService @Autowired constructor(
         return gitService.getAuthUrl(authParamJsonStr = authParamJsonStr)
     }
 
-    override fun gitCallback(code: String, state: String): Response {
+    override fun gitCallback(code: String, state: String): GitOauthCallback {
         if (!state.contains("BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+        logger.info("gitCallback authParams is: $authParams")
         val userId = authParams["userId"] as String
+        val gitProjectId = authParams["gitProjectId"] as String?
         val token = gitService.getToken(userId, code)
-        saveAccessToken(userId, token)
+        // 在oauth授权过程中,可以输入公共账号去鉴权，所以需要再验证token所属人
+        val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
+        saveAccessToken(oauthUserId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
-        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
+        return GitOauthCallback(
+            gitProjectId = gitProjectId?.toLong(),
+            userId = userId,
+            oauthUserId = oauthUserId,
+            redirectUrl = redirectUrl
+        )
     }
 
     override fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {

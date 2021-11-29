@@ -34,10 +34,12 @@ class Lex(var str: MutableList<Char>) {
     var syn = -1
     var state = 0
 
+    val chars = setOf('.', '\'', '[', ']', '_', '-', '+', '*', '/')
+
     fun getToken(): List<Word> {
         val results = mutableListOf<Word>()
 
-        var token = mutableListOf<Char>()
+        val token = mutableListOf<Char>()
 
         var ch = getNext()
 
@@ -254,7 +256,6 @@ class Lex(var str: MutableList<Char>) {
     }
 
     private fun isLetter(c: Char): Boolean {
-        val chars = setOf('.', '\'', '[', ']', '_', '-')
         return (c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in chars)
     }
 

@@ -127,7 +127,7 @@ class QualityHistoryService @Autowired constructor(
     ): Pair<Long, List<RuleInterceptHistory>> {
         val record = ruleService.serviceGet(ruleHashId)
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
-        val count = historyDao.count(dslContext, ruleId)
+        val count = historyDao.count(dslContext, projectId, ruleId)
         val interceptHistoryList = historyDao.listByRuleId(dslContext, projectId, ruleId, offset, limit)
 
         val pipelineIdList = interceptHistoryList.map { it.pipelineId }

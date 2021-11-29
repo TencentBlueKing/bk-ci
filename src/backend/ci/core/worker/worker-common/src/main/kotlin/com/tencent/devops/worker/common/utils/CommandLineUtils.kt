@@ -91,8 +91,9 @@ object CommandLineUtils {
             }
 
             override fun processLine(line: String?, level: Int) {
-                if (line == null)
+                if (line == null) {
                     return
+                }
 
                 var tmpLine: String = prefix + line
 
@@ -101,6 +102,7 @@ object CommandLineUtils {
                 }
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -108,7 +110,26 @@ object CommandLineUtils {
             }
         }
 
-        executor.streamHandler = PumpStreamHandler(outputStream)
+        val errorStream = object : LogOutputStream() {
+            override fun processLine(line: String?, level: Int) {
+                if (line == null) {
+                    return
+                }
+
+                var tmpLine: String = prefix + line
+
+                lineParser.forEach {
+                    tmpLine = it.onParseLine(tmpLine)
+                }
+                if (print2Logger) {
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    LoggerService.addErrorLine(tmpLine)
+                } else {
+                    result.append(tmpLine).append("\n")
+                }
+            }
+        }
+        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
@@ -149,7 +170,7 @@ object CommandLineUtils {
     private fun appendVariableToFile(
         tmpLine: String,
         workspace: File?,
-        resultLogFile: String?
+        resultLogFile: String
     ) {
         val pattenVar = "::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
@@ -167,7 +188,7 @@ object CommandLineUtils {
     private fun appendOutputToFile(
         tmpLine: String,
         workspace: File?,
-        resultLogFile: String?,
+        resultLogFile: String,
         elementId: String?
     ) {
         val pattenOutput = "::set-output\\sname=.*"
@@ -181,6 +202,24 @@ object CommandLineUtils {
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
+            }
+        }
+    }
+
+    private fun appendGateToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String
+    ) {
+        val pattenOutput = "::set-gate-value\\sname=.*"
+        val prefixOutput = "::set-gate-value name="
+        if (Pattern.matches(pattenOutput, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixOutput)
+            val keyValue = value.split("::")
+            if (keyValue.size >= 2) {
+                File(workspace, resultLogFile).appendText(
+                    "${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
                 )
             }
         }

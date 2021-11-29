@@ -1,0 +1,137 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_create",
+        "name": "",
+        "name_en": "Quality Group Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_edit",
+        "name": "",
+        "name_en": "Quality Group Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_enable",
+        "name": "",
+        "name_en": "Quality Group Enable",
+        "type": "enable",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_delete",
+        "name": "",
+        "name_en": "Quality Group Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_rule_edit",
+        "name": "",
+        "name_en": "Quality Rule Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_rule_delete",
+        "name": "",
+        "name_en": "Quality Rule Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

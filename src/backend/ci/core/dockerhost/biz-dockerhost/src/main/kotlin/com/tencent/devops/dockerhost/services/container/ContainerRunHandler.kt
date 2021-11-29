@@ -102,7 +102,7 @@ class ContainerRunHandler(
                 }
             }
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 

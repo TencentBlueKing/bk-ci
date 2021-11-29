@@ -86,7 +86,8 @@ class QualityRuleBuildHisService constructor(
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName }).forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
+                    .forEach {
                     val requestIndicator = indicatorMap[it.enName]
                     checkThresholdType(requestIndicator!!, it)
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
@@ -95,6 +96,11 @@ class QualityRuleBuildHisService constructor(
                         requestIndicator.threshold
                     ))
                 }
+            }
+
+            if (indicatorIds.isEmpty()) {
+                val indicatorNameSet = ruleRequest.indicators.map { it.enName }.toList()
+                throw OperationException("${ruleRequest.name} $indicatorNameSet indicator is not exist")
             }
 
             logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
@@ -143,6 +149,9 @@ class QualityRuleBuildHisService constructor(
 
         val allIndicatorIds = mutableSetOf<Long>()
         allRule.forEach {
+            if (it.indicatorIds.isNullOrBlank()) {
+                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error ${it.indicatorIds}")
+            }
             allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
         }
 
@@ -218,6 +227,10 @@ class QualityRuleBuildHisService constructor(
     @Suppress("NestedBlockDepth")
     private fun checkRuleRequest(ruleRequestList: List<RuleCreateRequestV3>) {
         ruleRequestList.forEach { request ->
+            if (request.indicators.isEmpty()) {
+                throw QualityOpConfigException("quality rule indicators is empty")
+            }
+
             request.opList?.forEach { op ->
                 if (op.operation == RuleOperation.END) {
                     if (op.notifyTypeList.isNullOrEmpty()) {
@@ -233,10 +246,6 @@ class QualityRuleBuildHisService constructor(
                     if (op.auditUserList.isNullOrEmpty()) {
                         throw QualityOpConfigException("auditUserList is empty for operation audit")
                     }
-                }
-
-                if (request.indicators.isEmpty()) {
-                    throw QualityOpConfigException("quality rule indicators is empty")
                 }
             }
         }
@@ -340,5 +349,54 @@ class QualityRuleBuildHisService constructor(
             ).data ?: false
         }
         return true
+    }
+
+    fun listRuleBuildHis(ruleBuildIds: Collection<Long>): List<QualityRule> {
+        val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
+        return allRule.map {
+            val rule = QualityRule(
+                hashId = HashUtil.encodeLongId(it.id),
+                name = it.ruleName,
+                desc = it.ruleDesc,
+                indicators = listOf(),
+                controlPoint = QualityRule.RuleControlPoint(
+                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                ),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
+                operation = RuleOperation.END,
+                notifyTypeList = null,
+                notifyUserList = null,
+                notifyGroupList = null,
+                auditUserList = null,
+                auditTimeoutMinutes = null,
+                gatewayId = it.gatewayId,
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
+                },
+                status = if (!it.status.isNullOrBlank()) {
+                    RuleInterceptResult.valueOf(it.status)
+                } else {
+                    null
+                },
+                gateKeepers = if (it.gateKeepers.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.gateKeepers.split(",")
+                },
+                stageId = it.stageId
+            )
+            rule
+        }
     }
 }
