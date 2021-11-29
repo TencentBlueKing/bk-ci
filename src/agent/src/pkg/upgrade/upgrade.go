@@ -95,6 +95,14 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	}
 	logs.Info("download upgrader done")
 
+	logs.Info("download daemon start")
+	newDaemonMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerDaemonFile(), upgradeDir+"/"+config.GetClientDaemonFile())
+	if err != nil {
+		logs.Error("download daemon failed", err)
+		return false, false, errors.New("download daemon failed")
+	}
+	logs.Info("download daemon done")
+
 	logs.Info("download agent start")
 	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
 	if err != nil {
@@ -111,6 +119,11 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	}
 	logs.Info("download worker done")
 
+	daemonMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClientDaemonFile())
+	if err != nil {
+		logs.Error("check daemon md5 failed", err)
+		return false, false, errors.New("check daemon md5 failed")
+	}
 	agentMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClienAgentFile())
 	if err != nil {
 		logs.Error("check agent md5 failed", err)
@@ -122,5 +135,5 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 		return false, false, errors.New("check agent md5 failed")
 	}
 
-	return agentMd5 != newAgentMd5, workerMd5 != newWorkerMd5, nil
+	return agentMd5 != newAgentMd5 || daemonMd5 != newDaemonMd5, workerMd5 != newWorkerMd5,nil
 }

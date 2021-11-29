@@ -25,34 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.api
+package com.tencent.devops.environment
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
-@Path("/op/thirdPartyAgent")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpThirdPartyAgentUpgradeResource {
-
-    @ApiOperation("设置agent最大并发升级数量")
-    @POST
-    @Path("/agents/setMaxParallelUpgradeCount")
-    fun setMaxParallelUpgradeCount(
-        @ApiParam("maxParallelUpgradeCount", required = true)
-        maxParallelUpgradeCount: Int
-    ): Result<Boolean>
-
-    @ApiOperation("获取agent最大并发升级数量")
-    @POST
-    @Path("/agents/getMaxParallelUpgradeCount")
-    fun getMaxParallelUpgradeCount(): Result<Int?>
-}
+class TpaLock(redisOperation: RedisOperation, key: String) :
+    RedisLock(redisOperation = redisOperation, lockKey = "lock:tpa:$key", expiredTimeInSeconds = 30)

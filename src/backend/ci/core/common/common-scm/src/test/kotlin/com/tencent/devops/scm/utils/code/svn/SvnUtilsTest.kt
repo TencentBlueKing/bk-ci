@@ -25,42 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.scm.utils.code.svn
 
-import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.slf4j.LoggerFactory
+import org.junit.Assert
+import org.junit.Test
 
-class UrlFilter(
-    private val pipelineId: String,
-    private val triggerOnUrl: String,
-    private val repositoryUrl: String,
-    private val includeHost: String? = null
-) : WebhookFilter {
+class SvnUtilsTest {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(UrlFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnUrl:$triggerOnUrl|repositoryUrl:$repositoryUrl" +
-                "|includeHost:$includeHost|url filter"
+    @Test
+    fun getSvnFilePath() {
+        var url = "http://svn.example.com/demo/trunk/aaa"
+        var filePath = "/trunk/aaa/test.java"
+        var expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
         )
-        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
-        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-        return isSameHost(triggerOnHost = triggerRepository.first, host = repository.first) &&
-            triggerRepository.second == repository.second
-    }
+        Assert.assertEquals(expected, "/test.java")
 
-    /**
-     * 判断两个域名是否指向同一个服务
-     */
-    private fun isSameHost(triggerOnHost: String, host: String): Boolean {
-        return if (triggerOnHost != host) {
-            val includeHosts = includeHost?.split(",") ?: return false
-            includeHosts.containsAll(setOf(triggerOnHost, host))
-        } else {
-            true
-        }
+        filePath = "/trunk/bbb/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/bbb/test.java")
+
+        url = "http://svn.example.com/demo/"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
+
+        url = "http://svn.example.com/demo/trunk/aaa/bbb"
+        filePath = "/trunk/aaa/test.java"
+        expected = SvnUtils.getSvnFilePath(
+            url = url,
+            filePath = filePath
+        )
+        Assert.assertEquals(expected, "trunk/aaa/test.java")
     }
 }
