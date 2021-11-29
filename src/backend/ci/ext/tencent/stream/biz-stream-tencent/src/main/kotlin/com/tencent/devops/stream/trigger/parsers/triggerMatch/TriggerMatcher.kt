@@ -137,7 +137,7 @@ class TriggerMatcher @Autowired constructor(
             context = context,
             triggerOn = triggerOn,
             isTrigger = isTrigger
-        )
+        ).map { entry -> entry.key to entry.value.toString() }.toMap()
         return TriggerResult(isTrigger, isTime, startParams)
     }
 

@@ -155,12 +155,14 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun startBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         model: Model,
-        gitBuildId: Long
+        gitBuildId: Long,
+        params: Map<String, String> = mapOf()
     ): BuildId? {
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
@@ -174,7 +176,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 event = event,
                 gitCIBasicSetting = gitCIBasicSetting,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName
+                pipelineName = pipeline.displayName,
+                params = params
             )
             logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                 "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
@@ -216,11 +219,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             }
             return BuildId(buildId)
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
-                e
+                ignore
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
             gitCIEventSaveService.saveRunNotBuildEvent(
@@ -232,7 +235,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
-                reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
+                reasonDetail = ignore.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
                 commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
@@ -259,14 +262,15 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String,
-        pipelineName: String
+        pipelineName: String,
+        params: Map<String, String> = mapOf()
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
-            values = mapOf(PIPELINE_NAME to pipelineName),
+            values = params.plus(PIPELINE_NAME to pipelineName),
             channelCode = channelCode
         ).data!!.id
     }
