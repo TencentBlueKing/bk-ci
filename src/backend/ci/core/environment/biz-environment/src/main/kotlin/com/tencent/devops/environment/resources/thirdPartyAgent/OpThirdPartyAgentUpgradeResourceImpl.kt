@@ -25,33 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.config
+package com.tencent.devops.environment.resources.thirdPartyAgent
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
-import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
-import com.tencent.devops.common.redis.RedisAutoConfiguration
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentUpgradeResource
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureAfter(RedisAutoConfiguration::class)
-class ThirdPartyAgentConfiguration {
+/**
+ * deng
+ * 2018/5/9
+ */
+@RestResource
+class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
+    private val upgradeService: AgentUpgradeService
+) : OpThirdPartyAgentUpgradeResource {
 
-    @Bean
-    fun agentGrayUtils(
-        @Autowired redisOperation: RedisOperation
-    ) = AgentGrayUtils(redisOperation)
+    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
+        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
+        return Result(true)
+    }
 
-    @Bean
-    fun thirdPartyAgentHeartbeatUtils(
-        @Autowired redisOperation: RedisOperation,
-        @Autowired objectMapper: ObjectMapper
-    ) = ThirdPartyAgentHeartbeatUtils(redisOperation, objectMapper)
+    override fun getMaxParallelUpgradeCount(): Result<Int> {
+        return Result(upgradeService.getMaxParallelUpgradeCount())
+    }
 }

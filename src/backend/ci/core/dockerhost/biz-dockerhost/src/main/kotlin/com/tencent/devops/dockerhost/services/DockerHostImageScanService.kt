@@ -11,5 +11,5 @@ interface DockerHostImageScanService {
         userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
-    )
+    ): String
 }

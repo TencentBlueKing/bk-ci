@@ -14,7 +14,8 @@ class SampleDockerHostImageScanService : DockerHostImageScanService {
         userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
-    ) {
+    ): String {
         // do something before push images
+        return ""
     }
 }
