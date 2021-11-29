@@ -25,37 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.param
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import org.springframework.stereotype.Service
+enum class TGitObjectKind(val value: String) {
+    PUSH("push"),
+    TAG_PUSH("tag_push"),
+    MERGE_REQUEST("merge_request"),
+    MANUAL("manual"),
+    SCHEDULE("schedule");
 
-@Service
-class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
-
-    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
-        return CodeP4WebHookTriggerElement::class.java
-    }
-
-    override fun getWebhookElementParams(
-        element: CodeP4WebHookTriggerElement,
-        variables: Map<String, String>
-    ): WebHookParams {
-        val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                variables = variables
-            )
-        )
-        with(element.data.input) {
-            params.eventType = eventType
-            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.codeType = CodeType.P4
-            return params
-        }
+    // 方便Json初始化使用常量保存，需要同步维护
+    companion object {
+        const val OBJECT_KIND_MANUAL = "manual"
+        const val OBJECT_KIND_PUSH = "push"
+        const val OBJECT_KIND_TAG_PUSH = "tag_push"
+        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }

@@ -25,37 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.param
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import org.springframework.stereotype.Service
+class TGitTagPushKind
 
-@Service
-class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
-
-    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
-        return CodeP4WebHookTriggerElement::class.java
-    }
-
-    override fun getWebhookElementParams(
-        element: CodeP4WebHookTriggerElement,
-        variables: Map<String, String>
-    ): WebHookParams {
-        val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                variables = variables
-            )
-        )
-        with(element.data.input) {
-            params.eventType = eventType
-            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.codeType = CodeType.P4
-            return params
-        }
-    }
+/**
+ * operation_kind字段
+ * create：创建tag
+ * delete：删除tag
+ * create_from字段：从哪个分支或者commit点创建
+ */
+enum class TGitTagPushOperationKind(val value: String) {
+    CREATE("create"),
+    DELETE("delete")
 }

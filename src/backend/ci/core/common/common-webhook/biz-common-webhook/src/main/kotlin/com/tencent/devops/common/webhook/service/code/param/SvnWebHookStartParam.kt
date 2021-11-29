@@ -28,18 +28,17 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.Repository
+import org.springframework.stereotype.Service
 
-class SvnWebHookStartParam(
-    private val matcher: SvnWebHookMatcher
-) : ScmWebhookStartParams<CodeSVNWebHookTriggerElement> {
+@Service
+class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
         return CodeSVNWebHookTriggerElement::class.java

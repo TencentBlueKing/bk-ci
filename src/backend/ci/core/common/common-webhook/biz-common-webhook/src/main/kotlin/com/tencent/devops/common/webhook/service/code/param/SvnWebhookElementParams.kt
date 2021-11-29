@@ -32,7 +32,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import org.springframework.stereotype.Service
 
+@Service
 class SvnWebhookElementParams : ScmWebhookElementParams<CodeSVNWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
