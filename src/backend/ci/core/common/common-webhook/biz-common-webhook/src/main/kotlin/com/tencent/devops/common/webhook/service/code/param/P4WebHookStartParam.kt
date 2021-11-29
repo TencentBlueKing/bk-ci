@@ -34,7 +34,9 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_INCLUDE_PATHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_P4PORT
+import org.springframework.stereotype.Service
 
+@Service
 class P4WebHookStartParam : ScmWebhookStartParams<CodeP4WebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeP4WebHookTriggerElement> {

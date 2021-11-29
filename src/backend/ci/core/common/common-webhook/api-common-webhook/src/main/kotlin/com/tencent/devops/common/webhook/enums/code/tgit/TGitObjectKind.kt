@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.webhook.enums.code.tgit
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
 enum class TGitObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),

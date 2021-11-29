@@ -44,7 +44,9 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_B
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import org.springframework.stereotype.Service
 
+@Service
 class GitWebHookStartParam : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeGitWebHookTriggerElement> {

@@ -32,7 +32,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import org.springframework.stereotype.Service
 
+@Service
 class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
