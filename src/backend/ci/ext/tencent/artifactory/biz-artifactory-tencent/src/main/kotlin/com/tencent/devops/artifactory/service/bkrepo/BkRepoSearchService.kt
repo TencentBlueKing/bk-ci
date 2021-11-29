@@ -138,7 +138,7 @@ class BkRepoSearchService @Autowired constructor(
         }
 
         val nodeList = bkRepoClient.queryByNameAndMetadata(
-            "",
+            userId,
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
             fileNameSet.toList(),
