@@ -408,6 +408,31 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun getUserInfoByToken(token: String): GitUserInfo {
+        logger.info("[$token] Start to get the user info by token")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitApiUrl}/user?access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code()})${it.message()}"
+                    )
+                }
+                val data = it.body()!!.string()
+                return JsonUtil.getObjectMapper().readValue(data) as GitUserInfo
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the user info by token")
+        }
+    }
+
     fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
         try {
             val token = getToken(gitProjectId)

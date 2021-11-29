@@ -148,14 +148,14 @@ class StreamYamlTrigger @Autowired constructor(
         gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
             yamlObject.name!!
         } else {
-            gitProjectPipeline.filePath.removeSuffix(".yml")
+            gitProjectPipeline.filePath
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         gitBasicSettingService.updateProjectInfo(gitRequestEvent.userId, gitProjectInfo)
 
         if (isTiming) {
-            // 只有定时任务的只注册定时事件
+            // 有定时任务的注册定时事件
             logger.warn(
                 "Only schedules matched, only save the pipeline, " +
                         "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
@@ -169,7 +169,9 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitBuildId = null,
                 isTimeTrigger = true,
-                onlySavePipeline = false
+                // 没有触发只有定时任务的需要保存一下蓝盾流水线
+                onlySavePipeline = !isTrigger,
+                gitProjectInfo = gitProjectInfo
             )
         }
 
@@ -207,19 +209,6 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false,
                 onlySavePipeline = false
-            )
-        } else {
-            // 没有触发只有定时任务的需要保存一下蓝盾流水线
-            yamlBuildV2.gitStartBuild(
-                pipeline = gitProjectPipeline,
-                event = gitRequestEvent,
-                yaml = yamlObject,
-                parsedYaml = parsedYaml,
-                originYaml = originYaml,
-                normalizedYaml = normalizedYaml,
-                gitBuildId = null,
-                isTimeTrigger = false,
-                onlySavePipeline = true
             )
         }
         return true

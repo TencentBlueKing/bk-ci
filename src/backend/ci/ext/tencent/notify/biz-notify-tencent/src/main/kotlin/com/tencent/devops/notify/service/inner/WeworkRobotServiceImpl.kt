@@ -33,15 +33,18 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
-import com.tencent.devops.notify.pojo.WeworkTextContentMessage
+import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -72,24 +75,39 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
-        val sendRequest = mutableListOf<WeworkRobotSingleTextMessage>()
+        val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
                 return
             }
             WeworkReceiverType.single -> {
                 weworkNotifyTextMessage.receivers.forEach {
-                    val singleTextMessage = WeworkRobotSingleTextMessage(
-                        chatid = it,
-                        text = WeworkTextContentMessage(
-                            content = weworkNotifyTextMessage.message,
-                            mentionedList = null,
-                            mentionedMobileList = null
-                        ),
-                        postId = null,
-                        visibleToUser = null
-                    )
-                    sendRequest.add(singleTextMessage)
+                    if (weworkNotifyTextMessage.textType == WeworkTextType.text) {
+                        sendRequest.add(
+                            WeworkRobotSingleTextMessage(
+                                chatid = it,
+                                text = WeworkRobotContentMessage(
+                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    mentionedList = null,
+                                    mentionedMobileList = null
+                                ),
+                                visibleToUser = null,
+                                postId = null
+                            )
+                        )
+                    } else if (weworkNotifyTextMessage.textType == WeworkTextType.markdown) {
+                        sendRequest.add(
+                            WeworkRobotMarkdownMessage(
+                                chatid = it,
+                                markdown = WeworkRobotContentMessage(
+                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    mentionedList = null,
+                                    mentionedMobileList = null
+                                ),
+                                postId = null
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -103,7 +121,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
     }
 
-    private fun doSendRequest(requestBodies: List<WeworkRobotSingleTextMessage>) {
+    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>) {
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
         }
@@ -114,7 +132,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             throw RemoteServiceException(errMsg)
     }
 
-    private fun send(weworkMessage: WeworkRobotSingleTextMessage): Optional<Throwable> {
+    private fun send(weworkMessage: WeweokRobotBaseMessage): Optional<Throwable> {
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         return OkhttpUtils.doPost(url, requestBody).use {

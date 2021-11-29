@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.wechatwork
 
-// import com.fasterxml.jackson.databind.ObjectMapper
-
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JacksonUtil
@@ -70,7 +68,6 @@ import java.time.LocalDateTime
 @Service
 class WechatWorkService @Autowired constructor(
     private val wechatWorkConfiguration: WechatWorkConfiguration
-
 ) {
     private val wechatWorkApiURL = wechatWorkConfiguration.url
     private var timeOutStamp: LocalDateTime? = null

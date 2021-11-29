@@ -377,12 +377,6 @@ include(":ext:tencent:experience:biz-experience-tencent")
 include(":ext:tencent:experience:boot-experience-tencent")
 include(":ext:tencent:experience:model-experience-tencent")
 
-include(":ext:tencent:gitci")
-include(":ext:tencent:gitci:api-gitci-tencent")
-include(":ext:tencent:gitci:biz-gitci-tencent")
-include(":ext:tencent:gitci:boot-gitci-tencent")
-include(":ext:tencent:gitci:model-gitci-tencent")
-
 include(":ext:tencent:stream")
 include(":ext:tencent:stream:api-stream-tencent")
 include(":ext:tencent:stream:biz-stream-tencent")

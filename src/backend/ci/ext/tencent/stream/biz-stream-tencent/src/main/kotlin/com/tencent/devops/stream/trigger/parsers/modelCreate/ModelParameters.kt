@@ -30,17 +30,27 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -49,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
@@ -64,6 +75,8 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_CI_RUN
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @Suppress("ComplexMethod")
@@ -110,6 +123,12 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+                    originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
+                startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
+                if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
+                    startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
+                }
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
@@ -121,6 +140,18 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
                 startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+                    originEvent.commits?.get(0)?.author?.name ?: ""
+                startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
+                if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
+                    startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
+                }
+                // TODO 工蜂暂时未提供tag message字段，待支持后再增加
+//                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
+                if (!originEvent.create_from.isNullOrBlank()) {
+                    startParams[PIPELINE_GIT_TAG_FROM] = originEvent.create_from!!
+                }
+
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
@@ -138,14 +169,26 @@ object ModelParameters {
                 startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
                 startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_SOURCE_URL] = originEvent.object_attributes.source.http_url
                 startParams[PIPELINE_WEBHOOK_TARGET_URL] = originEvent.object_attributes.target.http_url
+                startParams[PIPELINE_GIT_MR_ID] = originEvent.object_attributes.id.toString()
+                startParams[PIPELINE_GIT_MR_IID] = originEvent.object_attributes.iid.toString()
+                startParams[PIPELINE_GIT_COMMIT_AUTHOR] = originEvent.object_attributes.last_commit.author.name
+                startParams[PIPELINE_GIT_MR_TITLE] = originEvent.object_attributes.title
+                if (!originEvent.object_attributes.description.isNullOrBlank()) {
+                    startParams[PIPELINE_GIT_MR_DESC] = originEvent.object_attributes.description!!
+                }
+                startParams[PIPELINE_GIT_MR_PROPOSER] = originEvent.user.username
+                startParams[PIPELINE_GIT_MR_ACTION] = originEvent.object_attributes.action
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
                     TGitObjectKind.SCHEDULE.value
                 } else {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
                     TGitObjectKind.MANUAL.value
                 }
                 startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
@@ -172,7 +215,15 @@ object ModelParameters {
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
         // putVariables2StartParams(yaml, gitBasicSetting, startParams)
-        val buildFormProperties = getBuildFormPropertyFromYmlVariable(yaml, startParams)
+        val buildFormProperties = if (originEvent is GitPushEvent) {
+            getBuildFormPropertyFromYmlVariable(
+                // 根据 push options 参数改变variables的值
+                variables = replaceVariablesByPushOptions(yaml.variables, originEvent.push_options),
+                startParams = startParams
+            )
+        } else {
+            getBuildFormPropertyFromYmlVariable(yaml.variables, startParams)
+        }
 
         startParams.forEach {
             result.add(
@@ -198,14 +249,14 @@ object ModelParameters {
     }
 
     private fun getBuildFormPropertyFromYmlVariable(
-        yaml: ScriptBuildYaml,
+        variables: Map<String, Variable>?,
         startParams: MutableMap<String, String>
     ): List<BuildFormProperty> {
-        if (yaml.variables == null) {
+        if (variables.isNullOrEmpty()) {
             return emptyList()
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
-        yaml.variables!!.forEach { (key, variable) ->
+        variables.forEach { (key, variable) ->
             buildFormProperties.add(
                 BuildFormProperty(
                     id = StreamYamlBuild.VARIABLE_PREFIX + key,
@@ -225,5 +276,24 @@ object ModelParameters {
             )
         }
         return buildFormProperties
+    }
+
+    private fun replaceVariablesByPushOptions(
+        variables: Map<String, Variable>?,
+        pushOptions: Map<String, String>?
+    ): Map<String, Variable>? {
+        if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
+            return variables
+        }
+        val result = variables.toMutableMap()
+        variables.forEach { (key, value) ->
+            if (key in pushOptions.keys) {
+                result[key] = Variable(
+                    value = pushOptions[key],
+                    readonly = value.readonly
+                )
+            }
+        }
+        return result
     }
 }

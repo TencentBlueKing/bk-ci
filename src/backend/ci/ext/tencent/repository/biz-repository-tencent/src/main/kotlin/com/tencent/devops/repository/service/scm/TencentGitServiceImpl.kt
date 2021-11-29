@@ -43,6 +43,7 @@ import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -92,6 +93,10 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
 
     override fun getToken(userId: String, code: String): GitToken {
         return client.getScm(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
+    }
+
+    override fun getUserInfoByToken(token: String): GitUserInfo {
+        return client.getScm(ServiceGitResource::class).getUserInfoByToken(token = token).data!!
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): String {
