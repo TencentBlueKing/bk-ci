@@ -61,13 +61,7 @@ object QualityUtils {
                 "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
                 "<td style=\"border:none;padding-right: 0\">任务耗时：</td>" +
-                "<td style=\"border:none;padding-left:0;\">${
-                    if (status.isRunning()) {
-                        "--"
-                    } else {
-                        timeCost
-                    }
-                } </td >" +
+                "<td style=\"border:none;padding-left:0;\">$timeCost</td>" +
                 "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")

@@ -157,7 +157,7 @@ class SendCommitCheck @Autowired constructor(
 
     private fun StreamBuildListenerContextV2.getGateRepoData():
             Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        // 中间阶段不由stream这边发红线的评论，quality发送
+        // 中间阶段不由Commitcheck这边发送
         if (this is StreamBuildStageListenerContextV2) {
             return Pair(listOf(), mutableMapOf())
         }

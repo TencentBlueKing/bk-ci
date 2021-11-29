@@ -67,7 +67,13 @@ class StreamQualityService {
 
             val titleData = listOf(
                 event.status,
-                DateTimeUtil.formatMilliTime(System.currentTimeMillis() - (event.startTime ?: 0L)),
+                if (event.startTime == null) {
+                    "--"
+                } else {
+                    DateTimeUtil.formatMilliTime(
+                        System.currentTimeMillis() - (event.startTime)
+                    )
+                },
                 CodeEventType.MERGE_REQUEST.name,
                 pipelineName,
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
