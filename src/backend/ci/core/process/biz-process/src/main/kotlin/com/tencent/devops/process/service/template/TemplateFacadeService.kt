@@ -433,7 +433,7 @@ class TemplateFacadeService @Autowired constructor(
             checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
             pipelineSettingDao.updateSetting(
-                context,
+                dslContext = context,
                 pipelineId = templateId,
                 name = template.name,
                 desc = template.desc ?: ""
