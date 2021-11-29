@@ -130,7 +130,9 @@ class StreamBasicSettingService @Autowired constructor(
             creatorBgName = setting.creatorBgName,
             creatorDeptName = setting.creatorDeptName,
             creatorCenterName = setting.creatorCenterName,
-            enableCommitCheck = enableCommitCheck
+            enableCommitCheck = enableCommitCheck,
+            pathWithNamespace = setting.pathWithNamespace,
+            nameWithNamespace = setting.nameWithNamespace
         )
         return true
     }
@@ -184,7 +186,9 @@ class StreamBasicSettingService @Autowired constructor(
                     creatorBgName = null,
                     gitProjectDesc = projectInfo.description,
                     gitProjectAvatar = projectInfo.avatarUrl,
-                    lastCiInfo = null
+                    lastCiInfo = null,
+                    pathWithNamespace = projectInfo.pathWithNamespace,
+                    nameWithNamespace = projectInfo.nameWithNamespace
                 )
             )
         }
@@ -252,6 +256,22 @@ class StreamBasicSettingService @Autowired constructor(
         return count
     }
 
+    fun fixProjectNameSpace(): Int {
+        var count = 0
+        var currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        while (currProjects.isNotEmpty()) {
+            currProjects.forEach {
+                refreshNameSpace(it)
+                count++
+            }
+            logger.info("fixProjectNameSpace project ${currProjects.map { it.id }.toList()}, fixed count: $count")
+            Thread.sleep(100)
+            currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
+        }
+        logger.info("fixProjectNameSpace finished count: $count")
+        return count
+    }
+
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long) {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
@@ -269,7 +289,9 @@ class StreamBasicSettingService @Autowired constructor(
                 httpUrl = projectInfo.gitHttpsUrl ?: return@back,
                 sshUrl = projectInfo.gitSshUrl ?: return@back,
                 desc = projectInfo.description,
-                avatar = projectInfo.avatarUrl
+                avatar = projectInfo.avatarUrl,
+                pathWithNamespace = projectInfo.pathWithNamespace,
+                nameWithNamespace = projectInfo.nameWithNamespace
             )
         }
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
@@ -313,6 +335,30 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             }
             idList
+        }
+    }
+
+    private fun refreshNameSpace(it: TGitBasicSettingRecord) {
+        try {
+            val projectResult = requestGitProjectInfo(it.id)
+            if (projectResult != null) {
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = projectResult.pathWithNamespace ?: "",
+                    nameWithNamespace = projectResult.nameWithNamespace
+                )
+            } else {
+                // 说明存量数据在工蜂处已丢失
+                streamBasicSettingDao.fixProjectNameSpace(
+                    dslContext = dslContext,
+                    gitProjectId = it.id,
+                    pathWithNamespace = "",
+                    nameWithNamespace = ""
+                )
+            }
+        } catch (t: Throwable) {
+            logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
         }
     }
 
