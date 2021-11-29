@@ -432,6 +432,12 @@ class TemplateFacadeService @Autowired constructor(
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
+            pipelineSettingDao.updateSetting(
+                context,
+                pipelineId = templateId,
+                name = template.name,
+                desc = template.desc ?: ""
+            )
             version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
