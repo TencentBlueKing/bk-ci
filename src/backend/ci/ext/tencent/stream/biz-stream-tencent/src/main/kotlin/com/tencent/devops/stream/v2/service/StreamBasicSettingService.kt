@@ -324,7 +324,12 @@ class StreamBasicSettingService @Autowired constructor(
         val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(
             userId = userId,
             projectName = projectName
-        ) ?: return
+        )
+
+        if (null == bkProjectResult) {
+            logger.error("STREAM|projectName|$projectName|msg|bkProjectResult is empty")
+            return
+        }
 
         logger.info("PROJECT|bkProjectResult|$bkProjectResult")
 
