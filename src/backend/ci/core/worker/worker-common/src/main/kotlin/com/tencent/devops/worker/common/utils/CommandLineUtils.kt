@@ -110,7 +110,26 @@ object CommandLineUtils {
             }
         }
 
-        executor.streamHandler = PumpStreamHandler(outputStream)
+        val errorStream = object : LogOutputStream() {
+            override fun processLine(line: String?, level: Int) {
+                if (line == null) {
+                    return
+                }
+
+                var tmpLine: String = prefix + line
+
+                lineParser.forEach {
+                    tmpLine = it.onParseLine(tmpLine)
+                }
+                if (print2Logger) {
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    LoggerService.addErrorLine(tmpLine)
+                } else {
+                    result.append(tmpLine).append("\n")
+                }
+            }
+        }
+        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
