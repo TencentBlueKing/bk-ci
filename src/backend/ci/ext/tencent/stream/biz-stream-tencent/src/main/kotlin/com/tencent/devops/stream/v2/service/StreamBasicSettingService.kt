@@ -53,7 +53,7 @@ class StreamBasicSettingService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
-        private val projectPrefix = "git_"
+        private const val projectPrefix = "git_"
     }
 
     fun updateProjectSetting(
