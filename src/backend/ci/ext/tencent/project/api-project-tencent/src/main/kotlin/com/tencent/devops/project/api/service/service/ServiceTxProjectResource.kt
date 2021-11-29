@@ -399,8 +399,8 @@ interface ServiceTxProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("关联系统ID", required = true)
+        @ApiParam("项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
-    ): Result<ProjectVO?>
+    ): Result<ProjectVO>?
 }

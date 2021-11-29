@@ -375,11 +375,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectTxService.updateProjectName(userId, projectCode, projectName))
     }
 
-    override fun getProjectInfoByProjectName(userId: String, projectName: String): Result<ProjectVO> {
-        return Result(ProjectUtils.packagingBean(projectTxService.getProjectInfoByProjectName(
+    override fun getProjectInfoByProjectName(userId: String, projectName: String): Result<ProjectVO>? {
+
+        val tProjectRecord = projectTxService.getProjectInfoByProjectName(
             userId = userId,
             projectName = projectName
-        )!!, setOf()))
+        ) ?: return null
+
+        return Result(ProjectUtils.packagingBean(tProjectRecord, setOf()))
     }
 
     companion object {

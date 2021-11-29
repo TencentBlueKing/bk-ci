@@ -326,7 +326,7 @@ class StreamBasicSettingService @Autowired constructor(
             projectName = projectName
         )
 
-        if (bkProjectResult.isNotOk()) {
+        if (null == bkProjectResult) {
             logger.error("STREAM|projectName|$projectName|msg|bkProjectResult is empty")
             return
         }
