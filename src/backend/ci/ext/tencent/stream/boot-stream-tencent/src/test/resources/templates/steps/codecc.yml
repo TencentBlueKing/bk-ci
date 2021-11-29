@@ -1,4 +1,3 @@
-# codecc详细配置说明 http://devops.oa.com/console/store/atomStore/detail/atom/CodeccCheckAtomDebug
 parameters:
   - name: image
     type: string
