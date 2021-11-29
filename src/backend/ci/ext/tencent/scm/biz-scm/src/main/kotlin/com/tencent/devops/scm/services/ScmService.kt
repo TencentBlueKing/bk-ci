@@ -225,7 +225,9 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String,
         event: String? = null,
-        hookUrl: String? = null
+        hookUrl: String? = null,
+        includePaths: String?,
+        excludePaths: String?
     ) {
         logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
@@ -237,14 +239,14 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_GIT -> {
                         if (gitConfig.gitHookUrl.isBlank()) {
                             logger.warn("The git webhook url is not settle")
-                            throw RuntimeException("The git hook url is not settle")
+                            throw IllegalArgumentException("The git hook url is not settle")
                         }
                         gitConfig.gitHookUrl
                     }
                     ScmType.CODE_GITLAB -> {
                         if (gitConfig.gitlabHookUrl.isBlank()) {
                             logger.warn("The gitlab webhook url is not settle")
-                            throw RuntimeException("The gitlab webhook url is not settle")
+                            throw IllegalArgumentException("The gitlab webhook url is not settle")
                         }
                         gitConfig.gitlabHookUrl
                     }
