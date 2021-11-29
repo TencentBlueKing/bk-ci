@@ -31,7 +31,10 @@ import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.common.AGENT_ID
+import com.tencent.devops.worker.common.AGENT_SECRET_KEY
 import com.tencent.devops.worker.common.BUILD_TYPE
+import com.tencent.devops.worker.common.JOB_POOL
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -49,7 +52,14 @@ fun main(args: Array<String>) {
     TaskFactory.init()
     val buildType = System.getProperty(BUILD_TYPE)
     when (buildType) {
-        BuildType.DOCKER.name ->
+        BuildType.DOCKER.name -> {
+            val jobPoolType = System.getProperty(JOB_POOL)
+            // 无编译构建，轮询等待任务
+            if (jobPoolType != null &&
+                jobPoolType.equals(com.tencent.devops.common.pipeline.type.BuildType.AGENT_LESS.name)) {
+                waitBuildLessJobStart()
+            }
+
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
                     variables: Map<String, String>,
@@ -68,6 +78,7 @@ fun main(args: Array<String>) {
                     return Pair(workspaceDir, logPathDir)
                 }
             })
+        }
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
@@ -97,4 +108,13 @@ fun main(args: Array<String>) {
             throw RuntimeException("Unknown build type - $buildType")
         }
     }
+}
+
+private fun waitBuildLessJobStart() {
+    val agentId = System.getProperty(AGENT_ID)
+    val agentSecretKey = System.getProperty(AGENT_SECRET_KEY)
+    do {
+        println("Docker buildLess waiting start...")
+        Thread.sleep(1000)
+    } while (agentId.isNullOrBlank() || agentSecretKey.isNullOrBlank())
 }

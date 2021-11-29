@@ -41,11 +41,12 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.DockerHostConfig
 import com.tencent.devops.buildless.exception.DockerServiceException
-import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CommonUtils
-import com.tencent.devops.buildless.utils.DockerEnv
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
@@ -56,8 +57,10 @@ import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
 import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.buildless.utils.SLEEP_ENTRY_POINT_CMD
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+
 
 /**
  * 无构建环境的docker服务实现
@@ -111,7 +114,7 @@ class BuildlessService(
         return containerInfo.size
     }
 
-    fun createContainer(dockerHostBuildInfo: BuildlessBuildInfo): String {
+    fun createContainer(dockerHostBuildInfo: BuildLessStartInfo): String {
         try {
             val containerId = redisUtils.getIdleContainer()
 
@@ -123,21 +126,17 @@ class BuildlessService(
                 )
             }
 
-            httpDockerCli.execCreateCmd(containerId)
+            val response = httpDockerCli.execCreateCmd(containerId)
                 .withEnv(listOf(
                     "$ENV_KEY_PROJECT_ID=${dockerHostBuildInfo.projectId}",
                     "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
-                    "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}",
-                    "$ENV_KEY_GATEWAY=${DockerEnv.getGatway()}",
-                    "TERM=xterm-256color",
-                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_JOB_BUILD_TYPE=${dockerHostBuildInfo.buildType}"
+                    "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}"
                 ))
-                .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .exec()
 
+            httpDockerCli.execStartCmd(response.id).start()
+            logger.info("Success start container: $containerId")
+            redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
             return containerId
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
@@ -154,15 +153,20 @@ class BuildlessService(
 
         val volumeApps = Volume(dockerHostConfig.volumeApps)
         val volumeInit = Volume(dockerHostConfig.volumeInit)
+        val volumeSleep = Volume(dockerHostConfig.volumeSleep)
+        val volumeLogs = Volume(dockerHostConfig.volumeLogs)
 
-        val gateway = DockerEnv.getGatway()
+        val gateway = dockerHostConfig.gateway
+        val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
         val binds = Binds(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
         )
 
         val container = httpLongDockerCli.createContainerCmd(imageName)
-            .withName("$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}")
+            .withName(containerName)
             .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
@@ -192,12 +196,13 @@ class BuildlessService(
         return container.id
     }
 
-    fun stopContainer(dockerHostBuildInfo: BuildlessBuildInfo) {
-        stopContainer(dockerHostBuildInfo.containerId, dockerHostBuildInfo.buildId)
+    fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
+        stopContainer(buildLessEndInfo.containerId, buildLessEndInfo.buildId)
     }
 
     fun stopContainer(containerId: String, buildId: String) {
         if (containerId.isEmpty()) {
+            logger.error("[$buildId]| Stop the container failed, contianerId is null.")
             return
         }
 
@@ -225,6 +230,8 @@ class BuildlessService(
                 ignored
             )
         }
+
+        redisUtils.deleteBuildlessPoolContainer(containerId)
     }
 
     companion object {

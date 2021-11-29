@@ -29,7 +29,8 @@ package com.tencent.devops.buildless.controller
 
 import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
 import com.tencent.devops.buildless.exception.DockerServiceException
-import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.service.BuildlessService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -40,21 +41,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBuildlessResourceImpl @Autowired constructor(
     private val buildlessService: BuildlessService
 ) : ServiceBuildlessResource {
-    override fun startBuild(dockerHostBuildInfo: BuildlessBuildInfo): Result<String> {
+    override fun startBuild(buildLessEndInfo: BuildLessStartInfo): Result<String> {
         return try {
-            logger.warn("Create agentLess container, dockerHostBuildInfo: $dockerHostBuildInfo")
-            Result(buildlessService.createContainer(dockerHostBuildInfo))
+            logger.warn("Create agentLess container, dockerHostBuildInfo: $buildLessEndInfo")
+            Result(buildlessService.createContainer(buildLessEndInfo))
         } catch (e: DockerServiceException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}," +
-                    " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            logger.error("Create container failed, rollback build. buildId: ${buildLessEndInfo.buildId}," +
+                    " vmSeqId: ${buildLessEndInfo.vmSeqId}")
             Result(e.errorCode, "构建环境启动失败: ${e.message}", "")
         }
     }
 
-    override fun endBuild(dockerHostBuildInfo: BuildlessBuildInfo): Result<Boolean> {
-        logger.warn("[${dockerHostBuildInfo.buildId}] | Stop the container, " +
-                "containerId: ${dockerHostBuildInfo.containerId}")
-        buildlessService.stopContainer(dockerHostBuildInfo)
+    override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
+        logger.warn("[${buildLessEndInfo.buildId}] | Stop the container, " +
+                "containerId: ${buildLessEndInfo.containerId}")
+        buildlessService.stopContainer(buildLessEndInfo)
 
         return Result(true)
     }

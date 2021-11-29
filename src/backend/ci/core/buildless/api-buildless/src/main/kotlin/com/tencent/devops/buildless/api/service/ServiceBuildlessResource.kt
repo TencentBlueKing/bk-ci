@@ -27,7 +27,8 @@
 
 package com.tencent.devops.buildless.api.service
 
-import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -50,7 +51,7 @@ interface ServiceBuildlessResource {
     @Path("/start")
     fun startBuild(
         @ApiParam("构建任务", required = true)
-        dockerHostBuildInfo: BuildlessBuildInfo
+        buildLessEndInfo: BuildLessStartInfo
     ): Result<String>
 
     @ApiOperation("终止无编译流水线容器构建")
@@ -58,6 +59,6 @@ interface ServiceBuildlessResource {
     @Path("/end")
     fun endBuild(
         @ApiParam("构建任务", required = true)
-        dockerHostBuildInfo: BuildlessBuildInfo
+        buildLessEndInfo: BuildLessEndInfo
     ): Result<Boolean>
 }

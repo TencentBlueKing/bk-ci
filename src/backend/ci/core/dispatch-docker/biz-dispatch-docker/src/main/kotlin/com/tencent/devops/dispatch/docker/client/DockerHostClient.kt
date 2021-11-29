@@ -30,7 +30,8 @@ package com.tencent.devops.dispatch.docker.client
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
-import com.tencent.devops.buildless.pojo.BuildlessBuildInfo
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -197,8 +198,8 @@ class DockerHostClient @Autowired constructor(
         dockerHostBuildInfo: DockerHostBuildInfo
     ) {
         with(dockerHostBuildInfo) {
-            client.get(ServiceBuildlessResource::class).startBuild(
-                BuildlessBuildInfo(
+            val containerId = client.get(ServiceBuildlessResource::class).startBuild(
+                BuildLessStartInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
@@ -207,8 +208,14 @@ class DockerHostClient @Autowired constructor(
                     agentId = agentId,
                     secretKey = secretKey,
                     buildType = buildType.name,
-                    containerId = ""
                 )
+            ).data
+
+            pipelineDockerBuildDao.updateContainerId(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = Integer.valueOf(vmSeqId),
+                containerId = containerId!!
             )
         }
     }
@@ -312,16 +319,13 @@ class DockerHostClient @Autowired constructor(
     ) {
         if (clusterType == DockerHostClusterType.AGENT_LESS && projectId == "test-sawyer2") {
             client.get(ServiceBuildlessResource::class).endBuild(
-                BuildlessBuildInfo(
+                BuildLessEndInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     poolNo = 0,
-                    containerId = containerId,
-                    agentId = "",
-                    secretKey = "",
-                    buildType = ""
+                    containerId = containerId
                 )
             )
 
