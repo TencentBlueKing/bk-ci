@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
@@ -53,6 +54,7 @@ import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectTxInfoService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.util.ProjectUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -356,7 +358,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             resourceTypeCode = createInfo.resourceTypeCode
         ))
     }
-
     override fun getProjectRoles(projectCode: String, organizationType: String, organizationId: Long): Result<List<BKAuthProjectRolesResources>> {
         return Result(projectLocalService.getProjectRole(
             organizationType = organizationType,
@@ -372,6 +373,13 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
         return Result(projectTxService.updateProjectName(userId, projectCode, projectName))
+    }
+
+    override fun getProjectInfoByProjectName(userId: String, projectName: String): Result<ProjectVO> {
+        return Result(ProjectUtils.packagingBean(projectTxService.getProjectInfoByProjectName(
+            userId = userId,
+           projectName = projectName
+        )!!, setOf()))
     }
 
     companion object {

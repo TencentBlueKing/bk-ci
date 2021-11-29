@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -82,5 +83,23 @@ class ProjectTxInfoService @Autowired constructor(
             englishName = projectCode,
             projectName = projectName
         ) > 0
+    }
+
+    fun getProjectInfoByProjectName(
+        userId: String,
+        projectName: String
+    ): TProjectRecord? {
+        if (projectName.isEmpty() || projectName.length > 32) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                errorCode = ProjectMessageCode.NAME_TOO_LONG
+            )
+        }
+
+        return projectFreshDao.getProjectInfoByProjectName(
+            dslContext = dslContext,
+            userId = userId,
+            projectName = projectName
+        )
     }
 }
