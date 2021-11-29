@@ -132,7 +132,6 @@ class BuildlessService(
                     "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
                     "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}"
                 ))
-                .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .exec()
 
             httpDockerCli.execStartCmd(response.id).start()
@@ -169,7 +168,7 @@ class BuildlessService(
         val container = httpLongDockerCli.createContainerCmd(imageName)
             .withName(containerName)
             .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
-            .withCmd("/bin/sh", SLEEP_ENTRY_POINT_CMD)
+            .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
                 listOf(
                     "$ENV_KEY_GATEWAY=$gateway",
