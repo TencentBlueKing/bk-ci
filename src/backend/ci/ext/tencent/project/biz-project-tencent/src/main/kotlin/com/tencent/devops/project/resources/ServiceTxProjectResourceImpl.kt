@@ -378,7 +378,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     override fun getProjectInfoByProjectName(userId: String, projectName: String): Result<ProjectVO> {
         return Result(ProjectUtils.packagingBean(projectTxService.getProjectInfoByProjectName(
             userId = userId,
-           projectName = projectName
+            projectName = projectName
         )!!, setOf()))
     }
 

@@ -89,10 +89,10 @@ class ProjectTxInfoService @Autowired constructor(
         userId: String,
         projectName: String
     ): TProjectRecord? {
-        if (projectName.isEmpty() || projectName.length > 32) {
+        if (projectName.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
-                errorCode = ProjectMessageCode.NAME_TOO_LONG
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                errorCode = ProjectMessageCode.NAME_EMPTY
             )
         }
 
