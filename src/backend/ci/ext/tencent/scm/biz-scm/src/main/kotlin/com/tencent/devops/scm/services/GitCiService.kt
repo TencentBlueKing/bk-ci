@@ -426,7 +426,7 @@ class GitCiService {
         logger.info("$gitProjectId|$mrId|addMrComment")
         try {
             GitApi().addMRComment(
-                host = gitCIUrl,
+                host = "$gitCIUrl/api/v3",
                 token = token,
                 projectName = gitProjectId,
                 requestId = mrId,
