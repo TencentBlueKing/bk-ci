@@ -25,22 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+/*
+ * action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新，或源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    MERGE("merge")
+}
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-    }
+/*
+ * extension_action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新
+ * push-update：源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeExtensionActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge")
 }

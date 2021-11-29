@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+package com.tencent.devops.common.webhook.enums.code.tgit
 
 /*
  * operation_kind字段
