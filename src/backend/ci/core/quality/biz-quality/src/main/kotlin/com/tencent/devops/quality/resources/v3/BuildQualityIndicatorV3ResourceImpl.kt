@@ -40,8 +40,12 @@ class BuildQualityIndicatorV3ResourceImpl @Autowired constructor(
     private val qualityIndicatorService: QualityIndicatorService
 ) : BuildQualityIndicatorResource {
 
-    override fun upsertIndicator(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Result<Boolean> {
-        return Result(qualityIndicatorService.userCreate(userId, projectId, indicatorCreate))
+    override fun upsertIndicator(
+        userId: String,
+        projectId: String,
+        indicatorCreateList: List<IndicatorCreate>
+    ): Result<Boolean> {
+        return Result(qualityIndicatorService.upsertIndicators(userId, projectId, indicatorCreateList))
     }
 
 }

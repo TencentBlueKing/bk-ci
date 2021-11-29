@@ -53,6 +53,6 @@ interface BuildQualityIndicatorResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("指标请求报文", required = true)
-        indicatorCreate: IndicatorCreate
+        indicatorCreate: List<IndicatorCreate>
     ): Result<Boolean>
 }

@@ -318,6 +318,11 @@ class QualityIndicatorService @Autowired constructor(
         return true
     }
 
+    fun upsertIndicators(userId: String, projectId: String, indicatorCreateList: List<IndicatorCreate>): Boolean {
+
+        return false
+    }
+
     fun userQueryIndicatorList(projectId: String, keyword: String?): IndicatorListResponse {
         val scriptIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
@@ -587,6 +592,14 @@ class QualityIndicatorService @Autowired constructor(
             if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
         }
         return false
+    }
+
+    private fun checkCustomUpsertIndicator(projectId: String, enName: String): Long? {
+        val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return null
+        indicators.forEach{ indicator ->
+            if (indicator.enName == enName && indicator.indicatorRange == projectId) return indicator.id
+        }
+        return 0L
     }
 
     private fun getProjectAtomCodes(projectId: String): List<InstalledAtom> {
