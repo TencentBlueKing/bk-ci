@@ -19,4 +19,17 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
     override fun fixProjectInfo(): Result<Int> {
         return Result(streamBasicSettingService.fixProjectInfo())
     }
+
+    override fun updateBasicSetting(gitProjectId: Long, enableCommitCheck: Boolean): Result<Boolean> {
+        return Result(
+            streamBasicSettingService.updateProjectSetting(
+                gitProjectId = gitProjectId,
+                enableCommitCheck = enableCommitCheck
+            )
+        )
+    }
+
+    override fun fixProjectNameSpace(): Result<Int> {
+        return Result(streamBasicSettingService.fixProjectNameSpace())
+    }
 }

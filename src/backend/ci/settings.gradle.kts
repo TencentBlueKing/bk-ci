@@ -350,6 +350,7 @@ include(":ext:tencent:prebuild:model-prebuild")
 
 include(":ext:tencent:process")
 include(":ext:tencent:process:api-process-tencent")
+include(":ext:tencent:process:biz-base-tencent")
 include(":ext:tencent:process:biz-engine-tencent")
 include(":ext:tencent:process:biz-process-tencent")
 include(":ext:tencent:process:boot-process-tencent")

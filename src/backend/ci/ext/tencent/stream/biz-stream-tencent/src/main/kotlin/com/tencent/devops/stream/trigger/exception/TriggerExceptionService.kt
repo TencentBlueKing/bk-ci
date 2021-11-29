@@ -218,6 +218,9 @@ class TriggerExceptionService @Autowired constructor(
         state: GitCICommitCheckState,
         description: String?
     ) {
+        if (!gitCIBasicSetting.enableCommitCheck) {
+            return
+        }
         scmClient.pushCommitCheckWithBlock(
             commitId = gitRequestEvent.commitId,
             mergeRequestId = gitRequestEvent.mergeRequestId ?: 0L,

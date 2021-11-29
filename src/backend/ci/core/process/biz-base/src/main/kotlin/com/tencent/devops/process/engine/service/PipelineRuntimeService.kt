@@ -1204,7 +1204,12 @@ class PipelineRuntimeService @Autowired constructor(
                         channelCode = context.channelCode,
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams,
+                        buildParameters = originStartParams.plus(
+                            BuildParameters(
+                                key = BUILD_NO,
+                                value = currentBuildNo.toString()
+                            )
+                        ),
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),

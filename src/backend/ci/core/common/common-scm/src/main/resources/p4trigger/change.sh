@@ -6,7 +6,8 @@ event_type=$3
 CHANGE=$4
 TRIGGER_TYPE=CHANGE
 
-echo "Running devops commit_change.sh\n\n"
+echo "Running devops change.sh\n\n"
+echo "devopsCallbackUrl:$devopsCallbackUrl,P4PORT:$P4PORT,event_type:$event_type,CHANGE:$CHANGE"
 
 curl --header 'Content-Type: application/json' \
      --connect-timeout 3 \
@@ -17,6 +18,6 @@ curl --header 'Content-Type: application/json' \
      \"trigger_type\":\"$TRIGGER_TYPE\",
      \"event_type\":\"$event_type\"
      }" \
-     $devopsCallbackUrl
+     "$devopsCallbackUrl" || { echo "Sending webhook failed"; exit 0; }
 echo "Sending webhook finished\n\n"
 exit 0
