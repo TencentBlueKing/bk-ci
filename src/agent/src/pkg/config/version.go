@@ -26,4 +26,4 @@
 
 package config
 
-const AgentVersion = "v1.7.1"
+const AgentVersion = "v1.7.20"
