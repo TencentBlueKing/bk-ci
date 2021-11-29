@@ -132,6 +132,7 @@ class BuildlessService(
                     "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
                     "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}"
                 ))
+                .withCmd("/bin/sh", "echo 'start build'")
                 .exec()
 
             httpDockerCli.execStartCmd(response.id).start()
