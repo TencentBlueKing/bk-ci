@@ -35,6 +35,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,6 +45,11 @@ class ProjectTxInfoService @Autowired constructor(
     val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
+    }
+
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: return null
         return ProjectOrganization(
@@ -89,6 +95,7 @@ class ProjectTxInfoService @Autowired constructor(
         userId: String,
         projectName: String
     ): TProjectRecord? {
+        logger.info("PROJECT|userId|$userId|projectName|$projectName")
         if (projectName.isEmpty()) {
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
