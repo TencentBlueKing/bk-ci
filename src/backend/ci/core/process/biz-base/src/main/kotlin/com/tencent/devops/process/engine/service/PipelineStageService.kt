@@ -489,7 +489,7 @@ class PipelineStageService @Autowired constructor(
             // #5533 增加红线待审核的消息
             pipelineEventDispatcher.dispatch(
                 PipelineBuildReviewCheckBroadCastEvent(
-                    source = "s(${stage.stageId}) quality check for with${reviewType}",
+                    source = "s(${stage.stageId}) quality check for with $reviewType",
                     projectId = stage.projectId, pipelineId = stage.pipelineId,
                     buildId = stage.buildId, userId = event.userId,
                     reviewType = reviewType, status = qualityStatus.name,

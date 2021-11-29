@@ -34,7 +34,7 @@ import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * 构建结束的广播事件，用于通知等
- * @author irwinsun
+ * @author royalhuang
  * @version 1.0
  */
 @Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_CHECK_FANOUT)
@@ -50,5 +50,5 @@ data class PipelineBuildReviewCheckBroadCastEvent(
     val status: String,
     val stageId: String?,
     val taskId: String?,
-    val ruleIds: List<String>? = null  // stage的准入准出才有该红线ID集合
+    val ruleIds: List<String>? = null // stage的准入准出才有该红线ID集合
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
