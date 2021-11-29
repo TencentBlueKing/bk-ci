@@ -237,6 +237,7 @@ class LambdaDataService @Autowired constructor(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     projectEnglishName = task.projectId,
+                    vmSeqId = task.containerId,
                     type = "task",
                     itemId = task.taskId,
                     atomCode = task.atomCode,
