@@ -17,7 +17,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ATOM'
                     AND COLUMN_NAME = 'BRANCH') THEN
-        ALTER TABLE T_ATOM ADD COLUMN `BRANCH` VARCHAR(128);
+        ALTER TABLE T_ATOM ADD COLUMN `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支';
     END IF;
 
     COMMIT;

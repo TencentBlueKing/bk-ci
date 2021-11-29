@@ -618,7 +618,10 @@ export default {
                     instanceId: [{
                         id: projectId,
                         type: this.$permissionResourceTypeMap.PROJECT
-                    }, pipeline]
+                    }, {
+                        type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT,
+                        ...pipeline
+                    }]
                 }])
                 console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')

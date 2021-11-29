@@ -17,7 +17,7 @@ BEGIN
                     AND TABLE_NAME = 'T_QUALITY_CONTROL_POINT'
                     AND COLUMN_NAME = 'TAG') THEN
         ALTER TABLE `T_QUALITY_CONTROL_POINT`
-            ADD COLUMN `TAG` VARCHAR(64) NULL;
+            ADD COLUMN `TAG` VARCHAR(64) NULL COMMENT '标签';
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
@@ -42,7 +42,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_HISTORY'
                     AND COLUMN_NAME = 'CHECK_TIMES') THEN
-        ALTER TABLE `T_HISTORY` ADD COLUMN `CHECK_TIMES` INT DEFAULT 1;
+        ALTER TABLE `T_HISTORY` ADD COLUMN `CHECK_TIMES` INT DEFAULT 1 COMMENT '第几次检查';
     ELSEIF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db

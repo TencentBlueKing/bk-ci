@@ -105,7 +105,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             })
         },
 
@@ -218,13 +218,13 @@
             }
         }
     }
-    /deep/ .bk-form-radio {
+    ::v-deep .bk-form-radio {
         margin-left: 10px;
         &:first-child {
             margin-left: 0px;
         }
     }
-    /deep/ .form-tips {
+    ::v-deep .form-tips {
         margin: 20px 0;
         p.tips-body {
             text-align: left;

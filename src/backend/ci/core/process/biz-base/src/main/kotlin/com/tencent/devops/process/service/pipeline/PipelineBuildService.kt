@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.pipeline
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -55,7 +54,6 @@ import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.QualityUtils
-import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
@@ -86,7 +84,6 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildStartupParamService: BuildStartupParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineElementService: PipelineElementService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
@@ -212,16 +209,16 @@ class PipelineBuildService(
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
             val startParamsList = startParamsWithType.toMutableList()
-            val startParams = startParamsList.associate { it.key to it.value }.toMutableMap()
+            val startParamMap = startParamsList.associate { it.key to it.value }.toMutableMap()
             // 只有新构建才需要填充Post插件与质量红线插件
-            if (!startParams.containsKey(PIPELINE_RETRY_COUNT)) {
+            if (!startParamMap.containsKey(PIPELINE_RETRY_COUNT)) {
                 fillElementWhenNew(
                     model = model,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     startValues = startValues,
                     startParamsList = startParamsList,
-                    startParams = startParams,
+                    startParamsMap = startParamMap,
                     handlePostFlag = handlePostFlag
                 )
             }
@@ -276,28 +273,19 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
                 .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toList()
 
+            val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
+                // #5264 保留启动参数的原始值以及重试中需要用到的字段
+                originStartParams = startParamsWithType.filter {
+                    realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
+                        it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT
+                },
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule
             )
-
-            // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
-            if (startParams.isNotEmpty()) {
-                val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-                buildStartupParamService.addParam(
-                    projectId = readyToBuildPipelineInfo.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    param = JsonUtil.toJson(startParams.filter {
-                        realStartParamKeys.contains(it.key) || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG
-                    }, formatted = false)
-                )
-            }
-            // 构建过程中可获取构建启动参数 #2800
-            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
             if (acquire) {
@@ -312,7 +300,7 @@ class PipelineBuildService(
         pipelineId: String,
         startValues: Map<String, String>? = null,
         startParamsList: MutableList<BuildParameters>,
-        startParams: MutableMap<String, Any>,
+        startParamsMap: MutableMap<String, Any>,
         handlePostFlag: Boolean = true
     ) {
         val templateId = if (model.instanceFromTemplate == true) {
@@ -356,7 +344,7 @@ class PipelineBuildService(
                                     valueType = BuildFormPropertyType.TEMPORARY
                                 )
                             )
-                            startParams[key] = "true"
+                            startParamsMap[key] = "true"
                             logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
                         }
                     }
@@ -365,7 +353,7 @@ class PipelineBuildService(
                         finalElementList.add(element)
                     } else {
                         val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                        val skip = startParams[key] == "true"
+                        val skip = startParamsMap[key] == "true"
 
                         if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
                             val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)

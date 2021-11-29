@@ -119,6 +119,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return processInfo
     }
 
+    override fun doCancelReleaseBus(userId: String, atomId: String) = Unit
+
     override fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte {
         return AtomStatusEnum.RELEASED.status.toByte()
     }

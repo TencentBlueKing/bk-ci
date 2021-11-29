@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
+import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 
 @RestResource
@@ -88,7 +89,7 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.getDockerDriftThreshold(userId))
     }
 
-    override fun updateDockerDriftThreshold(userId: String, thresholdMap: Map<String, String>): Result<Boolean> {
-        return Result(dispatchDockerService.updateDockerDriftThreshold(userId, thresholdMap))
+    override fun updateDockerDriftThreshold(userId: String, hostDriftLoad: HostDriftLoad): Result<Boolean> {
+        return Result(dispatchDockerService.updateDockerDriftThreshold(userId, hostDriftLoad))
     }
 }

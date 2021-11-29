@@ -82,8 +82,8 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         return client.get(ServiceArtifactoryResource::class).searchFile(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             searchProps = searchProps
         )
     }
