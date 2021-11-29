@@ -33,62 +33,64 @@ class TXDockerHostImageScanService(
         userName: String,
         imageTagSet: MutableSet<String>,
         dockerClient: DockerClient
-    ) {
-        Executors.newFixedThreadPool(10).execute {
-            lateinit var longDockerClient: DockerClient
+    ): String {
+        lateinit var longDockerClient: DockerClient
+        try {
+            val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                .withDockerConfig(dockerHostConfig.dockerConfig)
+                .withApiVersion(dockerHostConfig.apiVersion)
+                .build()
+
+            val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+                .dockerHost(config.dockerHost)
+                .sslConfig(config.sslConfig)
+                .connectTimeout(5000)
+                .readTimeout(600000)
+                .build()
+
+            longDockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+
+            // 取任意一个tag扫描就可以
+            val imageTag = imageTagSet.first()
+            val inputStream = longDockerClient.saveImageCmd(imageTag.substringBeforeLast(":"))
+                .withTag(imageTag.substringAfterLast(":"))
+                .exec()
+
+            val uniqueImageCode = toHexStr(MessageDigest.getInstance("SHA-1")
+                .digest(imageTag.toByteArray()))
+            val imageSavedPath = "$dockerSavedPath/$uniqueImageCode.tar"
+            val targetSavedImagesFile = File(imageSavedPath)
+            FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
+
             try {
-                val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                    .withDockerConfig(dockerHostConfig.dockerConfig)
-                    .withApiVersion(dockerHostConfig.apiVersion)
-                    .build()
+                logger.info("[$buildId]|[$vmSeqId] start scan dockeriamge, imageSavedPath: $imageSavedPath")
+                val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $imageTag -i dev " +
+                        "-T $projectId -b $buildId -n $userName"
+                val scanResult = ShellUtil.executeEnhance(script)
+                logger.info("[$buildId]|[$vmSeqId] scan docker $imageTag result: $scanResult")
 
-                val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-                    .dockerHost(config.dockerHost)
-                    .sslConfig(config.sslConfig)
-                    .connectTimeout(5000)
-                    .readTimeout(600000)
-                    .build()
+                logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
+                        "image name and tag: $imageTag")
 
-                longDockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
-
-                imageTagSet.stream().forEach {
-                    val inputStream = longDockerClient.saveImageCmd(it.substringBeforeLast(":"))
-                        .withTag(it.substringAfterLast(":"))
-                        .exec()
-
-                    val uniqueImageCode = toHexStr(MessageDigest.getInstance("SHA-1")
-                        .digest(it.toByteArray()))
-                    val imageSavedPath = "$dockerSavedPath/$uniqueImageCode.tar"
-                    val targetSavedImagesFile = File(imageSavedPath)
-                    FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
-
-                    try {
-                        logger.info("[$buildId]|[$vmSeqId] start scan dockeriamge, imageSavedPath: $imageSavedPath")
-                        val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $it -i dev " +
-                                "-T $projectId -b $buildId -n $userName"
-                        val scanResult = ShellUtil.executeEnhance(script)
-                        logger.info("[$buildId]|[$vmSeqId] scan docker $it result: $scanResult")
-
-                        logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
-                                "image name and tag: $it")
-                    } catch (e: Throwable) {
-                        logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
-                    } finally {
-                        longDockerClient.removeImageCmd(it).exec()
-                        File(imageSavedPath).delete()
-                        logger.info("[$buildId]|[$vmSeqId] Remove local image success")
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("[$buildId]|[$vmSeqId] scan docker error.", e)
+                return scanResult
+            } catch (e: Throwable) {
+                logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
             } finally {
-                try {
-                    longDockerClient.close()
-                } catch (e: IOException) {
-                    logger.error("[$buildId]|[$vmSeqId] Long docker client close exception: ${e.message}")
-                }
+                longDockerClient.removeImageCmd(imageTag).exec()
+                File(imageSavedPath).delete()
+                logger.info("[$buildId]|[$vmSeqId] Remove local image success")
+            }
+        } catch (e: Exception) {
+            logger.error("[$buildId]|[$vmSeqId] scan docker error.", e)
+        } finally {
+            try {
+                longDockerClient.close()
+            } catch (e: IOException) {
+                logger.error("[$buildId]|[$vmSeqId] Long docker client close exception: ${e.message}")
             }
         }
+
+        return ""
     }
 
     fun toHexStr(byteArray: ByteArray) =
