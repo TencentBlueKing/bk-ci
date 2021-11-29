@@ -27,11 +27,15 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
+import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -67,5 +71,34 @@ class ProjectUserService @Autowired constructor(
             limit = limitByMax,
             offset = offset
         )
+    }
+
+    fun createPublicAccount(userInfo: UserInfo): Boolean {
+        val userMessage = userDao.get(dslContext, userInfo.userId)
+        if (userMessage != null) {
+            logger.warn("createPublicAccount ${userInfo.userId} ${userInfo.name} is exist")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(userInfo.userId)
+            )
+        }
+        userDao.create(
+            dslContext = dslContext,
+            userId = userInfo.userId,
+            name = userInfo.userId,
+            bgId = userInfo.bgId,
+            bgName = userInfo.bgName,
+            deptId = userInfo.deptId ?: 0,
+            deptName = userInfo.deptName ?: "",
+            centerId = userInfo.centerId ?: 0,
+            centerName = userInfo.centerName ?: "",
+            groupId = userInfo.groupId ?: 0,
+            groupName = userInfo.groupName ?: ""
+        )
+        return true
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ProjectUserService::class.java)
     }
 }
