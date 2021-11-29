@@ -1204,7 +1204,12 @@ class PipelineRuntimeService @Autowired constructor(
                         channelCode = context.channelCode,
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams,
+                        buildParameters = originStartParams.plus(
+                            BuildParameters(
+                                key = BUILD_NO,
+                                value = currentBuildNo.toString()
+                            )
+                        ),
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),
@@ -1570,7 +1575,7 @@ class PipelineRuntimeService @Autowired constructor(
             if (taskRecord != null) {
                 with(taskRecord) {
                     if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        val taskParam = JsonUtil.toMutableMap(taskParams)
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         val result = pipelineBuildTaskDao.updateTaskParam(
@@ -1610,7 +1615,7 @@ class PipelineRuntimeService @Autowired constructor(
             if (taskRecord != null) {
                 with(taskRecord) {
                     if (BuildStatus.values()[status].isRunning()) {
-                        val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
+                        val taskParam = JsonUtil.toMutableMap(taskParams)
                         taskParam[BS_MANUAL_ACTION] = params.status.toString()
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
