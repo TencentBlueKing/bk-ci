@@ -43,7 +43,12 @@ class GitCIPipelineUrlBeanImpl constructor(
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
-    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+    override fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        needShortUrl: Boolean
+    ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         val project = client.getScm(ServiceGitCiResource::class)
             .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
