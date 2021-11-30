@@ -27,9 +27,7 @@
 
 package com.tencent.devops.buildless.schedule
 
-import com.tencent.devops.buildless.service.BuildlessService
 import com.tencent.devops.buildless.utils.SystemInfoUtil
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 

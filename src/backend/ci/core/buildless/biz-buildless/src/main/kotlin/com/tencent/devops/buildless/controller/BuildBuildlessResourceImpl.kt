@@ -27,40 +27,19 @@
 
 package com.tencent.devops.buildless.controller
 
-import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
-import com.tencent.devops.buildless.exception.DockerServiceException
-import com.tencent.devops.buildless.pojo.BuildLessEndInfo
-import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.buildless.service.BuildlessContainerService
+import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
+import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceBuildlessResourceImpl @Autowired constructor(
-    private val buildlessContainerService: BuildlessContainerService
-) : ServiceBuildlessResource {
-    override fun startBuild(buildLessEndInfo: BuildLessStartInfo): Result<String> {
-        return try {
-            logger.warn("Create agentLess container, dockerHostBuildInfo: $buildLessEndInfo")
-            Result(buildlessContainerService.createContainer(buildLessEndInfo))
-        } catch (e: DockerServiceException) {
-            logger.error("Create container failed, rollback build. buildId: ${buildLessEndInfo.buildId}," +
-                    " vmSeqId: ${buildLessEndInfo.vmSeqId}")
-            Result(e.errorCode, "构建环境启动失败: ${e.message}", "")
-        }
-    }
+class BuildBuildlessResourceImpl @Autowired constructor(
+    private val buildlessTaskService: BuildLessTaskService
+) : BuildBuildLessResource {
 
-    override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
-        logger.warn("[${buildLessEndInfo.buildId}] | Stop the container, " +
-                "containerId: ${buildLessEndInfo.containerId}")
-        buildlessContainerService.stopContainer(buildLessEndInfo)
-
-        return Result(true)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceBuildlessResourceImpl::class.java)
+    override fun claimBuildLessTask(containerId: String): BuildLessTask? {
+        return buildlessTaskService.claimBuildLessTask(containerId)
     }
 }
