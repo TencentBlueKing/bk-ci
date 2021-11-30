@@ -33,12 +33,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 
 /**
- * 构建结束的广播事件，用于通知等
+ * 构建待审核的广播事件，用于通知等
  * @author royalhuang
  * @version 1.0
  */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_CHECK_FANOUT)
-data class PipelineBuildReviewCheckBroadCastEvent(
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT)
+data class PipelineBuildReviewBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
@@ -49,6 +49,5 @@ data class PipelineBuildReviewCheckBroadCastEvent(
     val reviewType: BuildReviewType,
     val status: String,
     val stageId: String?,
-    val taskId: String?,
-    val ruleIds: List<String>? = null // stage的准入准出才有该红线ID集合
+    val taskId: String?
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
