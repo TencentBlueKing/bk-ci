@@ -1,14 +1,13 @@
 package com.tencent.devops.stream.listener
 
 import com.tencent.devops.stream.constant.MQ as StreamMQ
-import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.listener.components.SendCommitCheck
+import com.tencent.devops.stream.listener.components.SendQualityMrComment
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.jooq.DSLContext
@@ -28,7 +27,7 @@ class BuildQualityCheckistener @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamPipelineService: StreamPipelineService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val sendCommitCheck: SendCommitCheck
+    private val sendQualityMrComment: SendQualityMrComment
 ) {
 
     companion object {
@@ -46,8 +45,49 @@ class BuildQualityCheckistener @Autowired constructor(
             )
         ))]
     )
-    fun buildQualityCheckListener(buildReviewEvent: PipelineBuildQualityCheckBroadCastEvent) {
-        // TODO 发MR评论
+    fun buildQualityCheckListener(buildQualityEvent: PipelineBuildQualityCheckBroadCastEvent) {
+        try {
+            logger.info("buildQualityCheckListener buildReviewEvent: $buildQualityEvent")
+            val streamBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildQualityEvent.buildId)
+            val buildEvent = streamBuild?.let {
+                StreamBuildEvent(
+                    id = it.id,
+                    eventId = it.eventId,
+                    pipelineId = it.pipelineId,
+                    version = it.version,
+                    normalizedYaml = it.normalizedYaml
+                )
+            } ?: return
+            val requestEvent = gitRequestEventDao.getWithEvent(dslContext, buildEvent.eventId) ?: return
+            val pipelineId = buildEvent.pipelineId
+
+            val gitProjectId = requestEvent.gitProjectId
+            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+                ?: throw OperationException("git ci all projectCode not exist")
+
+            val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
+                ?: throw OperationException("git ci pipeline not exist")
+
+            sendQualityMrComment.sendMrComment(
+                StreamBuildListenerContextV2(
+                    buildEvent = BuildEvent(
+                        projectId = buildQualityEvent.projectId,
+                        pipelineId = buildQualityEvent.pipelineId,
+                        userId = buildQualityEvent.userId,
+                        buildId = buildQualityEvent.buildId,
+                        status = buildQualityEvent.status,
+                        startTime = streamBuild.createTime.timestampmilli()
+                    ),
+                    requestEvent = requestEvent,
+                    streamBuildEvent = buildEvent,
+                    pipeline = pipeline,
+                    streamSetting = v2GitSetting
+                ),
+                ruleIds = buildQualityEvent.ruleIds
+                    ?: throw RuntimeException("${buildQualityEvent.buildId} have none ruleids")
+            )
+        } catch (e: Exception) {
+            logger.warn("buildQualityCheckListener ${buildQualityEvent.buildId} error: ${e.message}")
+        }
     }
 }
-

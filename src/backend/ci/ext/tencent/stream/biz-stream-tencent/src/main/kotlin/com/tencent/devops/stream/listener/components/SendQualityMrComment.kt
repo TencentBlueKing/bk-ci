@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.listener.BuildEvent
-import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
+import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
 import com.tencent.devops.stream.listener.utils.QualityUtils
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
@@ -56,7 +56,7 @@ class SendQualityMrComment @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SendQualityMrComment::class.java)
     }
 
-    fun sendMrComment(context: StreamBuildStageListenerContextV2, ruleIds: List<String>) {
+    fun sendMrComment(context: StreamBuildListenerContextV2, ruleIds: List<String>) {
         if (!context.checkSend()) {
             return
         }
@@ -98,7 +98,7 @@ class SendQualityMrComment @Autowired constructor(
         }
     }
 
-    private fun StreamBuildStageListenerContextV2.checkSend(): Boolean {
+    private fun StreamBuildListenerContextV2.checkSend(): Boolean {
         with(this) {
             if (!streamSetting.enableMrComment) {
                 return false
