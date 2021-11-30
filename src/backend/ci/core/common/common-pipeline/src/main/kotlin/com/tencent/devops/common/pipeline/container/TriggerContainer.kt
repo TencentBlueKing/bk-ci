@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -56,7 +57,10 @@ data class TriggerContainer(
     val buildNo: BuildNo? = null,
     @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
     override var canRetry: Boolean? = null,
+    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, hidden = true)
     override var containerId: String? = null,
+    @ApiModelProperty("容器唯一ID", required = false, hidden = true)
+    override var containerHashId: String? = null,
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
@@ -66,7 +70,7 @@ data class TriggerContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false
+    override var matrixGroupFlag: Boolean? = false
 ) : Container {
     companion object {
         const val classType = "trigger"

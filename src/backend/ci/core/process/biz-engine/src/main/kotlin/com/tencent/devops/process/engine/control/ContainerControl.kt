@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.control.command.container.impl.StartAct
 import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateContainerCmdFinally
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -63,7 +62,6 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
@@ -95,7 +93,7 @@ class ContainerControl @Autowired constructor(
                 val container = pipelineContainerService.getContainer(
                     buildId = buildId,
                     stageId = stageId,
-                    containerSeqId = containerId
+                    containerId = containerId
                 ) ?: run {
                     LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
                     return

@@ -60,9 +60,12 @@ class PipelineBuildContainerDao {
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
+                    MATRIX_GROUP_FLAG,
                     MATRIX_GROUP_ID,
                     CONTAINER_TYPE,
                     SEQ,
+                    CONTAINER_ID,
+                    CONTAINER_HASH_ID,
                     STATUS,
                     START_TIME,
                     END_TIME,
@@ -75,9 +78,12 @@ class PipelineBuildContainerDao {
                         buildContainer.pipelineId,
                         buildContainer.buildId,
                         buildContainer.stageId,
+                        buildContainer.matrixGroupFlag,
                         buildContainer.matrixGroupId,
                         buildContainer.containerType,
                         buildContainer.seq,
+                        buildContainer.containerId,
+                        buildContainer.containerHashId,
                         buildContainer.status.ordinal,
                         buildContainer.startTime,
                         buildContainer.endTime,
@@ -102,6 +108,8 @@ class PipelineBuildContainerDao {
                         .set(BUILD_ID, it.buildId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .set(MATRIX_GROUP_FLAG, it.matrixGroupFlag)
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(SEQ, it.seq)
@@ -134,6 +142,7 @@ class PipelineBuildContainerDao {
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(STATUS, it.status)
                         .set(START_TIME, it.startTime)
                         .set(END_TIME, it.endTime)
@@ -186,7 +195,7 @@ class PipelineBuildContainerDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        containerSeqId: Int,
+        containerId: String,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         buildStatus: BuildStatus
@@ -212,7 +221,7 @@ class PipelineBuildContainerDao {
             }
 
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
-                .and(SEQ.eq(containerSeqId)).execute()
+                .and(CONTAINER_ID.eq(containerId)).execute()
         }
     }
 
@@ -223,6 +232,24 @@ class PipelineBuildContainerDao {
     ): Collection<TPipelineBuildContainerRecord> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            if (!stageId.isNullOrBlank()) {
+                conditionStep.and(STAGE_ID.eq(stageId))
+            }
+            conditionStep.orderBy(SEQ.asc()).fetch()
+        }
+    }
+
+    fun listBuildContainerInMatrixGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String? = null
+    ): Collection<TPipelineBuildContainerRecord> {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            val conditionStep = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(MATRIX_GROUP_ID.isNotNull)
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
@@ -259,6 +286,8 @@ class PipelineBuildContainerDao {
                 stageId = stageId,
                 containerType = containerType,
                 containerId = containerId,
+                containerHashId = containerHashId,
+                matrixGroupFlag = matrixGroupFlag,
                 matrixGroupId = matrixGroupId,
                 seq = seq,
                 status = BuildStatus.values()[status],

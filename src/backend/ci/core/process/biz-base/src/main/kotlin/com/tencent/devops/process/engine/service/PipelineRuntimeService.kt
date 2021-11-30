@@ -657,7 +657,7 @@ class PipelineRuntimeService @Autowired constructor(
         val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
         val context = StartBuildContext.init(startParamMap)
 
-        val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
+        val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(buildId)
         val lastTimeBuildContainerRecords = pipelineContainerService.listByBuildId(buildId)
@@ -688,11 +688,6 @@ class PipelineRuntimeService @Autowired constructor(
             DependOnUtils.initDependOn(stage = stage, params = startParamMap)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
-                var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
-                var needStartVM = false // 是否需要启动构建
-                var needUpdateContainer = false
-                var taskSeq = 0
-
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
                     if (buildNoObj != null && context.actionType == ActionType.START) {
@@ -773,178 +768,35 @@ class PipelineRuntimeService @Autowired constructor(
                     return@nextContainer
                 }
 
-                // --- 第3层循环：Element遍历处理 ---
-                val containerElements = container.elements
-                containerElements.forEach nextElement@{ atomElement ->
-                    taskSeq++ // 跳过的也要+1，Seq不需要连续性
-                    // 计算启动构建机的插件任务的序号
-                    if (startVMTaskSeq < 0) {
-                        startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
-                        if (startVMTaskSeq > 0) {
-                            taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
-                        }
-                    }
-
-                    atomElement.disableBySkipVar(variables = startParamMap) // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
-
-                    val status = atomElement.initStatus(rerun = context.needRerun(stage))
-                    if (status.isFinish()) {
-                        logger.info("[$buildId|${atomElement.id}] status=$status")
-                        atomElement.status = status.name
-                        return@nextElement
-                    }
-
-                    // 全新构建
-                    if (lastTimeBuildTaskRecords.isEmpty()) {
-                        context.taskCount++
-                        buildTaskList.add(
-                            PipelineBuildTask(
-                                projectId = pipelineInfo.projectId,
-                                pipelineId = pipelineInfo.pipelineId,
-                                buildId = buildId,
-                                stageId = stage.id!!,
-                                containerId = container.id!!,
-                                containerHashId = container.containerId ?: "",
-                                containerType = container.getClassType(),
-                                taskSeq = taskSeq,
-                                taskId = atomElement.id!!,
-                                taskName = if (atomElement.name.length > 128) {
-                                    atomElement.name.substring(0, 128)
-                                } else atomElement.name,
-                                taskType = atomElement.getClassType(),
-                                taskAtom = atomElement.getTaskAtom(),
-                                status = status,
-                                taskParams = atomElement.genTaskParams(),
-                                additionalOptions = atomElement.additionalOptions,
-                                executeCount = 1,
-                                starter = context.userId,
-                                approver = null,
-                                subProjectId = null,
-                                subBuildId = null,
-                                atomCode = atomElement.getAtomCode()
-                            )
-                        )
-                        needUpdateContainer = true
-                    } else {
-                        // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
-                        if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
-                            val target = findTaskRecord(
-                                lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                                container = container,
-                                retryStartTaskId = atomElement.id!!
-                            )
-                            // 插件任务在历史中找不到，则跳过当前插件
-                            // 如果插件任务之前已经是完成状态，则跳过当前插件
-                            try {
-                                if (target == null || BuildStatus.values()[target.status].isFinish()) {
-                                    return@nextElement
-                                }
-                            } catch (ignored: Exception) { // 如果存在异常的ordinal
-                                logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
-                                return@nextElement
-                            }
-                        }
-
-                        // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
-                        val taskRecord = retryDetailModelStatus(
-                            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                            stage = stage,
-                            container = container,
-                            retryStartTaskId = atomElement.id!!,
-                            executeCount = context.executeCount,
-                            atomElement = atomElement, // #4245 将失败跳过的插件置为跳过
-                            initialStatus = if (context.inSkipStage(stage, atomElement)) BuildStatus.SKIP else null
-                        )
-
-                        if (taskRecord != null) {
-                            updateExistsRecord.add(taskRecord)
-                            // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
-                            if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
-                                val pair = findPostTask(lastTimeBuildTaskRecords, atomElement, containerElements)
-                                if (pair != null) {
-                                    setRetryBuildTask(
-                                        target = pair.first,
-                                        executeCount = context.executeCount,
-                                        stage = stage,
-                                        container = container,
-                                        atomElement = pair.second
-                                    )
-                                    updateExistsRecord.add(pair.first)
-                                }
-                            }
-                            needUpdateContainer = true
-                        }
-                    }
-
-                    // 确认是否要启动构建机/无编译环境
-                    if (!needStartVM && startVMTaskSeq > 0) {
-                        needStartVM = true
-                    }
-                }
-                // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
-                if (needStartVM) {
-                    supplyVMTask(
-                        stage = stage,
+                /*
+                    #4518 整合组装Task和刷新已有Container的逻辑
+                    构建矩阵特殊处理，即使重试也要重新计算执行策略
+                */
+                if (container.containPostTaskFlag == true) {
+                    if (container is VMBuildContainer) container.retryFreshMatrixOption()
+                    if (container is NormalContainer) container.retryFreshMatrixOption()
+                    pipelineContainerService.deleteTasksInMatrixGroupContainer(
+                        transactionContext = dslContext,
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineInfo.pipelineId,
+                        buildId = buildId
+                    )
+                } else {
+                    // --- 第3层循环：Element遍历处理 ---
+                    needUpdateStage = prepareBuildContainerTasks(
                         container = container,
-                        containerSeq = context.containerSeq,
-                        startVMTaskSeq = startVMTaskSeq,
-                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                        updateExistsRecord = updateExistsRecord,
+                        startParamMap = startParamMap,
+                        context = context,
+                        stage = stage,
+                        buildId = buildId,
+                        buildContainers = buildContainers,
                         buildTaskList = buildTaskList,
                         pipelineInfo = pipelineInfo,
-                        executeCount = context.executeCount,
-                        buildId = buildId,
-                        userId = context.userId
+                        updateContainerExistsRecord = updateContainerExistsRecord,
+                        updateTaskExistsRecord = updateTaskExistsRecord,
+                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                        lastTimeBuildContainerRecords = lastTimeBuildContainerRecords
                     )
-                }
-
-                if (needUpdateContainer) {
-                    if (lastTimeBuildContainerRecords.isNotEmpty()) {
-                        run findHistoryContainer@{
-                            lastTimeBuildContainerRecords.forEach {
-                                if (it.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
-                                    it.status = BuildStatus.QUEUE.ordinal
-                                    it.startTime = null
-                                    it.endTime = null
-                                    it.executeCount = context.executeCount
-                                    updateContainerExistsRecord.add(it)
-                                    return@findHistoryContainer
-                                }
-                            }
-                        }
-                    } else {
-                        ModelUtils.initContainerOldData(container)
-                        val controlOption = when (container) {
-                            is NormalContainer -> PipelineBuildContainerControlOption(
-                                jobControlOption = container.jobControlOption!!,
-                                inFinallyStage = stage.finally,
-                                mutexGroup = container.mutexGroup,
-                                containPostTaskFlag = container.containPostTaskFlag
-                            )
-                            is VMBuildContainer -> PipelineBuildContainerControlOption(
-                                jobControlOption = container.jobControlOption!!,
-                                inFinallyStage = stage.finally,
-                                mutexGroup = container.mutexGroup,
-                                containPostTaskFlag = container.containPostTaskFlag
-                            )
-                            else -> null
-                        }
-                        buildContainers.add(
-                            PipelineBuildContainer(
-                                projectId = pipelineInfo.projectId,
-                                pipelineId = pipelineInfo.pipelineId,
-                                buildId = buildId,
-                                stageId = stage.id!!,
-                                containerId = container.id!!,
-                                containerType = container.getClassType(),
-                                seq = context.containerSeq,
-                                status = BuildStatus.QUEUE,
-                                controlOption = controlOption,
-                                matrixGroupId = null
-                            )
-                        )
-                    }
-                    needUpdateStage = true
                 }
                 context.containerSeq++
             }
@@ -1138,13 +990,13 @@ class PipelineRuntimeService @Autowired constructor(
                 addTraceVar(projectId = pipelineInfo.projectId, pipelineId = pipelineInfo.pipelineId, buildId = buildId)
 
                 // 上一次存在的需要重试的任务直接Update，否则就插入
-                if (updateExistsRecord.isEmpty()) {
+                if (updateTaskExistsRecord.isEmpty()) {
                     // 保持要执行的任务
                     logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
                     pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 } else {
-                    logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
-                    pipelineTaskService.batchUpdate(transactionContext, updateExistsRecord)
+                    logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateTaskExistsRecord.size}")
+                    pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
                 }
 
                 if (updateContainerExistsRecord.isEmpty()) {
@@ -1208,6 +1060,202 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         return buildId
+    }
+
+    private fun prepareBuildContainerTasks(
+        buildId: String,
+        stage: Stage,
+        container: Container,
+        startParamMap: Map<String, Any>,
+        context: StartBuildContext,
+        pipelineInfo: PipelineInfo,
+        buildTaskList: MutableList<PipelineBuildTask>,
+        buildContainers: MutableList<PipelineBuildContainer>,
+        updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord>,
+        updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord>,
+        lastTimeBuildContainerRecords: Collection<TPipelineBuildContainerRecord>,
+        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>
+    ): Boolean {
+        var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
+        var needStartVM = false // 是否需要启动构建
+        var needUpdateContainer = false
+        var needUpdateStage = false
+        var taskSeq = 0
+        val containerElements = container.elements
+
+        containerElements.forEach nextElement@{ atomElement ->
+            taskSeq++ // 跳过的也要+1，Seq不需要连续性
+            // 计算启动构建机的插件任务的序号
+            if (startVMTaskSeq < 0) {
+                startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
+                if (startVMTaskSeq > 0) {
+                    taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
+                }
+            }
+
+            atomElement.disableBySkipVar(variables = startParamMap) // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+
+            val status = atomElement.initStatus(rerun = context.needRerun(stage))
+            if (status.isFinish()) {
+                logger.info("[$buildId|${atomElement.id}] status=$status")
+                atomElement.status = status.name
+                return@nextElement
+            }
+
+            // 全新构建
+            if (lastTimeBuildTaskRecords.isEmpty()) {
+                context.taskCount++
+                buildTaskList.add(
+                    PipelineBuildTask(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineInfo.pipelineId,
+                        buildId = buildId,
+                        stageId = stage.id!!,
+                        containerId = container.id!!,
+                        containerHashId = container.containerHashId ?: "",
+                        containerType = container.getClassType(),
+                        taskSeq = taskSeq,
+                        taskId = atomElement.id!!,
+                        taskName = if (atomElement.name.length > 128) {
+                            atomElement.name.substring(0, 128)
+                        } else atomElement.name,
+                        taskType = atomElement.getClassType(),
+                        taskAtom = atomElement.getTaskAtom(),
+                        status = status,
+                        taskParams = atomElement.genTaskParams(),
+                        additionalOptions = atomElement.additionalOptions,
+                        executeCount = 1,
+                        starter = context.userId,
+                        approver = null,
+                        subProjectId = null,
+                        subBuildId = null,
+                        atomCode = atomElement.getAtomCode()
+                    )
+                )
+                needUpdateContainer = true
+            } else {
+                // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
+                if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
+                    val target = findTaskRecord(
+                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                        container = container,
+                        retryStartTaskId = atomElement.id!!
+                    )
+                    // 插件任务在历史中找不到，则跳过当前插件
+                    // 如果插件任务之前已经是完成状态，则跳过当前插件
+                    try {
+                        if (target == null || BuildStatus.values()[target.status].isFinish()) {
+                            return@nextElement
+                        }
+                    } catch (ignored: Exception) { // 如果存在异常的ordinal
+                        logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
+                        return@nextElement
+                    }
+                }
+
+                // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
+                val taskRecord = retryDetailModelStatus(
+                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    stage = stage,
+                    container = container,
+                    retryStartTaskId = atomElement.id!!,
+                    executeCount = context.executeCount,
+                    atomElement = atomElement, // #4245 将失败跳过的插件置为跳过
+                    initialStatus = if (context.inSkipStage(stage, atomElement)) BuildStatus.SKIP else null
+                )
+
+                if (taskRecord != null) {
+                    updateTaskExistsRecord.add(taskRecord)
+                    // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
+                    if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
+                        val pair = findPostTask(lastTimeBuildTaskRecords, atomElement, containerElements)
+                        if (pair != null) {
+                            setRetryBuildTask(
+                                target = pair.first,
+                                executeCount = context.executeCount,
+                                stage = stage,
+                                container = container,
+                                atomElement = pair.second
+                            )
+                            updateTaskExistsRecord.add(pair.first)
+                        }
+                    }
+                    needUpdateContainer = true
+                }
+            }
+
+            // 确认是否要启动构建机/无编译环境
+            if (!needStartVM && startVMTaskSeq > 0) {
+                needStartVM = true
+            }
+        }
+        // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
+        if (needStartVM) {
+            supplyVMTask(
+                stage = stage,
+                container = container,
+                containerSeq = context.containerSeq,
+                startVMTaskSeq = startVMTaskSeq,
+                lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                updateExistsRecord = updateTaskExistsRecord,
+                buildTaskList = buildTaskList,
+                pipelineInfo = pipelineInfo,
+                executeCount = context.executeCount,
+                buildId = buildId,
+                userId = context.userId
+            )
+        }
+        if (needUpdateContainer) {
+            if (lastTimeBuildContainerRecords.isNotEmpty()) {
+                run findHistoryContainer@{
+                    lastTimeBuildContainerRecords.forEach {
+                        if (it.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
+                            it.status = BuildStatus.QUEUE.ordinal
+                            it.startTime = null
+                            it.endTime = null
+                            it.executeCount = context.executeCount
+                            updateContainerExistsRecord.add(it)
+                            return@findHistoryContainer
+                        }
+                    }
+                }
+            } else {
+                ModelUtils.initContainerOldData(container)
+                val controlOption = when (container) {
+                    is NormalContainer -> PipelineBuildContainerControlOption(
+                        jobControlOption = container.jobControlOption!!,
+                        inFinallyStage = stage.finally,
+                        mutexGroup = container.mutexGroup,
+                        containPostTaskFlag = container.containPostTaskFlag
+                    )
+                    is VMBuildContainer -> PipelineBuildContainerControlOption(
+                        jobControlOption = container.jobControlOption!!,
+                        inFinallyStage = stage.finally,
+                        mutexGroup = container.mutexGroup,
+                        containPostTaskFlag = container.containPostTaskFlag
+                    )
+                    else -> null
+                }
+                buildContainers.add(
+                    PipelineBuildContainer(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineInfo.pipelineId,
+                        buildId = buildId,
+                        stageId = stage.id!!,
+                        containerId = container.containerId ?: context.containerSeq.toString(),
+                        containerHashId = container.containerHashId ?: "",
+                        containerType = container.getClassType(),
+                        seq = context.containerSeq,
+                        status = BuildStatus.QUEUE,
+                        controlOption = controlOption,
+                        matrixGroupFlag = false,
+                        matrixGroupId = null
+                    )
+                )
+            }
+            needUpdateStage = true
+        }
+        return needUpdateStage
     }
 
     private fun findPostTask(
@@ -1488,6 +1536,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 buildId = buildId,
                                 stageId = stageId,
                                 containerId = containerId,
+                                containerHashId = containerHashId,
                                 containerType = containerType,
                                 taskId = taskId,
                                 taskParam = taskParam,
@@ -1532,7 +1581,7 @@ class PipelineRuntimeService @Autowired constructor(
                             PipelineBuildAtomTaskEvent(
                                 source = "manualDealBuildTask", projectId = projectId, pipelineId = pipelineId,
                                 userId = starter, buildId = buildId, stageId = stageId, containerId = containerId,
-                                containerType = containerType, taskId = taskId,
+                                containerHashId = containerHashId, containerType = containerType, taskId = taskId,
                                 taskParam = taskParam, actionType = ActionType.REFRESH
                             )
                         )
@@ -1592,6 +1641,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildTask.buildId,
                     stageId = buildTask.stageId,
                     containerId = buildTask.containerId,
+                    containerHashId = buildTask.containerHashId,
                     containerType = buildTask.containerType,
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH
                 )

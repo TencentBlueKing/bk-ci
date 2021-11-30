@@ -494,6 +494,7 @@ class StartActionTaskContainerCmd(
                 buildId = task.buildId,
                 stageId = task.stageId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 containerType = task.containerType,
                 taskId = task.taskId,
                 taskParam = task.taskParams,

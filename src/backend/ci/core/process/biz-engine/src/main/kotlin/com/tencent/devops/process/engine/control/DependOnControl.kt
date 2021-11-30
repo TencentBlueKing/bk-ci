@@ -52,7 +52,7 @@ class DependOnControl @Autowired constructor(
             buildId = container.buildId,
             message = logBuilder.toString(),
             tag = VMUtils.genStartVMTaskId(container.seq.toString()),
-            jobId = container.containerId,
+            jobId = container.containerHashId,
             executeCount = container.executeCount
         )
         return buildStatus

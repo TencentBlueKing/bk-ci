@@ -31,8 +31,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -41,9 +41,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class InitializeContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
-
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -56,9 +55,29 @@ class InitializeContainerStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
-        val stage = commandContext.stage
-        val event = commandContext.event
-
+        // 在下发构建机任务前进行构建矩阵计算
+        val count = generateMatrixGroup(commandContext)
+        LOG.info("ENGINE|${commandContext.stage.buildId}|MATRIX_CONTAINER_INIT|" +
+            "s(${commandContext.stage.stageId})|newContainerCount=$count")
+        commandContext.latestSummary = "from_s(${commandContext.stage.stageId}) generateNew($count)"
         commandContext.cmdFlowState = CmdFlowState.CONTINUE
+    }
+
+    private fun generateMatrixGroup(commandContext: StageContext): Int {
+        val event = commandContext.event
+        var newCount = 0
+        val model = containerBuildDetailService.getBuildModel(event.buildId) ?: return newCount
+
+        // #4518 根据当前上下文对每一个构建矩阵进行裂变
+        model.stages.forEach { stage ->
+            if (stage.id == commandContext.stage.stageId) {
+                stage.containers.forEach { container ->
+                    if (container.matrixGroupFlag == true) {
+                        // TODO
+                    }
+                }
+            }
+        }
+        return 0
     }
 }

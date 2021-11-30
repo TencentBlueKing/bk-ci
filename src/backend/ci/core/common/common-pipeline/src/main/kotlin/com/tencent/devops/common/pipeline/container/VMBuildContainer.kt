@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.container
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -83,7 +84,10 @@ data class VMBuildContainer(
     override var canRetry: Boolean? = null,
     @ApiModelProperty("是否访问外网", required = false, hidden = true)
     var enableExternal: Boolean? = false,
+    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, hidden = true)
     override var containerId: String? = null,
+    @ApiModelProperty("容器唯一ID", required = false, hidden = true)
+    override var containerHashId: String? = null,
     @ApiModelProperty("流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("互斥组", required = false)
@@ -97,9 +101,13 @@ data class VMBuildContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false,
+    override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("所在构建矩阵组的jobId", required = false)
-    var matrixGroupId: String? = null
+    var matrixGroupId: String? = null,
+    @ApiModelProperty("构建矩阵配置项", required = false)
+    var matrixControlOption: MatrixControlOption? = null,
+    @ApiModelProperty("分裂后的容器集合（每个元素不再带有该值）", required = false)
+    var groupContainers: MutableList<VMBuildContainer>? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"
@@ -112,4 +120,10 @@ data class VMBuildContainer(
         }
 
     override fun getClassType() = classType
+
+    fun retryFreshMatrixOption() {
+        groupContainers = mutableListOf()
+        matrixControlOption?.runningCount = null
+        matrixControlOption?.totalCount = null
+    }
 }

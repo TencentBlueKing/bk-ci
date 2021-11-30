@@ -25,41 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.common.pipeline.pojo.element.matrix
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- *
- * @version 1.0
- */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_TASK_START)
-data class PipelineBuildAtomTaskEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerHashId: String?,
-    val containerType: String,
-    val taskId: String,
-    val taskParam: MutableMap<String, Any>,
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null,
-    val reason: String? = null,
-    /**
-     * 0 表示 没有错误
-     */
-    var errorCode: Int = 0,
-    /**
-     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
-     */
-    var errorTypeName: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+@ApiModel("流水线模型-构建矩阵纯状态插件", description = MatrixStatusElement.classType)
+data class MatrixStatusElement(
+    @ApiModelProperty("任务名称", required = true)
+    override var name: String = "状态插件",
+    @ApiModelProperty("插件ID", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("执行状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("执行次数", required = false)
+    override var executeCount: Int = 1,
+    @ApiModelProperty("执行时间", required = false)
+    override var elapsed: Long? = null,
+    @ApiModelProperty("启动时间", required = false)
+    override var startEpoch: Long? = null
+) : Element(
+    name = name,
+    status = status,
+    executeCount = executeCount,
+    elapsed = elapsed,
+    startEpoch = startEpoch
+) {
+
+    companion object {
+        const val classType = "matrixStatus"
+    }
+
+    override fun getClassType() = classType
+}

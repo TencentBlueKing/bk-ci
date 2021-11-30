@@ -136,7 +136,7 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 message = "Skip when ${jobControlOption.runCondition} previous stage status is $previousStatus",
                 tag = container.stageId,
-                jobId = container.containerId,
+                jobId = container.containerHashId,
                 executeCount = container.executeCount
             )
         }

@@ -48,6 +48,7 @@ class MutexControlTest {
     private val containerId: String = "1"
     private val projectId: String = "demo"
     private val pipelineId: String = "p-12345678901234567890123456789012"
+    private val containerHashId: String = "c-12345678901234567890123456789012"
     private val stageId: String = "stage-1"
     private val mutexGroup: MutexGroup = MutexGroup(
         enable = true,
@@ -62,11 +63,13 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
         controlOption = null,
-        matrixGroupId = null
+        matrixGroupId = null,
+        matrixGroupFlag = false
     )
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,

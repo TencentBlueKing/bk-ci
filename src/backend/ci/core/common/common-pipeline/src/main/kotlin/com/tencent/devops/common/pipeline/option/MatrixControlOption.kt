@@ -25,41 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.common.pipeline.option
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import io.swagger.annotations.ApiModelProperty
 
 /**
- * Container事件
- *
- * @version 1.0
+ *  构建矩阵配置项
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_MATRIX_GROUP)
-data class PipelineBuildMatrixGroupEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerType: String,
-    val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    val reason: String? = null,
-    @Deprecated(message = "errorCode=com.tencent.devop.common.api.pojo.ErrorCode.USER_JOB_OUTTIME_LIMIT")
-    val timeout: Boolean? = false,
-    /**
-     * 0 表示 没有错误
-     */
-    var errorCode: Int = 0,
-    /**
-     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
-     */
-    var errorTypeName: String? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+data class MatrixControlOption(
+    @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
+    val strategyStr: String,
+    @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
+    val includeCase: List<Map<String, String>>? = null,
+    @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
+    val excludeCase: List<Map<String, String>>? = null,
+    @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
+    val fastKill: Boolean? = false,
+    @ApiModelProperty("Job运行的最大并发量", required = false)
+    val maxConcurrency: Int? = null,
+    @ApiModelProperty("正在运行的数量", required = false)
+    var totalCount: Int? = null,
+    @ApiModelProperty("正在运行的数量", required = false)
+    var runningCount: Int? = null
+)
