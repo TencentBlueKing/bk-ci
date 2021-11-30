@@ -43,7 +43,6 @@ import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
@@ -208,10 +207,10 @@ private fun waitBuildLessJobStart() {
     do {
         println("Docker buildLess waiting start...")
         Thread.sleep(1000)
-    } while (agentId.isBlank() || agentSecretKey.isBlank())
+    } while (agentId.isNullOrBlank() || agentSecretKey.isNullOrBlank())
 }
 
-private fun getProperty(prop: String): String {
+private fun getProperty(prop: String): String? {
     var value = System.getenv(prop)
     if (value.isNullOrBlank()) {
         // Get from java properties
