@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
@@ -57,7 +58,7 @@ fun main(args: Array<String>) {
     val buildType = System.getProperty(BUILD_TYPE)
     when (buildType) {
         BuildType.DOCKER.name -> {
-            val jobPoolType = System.getProperty(JOB_POOL)
+            val jobPoolType = getProperty(JOB_POOL)
             // 无编译构建，轮询等待任务
             if (jobPoolType != null &&
                 jobPoolType.equals(com.tencent.devops.common.pipeline.type.BuildType.AGENT_LESS.name)) {
@@ -202,10 +203,19 @@ fun main(args: Array<String>) {
 }
 
 private fun waitBuildLessJobStart() {
-    val agentId = System.getProperty(AGENT_ID)
-    val agentSecretKey = System.getProperty(AGENT_SECRET_KEY)
+    val agentId = getProperty(AGENT_ID)
+    val agentSecretKey = getProperty(AGENT_SECRET_KEY)
     do {
         println("Docker buildLess waiting start...")
         Thread.sleep(1000)
-    } while (agentId.isNullOrBlank() || agentSecretKey.isNullOrBlank())
+    } while (agentId.isBlank() || agentSecretKey.isBlank())
+}
+
+private fun getProperty(prop: String): String {
+    var value = System.getenv(prop)
+    if (value.isNullOrBlank()) {
+        // Get from java properties
+        value = System.getProperty(prop)
+    }
+    return value
 }
