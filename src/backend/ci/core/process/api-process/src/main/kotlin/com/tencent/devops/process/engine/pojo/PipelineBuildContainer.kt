@@ -35,7 +35,8 @@ data class PipelineBuildContainer(
     val pipelineId: String,
     val buildId: String,
     val stageId: String,
-    val containerId: String,
+    val containerId: String, // 与seq id同值
+    val containerHashId: String, // 与model中的container.containerHashId同值
     val matrixGroupFlag: Boolean?,
     val matrixGroupId: String?,
     val containerType: String,

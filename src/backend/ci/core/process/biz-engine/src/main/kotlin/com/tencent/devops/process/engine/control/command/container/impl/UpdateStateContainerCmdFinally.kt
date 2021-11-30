@@ -112,7 +112,7 @@ class UpdateStateContainerCmdFinally(
         pipelineContainerService.updateContainerStatus(
             buildId = event.buildId,
             stageId = event.stageId,
-            containerSeqId = event.containerId,
+            containerId = event.containerId,
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime
@@ -154,7 +154,7 @@ class UpdateStateContainerCmdFinally(
                 buildId = buildId,
                 message = "[$executeCount]| Finish Job#${this.containerId}| ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
+                jobId = containerHashId ?: "",
                 executeCount = executeCount
             )
         }

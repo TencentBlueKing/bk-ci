@@ -242,9 +242,14 @@ class PipelineRepositoryService constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
             defaultMessage = "第一阶段的环境不能为空"
         )) as TriggerContainer
+
+        // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
         if (c.containerId.isNullOrBlank()) {
-            c.containerId = modelContainerIdGenerator.getNextId()
+            c.containerId = c.id
+        }
+        if (c.containerHashId.isNullOrBlank()) {
+            c.containerHashId = modelContainerIdGenerator.getNextId()
         }
 
         var taskSeq = 0
@@ -331,10 +336,16 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
-            // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致
+
+            // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
+            c.id = containerSeqId.get().toString()
             if (c.containerId.isNullOrBlank()) {
-                c.containerId = modelContainerIdGenerator.getNextId()
+                c.containerId = c.id
             }
+            if (c.containerHashId.isNullOrBlank()) {
+                c.containerHashId = modelContainerIdGenerator.getNextId()
+            }
+
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank()) {
                     e.id = modelTaskIdGenerator.getNextId()

@@ -166,7 +166,7 @@ class PipelineTaskService @Autowired constructor(
         val listByStatus = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
-            containerSeqId = null,
+            containerId = null,
             statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
         val list = mutableListOf<Map<String, Any>>()
@@ -209,14 +209,14 @@ class PipelineTaskService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        containerSeqId: Int
+        containerId: String
     ): Int {
         return pipelineBuildTaskDao.deleteBuildTasksByContainerSeqId(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerSeqId = containerSeqId.toString()
+            containerId = containerId
         )
     }
 
@@ -255,7 +255,7 @@ class PipelineTaskService @Autowired constructor(
         val list = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
-            containerSeqId = containerSeqId,
+            containerId = containerSeqId,
             statusSet = buildStatusSet
         )
         val result = mutableListOf<PipelineBuildTask>()

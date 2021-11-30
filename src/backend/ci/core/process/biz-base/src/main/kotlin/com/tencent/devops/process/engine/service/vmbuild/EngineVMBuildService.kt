@@ -206,7 +206,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         variables = context,
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
-                        containerHashId = it.containerId ?: "",
+                        containerHashId = it.containerHashId ?: "",
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills!!,
                         containerType = it.getClassType()
@@ -261,7 +261,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 pipelineContainerService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
-                    containerSeqId = startUpVMTask.containerId,
+                    containerId = startUpVMTask.containerId,
                     startTime = LocalDateTime.now(),
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
@@ -305,6 +305,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 userId = startUpVMTask.starter,
                 stageId = startUpVMTask.stageId,
                 containerId = startUpVMTask.containerId,
+                containerHashId = startUpVMTask.containerHashId,
                 containerType = startUpVMTask.containerType,
                 actionType = actionType,
                 reason = message
@@ -328,7 +329,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val container = pipelineContainerService.getContainer(
                 buildId = buildId,
                 stageId = null,
-                containerSeqId = vmSeqId
+                containerId = vmSeqId
             )
             if (container == null || container.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")

@@ -63,6 +63,7 @@ open class TestBase {
         const val projectId = "devops1"
         const val buildId = "b-12345678901234567890123456789012"
         const val pipelineId = "p-12345678901234567890123456789012"
+        const val containerHashId = "c-12345678901234567890123456789012"
         const val stageId = "stage-1"
         const val firstContainerId = "1"
         const val firstContainerIdInt = 1
@@ -218,6 +219,7 @@ open class TestBase {
             buildId = buildId,
             stageId = stageId,
             containerId = id?.toString() ?: firstContainerId,
+            containerHashId = containerHashId,
             seq = id ?: firstContainerIdInt,
             containerType = vmContainerType,
             status = status,
@@ -230,7 +232,8 @@ open class TestBase {
                 mutexGroup = null
             ),
             cost = containerCost,
-            matrixGroupId = null
+            matrixGroupId = null,
+            matrixGroupFlag = null
         )
     }
 

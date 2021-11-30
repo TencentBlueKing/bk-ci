@@ -75,6 +75,7 @@ data class Model(
                     is VMBuildContainer -> {
                         VMBuildContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,
@@ -105,6 +106,7 @@ data class Model(
                     is NormalContainer -> {
                         NormalContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,

@@ -93,7 +93,7 @@ class ContainerControl @Autowired constructor(
                 val container = pipelineContainerService.getContainer(
                     buildId = buildId,
                     stageId = stageId,
-                    containerSeqId = containerId
+                    containerId = containerId
                 ) ?: run {
                     LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
                     return

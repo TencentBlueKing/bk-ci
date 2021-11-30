@@ -6,18 +6,16 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
-import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import javax.swing.text.html.parser.Element
 import org.junit.Assert
 import org.junit.Test
 
@@ -50,7 +48,7 @@ internal class StagePauseCheckTest {
     @Test
     @Suppress("ALL")
     fun genContainer() {
-        val vmContainer = VMBuildMatrixGroupContainer(
+        val vmContainer = VMBuildContainer(
             id = "1",
             name = "构建矩阵demo",
             elements = listOf(
@@ -67,21 +65,28 @@ internal class StagePauseCheckTest {
                     continueNoneZero = false
                 )
             ),
+            baseOS = VMBaseOS.ALL,
             status = BuildStatus.SUCCEED.name,
             startEpoch = 1551807007986,
             executeCount = 1,
             jobId = "myMatrix1",
             canRetry = true,
-            containerId = "c-9de5cd612def4e7caa448ee116fa8560",
+            containerId = "1",
+            containerHashId = "c-9de5cd612def4e7caa448ee116fa8560",
             matrixGroupFlag = true,
-            strategyStr = """
-                os: [docker,macos]
-                var1: [a,b,c]
-                var2: [1,2,3]
-            """,
-            runsOn = "#stream保留字段#",
-            includeCase = listOf(mapOf("var1" to "a"), mapOf("var2" to "2")),
-            excludeCase = listOf(mapOf("var2" to "1")),
+            matrixControlOption = MatrixControlOption(
+                strategyStr = """
+                    os: [docker,macos]
+                    var1: [a,b,c]
+                    var2: [1,2,3]
+                """,
+                includeCase = listOf(mapOf("var1" to "a"), mapOf("var2" to "2")),
+                excludeCase = listOf(mapOf("var2" to "1")),
+                totalCount = 10, // 3*3 + 2 - 1
+                runningCount = 1,
+                fastKill = true,
+                maxConcurrency = 50
+            ),
             groupContainers = mutableListOf(
                 VMBuildContainer(
                     id = "10001",
@@ -106,7 +111,8 @@ internal class StagePauseCheckTest {
                     startEpoch = 1551807007986,
                     executeCount = 1,
                     canRetry = true,
-                    containerId = "c-9de5cd612def4e7caa448ee116fa8560",
+                    containerId = "1",
+                    containerHashId = "c-9de5cd612def4e7caa448ee116fa8560",
                     matrixGroupFlag = true,
                     buildEnv = mapOf("variables.var1" to "aaa", "variables.var2" to "bbb"),
                     customBuildEnv = mapOf("e1" to "123", "e2" to "321"),
@@ -115,16 +121,12 @@ internal class StagePauseCheckTest {
                     matrixGroupId = "c-9de5cd612def4e7caa448ee116fa8560"
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
             buildEnv = mapOf("variables.var1" to "aaa", "variables.var2" to "bbb"),
             customBuildEnv = mapOf("e1" to "123", "e2" to "321"),
-            mutexGroup = null,
-            fastKill = true,
-            maxConcurrency = 50
+            mutexGroup = null
         )
 
-        val normalContainer = NormalMatrixGroupContainer(
+        val normalContainer = NormalContainer(
             id = "2",
             name = "构建矩阵demo",
             elements = listOf(
@@ -140,17 +142,25 @@ internal class StagePauseCheckTest {
             executeCount = 1,
             jobId = "myMatrix2",
             canRetry = true,
-            containerId = "c-4512cd612def4e7caa448ee116fa8560",
+            containerId = "2",
+            containerHashId = "c-4512cd612def4e7caa448ee116fa8560",
+            mutexGroup = null,
             matrixGroupFlag = true,
-            strategyStr = """
-                m1: [a,b,c]
-                m2: [1,2,3]
-            """,
-            includeCase = listOf(mapOf("m3" to "1"), mapOf("m3" to "2")),
-            excludeCase = listOf(mapOf("m2" to "1")),
+            matrixControlOption = MatrixControlOption(
+                strategyStr = """
+                    m1: [a,b,c]
+                    m2: [1,2,3]
+                """,
+                includeCase = listOf(mapOf("m3" to "1"), mapOf("m3" to "2")),
+                excludeCase = listOf(mapOf("m2" to "1")),
+                totalCount = 10, // 3*3 + 2 - 1
+                runningCount = 1,
+                fastKill = true,
+                maxConcurrency = 50
+            ),
             groupContainers = mutableListOf(
                 NormalContainer(
-                    id = "2",
+                    id = "20001",
                     name = "构建矩阵demo",
                     elements = listOf(
                         MatrixStatusElement(
@@ -166,17 +176,13 @@ internal class StagePauseCheckTest {
                     executeCount = 1,
                     jobId = "myMatrix2",
                     canRetry = true,
-                    containerId = "c-3124cd612def4e7caa448ee116fa8560",
+                    containerId = "20001",
+                    containerHashId = "c-3124cd612def4e7caa448ee116fa8560",
                     matrixGroupFlag = true,
                     mutexGroup = null,
                     matrixGroupId = "c-4512cd612def4e7caa448ee116fa8560"
                 )
-            ),
-            totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
-            mutexGroup = null,
-            fastKill = true,
-            maxConcurrency = 50
+            )
         )
         val triggerContainer = TriggerContainer(
             id = "0",

@@ -30,8 +30,6 @@ package com.tencent.devops.common.pipeline.container
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
-import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 
@@ -40,9 +38,7 @@ import io.swagger.annotations.ApiModel
 @JsonSubTypes(
     JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
     JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
-    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType),
-    JsonSubTypes.Type(value = VMBuildMatrixGroupContainer::class, name = VMBuildMatrixGroupContainer.classType),
-    JsonSubTypes.Type(value = NormalMatrixGroupContainer::class, name = NormalMatrixGroupContainer.classType)
+    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
 )
 interface Container {
     var id: String? // seq id
@@ -53,7 +49,8 @@ interface Container {
     var systemElapsed: Long? // 系统耗时（开机时间）
     var elementElapsed: Long? // 插件执行耗时
     var canRetry: Boolean? // 当前job是否能重试
-    var containerId: String? // container 唯一ID
+    var containerId: String? // container 流水线唯一ID，同seq id
+    var containerHashId: String? // container 全局唯一ID
     var startVMStatus: String?
     var executeCount: Int?
     val jobId: String? // 用户自定义id

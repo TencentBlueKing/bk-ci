@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.engine.utils
 
-import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 
 object ContainerUtils {
@@ -56,17 +54,5 @@ object ContainerUtils {
 
     fun isVMBuildContainerEnable(container: VMBuildContainer): Boolean {
         return container.jobControlOption == null || container.jobControlOption!!.enable
-    }
-
-    fun isMatrixGroupContainerEnable(container: VMBuildMatrixGroupContainer): Boolean {
-        return container.jobControlOption == null ||
-            container.jobControlOption!!.enable ||
-            container.strategyStr.isBlank()
-    }
-
-    fun isMatrixGroupContainerEnable(container: NormalMatrixGroupContainer): Boolean {
-        return container.jobControlOption == null ||
-            container.jobControlOption!!.enable ||
-            container.strategyStr.isBlank()
     }
 }

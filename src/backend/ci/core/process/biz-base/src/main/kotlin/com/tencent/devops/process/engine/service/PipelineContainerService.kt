@@ -52,13 +52,9 @@ class PipelineContainerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineContainerService::class.java)
     }
 
-    fun getContainer(buildId: String, stageId: String?, containerSeqId: String): PipelineBuildContainer? {
+    fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
         // #4518 防止出错暂时保留两个字段的兼容查询
-        val result = try {
-            pipelineBuildContainerDao.getBySeqId(dslContext, buildId, stageId, containerSeqId.toInt())
-        } catch (ignore: Throwable) {
-            pipelineBuildContainerDao.getByContainerId(dslContext, buildId, stageId, containerSeqId)
-        }
+        val result = pipelineBuildContainerDao.getByContainerId(dslContext, buildId, stageId, containerId)
         if (result != null) {
             return pipelineBuildContainerDao.convert(result)
         }
@@ -80,29 +76,29 @@ class PipelineContainerService @Autowired constructor(
         return pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
     }
 
-    fun batchSave(transactionContext: DSLContext?, taskList: Collection<PipelineBuildContainer>) {
-        return pipelineBuildContainerDao.batchSave(transactionContext ?: dslContext, taskList)
+    fun batchSave(transactionContext: DSLContext?, containerList: Collection<PipelineBuildContainer>) {
+        return pipelineBuildContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
-    fun batchUpdate(transactionContext: DSLContext?, taskList: List<TPipelineBuildContainerRecord>) {
-        return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, taskList)
+    fun batchUpdate(transactionContext: DSLContext?, containerList: List<TPipelineBuildContainerRecord>) {
+        return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
     }
 
     fun updateContainerStatus(
         buildId: String,
         stageId: String,
-        containerSeqId: String,
+        containerId: String,
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
         logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|" +
-            "containerSeqId=$containerSeqId|stageId=$stageId")
+            "containerSeqId=$containerId|stageId=$stageId")
         pipelineBuildContainerDao.updateStatus(
             dslContext = dslContext,
             buildId = buildId,
             stageId = stageId,
-            containerSeqId = containerSeqId.toInt(),
+            containerId = containerId,
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime
@@ -137,7 +133,7 @@ class PipelineContainerService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                containerSeqId = it.seq
+                containerId = it.containerId
             )
         }
         logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|deleteTaskCount=$count")

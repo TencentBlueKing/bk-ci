@@ -37,12 +37,10 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.matrix.VMBuildMatrixGroupContainer
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.container.matrix.NormalMatrixGroupContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -741,18 +739,6 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         return@nextContainer
                     }
-                } else if (container is VMBuildMatrixGroupContainer) {
-                    // #4518 如果构建矩阵没有配置任何策略则直接跳过不做分裂
-                    if (!ContainerUtils.isMatrixGroupContainerEnable(container)) {
-                        context.containerSeq++
-                        return@nextContainer
-                    }
-                } else if (container is NormalMatrixGroupContainer) {
-                    // #4518 如果构建矩阵没有配置任何策略则直接跳过不做分裂
-                    if (!ContainerUtils.isMatrixGroupContainerEnable(container)) {
-                        context.containerSeq++
-                        return@nextContainer
-                    }
                 }
                 /* #2318
                     原则：当存在多个失败插件时，进行失败插件重试时，一次只能对单个插件进行重试，其他失败插件不会重试，所以：
@@ -786,7 +772,16 @@ class PipelineRuntimeService @Autowired constructor(
                     #4518 整合组装Task和刷新已有Container的逻辑
                     构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container !is VMBuildMatrixGroupContainer) {
+                if (container.containPostTaskFlag == true) {
+                    if (container is VMBuildContainer) container.retryFreshMatrixOption()
+                    if (container is NormalContainer) container.retryFreshMatrixOption()
+                    pipelineContainerService.deleteTasksInMatrixGroupContainer(
+                        transactionContext = dslContext,
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineInfo.pipelineId,
+                        buildId = buildId
+                    )
+                } else {
                     // --- 第3层循环：Element遍历处理 ---
                     needUpdateStage = prepareBuildContainerTasks(
                         container = container,
@@ -802,16 +797,6 @@ class PipelineRuntimeService @Autowired constructor(
                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                         lastTimeBuildContainerRecords = lastTimeBuildContainerRecords
                     )
-                } else {
-                    pipelineContainerService.deleteTasksInMatrixGroupContainer(
-                        transactionContext = dslContext,
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId
-                    )
-                    container.groupContainers = null
-                    container.runningCount = null
-                    container.totalCount = null
                 }
                 context.containerSeq++
             }
@@ -1122,7 +1107,7 @@ class PipelineRuntimeService @Autowired constructor(
                         buildId = buildId,
                         stageId = stage.id!!,
                         containerId = container.id!!,
-                        containerHashId = container.containerId ?: "",
+                        containerHashId = container.containerHashId ?: "",
                         containerType = container.getClassType(),
                         taskSeq = taskSeq,
                         taskId = atomElement.id!!,
@@ -1253,6 +1238,7 @@ class PipelineRuntimeService @Autowired constructor(
                         buildId = buildId,
                         stageId = stage.id!!,
                         containerId = container.containerId ?: context.containerSeq.toString(),
+                        containerHashId = container.containerHashId ?: "",
                         containerType = container.getClassType(),
                         seq = context.containerSeq,
                         status = BuildStatus.QUEUE,
@@ -1545,6 +1531,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 buildId = buildId,
                                 stageId = stageId,
                                 containerId = containerId,
+                                containerHashId = containerHashId,
                                 containerType = containerType,
                                 taskId = taskId,
                                 taskParam = taskParam,
@@ -1589,7 +1576,7 @@ class PipelineRuntimeService @Autowired constructor(
                             PipelineBuildAtomTaskEvent(
                                 source = "manualDealBuildTask", projectId = projectId, pipelineId = pipelineId,
                                 userId = starter, buildId = buildId, stageId = stageId, containerId = containerId,
-                                containerType = containerType, taskId = taskId,
+                                containerHashId = containerHashId, containerType = containerType, taskId = taskId,
                                 taskParam = taskParam, actionType = ActionType.REFRESH
                             )
                         )
@@ -1649,6 +1636,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildTask.buildId,
                     stageId = buildTask.stageId,
                     containerId = buildTask.containerId,
+                    containerHashId = buildTask.containerHashId,
                     containerType = buildTask.containerType,
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH
                 )

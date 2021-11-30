@@ -64,6 +64,8 @@ class PipelineBuildContainerDao {
                     MATRIX_GROUP_ID,
                     CONTAINER_TYPE,
                     SEQ,
+                    CONTAINER_ID,
+                    CONTAINER_HASH_ID,
                     STATUS,
                     START_TIME,
                     END_TIME,
@@ -80,6 +82,8 @@ class PipelineBuildContainerDao {
                         buildContainer.matrixGroupId,
                         buildContainer.containerType,
                         buildContainer.seq,
+                        buildContainer.containerId,
+                        buildContainer.containerHashId,
                         buildContainer.status.ordinal,
                         buildContainer.startTime,
                         buildContainer.endTime,
@@ -104,6 +108,7 @@ class PipelineBuildContainerDao {
                         .set(BUILD_ID, it.buildId)
                         .set(STAGE_ID, it.stageId)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(MATRIX_GROUP_FLAG, it.matrixGroupFlag)
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
@@ -137,6 +142,7 @@ class PipelineBuildContainerDao {
                         .set(MATRIX_GROUP_ID, it.matrixGroupId)
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(CONTAINER_ID, it.containerId)
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(STATUS, it.status)
                         .set(START_TIME, it.startTime)
                         .set(END_TIME, it.endTime)
@@ -168,7 +174,6 @@ class PipelineBuildContainerDao {
         }
     }
 
-    @Deprecated("逐步切换至SEQ ID做查询")
     fun getByContainerId(
         dslContext: DSLContext,
         buildId: String,
@@ -190,7 +195,7 @@ class PipelineBuildContainerDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        containerSeqId: Int,
+        containerId: String,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         buildStatus: BuildStatus
@@ -216,7 +221,7 @@ class PipelineBuildContainerDao {
             }
 
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
-                .and(SEQ.eq(containerSeqId)).execute()
+                .and(CONTAINER_ID.eq(containerId)).execute()
         }
     }
 
@@ -281,6 +286,7 @@ class PipelineBuildContainerDao {
                 stageId = stageId,
                 containerType = containerType,
                 containerId = containerId,
+                containerHashId = containerHashId,
                 matrixGroupFlag = matrixGroupFlag,
                 matrixGroupId = matrixGroupId,
                 seq = seq,

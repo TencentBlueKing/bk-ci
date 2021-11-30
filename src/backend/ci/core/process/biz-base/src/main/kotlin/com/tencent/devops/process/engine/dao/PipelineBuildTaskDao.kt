@@ -219,15 +219,15 @@ class PipelineBuildTaskDao {
     fun listByStatus(
         dslContext: DSLContext,
         buildId: String,
-        containerSeqId: String?,
+        containerId: String?,
         statusSet: Collection<BuildStatus>?
     ): List<TPipelineBuildTaskRecord> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
             // #4518 T_PIPELINE_BUILD_TASK表中的CONTAINER_ID为Container的seq id
-            if (!containerSeqId.isNullOrBlank()) {
-                where.and(CONTAINER_ID.eq(containerSeqId))
+            if (!containerId.isNullOrBlank()) {
+                where.and(CONTAINER_ID.eq(containerId))
             }
             if (statusSet != null && statusSet.isNotEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
@@ -260,14 +260,14 @@ class PipelineBuildTaskDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        containerSeqId: String
+        containerId: String
     ): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.delete(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
-                .and(CONTAINER_ID.eq(containerSeqId))
+                .and(CONTAINER_ID.eq(containerId))
                 .execute()
         }
     }

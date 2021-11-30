@@ -71,7 +71,7 @@ class BuildingHeartBeatUtils @Autowired constructor(
         val ctr = pipelineContainerService.getContainer(
             buildId = buildInfo.buildId,
             stageId = null,
-            containerSeqId = containerId
+            containerId = containerId
         ) ?: return
         pipelineEventDispatcher.dispatch(
             PipelineContainerAgentHeartBeatEvent(
