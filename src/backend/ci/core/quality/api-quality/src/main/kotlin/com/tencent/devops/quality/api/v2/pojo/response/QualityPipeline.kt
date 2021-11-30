@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线模型-质量红线-列表信息")
-class QualityPipeline (
+data class QualityPipeline(
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
