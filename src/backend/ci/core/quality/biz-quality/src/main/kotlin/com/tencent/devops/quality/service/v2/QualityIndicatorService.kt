@@ -266,26 +266,7 @@ class QualityIndicatorService @Autowired constructor(
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {
         checkCustomIndicatorExist(projectId, indicatorCreate.name, indicatorCreate.cnName)
-        val indicatorUpdate = IndicatorUpdate(
-            elementType = indicatorCreate.elementType,
-            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementVersion = "",
-            enName = indicatorCreate.name,
-            cnName = indicatorCreate.cnName,
-            metadataIds = "",
-            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
-            operationAvailable = indicatorCreate.operation.joinToString(","),
-            threshold = indicatorCreate.threshold,
-            thresholdType = indicatorCreate.dataType.name,
-            desc = indicatorCreate.desc,
-            readOnly = false,
-            stage = "开发",
-            range = projectId,
-            tag = null,
-            enable = true,
-            type = IndicatorType.CUSTOM
-        )
+        val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         indicatorDao.create(userId, indicatorUpdate, dslContext)
         return true
     }
@@ -293,34 +274,32 @@ class QualityIndicatorService @Autowired constructor(
     fun userUpdate(userId: String, projectId: String, indicatorId: String, indicatorCreate: IndicatorCreate): Boolean {
         val id = HashUtil.decodeIdToLong(indicatorId)
         checkCustomIndicatorExcludeExist(id, projectId, indicatorCreate.name, indicatorCreate.cnName)
-        val indicatorUpdate = IndicatorUpdate(
-            elementType = indicatorCreate.elementType,
-            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementVersion = "",
-            enName = indicatorCreate.name,
-            cnName = indicatorCreate.cnName,
-            metadataIds = "",
-            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
-            operationAvailable = indicatorCreate.operation.joinToString(","),
-            threshold = indicatorCreate.threshold,
-            thresholdType = indicatorCreate.dataType.name,
-            desc = indicatorCreate.desc,
-            readOnly = false,
-            stage = "开发",
-            range = projectId,
-            tag = "",
-            enable = true,
-            type = IndicatorType.CUSTOM
-        )
+        val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         indicatorDao.update(userId = userId, id = id, indicatorUpdate = indicatorUpdate, dslContext = dslContext)
         return true
     }
 
     fun upsertIndicators(userId: String, projectId: String, indicatorCreateList: List<IndicatorCreate>): Boolean {
-
-        return false
+        indicatorCreateList.forEach { indicatorCreate ->
+            val indicatorId = checkCustomUpsertIndicator(projectId, indicatorCreate.name)
+            val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
+            if (indicatorId == null) {
+                indicatorDao.create(
+                    userId = userId,
+                    indicatorUpdate = indicatorUpdate,
+                    dslContext = dslContext
+                )
+            } else {
+                indicatorDao.update(
+                    userId = userId,
+                    id = indicatorId,
+                    indicatorUpdate = indicatorUpdate,
+                    dslContext = dslContext
+                )
+            }
+        }
+        return true
     }
 
     fun userQueryIndicatorList(projectId: String, keyword: String?): IndicatorListResponse {
@@ -599,7 +578,30 @@ class QualityIndicatorService @Autowired constructor(
         indicators.forEach{ indicator ->
             if (indicator.enName == enName && indicator.indicatorRange == projectId) return indicator.id
         }
-        return 0L
+        return null
+    }
+
+    private fun getIndicatorUpdate(projectId: String, indicatorCreate: IndicatorCreate): IndicatorUpdate {
+        return IndicatorUpdate(
+            elementType = indicatorCreate.elementType,
+            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
+            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
+            elementVersion = "",
+            enName = indicatorCreate.name,
+            cnName = indicatorCreate.cnName,
+            metadataIds = "",
+            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
+            operationAvailable = indicatorCreate.operation.joinToString(","),
+            threshold = indicatorCreate.threshold,
+            thresholdType = indicatorCreate.dataType.name,
+            desc = indicatorCreate.desc,
+            readOnly = false,
+            stage = "开发",
+            range = projectId,
+            tag = "",
+            enable = true,
+            type = IndicatorType.CUSTOM
+        )
     }
 
     private fun getProjectAtomCodes(projectId: String): List<InstalledAtom> {
