@@ -31,7 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
 import com.tencent.devops.process.service.BuildVariableService
@@ -74,7 +74,7 @@ class TencentMeasureConfig {
     @Bean
     fun measureService(
         @Autowired projectCacheService: ProjectCacheService,
-        @Autowired pipelineRuntimeService: PipelineRuntimeService,
+        @Autowired pipelineTaskService: PipelineTaskService,
         @Autowired buildVariableService: BuildVariableService,
         @Autowired dslContext: DSLContext,
         @Autowired templateService: TemplateService,
@@ -84,7 +84,7 @@ class TencentMeasureConfig {
         @Autowired atomMonitorEventDispatcher: AtomMonitorEventDispatcher
     ) = MeasureServiceImpl(
         projectCacheService = projectCacheService,
-        pipelineRuntimeService = pipelineRuntimeService,
+        pipelineTaskService = pipelineTaskService,
         buildVariableService = buildVariableService,
         templateService = templateService,
         redisOperation = redisOperation,
