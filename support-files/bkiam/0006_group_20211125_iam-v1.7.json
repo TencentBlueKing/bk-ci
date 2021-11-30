@@ -1,0 +1,34 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
+        {
+          "name": "质量红线管理",
+          "name_en": "Quality Permissions",
+          "actions": [
+            {
+              "id": "quality_group_create"
+            },
+            {
+              "id": "quality_group_edit"
+            },
+            {
+              "id": "quality_group_enable"
+            },
+            {
+              "id": "quality_group_delete"
+            },
+            {
+              "id": "quality_rule_edit"
+            },
+            {
+              "id": "quality_rule_delete"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -193,7 +193,7 @@
                 'pipelineSetting'
             ]),
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
             pipelineSettingUser () {
                 return this.pipelineSubscription.users ? this.pipelineSubscription.users.split(',') : []

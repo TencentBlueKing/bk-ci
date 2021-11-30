@@ -262,7 +262,7 @@
                         paramIdKey: `paramIdKey-${this.paramIdCount++}`
                     }
                     if (this.settingKey === 'templateParams') {
-                        Object.assign(param, { 'required': false })
+                        Object.assign(param, { required: false })
                     }
                     value.splice(index + 1, 0, param)
                 } else {

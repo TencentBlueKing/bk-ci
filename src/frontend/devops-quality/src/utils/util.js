@@ -1,5 +1,5 @@
 export function isVNode (node) {
-    return typeof node === 'object' && node.hasOwnProperty('componentOptions')
+    return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
 }
 
 export function isInArray (ele, array) {
@@ -133,29 +133,6 @@ export function findValByKeyValue (arr, oldKey, oldValue, key) {
             }
         }
     }
-
-    return result
-}
-
-/**
- *  在一个元素为对象的数组中，根据oldKey: oldValue找到指定的数组元素，并返回该数组的index
- *  @param arr - 元素为对象的数组
- *  @param oldKey - 查找的key
- *  @param oldValue - 查找的value
- *  @return result - 找到的index值，未找到返回-1
- */
-export function findIndexByKeyValue (arr, oldKey, oldValue) {
-    let result
-
-    arr.some((v, i) => {
-        for (const _key in v) {
-            if (_key === oldKey && v[_key] === oldValue) {
-                result = i
-
-                break
-            }
-        }
-    })
 
     return result
 }
@@ -315,7 +292,7 @@ export function isObject (o) {
 
 export function mergeModules (target, ...modules) {
     return modules.reduce((merged, mod) => {
-        Object.keys(mod).map(key => {
+        Object.keys(mod).forEach(key => {
             if (isObject(merged[key]) && isObject(mod[key])) {
                 merged[key] = {
                     ...merged[key],
