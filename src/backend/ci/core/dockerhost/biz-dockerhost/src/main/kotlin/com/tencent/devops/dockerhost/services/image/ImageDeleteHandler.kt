@@ -1,10 +1,16 @@
 package com.tencent.devops.dockerhost.services.image
 
+import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.services.Handler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class ImageDeleteHandler : Handler<ImageHandlerContext>() {
+class ImageDeleteHandler(
+    dockerHostConfig: DockerHostConfig,
+    dockerHostBuildApi: DockerHostBuildResourceApi
+) : Handler<ImageHandlerContext>(dockerHostConfig, dockerHostBuildApi) {
     override fun handlerRequest(handlerContext: ImageHandlerContext) {
         with(handlerContext) {
             // 扫描模式下不做镜像删除

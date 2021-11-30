@@ -45,8 +45,14 @@ class PipelineNotifyConfiguration {
         pipelineRepositoryService: PipelineRepositoryService,
         pipelineRuntimeService: PipelineRuntimeService,
         pipelineBuildFacadeService: PipelineBuildFacadeService,
-        client: Client
-    ) = BluekingNotifyPipelineCmd(pipelineRepositoryService, pipelineRuntimeService, pipelineBuildFacadeService, client)
+        client: Client,
+        buildVariableService: BuildVariableService
+    ) = BluekingNotifyPipelineCmd(
+        pipelineRepositoryService = pipelineRepositoryService,
+        pipelineRuntimeService = pipelineRuntimeService,
+        pipelineBuildFacadeService = pipelineBuildFacadeService,
+        client = client,
+        buildVariableService = buildVariableService)
 
     @Bean
     @ConditionalOnMissingBean(NotifyReceiversCmd::class)

@@ -22,7 +22,8 @@ function _M:get_tag(ns_config)
         return ns_config.tag
     end
 
-    local devops_project = ngx.var.project_id
+    local devops_project_id = ngx.var.project_id
+    local devops_project = ngx.var.project
     local devops_service = ngx.var.service
     local default_tag = ns_config.tag
     local tag = default_tag
@@ -43,47 +44,67 @@ function _M:get_tag(ns_config)
 
     -- 根据project_id路由
     local useProjectTag = false
-    if devops_project ~= nil and devops_project ~= '' then
-        local tag_cache_value = tag_cache:get(devops_project)
+    if devops_project_id ~= nil and devops_project_id ~= '' then
+        local tag_cache_value = tag_cache:get(devops_project_id)
         if tag_cache_value ~= '-1' then
             if tag_cache_value ~= nil then
                 tag = tag_cache_value
                 useProjectTag = true
             else
                 local redis_key = nil
-                if ngx.var.project == 'codecc' then
+                if devops_project == 'codecc' then
                     redis_key = 'project:setting:tag:codecc:v2'
                 else
                     redis_key = "project:setting:tag:v2"
                 end
                 -- 从redis获取tag
-                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
+                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
                     local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project, hash_val, 5)
+                    tag_cache:set(devops_project_id, hash_val, 5)
                     tag = hash_val
                     useProjectTag = true
                 else
-                    tag_cache:set(devops_project, '-1', 5)
+                    tag_cache:set(devops_project_id, '-1', 5)
                 end
             end
         end
     end
 
     -- 根据service路由
+    local useServiceTag = false
     if useProjectTag == false and devops_service ~= nil and devops_service ~= '' then
         local service_local_cache_key = 'tag_local_cache_key_' .. devops_service
         local service_local_cache_value = tag_cache:get(service_local_cache_key)
         if service_local_cache_value ~= nil then
             tag = service_local_cache_value
+            useServiceTag = true
         else
             local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
             if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
                 tag_cache:set(service_local_cache_key, service_redis_cache_value, 5)
                 tag = service_redis_cache_value
+                useServiceTag = true
             else
                 tag_cache:set(service_local_cache_key, default_tag, 5)
+            end
+        end
+    end
+
+    -- 根据ngx.var.project路由
+    if useProjectTag == false and useServiceTag == false and devops_project then
+        local project_local_cache_key = 'tag_local_cache_key_project_' .. devops_project
+        local project_local_cache_value = tag_cache:get(project_local_cache_key)
+        if project_local_cache_value ~= nil then
+            tag = project_local_cache_value
+        else
+            local project_redis_cache_value = red:get("project:setting:project:tag:" .. devops_project)
+            if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
+                tag_cache:set(project_local_cache_key, project_redis_cache_value, 5)
+                tag = project_redis_cache_value
+            else
+                tag_cache:set(project_local_cache_key, default_tag, 5)
             end
         end
     end

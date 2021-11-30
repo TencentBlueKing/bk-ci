@@ -88,7 +88,7 @@ function ExtendsCustomRules (_extends) {
         return
     }
     for (const key in customeRules) {
-        if (customeRules.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(customeRules, key)) {
             _extends(key, customeRules[key])
         }
     }

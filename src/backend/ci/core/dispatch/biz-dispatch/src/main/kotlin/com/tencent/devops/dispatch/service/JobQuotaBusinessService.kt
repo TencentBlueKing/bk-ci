@@ -478,27 +478,29 @@ class JobQuotaBusinessService @Autowired constructor(
 
         LOG.info("Check pipeline running.")
         val runningJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, CHECK_RUNNING_DAYS)
-        if (runningJobs.isNotEmpty) {
-            try {
-                runningJobs.filterNotNull().forEach {
-                    val isRunning = client.get(ServicePipelineResource::class).isRunning(projectId = it.projectId,
+        if (runningJobs.isNullOrEmpty()) {
+            return
+        }
+
+        try {
+            runningJobs.filterNotNull().forEach {
+                val isRunning = client.get(ServicePipelineResource::class).isRunning(projectId = it.projectId,
+                    buildId = it.buildId,
+                    channelCode = ChannelCode.BS).data
+                    ?: false
+                if (!isRunning) {
+                    runningJobsDao.delete(
+                        dslContext = dslContext,
                         buildId = it.buildId,
-                        channelCode = ChannelCode.BS).data
-                        ?: false
-                    if (!isRunning) {
-                        runningJobsDao.delete(
-                            dslContext = dslContext,
-                            buildId = it.buildId,
-                            vmSeqId = it.vmSeqId,
-                            executeCount = it.executeCount
-                        )
-                        LOG.info("${it.buildId}|${it.vmSeqId} Pipeline not running, " +
-                                "but runningJob history not deleted.")
-                    }
+                        vmSeqId = it.vmSeqId,
+                        executeCount = it.executeCount
+                    )
+                    LOG.info("${it.buildId}|${it.vmSeqId} Pipeline not running, " +
+                            "but runningJob history not deleted.")
                 }
-            } catch (e: Throwable) {
-                LOG.error("Check pipeline running failed, msg: ${e.message}")
             }
+        } catch (e: Throwable) {
+            LOG.error("Check pipeline running failed, msg: ${e.message}")
         }
     }
 
@@ -553,12 +555,18 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val TIMER_COUNT_TIME_LOCK_KEY = "job_quota_project_run_time_count_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
         private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
-        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量KEY, 告警使用
-        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key" // 系统当月已运行JOB数量阈值KEY，告警使用
-        private const val WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX = "job_quota_warning_project_max_lock_key_" // 项目当月已运行JOB数量告警前缀
-        private const val WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX = "job_quota_warning_project_threshold_lock_key_" // 项目当月已运行JOB数量阈值告警前缀
-        private const val WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX = "time_quota_warning_project_max_lock_key_" // 项目当月已运行时间告警前缀
-        private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX = "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
+        // 系统当月已运行JOB数量KEY, 告警使用
+        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key"
+        // 项目当月已运行JOB数量告警前缀
+        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key"
+        // 系统当月已运行JOB数量阈值KEY，告警使用
+        private const val WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX = "job_quota_warning_project_max_lock_key_"
+        private const val WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX =
+            "job_quota_warning_project_threshold_lock_key_" // 项目当月已运行JOB数量阈值告警前缀
+        private const val WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX =
+            "time_quota_warning_project_max_lock_key_" // 项目当月已运行时间告警前缀
+        private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX =
+            "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
         private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L

@@ -44,7 +44,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'markerQuey': 'getMarketQuery', 'detail': 'getDetail' }),
+            ...mapGetters('store', { markerQuey: 'getMarketQuery', detail: 'getDetail' }),
 
             detailCode () {
                 return this.$route.params.code
@@ -136,7 +136,7 @@
                     this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
                     this.getUserApprovalInfo(atomCode),
                     this.getAtomYaml({ atomCode }),
-                    this.getAtomYamlV2({ atomCode })
+                    this.getAtomYamlV2({ atomCode }).catch(({ data }) => '')
                 ]).then(([atomDetail, atomStatic, userAppInfo, yaml, yamlV2]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId

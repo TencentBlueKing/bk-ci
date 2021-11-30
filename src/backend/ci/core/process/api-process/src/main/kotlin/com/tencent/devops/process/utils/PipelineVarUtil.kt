@@ -28,12 +28,22 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -42,6 +52,9 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
 
 object PipelineVarUtil {
 
@@ -124,6 +137,8 @@ object PipelineVarUtil {
         "ci.actor" to PIPELINE_START_USER_ID,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
+        "ci.pipeline_start_time" to PIPELINE_TIME_START,
+        "ci.pipeline_execute_time" to PIPELINE_TIME_DURATION,
         "ci.ref" to PIPELINE_GIT_REF,
         "ci.head_ref" to PIPELINE_GIT_HEAD_REF,
         "ci.base_ref" to PIPELINE_GIT_BASE_REF,
@@ -133,11 +148,24 @@ object PipelineVarUtil {
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
         "ci.sha" to PIPELINE_GIT_SHA,
         "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
+        "ci.before_sha" to PIPELINE_GIT_BEFORE_SHA,
+        "ci.before_sha_short" to PIPELINE_GIT_BEFORE_SHA_SHORT,
         "ci.commit_message" to PIPELINE_GIT_COMMIT_MESSAGE,
         "ci.repo_url" to PIPELINE_GIT_REPO_URL,
         "ci.base_repo_url" to PIPELINE_GIT_BASE_REPO_URL,
         "ci.head_repo_url" to PIPELINE_GIT_HEAD_REPO_URL,
-        "ci.mr_url" to PIPELINE_GIT_MR_URL
+        "ci.mr_url" to PIPELINE_GIT_MR_URL,
+        "ci.commit_author" to PIPELINE_GIT_COMMIT_AUTHOR,
+        "ci.pipeline_update_user" to PIPELINE_GIT_UPDATE_USER,
+        "ci.authorizer" to PIPELINE_GIT_AUTHORIZER,
+        "ci.mr_id" to PIPELINE_GIT_MR_ID,
+        "ci.mr_iid" to PIPELINE_GIT_MR_IID,
+        "ci.tag_message" to PIPELINE_GIT_TAG_MESSAGE,
+        "ci.tag_from" to PIPELINE_GIT_TAG_FROM,
+        "ci.mr_title" to PIPELINE_GIT_MR_TITLE,
+        "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
+        "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
+        "ci.mr_action" to PIPELINE_GIT_MR_ACTION
     )
 
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()

@@ -48,7 +48,11 @@ interface IScm {
 
     fun checkTokenAndUsername()
 
-    fun addWebHook(hookUrl: String)
+    fun addWebHook(
+        hookUrl: String,
+        includePaths: String? = null,
+        excludePaths: String? = null
+    )
 
     fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
