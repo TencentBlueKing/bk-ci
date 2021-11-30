@@ -134,4 +134,35 @@ class AuthDeptServiceImplTest {
         val users = authDeptServiceImpl.findUserName(response)
         println(users)
     }
+
+    @Test
+    fun test1() {
+        val response = "[ {\n" +
+            "  \"id\" : \"29510\",\n" +
+            "  \"family\" : [ {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 123,\n" +
+            "    \"full_name\" : \"XXX公司\",\n" +
+            "    \"name\" : \"XXX公司\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 12345,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群\",\n" +
+            "    \"name\" : \"XXX事业群\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 456,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部\",\n" +
+            "    \"name\" : \"XXX部\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 9878,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部/XXX中心\",\n" +
+            "    \"name\" : \"XXX中心\"\n" +
+            "  } ],\n" +
+            "  \"name\" : \"XXX组\"\n" +
+            "} ]"
+        val users = authDeptServiceImpl.getUserDeptTreeIds(response)
+        println(users)
+    }
 }
