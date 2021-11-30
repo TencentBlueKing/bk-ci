@@ -688,6 +688,9 @@ class PipelineRuntimeService @Autowired constructor(
             DependOnUtils.initDependOn(stage = stage, params = startParamMap)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
+                // #4518 Model中的container.containerId转移至container.containerHashId，进行新字段值补充
+                container.containerHashId = container.containerHashId ?: container.containerId
+
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
                     if (buildNoObj != null && context.actionType == ActionType.START) {
@@ -772,7 +775,7 @@ class PipelineRuntimeService @Autowired constructor(
                     #4518 整合组装Task和刷新已有Container的逻辑
                     构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container.containPostTaskFlag == true) {
+                if (container.matrixGroupFlag == true) {
                     if (container is VMBuildContainer) container.retryFreshMatrixOption()
                     if (container is NormalContainer) container.retryFreshMatrixOption()
                     pipelineContainerService.deleteTasksInMatrixGroupContainer(
