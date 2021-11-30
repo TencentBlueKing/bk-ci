@@ -25,42 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.environment.api.thirdPartyAgent
 
-import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-class UrlFilter(
-    private val pipelineId: String,
-    private val triggerOnUrl: String,
-    private val repositoryUrl: String,
-    private val includeHost: String? = null
-) : WebhookFilter {
+@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Path("/op/thirdPartyAgent")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpThirdPartyAgentUpgradeResource {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(UrlFilter::class.java)
-    }
+    @ApiOperation("设置agent最大并发升级数量")
+    @POST
+    @Path("/agents/setMaxParallelUpgradeCount")
+    fun setMaxParallelUpgradeCount(
+        @ApiParam("maxParallelUpgradeCount", required = true)
+        maxParallelUpgradeCount: Int
+    ): Result<Boolean>
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnUrl:$triggerOnUrl|repositoryUrl:$repositoryUrl" +
-                "|includeHost:$includeHost|url filter"
-        )
-        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
-        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-        return isSameHost(triggerOnHost = triggerRepository.first, host = repository.first) &&
-            triggerRepository.second == repository.second
-    }
-
-    /**
-     * 判断两个域名是否指向同一个服务
-     */
-    private fun isSameHost(triggerOnHost: String, host: String): Boolean {
-        return if (triggerOnHost != host) {
-            val includeHosts = includeHost?.split(",") ?: return false
-            includeHosts.containsAll(setOf(triggerOnHost, host))
-        } else {
-            true
-        }
-    }
+    @ApiOperation("获取agent最大并发升级数量")
+    @POST
+    @Path("/agents/getMaxParallelUpgradeCount")
+    fun getMaxParallelUpgradeCount(): Result<Int?>
 }

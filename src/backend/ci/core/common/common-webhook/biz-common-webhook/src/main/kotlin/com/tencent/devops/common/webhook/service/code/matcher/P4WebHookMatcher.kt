@@ -25,17 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.common.webhook.service.code.matcher
 
-interface PipelineUrlBean {
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
-    /**
-     * 生成构建详情访问链接
-     */
-    fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+class P4WebHookMatcher(
+    override val event: P4Event
+) : AbstractScmWebhookMatcher<P4Event>(event) {
 
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    companion object {
+        private val logger = LoggerFactory.getLogger(P4WebHookMatcher::class.java)
+    }
+
+    override fun isMatch(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): ScmWebhookMatcher.MatchResult {
+        if (repository !is CodeP4Repository) {
+            logger.warn("$pipelineId|The repo($repository) is not code p4 repo for p4 web hook")
+            return ScmWebhookMatcher.MatchResult(isMatch = false)
+        }
+        return eventHandler.isMatch(
+            event = event,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repository = repository,
+            webHookParams = webHookParams
+        )
+    }
+
+    override fun getCodeType() = CodeType.P4
 }
