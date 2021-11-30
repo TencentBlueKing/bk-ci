@@ -37,12 +37,12 @@ import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.worker.common.AGENT_ID
 import com.tencent.devops.worker.common.AGENT_SECRET_KEY
-import com.tencent.devops.worker.common.JOB_POOL
 import okhttp3.Request
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
@@ -57,10 +57,11 @@ fun main(args: Array<String>) {
     val buildType = System.getProperty(BUILD_TYPE)
     when (buildType) {
         BuildType.DOCKER.name -> {
-            val jobPoolType = getProperty(JOB_POOL)
+            val jobPoolType = DockerEnv.getJobPool()
             // 无编译构建，轮询等待任务
             if (jobPoolType != null &&
-                jobPoolType.equals(com.tencent.devops.common.pipeline.type.BuildType.AGENT_LESS.name)) {
+                jobPoolType == com.tencent.devops.common.pipeline.type.BuildType.AGENT_LESS.name
+            ) {
                 waitBuildLessJobStart()
             }
 
@@ -202,19 +203,39 @@ fun main(args: Array<String>) {
 }
 
 private fun waitBuildLessJobStart() {
-    val agentId = getProperty(AGENT_ID)
-    val agentSecretKey = getProperty(AGENT_SECRET_KEY)
+    var startFlag: Boolean = false
+    val dockerHostIp = DockerEnv.getDockerHostIp()
+    val dockerHostPort = DockerEnv.getDockerHostPort()
+    val hostname = DockerEnv.getHostname()
+    val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+    val request = Request.Builder()
+        .url(loopUrl)
+        .header("Accept", "application/json")
+        .get()
+        .build()
+    println("BuildLess loopUrl: $loopUrl")
     do {
-        println("Docker buildLess waiting start...")
-        Thread.sleep(1000)
-    } while (agentId.isNullOrBlank() || agentSecretKey.isNullOrBlank())
-}
+        try {
+            OkhttpUtils.doHttp(request).use { resp ->
+                if (resp.isSuccessful && resp.body() != null) {
+                    val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+                    buildLessTask.forEach { t, u ->
+                        when (t) {
+                            "agentId" -> System.setProperty(AGENT_ID, u)
+                            "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                        }
+                    }
+                    startFlag = true
+                } else {
+                    println("No buildLessTask, resp: ${resp.body()} continue loop...")
+                }
+            }
+        } catch (e: Exception) {
+            println("Get buildLessTask error. continue loop... \n${e.message}")
+        }
 
-private fun getProperty(prop: String): String? {
-    var value = System.getenv(prop)
-    if (value.isNullOrBlank()) {
-        // Get from java properties
-        value = System.getProperty(prop)
-    }
-    return value
+        if (!startFlag) {
+            Thread.sleep(1000)
+        }
+    } while (!startFlag)
 }
