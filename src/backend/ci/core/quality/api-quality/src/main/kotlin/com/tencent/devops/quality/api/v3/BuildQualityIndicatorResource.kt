@@ -34,7 +34,12 @@ import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_INDICATOR_V3"], description = "构建-质量红线指标")

@@ -47,5 +47,4 @@ class BuildQualityIndicatorV3ResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(qualityIndicatorService.upsertIndicators(userId, projectId, indicatorCreateList))
     }
-
 }

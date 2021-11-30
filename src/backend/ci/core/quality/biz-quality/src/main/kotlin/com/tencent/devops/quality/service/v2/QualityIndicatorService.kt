@@ -575,7 +575,7 @@ class QualityIndicatorService @Autowired constructor(
 
     private fun checkCustomUpsertIndicator(projectId: String, enName: String): Long? {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return null
-        indicators.forEach{ indicator ->
+        indicators.forEach { indicator ->
             if (indicator.enName == enName && indicator.indicatorRange == projectId) return indicator.id
         }
         return null
