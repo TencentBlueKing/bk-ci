@@ -88,7 +88,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
                 ?: return null
             watcher.start("findGroupIndexInfo")
             projectMemberInfos.forEach {
-                val userDeptIds by lazy { deptService.getUserDeptInfo(userId)}
+                val userDeptIds by lazy { deptService.getUserDeptInfo(userId) }
                 // 如果是用户组下是组织,才匹配用户是否在该组织下
                 if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     watcher.start("getUserDept")
