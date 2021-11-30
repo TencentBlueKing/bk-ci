@@ -325,14 +325,11 @@ class StreamBasicSettingService @Autowired constructor(
             userId = userId,
             projectName = projectName
         )
-
+        logger.info("PROJECT|bkProjectResult|$bkProjectResult")
         if (null == bkProjectResult) {
             logger.error("STREAM|projectName|$projectName|msg|bkProjectResult is empty")
             return
         }
-
-        logger.info("PROJECT|bkProjectResult|$bkProjectResult")
-
         val projectId: String = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
 
         // sp2:如果项目存在，则根据project_id 调用scm接口获取git上的项目信息
