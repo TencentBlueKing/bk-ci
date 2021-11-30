@@ -25,7 +25,7 @@ class DispatchUtils @Autowired constructor(
     fun getPool(dispatchMessage: DispatchMessage): Pool {
         val dispatchType = dispatchMessage.dispatchType as KubernetesDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
-            dispatchType.dockerBuildVersion
+            dispatchType.kubernetesBuildVersion
         } else {
             when (dispatchType.dockerBuildVersion) {
                 DockerVersion.TLINUX1_2.value -> {
@@ -40,8 +40,9 @@ class DispatchUtils @Autowired constructor(
             }
         }
         logger.info(
-            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
-                    "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
+            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage|${dispatchType.imageType}" +
+                    "|${dispatchType.dockerBuildVersion}|${dispatchType.imageCode}|${dispatchType.imageVersion}" +
+                    "|${dispatchType.credentialId}" +
                     "|${dispatchType.credentialProject}"
         )
         var userName: String? = null

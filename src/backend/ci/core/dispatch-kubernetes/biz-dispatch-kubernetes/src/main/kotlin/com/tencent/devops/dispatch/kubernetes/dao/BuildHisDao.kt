@@ -28,16 +28,11 @@
 package com.tencent.devops.dispatch.kubernetes.dao
 
 import com.tencent.devops.model.dispatch.tables.TDispatchKubernetesBuildHis
-import com.tencent.devops.model.dispatch.tables.records.TDispatchKubernetesBuildHisRecord
 import org.jooq.DSLContext
-import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
 class BuildHisDao {
-
-    private val logger = LoggerFactory.getLogger(BuildHisDao::class.java)
 
     fun create(
         dslContext: DSLContext,
@@ -90,36 +85,6 @@ class BuildHisDao {
                 disk,
                 executeCount
             ).returning(ID).fetchOne()!!.id
-        }
-    }
-
-    fun get(
-        dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: String?
-    ): Result<TDispatchKubernetesBuildHisRecord> {
-        with(TDispatchKubernetesBuildHis.T_DISPATCH_KUBERNETES_BUILD_HIS) {
-            val select = dslContext.selectFrom(this)
-                .where(BUIDLD_ID.eq(buildId))
-            if (vmSeqId != null && vmSeqId.isNotEmpty()) {
-                select.and(VM_SEQ_ID.eq(vmSeqId))
-            }
-
-            return select.fetch()
-        }
-    }
-
-    fun getLatestBuildHistory(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeqId: String
-    ): TDispatchKubernetesBuildHisRecord? {
-        with(TDispatchKubernetesBuildHis.T_DISPATCH_KUBERNETES_BUILD_HIS) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .orderBy(GMT_CREATE.desc())
-                .fetchAny()
         }
     }
 
