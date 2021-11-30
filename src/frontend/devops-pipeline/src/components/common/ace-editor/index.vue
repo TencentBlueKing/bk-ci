@@ -24,7 +24,7 @@
     </div>
 </template>
 <script>
-    
+
     export default {
         props: {
             value: {
@@ -87,18 +87,15 @@
                     this.monaco.editor.setTheme(newVal)
                 }
             },
-                        
+
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
-                this.$nextTick(() => {
-                    this.editor.resize()
-                })
             }
         },
         async mounted () {
             this.isLoading = true
             this.monaco = await import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor')
-            
+
             this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
@@ -112,7 +109,7 @@
             this.isLoading = false
 
             // @event `change`
-            
+
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -125,17 +122,18 @@
         methods: {
             getLang (lang) {
                 const langMap = {
-                    sh: 'shell'
+                    sh: 'shell',
+                    batchfile: 'bat'
                 }
-                
+
                 return langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()
-    
+
                 if (_size.match(/^\d*$/)) return `${size}px`
                 if (_size.match(/^[0-9]?%$/)) return _size
-    
+
                 return '100%'
             }
         }
