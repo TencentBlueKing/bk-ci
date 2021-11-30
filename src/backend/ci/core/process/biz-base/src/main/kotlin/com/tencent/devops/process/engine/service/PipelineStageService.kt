@@ -280,6 +280,12 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildStageEvent(
                         source = BS_MANUAL_START_STAGE, projectId = projectId, pipelineId = pipelineId,
                         userId = userId, buildId = buildId, stageId = stageId, actionType = ActionType.REFRESH
+                    ),
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "stage($stageId) reviewed with PROCESSED", projectId = projectId,
+                        pipelineId = pipelineId, buildId = buildId, userId = userId,
+                        stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                        status = BuildStatus.REVIEW_PROCESSED.name
                     )
                     // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
                 )
@@ -332,6 +338,12 @@ class PipelineStageService @Autowired constructor(
                     pipelineId = pipelineId, userId = userId,
                     buildId = buildId, stageId = stageId,
                     actionType = ActionType.END
+                ),
+                PipelineBuildReviewBroadCastEvent(
+                    source = "stage($stageId) reviewed with ABORT", projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId, userId = userId,
+                    stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                    status = BuildStatus.REVIEW_ABORT.name
                 )
                 // #3400 FinishEvent会刷新HISTORY列表的Stage状态
             )
