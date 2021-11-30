@@ -116,7 +116,6 @@ class MQConfiguration @Autowired constructor() {
         return fanoutExchange
     }
 
-
     /**
      * 构建红线检查步骤广播交换机
      */
