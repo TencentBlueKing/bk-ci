@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
