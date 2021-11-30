@@ -28,21 +28,20 @@
 package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
 @Service
 class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -320,40 +319,39 @@ class StreamBasicSettingService @Autowired constructor(
      */
     fun checkSameGitProjectName(userId: String, projectName: String) {
 
-        // sp1:根据gitProjectName调用project接口获取t_project信息中的project_id
+        // sp1:根据gitProjectName调用project接口获取t_project信息
         val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(
             userId = userId,
             projectName = projectName
-        )
-        logger.info("PROJECT|bkProjectResult|$bkProjectResult")
-        if (null == bkProjectResult) {
-            logger.error("STREAM|projectName|$projectName|msg|bkProjectResult is empty")
-            return
-        }
-        val projectId: String = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
+        ) ?: return
 
-        // sp2:如果项目存在，则根据project_id 调用scm接口获取git上的项目信息
+        // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
+        val projectId: String = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
         val gitProjectResult = requestGitProjectInfo(projectId.toLong())
         // 如果工蜂存在该项目信息
+        logger.info("STREAM|gitProjectResult|$gitProjectResult")
         if ( null != gitProjectResult ) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
             val projectNameFromGit = gitProjectResult!!.name
-            val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/"), projectName.length)
-
+            val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
+            logger.info("STREAM|projectNameFromGit|$projectNameFromGit|projectNameFromPara|$projectNameFromPara")
             if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty()
-                && projectNameFromPara.equals(projectNameFromGit)) {
-                // 更新项目信息，包含setting + project表
+                && !projectNameFromPara.equals(projectNameFromGit)) {
+                // 项目已修改名称，更新项目信息，包含setting + project表
+                logger.info("STREAM|refreshSetting")
                 refreshSetting(userId, projectId.toLong())
             }
             return
         }
+        logger.info("STREAM|not exist git project")
 
-            // 工蜂不存在，则更新t_project表的project_name加上xxx_delete
+            // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
             try {
+                val timeStamp = System.currentTimeMillis().toString()
                 client.get(ServiceTxProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                    projectName = "${projectName}_delete"
+                    projectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")
