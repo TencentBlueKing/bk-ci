@@ -29,6 +29,7 @@ package com.tencent.devops.scm.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 
+@Suppress("MaxLineLength")
 object QualityUtils {
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
         val (status, timeCost, triggerType, pipelineName, url) = titleData
@@ -38,19 +39,15 @@ object QualityUtils {
             "蓝盾流水线"
         }
 
-        val buildStatus = try {
-            BuildStatus.valueOf(status)
-        } catch (e: Exception) {
-            BuildStatus.UNKNOWN
-        }
-
         // 生成报表
-        val statusLine = when {
-            buildStatus.name == "SUCCEED" -> {
+        val statusLine = when (status) {
+            "SUCCEED" -> {
                 "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
             }
-            buildStatus == BuildStatus.REVIEWING -> {
-                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">等待审核</td>"
+            BuildStatus.QUALITY_CHECK_WAIT.name,
+            BuildStatus.QUALITY_CHECK_FAIL.name,
+            BuildStatus.QUALITY_CHECK_PASS.name -> {
+                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">执行中</td>"
             }
             else -> {
                 "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
@@ -75,7 +72,7 @@ object QualityUtils {
         body.append("<th style=\"text-align:left;\">预期</th>")
         body.append("<th style=\"text-align:left;\"></th>")
         body.append("</tr>")
-        resultData.forEach { elementName, result ->
+        resultData.forEach { (elementName, result) ->
             result.forEachIndexed { index, list ->
                 body.append("<tr>")
                 if (index == 0) body.append("<td>$elementName</td>") else body.append("<td></td>")

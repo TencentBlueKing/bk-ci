@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -319,6 +320,7 @@ interface ServiceGitCiResource {
         @ApiParam(value = "mrId")
         @QueryParam("mrId")
         mrId: Long,
-        message: String
+        @ApiParam(value = "mr评论请求体")
+        mrBody: MrCommentBody
     )
 }

@@ -47,6 +47,8 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
+import com.tencent.devops.scm.utils.QualityUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -421,7 +423,7 @@ class GitCiService {
         token: String,
         gitProjectId: String,
         mrId: Long,
-        message: String
+        mrBody: MrCommentBody
     ) {
         logger.info("$gitProjectId|$mrId|addMrComment")
         try {
@@ -430,7 +432,7 @@ class GitCiService {
                 token = token,
                 projectName = gitProjectId,
                 requestId = mrId,
-                message = message.removePrefix("\"").removeSuffix("\"")
+                message = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
             )
         } catch (e: Exception) {
             logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")

@@ -31,9 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.stream.listener.BuildEvent
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
-import com.tencent.devops.stream.listener.utils.QualityUtils
 import com.tencent.devops.stream.pojo.git.GitEvent
 import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -93,7 +93,7 @@ class SendQualityMrComment @Autowired constructor(
                 token = token,
                 gitProjectId = requestEvent.gitProjectId.toString(),
                 mrId = gitEvent.object_attributes.id,
-                message = QualityUtils.getQualityReport(reportData.first, reportData.second)
+                mrBody = MrCommentBody(reportData)
             )
         }
     }
