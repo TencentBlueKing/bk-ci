@@ -56,7 +56,7 @@ class SendQualityMrComment @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SendQualityMrComment::class.java)
     }
 
-    fun sendMrComment(context: StreamBuildStageListenerContextV2) {
+    fun sendMrComment(context: StreamBuildStageListenerContextV2, ruleIds: List<String>) {
         if (!context.checkSend()) {
             return
         }
@@ -75,7 +75,7 @@ class SendQualityMrComment @Autowired constructor(
                     status = buildEvent.status,
                     startTime = null
                 ),
-                ruleIds = context.qualityRuleIds
+                ruleIds = ruleIds
             )
             if (reportData.first.isEmpty() || reportData.second.isEmpty()) {
                 logger.warn("qualityCheckListener ${buildEvent.buildId} reportData is null $reportData")

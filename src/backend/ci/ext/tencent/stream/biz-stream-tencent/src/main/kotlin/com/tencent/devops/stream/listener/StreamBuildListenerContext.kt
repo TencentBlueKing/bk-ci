@@ -56,8 +56,7 @@ class StreamBuildStageListenerContextV2(
     override val streamBuildEvent: StreamBuildEvent,
     override val pipeline: GitProjectPipeline,
     override val streamSetting: GitCIBasicSetting,
-    val reviewType: BuildReviewType,
-    val qualityRuleIds: List<String>?
+    val reviewType: BuildReviewType
 ) : StreamBuildListenerContextV2(
     buildEvent, requestEvent, streamBuildEvent, pipeline, streamSetting
 )

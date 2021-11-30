@@ -141,25 +141,9 @@ class SendCommitCheck @Autowired constructor(
                 gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
-                reportData = getGateRepoData(),
                 targetUrl = getTargetUrl(context)
             )
         }
-    }
-
-    private fun StreamBuildListenerContextV2.getGateRepoData():
-            Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        // 中间阶段不由Commitcheck这边发送
-        if (this is StreamBuildStageListenerContextV2) {
-            return Pair(listOf(), mutableMapOf())
-        }
-        return streamQualityService.getQualityGitMrResult(
-            client = client,
-            gitProjectId = streamSetting.gitProjectId,
-            pipelineName = pipeline.displayName,
-            event = buildEvent,
-            ruleIds = null
-        )
     }
 
     // 根据状态切换描述
