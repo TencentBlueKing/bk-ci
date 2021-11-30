@@ -57,6 +57,19 @@ $ helm uninstall bkci
 | `pullPolicy` | 镜像拉取策略 | `IfNotPresent` |
 | `pullSecrets` | 镜像拉取Secret名称数组 | `[]` |
 
+### 蓝鲸日志采集配置
+|参数|描述|默认值|
+|---|---|---|
+| `bklog.file.collectEnabled` | 是否开启文件日志采集 | `false` |
+| `bklog.file.dataId` | 文件采集项的ID | `1` |
+| `bklog.std.collectEnabled` | 是否开启标准输出日志采集 | `false` |
+| `bklog.std.dataId` | 标准输出日志采集项的ID | `1` |
+
+### 蓝鲸监控配置
+|参数|描述|默认值|
+|---|---|---|
+| `bkmonitor.collectEnabled` | 是否开启蓝鲸监控 | `false` |
+
 ### ingress 配置
 
 |参数|描述|默认值 |
