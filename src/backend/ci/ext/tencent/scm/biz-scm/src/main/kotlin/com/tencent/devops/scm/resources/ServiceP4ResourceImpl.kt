@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.scm.resources
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.scm.api.ServiceP4Resource
+import com.tencent.devops.scm.code.p4.api.P4Api
+import com.tencent.devops.scm.code.p4.api.P4FileSpec
 
-object CommitCheckUtils {
-    // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
-    fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
-//        val event = request.gitEvent ?: return false
-        return gitCIBasicSetting.enableCommitCheck && request.objectKind != TGitObjectKind.MANUAL.value
+@RestResource
+class ServiceP4ResourceImpl : ServiceP4Resource {
+
+    override fun getChangelistFiles(
+        p4Port: String,
+        username: String,
+        password: String,
+        change: Int
+    ): Result<List<P4FileSpec>> {
+        val changeListFiles = P4Api(
+            p4port = p4Port,
+            username = username,
+            password = password
+        ).getChangelistFiles(change)
+        return Result(changeListFiles)
     }
 }

@@ -25,16 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.scm.api
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-object CommitCheckUtils {
-    // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
-    fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
-//        val event = request.gitEvent ?: return false
-        return gitCIBasicSetting.enableCommitCheck && request.objectKind != TGitObjectKind.MANUAL.value
-    }
+@Api(tags = ["SERVICE_P4"], description = "服务-p4相关")
+@Path("/service/p4")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceP4Resource {
+
+    @ApiOperation("获取p4文件变更列表")
+    @GET
+    @Path("/getChangelistFiles")
+    fun getChangelistFiles(
+        @ApiParam("p4Port", required = true)
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam("p4 username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("p4 password", required = true)
+        @QueryParam("password")
+        password: String,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<List<P4FileSpec>>
 }
