@@ -1075,11 +1075,9 @@ class TXPipelineExportService @Autowired constructor(
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
-            }
-            else if(!ciName.isNullOrBlank()){
+            } else if (!ciName.isNullOrBlank()) {
                 "\${{ $ciName }}"
-            }
-            else {
+            } else {
                 "\${{ $originKeyWithNamespace }}"
             }
             newValue = newValue.replace(matcher.group(), realValue)
