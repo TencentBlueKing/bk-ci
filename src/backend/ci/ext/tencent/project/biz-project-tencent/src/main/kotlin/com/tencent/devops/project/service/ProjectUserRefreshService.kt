@@ -314,7 +314,8 @@ class ProjectUserRefreshService @Autowired constructor(
             centerId = userInfo.centerId ?: 0,
             centerName = userInfo.centerName ?: "",
             groupId = userInfo.groupId ?: 0,
-            groupName = userInfo.groupName ?: ""
+            groupName = userInfo.groupName ?: "",
+            publicAccount = true
         )
         return true
     }
