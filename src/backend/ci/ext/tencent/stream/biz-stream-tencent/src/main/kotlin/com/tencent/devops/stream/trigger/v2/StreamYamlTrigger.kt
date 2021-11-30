@@ -171,8 +171,7 @@ class StreamYamlTrigger @Autowired constructor(
                 isTimeTrigger = true,
                 // 没有触发只有定时任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
-                gitProjectInfo = gitProjectInfo,
-                params = startParams
+                gitProjectInfo = gitProjectInfo
             )
         }
 
@@ -209,7 +208,8 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false,
-                onlySavePipeline = false
+                onlySavePipeline = false,
+                params = startParams
             )
         }
         return true

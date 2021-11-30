@@ -286,7 +286,7 @@ class TriggerMatcher @Autowired constructor(
         isTrigger: Boolean
     ): Map<String, Any> {
         with(context) {
-            val element  = TriggerBuilder.buildCodeGitWebHookTriggerElement(
+            val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
                 gitEvent = gitEvent,
                 triggerOn = triggerOn
             ) ?: return emptyMap()
