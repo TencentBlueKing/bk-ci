@@ -90,19 +90,18 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
             projectMemberInfos.forEach {
                 val userDeptIds by lazy { deptService.getUserDeptInfo(userId) }
                 // 如果是用户组下是组织,才匹配用户是否在该组织下
-                if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
+                if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+                    && userDeptIds.contains(it.id)) {
                     watcher.start("getUserDept")
-                    if (userDeptIds.contains(it.id)) {
-                        logger.info("$userId join $projectId by dept ${it.id} ")
-                        departmentGroup.add(
-                            ManagerRoleGroupInfo(
-                                it.name,
-                                "",
-                                it.id.toInt()
-                            )
+                    logger.info("$userId join $projectId by dept ${it.id} ")
+                    departmentGroup.add(
+                        ManagerRoleGroupInfo(
+                            it.name,
+                            "",
+                            it.id.toInt()
                         )
-                        return@forEach
-                    }
+                    )
+                    return@forEach
                 }
             }
             return departmentGroup
