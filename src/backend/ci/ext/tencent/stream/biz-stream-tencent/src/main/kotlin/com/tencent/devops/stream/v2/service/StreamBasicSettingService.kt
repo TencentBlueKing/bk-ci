@@ -329,21 +329,18 @@ class StreamBasicSettingService @Autowired constructor(
         val projectId: String = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
         val gitProjectResult = requestGitProjectInfo(projectId.toLong())
         // 如果工蜂存在该项目信息
-        logger.info("STREAM|gitProjectResult|$gitProjectResult")
         if ( null != gitProjectResult ) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
             val projectNameFromGit = gitProjectResult!!.name
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
-            logger.info("STREAM|projectNameFromGit|$projectNameFromGit|projectNameFromPara|$projectNameFromPara")
+
             if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty()
                 && !projectNameFromPara.equals(projectNameFromGit)) {
                 // 项目已修改名称，更新项目信息，包含setting + project表
-                logger.info("STREAM|refreshSetting")
                 refreshSetting(userId, projectId.toLong())
             }
             return
         }
-        logger.info("STREAM|not exist git project")
 
             // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
             try {
