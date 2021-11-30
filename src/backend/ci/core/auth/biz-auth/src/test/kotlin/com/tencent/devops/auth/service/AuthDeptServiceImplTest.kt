@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.redis.RedisOperation
+import org.junit.Assert
 import org.junit.Test
 
 class AuthDeptServiceImplTest {
@@ -132,7 +133,10 @@ class AuthDeptServiceImplTest {
             "        ]\n" +
             "    }"
         val users = authDeptServiceImpl.findUserName(response)
-        println(users)
+        val mockUsers = mutableListOf<String>()
+        mockUsers.add("abc")
+        mockUsers.add("def")
+        Assert.assertEquals(users, mockUsers)
     }
 
     @Test
@@ -163,6 +167,12 @@ class AuthDeptServiceImplTest {
             "  \"name\" : \"XXX组\"\n" +
             "} ]"
         val users = authDeptServiceImpl.getUserDeptTreeIds(response)
-        println(users)
+        val mockUsers = mutableSetOf<String>()
+        mockUsers.add("29510")
+        mockUsers.add("123")
+        mockUsers.add("12345")
+        mockUsers.add("456")
+        mockUsers.add("9878")
+        Assert.assertEquals(users, mockUsers)
     }
 }

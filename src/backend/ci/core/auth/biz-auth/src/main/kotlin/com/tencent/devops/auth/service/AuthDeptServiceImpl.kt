@@ -304,12 +304,12 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     fun findUserName(str: String): List<String> {
         val dataMap = JsonUtil.to(str, Map::class.java)
-        val userInfoList = JsonUtil.to(JsonUtil.toJson(dataMap[HTTP_RESULT].toString()), List::class.java)
+        val userInfoList = JsonUtil.to(JsonUtil.toJson(dataMap[HTTP_RESULT]!!), List::class.java)
         val users = mutableListOf<String>()
         userInfoList.forEach {
-            val userInfo = JsonUtil.toJson(it.toString())
+            val userInfo = JsonUtil.toJson(it!!)
             val userInfoMap = JsonUtil.to(userInfo, Map::class.java)
-            val userName = userInfoMap.get("username").toString()
+            val userName = userInfoMap["username"].toString()
             users.add(userName)
         }
 
