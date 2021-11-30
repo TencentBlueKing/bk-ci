@@ -161,8 +161,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         model: Model,
-        gitBuildId: Long,
-        params: Map<String, String> = mapOf()
+        gitBuildId: Long
     ): BuildId? {
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
@@ -178,8 +177,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 event = event,
                 gitCIBasicSetting = gitCIBasicSetting,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName,
-                params = params
+                pipelineName = pipeline.displayName
             )
             logger.info(
                 "GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
@@ -269,15 +267,14 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String,
-        pipelineName: String,
-        params: Map<String, String> = mapOf()
+        pipelineName: String
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
-            values = params.plus(PIPELINE_NAME to pipelineName),
+            values = mapOf(PIPELINE_NAME to pipelineName),
             channelCode = channelCode
         ).data!!.id
     }

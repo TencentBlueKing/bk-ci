@@ -87,7 +87,8 @@ object ModelParameters {
         gitBasicSetting: GitCIBasicSetting,
         event: GitRequestEvent,
         v2GitUrl: String?,
-        originEvent: GitEvent?
+        originEvent: GitEvent?,
+        webhookParams: Map<String, String> = mapOf()
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -224,6 +225,7 @@ object ModelParameters {
         } else {
             getBuildFormPropertyFromYmlVariable(yaml.variables, startParams)
         }
+        startParams.putAll(webhookParams)
 
         startParams.forEach {
             result.add(

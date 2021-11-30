@@ -72,7 +72,8 @@ class ModelCreate @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        webhookParams: Map<String, String> = mapOf()
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -101,7 +102,8 @@ class ModelCreate @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             event = event,
             v2GitUrl = v2GitUrl,
-            originEvent = originEvent
+            originEvent = originEvent,
+            webhookParams = webhookParams
         )
 
         val triggerContainer = TriggerContainer(
