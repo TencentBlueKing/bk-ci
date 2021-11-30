@@ -430,7 +430,7 @@ class GitCiService {
                 token = token,
                 projectName = gitProjectId,
                 requestId = mrId,
-                message = message
+                message = message.removePrefix("\"").removeSuffix("\"")
             )
         } catch (e: Exception) {
             logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")

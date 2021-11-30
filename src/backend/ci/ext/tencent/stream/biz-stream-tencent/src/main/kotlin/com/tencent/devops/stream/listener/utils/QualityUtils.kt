@@ -91,11 +91,4 @@ object QualityUtils {
 
         return title + body.toString()
     }
-
-    private fun String.isRunning() = when (this) {
-        BuildStatus.QUALITY_CHECK_WAIT.name,
-        BuildStatus.QUALITY_CHECK_FAIL.name,
-        BuildStatus.QUALITY_CHECK_PASS.name -> true
-        else -> false
-    }
 }
