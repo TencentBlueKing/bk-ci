@@ -282,7 +282,6 @@ class ProjectUserRefreshService @Autowired constructor(
         return count
     }
 
-
     fun createPublicAccount(userInfo: UserInfo): Boolean {
         val userMessage = userDao.get(dslContext, userInfo.userId)
         if (userMessage != null) {
