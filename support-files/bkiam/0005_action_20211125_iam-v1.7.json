@@ -983,11 +983,11 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "project",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "quality_group_instance"
+                "id": "project_instance"
               }
             ]
           }
@@ -1023,7 +1023,7 @@
         "id": "quality_group_enable",
         "name": "使用质量红线用户组",
         "name_en": "Quality Group Enable",
-        "type": "enable",
+        "type": "use",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
