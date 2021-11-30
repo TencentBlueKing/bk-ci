@@ -138,6 +138,7 @@ class PipelineBuildDetailService @Autowired constructor(
             // #4518 兼容历史构建的containerId作为日志JobId
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
+                container.containerId = container.id
             }
         }
 
