@@ -690,6 +690,7 @@ class PipelineRuntimeService @Autowired constructor(
             stage.containers.forEach nextContainer@{ container ->
                 // #4518 Model中的container.containerId转移至container.containerHashId，进行新字段值补充
                 container.containerHashId = container.containerHashId ?: container.containerId
+                container.containerId = container.id
 
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
