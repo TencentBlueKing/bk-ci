@@ -29,6 +29,7 @@ package com.tencent.devops.stream.listener.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 
+@Suppress("MaxLineLength")
 object QualityUtils {
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
         val (status, timeCost, triggerType, pipelineName, url) = titleData
