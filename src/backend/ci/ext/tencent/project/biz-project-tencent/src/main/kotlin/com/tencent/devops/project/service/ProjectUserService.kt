@@ -27,16 +27,10 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
-import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,8 +40,7 @@ import org.springframework.stereotype.Service
 class ProjectUserService @Autowired constructor(
     val dslContext: DSLContext,
     val userDao: UserDao,
-    val projectUserDao: ProjectUserDao,
-    val tofService: TOFService
+    val projectUserDao: ProjectUserDao
 ) {
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
@@ -75,43 +68,6 @@ class ProjectUserService @Autowired constructor(
             limit = limitByMax,
             offset = offset
         )
-    }
-
-    fun createPublicAccount(userInfo: UserInfo): Boolean {
-        val userMessage = userDao.get(dslContext, userInfo.userId)
-        if (userMessage != null) {
-            logger.warn("createPublicAccount ${userInfo.userId} ${userInfo.name} is exist")
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(userInfo.userId)
-            )
-        }
-        try {
-            // 校验是否在rtx用户, 若为rtx用户不符合公共账号的判断逻辑
-            tofService.getUserDeptDetail(userInfo.userId)
-            logger.warn("createPublicAccount ${userInfo.userId} is not public account")
-            throw ErrorCodeException(
-                errorCode = PARAMETER_IS_INVALID,
-                params = arrayOf(userInfo.userId)
-            )
-        } catch (e: OperationException) {
-            logger.info("createPublicAccount ${userInfo.userId} is public account")
-        }
-
-        userDao.create(
-            dslContext = dslContext,
-            userId = userInfo.userId,
-            name = userInfo.userId,
-            bgId = userInfo.bgId,
-            bgName = userInfo.bgName,
-            deptId = userInfo.deptId ?: 0,
-            deptName = userInfo.deptName ?: "",
-            centerId = userInfo.centerId ?: 0,
-            centerName = userInfo.centerName ?: "",
-            groupId = userInfo.groupId ?: 0,
-            groupName = userInfo.groupName ?: ""
-        )
-        return true
     }
 
     companion object {
