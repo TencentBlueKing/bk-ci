@@ -1242,7 +1242,7 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineInfo.pipelineId,
                         buildId = buildId,
                         stageId = stage.id!!,
-                        containerId = container.containerId ?: context.containerSeq.toString(),
+                        containerId = container.id!!,
                         containerHashId = container.containerHashId ?: "",
                         containerType = container.getClassType(),
                         seq = context.containerSeq,
