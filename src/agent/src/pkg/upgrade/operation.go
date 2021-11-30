@@ -51,14 +51,14 @@ func UninstallAgent() {
 }
 
 func runUpgrader(action string) error {
-	logs.Info("start upgrader process")
+	logs.Info("[agentUpgrade]|start upgrader process")
 
 	scripPath := systemutil.GetUpgradeDir() + "/" + config.GetClientUpgraderFile()
 
 	if !systemutil.IsWindows() {
 		err := os.Chmod(scripPath, 0777)
 		if err != nil {
-			logs.Error("chmod failed: ", err.Error())
+			logs.Error("[agentUpgrade]|chmod failed: ", err.Error())
 			return errors.New("chmod failed: ")
 		}
 	}
@@ -70,18 +70,18 @@ func runUpgrader(action string) error {
 
 	pid, err := command.StartProcess(scripPath, args, systemutil.GetWorkDir(), nil, "")
 	if err != nil {
-		logs.Error("run upgrader failed: ", err.Error())
+		logs.Error("[agentUpgrade]|run upgrader failed: ", err.Error())
 		return errors.New("run upgrader failed")
 	}
-	logs.Info("start process success, pid: ", pid)
+	logs.Info("[agentUpgrade]|start process success, pid: ", pid)
 
-	logs.Warning("agent process exiting")
+	logs.Warning("[agentUpgrade]|agent process exiting")
 	systemutil.ExitProcess(0)
 	return nil
 }
 
 func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
-	logs.Info("start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged)
+	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged)
 	config.GIsAgentUpgrading = true
 	defer func() {
 		config.GIsAgentUpgrading = false
@@ -89,33 +89,33 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 	}()
 
 	if !agentChanged && !workAgentChanged {
-		logs.Info("no change to upgrade, skip")
+		logs.Info("[agentUpgrade]|no change to upgrade, skip")
 		return nil
 	}
 
 	if workAgentChanged {
-		logs.Info("work agent changed, replace work agent file")
+		logs.Info("[agentUpgrade]|work agent changed, replace work agent file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.WorkAgentFile,
 			systemutil.GetWorkDir()+"/"+config.WorkAgentFile,
 			true)
 		if err != nil {
-			logs.Error("replace work agent file failed: ", err.Error())
+			logs.Error("[agentUpgrade]|replace work agent file failed: ", err.Error())
 			return errors.New("replace work agent file failed")
 		}
-		logs.Info("relace agent file done")
+		logs.Info("[agentUpgrade]|relace agent file done")
 
 		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
 	}
 
 	if agentChanged {
-		logs.Info("agent changed, start upgrader")
+		logs.Info("[agentUpgrade]|agent changed, start upgrader")
 		err := runUpgrader(config.ActionUpgrade)
 		if err != nil {
 			return err
 		}
 	} else {
-		logs.Info("agent not changed, skip agent upgrade")
+		logs.Info("[agentUpgrade]|agent not changed, skip agent upgrade")
 	}
 	return nil
 }
