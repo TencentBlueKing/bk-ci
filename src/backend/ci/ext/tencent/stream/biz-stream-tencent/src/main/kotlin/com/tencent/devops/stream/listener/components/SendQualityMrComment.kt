@@ -57,7 +57,7 @@ class SendQualityMrComment @Autowired constructor(
     }
 
     fun sendMrComment(context: StreamBuildStageListenerContextV2) {
-        if (context.requestEvent.objectKind != TGitObjectKind.MERGE_REQUEST.value) {
+        if (!context.checkSend()) {
             return
         }
         with(context) {
@@ -96,5 +96,17 @@ class SendQualityMrComment @Autowired constructor(
                 message = QualityUtils.getQualityReport(reportData.first, reportData.second)
             )
         }
+    }
+
+    private fun StreamBuildStageListenerContextV2.checkSend(): Boolean {
+        with(this) {
+            if (!streamSetting.enableMrComment) {
+                return false
+            }
+            if (requestEvent.objectKind != TGitObjectKind.MERGE_REQUEST.value) {
+                return false
+            }
+        }
+        return true
     }
 }

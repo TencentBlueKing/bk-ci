@@ -99,7 +99,8 @@ class StreamBasicSettingService @Autowired constructor(
         enableMrBlock: Boolean? = null,
         enableCi: Boolean? = null,
         authUserId: String? = null,
-        enableCommitCheck: Boolean? = null
+        enableCommitCheck: Boolean? = null,
+        enableMrComment: Boolean? = null
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
@@ -132,7 +133,8 @@ class StreamBasicSettingService @Autowired constructor(
             creatorCenterName = setting.creatorCenterName,
             enableCommitCheck = enableCommitCheck,
             pathWithNamespace = setting.pathWithNamespace,
-            nameWithNamespace = setting.nameWithNamespace
+            nameWithNamespace = setting.nameWithNamespace,
+            enableMrComment = enableMrComment
         )
         return true
     }
@@ -208,7 +210,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
             val projectResult =
