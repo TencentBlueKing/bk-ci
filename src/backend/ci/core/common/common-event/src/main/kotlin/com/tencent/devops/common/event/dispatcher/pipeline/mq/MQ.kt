@@ -93,7 +93,8 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
     // 构建审核和检查步骤广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_REVIEW_CHECK_FANOUT = "e.engine.pipeline.build.review.check.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT = "e.engine.pipeline.build.review.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT = "e.engine.pipeline.build.quality.check.fanout"
 
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
