@@ -62,6 +62,7 @@ object TriggerBuilder {
         triggerOn: TriggerOn
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
+            id = "0",
             repositoryHashId = null,
             repositoryName = gitPushEvent.project_id.toString(),
             repositoryType = RepositoryType.NAME,
@@ -81,6 +82,7 @@ object TriggerBuilder {
         triggerOn: TriggerOn
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
+            id = "0",
             repositoryHashId = null,
             repositoryName = gitTagPushEvent.project_id.toString(),
             repositoryType = RepositoryType.NAME,
@@ -101,6 +103,7 @@ object TriggerBuilder {
         triggerOn: TriggerOn
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
+            id = "0",
             repositoryHashId = null,
             repositoryName = gitMergeRequestEvent.object_attributes.target_project_id.toString(),
             repositoryType = RepositoryType.NAME,
