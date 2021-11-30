@@ -123,7 +123,7 @@ export default {
             }
         },
         handleEnterOption (isMultiple = false) {
-            const name = this.displayName
+            const displayName = this.displayName
             this.handleBlur()
             if (!isMultiple) {
                 let option = {}
@@ -138,24 +138,32 @@ export default {
                     this.displayName = option.name
                 }
             } else {
-                if (name) {
+                if (displayName) {
+                    const nameArr = displayName.split(',')
                     if (this.hasGroup) {
-                        this.filteredList.forEach(item => {
-                            item.children.forEach(child => {
-                                if (child.name === name) {
-                                    this.handleChange(this.name, [child.id])
-                                    this.displayName = child.name
-                                }
+                        const res = nameArr.every(name => {
+                            const curItem = this.filteredList.find(item => {
+                                return item.children.find(child => {
+                                    return child.name === name
+                                })
                             })
+                            if (curItem) return true
+                            return false
                         })
+                        if (res) {
+                            this.handleChange(this.name, nameArr)
+                            this.displayName = nameArr.join(',')
+                        }
                     } else {
-                        this.filteredList.forEach(item => {
-                            console.log(item, 'ttt')
-                            if (item.name === name) {
-                                this.handleChange(this.name, [item.id])
-                                this.displayName = item.name
-                            }
+                        const res = nameArr.every(name => {
+                            const curItem = this.filteredList.find(item => item.name === name)
+                            if (curItem) return true
+                            return false
                         })
+                        if (res) {
+                            this.handleChange(this.name, nameArr)
+                            this.displayName = nameArr.join(',')
+                        }
                     }
                 }
             }
