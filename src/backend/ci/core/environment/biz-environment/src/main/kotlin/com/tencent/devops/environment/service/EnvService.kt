@@ -526,7 +526,7 @@ class EnvService @Autowired constructor(
 
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
-        val serverNodeTypes = listOf(NodeType.CMDB.name, NodeType.CC.name)
+        val serverNodeTypes = listOf(NodeType.CMDB.name)
 
         toAddNodeIds.forEach {
             if (env.envType == EnvType.BUILD.name && existNodesMap[it]?.nodeType in serverNodeTypes) {

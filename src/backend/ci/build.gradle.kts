@@ -22,7 +22,7 @@ allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.6.0") +
+    version = (System.getProperty("ci_version") ?: "1.7.0") +
         if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
@@ -87,6 +87,7 @@ allprojects {
             dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
                 entry("pinyin-plus")
             }
+            dependency("com.perforce:p4java:${Versions.p4}")
         }
     }
 
