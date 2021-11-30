@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import org.slf4j.LoggerFactory
 
 class BkAuthPermissionService : PermissionService {
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -34,6 +35,7 @@ class BkAuthPermissionService : PermissionService {
         projectCode: String,
         resourceType: String
     ): List<String> {
+        logger.info("getUserResourceByAction $userId $action $projectCode $resourceType")
         return emptyList()
     }
 
@@ -44,5 +46,9 @@ class BkAuthPermissionService : PermissionService {
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(BkAuthPermissionService::class.java)
     }
 }

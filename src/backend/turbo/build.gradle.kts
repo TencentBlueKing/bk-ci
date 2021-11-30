@@ -1,5 +1,5 @@
 plugins {
-	id("com.tencent.devops.boot") version "0.0.4"
+	id("com.tencent.devops.boot") version "0.0.5-SNAPSHOT"
 }
 
 allprojects {
@@ -13,6 +13,7 @@ allprojects {
 		exclude(group = "org.slf4j", module = "log4j-over-slf4j")
 		exclude(group = "org.slf4j", module = "slf4j-log4j12")
 		exclude(group = "org.slf4j", module = "slf4j-nop")
+		resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.MINUTES)
 	}
 
 	dependencyManagement {
