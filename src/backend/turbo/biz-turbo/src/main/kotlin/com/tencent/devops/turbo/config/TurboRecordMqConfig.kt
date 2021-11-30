@@ -2,14 +2,18 @@ package com.tencent.devops.turbo.config
 
 import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
 import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_CREATE
-import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_CREATE
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_PLUGIN_DATA
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
 import com.tencent.devops.turbo.component.TurboRecordConsumer
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.Queue
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.CustomExchange
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+@Suppress("WildcardImport")
 @Configuration
 class TurboRecordMqConfig {
 
@@ -96,6 +101,49 @@ class TurboRecordMqConfig {
         container.setAmqpAdmin(rabbitAdmin)
         // 确保只有一个消费者消费，保证负载不超时
         val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::updateSingleTurboRecord.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
+    @Bean
+    fun turboPluginHandleExchange(): CustomExchange {
+        return CustomExchange(
+            EXCHANGE_TURBO_PLUGIN,
+            "x-delayed-message",
+            true,
+            false,
+            mapOf("x-delayed-type" to "direct")
+        )
+    }
+
+    @Bean
+    fun turboPluginUpdateQueue(): Queue {
+        return Queue(QUEUE_TURBO_PLUGIN_DATA)
+    }
+
+    @Bean
+    fun turboPluginUpdateBind(turboPluginUpdateQueue: Queue, turboPluginHandleExchange: CustomExchange): Binding {
+        return BindingBuilder.bind(turboPluginUpdateQueue).to(turboPluginHandleExchange)
+            .with(ROUTE_TURBO_PLUGIN_DATA).noargs()
+    }
+
+    @Bean
+    fun turboPluginUpdateListenerContainer(
+        connectionFactory: ConnectionFactory,
+        turboPluginUpdateQueue: Queue,
+        rabbitAdmin: RabbitAdmin,
+        turboRecordConsumer: TurboRecordConsumer,
+        messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setPrefetchCount(1)
+        container.setQueueNames(turboPluginUpdateQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(5)
+        container.setAmqpAdmin(rabbitAdmin)
+        // 确保只有一个消费者消费，保证负载不超时
+        val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::updateSingleRecordForPlugin.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container

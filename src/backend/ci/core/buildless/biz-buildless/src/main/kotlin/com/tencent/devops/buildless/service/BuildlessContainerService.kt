@@ -43,6 +43,7 @@ import com.tencent.devops.buildless.config.DockerHostConfig
 import com.tencent.devops.buildless.exception.DockerServiceException
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CommonUtils
@@ -50,14 +51,12 @@ import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
+import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
-import com.tencent.devops.buildless.utils.ENV_KEY_AGENT_ID
-import com.tencent.devops.buildless.utils.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
-import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.buildless.utils.SLEEP_ENTRY_POINT_CMD
+import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -67,8 +66,9 @@ import org.springframework.stereotype.Service
  */
 
 @Service
-class BuildlessService(
+class BuildlessContainerService(
     private val dockerHostConfig: DockerHostConfig,
+    private val commonConfig: CommonConfig,
     private val redisUtils: RedisUtils
 ) {
 
@@ -126,15 +126,16 @@ class BuildlessService(
                 )
             }
 
-            val response = httpDockerCli.execCreateCmd(containerId)
-                .withEnv(listOf(
-                    "$ENV_KEY_PROJECT_ID=${dockerHostBuildInfo.projectId}",
-                    "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
-                    "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}"
-                ))
-                .exec()
+            redisUtils.addBuildLessReadyTask(BuildLessTask(
+                projectId = dockerHostBuildInfo.projectId,
+                pipelineId = dockerHostBuildInfo.pipelineId,
+                buildId = dockerHostBuildInfo.buildId,
+                poolNo = dockerHostBuildInfo.poolNo,
+                vmSeqId = dockerHostBuildInfo.vmSeqId,
+                agentId = dockerHostBuildInfo.agentId,
+                secretKey = dockerHostBuildInfo.secretKey
+            ))
 
-            httpDockerCli.execStartCmd(response.id).start()
             logger.info("Success start container: $containerId")
             redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
             return containerId
@@ -174,6 +175,7 @@ class BuildlessService(
                     "$ENV_KEY_GATEWAY=$gateway",
                     "TERM=xterm-256color",
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                    "$ENV_DOCKER_HOST_PORT= ${commonConfig.serverPort}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_JOB_BUILD_TYPE=AGENT_LESS"
@@ -235,6 +237,6 @@ class BuildlessService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildlessService::class.java)
+        private val logger = LoggerFactory.getLogger(BuildlessContainerService::class.java)
     }
 }

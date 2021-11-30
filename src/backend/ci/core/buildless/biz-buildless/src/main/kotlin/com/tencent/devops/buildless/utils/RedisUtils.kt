@@ -27,6 +27,8 @@
 package com.tencent.devops.buildless.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,6 +61,21 @@ class RedisUtils @Autowired constructor(
         redisOperation.hdelete(buildlessPoolKey(), containerId)
     }
 
+    fun addBuildLessReadyTask(buildLessTask: BuildLessTask) {
+        redisOperation.leftPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
+    }
+
+    fun popBuildLessReadyTask(): BuildLessTask? {
+        val resultString = redisOperation.rightPop(buildLessReadyTaskKey())
+        if (resultString.isNullOrBlank()) {
+            return null
+        }
+
+        return JsonUtil.to(resultString, BuildLessTask::class.java)
+    }
+
     private fun buildlessPoolKey() =
         "buildless:contianer_pool"
+
+    private fun buildLessReadyTaskKey() = "buildless:ready_task"
 }
