@@ -89,7 +89,7 @@
       "data": {
         "id": "quality_group_instance",
         "name": "质量红线用户组视图",
-        "name_en": "quality instance selection",
+        "name_en": "quality group instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
           {"system_id": "bk_ci","id": "group"}
@@ -101,7 +101,7 @@
       "data": {
         "id": "quality_rule_instance",
         "name": "质量红线规则视图",
-        "name_en": "quality instance selection",
+        "name_en": "quality rule instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
           {"system_id": "bk_ci","id": "rule"}
