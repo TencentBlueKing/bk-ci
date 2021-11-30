@@ -1054,6 +1054,7 @@ class TXPipelineExportService @Autowired constructor(
                     }
                 }
             }
+            val ciName = PipelineVarUtil.fetchReverseVarName(originKey)
             val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
                 originKey.replace("${namespace}_", "")
@@ -1074,7 +1075,11 @@ class TXPipelineExportService @Autowired constructor(
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
-            } else {
+            }
+            else if(!ciName.isNullOrBlank()){
+                "\${{ $ciName }}"
+            }
+            else {
                 "\${{ $originKeyWithNamespace }}"
             }
             newValue = newValue.replace(matcher.group(), realValue)
