@@ -101,6 +101,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
                                 it.id.toInt()
                             )
                         )
+                        return@forEach
                     }
                 }
             }
