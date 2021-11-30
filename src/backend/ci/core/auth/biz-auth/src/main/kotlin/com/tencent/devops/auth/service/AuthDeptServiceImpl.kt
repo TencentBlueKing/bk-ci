@@ -333,7 +333,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     fun getUserDeptTreeIds(responseData: String): Set<String> {
         val deptInfo = JsonUtil.to(responseData, object : TypeReference<List<UserDeptTreeInfo>>() {})
         val deptTreeId = mutableSetOf<String>()
-        val deptTree = deptInfo[0] as UserDeptTreeInfo
+        val deptTree = deptInfo[0]
         deptTreeId.add(deptTree.id)
         val family = deptTree.family
         family.forEach {
