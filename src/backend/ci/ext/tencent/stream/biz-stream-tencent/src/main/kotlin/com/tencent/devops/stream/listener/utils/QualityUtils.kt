@@ -54,8 +54,7 @@ object QualityUtils {
         }
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
-                "<td style=\"border:none;padding-left:0;\">" +
-                "<a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
+                "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
                 "<td style=\"border:none;padding-right: 0;\">状态：</td>" +
                 statusLine +
                 "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
