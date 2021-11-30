@@ -4,23 +4,26 @@ kind: StatefulSet
 metadata:
   name: {{ include "common.names.fullname" . }}-artifactory
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: artifactory
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: artifactory
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: artifactory
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: artifactory
   replicas: {{ .Values.artifactory.replicas }}
   serviceName: {{ include "common.names.fullname" . }}-artifactory
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: artifactory
         {{- if .Values.artifactory.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.artifactory.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: artifactory
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.artifactory.hostAliases }}

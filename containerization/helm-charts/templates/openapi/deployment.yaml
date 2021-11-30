@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-openapi
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: openapi
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: openapi
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: openapi
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: openapi
   replicas: {{ .Values.openapi.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: openapi
         {{- if .Values.openapi.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.openapi.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: openapi
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.openapi.hostAliases }}

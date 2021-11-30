@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-ticket
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: ticket
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: ticket
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: ticket
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: ticket
   replicas: {{ .Values.ticket.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: ticket
         {{- if .Values.ticket.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.ticket.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: ticket
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.ticket.hostAliases }}

@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-process
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: process
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: process
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: process
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: process
   replicas: {{ .Values.process.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: process
         {{- if .Values.process.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.process.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: process
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.process.hostAliases }}

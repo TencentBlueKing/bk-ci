@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-image
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: image
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: image
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: image
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: image
   replicas: {{ .Values.image.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: image
         {{- if .Values.image.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.image.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: image
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.image.hostAliases }}

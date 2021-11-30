@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-plugin
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: plugin
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: plugin
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: plugin
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: plugin
   replicas: {{ .Values.plugin.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: plugin
         {{- if .Values.plugin.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.plugin.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: plugin
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.plugin.hostAliases }}

@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-websocket
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: websocket
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: websocket
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: websocket
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: websocket
   replicas: {{ .Values.websocket.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: websocket
         {{- if .Values.websocket.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.websocket.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: websocket
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.websocket.hostAliases }}

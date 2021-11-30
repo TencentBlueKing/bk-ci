@@ -4,22 +4,25 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-dispatch-kubernetes
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: dispatch-kubernetes
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: dispatch-kubernetes
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: dispatch-kubernetes
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: dispatch-kubernetes
   replicas: {{ .Values.dispatchKubernetes.replicas }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: dispatch-kubernetes
         {{- if .Values.dispatchKubernetes.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.dispatchKubernetes.podLabels "context" $) | nindent 8 }}
         {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: dispatch-kubernetes
     spec:
       # 这里需要创建一个集群管理员权限的账户，先用固定的测试
       serviceAccountName: bkci-kube-client-account
@@ -56,13 +59,6 @@ spec:
           {{- if .Values.dispatchKubernetes.resources }}
           resources: {{- toYaml .Values.dispatchKubernetes.resources | nindent 12 }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.dispatchKubernetes.resources.requests.cpu | quote }}
-              memory: {{ .Values.dispatchKubernetes.resources.requests.memory | quote }}
-            limits:
-              cpu: {{ .Values.dispatchKubernetes.resources.limits.cpu | quote }}
-              memory: {{ .Values.dispatchKubernetes.resources.limits.memory | quote }}
           ports:
             - name: http
               containerPort: 80
@@ -88,7 +84,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 300
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
