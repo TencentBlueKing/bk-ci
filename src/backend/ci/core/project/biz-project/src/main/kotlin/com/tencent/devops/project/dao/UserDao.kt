@@ -72,7 +72,7 @@ class UserDao {
                 GROUP_NAME,
                 CREATE_TIME,
                 UPDATE_TIME,
-                USER_TYPE,
+                USER_TYPE
             ).values(
                 userId,
                 name,
