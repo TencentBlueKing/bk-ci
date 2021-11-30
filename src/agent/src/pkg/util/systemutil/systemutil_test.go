@@ -44,5 +44,5 @@ func Test_IP(t *testing.T) {
 }
 
 func Test_GetAgentIp(t *testing.T) {
-	t.Log(systemutil.GetAgentIp())
+	t.Log(systemutil.GetAgentIp([]string{}))
 }

@@ -29,7 +29,9 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserGitCIGitCodeResource
 import com.tencent.devops.stream.constant.GitCIConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.GitCIConstant.STREAM_FILE_SUFFIX
@@ -41,14 +43,15 @@ import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.stream.pojo.v2.project.GitProjectInfoWithProject
 import com.tencent.devops.stream.v2.service.StreamProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIGitCodeResourceImpl @Autowired constructor(
+    private val client: Client,
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
@@ -56,7 +59,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val streamProjectService: StreamProjectService
 ) : UserGitCIGitCodeResource {
 
-    override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
+    override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitProjectInfoWithProject?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
@@ -69,12 +72,30 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         streamProjectService.addUserProjectHistory(
             userId = userId,
             projectId = GitCommonUtils.getCiProjectId(
-                projectInfo.gitProjectId.toLong()
+                projectInfo.gitProjectId
             )
         )
-        return Result(
-            projectInfo
-        )
+        val routerTag = client.get(ServiceProjectResource::class).get(
+            englishName = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId)
+        ).data?.routerTag
+        return with(projectInfo) {
+            Result(
+                GitProjectInfoWithProject(
+                    gitProjectId = projectInfo.gitProjectId,
+                    name = name,
+                    homepage = homepage,
+                    gitHttpUrl = gitHttpUrl,
+                    gitHttpsUrl = gitHttpsUrl,
+                    gitSshUrl = gitSshUrl,
+                    nameWithNamespace = nameWithNamespace,
+                    pathWithNamespace = pathWithNamespace,
+                    defaultBranch = defaultBranch,
+                    description = description,
+                    avatarUrl = avatarUrl,
+                    routerTag = routerTag
+                )
+            )
+        }
     }
 
     override fun getGitCodeProjectMembers(

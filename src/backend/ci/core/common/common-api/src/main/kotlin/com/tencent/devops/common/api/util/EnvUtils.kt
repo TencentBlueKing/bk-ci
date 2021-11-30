@@ -62,10 +62,10 @@ object EnvUtils {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
-        // 先处理${} 单个花括号的情况
-        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap, depth = 1)
-        // 再处理${{}} 双花括号的情况
-        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap, depth = 1)
+        // 先处理${{}} 双花括号的情况
+        val value = parseWithDoubleCurlyBraces(command, data, isEscape, contextMap, depth = 1)
+        // 再处理${} 单个花括号的情况
+        return parseWithSingleCurlyBraces(value, data, replaceWithEmpty, isEscape, contextMap, depth = 1)
     }
 
     private fun parseWithDoubleCurlyBraces(

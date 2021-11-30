@@ -169,7 +169,22 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
-        return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+        try {
+            return tofService.getUserDeptDetail(userId, "")
+        } catch (e: OperationException) {
+            // stream场景下会传公共账号,tof不存在公共账号
+            logger.warn("getDeptInfo: $e")
+            return UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                centerId = "0",
+                centerName = "",
+                deptId = "0",
+                deptName = "",
+                groupId = "0",
+                groupName = ""
+            )
+        }
     }
 
     override fun createExtProjectInfo(

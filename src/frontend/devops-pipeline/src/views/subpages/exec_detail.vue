@@ -270,14 +270,16 @@
                 return 1
             },
             sidePanelConfig () {
-                return this.showLog ? {
-                    title: `${this.getElementViewName || this.$t('history.viewLog')}`,
-                    width: 820
-                } : {
-                    title: this.$t('propertyBar'),
-                    class: 'bkci-property-panel',
-                    width: 640
-                }
+                return this.showLog
+                    ? {
+                        title: `${this.getElementViewName || this.$t('history.viewLog')}`,
+                        width: 820
+                    }
+                    : {
+                        title: this.$t('propertyBar'),
+                        class: 'bkci-property-panel',
+                        width: 640
+                    }
             },
             buildNum () {
                 const { execDetail } = this
@@ -376,7 +378,7 @@
             position: relative;
             overflow: auto;
             height: 100%;
-            /deep/ .devops-stage-list {
+            ::v-deep .devops-stage-list {
                 padding-bottom: 25px;
             }
         }

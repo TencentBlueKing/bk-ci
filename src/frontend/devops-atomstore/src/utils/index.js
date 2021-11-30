@@ -45,7 +45,7 @@ export function isObject (o) {
 
 export function mergeModules (target, ...modules) {
     return modules.reduce((merged, mod) => {
-        Object.keys(mod).map(key => {
+        Object.keys(mod).forEach(key => {
             if (isObject(merged[key]) && isObject(mod[key])) {
                 merged[key] = {
                     ...merged[key],
