@@ -41,14 +41,14 @@ object GitCIPipelineUtils {
         openCheckIn: Boolean = false,
         openCheckOut: Boolean = false
     ): String {
-        var url = "$homePage/pipeline/$pipelineId/detail/$buildId/#$gitProjectId"
+        var url = "$homePage/pipeline/$pipelineId/detail/$buildId"
         if (openCheckIn) {
             url = url.plus("?checkIn=1")
         }
         if (openCheckOut) {
             url = url.plus("?checkOut=1")
         }
-        return url
+        return "$url/#$gitProjectId"
     }
 
     fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
