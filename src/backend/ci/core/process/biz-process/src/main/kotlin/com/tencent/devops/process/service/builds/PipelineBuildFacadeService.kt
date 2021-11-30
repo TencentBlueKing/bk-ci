@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -1483,7 +1484,7 @@ class PipelineBuildFacadeService(
             message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         val result = mutableListOf<IdValue>()
-        BuildStatus.values().filter { it.visible }.forEach {
+        BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
             result.add(IdValue(it.name, MessageCodeUtil.getMessageByLocale(it.statusName, it.name)))
         }
         return result
