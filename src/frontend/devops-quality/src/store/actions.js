@@ -211,21 +211,21 @@ const actions = {
      * 获取流水线视图列表
      */
     requestPipelineTemplate ({ commit }, { projectId, params }) {
-        return vue.$ajax.get(`${processPrefix}/user/quality/templates/projects/${projectId}/templates`, { params })
+        return vue.$ajax.get(`${processPrefix}/user/template/pipelines/projects/${projectId}/listQualityViewTemplates`, { params })
     },
 
     /**
      * 获取视图流水线编排列表
      */
     requestViewPipelines ({ commit }, { projectId, params }) {
-        return vue.$ajax.get(`${processPrefix}/user/quality/pipelines/projects/${projectId}/listViewPipelines`, { params })
+        return vue.$ajax.get(`${processPrefix}/user/pipelines/projects/${projectId}/listQualityViewPipelines`, { params })
     },
 
     /**
      * 获取规则模板
      */
-    requestRuleTemplate ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/rules/v2/listTemplates`)
+    requestRuleTemplate ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/rules/v2/${projectId}/listTemplates`)
     },
 
     /**
@@ -287,8 +287,8 @@ const actions = {
     /**
      * 获取流水线控制点
      */
-    getControlPoint ({ commit }, { element }) {
-        return vue.$ajax.get(`${prefix}/user/controlPoints/v2/elementType/${element}/get`)
+    getControlPoint ({ commit }, { element, projectId }) {
+        return vue.$ajax.get(`${prefix}/user/controlPoints/v2/${projectId}/elementType/${element}/get`)
     },
 
     /**
