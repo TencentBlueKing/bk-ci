@@ -46,7 +46,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
 @Service
 class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -58,6 +57,7 @@ class StreamBasicSettingService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
+        private const val projectPrefix = "git_"
     }
 
     fun listAgentBuilds(
@@ -213,6 +213,9 @@ class StreamBasicSettingService @Autowired constructor(
                             GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
+
+            // 增加判断可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
+            checkSameGitProjectName(userId, gitProjectName)
             val projectResult =
                 client.get(ServiceTxProjectResource::class).createGitCIProject(
                     gitProjectId = setting.gitProjectId,
@@ -392,5 +395,49 @@ class StreamBasicSettingService @Autowired constructor(
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
         }
+    }
+
+    /**可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
+     * 根据传入项目gitProjectName查询t_project表，获取projectId，调用StreamScmService::getProjectInfo获取工蜂项目信息：
+     * case:项目存在，并且项目group/project跟入参不一致，说明该projectId的项目信息已修改，需更新同步到t_projec表；
+     * case:项目存在，并且项目group/project跟入参一致(工蜂侧做项目group/名称唯一性保障,理论不会出现);
+     * case:项目不存在，说明该项目ID已经在工蜂侧删除，则更改该projectID对应的project_name为xxx_时间戳_delete;
+     */
+    fun checkSameGitProjectName(userId: String, projectName: String) {
+
+        // sp1:根据gitProjectName调用project接口获取t_project信息
+        val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(
+            userId = userId,
+            projectName = projectName
+        ) ?: return
+
+        // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
+        val projectId = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
+        val gitProjectResult = requestGitProjectInfo(projectId.toLong())
+        // 如果工蜂存在该项目信息
+        if (null != gitProjectResult) {
+            // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
+            val projectNameFromGit = gitProjectResult.name
+            val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
+
+            if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
+                projectNameFromPara != projectNameFromGit) {
+                // 项目已修改名称，更新项目信息，包含setting + project表
+                refreshSetting(userId, projectId.toLong())
+            }
+            return
+        }
+
+            // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
+            try {
+                val timeStamp = System.currentTimeMillis().toString()
+                client.get(ServiceTxProjectResource::class).updateProjectName(
+                    userId = userId,
+                    projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
+                    projectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                )
+            } catch (e: Throwable) {
+                logger.error("update bkci project name error :${e.message}")
+            }
     }
 }
