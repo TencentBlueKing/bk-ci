@@ -35,6 +35,8 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String?,
+        stageId: String?,
         needShortUrl: Boolean
     ): String {
         return "${HomeHostUtil
