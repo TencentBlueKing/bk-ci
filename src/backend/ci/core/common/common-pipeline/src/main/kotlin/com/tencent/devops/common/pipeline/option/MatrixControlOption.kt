@@ -34,11 +34,11 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class MatrixControlOption(
     @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
-    val strategyStr: String,
+    val strategyStr: String, // Map<String, List<String>>
     @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
-    val includeCase: List<Map<String, String>>? = null,
+    val includeCaseStr: String? = null, // List<Map<String, String>>
     @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
-    val excludeCase: List<Map<String, String>>? = null,
+    val excludeCaseStr: String? = null, // List<Map<String, String>>
     @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
