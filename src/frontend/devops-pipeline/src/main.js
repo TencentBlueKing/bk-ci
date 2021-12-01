@@ -35,7 +35,7 @@ import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
+
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -67,6 +67,12 @@ Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
 }
+/* eslint-disable */
+// 扩展字符串，判断是否为蓝盾变量格式
+String.prototype.isBkVar = function () {
+    return /^\${{([\w\_]+)}}$/g.test(this)
+}
+/* eslint-disable */
 
 Vue.mixin({
     methods: {

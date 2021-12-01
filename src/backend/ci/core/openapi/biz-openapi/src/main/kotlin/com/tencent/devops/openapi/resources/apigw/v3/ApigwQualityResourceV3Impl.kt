@@ -54,7 +54,12 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>> {
-        return client.get(ServiceQualityRuleResource::class).list(userId, projectId, page, pageSize)
+        return client.get(ServiceQualityRuleResource::class).list(
+            userId = userId,
+            projectId = projectId,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
     }
 
     override fun createRule(
@@ -101,14 +106,16 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>> {
-        return client.get(ServiceQualityInterceptResource::class).list(userId = userId,
+        return client.get(ServiceQualityInterceptResource::class).list(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             ruleHashId = ruleHashId,
             interceptResult = interceptResult,
             startTime = startTime,
             endTime = endTime,
-            page = page,
-            pageSize = pageSize)
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
     }
 }

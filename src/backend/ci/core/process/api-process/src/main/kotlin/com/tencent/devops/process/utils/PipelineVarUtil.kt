@@ -28,12 +28,16 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -42,6 +46,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
 
 object PipelineVarUtil {
 
@@ -137,7 +142,12 @@ object PipelineVarUtil {
         "ci.repo_url" to PIPELINE_GIT_REPO_URL,
         "ci.base_repo_url" to PIPELINE_GIT_BASE_REPO_URL,
         "ci.head_repo_url" to PIPELINE_GIT_HEAD_REPO_URL,
-        "ci.mr_url" to PIPELINE_GIT_MR_URL
+        "ci.mr_url" to PIPELINE_GIT_MR_URL,
+        "ci.commit_author" to PIPELINE_GIT_COMMIT_AUTHOR,
+        "ci.pipeline_update_user" to PIPELINE_GIT_UPDATE_USER,
+        "ci.authorizer" to PIPELINE_GIT_AUTHORIZER,
+        "ci.mr_id" to PIPELINE_GIT_MR_ID,
+        "ci.mr_iid" to PIPELINE_GIT_MR_IID
     )
 
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()

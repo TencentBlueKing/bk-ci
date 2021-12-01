@@ -32,12 +32,14 @@ import com.tencent.devops.repository.api.ExternalRepoResource
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalRepoResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService
 ) : ExternalRepoResource {
     override fun gitCallback(code: String, state: String): Response {
-        return gitOauthService.gitCallback(code, state)
+        val gitOauthCallback = gitOauthService.gitCallback(code, state)
+        return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
     }
 }

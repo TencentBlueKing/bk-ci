@@ -85,7 +85,7 @@ class UserFileResourceImpl @Autowired constructor(
         if (!validateResult) {
             throw PermissionForbiddenException("no permission")
         }
-        return archiveFileService.downloadFileToLocal(filePath, response)
+        return archiveFileService.downloadFileToLocal(userId, filePath, response)
     }
 
     override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
@@ -93,7 +93,7 @@ class UserFileResourceImpl @Autowired constructor(
         if (!validateResult) {
             throw PermissionForbiddenException("no permission")
         }
-        archiveFileService.downloadFile(filePath, response)
+        archiveFileService.downloadFile(userId, filePath, response)
     }
 
     override fun downloadFileExt(userId: String, filePath: String, response: HttpServletResponse) {

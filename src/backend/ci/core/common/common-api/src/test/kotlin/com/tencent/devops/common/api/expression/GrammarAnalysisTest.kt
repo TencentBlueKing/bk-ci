@@ -78,4 +78,15 @@ class GrammarAnalysisTest {
             assertEquals(e.javaClass, IllegalArgumentException::class.java)
         }
     }
+
+    @Test
+    fun analysis5() {
+        val str = "featch/reviews == featch/reviews"
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, GrammarAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
 }

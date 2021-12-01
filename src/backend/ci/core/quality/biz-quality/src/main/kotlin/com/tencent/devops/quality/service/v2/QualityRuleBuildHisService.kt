@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
@@ -130,7 +131,7 @@ class QualityRuleBuildHisService constructor(
                 }
             }
         }
-        throw IllegalArgumentException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
+        throw OperationException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
             "请修改红线阈值[${requestIndicator.threshold}]")
     }
 
@@ -339,5 +340,54 @@ class QualityRuleBuildHisService constructor(
             ).data ?: false
         }
         return true
+    }
+
+    fun listRuleBuildHis(ruleBuildIds: Collection<Long>): List<QualityRule> {
+        val allRule = qualityRuleBuildHisDao.list(dslContext, ruleBuildIds)
+        return allRule.map {
+            val rule = QualityRule(
+                hashId = HashUtil.encodeLongId(it.id),
+                name = it.ruleName,
+                desc = it.ruleDesc,
+                indicators = listOf(),
+                controlPoint = QualityRule.RuleControlPoint(
+                    "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
+                ),
+                range = if (it.pipelineRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.pipelineRange.split(",")
+                },
+                templateRange = if (it.templateRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.templateRange.split(",")
+                },
+                operation = RuleOperation.END,
+                notifyTypeList = null,
+                notifyUserList = null,
+                notifyGroupList = null,
+                auditUserList = null,
+                auditTimeoutMinutes = null,
+                gatewayId = it.gatewayId,
+                opList = if (it.operationList.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.operationList, object : TypeReference<List<QualityRule.RuleOp>>() {})
+                },
+                status = if (!it.status.isNullOrBlank()) {
+                    RuleInterceptResult.valueOf(it.status)
+                } else {
+                    null
+                },
+                gateKeepers = if (it.gateKeepers.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    it.gateKeepers.split(",")
+                },
+                stageId = it.stageId
+            )
+            rule
+        }
     }
 }

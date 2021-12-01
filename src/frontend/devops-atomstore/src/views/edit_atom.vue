@@ -645,12 +645,13 @@
             },
 
             validate () {
-                return new Promise(async (resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const isCheckValid = this.checkValid()
                     const message = this.checkJobType()
-                    const valid = await this.$validator.validate()
-                    if (isCheckValid && !message && valid) resolve()
-                    else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                    this.$validator.validate().then(valid => {
+                        if (isCheckValid && !message && valid) resolve()
+                        else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                    })
                 })
             },
 
@@ -692,13 +693,15 @@
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
-                        const subHeader = h('p', { style: {
-                            textDecoration: 'none',
-                            cursor: 'pointer',
-                            whiteSpace: 'normal',
-                            textAlign: 'left',
-                            lineHeight: '24px'
-                        } }, err.message || err)
+                        const subHeader = h('p', {
+                            style: {
+                                textDecoration: 'none',
+                                cursor: 'pointer',
+                                whiteSpace: 'normal',
+                                textAlign: 'left',
+                                lineHeight: '24px'
+                            }
+                        }, err.message || err)
                         if ([2120030, 2120031].includes(err.code)) {
                             const confirmFn = () => this.submit(true)
                             this.$bkInfo({

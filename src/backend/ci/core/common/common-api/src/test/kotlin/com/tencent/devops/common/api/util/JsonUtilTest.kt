@@ -39,10 +39,91 @@ import org.junit.Test
 class JsonUtilTest {
 
     @Test
+    fun mapToTest() {
+        val bean = NameAndValue(key = "name", value = "this is password 123456", type = TestType.STRING)
+        val toMap = JsonUtil.toMap(bean)
+        val newBean = JsonUtil.mapTo(toMap, NameAndValue::class.java)
+        Assert.assertEquals(bean.key, newBean.key)
+        Assert.assertEquals(bean.value, newBean.value)
+        Assert.assertEquals(bean.type, newBean.type)
+    }
+
+    @Test
+    @Suppress("ALL")
+    fun toOrNullTest() {
+        val json = "      "
+        Assert.assertNull(JsonUtil.toOrNull(json, List::class.java))
+
+        val emptyListJson = "[]"
+        val list = JsonUtil.toOrNull(emptyListJson, List::class.java)
+        Assert.assertNotNull(list)
+        Assert.assertEquals(0, list!!.size)
+
+        val notEmptyListJson = "[\"hello\"]"
+        val strList = JsonUtil.toOrNull(notEmptyListJson, List::class.java) as List<String>?
+        Assert.assertNotNull(strList)
+        Assert.assertEquals(1, strList!!.size)
+
+        val illegal = "\"hello\""
+        val nullList = JsonUtil.toOrNull(illegal, List::class.java) as List<String>?
+        Assert.assertNull(nullList)
+
+        val nullObj = JsonUtil.toOrNull(json, object : TypeReference<List<String>>() {})
+        Assert.assertNull(nullObj)
+
+        val listStr = JsonUtil.toOrNull(notEmptyListJson, object : TypeReference<List<String>>() {})
+        Assert.assertNotNull(listStr)
+        Assert.assertEquals(1, listStr?.size)
+
+        val illegalNull = JsonUtil.toOrNull(illegal, object : TypeReference<List<String>>() {})
+        Assert.assertNull(illegalNull)
+    }
+
+    @Test
     fun toMutableMapSkipEmpty() {
-        val json = "{}"
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
         val map = JsonUtil.toMutableMapSkipEmpty(json)
         Assert.assertNotNull(map)
+        Assert.assertEquals(map.size, 2)
+        Assert.assertEquals(map["emptyKey"], "")
+
+        map["str_array"] = ArrayList<String>()
+
+        val mt = JsonUtil.toMutableMapSkipEmpty(map)
+        Assert.assertNotNull(mt["a"])
+        Assert.assertNull(mt["emptyKey"])
+        Assert.assertNull(mt["str_array"])
+    }
+
+    @Test
+    fun toMutableMap() {
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
+        val map = JsonUtil.toMap(json)
+        Assert.assertNotNull(map)
+        Assert.assertNotNull(map["emptyKey"])
+        Assert.assertEquals(map["a"], "1")
+        Assert.assertEquals(map["emptyKey"], "")
+
+        val map2 = JsonUtil.toMap(map)
+        Assert.assertNotNull(map2)
+        Assert.assertNotNull(map2["emptyKey"])
+        Assert.assertEquals(map2["a"], "1")
+        Assert.assertEquals(map2["emptyKey"], "")
+
+        val mt = JsonUtil.toMutableMap(map)
+        mt["str_array"] = ArrayList<String>()
+
+        println(mt)
+
+        val mutableMap = JsonUtil.toMutableMap(mt)
+        Assert.assertNotNull(mutableMap)
+        Assert.assertNotNull(mutableMap["emptyKey"])
+        Assert.assertNotNull(mutableMap["str_array"])
+        Assert.assertEquals(mutableMap["a"], "1")
+        Assert.assertEquals(mutableMap["emptyKey"], "")
+        mutableMap["a"] = "2"
+        Assert.assertEquals(mutableMap["a"], "2")
+        println(mutableMap)
     }
 
     @Test
