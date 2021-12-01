@@ -165,7 +165,7 @@ class BuildlessContainerService(
                     "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_JOB_BUILD_TYPE=AGENT_LESS"
+                    "$ENV_JOB_BUILD_TYPE=BUILD_LESS"
                 )
             )
             .withHostConfig(

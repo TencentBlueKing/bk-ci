@@ -73,6 +73,7 @@ interface ServiceDockerHostResource {
         @PathParam("vmSeqId")
         vmSeqId: Int,
         @ApiParam("容器信息", required = true)
+        @QueryParam("containerId")
         containerId: String
     ): Result<Boolean>
 }
