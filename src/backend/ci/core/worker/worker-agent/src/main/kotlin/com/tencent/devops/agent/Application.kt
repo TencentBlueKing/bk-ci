@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             val jobPoolType = DockerEnv.getJobPool()
             // 无编译构建，轮询等待任务
             if (jobPoolType != null &&
-                jobPoolType == com.tencent.devops.common.pipeline.type.BuildType.AGENT_LESS.name
+                jobPoolType == "BUILD_LESS"
             ) {
                 waitBuildLessJobStart()
             }

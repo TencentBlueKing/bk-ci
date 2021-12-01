@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -43,11 +42,10 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -78,6 +76,20 @@ class DockerHostBuildService @Autowired constructor(
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
+
+    fun updateContainerId(
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String
+    ) {
+        LOG.info("$buildId|$vmSeqId update containerId: $containerId")
+        pipelineDockerBuildDao.updateContainerId(
+            dslContext = dslContext,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            containerId = containerId
+        )
+    }
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
@@ -336,16 +348,6 @@ class DockerHostBuildService @Autowired constructor(
                 imageType = ""
             )
         )
-    }
-
-    fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
-        LOG.info("[getHost]| hostTag=$hostTag, hostZone=$hostZone")
-        return if (hostZone == null) {
-            Result(DockerHostInfo(MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
-        } else {
-            Result(DockerHostInfo(hostZone.routeKey ?: MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
-        }
     }
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {

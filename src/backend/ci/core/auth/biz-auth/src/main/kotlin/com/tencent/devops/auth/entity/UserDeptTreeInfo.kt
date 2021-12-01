@@ -25,8 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.auth.entity
 
-data class DockerHostInfo(
-    val routeKey: String
+data class UserDeptTreeInfo(
+    val id: String,
+    val family: List<DeptTreeInfo>,
+    val name: String
 )
