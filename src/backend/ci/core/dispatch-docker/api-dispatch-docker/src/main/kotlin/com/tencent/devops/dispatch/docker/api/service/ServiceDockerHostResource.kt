@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.docker.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -47,6 +47,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("dispatch-docker") // 指明接入到哪个微服务
 interface ServiceDockerHostResource {
 
     @ApiOperation("获取dockerhost列表")
