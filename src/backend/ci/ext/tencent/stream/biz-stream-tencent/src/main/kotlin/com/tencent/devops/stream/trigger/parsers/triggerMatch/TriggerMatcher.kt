@@ -294,6 +294,7 @@ class TriggerMatcher @Autowired constructor(
                 element = element,
                 variables = mapOf()
             ) ?: return emptyMap()
+            logger.info("get start params, element:$element, webHookParams:$webHookParams")
             val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
             val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
             return WebhookStartParamsRegistrar.getService(element = element).getStartParams(
