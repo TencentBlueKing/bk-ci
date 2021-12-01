@@ -53,10 +53,10 @@ data class GitProjectInfoWithProject(
     @ApiModelProperty("gitSshUrl", name = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @ApiModelProperty("带有所有者的项目名称", name = "name_with_namespace")
+    @ApiModelProperty("带有名空间的项目名称", name = "name_with_namespace")
     @JsonProperty("name_with_namespace")
     val nameWithNamespace: String,
-    @ApiModelProperty("带有所有者的项目路径", name = "path_with_namespace")
+    @ApiModelProperty("带有名空间的项目路径", name = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
     @ApiModelProperty("项目的默认分支", name = "default_branch")
