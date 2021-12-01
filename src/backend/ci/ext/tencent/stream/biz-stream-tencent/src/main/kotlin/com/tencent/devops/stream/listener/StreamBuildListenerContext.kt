@@ -18,7 +18,7 @@ interface StreamBuildListenerContext {
 
 // 获取整体的构建状态
 fun StreamBuildListenerContext.isSuccess() =
-    (getBuildStatus().isSuccess() || getBuildStatus() == BuildStatus.STAGE_SUCCESS)
+    (getBuildStatus() == BuildStatus.SUCCEED || getBuildStatus() == BuildStatus.STAGE_SUCCESS)
 
 // 获取commit checkState
 fun StreamBuildListenerContext.getGitCommitCheckState(): GitCICommitCheckState {
