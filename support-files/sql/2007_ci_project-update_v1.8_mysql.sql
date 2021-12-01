@@ -16,7 +16,7 @@ BEGIN
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_USER'
                         AND COLUMN_NAME = 'USER_TYPE') THEN
-        ALTER TABLE T_PROJECT
+        ALTER TABLE T_USER
             ADD COLUMN `USER_TYPE` BIT DEFAULT 0 NOT NULL COMMENT '用户类型0普通用户 1公共账号' ;
     END IF;
 
