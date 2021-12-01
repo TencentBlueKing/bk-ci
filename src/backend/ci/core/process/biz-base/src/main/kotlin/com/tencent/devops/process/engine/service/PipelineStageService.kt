@@ -481,6 +481,7 @@ class PipelineStageService @Autowired constructor(
                 templateId = null,
                 interceptName = null,
                 ruleBuildIds = check?.ruleIds!!.toSet(),
+                stageId = stage.stageId,
                 runtimeVariable = buildContext
             )
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
