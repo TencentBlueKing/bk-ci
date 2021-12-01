@@ -54,7 +54,6 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.service.StreamQualityService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -67,8 +66,7 @@ class SendCommitCheck @Autowired constructor(
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils,
-    private val streamQualityService: StreamQualityService
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
@@ -207,14 +205,14 @@ class SendCommitCheck @Autowired constructor(
     private fun getTargetUrl(
         context: StreamBuildListenerContextV2
     ): String {
-        var checkIn: Boolean
-        var checkOut: Boolean
+        var checkIn: String?
+        var checkOut: String?
         with(context) {
             if (context !is StreamBuildStageListenerContextV2) {
-                checkIn = false
-                checkOut = false
+                checkIn = null
+                checkOut = null
             } else {
-                val pair = context.reviewType.isCheckInOrOut()
+                val pair = context.isCheckInOrOut()
                 checkIn = pair.first
                 checkOut = pair.second
             }
@@ -223,8 +221,8 @@ class SendCommitCheck @Autowired constructor(
                 gitProjectId = streamSetting.gitProjectId,
                 pipelineId = pipeline.pipelineId,
                 buildId = buildEvent.buildId,
-                openCheckIn = checkIn,
-                openCheckOut = checkOut
+                openCheckInId = checkIn,
+                openCheckOutId = checkOut
             )
         }
     }
@@ -273,18 +271,18 @@ class SendCommitCheck @Autowired constructor(
     }
 }
 
-private fun BuildReviewType.isCheckInOrOut(): Pair<Boolean, Boolean> {
-    return when (this) {
+private fun StreamBuildStageListenerContextV2.isCheckInOrOut(): Pair<String?, String?> {
+    return when (this.reviewType) {
         // 人工审核目前只在checkIn
         BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN -> {
-            Pair(true, false)
+            Pair(this.buildEvent.stageId, null)
         }
         BuildReviewType.QUALITY_CHECK_OUT -> {
-            Pair(false, true)
+            Pair(null, this.buildEvent.stageId)
         }
         // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
         BuildReviewType.TASK_REVIEW -> {
-            Pair(false, false)
+            Pair(null, null)
         }
     }
 }

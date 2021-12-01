@@ -85,7 +85,8 @@ class BuildReviewListener @Autowired constructor(
                                 userId = buildReviewEvent.userId,
                                 buildId = buildReviewEvent.buildId,
                                 status = buildReviewEvent.status,
-                                startTime = streamBuild.createTime.timestampmilli()
+                                startTime = streamBuild.createTime.timestampmilli(),
+                                stageId = buildReviewEvent.stageId
                             ),
                             requestEvent = requestEvent,
                             streamBuildEvent = buildEvent,

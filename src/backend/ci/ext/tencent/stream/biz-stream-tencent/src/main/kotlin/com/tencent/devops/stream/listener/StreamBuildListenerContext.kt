@@ -76,7 +76,8 @@ data class BuildEvent(
     val userId: String,
     val buildId: String,
     val status: String,
-    val startTime: Long?
+    val startTime: Long?,
+    val stageId: String? = null
 )
 
 // 先建立一个Build临时对象，看后续用的多不，多的话拆处集成

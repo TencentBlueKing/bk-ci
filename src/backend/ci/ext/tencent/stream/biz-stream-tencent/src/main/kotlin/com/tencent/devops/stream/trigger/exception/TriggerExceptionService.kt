@@ -229,7 +229,7 @@ class TriggerExceptionService @Autowired constructor(
             state = state,
             context = GitCITriggerService.noPipelineBuildEvent,
             gitCIBasicSetting = gitCIBasicSetting,
-            jumpRequest = false,
+            jumpNotification = false,
             description = description
         )
     }

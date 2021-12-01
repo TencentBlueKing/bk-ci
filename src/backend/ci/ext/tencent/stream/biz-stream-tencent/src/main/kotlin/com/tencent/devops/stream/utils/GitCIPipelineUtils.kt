@@ -38,18 +38,18 @@ object GitCIPipelineUtils {
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
-        openCheckIn: Boolean = false,
-        openCheckOut: Boolean = false
+        openCheckInId: String? = null,
+        openCheckOutId: String? = null
     ): String {
         val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (openCheckIn) {
-            return url.plus("?checkIn=1#$gitProjectId")
+        if (!openCheckInId.isNullOrBlank()) {
+            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
         }
-        if (openCheckOut) {
-            return url.plus("?checkOut=1#$gitProjectId")
+        if (!openCheckOutId.isNullOrBlank()) {
+            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
         }
         return "$url/#$gitProjectId"
     }
 
-    fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
+    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
 }
