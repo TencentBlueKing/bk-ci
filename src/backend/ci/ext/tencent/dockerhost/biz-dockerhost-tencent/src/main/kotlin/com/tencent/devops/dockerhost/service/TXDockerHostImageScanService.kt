@@ -76,7 +76,7 @@ class TXDockerHostImageScanService(
             } catch (e: Throwable) {
                 logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
             } finally {
-                longDockerClient.removeImageCmd(imageTag).exec()
+                // longDockerClient.removeImageCmd(imageTag).exec()
                 File(imageSavedPath).delete()
                 logger.info("[$buildId]|[$vmSeqId] Remove local image success")
             }
