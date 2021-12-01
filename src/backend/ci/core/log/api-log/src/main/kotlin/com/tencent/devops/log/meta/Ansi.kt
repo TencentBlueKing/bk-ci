@@ -323,9 +323,9 @@ open class Ansi(private var builder: StringBuilder) {
     }
 
     fun a(value: String?): Ansi {
-        flushAttributes()
-        // 修复换行后ansi编码问题
+        // 修复换行后ansi编码问
         val strLF = innerAppendEscapeSequenceStr('m', attributeOptions)
+        flushAttributes()
         val fixLF = value?.replace("\n", "\n$strLF")
         builder.append(fixLF)
         return this
