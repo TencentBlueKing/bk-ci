@@ -33,7 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
-import com.tencent.devops.common.webhook.service.code.filter.UrlFilter
+import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
@@ -103,7 +103,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            val urlFilter = UrlFilter(
+            val urlFilter = GitUrlFilter(
                 pipelineId = pipelineId,
                 triggerOnUrl = getUrl(event),
                 repositoryUrl = repository.url,
