@@ -13,30 +13,22 @@ import kotlin.reflect.KClass
 
 object ArtifactApiFactory {
 
-    private const val LOCAL = "local"
-    private const val BK_REPO = "bkrepo"
     private val logger = LoggerFactory.getLogger(ArtifactApiFactory::class.java)
-    private val apiMap = ConcurrentHashMap<String, KClass<*>>()
+    private val apiMap = ConcurrentHashMap<String, Any>()
 
     init {
         val reflections = Reflections("com.tencent.devops.worker.common.api")
         val archiveApiClass = reflections.getSubTypesOf(ArchiveSDKApi::class.java)
         val reportApiClass = reflections.getSubTypesOf(ReportSDKApi::class.java)
         archiveApiClass.filter { !Modifier.isAbstract(it.modifiers) }.forEach {
-            val apiPriority = it.getAnnotation(ApiPriority::class.java)
-            if (apiPriority != null) {
-                apiMap["$BK_REPO-${ArchiveSDKApi::class.simpleName}"] = it.kotlin
-            } else {
-                apiMap["$LOCAL-${ArchiveSDKApi::class.simpleName}"] = it.kotlin
-            }
+            val obj = it.newInstance()
+            val realm = it.getMethod("getRealm").invoke(obj).toString()
+            apiMap["$realm-${ArchiveSDKApi::class.simpleName}"] = obj
         }
         reportApiClass.filter { !Modifier.isAbstract(it.modifiers) }.forEach {
-            val apiPriority = it.getAnnotation(ApiPriority::class.java)
-            if (apiPriority != null) {
-                apiMap["$BK_REPO-${ReportSDKApi::class.simpleName}"] = it.kotlin
-            } else {
-                apiMap["$LOCAL-${ReportSDKApi::class.simpleName}"] = it.kotlin
-            }
+            val obj = it.newInstance()
+            val realm = it.getMethod("getRealm").invoke(obj).toString()
+            apiMap["$realm-${ReportSDKApi::class.simpleName}"] = obj
         }
         logger.info("artifact api candidate map: $apiMap")
     }
@@ -44,9 +36,9 @@ object ArtifactApiFactory {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> create(apiInterfaceClass: KClass<T>): T {
         val realm = Realm().getRealm()
-        val clazz = apiMap["$realm-${apiInterfaceClass.simpleName}"]
+        val obj = apiMap["$realm-${apiInterfaceClass.simpleName}"]
             ?: throw ApiNotExistException("api interface $apiInterfaceClass have no $realm implement class")
-        return clazz.java.newInstance() as T
+        return obj as T
     }
 
     private class Realm : AbstractBuildResourceApi() {

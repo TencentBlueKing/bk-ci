@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
@@ -45,6 +46,10 @@ import java.io.File
 @ApiPriority(priority = 9)
 class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     private val bkrepoResourceApi = BkRepoResourceApi()
+
+    override fun getRealm(): String {
+        return REALM_BK_REPO
+    }
 
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/process/api/build/reports/$taskId/rootUrl"
