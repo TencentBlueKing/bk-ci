@@ -5,7 +5,7 @@
         </bread-crumbs>
 
         <div class="edit-atom-content" v-if="showContent">
-            <form class="bk-form edit-atom-form g-form-radio">
+            <div class="bk-form edit-atom-form g-form-radio">
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.名称') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -257,11 +257,11 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <button class="bk-button bk-primary" type="button" @click="submit()"> {{ $t('store.提交') }} </button>
-                    <button class="bk-button bk-default" type="button" @click="$router.back()"> {{ $t('store.取消') }} </button>
+                    <bk-button theme="primary" @click="submit"> {{ $t('store.提交') }} </bk-button>
+                    <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
                 </div>
                 <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
-            </form>
+            </div>
         </div>
     </div>
 </template>

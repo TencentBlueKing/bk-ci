@@ -38,23 +38,7 @@
                             class="mr15"
                             @click="handleVersionClick(prop)"
                         >
-                            <div
-                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                v-if="['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'UNDERCARRIAGING'].includes(prop.atomStatus)"
-                            >
-                                <div class="rotate rotate1"></div>
-                                <div class="rotate rotate2"></div>
-                                <div class="rotate rotate3"></div>
-                                <div class="rotate rotate4"></div>
-                                <div class="rotate rotate5"></div>
-                                <div class="rotate rotate6"></div>
-                                <div class="rotate rotate7"></div>
-                                <div class="rotate rotate8"></div>
-                            </div>
-                            <span class="atom-status-icon success" v-if="prop.atomStatus === 'RELEASED'"></span>
-                            <span class="atom-status-icon fail" v-if="prop.atomStatus === 'GROUNDING_SUSPENSION'"></span>
-                            <span class="atom-status-icon obtained" v-if="prop.atomStatus === 'AUDIT_REJECT' || prop.atomStatus === 'UNDERCARRIAGED'"></span>
-                            <span class="atom-status-icon devops-icon icon-initialize" v-if="prop.atomStatus === 'INIT'"></span>
+                            <status :status="calcStatus(prop.atomStatus)"></status>
                             <span
                                 :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }"
                             >{{ prop.version }}</span>
@@ -326,11 +310,13 @@
 <script>
     import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
+    import status from './status'
     import { atomStatusMap } from '@/store/constants'
 
     export default {
         components: {
-            formTips
+            formTips,
+            status
         },
 
         data () {
@@ -436,6 +422,35 @@
                 if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus)) {
                     this.routerProgress(prop)
                 }
+            },
+            calcStatus (status) {
+                let icon = ''
+                switch (status) {
+                    case 'COMMITTING':
+                    case 'BUILDING':
+                    case 'BUILD_FAIL':
+                    case 'TESTING':
+                    case 'AUDITING':
+                    case 'UNDERCARRIAGING':
+                    case 'CODECCING':
+                        icon = 'doing'
+                        break
+                    case 'RELEASED':
+                        icon = 'success'
+                        break
+                    case 'GROUNDING_SUSPENSION':
+                    case 'CODECC_FAIL':
+                        icon = 'fail'
+                        break
+                    case 'AUDIT_REJECT':
+                    case 'UNDERCARRIAGED':
+                        icon = 'info'
+                        break
+                    case 'INIT':
+                        icon = 'init'
+                        break
+                }
+                return icon
             },
             openConvention () {
                 this.showConvention = true
