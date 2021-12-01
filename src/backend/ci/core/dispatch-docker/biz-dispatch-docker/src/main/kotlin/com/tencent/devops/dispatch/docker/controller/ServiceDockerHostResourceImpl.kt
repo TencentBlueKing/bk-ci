@@ -29,17 +29,21 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.service.ServiceDispatchDockerHostResource
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource@Suppress("ALL")
-class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService
-) : ServiceDispatchDockerHostResource {
+class ServiceDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService,
+    private val dockerHostBuildService: DockerHostBuildService
+) : ServiceDockerHostResource {
     override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
         checkParams(page, pageSize)
         val realPage = page ?: 1
@@ -54,8 +58,13 @@ class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
         )
     }
 
+    override fun updateContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean> {
+        dockerHostBuildService.updateContainerId(buildId, vmSeqId, containerId)
+        return Result(true)
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(ServiceDispatchDockerHostResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceDockerHostResourceImpl::class.java)
     }
 
     fun checkParams(page: Int?, pageSize: Int?) {

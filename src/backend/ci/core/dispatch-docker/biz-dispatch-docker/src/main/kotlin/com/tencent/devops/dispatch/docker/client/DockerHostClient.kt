@@ -198,7 +198,7 @@ class DockerHostClient @Autowired constructor(
         dockerHostBuildInfo: DockerHostBuildInfo
     ) {
         with(dockerHostBuildInfo) {
-            val containerId = client.get(ServiceBuildlessResource::class).startBuild(
+            client.get(ServiceBuildlessResource::class).startBuild(
                 BuildLessStartInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -209,13 +209,6 @@ class DockerHostClient @Autowired constructor(
                     secretKey = secretKey,
                     buildType = buildType.name,
                 )
-            ).data
-
-            pipelineDockerBuildDao.updateContainerId(
-                dslContext = dslContext,
-                buildId = buildId,
-                vmSeqId = Integer.valueOf(vmSeqId),
-                containerId = containerId!!
             )
         }
     }

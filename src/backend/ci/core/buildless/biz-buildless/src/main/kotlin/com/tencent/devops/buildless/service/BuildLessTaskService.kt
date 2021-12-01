@@ -29,24 +29,33 @@ package com.tencent.devops.buildless.service
 
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 
 /**
- * 无构建环境的docker服务实现
+ * 无构建环境Task服务
  */
 
 @Service
 class BuildLessTaskService(
-    private val redisUtils: RedisUtils
+    private val redisUtils: RedisUtils,
+    private val client: Client
 ) {
 
    fun claimBuildLessTask(containerId: String): BuildLessTask? {
        val buildLessTask = redisUtils.popBuildLessReadyTask()
        if (buildLessTask != null) {
            logger.info("Container: $containerId claim buildLessTask: $buildLessTask")
+           client.get(ServiceDockerHostResource::class).updateContainerId(
+               buildId = buildLessTask.buildId,
+               vmSeqId = buildLessTask.vmSeqId,
+               containerId = containerId
+           )
        }
+
        return buildLessTask
    }
 

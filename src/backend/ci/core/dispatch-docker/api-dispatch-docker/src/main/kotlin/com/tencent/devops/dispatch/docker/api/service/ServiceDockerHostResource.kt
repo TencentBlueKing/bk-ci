@@ -28,13 +28,17 @@
 package com.tencent.devops.dispatch.docker.api.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -43,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDispatchDockerHostResource {
+interface ServiceDockerHostResource {
 
     @ApiOperation("获取dockerhost列表")
     @GET
@@ -56,4 +60,18 @@ interface ServiceDispatchDockerHostResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Page<DockerHostZone>
+
+    @ApiOperation("更新构建信息")
+    @PUT
+    @Path("/builds/{buildId}/vmseqs/{vmSeqId}")
+    fun updateContainerId(
+        @ApiParam("buildId", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("vmSeqId", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: Int,
+        @ApiParam("容器信息", required = true)
+        containerId: String
+    ): Result<Boolean>
 }

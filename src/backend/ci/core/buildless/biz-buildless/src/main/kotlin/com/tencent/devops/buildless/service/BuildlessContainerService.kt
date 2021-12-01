@@ -116,16 +116,6 @@ class BuildlessContainerService(
 
     fun createContainer(dockerHostBuildInfo: BuildLessStartInfo): String {
         try {
-            val containerId = redisUtils.getIdleContainer()
-
-            if (containerId.isNullOrBlank()) {
-                throw DockerServiceException(
-                    errorType = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorCode,
-                    errorMsg = "[${dockerHostBuildInfo.buildId}]|Create container failed"
-                )
-            }
-
             redisUtils.addBuildLessReadyTask(BuildLessTask(
                 projectId = dockerHostBuildInfo.projectId,
                 pipelineId = dockerHostBuildInfo.pipelineId,
@@ -135,10 +125,7 @@ class BuildlessContainerService(
                 agentId = dockerHostBuildInfo.agentId,
                 secretKey = dockerHostBuildInfo.secretKey
             ))
-
-            logger.info("Success start container: $containerId")
-            redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
-            return containerId
+            return ""
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
             throw DockerServiceException(
@@ -175,7 +162,7 @@ class BuildlessContainerService(
                     "$ENV_KEY_GATEWAY=$gateway",
                     "TERM=xterm-256color",
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_DOCKER_HOST_PORT= ${commonConfig.serverPort}",
+                    "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_JOB_BUILD_TYPE=AGENT_LESS"
