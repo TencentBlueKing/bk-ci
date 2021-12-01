@@ -111,10 +111,12 @@ class GitCIEventService @Autowired constructor(
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
+        val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
         // 人工触发不发送
-        if (event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck) {
-            val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
-                ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
+        if (gitBasicSetting.enableCommitCheck &&
+            event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck
+        ) {
             val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,

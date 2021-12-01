@@ -29,11 +29,12 @@ package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 object CommitCheckUtils {
-
-    fun needSendCheck(request: GitRequestEvent): Boolean {
+    // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
+    fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
 //        val event = request.gitEvent ?: return false
-        return request.objectKind != TGitObjectKind.MANUAL.value
+        return gitCIBasicSetting.enableCommitCheck && request.objectKind != TGitObjectKind.MANUAL.value
     }
 }
