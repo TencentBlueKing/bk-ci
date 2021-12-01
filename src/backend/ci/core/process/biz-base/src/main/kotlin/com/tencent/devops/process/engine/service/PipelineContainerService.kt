@@ -41,13 +41,13 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.context.StartBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -157,13 +157,100 @@ class PipelineContainerService @Autowired constructor(
         logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|deleteTaskCount=$count")
     }
 
+    fun prepareMatrixVMBuildContainerTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stage: Stage,
+        container: VMBuildContainer,
+        context: MatrixBuildContext,
+        buildTaskList: MutableList<PipelineBuildTask>,
+        buildContainers: MutableList<PipelineBuildContainer>
+    ): List<VMBuildContainer> {
+        var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
+        var taskSeq = 0
+        val parentElements = container.elements
+        val groupContainers = mutableListOf<VMBuildContainer>()
+
+        parentElements.forEach nextElement@{ atomElement ->
+            taskSeq++ // 跳过的也要+1，Seq不需要连续性
+            // 计算启动构建机的插件任务的序号
+            if (startVMTaskSeq < 0) {
+                startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
+                if (startVMTaskSeq > 0) {
+                    taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
+                }
+            }
+
+            val status = atomElement.initStatus(rerun = context.needRerun(stage))
+            if (status.isFinish()) {
+                logger.info("[$buildId|${atomElement.id}] status=$status")
+                atomElement.status = status.name
+                return@nextElement
+            }
+
+            context.taskCount++
+            addBuildTaskToList(
+                buildTaskList = buildTaskList,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = context.userId,
+                stage = stage,
+                container = container,
+                taskSeq = taskSeq,
+                atomElement = atomElement,
+                status = status
+            )
+        }
+        // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
+        supplyVMTask(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            userId = context.userId,
+            stage = stage,
+            container = container,
+            containerSeq = context.containerSeq,
+            startVMTaskSeq = startVMTaskSeq,
+            lastTimeBuildTaskRecords = listOf(),
+            updateExistsRecord = mutableListOf(),
+            buildTaskList = buildTaskList,
+            executeCount = context.executeCount
+        )
+
+        buildContainers.add(
+            PipelineBuildContainer(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stage.id!!,
+                containerId = container.id!!,
+                containerHashId = container.containerHashId ?: "",
+                containerType = container.getClassType(),
+                seq = context.containerSeq,
+                status = BuildStatus.QUEUE,
+                controlOption = PipelineBuildContainerControlOption(
+                    jobControlOption = container.jobControlOption!!,
+                    inFinallyStage = stage.finally,
+                    mutexGroup = container.mutexGroup,
+                    containPostTaskFlag = container.containPostTaskFlag
+                ),
+                matrixGroupFlag = false,
+                matrixGroupId = null
+            )
+        )
+        return groupContainers
+    }
+
     fun prepareBuildContainerTasks(
+        projectId: String,
+        pipelineId: String,
         buildId: String,
         stage: Stage,
         container: Container,
         startParamMap: Map<String, Any>,
         context: StartBuildContext,
-        pipelineInfo: PipelineInfo,
         buildTaskList: MutableList<PipelineBuildTask>,
         buildContainers: MutableList<PipelineBuildContainer>,
         updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord>,
@@ -188,7 +275,8 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
 
-            atomElement.disableBySkipVar(variables = startParamMap) // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+            // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
+            atomElement.disableBySkipVar(variables = startParamMap)
 
             val status = atomElement.initStatus(rerun = context.needRerun(stage))
             if (status.isFinish()) {
@@ -200,32 +288,17 @@ class PipelineContainerService @Autowired constructor(
             // 全新构建
             if (lastTimeBuildTaskRecords.isEmpty()) {
                 context.taskCount++
-                buildTaskList.add(
-                    PipelineBuildTask(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
-                        containerHashId = container.containerHashId ?: "",
-                        containerType = container.getClassType(),
-                        taskSeq = taskSeq,
-                        taskId = atomElement.id!!,
-                        taskName = if (atomElement.name.length > 128) {
-                            atomElement.name.substring(0, 128)
-                        } else atomElement.name,
-                        taskType = atomElement.getClassType(),
-                        taskAtom = atomElement.getTaskAtom(),
-                        status = status,
-                        taskParams = atomElement.genTaskParams(),
-                        additionalOptions = atomElement.additionalOptions,
-                        executeCount = 1,
-                        starter = context.userId,
-                        approver = null,
-                        subProjectId = null,
-                        subBuildId = null,
-                        atomCode = atomElement.getAtomCode()
-                    )
+                addBuildTaskToList(
+                    buildTaskList = buildTaskList,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = context.userId,
+                    stage = stage,
+                    container = container,
+                    taskSeq = taskSeq,
+                    atomElement = atomElement,
+                    status = status
                 )
                 needUpdateContainer = true
             } else {
@@ -287,6 +360,10 @@ class PipelineContainerService @Autowired constructor(
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = context.userId,
                 stage = stage,
                 container = container,
                 containerSeq = context.containerSeq,
@@ -294,10 +371,7 @@ class PipelineContainerService @Autowired constructor(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 updateExistsRecord = updateTaskExistsRecord,
                 buildTaskList = buildTaskList,
-                pipelineInfo = pipelineInfo,
-                executeCount = context.executeCount,
-                buildId = buildId,
-                userId = context.userId
+                executeCount = context.executeCount
             )
         }
         if (needUpdateContainer) {
@@ -333,8 +407,8 @@ class PipelineContainerService @Autowired constructor(
                 }
                 buildContainers.add(
                     PipelineBuildContainer(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
                         buildId = buildId,
                         stageId = stage.id!!,
                         containerId = container.id!!,
@@ -371,7 +445,52 @@ class PipelineContainerService @Autowired constructor(
         return target
     }
 
+    private fun addBuildTaskToList(
+        buildTaskList: MutableList<PipelineBuildTask>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        stage: Stage,
+        container: Container,
+        taskSeq: Int,
+        atomElement: Element,
+        status: BuildStatus
+    ) {
+        buildTaskList.add(
+            PipelineBuildTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stage.id!!,
+                containerId = container.id!!,
+                containerHashId = container.containerHashId ?: "",
+                containerType = container.getClassType(),
+                taskSeq = taskSeq,
+                taskId = atomElement.id!!,
+                taskName = if (atomElement.name.length > 128) {
+                    atomElement.name.substring(0, 128)
+                } else atomElement.name,
+                taskType = atomElement.getClassType(),
+                taskAtom = atomElement.getTaskAtom(),
+                status = status,
+                taskParams = atomElement.genTaskParams(),
+                additionalOptions = atomElement.additionalOptions,
+                executeCount = 1,
+                starter = userId,
+                approver = null,
+                subProjectId = null,
+                subBuildId = null,
+                atomCode = atomElement.getAtomCode()
+            )
+        )
+    }
+
     private fun supplyVMTask(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
         stage: Stage,
         container: Container,
         containerSeq: Int,
@@ -379,10 +498,7 @@ class PipelineContainerService @Autowired constructor(
         lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
         updateExistsRecord: MutableList<TPipelineBuildTaskRecord>,
         buildTaskList: MutableList<PipelineBuildTask>,
-        pipelineInfo: PipelineInfo,
-        executeCount: Int,
-        buildId: String,
-        userId: String
+        executeCount: Int
     ) {
         if (startVMTaskSeq <= 0) {
             return
@@ -391,8 +507,8 @@ class PipelineContainerService @Autowired constructor(
         if (lastTimeBuildTaskRecords.isEmpty()) {
             buildTaskList.add(
                 vmOperatorTaskGenerator.makeStartVMContainerTask(
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineInfo.pipelineId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     stageId = stage.id!!,
                     container = container,
@@ -403,8 +519,8 @@ class PipelineContainerService @Autowired constructor(
             )
             buildTaskList.addAll(
                 vmOperatorTaskGenerator.makeShutdownVMContainerTasks(
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineInfo.pipelineId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     stageId = stage.id!!,
                     container = container,
@@ -429,7 +545,7 @@ class PipelineContainerService @Autowired constructor(
                 logger.info("[$buildId]|RETRY| not found $startTaskVMId(${container.name})")
             }
 
-            val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMSeq(containerSeq, taskSeq = startVMTaskSeq - 1))
+            val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq - 1))
             taskRecord = retryDetailModelStatus(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 stage = stage,
@@ -439,7 +555,7 @@ class PipelineContainerService @Autowired constructor(
             )
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
-                val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMSeq(containerSeq, taskSeq = startVMTaskSeq))
+                val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq))
                 taskRecord = retryDetailModelStatus(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                     stage = stage,
