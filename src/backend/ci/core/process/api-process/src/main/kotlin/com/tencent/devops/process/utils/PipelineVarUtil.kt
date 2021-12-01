@@ -169,13 +169,22 @@ object PipelineVarUtil {
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION
     )
 
+    /**
+     * CI预置上下文转换映射关系
+     */
+    private val contextVarMappingBuildVarRevert = mapOf(
+        PIPELINE_START_USER_NAME to "ci.actor"
+    )
+
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
 
     private val reverseContextVarMappingBuildVar =
         contextVarMappingBuildVar.values.zip(contextVarMappingBuildVar.keys).toMap()
 
     fun fetchReverseVarName(contextKey: String): String? {
-        return reverseContextVarMappingBuildVar[contextKey]
+        val varMap = reverseContextVarMappingBuildVar.toMutableMap()
+        varMap.putAll(contextVarMappingBuildVarRevert)
+        return varMap[contextKey]
     }
 
     /**
