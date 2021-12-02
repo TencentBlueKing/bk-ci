@@ -31,6 +31,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/astaxie/beego/logs"
 	"io"
@@ -127,7 +128,7 @@ func (r *HttpClient) Body(body interface{}) *HttpClient {
 	}
 	r.body = bytes.NewReader(data)
 
-	logs.Info("body: ", string(data))
+	logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
 	return r
 }
 
@@ -135,7 +136,7 @@ func (r *HttpClient) Execute() *HttpResult {
 	result := new(HttpResult)
 	defer func() {
 		if err := recover(); err != nil {
-			logs.Error("http request err: ", err)
+			logs.Error(fmt.Sprintf("url:[%s]|http request err: ", r.url), err)
 			result.Error = errors.New("http request err")
 		}
 	}()
@@ -172,8 +173,7 @@ func (r *HttpClient) Execute() *HttpResult {
 
 	result.Body = body
 	result.Status = resp.StatusCode
-	logs.Info("http status: ", resp.Status)
-	logs.Info("http respBody: ", string(body))
+	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
 	return result
 }
 
