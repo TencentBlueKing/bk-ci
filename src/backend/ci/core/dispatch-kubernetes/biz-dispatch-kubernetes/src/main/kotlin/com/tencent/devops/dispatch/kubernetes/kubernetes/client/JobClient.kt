@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.tencent.devops.dispatch.kubernetes.common.NFS_VOLUME_NAME_PREFIX
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
+import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfiguration
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.job.Job
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.job.JobData
@@ -23,7 +24,8 @@ import org.springframework.stereotype.Component
 class JobClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
-    private val kubernetesDataUtils: KubernetesDataUtils
+    private val kubernetesDataUtils: KubernetesDataUtils,
+    private val dispatchBuildConfiguration: DispatchBuildConfiguration
 ) {
 
     companion object {
@@ -93,7 +95,8 @@ class JobClient @Autowired constructor(
                         } else {
                             null
                         },
-                        restartPolicy = "Never"
+                        restartPolicy = "Never",
+                        tolerations = dispatchBuildConfiguration.tolerations
                     )
                 )
             )

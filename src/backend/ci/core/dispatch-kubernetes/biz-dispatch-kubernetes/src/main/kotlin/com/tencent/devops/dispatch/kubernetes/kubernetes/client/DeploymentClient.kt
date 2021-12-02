@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.google.gson.Gson
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
+import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfiguration
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.Deployment
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.deployment.DeploymentData
@@ -53,7 +54,8 @@ import org.springframework.stereotype.Component
 class DeploymentClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
-    private val kubernetesDataUtils: KubernetesDataUtils
+    private val kubernetesDataUtils: KubernetesDataUtils,
+    private val dispatchBuildConfiguration: DispatchBuildConfiguration
 ) {
 
     companion object {
@@ -91,7 +93,8 @@ class DeploymentClient @Autowired constructor(
                             volumeMounts = kubernetesDataUtils.getPodVolumeMount()
                         ),
                         volumes = kubernetesDataUtils.getPodVolume(),
-                        nodeSelector = null
+                        nodeSelector = null,
+                        tolerations = dispatchBuildConfiguration.tolerations
                     )
                 )
             )
@@ -140,7 +143,8 @@ class DeploymentClient @Autowired constructor(
                             volumeMounts = kubernetesDataUtils.getPodVolumeMount()
                         ),
                         volumes = kubernetesDataUtils.getPodVolume(),
-                        nodeSelector = null
+                        nodeSelector = null,
+                        tolerations = dispatchBuildConfiguration.tolerations
                     )
                 )
             )
