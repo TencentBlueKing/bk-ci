@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.api.util
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.yaml.snakeyaml.Yaml
 
 /**
  *
@@ -48,5 +50,11 @@ object YamlUtil {
             return bean.toString()
         }
         return getObjectMapper().writeValueAsString(bean)!!
+    }
+
+    fun <T> to(yamlStr: String): T {
+        val yaml = Yaml()
+        val obj = toYaml(yaml.load(yamlStr) as Any)
+        return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
     }
 }

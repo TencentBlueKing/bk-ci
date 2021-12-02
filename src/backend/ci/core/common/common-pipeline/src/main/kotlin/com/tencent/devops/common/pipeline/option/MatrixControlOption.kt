@@ -27,7 +27,11 @@
 
 package com.tencent.devops.common.pipeline.option
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import io.swagger.annotations.ApiModelProperty
+import org.yaml.snakeyaml.Yaml
 
 /**
  *  构建矩阵配置项
@@ -53,23 +57,48 @@ data class MatrixControlOption(
      * 根据[strategyStr]生成对应的矩阵参数表
      */
     fun convertStrategy(): Map<String, List<String>> {
+        val strategyMap = try {
+            YamlUtil.to<Map<String, List<String>>>(strategyStr)
+        } catch (e: Exception) {
+            try {
+                JsonUtil.to(strategyStr)
+            } catch (e: Exception) {
+                emptyMap()
+            }
+        }
         // TODO 存在json和yaml两种情况
-        return mapOf()
+        return strategyMap
     }
 
     /**
      * 根据[includeCaseStr]生成额外增加的参数组合
      */
-    fun convertIncludeCase(): Map<String, List<String>> {
+    fun convertIncludeCase(): List<Map<String, String>> {
+        if (includeCaseStr.isNullOrBlank()) {
+            return emptyList()
+        }
+        val includeCaseList = try {
+            YamlUtil.to<List<Map<String, String>>>(includeCaseStr)
+        } catch (e: Exception) {
+            emptyList()
+        }
         // TODO yaml解析
-        return mapOf()
+        return includeCaseList
     }
 
     /**
      * 根据[excludeCaseStr]生成需要排除的参数组合
      */
-    fun convertExcludeCase(): Map<String, List<String>> {
+    fun convertExcludeCase(): List<Map<String, String>> {
+        if (excludeCaseStr.isNullOrBlank()) {
+            return emptyList()
+        }
+        val excludeCaseList = try {
+            YamlUtil.to<List<Map<String, String>>>(excludeCaseStr)
+        } catch (e: Exception) {
+            emptyList()
+        }
         // TODO yaml解析
-        return mapOf()
+        return excludeCaseList
     }
 }
