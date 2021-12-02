@@ -298,7 +298,7 @@ class BuildCancelControl @Autowired constructor(
                 pipelineId = event.pipelineId,
                 userId = event.userId,
                 buildId = event.buildId,
-                buildResult = true,
+                buildResult = false, // #5046 取消不是成功
                 vmSeqId = id,
                 routeKeySuffix = dispatchType?.routeKeySuffix?.routeKeySuffix,
                 executeCount = executeCount

@@ -29,6 +29,7 @@ package com.tencent.devops.scm.utils.code.svn
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
+import org.apache.commons.lang3.StringUtils
 import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
@@ -157,5 +158,23 @@ object SvnUtils {
         }
 
         return url.substring(builder.toString().length)
+    }
+
+    /**
+     * 得到svn文件路径
+     *
+     * svn的url中可能已经包含部分文件路径，需要把文件路径中相同的部分去掉
+     */
+    fun getSvnFilePath(url: String, filePath: String): String {
+        val filePathArr = filePath.removePrefix("/").split("/")
+        if (filePathArr.isEmpty()) {
+            return filePath
+        }
+        val start = StringUtils.lastIndexOf(url, filePathArr[0])
+        return if (start > 0) {
+            filePath.removePrefix("/").removePrefix(StringUtils.substring(url, start))
+        } else {
+            filePath.removePrefix("/")
+        }
     }
 }
