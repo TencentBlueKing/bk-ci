@@ -187,6 +187,4 @@ class InitializeContainerStageCmd(
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
     }
-
-    private
 }
