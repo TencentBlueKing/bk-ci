@@ -27,11 +27,9 @@
 
 package com.tencent.devops.common.pipeline.option
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import io.swagger.annotations.ApiModelProperty
-import org.yaml.snakeyaml.Yaml
 
 /**
  *  构建矩阵配置项
@@ -50,19 +48,47 @@ data class MatrixControlOption(
     @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("正在运行的数量", required = false)
-    var runningCount: Int? = null
+    var runningCount: Int? = null,
 ) {
+
+    /**
+     * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到矩阵参数表
+     */
+    fun getAllContextCase(): List<Map<String, String>> {
+        val matrixParamMap = mutableListOf<Map<String, String>>()
+        matrixParamMap.addAll(calculateContextMatrix(convertStrategy()))
+        matrixParamMap.addAll(convertCase(includeCaseStr)) // 追加额外的参数组合
+        matrixParamMap.removeAll(convertCase(excludeCaseStr)) // 排除特定的参数组合
+        return matrixParamMap
+    }
 
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    fun convertStrategy(): Map<String, List<String>> {
+    private fun calculateContextMatrix(strategyMap: Map<String, List<String>>): List<Map<String, String>> {
+        val caseList = mutableListOf<Map<String, String>>()
+        val keyList = strategyMap.keys
+        cartesianProduct(strategyMap.values.toList())
+            .forEach { valueList ->
+                val case = mutableMapOf<String, String>()
+                keyList.forEachIndexed { index, key ->
+                    case[key] = valueList[index].toString()
+                }
+                caseList.add(case)
+            }
+        return caseList
+    }
+
+    /**
+     * 根据[strategyStr]生成对应的矩阵参数表
+     */
+    private fun convertStrategy(): Map<String, List<String>> {
         val strategyMap = try {
             YamlUtil.to<Map<String, List<String>>>(strategyStr)
-        } catch (e: Exception) {
+        } catch (ignore: Throwable) {
             try {
                 JsonUtil.to(strategyStr)
-            } catch (e: Exception) {
+            } catch (ignore: Throwable) {
                 emptyMap()
             }
         }
@@ -71,34 +97,25 @@ data class MatrixControlOption(
     }
 
     /**
-     * 根据[includeCaseStr]生成额外增加的参数组合
+     * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    fun convertIncludeCase(): List<Map<String, String>> {
-        if (includeCaseStr.isNullOrBlank()) {
+    private fun convertCase(str: String?): List<Map<String, String>> {
+        if (str.isNullOrBlank()) {
             return emptyList()
         }
         val includeCaseList = try {
-            YamlUtil.to<List<Map<String, String>>>(includeCaseStr)
-        } catch (e: Exception) {
+            YamlUtil.to<List<Map<String, String>>>(str)
+        } catch (ignore: Throwable) {
             emptyList()
         }
-        // TODO yaml解析
         return includeCaseList
     }
 
     /**
-     * 根据[excludeCaseStr]生成需要排除的参数组合
+     * Kotlin实现的笛卡尔乘积算法，[input]需要包含两个以上元素
      */
-    fun convertExcludeCase(): List<Map<String, String>> {
-        if (excludeCaseStr.isNullOrBlank()) {
-            return emptyList()
-        }
-        val excludeCaseList = try {
-            YamlUtil.to<List<Map<String, String>>>(excludeCaseStr)
-        } catch (e: Exception) {
-            emptyList()
-        }
-        // TODO yaml解析
-        return excludeCaseList
-    }
+    private fun cartesianProduct(input: List<List<Any>>): List<List<Any>> =
+        input.fold(listOf(listOf<Any>())) { acc, set ->
+            acc.flatMap { list -> set.map { element -> list + element } }
+        }.toList()
 }
