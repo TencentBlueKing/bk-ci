@@ -346,7 +346,7 @@ class PipelineStageService @Autowired constructor(
     ) {
         with(buildStage) {
             logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
-                "inOrOut=$inOrOut|request=$qualityRequest")
+                "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout")
             val stageNextStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.SUCCEED
             pipelineBuildStageDao.updateStatus(
                 dslContext = dslContext, buildId = buildId, stageId = stageId,

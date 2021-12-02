@@ -330,7 +330,7 @@ class BuildMonitorControl @Autowired constructor(
                         pass = false,
                         checkTimes = executeCount
                     ),
-                    inOrOut = true,
+                    inOrOut = false,
                     check = checkOut!!,
                     timeout = true
                 )
