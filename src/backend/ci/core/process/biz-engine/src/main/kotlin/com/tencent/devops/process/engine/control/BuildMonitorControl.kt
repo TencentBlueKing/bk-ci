@@ -36,7 +36,6 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -226,12 +225,12 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
-        val checkInIntervals = checkNextStageInMonitorIntervals(userId)
-        val checkOutIntervals = checkNextStageOutMonitorIntervals(userId)
+        val checkInIntervals = checkInMonitorIntervals(userId)
+        val checkOutIntervals = checkOutMonitorIntervals(userId)
         return min(checkInIntervals, checkOutIntervals)
     }
 
-    private fun PipelineBuildStage.checkNextStageInMonitorIntervals(userId: String): Long {
+    private fun PipelineBuildStage.checkInMonitorIntervals(userId: String): Long {
 
         var interval = 0L
         if (checkIn?.manualTrigger != true && checkIn?.ruleIds.isNullOrEmpty()) {
@@ -261,7 +260,7 @@ class BuildMonitorControl @Autowired constructor(
             )
 
             // #5654 如果是红线待审核状态则取消红线审核
-            if (checkIn?.status != BuildStatus.QUALITY_CHECK_WAIT.name) {
+            if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
                 pipelineStageService.qualityTriggerStage(
                     userId = userId,
                     buildStage = this,
@@ -293,10 +292,10 @@ class BuildMonitorControl @Autowired constructor(
         return interval
     }
 
-    private fun PipelineBuildStage.checkNextStageOutMonitorIntervals(userId: String): Long {
+    private fun PipelineBuildStage.checkOutMonitorIntervals(userId: String): Long {
 
         var interval = 0L
-        if (checkOut?.manualTrigger != true && checkOut?.ruleIds.isNullOrEmpty()) {
+        if (checkOut?.ruleIds.isNullOrEmpty()) {
             return interval
         }
 
@@ -322,7 +321,7 @@ class BuildMonitorControl @Autowired constructor(
                 executeCount = executeCount
             )
             // #5654 如果是红线待审核状态则取消红线审核
-            if (checkOut?.status != BuildStatus.QUALITY_CHECK_WAIT.name) {
+            if (checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
                 pipelineStageService.qualityTriggerStage(
                     userId = userId,
                     buildStage = this,
