@@ -49,7 +49,7 @@ class ProjectRouteTagService @Autowired constructor(
     fun checkProjectTag(projectId: String): Boolean {
         // 优先走缓存
         if (redisOperation.get(singelProjectRedisKey(projectId)) != null) {
-            val cacheCheck= projectClusterCheck(redisOperation.get(singelProjectRedisKey(projectId))!!)
+            val cacheCheck = projectClusterCheck(redisOperation.get(singelProjectRedisKey(projectId))!!)
             // cache校验成功直接返回
             if (cacheCheck) {
                 return cacheCheck
