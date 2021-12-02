@@ -43,7 +43,7 @@ module.exports = (env, argv) => {
         ...config.plugins,
         new MonacoWebpackPlugin({
             publicPath: '/pipeline/',
-            languages: ['javascript', 'dockerfile', 'typescript', 'kotlin', 'rust', 'go', 'yaml', 'json', 'python', 'shell', 'powershell', 'markdown', 'lua', 'php']
+            languages: ['bat', 'javascript', 'dockerfile', 'typescript', 'kotlin', 'rust', 'go', 'yaml', 'json', 'python', 'shell', 'powershell', 'markdown', 'lua', 'php']
         }),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,

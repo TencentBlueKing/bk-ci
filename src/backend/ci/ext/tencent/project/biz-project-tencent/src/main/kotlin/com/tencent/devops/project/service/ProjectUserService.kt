@@ -32,6 +32,7 @@ import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -67,5 +68,9 @@ class ProjectUserService @Autowired constructor(
             limit = limitByMax,
             offset = offset
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ProjectUserService::class.java)
     }
 }

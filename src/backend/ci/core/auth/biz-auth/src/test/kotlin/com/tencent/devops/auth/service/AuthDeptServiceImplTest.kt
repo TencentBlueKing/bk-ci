@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.redis.RedisOperation
+import org.junit.Assert
 import org.junit.Test
 
 class AuthDeptServiceImplTest {
@@ -132,6 +133,46 @@ class AuthDeptServiceImplTest {
             "        ]\n" +
             "    }"
         val users = authDeptServiceImpl.findUserName(response)
-        println(users)
+        val mockUsers = mutableListOf<String>()
+        mockUsers.add("abc")
+        mockUsers.add("def")
+        Assert.assertEquals(users, mockUsers)
+    }
+
+    @Test
+    fun test1() {
+        val response = "[ {\n" +
+            "  \"id\" : \"29510\",\n" +
+            "  \"family\" : [ {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 123,\n" +
+            "    \"full_name\" : \"XXX公司\",\n" +
+            "    \"name\" : \"XXX公司\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 12345,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群\",\n" +
+            "    \"name\" : \"XXX事业群\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 456,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部\",\n" +
+            "    \"name\" : \"XXX部\"\n" +
+            "  }, {\n" +
+            "    \"order\" : 1,\n" +
+            "    \"id\" : 9878,\n" +
+            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部/XXX中心\",\n" +
+            "    \"name\" : \"XXX中心\"\n" +
+            "  } ],\n" +
+            "  \"name\" : \"XXX组\"\n" +
+            "} ]"
+        val users = authDeptServiceImpl.getUserDeptTreeIds(response)
+        val mockUsers = mutableSetOf<String>()
+        mockUsers.add("29510")
+        mockUsers.add("123")
+        mockUsers.add("12345")
+        mockUsers.add("456")
+        mockUsers.add("9878")
+        Assert.assertEquals(users, mockUsers)
     }
 }

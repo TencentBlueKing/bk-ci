@@ -146,10 +146,13 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     ) {
         logger.info("send group msg by robot: $chatId, $content")
         if (markerDownFlag) {
+            val textContent = if (detailFlag) {
+                "$content\n[查看详情]($detailUrl)"
+            } else content
             val msg = RobotMarkdownSendMsg(
                 chatId = chatId,
                 markdown = MsgInfo(
-                    content = content
+                    content = textContent
                 )
             )
             wechatWorkRobotService.send(msg.toJsonString())
