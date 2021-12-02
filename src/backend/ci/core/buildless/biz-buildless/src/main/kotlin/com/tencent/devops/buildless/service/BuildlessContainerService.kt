@@ -107,7 +107,7 @@ class BuildlessContainerService(
     /**
      * 检验容器池的大小
      */
-    fun getPoolCoreSize(): Int {
+    fun getRunningPool(): Int {
         val containerInfo = httpLongDockerCli
             .listContainersCmd()
             .withStatusFilter(setOf("running"))
@@ -121,7 +121,9 @@ class BuildlessContainerService(
         try {
             // 校验当前容器池是否有可用资源
             val idlePoolSize = redisUtils.getIdleContainer()
-            if (idlePoolSize in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE) {
+            val runningPool = getRunningPool()
+            if (idlePoolSize == 0L &&
+                (runningPool in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE)) {
                 createBuildlessPoolContainer()
             }
 
