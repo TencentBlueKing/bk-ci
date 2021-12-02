@@ -29,10 +29,12 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -157,20 +159,22 @@ class PipelineContainerService @Autowired constructor(
         logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|deleteTaskCount=$count")
     }
 
-    fun prepareMatrixVMBuildContainerTasks(
+    fun prepareMatrixBuildContainer(
         projectId: String,
         pipelineId: String,
         buildId: String,
         stage: Stage,
-        container: VMBuildContainer,
+        container: Container,
         context: MatrixBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
-        buildContainers: MutableList<PipelineBuildContainer>
-    ): List<VMBuildContainer> {
+        buildContainers: MutableList<PipelineBuildContainer>,
+        matrixGroupId: String,
+        jobControlOption: JobControlOption,
+        mutexGroup: MutexGroup?
+    ) {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
         val parentElements = container.elements
-        val groupContainers = mutableListOf<VMBuildContainer>()
 
         parentElements.forEach nextElement@{ atomElement ->
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
@@ -231,16 +235,15 @@ class PipelineContainerService @Autowired constructor(
                 seq = context.containerSeq,
                 status = BuildStatus.QUEUE,
                 controlOption = PipelineBuildContainerControlOption(
-                    jobControlOption = container.jobControlOption!!,
+                    jobControlOption = jobControlOption,
                     inFinallyStage = stage.finally,
-                    mutexGroup = container.mutexGroup,
+                    mutexGroup = mutexGroup,
                     containPostTaskFlag = container.containPostTaskFlag
                 ),
                 matrixGroupFlag = false,
-                matrixGroupId = null
+                matrixGroupId = matrixGroupId
             )
         )
-        return groupContainers
     }
 
     fun prepareBuildContainerTasks(

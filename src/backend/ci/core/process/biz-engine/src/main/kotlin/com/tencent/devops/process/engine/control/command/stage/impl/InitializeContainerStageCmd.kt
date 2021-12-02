@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -99,8 +100,10 @@ class InitializeContainerStageCmd(
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
         model.stages.forEach { stage ->
             if (stage.id == commandContext.stage.stageId) {
-                stage.containers.forEachIndexed { index, container ->
-                    if (container.matrixGroupFlag == true) {
+                stage.containers.forEachIndexed { index, parentContainer ->
+
+                    // #4518 开启了矩阵功能但没有矩阵配置，则直接跳过
+                    if (parentContainer.matrixGroupFlag == true && parentContainer.matrixGroupFlag != null) {
 
                         val context = MatrixBuildContext(
                             actionType = ActionType.START,
@@ -121,27 +124,58 @@ class InitializeContainerStageCmd(
                             retryFailedContainer = variables[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                             skipFailedTask = variables[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
                             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
-                            containerSeq = VMUtils.genMatrixContainerSeq(container.id!!.toInt(), index)
+                            containerSeq = VMUtils.genMatrixContainerSeq(parentContainer.id!!.toInt(), index)
                         )
 
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-                            "containerId=${container.id}|containerHashId=${container.containerHashId}|context=$context")
+                            "containerId=${parentContainer.id}|containerHashId=${parentContainer.containerHashId}|context=$context")
 
-                        if (container is VMBuildContainer) {
-                            pipelineContainerService.prepareMatrixVMBuildContainerTasks(
+                        if (parentContainer is VMBuildContainer) {
+                            val strategyMatrix = try {
+                                parentContainer.matrixControlOption!!.convertStrategy()
+                            } catch (ignore: Throwable) {
+                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|${event.stageId}|" +
+                                    "containerId=${parentContainer.id}|parentContainer=$parentContainer")
+                                return@forEachIndexed
+                            }
+
+                            strategyMatrix.forEach { contextKey, contextValueList ->
+
+                            }
+                            
+                            pipelineContainerService.prepareMatrixBuildContainer(
                                 projectId = event.projectId,
                                 pipelineId = event.pipelineId,
                                 buildId = event.buildId,
-                                container = container,
+                                container = parentContainer,
                                 stage = stage,
                                 context = context,
                                 buildContainers = buildContainers,
-                                buildTaskList = buildTaskList
+                                buildTaskList = buildTaskList,
+                                // TODO 先保留父的所有配置
+                                jobControlOption = parentContainer.jobControlOption!!,
+                                mutexGroup = parentContainer.mutexGroup,
+                                matrixGroupId = parentContainer.id!!
+                            )
+                        } else if (parentContainer is NormalContainer) {
+                            pipelineContainerService.prepareMatrixBuildContainer(
+                                projectId = event.projectId,
+                                pipelineId = event.pipelineId,
+                                buildId = event.buildId,
+                                container = parentContainer,
+                                stage = stage,
+                                context = context,
+                                buildContainers = buildContainers,
+                                buildTaskList = buildTaskList,
+                                // TODO 先保留父的所有配置
+                                jobControlOption = parentContainer.jobControlOption!!,
+                                mutexGroup = parentContainer.mutexGroup,
+                                matrixGroupId = parentContainer.id!!
                             )
                         }
 
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-                            "${container.id}|containerHashId=${container.containerHashId}|context=$context|" +
+                            "${parentContainer.id}|containerHashId=${parentContainer.containerHashId}|context=$context|" +
                             "buildContainers=$buildContainers|buildTaskList=$buildTaskList")
                     }
                 }
@@ -153,4 +187,6 @@ class InitializeContainerStageCmd(
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
     }
+
+    private
 }

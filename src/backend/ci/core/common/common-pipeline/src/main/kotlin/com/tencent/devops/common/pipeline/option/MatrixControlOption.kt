@@ -43,8 +43,33 @@ data class MatrixControlOption(
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
     val maxConcurrency: Int? = null,
-    @ApiModelProperty("正在运行的数量", required = false)
+    @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("正在运行的数量", required = false)
     var runningCount: Int? = null
-)
+) {
+
+    /**
+     * 根据[strategyStr]生成对应的矩阵参数表
+     */
+    fun convertStrategy(): Map<String, List<String>> {
+        // TODO 存在json和yaml两种情况
+        return mapOf()
+    }
+
+    /**
+     * 根据[includeCaseStr]生成额外增加的参数组合
+     */
+    fun convertIncludeCase(): Map<String, List<String>> {
+        // TODO yaml解析
+        return mapOf()
+    }
+
+    /**
+     * 根据[excludeCaseStr]生成需要排除的参数组合
+     */
+    fun convertExcludeCase(): Map<String, List<String>> {
+        // TODO yaml解析
+        return mapOf()
+    }
+}
