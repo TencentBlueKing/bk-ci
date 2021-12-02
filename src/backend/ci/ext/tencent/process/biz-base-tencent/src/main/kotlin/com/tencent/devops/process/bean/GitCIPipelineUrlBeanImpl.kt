@@ -57,10 +57,18 @@ class GitCIPipelineUrlBeanImpl constructor(
             .data ?: return ""
         val urlParam = StringBuffer("")
         if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
-            val checkPosition = if (position == ControlPointPosition.BEFORE_POSITION) "checkIn" else "checkOut"
-            urlParam.append("?$checkPosition=$stageId")
+            when (position) {
+                ControlPointPosition.BEFORE_POSITION -> {
+                    urlParam.append("?checkIn=$stageId")
+                }
+                ControlPointPosition.AFTER_POSITION -> {
+                    urlParam.append("?checkOut=$stageId")
+                }
+            }
         }
         val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${project.pathWithNamespace}"
+
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
 
         if (null != needShortUrl && needShortUrl == false) {
             return url
