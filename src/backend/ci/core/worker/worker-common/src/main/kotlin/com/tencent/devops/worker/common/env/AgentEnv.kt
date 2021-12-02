@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.env
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
@@ -55,6 +56,7 @@ object AgentEnv {
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     private const val MACOS_WORKSPACE = "DEVOPS_MACOS_DIR"
+    private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -67,7 +69,7 @@ object AgentEnv {
 
     private var property: Properties? = null
 
-    private val propertyFile = File(getLandun(), ".agent.properties")
+    private val propertyFile = File(getLandun(), AGENT_PROPERTIES_FILE_NAME)
 
     fun getProjectId(): String {
 
@@ -127,7 +129,7 @@ object AgentEnv {
                     } else {
                         // Get it from .agent.property
                         try {
-                            Env.parse(getProperty(AGENT_ENV) ?: "")
+                            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
                         } catch (t: Throwable) {
                             logger.warn("Fail to get the agent env, use prod as default", t)
                             Env.PROD
