@@ -48,8 +48,10 @@ import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.CommonUtils
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
+import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
@@ -118,8 +120,8 @@ class BuildlessContainerService(
     fun createContainer(dockerHostBuildInfo: BuildLessStartInfo): String {
         try {
             // 校验当前容器池是否有可用资源
-            val poolSize = getPoolCoreSize()
-            if (poolSize in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE) {
+            val idlePoolSize = redisUtils.getIdleContainer()
+            if (idlePoolSize in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE) {
                 createBuildlessPoolContainer()
             }
 
@@ -168,11 +170,12 @@ class BuildlessContainerService(
                 listOf(
                     "$ENV_KEY_GATEWAY=$gateway",
                     "TERM=xterm-256color",
-                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
                     "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_JOB_BUILD_TYPE=BUILD_LESS"
+                    "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+                    "$ENV_CONTAINER_NAME=$containerName"
                 )
             )
             .withHostConfig(
@@ -186,14 +189,22 @@ class BuildlessContainerService(
             )
             .exec()
 
-        logger.info("Created container $container")
         httpLongDockerCli.startContainerCmd(container.id).exec()
+
+        redisUtils.setBuildlessPoolContainer(container.id, ContainerStatus.IDLE)
+        logger.info("===> created container $container")
 
         return container.id
     }
 
     fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
-        stopContainer(buildLessEndInfo.containerId, buildLessEndInfo.buildId)
+        with(buildLessEndInfo) {
+            stopContainer(containerId, buildId)
+
+            // 从缓存中删除容器状态
+            logger.info("===> $buildId|$vmSeqId remove container: $containerId from pool.")
+            redisUtils.deleteBuildlessPoolContainer(buildLessEndInfo.containerId)
+        }
 
         // 容器销毁后接着拉起新的容器
         createBuildlessPoolContainer()
@@ -201,7 +212,7 @@ class BuildlessContainerService(
 
     fun stopContainer(containerId: String, buildId: String) {
         if (containerId.isEmpty()) {
-            logger.error("[$buildId]| Stop the container failed, contianerId is null.")
+            logger.error("[$buildId]| Stop the container failed, containerId is null.")
             return
         }
 
@@ -229,8 +240,6 @@ class BuildlessContainerService(
                 ignored
             )
         }
-
-        redisUtils.deleteBuildlessPoolContainer(containerId)
     }
 
     companion object {

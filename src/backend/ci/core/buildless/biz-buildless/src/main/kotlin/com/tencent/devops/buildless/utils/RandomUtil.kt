@@ -39,7 +39,7 @@ object RandomUtil {
     fun randomString(): String {
         val random = Random()
         val buf = StringBuffer()
-        for (i in 0 until 7) {
+        for (i in 0 until 35) {
             val num = random.nextInt(secretSeed.length)
             buf.append(secretSeed[num])
         }

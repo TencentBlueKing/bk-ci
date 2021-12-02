@@ -43,6 +43,8 @@ object CommonUtils {
 
     private const val dockerHubUrl = "https://index.docker.io/v1/"
 
+    private var hostIp: String? = null
+
     fun isPortUsing(host: String, port: Int): Boolean {
         return try {
             // 建立一个Socket连接
@@ -52,6 +54,21 @@ object CommonUtils {
         } catch (e: IOException) {
             false
         }
+    }
+
+    fun getHostIp(): String {
+        if (hostIp.isNullOrBlank()) {
+            synchronized(this) {
+                if (hostIp.isNullOrBlank()) {
+                    hostIp = getInnerIP()
+                    if (hostIp.isNullOrBlank()) {
+                        throw RuntimeException("Empty host ip.")
+                    }
+                    logger.info("Get the HostIp($hostIp)")
+                }
+            }
+        }
+        return hostIp!!
     }
 
     fun getInnerIP(localIp: String? = ""): String {

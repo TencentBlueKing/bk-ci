@@ -53,7 +53,7 @@ class ServiceBuildlessResourceImpl @Autowired constructor(
     }
 
     override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
-        logger.warn("[${buildLessEndInfo.buildId}] | Stop the container, " +
+        logger.warn("${buildLessEndInfo.buildId}|${buildLessEndInfo.vmSeqId} Stop the container, " +
                 "containerId: ${buildLessEndInfo.containerId}")
         buildlessContainerService.stopContainer(buildLessEndInfo)
 
