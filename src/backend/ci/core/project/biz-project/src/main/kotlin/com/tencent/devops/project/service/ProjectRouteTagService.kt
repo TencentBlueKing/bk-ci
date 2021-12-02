@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.client.consul.ConsulConstants.SINGLE_PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.singelProjectRedisKey
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
@@ -50,7 +49,7 @@ class ProjectRouteTagService @Autowired constructor(
     fun checkProjectTag(projectId: String): Boolean {
         // 优先走缓存
         if (redisOperation.get(singelProjectRedisKey(projectId)) != null) {
-            val cacheCheck= projectClusterCheck(projectId, redisOperation.get(singelProjectRedisKey(projectId))!!)
+            val cacheCheck= projectClusterCheck(redisOperation.get(singelProjectRedisKey(projectId))!!)
             // cache校验成功直接返回
             if (cacheCheck) {
                 return cacheCheck
@@ -60,13 +59,12 @@ class ProjectRouteTagService @Autowired constructor(
         logger.info("checkProjectTag $projectId cache not match, get from db. ${projectInfo.routerTag}")
         // 请求源大量来自定时任务, redis缓存2分钟
         redisOperation.set(singelProjectRedisKey(projectId), projectInfo.routerTag ?: "", 120L)
-        return projectClusterCheck(projectId, projectInfo.routerTag)
+        return projectClusterCheck(projectInfo.routerTag)
     }
 
-    private fun projectClusterCheck(projectId: String, routerTag: String?): Boolean {
+    private fun projectClusterCheck(routerTag: String?): Boolean {
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrBlank()) {
-            logger.info("projectClusterCheck $projectId routerTag isNullOrBlank. tag:$tag, prodTag: $prodTag")
             // 只有默认集群在routerTag为空的时候才返回true
             return tag == prodTag
         }
