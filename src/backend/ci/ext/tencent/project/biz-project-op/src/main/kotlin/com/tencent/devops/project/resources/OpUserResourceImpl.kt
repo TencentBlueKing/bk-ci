@@ -30,6 +30,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpUserResource
+import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserRefreshService
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,5 +58,9 @@ class OpUserResourceImpl @Autowired constructor(
             limitCount = limit ?: 5,
             sleepTime = sleep ?: 500
         ))
+    }
+
+    override fun createPublicAccount(userInfo: UserInfo): Result<Boolean> {
+        return Result(projectUserRefreshService.createPublicAccount(userInfo))
     }
 }

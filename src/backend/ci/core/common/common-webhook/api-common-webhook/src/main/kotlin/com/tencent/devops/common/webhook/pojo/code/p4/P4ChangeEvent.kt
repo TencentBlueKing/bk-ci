@@ -25,29 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.common.webhook.pojo.code.p4
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentUpgradeResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentUpgradeResource {
-
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
-    }
-
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class P4ChangeEvent(
+    val change: Int,
+    override val p4Port: String,
+    @JsonProperty("event_type")
+    override val eventType: CodeEventType
+) : P4Event(
+    p4Port = p4Port,
+    eventType = eventType
+) {
+    companion object {
+        const val classType = "CHANGE"
     }
 }

@@ -25,41 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron.environment
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-@Suppress("ALL", "UNUSED")
-class AgentUpgrdeJob @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val updateService: AgentUpgradeService
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
-        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
-    }
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
-    fun updateCanUpgradeAgentList() {
-        logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateService.updateCanUpgradeAgentList()
-        } catch (ignore: Throwable) {
-            logger.warn("update can upgrade agent list failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
-}
+@ApiModel("用户信息-公共账号必须绑定bg")
+data class UserInfo(
+    @ApiModelProperty("用户Id")
+    val userId: String,
+    @ApiModelProperty("用户名")
+    val name: String,
+    @ApiModelProperty("BgId")
+    val bgId: Int,
+    @ApiModelProperty("Bg名称")
+    val bgName: String,
+    @ApiModelProperty("部门Id")
+    val deptId: Int?,
+    @ApiModelProperty("部门名称")
+    val deptName: String?,
+    @ApiModelProperty("中心Id")
+    val centerId: Int?,
+    @ApiModelProperty("中心名称")
+    val centerName: String?,
+    @ApiModelProperty("组Id")
+    val groupId: Int?,
+    @ApiModelProperty("组名称")
+    val groupName: String?
+)

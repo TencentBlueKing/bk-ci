@@ -194,7 +194,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String,
         event: String?,
-        hookUrl: String?
+        hookUrl: String?,
+        includePaths: String?,
+        excludePaths: String?
     ): Result<Boolean> {
         logger.info(
             "Start to add the web hook of " +
@@ -209,7 +211,10 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
             token = token,
             region = region,
             userName = userName,
-            event = event, hookUrl = hookUrl
+            event = event,
+            hookUrl = hookUrl,
+            includePaths = includePaths,
+            excludePaths = excludePaths
         )
         return Result(true)
     }
