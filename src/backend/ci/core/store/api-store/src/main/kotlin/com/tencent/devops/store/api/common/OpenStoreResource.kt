@@ -27,82 +27,41 @@
 
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.PUT
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STORE"], description = "service-store")
-@Path("/service/store")
+@Api(tags = ["OPEN_STORE"], description = "open-store")
+@Path("/open/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceStoreResource {
+interface OpenStoreResource {
 
-    @ApiOperation("卸载")
-    @DELETE
-    @Path("/codes/{storeCode}/uninstall")
-    fun uninstall(
+    @GET
+    @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
+    @ApiOperation("校验项目是否有使用该组件的权限")
+    fun validateProjectAtomPermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目编码", required = true)
+        projectCode: String,
         @ApiParam("标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
         @ApiParam("类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
-        @ApiParam("项目", required = true)
-        @QueryParam("projectCode")
-        projectCode: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取敏感数据")
-    @GET
-    @Path("/getSensitiveConf")
-    fun getSensitiveConf(
-        @ApiParam("组件类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
-        @QueryParam("storeCode")
-        storeCode: String
-    ): Result<List<SensitiveConfResp>?>
-
-    @ApiOperation("store组件内置流水线构建结果处理")
-    @PUT
-    @Path("/pipelineIds/{pipelineId}/buildIds/{buildId}/build/handle")
-    fun handleStoreBuildResult(
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam(value = "store组件内置流水线构建结果请求报文体", required = true)
-        storeBuildResultRequest: StoreBuildResultRequest
-    ): Result<Boolean>
-
-    @ApiOperation("判断用户是否是该组件的成员")
-    @GET
-    @Path("/codes/{storeCode}/user/validate")
-    fun isStoreMember(
-        @ApiParam("标识", required = true)
-        @PathParam("storeCode")
-        storeCode: String,
-        @ApiParam("类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
-        @ApiParam("用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 }

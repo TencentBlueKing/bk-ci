@@ -27,48 +27,53 @@
 
 package com.tencent.devops.store.resources.common
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.ServiceStoreResource
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.api.common.OpenStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreBuildService
-import com.tencent.devops.store.service.common.StoreMemberService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
-import com.tencent.devops.store.service.common.UserSensitiveConfService
+import com.tencent.devops.store.utils.StoreUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceStoreResourceImpl @Autowired constructor(
+class OpenStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
-    private val sensitiveConfService: UserSensitiveConfService,
-    private val storeBuildService: StoreBuildService
-) : ServiceStoreResource {
+    private val storeCommonService: StoreCommonService,
+    private val clientTokenService: ClientTokenService,
+    private val redisOperation: RedisOperation
+) : OpenStoreResource {
 
-    override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
-        return storeProjectService.uninstall(storeType, storeCode, projectCode)
-    }
-
-    override fun getSensitiveConf(storeType: StoreTypeEnum, storeCode: String): Result<List<SensitiveConfResp>?> {
-        return sensitiveConfService.list("", storeType, storeCode, true)
-    }
-
-    override fun handleStoreBuildResult(
-        pipelineId: String,
-        buildId: String,
-        storeBuildResultRequest: StoreBuildResultRequest
+    override fun validateProjectAtomPermission(
+        token: String,
+        projectCode: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
     ): Result<Boolean> {
-        return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
-    }
-
-    override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
+        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+            // 如果从缓存中查出该组件是公共组件则无需权限校验
+            return Result(true)
+        }
+        // 校验token是否合法
+        val validateTokenFlag = clientTokenService.checkToken(null, token)
+        if (!validateTokenFlag) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(token)
+            )
+        }
         return Result(
-            SpringContextUtil.getBean(
-                clazz = StoreMemberService::class.java,
-                beanName = "${storeType.name.toLowerCase()}MemberService"
-            ).isStoreMember(userId, storeCode, storeType.type.toByte())
+            storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||
+                storeProjectService.isInstalledByProject(
+                    projectCode = projectCode,
+                    storeCode = storeCode,
+                    storeType = StoreTypeEnum.ATOM.type.toByte()
+                )
         )
     }
 }
