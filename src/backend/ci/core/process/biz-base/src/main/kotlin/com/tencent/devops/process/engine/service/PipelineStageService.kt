@@ -412,7 +412,9 @@ class PipelineStageService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: "")
-                )
+                ),
+                position = ControlPointPosition.BEFORE_POSITION,
+                stageId = stage.stageId
             )
         )
     }
