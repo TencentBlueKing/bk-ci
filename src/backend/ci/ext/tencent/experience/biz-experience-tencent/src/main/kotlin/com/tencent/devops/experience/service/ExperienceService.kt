@@ -558,6 +558,10 @@ class ExperienceService @Autowired constructor(
         sendNotification(experienceRecord.id)
     }
 
+    fun getCreatorById(experienceHashId: String): String {
+        return experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId)).creator
+    }
+
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
         val experienceId = getExperienceId4Update(experienceHashId, userId, projectId).id
         experienceDao.updateOnline(dslContext, experienceId, online)
@@ -825,13 +829,13 @@ class ExperienceService @Autowired constructor(
     }
 
     fun listForBuild(
-        userId: String,
+        userId: String?,
         projectId: String,
         pipelineId: String,
         buildId: String
     ): List<ExperienceInfoForBuild> {
         // 判断是否有权限
-        if (!client.get(ServiceBuildPermissionResource::class)
+        if (!userId.isNullOrEmpty() && !client.get(ServiceBuildPermissionResource::class)
                 .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
         ) {
             throw ErrorCodeException(

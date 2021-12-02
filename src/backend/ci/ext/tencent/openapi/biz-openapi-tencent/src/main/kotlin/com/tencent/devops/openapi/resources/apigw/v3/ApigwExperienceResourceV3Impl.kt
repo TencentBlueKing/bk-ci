@@ -6,7 +6,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
-import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.openapi.api.apigw.v3.ApigwExperienceResourceV3
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -19,7 +18,7 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
     }
 
     override fun listForBuild(
-        userId: String,
+        userId: String?,
         projectId: String,
         pipelineId: String,
         buildId: String
@@ -27,20 +26,11 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
         return client.get(ServiceExperienceResource::class).listForBuild(userId, projectId, pipelineId, buildId)
     }
 
-    override fun edit(
-        userId: String,
-        projectId: String,
-        experienceHashId: String,
-        experience: ExperienceUpdate
-    ): Result<Boolean> {
-        return client.get(ServiceExperienceResource::class).edit(userId, projectId, experienceHashId, experience)
-    }
-
-    override fun offline(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun offline(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         return client.get(ServiceExperienceResource::class).offline(userId, projectId, experienceHashId)
     }
 
-    override fun online(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun online(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         return client.get(ServiceExperienceResource::class).online(userId, projectId, experienceHashId)
     }
 }

@@ -132,7 +132,7 @@ interface ServiceExperienceResource {
     fun listForBuild(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+        userId: String?,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -167,7 +167,7 @@ interface ServiceExperienceResource {
     fun offline(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String?,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -182,7 +182,7 @@ interface ServiceExperienceResource {
     fun online(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String?,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

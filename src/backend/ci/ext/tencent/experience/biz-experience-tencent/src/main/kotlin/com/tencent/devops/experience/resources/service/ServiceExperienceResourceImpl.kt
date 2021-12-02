@@ -82,15 +82,6 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
     }
 
-    override fun listForBuild(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<List<ExperienceInfoForBuild>> {
-        return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
-    }
-
     override fun edit(
         userId: String,
         projectId: String,
@@ -102,20 +93,39 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun offline(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun listForBuild(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<ExperienceInfoForBuild>> {
+        return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
+    }
+
+    override fun offline(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
-        experienceService.updateOnline(userId, projectId, experienceHashId, false)
+        experienceService.updateOnline(
+            userId ?: experienceService.getCreatorById(experienceHashId),
+            projectId,
+            experienceHashId,
+            false
+        )
         return Result(true)
     }
 
-    override fun online(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun online(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
-        experienceService.updateOnline(userId, projectId, experienceHashId, true)
+        experienceService.updateOnline(
+            userId ?: experienceService.getCreatorById(experienceHashId),
+            projectId,
+            experienceHashId,
+            true
+        )
         return Result(true)
     }
 
-    private fun checkParam(userId: String, projectId: String, experienceHashId: String = "default") {
-        if (userId.isBlank()) {
+    private fun checkParam(userId: String?, projectId: String, experienceHashId: String = "default") {
+        if (userId != null && userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
         if (projectId.isBlank()) {
