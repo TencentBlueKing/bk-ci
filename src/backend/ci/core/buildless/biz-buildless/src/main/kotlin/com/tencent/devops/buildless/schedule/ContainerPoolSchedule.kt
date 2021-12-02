@@ -28,24 +28,21 @@
 package com.tencent.devops.buildless.schedule
 
 import com.tencent.devops.buildless.service.BuildlessContainerService
-import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
 class ContainerPoolSchedule @Autowired constructor(
-    private val buildlessContainerService: BuildlessContainerService,
-    private val redisUtils: RedisUtils
+    private val buildlessContainerService: BuildlessContainerService
 ) {
-
     @Scheduled(cron = "* 0/2 * * * ?")
     fun execute() {
         val coreSize = buildlessContainerService.getPoolCoreSize()
-        if (coreSize > 3) return
-        for (i in 1..(3 - coreSize)) {
-            val containerId = buildlessContainerService.createBuildlessPoolContainer()
-            redisUtils.setBuildlessPoolContainer(containerId)
+        if (coreSize > CORE_CONTAINER_POOL_SIZE) return
+        for (i in 1..(CORE_CONTAINER_POOL_SIZE - coreSize)) {
+            buildlessContainerService.createBuildlessPoolContainer()
         }
     }
 }

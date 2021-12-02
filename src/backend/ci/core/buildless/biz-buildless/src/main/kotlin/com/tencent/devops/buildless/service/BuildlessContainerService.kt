@@ -46,14 +46,15 @@ import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
+import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.CommonUtils
-import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
+import com.tencent.devops.buildless.utils.MAX_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.service.config.CommonConfig
@@ -116,6 +117,12 @@ class BuildlessContainerService(
 
     fun createContainer(dockerHostBuildInfo: BuildLessStartInfo): String {
         try {
+            // 校验当前容器池是否有可用资源
+            val poolSize = getPoolCoreSize()
+            if (poolSize in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE) {
+                createBuildlessPoolContainer()
+            }
+
             redisUtils.addBuildLessReadyTask(BuildLessTask(
                 projectId = dockerHostBuildInfo.projectId,
                 pipelineId = dockerHostBuildInfo.pipelineId,
@@ -187,6 +194,9 @@ class BuildlessContainerService(
 
     fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
         stopContainer(buildLessEndInfo.containerId, buildLessEndInfo.buildId)
+
+        // 容器销毁后接着拉起新的容器
+        createBuildlessPoolContainer()
     }
 
     fun stopContainer(containerId: String, buildId: String) {

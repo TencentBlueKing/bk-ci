@@ -69,4 +69,5 @@ const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // doc
 const val ENTRY_POINT_CMD = "/data/init.sh"
 const val SLEEP_ENTRY_POINT_CMD = "/data/sleep.sh"
 
-const val MAX_CONTAINER_NUM = 100
+const val MAX_CONTAINER_POOL_SIZE = 20
+const val CORE_CONTAINER_POOL_SIZE = 20
