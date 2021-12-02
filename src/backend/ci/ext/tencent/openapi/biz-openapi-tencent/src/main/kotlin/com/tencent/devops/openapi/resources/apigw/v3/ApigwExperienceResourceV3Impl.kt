@@ -13,11 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwExperienceResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwExperienceResourceV3 {
-    override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
+    override fun jumpInfo(appCode: String?, projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
         return client.get(ServiceExperienceResource::class).jumpInfo(projectId, bundleIdentifier, platform)
     }
 
     override fun listForBuild(
+        appCode: String?,
         userId: String?,
         projectId: String,
         pipelineId: String,
@@ -26,11 +27,11 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
         return client.get(ServiceExperienceResource::class).listForBuild(userId, projectId, pipelineId, buildId)
     }
 
-    override fun offline(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun offline(appCode: String?, userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         return client.get(ServiceExperienceResource::class).offline(userId, projectId, experienceHashId)
     }
 
-    override fun online(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
+    override fun online(appCode: String?, userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         return client.get(ServiceExperienceResource::class).online(userId, projectId, experienceHashId)
     }
 }
