@@ -1,0 +1,10 @@
+parameters:
+  - name: iftest
+    type: array
+    default: ["PYTHON"]
+
+steps:
+  - run: |
+      echo 123
+    if: parameters.iftest == [PYTHON]
+    id: 123123123
