@@ -35,6 +35,7 @@
     "gitUrlPlaceholder": "please select Git url",
     "tgitUrlPlaceholder": "please select TGit url",
     "gitlabUrlPlaceholder": "please select Gitlab url",
+    "p4UrlPlaceholder": "please select P4 url",
     "httpUrlPlaceholder": "please select Git url",
     "httpsUrlPlaceholder": "please select TGit url",
     "svnCredPlaceholder": "please select credential accordingly",
@@ -54,5 +55,6 @@
     "Gitlab": "Gitlab",
     "TGit": "TGit",
     "authType": "Authorization method",
-    "authIdentity": "Authorized identity"
+    "authIdentity": "Authorized identity",
+    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port"
 }
