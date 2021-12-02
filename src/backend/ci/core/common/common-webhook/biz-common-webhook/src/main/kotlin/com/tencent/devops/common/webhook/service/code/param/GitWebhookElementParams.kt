@@ -56,11 +56,8 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
-        if (element.branchName == null) {
-            return null
-        }
         params.block = element.block ?: false
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.pathFilterType = element.pathFilterType
