@@ -92,6 +92,7 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
@@ -115,6 +116,7 @@ class ExperienceService @Autowired constructor(
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
+    private val threadPool = Executors.newFixedThreadPool(3)
 
     fun hasArtifactoryPermission(
         userId: String,
@@ -660,86 +662,90 @@ class ExperienceService @Autowired constructor(
     }
 
     private fun sendNotification(experienceId: Long) {
-        val experienceRecord = experienceDao.get(dslContext, experienceId)
-        if (DateUtil.isExpired(experienceRecord.endDate)) {
-            logger.info("experience($experienceId) is expired")
-            return
-        }
+        threadPool.submit {
+            val experienceRecord = experienceDao.get(dslContext, experienceId)
+            if (DateUtil.isExpired(experienceRecord.endDate)) {
+                logger.info("experience($experienceId) is expired")
+                return@submit
+            }
 
-        val projectId = experienceRecord.projectId
-        val name = experienceRecord.name
-        val version = experienceRecord.version
-        val userId = experienceRecord.creator
-        val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
+            val projectId = experienceRecord.projectId
+            val name = experienceRecord.name
+            val version = experienceRecord.version
+            val userId = experienceRecord.creator
+            val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
 
-        val extraUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-        val groupIdToUserIdsMap =
-            experienceBaseService.getGroupIdToInnerUserIds(experienceBaseService.getGroupIdsByRecordId(experienceId))
+            val extraUsers =
+                experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+            val groupIdToUserIdsMap =
+                experienceBaseService.getGroupIdToInnerUserIds(experienceBaseService.getGroupIdsByRecordId(experienceId))
 
-        val receivers = mutableSetOf<String>()
-        receivers.addAll(extraUsers)
-        receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+            val receivers = mutableSetOf<String>()
+            receivers.addAll(extraUsers)
+            receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
 
-        if (receivers.isEmpty()) {
-            logger.info("empty receivers , experienceId:$experienceId")
-            return
-        }
+            if (receivers.isEmpty()) {
+                logger.info("empty receivers , experienceId:$experienceId")
+                return@submit
+            }
 
-        val innerUrl = getInnerUrl(projectId, experienceId)
-        val outerUrl = getShortExternalUrl(experienceId)
+            val innerUrl = getInnerUrl(projectId, experienceId)
+            val outerUrl = getShortExternalUrl(experienceId)
 
-        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
-        if (notifyTypeList.contains(NotifyType.EMAIL)) {
-            val message = EmailUtil.makeMessage(
-                userId = userId,
-                projectName = projectName,
-                name = name,
-                version = version,
-                url = innerUrl,
-                receivers = receivers.toSet()
-            )
-            client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-        }
-
-        receivers.forEach {
-            if (notifyTypeList.contains(NotifyType.RTX)) {
-                val message = RtxUtil.makeMessage(
+            if (notifyTypeList.contains(NotifyType.EMAIL)) {
+                val message = EmailUtil.makeMessage(
+                    userId = userId,
                     projectName = projectName,
                     name = name,
                     version = version,
-                    innerUrl = innerUrl,
-                    outerUrl = outerUrl,
-                    receivers = setOf(it)
+                    url = innerUrl,
+                    receivers = receivers.toSet()
                 )
-                client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+                client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
-            if (notifyTypeList.contains(NotifyType.WECHAT)) {
-                val message = WechatUtil.makeMessage(
-                    projectName = projectName,
-                    name = name,
-                    version = version,
-                    innerUrl = innerUrl,
-                    outerUrl = outerUrl,
-                    receivers = setOf(it)
-                )
-                client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+
+            receivers.forEach {
+                if (notifyTypeList.contains(NotifyType.RTX)) {
+                    val message = RtxUtil.makeMessage(
+                        projectName = projectName,
+                        name = name,
+                        version = version,
+                        innerUrl = innerUrl,
+                        outerUrl = outerUrl,
+                        receivers = setOf(it)
+                    )
+                    client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+                }
+                if (notifyTypeList.contains(NotifyType.WECHAT)) {
+                    val message = WechatUtil.makeMessage(
+                        projectName = projectName,
+                        name = name,
+                        version = version,
+                        innerUrl = innerUrl,
+                        outerUrl = outerUrl,
+                        receivers = setOf(it)
+                    )
+                    client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+                }
+            }
+            if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
+                val wechatGroupList = regex.split(experienceRecord.wechatGroups)
+                wechatGroupList.forEach {
+                    val message = WechatGroupUtil.makeRichtextMessage(
+                        projectName = projectName,
+                        name = name,
+                        version = version,
+                        innerUrl = innerUrl,
+                        outerUrl = outerUrl,
+                        groupId = it
+                    )
+                    wechatWorkService.sendRichText(message)
+                }
             }
         }
-        if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
-            val wechatGroupList = regex.split(experienceRecord.wechatGroups)
-            wechatGroupList.forEach {
-                val message = WechatGroupUtil.makeRichtextMessage(
-                    projectName = projectName,
-                    name = name,
-                    version = version,
-                    innerUrl = innerUrl,
-                    outerUrl = outerUrl,
-                    groupId = it
-                )
-                wechatWorkService.sendRichText(message)
-            }
-        }
+
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
