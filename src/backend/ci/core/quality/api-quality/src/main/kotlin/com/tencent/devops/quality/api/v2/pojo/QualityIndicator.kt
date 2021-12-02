@@ -31,6 +31,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.quality.pojo.enum.RunElementType
 
 data class QualityIndicator(
     val hashId: String,
@@ -62,7 +65,7 @@ data class QualityIndicator(
     }
 
     fun isScriptElementIndicator(): Boolean {
-        return elementType in SCRIPT_ELEMENT
+        return elementType in SCRIPT_ELEMENT || isRunElementType()
     }
 
     fun clone(): QualityIndicator {
@@ -85,5 +88,13 @@ data class QualityIndicator(
             logPrompt = this.logPrompt,
             enable = this.enable
         )
+    }
+
+    fun isRunElementType(): Boolean {
+        return if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            elementType == RunElementType.RUN_TEST.toString()
+        } else {
+            elementType == RunElementType.RUN.toString()
+        }
     }
 }
