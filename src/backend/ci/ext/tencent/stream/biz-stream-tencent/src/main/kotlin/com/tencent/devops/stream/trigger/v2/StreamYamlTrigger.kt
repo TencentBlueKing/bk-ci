@@ -181,8 +181,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline, " +
-                    "startParams:$startParams"
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
