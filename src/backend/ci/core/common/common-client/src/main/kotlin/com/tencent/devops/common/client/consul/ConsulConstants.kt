@@ -38,5 +38,5 @@ object ConsulConstants {
 
     const val SINGLE_PROJECT_TAG_REDIS_KEY = "single:project:cluster:tag:"
 
-    fun singelProjectRedisKey(projectId: String): String = "$SINGLE_PROJECT_TAG_REDIS_KEY:$projectId"
+    fun singelProjectRedisKey(projectId: String): String = "$SINGLE_PROJECT_TAG_REDIS_KEY$projectId"
 }

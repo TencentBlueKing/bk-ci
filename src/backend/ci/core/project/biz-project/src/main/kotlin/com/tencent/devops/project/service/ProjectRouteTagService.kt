@@ -50,19 +50,23 @@ class ProjectRouteTagService @Autowired constructor(
     fun checkProjectTag(projectId: String): Boolean {
         // 优先走缓存
         if (redisOperation.get(singelProjectRedisKey(projectId)) != null) {
-            return projectClusterCheck(redisOperation.get(singelProjectRedisKey(projectId))!!)
+            val cacheCheck= projectClusterCheck(projectId, redisOperation.get(singelProjectRedisKey(projectId))!!)
+            // cache校验成功直接返回
+            if (cacheCheck) {
+                return cacheCheck
+            }
         }
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
         logger.info("checkProjectTag $projectId cache not match, get from db. ${projectInfo.routerTag}")
         // 请求源大量来自定时任务, redis缓存2分钟
         redisOperation.set(singelProjectRedisKey(projectId), projectInfo.routerTag ?: "", 120L)
-        return projectClusterCheck(projectInfo.routerTag)
-
+        return projectClusterCheck(projectId, projectInfo.routerTag)
     }
 
-    private fun projectClusterCheck(routerTag: String?): Boolean {
+    private fun projectClusterCheck(projectId: String, routerTag: String?): Boolean {
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrBlank()) {
+            logger.info("projectClusterCheck $projectId routerTag isNullOrBlank. tag:$tag, prodTag: $prodTag")
             // 只有默认集群在routerTag为空的时候才返回true
             return tag == prodTag
         }
