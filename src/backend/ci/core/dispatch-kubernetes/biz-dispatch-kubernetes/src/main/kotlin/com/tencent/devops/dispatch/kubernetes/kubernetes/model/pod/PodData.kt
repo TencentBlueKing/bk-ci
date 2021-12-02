@@ -60,7 +60,9 @@ data class Toleration(
     var operator: String,
     var value: String,
     var effecf: String
-)
+){
+   constructor():this("","","","")
+}
 
 interface Volume {
     val name: String
