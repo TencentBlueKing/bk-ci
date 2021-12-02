@@ -257,7 +257,7 @@
                     </div>
                 </div>
                 <div class="form-footer">
-                    <bk-button theme="primary" @click="submit"> {{ $t('store.提交') }} </bk-button>
+                    <bk-button theme="primary" @click="submit()"> {{ $t('store.提交') }} </bk-button>
                     <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
                 </div>
                 <select-logo :form="atomForm" type="ATOM" :is-err="formErrors.logoUrlError" ref="logoUrlError"></select-logo>
