@@ -47,5 +47,5 @@ data class DataPlatJobDetail(
     val errorType: Int?,
     val errorCode: Int?,
     val errorMsg: String?,
-    val baseOS: String?,
+    val baseOS: String?
 )

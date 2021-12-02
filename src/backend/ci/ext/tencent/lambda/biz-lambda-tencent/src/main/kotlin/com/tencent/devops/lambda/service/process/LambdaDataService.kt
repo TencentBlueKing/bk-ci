@@ -494,7 +494,7 @@ class LambdaDataService @Autowired constructor(
             }
 
             val labelList = mutableListOf<String>()
-            lambdaPipelineLabelDao.getLables(dslContext, pipelineId)?.forEach {label ->
+            lambdaPipelineLabelDao.getLables(dslContext, pipelineId)?.forEach { label ->
                 labelList.add(label["name"] as String)
             }
 
