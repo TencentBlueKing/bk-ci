@@ -39,6 +39,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta
 import io.kubernetes.client.openapi.models.V1PodSpec
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec
 import io.kubernetes.client.openapi.models.V1ResourceRequirements
+import io.kubernetes.client.openapi.models.V1Toleration
 import io.kubernetes.client.openapi.models.V1Volume
 import io.kubernetes.client.openapi.models.V1VolumeMount
 
@@ -68,6 +69,15 @@ object Pod {
             }
             if (restartPolicy != null) {
                 spec.restartPolicy(restartPolicy)
+            }
+            if (!tolerations.isNullOrEmpty()) {
+                spec.tolerations(tolerations.map {
+                    V1Toleration()
+                        .key(it.key)
+                        .operator(it.operator)
+                        .value(it.value)
+                        .effect(it.effecf)
+                })
             }
             pods.spec(spec)
             return pods

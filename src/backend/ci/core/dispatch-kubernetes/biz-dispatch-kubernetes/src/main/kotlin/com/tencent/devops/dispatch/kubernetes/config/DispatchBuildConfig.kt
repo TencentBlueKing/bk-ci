@@ -27,7 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.config
 
+import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.Toleration
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
 @Component
@@ -66,3 +68,9 @@ class DispatchBuildConfig {
     @Value("\${dispatch.build.volume.hostPath.hostdir:#{null}}")
     val volumeHostPathHostDir: String? = null
 }
+
+@Component
+@ConfigurationProperties(prefix = "dispatch.build")
+data class DispatchBuildConfiguration(
+    var tolerations: List<Toleration>? = null
+)

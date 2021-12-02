@@ -48,6 +48,11 @@ dispatch:
         path: dispatch_kubernetes_init.sh
       hostPath:
         hostdir: /data/volume/bkci/dispatch-kubernetes
+    tolerations:
+      - key: "bk-codecc"
+        operator: "Equal"
+        value: "use"
+        effecf: "NoSchedule"    
 
 pipeline:
   build:

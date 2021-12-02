@@ -34,7 +34,8 @@ data class PodData(
     val container: ContainerData?,
     val volumes: List<Volume>?,
     val nodeSelector: NodeSelector?,
-    val restartPolicy: String? = null
+    val restartPolicy: String? = null,
+    val tolerations: List<Toleration>? = null
 )
 
 data class ContainerData(
@@ -53,6 +54,15 @@ data class VolumeMount(
     val mountPath: String,
     val name: String
 )
+
+data class Toleration(
+    var key: String,
+    var operator: String,
+    var value: String,
+    var effecf: String
+){
+   constructor():this("","","","")
+}
 
 interface Volume {
     val name: String
