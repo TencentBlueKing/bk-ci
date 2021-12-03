@@ -139,7 +139,8 @@ data class MatrixControlOption(
         val contextStr = ReplacementUtils.replace(
             command = strategyStr,
             replacement = object : ReplacementUtils.KeyReplacement {
-                override fun getReplacement(key: String): String? {
+                // 内外源不一致，此处多传一个doubleCurlyBraces只为实现内部版接口
+                override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
                     // 匹配fromJSON()
                     val matcher = MATRIX_JSON_KEY_PATTERN.matcher(key)
                     if (matcher.find()) {
