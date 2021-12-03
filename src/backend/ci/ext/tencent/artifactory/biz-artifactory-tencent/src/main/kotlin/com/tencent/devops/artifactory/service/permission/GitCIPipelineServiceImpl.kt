@@ -34,7 +34,7 @@ class GitCIPipelineServiceImpl @Autowired constructor(
         pipelineId: String?,
         permission: AuthPermission?
     ): Boolean {
-        logger.info("GitCIPipelineService user:$userId projectId: $projectId")
+        logger.info("GitCIPipelineService |$userId|$projectId|$pipelineId|$permission|")
         return if (pipelineId != null) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
                 userId = userId,
