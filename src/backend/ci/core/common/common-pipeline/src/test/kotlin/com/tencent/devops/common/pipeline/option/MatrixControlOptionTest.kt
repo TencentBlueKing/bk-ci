@@ -6,39 +6,6 @@ import org.junit.Test
 
 internal class MatrixControlOptionTest {
 
-    /**
-     * 用于比对结果的传统笛卡尔乘积算法:
-     * 原二维数组[input], 通过乘积转化后的数组[output],
-     * 层级参数[layer], 当前操作数组[currentList]
-     */
-    private fun descartes(
-        input: List<List<String>>,
-        output: MutableList<List<String>>,
-        layer: Int, currentList: List<String>
-    ) {
-        if (layer < input.size - 1) {
-            if (input[layer].isEmpty()) {
-                descartes(input, output, layer + 1, currentList)
-            } else {
-                for (i in input[layer].indices) {
-                    val list: MutableList<String> = ArrayList(currentList)
-                    list.add(input[layer][i])
-                    descartes(input, output, layer + 1, list)
-                }
-            }
-        } else if (layer == input.size - 1) {
-            if (input[layer].isEmpty()) {
-                output.add(currentList)
-            } else {
-                for (i in input[layer].indices) {
-                    val list: MutableList<String> = ArrayList(currentList)
-                    list.add(input[layer][i])
-                    output.add(list)
-                }
-            }
-        }
-    }
-
     @Test
     fun calculateValueMatrix() {
         val matrixControlOption = MatrixControlOption(
@@ -58,7 +25,7 @@ internal class MatrixControlOptionTest {
                     ),
                     mapOf(
                         "os" to "macos",
-                        "os" to "d",
+                        "var1" to "d",
                         "var2" to "4"
                     ),
                     // +0 重复值不加入
@@ -66,7 +33,7 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
-                    ),
+                    )
                 )
             ),
             // -1
@@ -80,16 +47,201 @@ internal class MatrixControlOptionTest {
                 )
             ),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.getAllContextCase()
+        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 19)
+        Assert.assertEquals(contextCase.size, 20)
+    }
+
+    @Test
+    fun calculateValueMatrix2() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+                    {
+                        "include": [
+                            {
+                                "os": "docker",
+                                "var1": "form_json",
+                                "var2": 2
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "form_json",
+                                "var2": 1
+                            }
+                        ],
+                        "exclude": [
+                            {
+                                "os": "docker",
+                                "var1": "b",
+                                "var2": 3
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "c",
+                                "var2": 2
+                            }
+                        ],
+                        "strategy": {
+                            "os": [
+                                "docker",
+                                "macos"
+                            ],
+                            "var1": [
+                                "a",
+                                "b",
+                                "c"
+                            ],
+                            "var2": [
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    }
+                """,
+            // +2
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "includeCaseStr",
+                        "var2" to "0"
+                    ),
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "includeCaseStr",
+                        "var2" to "4"
+                    ),
+                    // +0 重复值不加入
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "includeCaseStr",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 20)
+    }
+
+    @Test
+    fun calculateValueMatrix3() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = "\${{fromJSON(depends.job1.outputs.matrix)}}",
+            // +2
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "includeCaseStr",
+                        "var2" to "0"
+                    ),
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "includeCaseStr",
+                        "var2" to "4"
+                    ),
+                    // +0 重复值不加入
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "includeCaseStr",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf("depends.job1.outputs.matrix" to """
+            {
+                        "include": [
+                            {
+                                "os": "docker",
+                                "var1": "form_json",
+                                "var2": 2
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "form_json",
+                                "var2": 1
+                            }
+                        ],
+                        "exclude": [
+                            {
+                                "os": "docker",
+                                "var1": "b",
+                                "var2": 3
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "c",
+                                "var2": 2
+                            }
+                        ],
+                        "strategy": {
+                            "os": [
+                                "docker",
+                                "macos"
+                            ],
+                            "var1": [
+                                "a",
+                                "b",
+                                "c"
+                            ],
+                            "var2": [
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    }
+        """)
+        val contextCase = matrixControlOption.getAllContextCase(buildContext)
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 20)
     }
 
     @Test
@@ -103,7 +255,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -126,7 +278,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -148,7 +300,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -169,7 +321,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )

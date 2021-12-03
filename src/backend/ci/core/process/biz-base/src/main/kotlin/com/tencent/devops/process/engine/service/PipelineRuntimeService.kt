@@ -767,7 +767,7 @@ class PipelineRuntimeService @Autowired constructor(
                 */
                 if (container.matrixGroupFlag == true) {
                     if (container is VMBuildContainer) container.retryFreshMatrixOption()
-                    if (container is NormalContainer) container.retryFreshMatrixOption()
+                    else if (container is NormalContainer) container.retryFreshMatrixOption()
                     pipelineContainerService.deleteTasksInMatrixGroupContainer(
                         transactionContext = dslContext,
                         projectId = pipelineInfo.projectId,
