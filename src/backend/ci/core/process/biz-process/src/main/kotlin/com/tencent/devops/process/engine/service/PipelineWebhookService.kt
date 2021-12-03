@@ -124,9 +124,7 @@ class PipelineWebhookService @Autowired constructor(
                         ),
                         codeEventType = eventType,
                         repositoryConfig = repositoryConfig,
-                        createPipelineFlag = true,
-                        includePaths = includePaths,
-                        excludePaths = excludePaths
+                        createPipelineFlag = true
                     )
                 } catch (ignore: Exception) {
                     failedElementNames.add("- ${element.name}: ${ignore.message}")
@@ -158,9 +156,7 @@ class PipelineWebhookService @Autowired constructor(
         pipelineWebhook: PipelineWebhook,
         codeEventType: CodeEventType? = null,
         repositoryConfig: RepositoryConfig,
-        createPipelineFlag: Boolean? = false,
-        includePaths: String?,
-        excludePaths: String?
+        createPipelineFlag: Boolean? = false
     ) {
         logger.info("save Webhook[$pipelineWebhook]")
         var continueFlag = true
@@ -178,9 +174,7 @@ class PipelineWebhookService @Autowired constructor(
             val projectName = registerWebhook(
                 pipelineWebhook = pipelineWebhook,
                 repositoryConfig = repositoryConfig,
-                codeEventType = codeEventType,
-                includePaths = includePaths,
-                excludePaths = excludePaths
+                codeEventType = codeEventType
             )
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
@@ -196,9 +190,7 @@ class PipelineWebhookService @Autowired constructor(
     private fun registerWebhook(
         pipelineWebhook: PipelineWebhook,
         repositoryConfig: RepositoryConfig,
-        codeEventType: CodeEventType?,
-        includePaths: String?,
-        excludePaths: String?
+        codeEventType: CodeEventType?
     ): String? {
         // 防止同一个仓库注册多个相同事件的webhook
         val redisLock = RedisLock(
@@ -230,9 +222,7 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addP4Webhook(
                         projectId = pipelineWebhook.projectId,
                         repositoryConfig = repositoryConfig,
-                        codeEventType = codeEventType,
-                        includePaths = includePaths,
-                        excludePaths = excludePaths
+                        codeEventType = codeEventType
                     )
                 else -> {
                     null
@@ -553,9 +543,7 @@ class PipelineWebhookService @Autowired constructor(
                 WebhookElementParams(
                     repositoryConfig = realRepositoryConfig,
                     scmType = ScmType.CODE_P4,
-                    eventType = element.data.input.eventType,
-                    includePaths = element.data.input.includePaths,
-                    excludePaths = element.data.input.excludePaths
+                    eventType = element.data.input.eventType
                 )
             else ->
                 throw InvalidParamException("Unknown code element -> $element")

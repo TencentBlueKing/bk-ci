@@ -27,7 +27,6 @@
 
 package com.tencent.devops.scm.code.p4.api
 
-import com.perforce.p4java.admin.ITriggerEntry
 import com.perforce.p4java.admin.ITriggerEntry.TriggerType
 import com.perforce.p4java.core.IDepot
 import com.perforce.p4java.core.file.FileSpecOpStatus
@@ -78,8 +77,6 @@ class P4Api(
      */
     fun addWebHook(
         hookUrl: String,
-        includePaths: String?,
-        excludePaths: String?,
         event: String?
     ) {
         P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
@@ -89,18 +86,9 @@ class P4Api(
                 eventType = eventType,
                 hookUrl = hookUrl
             )
-            val remainPaths = filterExistTrigger(
-                p4Server = p4Server,
-                includePaths = includePaths,
-                excludePaths = excludePaths,
-                eventType = eventType,
-                command = command
-            )
-            if (remainPaths.isEmpty()) {
-                logger.info(
-                    "The web hook url($hookUrl) and event($event)," +
-                        "includePaths($includePaths),excludePaths($excludePaths) is already exist"
-                )
+            val existEvent = existEvent(p4Server = p4Server, eventType = eventType, command = command)
+            if (existEvent) {
+                logger.info("The web hook url($hookUrl) and event($event) is already exist")
                 return
             }
             // 创建一个devops_trigger的depot
@@ -117,7 +105,6 @@ class P4Api(
 
             addTriggers(
                 p4Server = p4Server,
-                remainPaths = remainPaths,
                 eventType = eventType,
                 command = command
             )
@@ -159,47 +146,21 @@ class P4Api(
         }
     }
 
-    @SuppressWarnings("LongParameterList")
-    private fun filterExistTrigger(
+    private fun existEvent(
         p4Server: P4Server,
-        includePaths: String?,
-        excludePaths: String?,
         eventType: TriggerType,
         command: String
-    ): Set<String> {
-        val paths = mutableSetOf<String>()
-        if (!includePaths.isNullOrBlank()) {
-            paths.addAll(includePaths.split(",").map { convertPath(it) })
-        }
-        if (!excludePaths.isNullOrBlank()) {
-            paths.addAll(excludePaths.split(",").map { convertPath(it) })
-        }
+    ): Boolean {
         p4Server.getTriggers().forEach { entry ->
-            if (isSameEvent(entry, paths, eventType, command)) {
-                paths.remove(entry.path)
+            if (entry.name == "${DEVOPS_P4_TRIGGER_NAME}_$eventType" &&
+                entry.triggerType.name == eventType.name &&
+                entry.command == command
+            ) {
+                return true
             }
         }
-        return paths
+        return false
     }
-
-    /**
-     * 提取路径
-     * 比如配置//demo/aaa/...转换成//demo/...
-     */
-    private fun convertPath(path: String): String {
-        // p4主仓库名
-        val depot = path.removePrefix("//").substringBefore("/")
-        return "//$depot/..."
-    }
-
-    private fun isSameEvent(
-        entry: ITriggerEntry,
-        paths: Set<String>,
-        eventType: TriggerType,
-        command: String
-    ) = paths.contains(entry.path) &&
-        entry.triggerType.name == eventType.name &&
-        entry.command == command
 
     private fun createDevopsDepot(p4Server: P4Server) =
         p4Server.createDepot(
@@ -241,7 +202,7 @@ class P4Api(
         eventType: TriggerType,
         hookUrl: String
     ): Pair<String, String> {
-        val command = "%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/{0}% $hookUrl $p4port ${eventType.name} {1} {2}"
+        val command = "%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/{0}% $hookUrl $p4port ${eventType.name} {1} {2} {3}"
         return when (eventType) {
             TriggerType.CHANGE_COMMIT,
             TriggerType.CHANGE_CONTENT,
@@ -249,7 +210,7 @@ class P4Api(
             -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(
-                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name
+                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name, "%user%"
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
@@ -259,14 +220,14 @@ class P4Api(
             -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(
-                    command, eventScriptFileName, "%change%", P4TriggerType.SHELVE.name
+                    command, eventScriptFileName, "%change%", P4TriggerType.SHELVE.name, "%user%"
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
             else -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(
-                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name
+                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name, "%user%"
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
@@ -275,7 +236,6 @@ class P4Api(
 
     private fun addTriggers(
         p4Server: P4Server,
-        remainPaths: Set<String>,
         eventType: TriggerType,
         command: String
     ) {
@@ -291,22 +251,20 @@ class P4Api(
                 )
             }
         }
-        var order = oldTriggers.size
+        val order = oldTriggers.size
         val newTriggers = mutableListOf<TriggerInfo>()
         newTriggers.addAll(oldTriggers)
         // 新增触发器
-        remainPaths.forEach { path ->
-            val trigger = TriggerInfo(
-                name = "${DEVOPS_P4_TRIGGER_NAME}_$order",
-                type = eventType,
-                path = path,
-                command = command,
-                order = order++
-            )
-            newTriggers.add(trigger)
-        }
+        val trigger = TriggerInfo(
+            name = "${DEVOPS_P4_TRIGGER_NAME}_$eventType",
+            type = eventType,
+            path = "//...",
+            command = command,
+            order = order + 1
+        )
+        newTriggers.add(trigger)
 
         val result = p4Server.addTriggers(newTriggers)
-        logger.info("add p4 triggers|$p4port|$remainPaths|$eventType|$result")
+        logger.info("add p4 triggers|$p4port|$eventType|$result")
     }
 }
