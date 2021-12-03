@@ -36,8 +36,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode

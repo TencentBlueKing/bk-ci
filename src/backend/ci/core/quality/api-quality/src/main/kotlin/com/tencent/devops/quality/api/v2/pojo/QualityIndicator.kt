@@ -31,10 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.quality.pojo.enum.RunElementType
-import org.slf4j.LoggerFactory
 
 data class QualityIndicator(
     val hashId: String,
