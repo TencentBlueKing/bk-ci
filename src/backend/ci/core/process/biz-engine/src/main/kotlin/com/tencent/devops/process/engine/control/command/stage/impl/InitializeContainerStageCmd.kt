@@ -32,15 +32,12 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
-import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -75,7 +72,6 @@ class InitializeContainerStageCmd(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(InitializeContainerStageCmd::class.java)
-        private const val CONTEXT_KEY_PREFIX = "matrix."
     }
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -102,7 +98,7 @@ class InitializeContainerStageCmd(
         val model = containerBuildDetailService.getBuildModel(event.buildId) ?: return
 
         // #4518 待生成的分裂后container表和task表记录
-        val buildContainers = mutableListOf<PipelineBuildContainer>()
+        val buildContainerList = mutableListOf<PipelineBuildContainer>()
         val buildTaskList = mutableListOf<PipelineBuildTask>()
 
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
@@ -111,7 +107,7 @@ class InitializeContainerStageCmd(
                 stage.containers.forEachIndexed nextParentContainer@{ index, parentContainer ->
 
                     // #4518 开启了矩阵功能但没有矩阵配置，则直接跳过
-                    if (parentContainer.matrixGroupFlag == true && parentContainer.matrixGroupFlag != null) {
+                    if (parentContainer.matrixGroupFlag == true) {
 
                         val context = MatrixBuildContext(
                             actionType = ActionType.START,
@@ -139,10 +135,12 @@ class InitializeContainerStageCmd(
                             "containerId=${parentContainer.id}|containerHashId=${parentContainer.containerHashId}" +
                             "|context=$context")
 
-                        if (parentContainer is VMBuildContainer) {
+                        if (parentContainer is VMBuildContainer && parentContainer.matrixControlOption != null) {
+
                             // 每一种上下文组合都是一个新容器
+                            val matrixOption = parentContainer.matrixControlOption ?: return@nextParentContainer
                             val contextCaseList = try {
-                                parentContainer.matrixControlOption!!.getAllContextCase(commandContext.variables)
+                                matrixOption.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
                                 LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|VM|${event.stageId}|" +
                                     "containerId=${parentContainer.id}|parentContainer=$parentContainer")
@@ -153,6 +151,10 @@ class InitializeContainerStageCmd(
                             val mutexGroup = parentContainer.mutexGroup
 
                             contextCaseList.forEach { contextCase ->
+
+                                // 包括matrix.xxx的所有上下文
+                                val allContext = contextCase.plus(parentContainer.customBuildEnv ?: mapOf())
+                                val dispatchInfo = matrixOption.parseRunsOn(allContext)
                                 val matrixGroupId = parentContainer.id!!
                                 val newContainer = VMBuildContainer(
                                     id = context.containerSeq.toString(),
@@ -172,17 +174,17 @@ class InitializeContainerStageCmd(
                                     mutexGroup = mutexGroup,
                                     executeCount = parentContainer.executeCount,
                                     containPostTaskFlag = parentContainer.containPostTaskFlag,
-                                    // TODO 此处支持所有环境的调度
-                                    baseOS = parentContainer.baseOS,
-                                    vmNames = parentContainer.vmNames,
-                                    dockerBuildVersion = parentContainer.dockerBuildVersion,
-                                    dispatchType = parentContainer.dispatchType,
-                                    buildEnv = parentContainer.buildEnv,
-                                    customBuildEnv = contextCase.plus(parentContainer.buildEnv ?: mapOf()),
-                                    // TODO 是否支持第三方机，工作空间如何实现并发
-                                    thirdPartyAgentId = parentContainer.thirdPartyAgentId,
-                                    thirdPartyAgentEnvId = parentContainer.thirdPartyAgentEnvId,
-                                    thirdPartyWorkspace = parentContainer.thirdPartyWorkspace
+                                    customBuildEnv = allContext,
+                                    // --- TODO 根据自定义的runsOn决定类型调度，已经生成buildEnv等参数，可能存在变量占位符
+                                    baseOS = dispatchInfo.baseOS,
+                                    vmNames = dispatchInfo.vmNames ?: parentContainer.vmNames,
+                                    dockerBuildVersion = dispatchInfo.dockerBuildVersion ?: parentContainer.dockerBuildVersion,
+                                    dispatchType = dispatchInfo.dispatchType ?: parentContainer.dispatchType,
+                                    buildEnv = dispatchInfo.buildEnv ?: parentContainer.buildEnv,
+                                    thirdPartyAgentId = dispatchInfo.thirdPartyAgentId ?: parentContainer.thirdPartyAgentId,
+                                    thirdPartyAgentEnvId = dispatchInfo.thirdPartyAgentEnvId ?: parentContainer.thirdPartyAgentEnvId,
+                                    thirdPartyWorkspace = dispatchInfo.thirdPartyWorkspace ?: parentContainer.thirdPartyWorkspace
+                                    // ---
                                 )
 
                                 pipelineContainerService.prepareMatrixBuildContainer(
@@ -192,9 +194,8 @@ class InitializeContainerStageCmd(
                                     container = newContainer,
                                     stage = stage,
                                     context = context,
-                                    buildContainers = buildContainers,
+                                    buildContainers = buildContainerList,
                                     buildTaskList = buildTaskList,
-                                    // TODO 先保留父的所有配置
                                     jobControlOption = jobControlOption,
                                     mutexGroup = mutexGroup,
                                     matrixGroupId = matrixGroupId
@@ -251,9 +252,8 @@ class InitializeContainerStageCmd(
                                     container = newContainer,
                                     stage = stage,
                                     context = context,
-                                    buildContainers = buildContainers,
+                                    buildContainers = buildContainerList,
                                     buildTaskList = buildTaskList,
-                                    // TODO 先保留父的所有配置
                                     jobControlOption = jobControlOption,
                                     mutexGroup = mutexGroup,
                                     matrixGroupId = matrixGroupId
@@ -272,14 +272,14 @@ class InitializeContainerStageCmd(
 
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
                             "${parentContainer.id}|containerHashId=${parentContainer.containerHashId}|context=$context|" +
-                            "buildContainers=$buildContainers|buildTaskList=$buildTaskList")
+                            "buildContainers=$buildContainerList|buildTaskList=$buildTaskList")
                     }
                 }
             }
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            pipelineContainerService.batchSave(transactionContext, buildContainers)
+            pipelineContainerService.batchSave(transactionContext, buildContainerList)
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
     }

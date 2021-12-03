@@ -27,9 +27,13 @@
 
 package com.tencent.devops.common.pipeline.option
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.type.DispatchInfo
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
@@ -48,16 +52,19 @@ data class MatrixControlOption(
     @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
-    val maxConcurrency: Int? = null,
+    val maxConcurrency: Int? = 20,
     @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
-    @ApiModelProperty("正在运行的数量", required = false)
-    var runningCount: Int? = null,
+    @ApiModelProperty("完成执行的数量", required = false)
+    var finishCount: Int? = null,
+    @ApiModelProperty("自定义调度类型", required = false)
+    var runsOnStr: String? = null
 ) {
 
     companion object {
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
+        private const val CONTEXT_KEY_PREFIX = "matrix."
     }
 
     /**
@@ -77,7 +84,9 @@ data class MatrixControlOption(
         matrixParamMap.removeAll(convertCase(replaceContext(excludeCaseStr, buildContext))) // 排除特定的参数组合
         matrixParamMap.addAll(convertCase(replaceContext(includeCaseStr, buildContext))) // 追加额外的参数组合
 
-        return matrixParamMap
+        return matrixParamMap.map { list ->
+            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.key}.toMap()
+        }.toList()
     }
 
     /**
@@ -89,7 +98,7 @@ data class MatrixControlOption(
         }
         val caseList = mutableListOf<Map<String, String>>()
         val keyList = strategyMap.keys
-        cartesianProduct(strategyMap.values.toList())
+        MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
             .forEach { valueList ->
                 val case = mutableMapOf<String, String>()
                 keyList.forEachIndexed { index, key ->
@@ -161,14 +170,6 @@ data class MatrixControlOption(
         }
         return includeCaseList
     }
-
-    /**
-     * Kotlin实现的笛卡尔乘积算法，[input]需要包含两个以上元素
-     */
-    fun cartesianProduct(input: List<List<Any>>): List<List<Any>> =
-        input.fold(listOf(listOf<Any>())) { acc, set ->
-            acc.flatMap { list -> set.map { element -> list + element } }
-        }.toList()
 
     /**
      * 普通形态的上下文替换

@@ -123,7 +123,7 @@ data class VMBuildContainer(
 
     fun retryFreshMatrixOption() {
         groupContainers = mutableListOf()
-        matrixControlOption?.runningCount = null
+        matrixControlOption?.finishCount = null
         matrixControlOption?.totalCount = null
     }
 }
