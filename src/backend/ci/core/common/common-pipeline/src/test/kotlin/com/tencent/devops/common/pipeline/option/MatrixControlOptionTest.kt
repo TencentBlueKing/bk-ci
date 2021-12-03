@@ -80,11 +80,11 @@ internal class MatrixControlOptionTest {
                 )
             ),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.getAllContextCase()
+        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -103,7 +103,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -126,7 +126,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -148,7 +148,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
@@ -169,7 +169,7 @@ internal class MatrixControlOptionTest {
             includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
             excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
             totalCount = 10, // 3*3 + 2 - 1
-            runningCount = 1,
+            finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )

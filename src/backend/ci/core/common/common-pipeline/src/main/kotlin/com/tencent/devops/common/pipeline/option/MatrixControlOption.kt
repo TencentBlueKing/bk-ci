@@ -27,8 +27,11 @@
 
 package com.tencent.devops.common.pipeline.option
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.type.DispatchInfo
 import io.swagger.annotations.ApiModelProperty
 
 /**
@@ -44,15 +47,27 @@ data class MatrixControlOption(
     @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
-    val maxConcurrency: Int? = null,
+    val maxConcurrency: Int? = 20,
     @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
-    @ApiModelProperty("正在运行的数量", required = false)
-    var runningCount: Int? = null,
+    @ApiModelProperty("完成执行的数量", required = false)
+    var finishCount: Int? = null,
+    @ApiModelProperty("自定义调度类型", required = false)
+    var runsOnStr: String? = null
 ) {
 
     companion object {
         private const val MATRIX_JSON_KEY_PATTERN = "\${{fromJSON(上下文KEY/原生JSON)}}"
+        private const val CONTEXT_KEY_PREFIX = "matrix."
+    }
+
+    /**
+     * VMBuildContainer需要根据[runsOnStr]计算调度信息
+     */
+    fun parseRunsOn(buildContext: Map<String, String>): DispatchInfo {
+        val realRunsOnStr = EnvUtils.parseEnv(runsOnStr, buildContext)
+        // TODO 根据替换后[realRunsOnStr]生成调度信息
+        return DispatchInfo(VMBaseOS.ALL)
     }
 
     /**
@@ -66,7 +81,9 @@ data class MatrixControlOption(
         matrixParamMap.removeAll(convertCase(excludeCaseStr)) // 排除特定的参数组合
         matrixParamMap.addAll(convertCase(includeCaseStr)) // 追加额外的参数组合
 
-        return matrixParamMap
+        return matrixParamMap.map { list ->
+            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.key}.toMap()
+        }.toList()
     }
 
     /**
