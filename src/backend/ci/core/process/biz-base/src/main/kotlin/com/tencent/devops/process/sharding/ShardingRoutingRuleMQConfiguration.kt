@@ -101,7 +101,7 @@ class ShardingRoutingRuleMQConfiguration {
     @Bean
     fun shardingRoutingRuleDeleteQueueBind(
         @Autowired shardingRoutingRuleDeleteQueue: Queue,
-        @Autowired shardingRoutingRuleDeleteExchange: FanoutExchange,
+        @Autowired shardingRoutingRuleDeleteExchange: FanoutExchange
     ): Binding = BindingBuilder.bind(shardingRoutingRuleDeleteQueue)
         .to(shardingRoutingRuleDeleteExchange)
 
@@ -161,7 +161,7 @@ class ShardingRoutingRuleMQConfiguration {
         queueName: String?,
         rabbitAdmin: RabbitAdmin,
         shardingRoutingRuleListener: ShardingRoutingRuleListener,
-        messageConverter: Jackson2JsonMessageConverter,
+        messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(queueName)
