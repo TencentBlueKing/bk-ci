@@ -42,6 +42,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.ResourcesPools
+import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -50,6 +51,7 @@ import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -91,10 +93,6 @@ class ModelContainer @Autowired constructor(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
             baseOS = getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
@@ -105,15 +103,62 @@ class ModelContainer @Autowired constructor(
                 null
             },
             customBuildEnv = job.env,
-            thirdPartyAgentId = null,
-            thirdPartyAgentEnvId = null,
-            thirdPartyWorkspace = null,
-            dockerBuildVersion = null,
-            tstackAgentId = null,
             jobControlOption = getJobControlOption(job, finalStage),
-            dispatchType = getDispatchType(job, projectCode, resources)
+            dispatchType = getDispatchType(job, projectCode, resources),
+            matrixGroupFlag = job.strategy != null,
+            matrixControlOption = getMatrixControlOption(job.strategy, job.runsOn.poolName)
         )
         containerList.add(vmContainer)
+    }
+
+    private fun getMatrixControlOption(strategy: Strategy?, poolName: String): MatrixControlOption? {
+        if (strategy == null) {
+            return null
+        }
+
+        val runsOnStr = if (poolName.trimStart().startsWith("\${{ matrix.") ||
+            poolName.trimStart().startsWith("\${{matrix.")
+        ) {
+            poolName
+        } else {
+            null
+        }
+
+        with(strategy) {
+            if (matrix is Map<*, *>) {
+                val json = matrix as MutableMap<String, Any>
+                json.remove("include")
+                json.remove("exclude")
+
+                val yaml = matrix as MutableMap<String, Any>
+                val include = if ("include" in yaml.keys && yaml["include"] != null) {
+                    YamlUtil.toYaml(yaml["include"]!!)
+                } else {
+                    null
+                }
+                val exclude = if ("exclude" in yaml.keys && yaml["exclude"] != null) {
+                    YamlUtil.toYaml(yaml["exclude"]!!)
+                } else {
+                    null
+                }
+
+                return MatrixControlOption(
+                    strategyStr = JsonUtil.toJson(json),
+                    includeCaseStr = include,
+                    excludeCaseStr = exclude,
+                    fastKill = fastKill,
+                    maxConcurrency = maxParallel,
+                    runsOnStr = runsOnStr
+                )
+            } else {
+                return MatrixControlOption(
+                    strategyStr = matrix.toString(),
+                    fastKill = fastKill,
+                    maxConcurrency = maxParallel,
+                    runsOnStr = runsOnStr
+                )
+            }
+        }
     }
 
     fun addNormalContainer(
