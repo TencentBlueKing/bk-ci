@@ -116,7 +116,7 @@ class JobService @Autowired constructor(
 
     fun listUsableServerNodesByLastUpdateUser(projectId: String, pipelineId: String): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodesByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
-        val userId = getLastUpdateUserId(pipelineId) ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
+        val userId = getLastUpdateUserId(projectId, pipelineId) ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
         // 以流水线最后修改人的身份调用service接口获取信息
         val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
         logger.info("listUsableServerNodes==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")

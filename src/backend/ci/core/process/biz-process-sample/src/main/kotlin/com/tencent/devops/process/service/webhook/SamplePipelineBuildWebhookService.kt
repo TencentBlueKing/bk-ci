@@ -24,24 +24,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-<<<<<<< HEAD:src/backend/ci/ext/tencent/monitoring/biz-monitoring-tencent/src/main/kotlin/com/tencent/devops/monitoring/resources/GrafanaWebhookResourceImpl.kt
-package com.tencent.devops.monitoring.resources
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.GrafanaWebhookResource
-import com.tencent.devops.monitoring.pojo.GrafanaNotification
-import com.tencent.devops.monitoring.services.GrafanaWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class GrafanaWebhookResourceImpl @Autowired constructor(
-    private val grafanaWebhookService: GrafanaWebhookService
-) : GrafanaWebhookResource {
-
-    override fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
-        return grafanaWebhookService.webhookCallBack(grafanaNotification)
-=======
 
 package com.tencent.devops.process.service.webhook
 
@@ -52,6 +34,5 @@ class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
 
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         // 开源版暂不做权限校验
->>>>>>> carl/issue_5267_sub_db:src/backend/ci/core/process/biz-process-sample/src/main/kotlin/com/tencent/devops/process/service/webhook/SamplePipelineBuildWebhookService.kt
     }
 }

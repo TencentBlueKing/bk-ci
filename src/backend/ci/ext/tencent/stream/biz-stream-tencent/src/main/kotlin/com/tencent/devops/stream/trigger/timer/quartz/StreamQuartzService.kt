@@ -101,7 +101,7 @@ class StreamQuartzService @Autowired constructor(
     fun addJob(projectId: String, pipelineId: String, crontab: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = "${pipelineId}_${md5}_${projectId}"
+            val comboKey = "${pipelineId}_${md5}_$projectId"
             schedulerManager.addJob(
                 comboKey, crontab,
                 jobBeanClass
