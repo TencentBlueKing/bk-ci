@@ -37,8 +37,10 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -67,6 +69,7 @@ class InitializeContainerStageCmd(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
+    private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -137,18 +140,25 @@ class InitializeContainerStageCmd(
                             "|context=$context")
 
                         if (parentContainer is VMBuildContainer) {
-                            // 每一种上下文组合都是
+                            // 每一种上下文组合都是一个新容器
                             val contextCaseList = try {
                                 parentContainer.matrixControlOption!!.getAllContextCase()
                             } catch (ignore: Throwable) {
-                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|${event.stageId}|" +
+                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|VM|${event.stageId}|" +
                                     "containerId=${parentContainer.id}|parentContainer=$parentContainer")
                                 return@nextParentContainer
                             }
 
+                            val jobControlOption = parentContainer.jobControlOption!!
+                            val mutexGroup = parentContainer.mutexGroup
+
                             contextCaseList.forEach { contextCase ->
+                                val matrixGroupId = parentContainer.id!!
                                 val newContainer = VMBuildContainer(
                                     id = context.containerSeq.toString(),
+                                    containerId = context.containerSeq.toString(),
+                                    containerHashId = modelContainerIdGenerator.getNextId(),
+                                    matrixGroupId = matrixGroupId,
                                     elements = parentContainer.elements.map { parentElement ->
                                         MatrixStatusElement(
                                             name = parentElement.name,
@@ -156,14 +166,19 @@ class InitializeContainerStageCmd(
                                             executeCount = commandContext.executeCount
                                         )
                                     }.toList(),
+                                    canRetry = parentContainer.canRetry,
+                                    enableExternal = parentContainer.enableExternal,
+                                    jobControlOption = jobControlOption,
+                                    mutexGroup = mutexGroup,
+                                    executeCount = parentContainer.executeCount,
+                                    containPostTaskFlag = parentContainer.containPostTaskFlag,
                                     // TODO 此处支持所有环境的调度
                                     baseOS = parentContainer.baseOS,
                                     vmNames = parentContainer.vmNames,
                                     dockerBuildVersion = parentContainer.dockerBuildVersion,
                                     dispatchType = parentContainer.dispatchType,
-                                    // TODO 选择一个能替换上下文的做传参
                                     buildEnv = parentContainer.buildEnv,
-                                    customBuildEnv = parentContainer.buildEnv,
+                                    customBuildEnv = contextCase.plus(parentContainer.buildEnv ?: mapOf()),
                                     // TODO 是否支持第三方机，工作空间如何实现并发
                                     thirdPartyAgentId = parentContainer.thirdPartyAgentId,
                                     thirdPartyAgentEnvId = parentContainer.thirdPartyAgentEnvId,
@@ -180,9 +195,9 @@ class InitializeContainerStageCmd(
                                     buildContainers = buildContainers,
                                     buildTaskList = buildTaskList,
                                     // TODO 先保留父的所有配置
-                                    jobControlOption = parentContainer.jobControlOption!!,
-                                    mutexGroup = parentContainer.mutexGroup,
-                                    matrixGroupId = parentContainer.id!!
+                                    jobControlOption = jobControlOption,
+                                    mutexGroup = mutexGroup,
+                                    matrixGroupId = matrixGroupId
                                 )
 
                                 // 如为空就初始化，如有元素就直接追加
@@ -194,24 +209,65 @@ class InitializeContainerStageCmd(
 
                                 context.containerSeq++
                             }
-                            
-
                         } else if (parentContainer is NormalContainer) {
-                            // TODO 同VMBuildContainer
-                            pipelineContainerService.prepareMatrixBuildContainer(
-                                projectId = event.projectId,
-                                pipelineId = event.pipelineId,
-                                buildId = event.buildId,
-                                container = parentContainer,
-                                stage = stage,
-                                context = context,
-                                buildContainers = buildContainers,
-                                buildTaskList = buildTaskList,
-                                // TODO 先保留父的所有配置
-                                jobControlOption = parentContainer.jobControlOption!!,
-                                mutexGroup = parentContainer.mutexGroup,
-                                matrixGroupId = parentContainer.id!!
-                            )
+                            // 每一种上下文组合都是一个新容器
+                            val contextCaseList = try {
+                                parentContainer.matrixControlOption!!.getAllContextCase()
+                            } catch (ignore: Throwable) {
+                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP||NORMAL|${event.stageId}|" +
+                                    "containerId=${parentContainer.id}|parentContainer=$parentContainer")
+                                return@nextParentContainer
+                            }
+
+                            val jobControlOption = parentContainer.jobControlOption!!
+                            val mutexGroup = parentContainer.mutexGroup
+
+                            contextCaseList.forEach { contextCase ->
+                                val matrixGroupId = parentContainer.id!!
+                                // TODO 无编译环境没有传参的地方？
+                                val newContainer = NormalContainer(
+                                    id = context.containerSeq.toString(),
+                                    containerId = context.containerSeq.toString(),
+                                    containerHashId = modelContainerIdGenerator.getNextId(),
+                                    matrixGroupId = matrixGroupId,
+                                    elements = parentContainer.elements.map { parentElement ->
+                                        MatrixStatusElement(
+                                            name = parentElement.name,
+                                            id = parentElement.id,
+                                            executeCount = commandContext.executeCount
+                                        )
+                                    }.toList(),
+                                    canRetry = parentContainer.canRetry,
+                                    jobControlOption = jobControlOption,
+                                    mutexGroup = mutexGroup,
+                                    executeCount = parentContainer.executeCount,
+                                    containPostTaskFlag = parentContainer.containPostTaskFlag
+                                )
+
+                                pipelineContainerService.prepareMatrixBuildContainer(
+                                    projectId = event.projectId,
+                                    pipelineId = event.pipelineId,
+                                    buildId = event.buildId,
+                                    container = newContainer,
+                                    stage = stage,
+                                    context = context,
+                                    buildContainers = buildContainers,
+                                    buildTaskList = buildTaskList,
+                                    // TODO 先保留父的所有配置
+                                    jobControlOption = jobControlOption,
+                                    mutexGroup = mutexGroup,
+                                    matrixGroupId = matrixGroupId
+                                )
+
+                                // 如为空就初始化，如有元素就直接追加
+                                if (parentContainer.groupContainers.isNullOrEmpty()) {
+                                    parentContainer.groupContainers = mutableListOf(newContainer)
+                                } else {
+                                    parentContainer.groupContainers!!.add(newContainer)
+                                }
+
+                                context.containerSeq++
+                            }
                         }
 
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
