@@ -76,7 +76,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.jooq.impl.DSL
 
-@Suppress("ALL")
 @Service
 class PipelineTaskService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -134,16 +133,16 @@ class PipelineTaskService @Autowired constructor(
                     taskName = taskName,
                     taskType = taskType,
                     taskAtom = taskAtom,
-                    status = com.tencent.devops.common.pipeline.enums.BuildStatus.values()[status],
-                    taskParams = com.tencent.devops.common.api.util.JsonUtil.toMutableMap(taskParams),
-                    additionalOptions = com.tencent.devops.common.api.util.JsonUtil.toOrNull(additionalOptions, com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions::class.java),
+                    status = BuildStatus.values()[status],
+                    taskParams = JsonUtil.toMutableMap(taskParams),
+                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
                     executeCount = executeCount ?: 1,
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
                     startTime = startTime?.timestampmilli() ?: 0L,
                     endTime = endTime?.timestampmilli() ?: 0L,
-                    errorType = if (errorType == null) null else com.tencent.devops.common.api.pojo.ErrorType.values()[errorType],
+                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
                     errorCode = errorCode,
                     errorMsg = errorMsg
                 )
