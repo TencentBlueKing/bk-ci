@@ -167,11 +167,9 @@ class PipelineContainerService @Autowired constructor(
         container: Container,
         context: MatrixBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
-        buildContainers: MutableList<PipelineBuildContainer>,
         matrixGroupId: String,
-        jobControlOption: JobControlOption,
-        mutexGroup: MutexGroup?
-    ) {
+        jobControlOption: JobControlOption
+    ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
         val parentElements = container.elements
@@ -223,26 +221,23 @@ class PipelineContainerService @Autowired constructor(
             executeCount = context.executeCount
         )
 
-        buildContainers.add(
-            PipelineBuildContainer(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stage.id!!,
-                containerId = container.id!!,
-                containerHashId = container.containerHashId ?: "",
-                containerType = container.getClassType(),
-                seq = context.containerSeq,
-                status = BuildStatus.QUEUE,
-                controlOption = PipelineBuildContainerControlOption(
-                    jobControlOption = jobControlOption,
-                    inFinallyStage = stage.finally,
-                    mutexGroup = mutexGroup,
-                    containPostTaskFlag = container.containPostTaskFlag
-                ),
-                matrixGroupFlag = false,
-                matrixGroupId = matrixGroupId
-            )
+        return PipelineBuildContainer(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stage.id!!,
+            containerId = container.id!!,
+            containerHashId = container.containerHashId ?: "",
+            containerType = container.getClassType(),
+            seq = context.containerSeq,
+            status = BuildStatus.QUEUE,
+            controlOption = PipelineBuildContainerControlOption(
+                jobControlOption = jobControlOption,
+                inFinallyStage = stage.finally,
+                containPostTaskFlag = container.containPostTaskFlag
+            ),
+            matrixGroupFlag = false,
+            matrixGroupId = matrixGroupId
         )
     }
 
