@@ -4,7 +4,7 @@ devopsCallbackUrl=$1
 P4PORT=$2
 event_type=$3
 CHANGE=$4
-TRIGGER_TYPE=CHANGE
+TRIGGER_TYPE=$5
 
 echo "Running devops change.sh\n\n"
 echo "devopsCallbackUrl:$devopsCallbackUrl,P4PORT:$P4PORT,event_type:$event_type,CHANGE:$CHANGE"
