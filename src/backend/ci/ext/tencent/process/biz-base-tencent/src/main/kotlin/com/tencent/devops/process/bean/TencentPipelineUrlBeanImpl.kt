@@ -40,8 +40,12 @@ class TencentPipelineUrlBeanImpl constructor(
         private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 3
     }
-
-    override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+    override fun genBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        needShortUrl: Boolean
+    ): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
         return "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"

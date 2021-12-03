@@ -332,7 +332,7 @@ class TXPipelineExportService @Autowired constructor(
                 outputConflictMap = outputConflictMap,
                 pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
                 exportFile = exportFile
-            )
+            ) ?: return@forEach
             val tags = mutableListOf<String>()
             stage.tag?.forEach {
                 val tagName = stageTagsMap[it]

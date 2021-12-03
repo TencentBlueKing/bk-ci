@@ -39,6 +39,7 @@ dependencies {
     api(project(":ext:tencent:common:common-gcloud"))
     api(project(":core:process:model-process"))
     api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":ext:tencent:process:biz-base-tencent"))
     api(project(":core:process:api-process"))
     api(project(":ext:tencent:external:api-external"))
     api(project(":ext:tencent:scm:api-scm"))

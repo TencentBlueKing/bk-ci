@@ -27,4 +27,6 @@
 
 dependencies {
     api(project(":core:process:biz-base"))
+    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
 }

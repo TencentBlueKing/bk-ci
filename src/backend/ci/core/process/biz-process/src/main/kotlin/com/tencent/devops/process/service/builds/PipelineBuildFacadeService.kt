@@ -1297,11 +1297,11 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 50
+        val pageSizeNotNull = pageSize ?: 1000
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 50
+        val limit = sqlLimit?.limit ?: 1000
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
@@ -1341,7 +1341,7 @@ class PipelineBuildFacadeService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = limit,
+                pageSize = pageSizeNotNull,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
@@ -1379,11 +1379,14 @@ class PipelineBuildFacadeService(
         buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 50
+        var pageSizeNotNull = pageSize ?: 50
+        if (pageNotNull > 50) {
+            pageSizeNotNull = 50
+        }
         val sqlLimit =
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
@@ -1470,7 +1473,7 @@ class PipelineBuildFacadeService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = limit,
+                pageSize = pageSizeNotNull,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
@@ -1836,12 +1839,9 @@ class PipelineBuildFacadeService(
         vmSeqId: String,
         simpleResult: SimpleResult
     ) {
-        // success do nothing just log
+        var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+        // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
-<<<<<<< HEAD
-            logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
-            return
-=======
             val startUpVMTask = pipelineRuntimeService.getBuildTask(
                 projectId = projectCode,
                 buildId = buildId,
@@ -1853,7 +1853,6 @@ class PipelineBuildFacadeService(
                 logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
                 return
             }
->>>>>>> carl/issue_5267_sub_db
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
@@ -1875,7 +1874,6 @@ class PipelineBuildFacadeService(
                 stageId = container.stageId
             )
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
-                val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
                 logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildContainerEvent(

@@ -28,12 +28,14 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -80,4 +82,11 @@ interface OpUserResource {
         @QueryParam("sleep")
         sleep: Long?
     ): Result<Int>
+
+    @ApiOperation("添加公共账号")
+    @POST
+    @Path("/ext/public/account")
+    fun createPublicAccount(
+        userInfo: UserInfo
+    ): Result<Boolean>
 }
