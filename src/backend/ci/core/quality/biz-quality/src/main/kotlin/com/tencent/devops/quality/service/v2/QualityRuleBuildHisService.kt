@@ -262,17 +262,24 @@ class QualityRuleBuildHisService constructor(
         return count
     }
 
-    fun convertGateKeepers(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3): Int {
-        var count = 0
+    fun convertVariables(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3) {
         ruleList.forEach { it ->
+            val indicatorThreshold = it.indicators.map { indicator ->
+                EnvUtils.parseEnv(indicator.threshold, buildCheckParamsV3.runtimeVariable ?: mapOf())
+            }
+            val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
+                indicatorThreshold.joinToString(","))
+
+            logger.info("QUALITY|CONVERTGATEKEEPERS|$indicatorThreshold|COUNT|$indicatorCount")
+
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
             }
-            count = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
+            val gateKeeperCount = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
                 gateKeepers?.joinToString(","))
-            logger.info("QUALITY|CONVERTGATEKEEPERS|$gateKeepers|COUNT|$count")
+
+            logger.info("QUALITY|CONVERTGATEKEEPERS|$gateKeepers|COUNT|$gateKeeperCount")
         }
-        return count
     }
 
     fun updateStatusService(userId: String, ruleBuildId: Long, pass: Boolean): Boolean {
