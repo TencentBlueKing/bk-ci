@@ -51,14 +51,21 @@ data class MatrixControlOption(
     var runningCount: Int? = null,
 ) {
 
+    companion object {
+        private const val MATRIX_JSON_KEY_PATTERN = "\${{fromJSON(上下文KEY/原生JSON)}}"
+    }
+
     /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到矩阵参数表
      */
-    fun getAllContextCase(): List<Map<String, String>> {
+    fun getAllContextCase(buildContext: Map<String, String>): List<Map<String, String>> {
         val matrixParamMap = mutableListOf<Map<String, String>>()
-        matrixParamMap.addAll(calculateContextMatrix(convertStrategy()))
-        matrixParamMap.addAll(convertCase(includeCaseStr)) // 追加额外的参数组合
+        matrixParamMap.addAll(calculateContextMatrix(convertStrategy(buildContext)))
+
+        // #4518 先排除再追加
         matrixParamMap.removeAll(convertCase(excludeCaseStr)) // 排除特定的参数组合
+        matrixParamMap.addAll(convertCase(includeCaseStr)) // 追加额外的参数组合
+
         return matrixParamMap
     }
 
@@ -82,7 +89,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategy(): Map<String, List<String>> {
+    private fun convertStrategy(buildContext: Map<String, String>): Map<String, List<String>> {
         val strategyMap = try {
             YamlUtil.to<Map<String, List<String>>>(strategyStr)
         } catch (ignore: Throwable) {

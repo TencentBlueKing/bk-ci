@@ -142,7 +142,7 @@ class InitializeContainerStageCmd(
                         if (parentContainer is VMBuildContainer) {
                             // 每一种上下文组合都是一个新容器
                             val contextCaseList = try {
-                                parentContainer.matrixControlOption!!.getAllContextCase()
+                                parentContainer.matrixControlOption!!.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
                                 LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|VM|${event.stageId}|" +
                                     "containerId=${parentContainer.id}|parentContainer=$parentContainer")
@@ -212,7 +212,7 @@ class InitializeContainerStageCmd(
                         } else if (parentContainer is NormalContainer) {
                             // 每一种上下文组合都是一个新容器
                             val contextCaseList = try {
-                                parentContainer.matrixControlOption!!.getAllContextCase()
+                                parentContainer.matrixControlOption!!.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
                                 LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP||NORMAL|${event.stageId}|" +
                                     "containerId=${parentContainer.id}|parentContainer=$parentContainer")
