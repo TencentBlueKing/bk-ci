@@ -95,8 +95,16 @@ class PreTrigger @Autowired constructor(
     }
 
     fun skipStream(event: GitPushEvent): Boolean {
+        // 判断commitMsg
+        event.commits?.filter { it.id == event.after }?.forEach { commit ->
+            SKIP_CI_KEYS.forEach { key ->
+                if (commit.message.contains(key)) {
+                    return true
+                }
+            }
+        }
         event.push_options?.keys?.forEach {
-            if (it in SKIP_CI_KEYS) {
+            if (it == "ci.skip") {
                 return true
             }
         }
