@@ -87,7 +87,7 @@ class ShardingRoutingRuleMQConfiguration {
     @Bean
     fun shardingRoutingRuleCreateQueueBind(
         @Autowired shardingRoutingRuleCreateQueue: Queue,
-        @Autowired shardingRoutingRuleCreateExchange: FanoutExchange,
+        @Autowired shardingRoutingRuleCreateExchange: FanoutExchange
     ): Binding = BindingBuilder.bind(shardingRoutingRuleCreateQueue)
         .to(shardingRoutingRuleCreateExchange)
 

@@ -30,7 +30,6 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineAtomReplaceBase
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

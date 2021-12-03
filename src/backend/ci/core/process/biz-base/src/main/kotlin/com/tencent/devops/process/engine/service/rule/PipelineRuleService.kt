@@ -195,7 +195,7 @@ class PipelineRuleService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         busCode: String,
-        ruleStr: String,
+        ruleStr: String
     ): String {
         val validRuleProcessorMap = validateRuleStr(ruleStr, busCode)
         val validRuleValueMap = mutableMapOf<String, String>()

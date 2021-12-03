@@ -46,7 +46,7 @@ class ShardingRoutingRuleDao {
                 ROUTING_NAME,
                 ROUTING_RULE,
                 CREATOR,
-                MODIFIER,
+                MODIFIER
             )
                 .values(
                     UUIDUtil.generate(),

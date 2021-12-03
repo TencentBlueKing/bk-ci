@@ -208,7 +208,7 @@ class PipelineWebhookDao {
         projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int,
+        limit: Int
     ): List<PipelineWebhook>? {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.selectFrom(this)

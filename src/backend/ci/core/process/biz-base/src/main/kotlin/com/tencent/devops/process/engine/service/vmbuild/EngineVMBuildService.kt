@@ -111,7 +111,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        retryCount: Int,
+        retryCount: Int
     ): BuildVariables {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {

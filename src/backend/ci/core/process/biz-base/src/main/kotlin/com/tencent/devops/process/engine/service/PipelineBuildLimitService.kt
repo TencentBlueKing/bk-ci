@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao

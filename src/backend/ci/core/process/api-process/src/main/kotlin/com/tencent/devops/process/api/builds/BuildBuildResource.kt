@@ -238,7 +238,7 @@ interface BuildBuildResource {
         buildId: String,
         @ApiParam("任务ID", required = false)
         @PathParam("taskId")
-        taskId: String,
+        taskId: String
     ): Result<Map<String, String>>
 
     @ApiOperation("构建过程中主动更新atoms缓存信息")

@@ -117,7 +117,7 @@ class PipelineFavorDao {
         dslContext: DSLContext,
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineId: String
     ): Result<TPipelineFavorRecord>? {
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             return dslContext.selectFrom(this)

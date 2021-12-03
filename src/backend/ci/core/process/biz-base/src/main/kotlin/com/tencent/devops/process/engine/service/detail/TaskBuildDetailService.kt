@@ -545,7 +545,7 @@ class TaskBuildDetailService(
         projectId: String,
         atomCode: String,
         atomVersion: String,
-        atomClass: String,
+        atomClass: String
     ): String {
         // 只有是研发商店插件,获取插件的版本信息
         if (atomClass != MarketBuildAtomElement.classType && atomClass != MarketBuildLessAtomElement.classType) {

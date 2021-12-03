@@ -49,7 +49,7 @@ class DataSourceDao {
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
                 CREATOR,
-                MODIFIER,
+                MODIFIER
             )
                 .values(
                     UUIDUtil.generate(),

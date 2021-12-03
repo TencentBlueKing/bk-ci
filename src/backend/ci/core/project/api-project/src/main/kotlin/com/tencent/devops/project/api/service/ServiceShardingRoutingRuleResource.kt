@@ -53,6 +53,6 @@ interface ServiceShardingRoutingRuleResource {
         @ApiParam("规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
-        routingName: String,
+        routingName: String
     ): Result<ShardingRoutingRule?>
 }

@@ -646,7 +646,7 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(
-        projectId: String,
+        projectId: String
     ): Map<String, List<String>>? {
         var labelToPipelineMap: Map<String, List<String>>? = null
         if (isNotEmpty()) {

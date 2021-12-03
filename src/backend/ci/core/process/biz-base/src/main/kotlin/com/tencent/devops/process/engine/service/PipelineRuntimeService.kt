@@ -397,7 +397,7 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         buildId: String,
         stageId: String?,
-        containerId: String,
+        containerId: String
     ): PipelineBuildContainer? {
         val result = pipelineBuildContainerDao.get(
             dslContext = dslContext,

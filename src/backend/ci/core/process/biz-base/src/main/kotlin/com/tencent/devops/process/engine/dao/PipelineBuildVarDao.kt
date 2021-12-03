@@ -135,7 +135,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        key: String? = null,
+        key: String? = null
     ): List<BuildParameters> {
 
         with(T_PIPELINE_BUILD_VAR) {

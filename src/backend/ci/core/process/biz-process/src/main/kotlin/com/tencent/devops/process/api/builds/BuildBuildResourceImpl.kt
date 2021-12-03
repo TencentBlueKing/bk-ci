@@ -57,7 +57,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         vmSeqId: String,
-        vmName: String,
+        vmName: String
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(
