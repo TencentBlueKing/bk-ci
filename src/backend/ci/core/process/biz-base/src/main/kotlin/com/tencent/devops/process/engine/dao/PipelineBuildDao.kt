@@ -166,7 +166,7 @@ class PipelineBuildDao {
     fun getBuildInfo(
         dslContext: DSLContext,
         projectId: String,
-        buildId: String,
+        buildId: String
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)

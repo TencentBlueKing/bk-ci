@@ -111,7 +111,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        retryCount: Int,
+        retryCount: Int
     ): BuildVariables {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
@@ -411,9 +411,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
                 )
-                buildVariable.putAll(extMap)
+
                 PipelineVarUtil.fillOldVar(buildVariable)
                 buildVariable.putAll(allVariable)
+                buildVariable.putAll(extMap)
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {

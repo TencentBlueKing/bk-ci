@@ -193,7 +193,10 @@ interface ServiceBuildResource {
         skipFailedTask: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否忽略人工触发", required = false)
+        @QueryParam("checkManualStartup")
+        checkManualStartup: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")

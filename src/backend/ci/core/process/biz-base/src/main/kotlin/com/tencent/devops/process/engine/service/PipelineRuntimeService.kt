@@ -397,7 +397,7 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         buildId: String,
         stageId: String?,
-        containerId: String,
+        containerId: String
     ): PipelineBuildContainer? {
         val result = pipelineBuildContainerDao.get(
             dslContext = dslContext,
@@ -1213,7 +1213,12 @@ class PipelineRuntimeService @Autowired constructor(
                         channelCode = context.channelCode,
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams,
+                        buildParameters = originStartParams.plus(
+                            BuildParameters(
+                                key = BUILD_NO,
+                                value = currentBuildNo.toString()
+                            )
+                        ),
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),
@@ -1753,7 +1758,7 @@ class PipelineRuntimeService @Autowired constructor(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 pipelineId = latestRunningBuild.pipelineId,
-                startTime = startTime,
+                startTime = startTime
             )
             pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }

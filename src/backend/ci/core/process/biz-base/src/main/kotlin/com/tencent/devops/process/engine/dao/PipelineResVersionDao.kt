@@ -69,7 +69,7 @@ class PipelineResVersionDao {
         creator: String,
         version: Int,
         versionName: String = "init",
-        modelString: String,
+        modelString: String
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(

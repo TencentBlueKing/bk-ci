@@ -36,4 +36,5 @@ object Versions {
     const val YamlSchema = "1.0.49"
     const val ShardingSphere = "5.0.0"
     const val Oshi = "5.8.3"
+    const val p4 = "2021.1.2163843"
 }

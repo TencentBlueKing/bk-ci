@@ -57,7 +57,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         vmSeqId: String,
-        vmName: String,
+        vmName: String
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(
@@ -87,7 +87,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        result: BuildTaskResult,
+        result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         vmBuildService.buildCompleteTask(
@@ -205,7 +205,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
-        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId))
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, true))
     }
 
     companion object {

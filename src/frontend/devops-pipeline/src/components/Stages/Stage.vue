@@ -509,11 +509,13 @@
                                 ...element,
                                 id: `e-${hashID(32)}`
                             })),
-                            jobControlOption: container.jobControlOption ? {
-                                ...container.jobControlOption,
-                                dependOnType: 'ID',
-                                dependOnId: []
-                            } : undefined
+                            jobControlOption: container.jobControlOption
+                                ? {
+                                    ...container.jobControlOption,
+                                    dependOnType: 'ID',
+                                    dependOnId: []
+                                }
+                                : undefined
                         }))
 
                     }

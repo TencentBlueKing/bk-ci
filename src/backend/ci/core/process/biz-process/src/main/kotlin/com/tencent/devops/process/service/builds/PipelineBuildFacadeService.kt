@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -295,7 +296,8 @@ class PipelineBuildFacadeService(
         skipFailedTask: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        checkManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
@@ -340,7 +342,7 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
 
-            if (!readyToBuildPipelineInfo.canManualStartup) {
+            if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -612,12 +614,14 @@ class PipelineBuildFacadeService(
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
             startParams.forEach { (key, value, valueType, readOnly) ->
-                startParamsWithType.add(BuildParameters(
-                    key,
-                    value,
-                    valueType,
-                    readOnly
-                ))
+                startParamsWithType.add(
+                    BuildParameters(
+                        key,
+                        value,
+                        valueType,
+                        readOnly
+                    )
+                )
             }
 
             return pipelineBuildService.startPipeline(
@@ -1497,7 +1501,7 @@ class PipelineBuildFacadeService(
             message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         val result = mutableListOf<IdValue>()
-        BuildStatus.values().filter { it.visible }.forEach {
+        BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
             result.add(IdValue(it.name, MessageCodeUtil.getMessageByLocale(it.statusName, it.name)))
         }
         return result
@@ -1834,8 +1838,22 @@ class PipelineBuildFacadeService(
     ) {
         // success do nothing just log
         if (simpleResult.success) {
+<<<<<<< HEAD
             logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
             return
+=======
+            val startUpVMTask = pipelineRuntimeService.getBuildTask(
+                projectId = projectCode,
+                buildId = buildId,
+                taskId = VMUtils.genStartVMTaskId(vmSeqId)
+            )
+            if (startUpVMTask?.status?.isRunning() == true) {
+                msg = "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
+            } else {
+                logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
+                return
+            }
+>>>>>>> carl/issue_5267_sub_db
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)

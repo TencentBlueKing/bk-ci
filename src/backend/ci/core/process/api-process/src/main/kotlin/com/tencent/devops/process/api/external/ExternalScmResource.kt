@@ -85,4 +85,9 @@ interface ExternalScmResource {
         traceId: String,
         body: String
     ): Result<Boolean>
+
+    @ApiOperation("p4仓库提交")
+    @POST
+    @Path("/p4/commit")
+    fun webHookCodeP4Commit(body: String): Result<Boolean>
 }

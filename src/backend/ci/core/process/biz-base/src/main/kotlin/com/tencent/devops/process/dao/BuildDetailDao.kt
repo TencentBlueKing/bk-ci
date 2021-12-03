@@ -158,7 +158,7 @@ class BuildDetailDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        model: String,
+        model: String
     ) {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.update(this).set(MODEL, model)

@@ -90,7 +90,7 @@ class PipelineBuildSummaryDao {
     fun getSummaries(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: Set<String>,
+        pipelineIds: Set<String>
     ): Result<TPipelineBuildSummaryRecord> {
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.selectFrom(this)
