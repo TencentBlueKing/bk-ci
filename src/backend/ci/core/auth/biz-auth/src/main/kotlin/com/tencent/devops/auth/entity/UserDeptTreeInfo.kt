@@ -25,44 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.entity
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-
-class DefaultDeptServiceImpl : DeptService {
-
-    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo?> {
-        return emptyList()
-    }
-
-    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return emptyList()
-    }
-
-    override fun getUserParentDept(userId: String): Int {
-        return 0
-    }
-
-    override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserDeptInfo(userId: String): Set<String> {
-        return emptySet()
-    }
-}
+data class UserDeptTreeInfo(
+    val id: String,
+    val family: List<DeptTreeInfo>,
+    val name: String
+)

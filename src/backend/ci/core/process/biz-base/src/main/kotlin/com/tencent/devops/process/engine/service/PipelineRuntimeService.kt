@@ -214,7 +214,7 @@ class PipelineRuntimeService @Autowired constructor(
 //                pipelineId = pipelineId
 //            )
         }
-        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
+//        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {

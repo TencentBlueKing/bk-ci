@@ -25,44 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.project.pojo
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class DefaultDeptServiceImpl : DeptService {
-
-    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo?> {
-        return emptyList()
-    }
-
-    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return emptyList()
-    }
-
-    override fun getUserParentDept(userId: String): Int {
-        return 0
-    }
-
-    override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserDeptInfo(userId: String): Set<String> {
-        return emptySet()
-    }
-}
+@ApiModel("用户信息-公共账号必须绑定bg")
+data class UserInfo(
+    @ApiModelProperty("用户Id")
+    val userId: String,
+    @ApiModelProperty("用户名")
+    val name: String,
+    @ApiModelProperty("BgId")
+    val bgId: Int,
+    @ApiModelProperty("Bg名称")
+    val bgName: String,
+    @ApiModelProperty("部门Id")
+    val deptId: Int?,
+    @ApiModelProperty("部门名称")
+    val deptName: String?,
+    @ApiModelProperty("中心Id")
+    val centerId: Int?,
+    @ApiModelProperty("中心名称")
+    val centerName: String?,
+    @ApiModelProperty("组Id")
+    val groupId: Int?,
+    @ApiModelProperty("组名称")
+    val groupName: String?
+)
