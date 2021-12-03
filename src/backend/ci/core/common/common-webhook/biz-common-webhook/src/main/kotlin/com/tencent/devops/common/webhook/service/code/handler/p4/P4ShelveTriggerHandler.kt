@@ -56,7 +56,7 @@ class P4ShelveTriggerHandler(
 
     override fun getUrl(event: P4ShelveEvent) = event.p4Port
 
-    override fun getUsername(event: P4ShelveEvent) = ""
+    override fun getUsername(event: P4ShelveEvent) = event.user ?: ""
 
     override fun getRevision(event: P4ShelveEvent) = event.change.toString()
 

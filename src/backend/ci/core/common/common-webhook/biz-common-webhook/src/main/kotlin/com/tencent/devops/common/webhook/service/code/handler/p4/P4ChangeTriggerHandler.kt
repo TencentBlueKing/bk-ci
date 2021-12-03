@@ -56,7 +56,7 @@ class P4ChangeTriggerHandler(
 
     override fun getUrl(event: P4ChangeEvent) = event.p4Port
 
-    override fun getUsername(event: P4ChangeEvent) = ""
+    override fun getUsername(event: P4ChangeEvent) = event.user ?: ""
 
     override fun getRevision(event: P4ChangeEvent) = event.change.toString()
 
