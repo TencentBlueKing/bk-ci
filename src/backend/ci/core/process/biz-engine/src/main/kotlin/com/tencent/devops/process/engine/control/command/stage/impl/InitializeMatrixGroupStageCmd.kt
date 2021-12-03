@@ -217,9 +217,11 @@ class InitializeMatrixGroupStageCmd(
                                 context.containerSeq++
                             }
                         } else if (parentContainer is NormalContainer && parentContainer.matrixControlOption != null) {
+
                             // 每一种上下文组合都是一个新容器
+                            val matrixOption = parentContainer.matrixControlOption ?: return@nextParentContainer
                             val contextCaseList = try {
-                                parentContainer.matrixControlOption!!.getAllContextCase(commandContext.variables)
+                                matrixOption.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
                                 LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP||NORMAL|${event.stageId}|" +
                                     "containerId=${parentContainer.id}|parentContainer=$parentContainer")
@@ -227,7 +229,6 @@ class InitializeMatrixGroupStageCmd(
                             }
 
                             val jobControlOption = parentContainer.jobControlOption!!
-                            val mutexGroup = parentContainer.mutexGroup
 
                             contextCaseList.forEach { contextCase ->
 

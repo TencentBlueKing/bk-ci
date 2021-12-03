@@ -62,7 +62,6 @@ import java.util.concurrent.TimeUnit
 @Service
 class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -80,7 +79,15 @@ class StartActionTaskContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         val actionType = commandContext.event.actionType
-        commandContext.cmdFlowState = CmdFlowState.FINALLY
+
+        // #4158 如果是构建矩阵父容器则跳过插件执行，进行组内容器执行
+        if (commandContext.container.matrixGroupFlag == true) {
+            commandContext.cmdFlowState = CmdFlowState.CONTINUE
+            return
+        } else {
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+        }
+
         when {
             actionType.isStartOrRefresh() || actionType.isEnd() -> {
                 if (!actionType.isTerminate()) {
