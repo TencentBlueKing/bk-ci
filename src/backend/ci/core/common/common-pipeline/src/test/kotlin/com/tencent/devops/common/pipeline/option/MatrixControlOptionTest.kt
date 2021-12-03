@@ -1,10 +1,27 @@
 package com.tencent.devops.common.pipeline.option
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import org.junit.Assert
 import org.junit.Test
+import java.util.Random
 
 internal class MatrixControlOptionTest {
+
+    @Test
+    fun cartesianProductTest() {
+        val array2d = List(7) { List(7) { Random().nextInt(100) } }
+        val timeAStart = System.currentTimeMillis()
+        val a = MatrixContextUtils.loopCartesianProduct(array2d)
+        val timeAEnd = System.currentTimeMillis()
+        val timeBStart = System.currentTimeMillis()
+        val b = MatrixContextUtils.recursiveCartesianProduct(array2d)
+        val timeBEnd = System.currentTimeMillis()
+        println("loopCartesianProduct cost:${timeAEnd-timeAStart}ms")
+        println("recursiveCartesianProduct cost:${timeBEnd-timeBStart}ms")
+        Assert.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
+    }
 
     @Test
     fun calculateValueMatrix() {
@@ -25,7 +42,7 @@ internal class MatrixControlOptionTest {
                     ),
                     mapOf(
                         "os" to "macos",
-                        "os" to "d",
+                        "var1" to "d",
                         "var2" to "4"
                     ),
                     // +0 重复值不加入
@@ -56,7 +73,7 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 19)
+        Assert.assertEquals(contextCase.size, 20)
     }
 
     @Test
@@ -192,7 +209,8 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val buildContext = mapOf("depends.job1.outputs.matrix" to """
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
             {
                         "include": [
                             {
@@ -235,7 +253,8 @@ internal class MatrixControlOptionTest {
                             ]
                         }
                     }
-        """)
+        """
+        )
         val contextCase = matrixControlOption.getAllContextCase(buildContext)
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
