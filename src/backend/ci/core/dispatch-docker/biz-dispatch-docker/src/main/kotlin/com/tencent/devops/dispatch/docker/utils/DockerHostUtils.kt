@@ -241,17 +241,30 @@ class DockerHostUtils @Autowired constructor(
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
     ): Pair<String, Int> {
-        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
-        val hostDriftLoad = getDockerDriftThreshold()
+        // 检测IP是否活跃以及负载情况
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.diskLoad > hostDriftLoad.disk ||
-            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
-            dockerIpInfo.memLoad > hostDriftLoad.memory ||
-            dockerIpInfo.cpuLoad > hostDriftLoad.cpu ||
-            (dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp)) ||
-            (dockerIpInfo.grayEnv != gray.isGray()) ||
-            (dockerIpInfo.usedNum > hostDriftLoad.usedNum) ||
-            dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+            dockerIpInfo.grayEnv != gray.isGray() ||
+            overload(dockerIpInfo)) {
+            return getAvailableDockerIpWithSpecialIps(
+                dispatchMessage.projectId,
+                dispatchMessage.pipelineId,
+                dispatchMessage.vmSeqId,
+                specialIpSet
+            )
+        }
+
+        // 校验专机
+        if (specialIpCheck(dockerIpInfo, specialIpSet)) {
+            return getAvailableDockerIpWithSpecialIps(
+                dispatchMessage.projectId,
+                dispatchMessage.pipelineId,
+                dispatchMessage.vmSeqId,
+                specialIpSet
+            )
+        }
+
+        // 配置代码缓存集群，不用关注漂移
+        if (dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
                 dispatchMessage.pipelineId,
@@ -261,6 +274,42 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair(dockerIpInfo.dockerIp, dockerIpInfo.dockerHostPort)
+    }
+
+    private fun overload(
+        dockerIpInfo: TDispatchPipelineDockerIpInfoRecord
+    ): Boolean {
+        // 查看当前IP负载是否超载
+        val hostDriftLoad = getDockerDriftThreshold()
+        if (dockerIpInfo.diskLoad > hostDriftLoad.disk ||
+            dockerIpInfo.diskIoLoad > hostDriftLoad.diskIo ||
+            dockerIpInfo.memLoad > hostDriftLoad.memory
+        ) {
+            return true
+        }
+
+        if (dockerIpInfo.usedNum > hostDriftLoad.usedNum || dockerIpInfo.cpuLoad > hostDriftLoad.cpu) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun specialIpCheck(
+        dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
+        specialIpSet: Set<String>
+    ): Boolean {
+        // 上次构建IP已开启专机独享并不在项目专机列表中，此时会漂移
+        if ((dockerIpInfo.specialOn && !specialIpSet.contains(dockerIpInfo.dockerIp))) {
+            return true
+        }
+
+        // 配置了专机，但上次构建IP不在专机列表中，漂移
+        if (specialIpSet.isNotEmpty() && !specialIpSet.contains(dockerIpInfo.dockerIp)) {
+            return true
+        }
+
+        return false
     }
 
     fun updateDockerDriftThreshold(hostDriftLoad: HostDriftLoad) {
