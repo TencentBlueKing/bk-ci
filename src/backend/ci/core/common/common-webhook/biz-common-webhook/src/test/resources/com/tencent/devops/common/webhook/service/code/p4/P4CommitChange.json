@@ -1,4 +1,5 @@
 {"change": 1,
   "p4Port": "127.0.0.1:1660",
-  "trigger_type": "CHANGE_COMMIT"
+  "event_type": "CHANGE_COMMIT",
+  "trigger_type": "CHANGE"
 }

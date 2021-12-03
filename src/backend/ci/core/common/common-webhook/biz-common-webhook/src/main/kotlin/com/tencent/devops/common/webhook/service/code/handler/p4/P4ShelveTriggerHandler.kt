@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeCommitEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4ShelveEvent
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -47,29 +47,35 @@ import com.tencent.devops.scm.pojo.BK_REPO_P4_WEBHOOK_CHANGE
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
-class P4ChangeCommitTriggerHandler(
+class P4ShelveTriggerHandler(
     private val client: Client
-) : CodeWebhookTriggerHandler<P4ChangeCommitEvent> {
-    override fun eventClass(): Class<P4ChangeCommitEvent> {
-        return P4ChangeCommitEvent::class.java
+) : CodeWebhookTriggerHandler<P4ShelveEvent> {
+    override fun eventClass(): Class<P4ShelveEvent> {
+        return P4ShelveEvent::class.java
     }
 
-    override fun getUrl(event: P4ChangeCommitEvent) = event.p4Port
+    override fun getUrl(event: P4ShelveEvent) = event.p4Port
 
-    override fun getUsername(event: P4ChangeCommitEvent) = ""
+    override fun getUsername(event: P4ShelveEvent) = ""
 
-    override fun getRevision(event: P4ChangeCommitEvent) = event.change.toString()
+    override fun getRevision(event: P4ShelveEvent) = event.change.toString()
 
-    override fun getRepoName(event: P4ChangeCommitEvent) = event.p4Port
+    override fun getRepoName(event: P4ShelveEvent) = event.p4Port
 
-    override fun getBranchName(event: P4ChangeCommitEvent) = ""
+    override fun getBranchName(event: P4ShelveEvent) = ""
 
-    override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
+    @Deprecated(
+        message = "p4 use getEventType(event: P4ShelveEvent)",
+        replaceWith = ReplaceWith("@see getEventType(event)")
+    )
+    override fun getEventType(): CodeEventType = CodeEventType.SHELVE_COMMIT
 
-    override fun getMessage(event: P4ChangeCommitEvent) = ""
+    override fun getEventType(event: P4ShelveEvent): CodeEventType = event.eventType
+
+    override fun getMessage(event: P4ShelveEvent) = ""
 
     override fun getWebhookFilters(
-        event: P4ChangeCommitEvent,
+        event: P4ShelveEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
@@ -83,12 +89,12 @@ class P4ChangeCommitTriggerHandler(
             )
             val eventTypeFilter = EventTypeFilter(
                 pipelineId = pipelineId,
-                triggerOnEventType = getEventType(),
+                triggerOnEventType = getEventType(event),
                 eventType = webHookParams.eventType
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
+                    val changeFiles = client.get(ServiceP4Resource::class).getShelvedFiles(
                         projectId = projectId,
                         repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                         repositoryType = repositoryConfig.repositoryType,
@@ -99,8 +105,7 @@ class P4ChangeCommitTriggerHandler(
                             pathFilterType = PathFilterType.RegexBasedFilter,
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
-                            includedPaths = WebhookUtils.convert(includePaths)
-                                .map { it.replace("...", "**") },
+                            includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths)
                         )
                     ).doFilter(response)
@@ -111,7 +116,7 @@ class P4ChangeCommitTriggerHandler(
     }
 
     override fun retrieveParams(
-        event: P4ChangeCommitEvent,
+        event: P4ShelveEvent,
         projectId: String?,
         repository: Repository?
     ): Map<String, Any> {

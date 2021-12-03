@@ -47,7 +47,8 @@ class CodeP4ScmImplTest {
     fun addWebHook() {
         p4ScmImpl.addWebHook(
             hookUrl = "http://127.0.0.1:8080/api/external/scm/p4/commit",
-            path = "//demo/...,//Test/...,//Test/*.java"
+            includePaths = "//demo/...,//Test/...",
+            excludePaths = "//Test/*.java"
         )
     }
 }

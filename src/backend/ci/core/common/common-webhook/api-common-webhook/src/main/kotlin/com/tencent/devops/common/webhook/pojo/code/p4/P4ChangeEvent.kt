@@ -28,15 +28,20 @@
 package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class P4ChangeCommitEvent(
+data class P4ChangeEvent(
     val change: Int,
-    override val p4Port: String
+    override val p4Port: String,
+    @JsonProperty("event_type")
+    override val eventType: CodeEventType
 ) : P4Event(
-    p4Port = p4Port
+    p4Port = p4Port,
+    eventType = eventType
 ) {
     companion object {
-        const val classType = "CHANGE_COMMIT"
+        const val classType = "CHANGE"
     }
 }

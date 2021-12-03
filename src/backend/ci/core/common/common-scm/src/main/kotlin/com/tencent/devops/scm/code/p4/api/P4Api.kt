@@ -28,10 +28,12 @@
 package com.tencent.devops.scm.code.p4.api
 
 import com.perforce.p4java.admin.ITriggerEntry
+import com.perforce.p4java.admin.ITriggerEntry.TriggerType
 import com.perforce.p4java.core.IDepot
 import com.perforce.p4java.core.file.FileSpecOpStatus
 import com.tencent.devops.scm.code.p4.P4Client
 import com.tencent.devops.scm.code.p4.P4Server
+import com.tencent.devops.scm.enums.P4TriggerType
 import com.tencent.devops.scm.pojo.p4.DepotInfo
 import com.tencent.devops.scm.pojo.p4.TriggerInfo
 import com.tencent.devops.scm.pojo.p4.Workspace
@@ -40,9 +42,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.util.UUID
 
+@SuppressWarnings("TooManyFunctions")
 class P4Api(
     val p4port: String,
     val username: String,
@@ -65,6 +69,13 @@ class P4Api(
         }
     }
 
+    /**
+     * p4服务端支持路径监听，但是在p4服务端维护路径，会存在下面问题
+     * 1. 如果流水线删除事件触发插件，无法删除事件触发
+     * 2. 如果流水线一开始监听//demo/...,后面改成//demo/aaa/...,因为在p4服务端会存在两条事件(不会删除),导致流水线触发两次
+     *
+     * 基于以上原因，注册时只配置主仓库路径，然后由蓝盾判断是否能够触发
+     */
     fun addWebHook(
         hookUrl: String,
         includePaths: String?,
@@ -73,19 +84,23 @@ class P4Api(
     ) {
         P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
             p4Server.connectionRetry()
-            val eventType = ITriggerEntry.TriggerType.fromString(event) ?: ITriggerEntry.TriggerType.CHANGE_COMMIT
-            val eventScriptFileName = "${eventType.name.toLowerCase()}.sh"
+            val eventType = triggerTypeValueOf(event) ?: TriggerType.CHANGE_COMMIT
+            val (eventScriptFileName, command) = getTriggerFileAndCommand(
+                eventType = eventType,
+                hookUrl = hookUrl
+            )
             val remainPaths = filterExistTrigger(
                 p4Server = p4Server,
                 includePaths = includePaths,
                 excludePaths = excludePaths,
                 eventType = eventType,
-                eventScriptFileName = eventScriptFileName,
-                hookUrl = hookUrl
+                command = command
             )
             if (remainPaths.isEmpty()) {
-                logger.info("The web hook url($hookUrl) and event($event)," +
-                    "includePaths($includePaths),excludePaths($excludePaths) is already exist")
+                logger.info(
+                    "The web hook url($hookUrl) and event($event)," +
+                        "includePaths($includePaths),excludePaths($excludePaths) is already exist"
+                )
                 return
             }
             // 创建一个devops_trigger的depot
@@ -104,10 +119,20 @@ class P4Api(
                 p4Server = p4Server,
                 remainPaths = remainPaths,
                 eventType = eventType,
-                eventScriptFileName = eventScriptFileName,
-                hookUrl = hookUrl
+                command = command
             )
         }
+    }
+
+    private fun triggerTypeValueOf(event: String?): TriggerType? {
+        if (event != null) {
+            TriggerType.values().forEach { tt ->
+                if (tt.name == event) {
+                    return tt
+                }
+            }
+        }
+        return null
     }
 
     fun getChangelistFiles(change: Int): List<P4FileSpec> {
@@ -122,22 +147,33 @@ class P4Api(
         }
     }
 
+    fun getShelvedFiles(change: Int): List<P4FileSpec> {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            p4Server.getShelvedFiles(change = change)
+        }.map { iFileSpec ->
+            P4FileSpec(
+                opStatus = iFileSpec.opStatus.name,
+                depotPathString = iFileSpec.depotPathString
+            )
+        }
+    }
+
+    @SuppressWarnings("LongParameterList")
     private fun filterExistTrigger(
         p4Server: P4Server,
         includePaths: String?,
         excludePaths: String?,
-        eventType: ITriggerEntry.TriggerType,
-        eventScriptFileName: String,
-        hookUrl: String
+        eventType: TriggerType,
+        command: String
     ): Set<String> {
         val paths = mutableSetOf<String>()
         if (!includePaths.isNullOrBlank()) {
-            paths.addAll(includePaths.split(","))
+            paths.addAll(includePaths.split(",").map { convertPath(it) })
         }
         if (!excludePaths.isNullOrBlank()) {
-            paths.addAll(excludePaths.split(",").map { "-$it" })
+            paths.addAll(excludePaths.split(",").map { convertPath(it) })
         }
-        val command = getTriggerCommand(eventType = eventType, eventScriptFileName, hookUrl = hookUrl)
         p4Server.getTriggers().forEach { entry ->
             if (isSameEvent(entry, paths, eventType, command)) {
                 paths.remove(entry.path)
@@ -146,13 +182,22 @@ class P4Api(
         return paths
     }
 
+    /**
+     * 提取路径
+     * 比如配置//demo/aaa/...转换成//demo/...
+     */
+    private fun convertPath(path: String): String {
+        // p4主仓库名
+        val depot = path.removePrefix("//").substringBefore("/")
+        return "//$depot/..."
+    }
+
     private fun isSameEvent(
         entry: ITriggerEntry,
         paths: Set<String>,
-        eventType: ITriggerEntry.TriggerType,
+        eventType: TriggerType,
         command: String
-    ) = entry.name == DEVOPS_P4_TRIGGER_NAME &&
-        paths.contains(entry.path) &&
+    ) = paths.contains(entry.path) &&
         entry.triggerType.name == eventType.name &&
         entry.command == command
 
@@ -192,25 +237,47 @@ class P4Api(
         }
     }
 
-    private fun getTriggerCommand(
-        eventType: ITriggerEntry.TriggerType,
-        eventScriptFileName: String,
+    private fun getTriggerFileAndCommand(
+        eventType: TriggerType,
         hookUrl: String
-    ): String {
+    ): Pair<String, String> {
+        val command = "%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/{0}% $hookUrl $p4port ${eventType.name} {1} {2}"
         return when (eventType) {
-            ITriggerEntry.TriggerType.CHANGE_COMMIT ->
-                "\"%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/$eventScriptFileName% $hookUrl $p4port %change%\""
-            else ->
-                "\"%//$DEVOPS_P4_TRIGGER_DEPOT_NAME/$eventScriptFileName% $hookUrl $p4port %change%\""
+            TriggerType.CHANGE_COMMIT,
+            TriggerType.CHANGE_CONTENT,
+            TriggerType.CHANGE_SUBMIT
+            -> {
+                val eventScriptFileName = "change.sh"
+                val replaceCommand = MessageFormat.format(
+                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name
+                )
+                Pair(eventScriptFileName, "\"$replaceCommand\"")
+            }
+            TriggerType.SHELVE_COMMIT,
+            TriggerType.SHELVE_DELETE,
+            TriggerType.SHELVE_SUBMIT
+            -> {
+                val eventScriptFileName = "change.sh"
+                val replaceCommand = MessageFormat.format(
+                    command, eventScriptFileName, "%change%", P4TriggerType.SHELVE.name
+                )
+                Pair(eventScriptFileName, "\"$replaceCommand\"")
+            }
+            else -> {
+                val eventScriptFileName = "change.sh"
+                val replaceCommand = MessageFormat.format(
+                    command, eventScriptFileName, "%change%", P4TriggerType.CHANGE.name
+                )
+                Pair(eventScriptFileName, "\"$replaceCommand\"")
+            }
         }
     }
 
     private fun addTriggers(
         p4Server: P4Server,
         remainPaths: Set<String>,
-        eventType: ITriggerEntry.TriggerType,
-        eventScriptFileName: String,
-        hookUrl: String
+        eventType: TriggerType,
+        command: String
     ) {
         // p4触发器是按照顺序更新的,所以再次获取p4触发器数量，然后再增加
         val oldTriggers = p4Server.getTriggers().mapIndexed { index, entry ->
@@ -219,7 +286,7 @@ class P4Api(
                     name = name,
                     type = triggerType,
                     path = entry.path,
-                    command = command,
+                    command = entry.command,
                     order = index
                 )
             }
@@ -233,11 +300,7 @@ class P4Api(
                 name = "${DEVOPS_P4_TRIGGER_NAME}_$order",
                 type = eventType,
                 path = path,
-                command = getTriggerCommand(
-                    eventType = eventType,
-                    eventScriptFileName = eventScriptFileName,
-                    hookUrl = hookUrl
-                ),
+                command = command,
                 order = order++
             )
             newTriggers.add(trigger)

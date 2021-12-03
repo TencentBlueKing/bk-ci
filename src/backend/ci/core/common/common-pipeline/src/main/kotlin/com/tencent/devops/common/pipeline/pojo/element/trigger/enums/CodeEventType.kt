@@ -47,5 +47,15 @@ enum class CodeEventType {
     PRE_COMMIT,
 
     // p4 event
-    CHANGE_COMMIT
+    CHANGE_COMMIT,
+    PUSH_SUBMIT,
+    CHANGE_CONTENT,
+    CHANGE_SUBMIT,
+    PUSH_CONTENT,
+    PUSH_COMMIT,
+    FIX_ADD,
+    FIX_DELETE,
+    FORM_COMMIT,
+    SHELVE_COMMIT,
+    SHELVE_DELETE;
 }
