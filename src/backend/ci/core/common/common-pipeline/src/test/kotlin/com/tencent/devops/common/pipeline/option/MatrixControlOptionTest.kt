@@ -6,39 +6,6 @@ import org.junit.Test
 
 internal class MatrixControlOptionTest {
 
-    /**
-     * 用于比对结果的传统笛卡尔乘积算法:
-     * 原二维数组[input], 通过乘积转化后的数组[output],
-     * 层级参数[layer], 当前操作数组[currentList]
-     */
-    private fun descartes(
-        input: List<List<String>>,
-        output: MutableList<List<String>>,
-        layer: Int, currentList: List<String>
-    ) {
-        if (layer < input.size - 1) {
-            if (input[layer].isEmpty()) {
-                descartes(input, output, layer + 1, currentList)
-            } else {
-                for (i in input[layer].indices) {
-                    val list: MutableList<String> = ArrayList(currentList)
-                    list.add(input[layer][i])
-                    descartes(input, output, layer + 1, list)
-                }
-            }
-        } else if (layer == input.size - 1) {
-            if (input[layer].isEmpty()) {
-                output.add(currentList)
-            } else {
-                for (i in input[layer].indices) {
-                    val list: MutableList<String> = ArrayList(currentList)
-                    list.add(input[layer][i])
-                    output.add(list)
-                }
-            }
-        }
-    }
-
     @Test
     fun calculateValueMatrix() {
         val matrixControlOption = MatrixControlOption(

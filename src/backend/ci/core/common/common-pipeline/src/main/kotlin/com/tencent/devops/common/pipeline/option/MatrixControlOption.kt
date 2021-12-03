@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchInfo
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import io.swagger.annotations.ApiModelProperty
 
 /**
@@ -92,7 +93,7 @@ data class MatrixControlOption(
     private fun calculateContextMatrix(strategyMap: Map<String, List<String>>): List<Map<String, String>> {
         val caseList = mutableListOf<Map<String, String>>()
         val keyList = strategyMap.keys
-        cartesianProduct(strategyMap.values.toList())
+        MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
             .forEach { valueList ->
                 val case = mutableMapOf<String, String>()
                 keyList.forEachIndexed { index, key ->
@@ -134,12 +135,4 @@ data class MatrixControlOption(
         }
         return includeCaseList
     }
-
-    /**
-     * Kotlin实现的笛卡尔乘积算法，[input]需要包含两个以上元素
-     */
-    private fun cartesianProduct(input: List<List<Any>>): List<List<Any>> =
-        input.fold(listOf(listOf<Any>())) { acc, set ->
-            acc.flatMap { list -> set.map { element -> list + element } }
-        }.toList()
 }
