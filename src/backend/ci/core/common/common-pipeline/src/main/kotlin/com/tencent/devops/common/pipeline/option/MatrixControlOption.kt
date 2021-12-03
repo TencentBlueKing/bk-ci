@@ -27,11 +27,14 @@
 
 package com.tencent.devops.common.pipeline.option
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
+import com.tencent.devops.common.pipeline.type.DispatchInfo
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -62,6 +65,15 @@ data class MatrixControlOption(
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
         private const val CONTEXT_KEY_PREFIX = "matrix."
+    }
+
+    /**
+     * VMBuildContainer需要根据[runsOnStr]计算调度信息
+     */
+    fun parseRunsOn(buildContext: Map<String, String>): DispatchInfo {
+        val realRunsOnStr = EnvUtils.parseEnv(runsOnStr, buildContext)
+        // TODO 根据替换后[realRunsOnStr]生成调度信息
+        return DispatchInfo(VMBaseOS.ALL)
     }
 
     /**
