@@ -57,7 +57,7 @@ data class MatrixControlOption(
     var totalCount: Int? = null,
     @ApiModelProperty("完成执行的数量", required = false)
     var finishCount: Int? = null,
-    @ApiModelProperty("自定义调度类型", required = false)
+    @ApiModelProperty("自定义调度类型（可能为占位符如 matrix.os）", required = false)
     var runsOnStr: String? = null
 ) {
 

@@ -41,7 +41,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 data class StageContext(
     val stage: PipelineBuildStage, // 当前Stage
     val containers: List<PipelineBuildContainer>, // 当前Stage下的容器列表
-    var groupContainers: List<PipelineBuildContainer>, // 当前Stage下的容器列表
+    var dealMatrixGroup: Boolean = false,
     var buildStatus: BuildStatus, // 每次流转最近一次的状态，用于传递到最终Stage执行状态
     val event: PipelineBuildStageEvent, // 当前Stage消息事件
     var latestSummary: String, // 最新备注信息，64字符以内

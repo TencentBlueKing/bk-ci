@@ -119,7 +119,7 @@ class StageControl @Autowired constructor(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,
             stage = stage,
-            containers = containers.toMutableList(),
+            containers = containers,
             latestSummary = "init",
             watcher = watcher,
             variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文

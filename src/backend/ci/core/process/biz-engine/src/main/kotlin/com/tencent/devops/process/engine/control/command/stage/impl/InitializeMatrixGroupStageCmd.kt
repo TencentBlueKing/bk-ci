@@ -80,19 +80,28 @@ class InitializeMatrixGroupStageCmd(
 
     override fun execute(commandContext: StageContext) {
 
+        // 如果没有构建矩阵父容器则直接跳过
+        val matrixContainers = commandContext.containers.filter {
+            it.matrixGroupFlag == true
+        }
+        if (matrixContainers.isEmpty()) return
+
         // 在下发构建机任务前进行构建矩阵计算
         val count = generateMatrixGroup(commandContext)
 
         LOG.info("ENGINE|${commandContext.stage.buildId}|MATRIX_CONTAINER_INIT|" +
             "s(${commandContext.stage.stageId})|newContainerCount=$count")
+
+        if (count > 0) commandContext.dealMatrixGroup = true
         commandContext.latestSummary = "from_s(${commandContext.stage.stageId}) generateNew($count)"
         commandContext.cmdFlowState = CmdFlowState.CONTINUE
     }
 
-    private fun generateMatrixGroup(commandContext: StageContext) {
+    private fun generateMatrixGroup(commandContext: StageContext): Int {
+
         val event = commandContext.event
         val variables = commandContext.variables
-        val model = containerBuildDetailService.getBuildModel(event.buildId) ?: return
+        val model = containerBuildDetailService.getBuildModel(event.buildId) ?: return 0
 
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()
@@ -101,7 +110,7 @@ class InitializeMatrixGroupStageCmd(
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
         model.stages.forEach nextStage@{ stage ->
             if (stage.id == commandContext.stage.stageId) {
-                stage.containers.forEachIndexed nextParentContainer@{ index, parentContainer ->
+                stage.containers.forEach nextParentContainer@{ parentContainer ->
 
                     // #4518 开启了矩阵功能但没有矩阵配置，则直接跳过
                     if (parentContainer.matrixGroupFlag == true) {
@@ -132,6 +141,10 @@ class InitializeMatrixGroupStageCmd(
                             "containerId=${parentContainer.id}|containerHashId=${parentContainer.containerHashId}" +
                             "|context=$context")
 
+                        // 当前矩阵组下的新容器
+                        val groupContainers = mutableListOf<PipelineBuildContainer>()
+                        val matrixGroupId = parentContainer.id!!
+
                         if (parentContainer is VMBuildContainer && parentContainer.matrixControlOption != null) {
 
                             // 每一种上下文组合都是一个新容器
@@ -145,14 +158,13 @@ class InitializeMatrixGroupStageCmd(
                             }
 
                             val jobControlOption = parentContainer.jobControlOption!!
-                            val mutexGroup = parentContainer.mutexGroup
 
                             contextCaseList.forEach { contextCase ->
 
                                 // 包括matrix.xxx的所有上下文
                                 val allContext = contextCase.plus(parentContainer.customBuildEnv ?: mapOf())
                                 val dispatchInfo = matrixOption.parseRunsOn(allContext)
-                                val matrixGroupId = parentContainer.id!!
+
                                 val newContainer = VMBuildContainer(
                                     id = context.containerSeq.toString(),
                                     containerId = context.containerSeq.toString(),
@@ -168,7 +180,6 @@ class InitializeMatrixGroupStageCmd(
                                     canRetry = parentContainer.canRetry,
                                     enableExternal = parentContainer.enableExternal,
                                     jobControlOption = jobControlOption,
-                                    mutexGroup = mutexGroup,
                                     executeCount = parentContainer.executeCount,
                                     containPostTaskFlag = parentContainer.containPostTaskFlag,
                                     customBuildEnv = allContext,
@@ -184,19 +195,17 @@ class InitializeMatrixGroupStageCmd(
                                     // ---
                                 )
 
-                                pipelineContainerService.prepareMatrixBuildContainer(
+                                groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
                                     projectId = event.projectId,
                                     pipelineId = event.pipelineId,
                                     buildId = event.buildId,
                                     container = newContainer,
                                     stage = stage,
                                     context = context,
-                                    buildContainers = buildContainerList,
                                     buildTaskList = buildTaskList,
                                     jobControlOption = jobControlOption,
-                                    mutexGroup = mutexGroup,
                                     matrixGroupId = matrixGroupId
-                                )
+                                ))
 
                                 // 如为空就初始化，如有元素就直接追加
                                 if (parentContainer.groupContainers.isNullOrEmpty()) {
@@ -221,7 +230,7 @@ class InitializeMatrixGroupStageCmd(
                             val mutexGroup = parentContainer.mutexGroup
 
                             contextCaseList.forEach { contextCase ->
-                                val matrixGroupId = parentContainer.id!!
+
                                 val newContainer = NormalContainer(
                                     id = context.containerSeq.toString(),
                                     containerId = context.containerSeq.toString(),
@@ -236,24 +245,21 @@ class InitializeMatrixGroupStageCmd(
                                     }.toList(),
                                     canRetry = parentContainer.canRetry,
                                     jobControlOption = jobControlOption,
-                                    mutexGroup = mutexGroup,
                                     executeCount = parentContainer.executeCount,
                                     containPostTaskFlag = parentContainer.containPostTaskFlag
                                 )
 
-                                pipelineContainerService.prepareMatrixBuildContainer(
+                                groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
                                     projectId = event.projectId,
                                     pipelineId = event.pipelineId,
                                     buildId = event.buildId,
                                     container = newContainer,
                                     stage = stage,
                                     context = context,
-                                    buildContainers = buildContainerList,
                                     buildTaskList = buildTaskList,
                                     jobControlOption = jobControlOption,
-                                    mutexGroup = mutexGroup,
                                     matrixGroupId = matrixGroupId
-                                )
+                                ))
 
                                 // 如为空就初始化，如有元素就直接追加
                                 if (parentContainer.groupContainers.isNullOrEmpty()) {
@@ -266,9 +272,12 @@ class InitializeMatrixGroupStageCmd(
                             }
                         }
 
+                        // 新增容器全部添加到Container表中
+                        buildContainerList.addAll(groupContainers)
+
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
                             "${parentContainer.id}|containerHashId=${parentContainer.containerHashId}|context=$context|" +
-                            "buildContainers=$buildContainerList|buildTaskList=$buildTaskList")
+                            "groupContainers=$groupContainers|buildTaskList=$buildTaskList")
                     }
                 }
             }
@@ -281,7 +290,6 @@ class InitializeMatrixGroupStageCmd(
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
 
-        // 待并行执行的容器全部加入上下文
-        commandContext.groupContainers = buildContainerList
+        return buildContainerList.size
     }
 }
