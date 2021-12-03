@@ -18,7 +18,7 @@ curl --header 'Content-Type: application/json' \
      \"p4Port\":\"$p4Port\",
      \"trigger_type\":\"$trigger_type\",
      \"event_type\":\"$event_type\",
-	   \"user\":\"$user\",
+	   \"user\":\"$user\"
      }" \
      "$devopsCallbackUrl" || { echo "Sending webhook failed"; exit 0; }
 echo "Sending webhook finished\n\n"
