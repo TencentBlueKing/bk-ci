@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -60,17 +59,16 @@ import org.springframework.stereotype.Service
  * Stage下发Container事件命令处理
  */
 @Service
-class InitializeContainerStageCmd(
+class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val modelContainerIdGenerator: ModelContainerIdGenerator,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val modelContainerIdGenerator: ModelContainerIdGenerator
 ) : StageCmd {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(InitializeContainerStageCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(InitializeMatrixGroupStageCmd::class.java)
     }
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -209,7 +207,7 @@ class InitializeContainerStageCmd(
 
                                 context.containerSeq++
                             }
-                        } else if (parentContainer is NormalContainer) {
+                        } else if (parentContainer is NormalContainer && parentContainer.matrixControlOption != null) {
                             // 每一种上下文组合都是一个新容器
                             val contextCaseList = try {
                                 parentContainer.matrixControlOption!!.getAllContextCase(commandContext.variables)
@@ -224,7 +222,6 @@ class InitializeContainerStageCmd(
 
                             contextCaseList.forEach { contextCase ->
                                 val matrixGroupId = parentContainer.id!!
-                                // TODO 无编译环境没有传参的地方？
                                 val newContainer = NormalContainer(
                                     id = context.containerSeq.toString(),
                                     containerId = context.containerSeq.toString(),
@@ -276,10 +273,15 @@ class InitializeContainerStageCmd(
                 }
             }
         }
+
+        // 在表中增加所有分裂的矩阵和插件
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineContainerService.batchSave(transactionContext, buildContainerList)
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
+
+        // 待并行执行的容器全部加入上下文
+        commandContext.groupContainers = buildContainerList
     }
 }
