@@ -90,8 +90,8 @@ data class MatrixControlOption(
         }
 
         // #4518 先排除再追加
-        matrixParamMap.removeAll(convertCase(replaceContext(excludeCaseStr, buildContext))) // 排除特定的参数组合
-        matrixParamMap.addAll(convertCase(replaceContext(includeCaseStr, buildContext))) // 追加额外的参数组合
+        matrixParamMap.removeAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext))) // 排除特定的参数组合
+        matrixParamMap.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
 
         return matrixParamMap.map { list ->
             list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.value }.toMap()
@@ -122,10 +122,7 @@ data class MatrixControlOption(
      * 根据[strategyStr]生成对应的矩阵参数表
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<String>> {
-        val contextStr = replaceContext(strategyStr, buildContext)
-        if (contextStr.isNullOrBlank()) {
-            return emptyMap()
-        }
+        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         val strategyMap = try {
             YamlUtil.to<Map<String, List<String>>>(contextStr)
         } catch (ignore: Throwable) {
@@ -178,22 +175,5 @@ data class MatrixControlOption(
             emptyList()
         }
         return includeCaseList
-    }
-
-    /**
-     * 普通形态的上下文替换
-     */
-    private fun replaceContext(oldStr: String?, buildContext: Map<String, String>): String? {
-        if (oldStr.isNullOrBlank()) {
-            return null
-        }
-        return ReplacementUtils.replace(
-            command = oldStr,
-            replacement = object : ReplacementUtils.KeyReplacement {
-                override fun getReplacement(key: String): String? {
-                    return buildContext[key]
-                }
-            }
-        )
     }
 }
