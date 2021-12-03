@@ -86,15 +86,11 @@ class QualityRuleBuildHisService constructor(
         return ruleRequestList.map { ruleRequest ->
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
-            val type = when (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-                true -> RunElementType.RUN_TEST.elementType
-                false -> RunElementType.RUN.elementType
-            }
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
                 indicatorService.serviceList(atomCode, indicators.map { it.enName })
-                    .filterNot { it.elementType == type && it.range != projectId }
+                    .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
                     val requestIndicator = (indicatorMap[it.enName])!!
 

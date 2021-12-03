@@ -63,12 +63,15 @@ data class QualityIndicator(
     )
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QualityIndicator::class.java)
-        val SCRIPT_ELEMENT = setOf(LinuxScriptElement.classType, WindowsScriptElement.classType)
+        val SCRIPT_ELEMENT = setOf(
+            LinuxScriptElement.classType,
+            WindowsScriptElement.classType,
+            RunElementType.RUN.elementType
+        )
     }
 
     fun isScriptElementIndicator(): Boolean {
-        return elementType in SCRIPT_ELEMENT || isRunElementType()
+        return elementType in SCRIPT_ELEMENT
     }
 
     fun clone(): QualityIndicator {
@@ -92,14 +95,5 @@ data class QualityIndicator(
             enable = this.enable,
             range = this.range
         )
-    }
-
-    fun isRunElementType(): Boolean {
-        return if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            logger.info("QUALITY|elementType is: $elementType|isDebug: ${RunElementType.RUN_TEST.elementType}")
-            elementType == RunElementType.RUN_TEST.elementType
-        } else {
-            elementType == RunElementType.RUN.toString()
-        }
     }
 }

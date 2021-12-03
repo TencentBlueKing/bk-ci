@@ -27,6 +27,5 @@
 package com.tencent.devops.quality.pojo.enum
 
 enum class RunElementType(val elementType: String) {
-    RUN_TEST("runTest"),
     RUN("run");
 }
