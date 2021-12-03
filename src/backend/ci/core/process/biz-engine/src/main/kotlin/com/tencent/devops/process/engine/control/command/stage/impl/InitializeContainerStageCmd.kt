@@ -224,7 +224,6 @@ class InitializeContainerStageCmd(
 
                             contextCaseList.forEach { contextCase ->
                                 val matrixGroupId = parentContainer.id!!
-                                // TODO 无编译环境没有传参的地方？
                                 val newContainer = NormalContainer(
                                     id = context.containerSeq.toString(),
                                     containerId = context.containerSeq.toString(),

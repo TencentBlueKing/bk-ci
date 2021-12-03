@@ -25,7 +25,7 @@ internal class MatrixControlOptionTest {
                     ),
                     mapOf(
                         "os" to "macos",
-                        "os" to "d",
+                        "var1" to "d",
                         "var2" to "4"
                     ),
                     // +0 重复值不加入
@@ -56,7 +56,7 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 19)
+        Assert.assertEquals(contextCase.size, 20)
     }
 
     @Test

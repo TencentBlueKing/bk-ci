@@ -94,7 +94,7 @@ data class MatrixControlOption(
         matrixParamMap.addAll(convertCase(replaceContext(includeCaseStr, buildContext))) // 追加额外的参数组合
 
         return matrixParamMap.map { list ->
-            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.key }.toMap()
+            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.value }.toMap()
         }.toList()
     }
 
