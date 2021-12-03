@@ -337,7 +337,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 if (!rule.gateKeepers.isNullOrEmpty() &&
                                     finalRule?.status == RuleInterceptResult.WAIT) {
                                     doRuleOperation(
-                                        this, resultList, QualityRule.RuleOp(
+                                        this,
+                                        resultList.filter { result -> result.ruleName == rule.name },
+                                        QualityRule.RuleOp(
                                             operation = RuleOperation.AUDIT,
                                             notifyTypeList = ruleOp.notifyTypeList,
                                             notifyGroupList = ruleOp.notifyGroupList,
@@ -353,7 +355,9 @@ class QualityRuleCheckService @Autowired constructor(
                         } else {
                             logger.info("op list is empty for rule and build: $buildId, $rule")
                             doRuleOperation(
-                                this, resultList, QualityRule.RuleOp(
+                                this,
+                                resultList.filter { result -> result.ruleName == rule.name },
+                                QualityRule.RuleOp(
                                     operation = rule.operation,
                                     notifyTypeList = rule.notifyTypeList,
                                     notifyGroupList = rule.notifyGroupList,
