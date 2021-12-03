@@ -65,7 +65,7 @@ interface ServiceP4Resource {
 
     @ApiOperation("获取p4 shelve文件变更列表")
     @GET
-    @Path("/getChangelistFiles")
+    @Path("/getShelvedFiles")
     fun getShelvedFiles(
         @ApiParam("p4Port", required = true)
         @QueryParam("p4Port")
