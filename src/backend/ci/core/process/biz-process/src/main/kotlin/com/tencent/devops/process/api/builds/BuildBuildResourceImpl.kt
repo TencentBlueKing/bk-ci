@@ -87,7 +87,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        result: BuildTaskResult,
+        result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         vmBuildService.buildCompleteTask(

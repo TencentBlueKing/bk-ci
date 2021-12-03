@@ -1758,7 +1758,7 @@ class PipelineRuntimeService @Autowired constructor(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 pipelineId = latestRunningBuild.pipelineId,
-                startTime = startTime,
+                startTime = startTime
             )
             pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }
