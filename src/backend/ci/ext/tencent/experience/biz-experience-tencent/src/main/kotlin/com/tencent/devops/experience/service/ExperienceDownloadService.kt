@@ -181,7 +181,8 @@ class ExperienceDownloadService @Autowired constructor(
         val url = if (path.endsWith(".ipa", true)) {
             val tail = ttl?.let { "&ttl=$ttl" } ?: ""
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
-                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path$tail"
+                    "/$projectId/$artifactoryType/filePlist" +
+                    "?experienceHashId=$experienceHashId&path=$path&x-devops-project-id=$projectId$tail"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(
