@@ -76,6 +76,7 @@ class InitializeContainerStageCmd(
     companion object {
         private val LOG = LoggerFactory.getLogger(InitializeContainerStageCmd::class.java)
         private const val CONTEXT_KEY_PREFIX = "matrix."
+        private const val DISPATCH_TYPE_KEY = "matrix.os"
     }
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -153,6 +154,10 @@ class InitializeContainerStageCmd(
                             val mutexGroup = parentContainer.mutexGroup
 
                             contextCaseList.forEach { contextCase ->
+
+                                // 获取分裂后的OS保留字
+                                val matrixOS = contextCase[DISPATCH_TYPE_KEY]
+
                                 val matrixGroupId = parentContainer.id!!
                                 val newContainer = VMBuildContainer(
                                     id = context.containerSeq.toString(),
@@ -172,13 +177,14 @@ class InitializeContainerStageCmd(
                                     mutexGroup = mutexGroup,
                                     executeCount = parentContainer.executeCount,
                                     containPostTaskFlag = parentContainer.containPostTaskFlag,
-                                    // TODO 此处支持所有环境的调度
+                                    // 如果需要支持所有环境的调度，在构造model时传 VMBaseOS.ALL 即可
                                     baseOS = parentContainer.baseOS,
                                     vmNames = parentContainer.vmNames,
                                     dockerBuildVersion = parentContainer.dockerBuildVersion,
+                                    // TODO 根据分裂后的上下文决定类型
                                     dispatchType = parentContainer.dispatchType,
                                     buildEnv = parentContainer.buildEnv,
-                                    customBuildEnv = contextCase.plus(parentContainer.buildEnv ?: mapOf()),
+                                    customBuildEnv = contextCase.plus(parentContainer.customBuildEnv ?: mapOf()),
                                     // TODO 是否支持第三方机，工作空间如何实现并发
                                     thirdPartyAgentId = parentContainer.thirdPartyAgentId,
                                     thirdPartyAgentEnvId = parentContainer.thirdPartyAgentEnvId,
