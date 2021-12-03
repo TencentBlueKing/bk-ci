@@ -27,12 +27,9 @@
 
 package com.tencent.devops.common.pipeline.option
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.DispatchInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
 import io.swagger.annotations.ApiModelProperty
@@ -85,7 +82,7 @@ data class MatrixControlOption(
         matrixParamMap.addAll(convertCase(replaceContext(includeCaseStr, buildContext))) // 追加额外的参数组合
 
         return matrixParamMap.map { list ->
-            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.key}.toMap()
+            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.key }.toMap()
         }.toList()
     }
 

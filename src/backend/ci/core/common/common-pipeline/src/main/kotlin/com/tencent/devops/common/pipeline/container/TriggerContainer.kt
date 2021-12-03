@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element

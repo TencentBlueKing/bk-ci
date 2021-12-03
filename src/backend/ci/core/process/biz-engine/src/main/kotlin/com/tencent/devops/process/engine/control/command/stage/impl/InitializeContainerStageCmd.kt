@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
-import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext

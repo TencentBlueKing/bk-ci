@@ -1,7 +1,5 @@
 package com.tencent.devops.common.pipeline.option
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import org.junit.Assert
 import org.junit.Test
@@ -35,7 +33,7 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
-                    ),
+                    )
                 )
             ),
             // -1
@@ -127,7 +125,7 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "includeCaseStr",
                         "var2" to "1"
-                    ),
+                    )
                 )
             ),
             // -1
@@ -176,7 +174,7 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "includeCaseStr",
                         "var2" to "1"
-                    ),
+                    )
                 )
             ),
             // -1

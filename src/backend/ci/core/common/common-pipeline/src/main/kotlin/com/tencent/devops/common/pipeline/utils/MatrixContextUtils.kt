@@ -54,7 +54,8 @@ object MatrixContextUtils {
     private fun product(
         input: List<List<Any>>,
         output: MutableList<List<Any>>,
-        layer: Int, currentList: List<Any>
+        layer: Int,
+        currentList: List<Any>
     ) {
         if (layer < input.size - 1) {
             if (input[layer].isEmpty()) {
