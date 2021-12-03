@@ -84,7 +84,7 @@ internal class StagePauseCheckTest {
                 includeCaseStr = YamlUtil.toYaml(listOf(mapOf("var1" to "a"), mapOf("var2" to "2"))),
                 excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("var2" to "1"))),
                 totalCount = 10, // 3*3 + 2 - 1
-                runningCount = 1,
+                finishCount = 1,
                 fastKill = true,
                 maxConcurrency = 50
             ),
@@ -155,7 +155,7 @@ internal class StagePauseCheckTest {
                 includeCaseStr = YamlUtil.toYaml(listOf(mapOf("m3" to "1"), mapOf("m3" to "2"))),
                 excludeCaseStr = YamlUtil.toYaml(listOf(mapOf("m2" to "1"))),
                 totalCount = 10, // 3*3 + 2 - 1
-                runningCount = 1,
+                finishCount = 1,
                 fastKill = true,
                 maxConcurrency = 50
             ),
