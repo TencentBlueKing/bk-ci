@@ -545,7 +545,8 @@ class QualityIndicatorService @Autowired constructor(
             metadataList = metadata,
             desc = indicator.desc,
             logPrompt = indicator.logPrompt,
-            enable = indicator.enable ?: false
+            enable = indicator.enable ?: false,
+            range = indicator.indicatorRange
         )
     }
 

@@ -34,6 +34,7 @@ import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.quality.pojo.enum.RunElementType
+import org.slf4j.LoggerFactory
 
 data class QualityIndicator(
     val hashId: String,
@@ -52,7 +53,8 @@ data class QualityIndicator(
     val metadataList: List<Metadata>,
     val desc: String?,
     val logPrompt: String,
-    val enable: Boolean?
+    val enable: Boolean?,
+    val range: String?
 ) {
     data class Metadata(
         val hashId: String,
@@ -61,6 +63,7 @@ data class QualityIndicator(
     )
 
     companion object {
+        private val logger = LoggerFactory.getLogger(QualityIndicator::class.java)
         val SCRIPT_ELEMENT = setOf(LinuxScriptElement.classType, WindowsScriptElement.classType)
     }
 
@@ -86,13 +89,15 @@ data class QualityIndicator(
             metadataList = this.metadataList,
             desc = this.desc,
             logPrompt = this.logPrompt,
-            enable = this.enable
+            enable = this.enable,
+            range = this.range
         )
     }
 
     fun isRunElementType(): Boolean {
         return if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            elementType == RunElementType.RUN_TEST.toString()
+            logger.info("QUALITY|elementType is: $elementType|isDebug: ${RunElementType.RUN_TEST.elementType}")
+            elementType == RunElementType.RUN_TEST.elementType
         } else {
             elementType == RunElementType.RUN.toString()
         }

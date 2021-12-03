@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -53,6 +55,7 @@ import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import com.tencent.devops.quality.pojo.enum.RunElementType
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -83,11 +86,16 @@ class QualityRuleBuildHisService constructor(
         return ruleRequestList.map { ruleRequest ->
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
+            val type = when (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+                true -> RunElementType.RUN_TEST.elementType
+                false -> RunElementType.RUN.elementType
+            }
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
-                    .forEach {
+                indicatorService.serviceList(atomCode, indicators.map { it.enName })
+                    .filterNot { it.elementType == type && it.range != projectId }
+                    .filter { it.enable ?: false }.forEach {
                     val requestIndicator = (indicatorMap[it.enName])!!
 
                     // 使用上下文变量表示阈值时不检查类型
