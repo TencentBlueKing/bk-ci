@@ -294,7 +294,7 @@
                                     this.$set(this.selectedMap, option.id, option.name)
                                 }
                             } else if (this.isEnvVar(v)) {
-                                if (!nameArr.includes(option.name)) {
+                                if (!nameArr.includes(v)) {
                                     this.$set(this.selectedMap, v, v)
                                     nameArr.push(v)
                                 }
@@ -302,7 +302,7 @@
                         })
                     })
                 }
-                return nameArr.join(',')
+                this.displayName = nameArr.join(',')
             },
             getDisplayName (val) {
                 if (this.isEnvVar(val)) {
@@ -343,7 +343,7 @@
                 } finally {
                     if (this.value.length) {
                         if (this.isMultiple) {
-                            this.displayName = this.getMultipleDisplayName(this.value, 'id')
+                            this.getMultipleDisplayName(this.value, 'id')
                         } else {
                             this.displayName = this.getDisplayName(this.value)
                         }

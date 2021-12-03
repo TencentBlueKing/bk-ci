@@ -124,45 +124,11 @@ export default {
         },
         handleEnterOption () {
             if (this.isMultiple) {
-                const displayNameArr = this.displayName.split(',')
-                const nameArr = []
-                if (this.hasGroup) {
-                    displayNameArr.forEach(v => {
-                        for (let i = 0; i < this.optionList.length; i++) {
-                            const option = this.optionList[i]
-                            option.children.forEach(child => {
-                                if (child.name === v) {
-                                    if (!nameArr.includes(child.name)) {
-                                        nameArr.push(child.name)
-                                        this.$set(this.selectedMap, child.id, child.name)
-                                    }
-                                } else if (this.isEnvVar(v)) {
-                                    if (!nameArr.includes(v)) {
-                                        nameArr.push(v)
-                                        this.$set(this.selectedMap, v, v)
-                                    }
-                                }
-                            })
-                        }
-                    })
-                } else {
-                    displayNameArr.forEach(v => {
-                        this.optionList.forEach(option => {
-                            if (option.name === v) {
-                                if (!nameArr.includes(option.name)) {
-                                    nameArr.push(option.name)
-                                    this.$set(this.selectedMap, option.id, option.name)
-                                }
-                            } else if (this.isEnvVar(v)) {
-                                if (!nameArr.includes(v)) {
-                                    this.$set(this.selectedMap, v, v)
-                                    nameArr.push(v)
-                                }
-                            }
-                        })
-                    })
-                }
-                this.displayName = nameArr.join(',')
+                this.optionListVisible = false
+                this.isFocused = false
+                this.$refs.inputArea && this.$refs.inputArea.blur()
+                this.$emit('blur', null)
+                this.getMultipleDisplayName(this.displayName, 'name')
             } else {
                 let option = {}
                 if (this.hasGroup) {
