@@ -9,7 +9,7 @@
             :title="value"
             autocomplete="off"
             @focus="handleFocus"
-            @keypress.enter.prevent="handleEnterOption(isMultiple)"
+            @keypress.enter.prevent="handleEnterOption"
             @keydown.up.prevent="handleKeyup"
             @keydown.down.prevent="handleKeydown"
             @keydown.tab.prevent="handleBlur" />
@@ -190,6 +190,7 @@
 
                 return (noSensiveKeyword && !this.isMultiple) ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
             },
+
             selectOption ({ id, name, disabled = false }) {
                 if (disabled) return
                 if (!this.isMultiple) {
@@ -198,13 +199,10 @@
                         this.handleBlur()
                     })
                 } else {
-                    if (Object.prototype.hasOwnProperty.call(this.selectedMap, id)) {
+                    if (id in this.selectedMap) {
                         this.$delete(this.selectedMap, id)
                     } else {
-                        this.selectedMap = {
-                            ...this.selectedMap,
-                            [id]: name
-                        }
+                        this.$set(this.selectedMap, id, name)
                     }
                 }
             },
@@ -227,24 +225,21 @@
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-
-                let nameArr = []
-                let isMultipleEnvVar = false
+                
                 if (this.isMultiple) {
-                    nameArr = this.displayName.split(',')
-                    isMultipleEnvVar = nameArr.every(i => {
-                        return this.isEnvVar(i.trim())
-                    })
-                }
-
-                if (isMultipleEnvVar) {
-                    this.handleChange(this.name, nameArr)
-                } else if (this.isEnvVar(this.displayName)) {
-                    this.handleChange(this.name, this.displayName.trim())
-                } else if (this.isEnvVar(this.value)) {
-                    this.displayName = this.value
+                    if (this.displayName) {
+                        this.getMultipleDisplayName(this.displayName, 'name')
+                    } else {
+                        this.getMultipleDisplayName(this.value, 'id')
+                    }
                 } else {
-                    this.displayName = this.getDisplayName(this.value)
+                    if (this.isEnvVar(this.displayName)) {
+                        this.handleChange(this.name, this.displayName.trim())
+                    } else if (this.isEnvVar(this.value)) {
+                        this.displayName = this.value
+                    } else {
+                        this.displayName = this.getDisplayName(this.value)
+                    }
                 }
             },
 
@@ -266,64 +261,72 @@
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
+            getMultipleDisplayName (val, type = 'name') {
+                if (type === 'name') {
+                    val = val.split(',')
+                }
+                const nameArr = []
+                if (this.hasGroup) {
+                    val.forEach(v => {
+                        for (let i = 0; i < this.optionList.length; i++) {
+                            const option = this.optionList[i]
+                            option.children.forEach(child => {
+                                if (child[type] === v) {
+                                    if (!nameArr.includes(child.name)) {
+                                        nameArr.push(child.name)
+                                        this.$set(this.selectedMap, child.id, child.name)
+                                    }
+                                } else if (this.isEnvVar(v)) {
+                                    if (!nameArr.includes(v)) {
+                                        nameArr.push(v)
+                                        this.$set(this.selectedMap, v, v)
+                                    }
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    val.forEach(v => {
+                        this.optionList.forEach(option => {
+                            if (option[type] === v) {
+                                if (!nameArr.includes(option.name)) {
+                                    nameArr.push(option.name)
+                                    this.$set(this.selectedMap, option.id, option.name)
+                                }
+                            } else if (this.isEnvVar(v)) {
+                                if (!nameArr.includes(option.name)) {
+                                    this.$set(this.selectedMap, v, v)
+                                    nameArr.push(v)
+                                }
+                            }
+                        })
+                    })
+                }
+                return nameArr.join(',')
+            },
             getDisplayName (val) {
-                let isMultipleEnvVar = false
-                if (this.isMultiple && val && Array.isArray(val)) {
-                    isMultipleEnvVar = val.every(i => this.isEnvVar(i))
-                }
-                if (isMultipleEnvVar) {
-                    return val.join(',')
-                }
-
                 if (this.isEnvVar(val)) {
                     return val
                 }
                 if (this.hasGroup) {
-                    if (typeof val === 'string') {
-                        for (let i = 0; i < this.optionList.length; i++) {
-                            const option = this.optionList[i]
-                            const matchVal = option.children.find(child => child.id === val)
-                            if (matchVal) {
-                                return matchVal.name
-                            }
+                    for (let i = 0; i < this.optionList.length; i++) {
+                        const option = this.optionList[i]
+                        const matchVal = option.children.find(child => child.id === val)
+                        if (matchVal) {
+                            return matchVal.name
                         }
-                    } else {
-                        const valArr = []
-                        val.forEach(id => {
-                            for (let i = 0; i < this.optionList.length; i++) {
-                                const option = this.optionList[i]
-                                option.children.forEach(child => {
-                                    if (child.id === id) {
-                                        valArr.push(option.name)
-                                    }
-                                })
-                            }
-                        })
-                        return valArr.join(',')
                     }
                 } else {
-                    if (typeof val === 'string') {
-                        const option = this.optionList.find(option => option.id === val)
-                        if (option) {
-                            return option.name
-                        }
-                    } else {
-                        const valArr = []
-                        val.forEach(id => {
-                            this.optionList.forEach(option => {
-                                if (option.id === id) {
-                                    valArr.push(option.name)
-                                }
-                            })
-                        })
-                        return valArr.join(',')
+                    const option = this.optionList.find(option => option.id === val)
+                    if (option) {
+                        return option.name
                     }
                 }
                 return ''
             },
             async getOptionList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
-                    if (this.value !== '') this.displayName = this.getDisplayName(this.value)
+                    if (this.value.length) this.displayName = this.getDisplayName(this.value)
                     this.optionList = []
                     return
                 }
@@ -338,21 +341,12 @@
                 } catch (e) {
                     console.error(e)
                 } finally {
-                    if (this.value) {
-                        this.displayName = this.getDisplayName(this.value)
-                    }
-                    if (this.isMultiple && this.value) {
-                        if (typeof this.value === 'string') this.value = this.value.split(',')
-                        this.value.forEach(id => {
-                            this.optionList.forEach(option => {
-                                if (option.id === id) {
-                                    this.selectedMap = {
-                                        ...this.selectedMap,
-                                        [id]: option.name
-                                    }
-                                }
-                            })
-                        })
+                    if (this.value.length) {
+                        if (this.isMultiple) {
+                            this.displayName = this.getMultipleDisplayName(this.value, 'id')
+                        } else {
+                            this.displayName = this.getDisplayName(this.value)
+                        }
                     }
                     this.loading = false
                 }

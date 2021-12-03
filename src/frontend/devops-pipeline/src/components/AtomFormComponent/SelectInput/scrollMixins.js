@@ -122,49 +122,57 @@ export default {
                 }
             }
         },
-        handleEnterOption (isMultiple = false) {
-            const displayName = this.displayName
-            this.handleBlur()
-            if (!isMultiple) {
+        handleEnterOption () {
+            if (this.isMultiple) {
+                const displayNameArr = this.displayName.split(',')
+                const nameArr = []
+                if (this.hasGroup) {
+                    displayNameArr.forEach(v => {
+                        for (let i = 0; i < this.optionList.length; i++) {
+                            const option = this.optionList[i]
+                            option.children.forEach(child => {
+                                if (child.name === v) {
+                                    if (!nameArr.includes(child.name)) {
+                                        nameArr.push(child.name)
+                                        this.$set(this.selectedMap, child.id, child.name)
+                                    }
+                                } else if (this.isEnvVar(v)) {
+                                    if (!nameArr.includes(v)) {
+                                        nameArr.push(v)
+                                        this.$set(this.selectedMap, v, v)
+                                    }
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    displayNameArr.forEach(v => {
+                        this.optionList.forEach(option => {
+                            if (option.name === v) {
+                                if (!nameArr.includes(option.name)) {
+                                    nameArr.push(option.name)
+                                    this.$set(this.selectedMap, option.id, option.name)
+                                }
+                            } else if (this.isEnvVar(v)) {
+                                if (!nameArr.includes(v)) {
+                                    this.$set(this.selectedMap, v, v)
+                                    nameArr.push(v)
+                                }
+                            }
+                        })
+                    })
+                }
+                this.displayName = nameArr.join(',')
+            } else {
                 let option = {}
                 if (this.hasGroup) {
                     option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
                 } else {
                     option = this.filteredList[this.selectedPointer]
                 }
-                if (option && !option.disabled && !isMultiple) {
+                if (option && !option.disabled) {
                     this.handleChange(this.name, option.id)
                     this.handleBlur()
-                    this.displayName = option.name
-                }
-            } else {
-                if (displayName) {
-                    const nameArr = displayName.split(',')
-                    if (this.hasGroup) {
-                        const res = nameArr.every(name => {
-                            const curItem = this.filteredList.find(item => {
-                                return item.children.find(child => {
-                                    return child.name === name
-                                })
-                            })
-                            if (curItem) return true
-                            return false
-                        })
-                        if (res) {
-                            this.handleChange(this.name, nameArr)
-                            this.displayName = nameArr.join(',')
-                        }
-                    } else {
-                        const res = nameArr.every(name => {
-                            const curItem = this.filteredList.find(item => item.name === name)
-                            if (curItem) return true
-                            return false
-                        })
-                        if (res) {
-                            this.handleChange(this.name, nameArr)
-                            this.displayName = nameArr.join(',')
-                        }
-                    }
                 }
             }
         }
