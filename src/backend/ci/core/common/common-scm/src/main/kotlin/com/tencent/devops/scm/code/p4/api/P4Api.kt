@@ -251,7 +251,6 @@ class P4Api(
                 )
             }
         }
-        val order = oldTriggers.size
         val newTriggers = mutableListOf<TriggerInfo>()
         newTriggers.addAll(oldTriggers)
         // 新增触发器
@@ -260,7 +259,7 @@ class P4Api(
             type = eventType,
             path = "//...",
             command = command,
-            order = order + 1
+            order = oldTriggers.size
         )
         newTriggers.add(trigger)
 
