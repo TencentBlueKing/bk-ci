@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.control.command.container.impl.CheckMut
 import com.tencent.devops.process.engine.control.command.container.impl.CheckPauseContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.ContainerCmdLoop
 import com.tencent.devops.process.engine.control.command.container.impl.InitializeMatrixGroupStageCmd
+import com.tencent.devops.process.engine.control.command.container.impl.MatrixExecuteContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.StartMatrixGroupContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateContainerCmdFinally
@@ -162,7 +163,8 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
             commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
-            commandCache.get(StartMatrixGroupContainerCmd::class.java), // 进行矩阵启动时间
+            commandCache.get(StartMatrixGroupContainerCmd::class.java), // 进行矩阵内容器批量启动
+            commandCache.get(MatrixExecuteContainerCmd::class.java), // 循环进行矩阵的状态刷新
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
             commandCache.get(ContainerCmdLoop::class.java), // 发送本事件的循环消息
             commandCache.get(UpdateStateContainerCmdFinally::class.java) // 更新Job状态并可能返回Stage处理

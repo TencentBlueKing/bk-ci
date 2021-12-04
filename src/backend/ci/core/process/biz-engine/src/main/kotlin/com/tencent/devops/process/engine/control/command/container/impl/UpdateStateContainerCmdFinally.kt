@@ -60,6 +60,18 @@ class UpdateStateContainerCmdFinally(
     override fun execute(commandContext: ContainerContext) {
         // 更新状态模型
         updateContainerStatus(commandContext = commandContext)
+
+        // 如果是构建矩阵的刷新状态且未完成则重放一个事件保证轮询
+        if (commandContext.container.matrixGroupFlag == true && commandContext.buildStatus.isRunning()) {
+            pipelineEventDispatcher.dispatch(
+                commandContext.event.copy(
+                    actionType = ActionType.REFRESH,
+                    source = commandContext.latestSummary,
+                    reason = "Matrix(${commandContext.container.containerId}) cannot finished"
+                )
+            )
+        }
+
         // 结束时才会释放锁定及返回
         if (commandContext.buildStatus.isFinish()) {
             // 释放互斥组
