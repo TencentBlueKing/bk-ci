@@ -88,8 +88,13 @@ class QualityRuleBuildHisService constructor(
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
                 indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
                     .forEach {
-                    val requestIndicator = indicatorMap[it.enName]
-                    checkThresholdType(requestIndicator!!, it)
+                    val requestIndicator = (indicatorMap[it.enName])!!
+
+                    // 使用上下文变量表示阈值时不检查类型
+                    if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold)) {
+                        checkThresholdType(requestIndicator, it)
+                    }
+
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
                         requestIndicator.operation,
@@ -264,6 +269,12 @@ class QualityRuleBuildHisService constructor(
 
     fun convertVariables(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3) {
         ruleList.forEach { it ->
+            val indicatorThreshold = it.indicators.map { indicator ->
+                EnvUtils.parseEnv(indicator.threshold, buildCheckParamsV3.runtimeVariable ?: mapOf())
+            }
+            val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
+                indicatorThreshold.joinToString(","))
+            logger.info("QUALITY|convert_indicatorThreshold|$indicatorThreshold|COUNT|$indicatorCount")
 
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
@@ -271,7 +282,7 @@ class QualityRuleBuildHisService constructor(
             val gateKeeperCount = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
                 gateKeepers?.joinToString(","))
 
-            logger.info("QUALITY|CONVERTGATEKEEPERS|$gateKeepers|COUNT|$gateKeeperCount")
+            logger.info("QUALITY|convert_gateKeepers|$gateKeepers|COUNT|$gateKeeperCount")
         }
     }
 
