@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -70,7 +71,8 @@ class InitializeMatrixGroupStageCmd(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val modelContainerIdGenerator: ModelContainerIdGenerator
+    private val modelContainerIdGenerator: ModelContainerIdGenerator,
+    private val modelTaskIdGenerator: ModelTaskIdGenerator
 ) : StageCmd {
 
     companion object {
@@ -183,7 +185,7 @@ class InitializeMatrixGroupStageCmd(
                                     elements = parentContainer.elements.map { parentElement ->
                                         SampleStatusElement(
                                             name = parentElement.name,
-                                            id = VMUtils.genMatrixTaskId(parentElement.id!!, newContainerSeq),
+                                            id = modelTaskIdGenerator.getNextId(),
                                             executeCount = commandContext.executeCount
                                         )
                                     }.toList(),
@@ -256,7 +258,7 @@ class InitializeMatrixGroupStageCmd(
                                     elements = parentContainer.elements.map { parentElement ->
                                         SampleStatusElement(
                                             name = parentElement.name,
-                                            id = VMUtils.genMatrixTaskId(parentElement.id!!, newContainerSeq),
+                                            id = modelTaskIdGenerator.getNextId(),
                                             executeCount = commandContext.executeCount
                                         )
                                     }.toList(),
