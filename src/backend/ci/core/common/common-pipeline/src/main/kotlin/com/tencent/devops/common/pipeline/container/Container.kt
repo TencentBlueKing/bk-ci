@@ -69,4 +69,8 @@ interface Container {
     }
 
     fun getClassType(): String
+
+    fun getContainerById(vmSeqId: String): Container?
+
+    fun retryFreshMatrixOption()
 }

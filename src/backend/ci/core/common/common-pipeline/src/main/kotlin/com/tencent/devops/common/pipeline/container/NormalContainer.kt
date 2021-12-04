@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("ReturnCount")
 @ApiModel("流水线模型-普通任务容器")
 data class NormalContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
@@ -94,7 +95,17 @@ data class NormalContainer(
 
     override fun getClassType() = classType
 
-    fun retryFreshMatrixOption() {
+    override fun getContainerById(vmSeqId: String): Container? {
+        if (id == vmSeqId) return this
+        if (groupContainers?.isNotEmpty() == true) {
+            groupContainers?.forEach {
+                if (it.id == vmSeqId) return it
+            }
+        }
+        return null
+    }
+
+    override fun retryFreshMatrixOption() {
         groupContainers = mutableListOf()
         matrixControlOption?.finishCount = null
         matrixControlOption?.totalCount = null

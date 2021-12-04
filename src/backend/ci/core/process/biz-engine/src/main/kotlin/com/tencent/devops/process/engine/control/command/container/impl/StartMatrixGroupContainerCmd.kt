@@ -130,7 +130,8 @@ class StartMatrixGroupContainerCmd(
                 executeCount = commandContext.executeCount
             )
             LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
-                "|matrixGroupIDd=${parentContainer.containerId}|j(${container.containerId})|count=${groupContainers.size}")
+                "|matrixGroupIDd=${parentContainer.containerId}|j(${container.containerId})|" +
+                "count=${groupContainers.size}")
             sendBuildContainerEvent(commandContext, container, actionType, event.userId)
         }
     }

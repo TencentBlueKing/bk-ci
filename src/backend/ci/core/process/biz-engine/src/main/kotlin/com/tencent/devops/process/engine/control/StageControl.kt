@@ -40,7 +40,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckConditionalSkipStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckInterruptStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckPauseReviewStageCmd
-import com.tencent.devops.process.engine.control.command.stage.impl.InitializeMatrixGroupStageCmd
+import com.tencent.devops.process.engine.control.command.container.impl.InitializeMatrixGroupStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.StartContainerStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock
@@ -131,7 +131,6 @@ class StageControl @Autowired constructor(
             commandCache.get(CheckInterruptStageCmd::class.java), // 快速失败或者中断执行的检查
             commandCache.get(CheckConditionalSkipStageCmd::class.java), // 检查Stage条件跳过处理
             commandCache.get(CheckPauseReviewStageCmd::class.java), // Stage暂停&审核事件处理
-            commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
             commandCache.get(StartContainerStageCmd::class.java), // 正常执行下发Container事件的处理
             commandCache.get(UpdateStateForStageCmdFinally::class.java) // 最终处理Stage状态和后续事件
         )

@@ -76,4 +76,10 @@ data class TriggerContainer(
     }
 
     override fun getClassType() = classType
+
+    override fun getContainerById(vmSeqId: String): Container? {
+        return if (id == vmSeqId) this else null
+    }
+
+    override fun retryFreshMatrixOption() = Unit
 }

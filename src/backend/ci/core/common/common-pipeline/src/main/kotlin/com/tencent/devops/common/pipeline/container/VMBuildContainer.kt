@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("ReturnCount")
 @ApiModel("流水线模型-虚拟机构建容器")
 data class VMBuildContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
@@ -121,7 +122,17 @@ data class VMBuildContainer(
 
     override fun getClassType() = classType
 
-    fun retryFreshMatrixOption() {
+    override fun getContainerById(vmSeqId: String): Container? {
+        if (id == vmSeqId) return this
+        if (groupContainers?.isNotEmpty() == true) {
+            groupContainers?.forEach {
+                if (it.id == vmSeqId) return it
+            }
+        }
+        return null
+    }
+
+    override fun retryFreshMatrixOption() {
         groupContainers = mutableListOf()
         matrixControlOption?.finishCount = null
         matrixControlOption?.totalCount = null

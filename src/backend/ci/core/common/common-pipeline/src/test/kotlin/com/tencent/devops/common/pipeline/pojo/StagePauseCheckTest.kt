@@ -112,7 +112,7 @@ internal class StagePauseCheckTest {
                     startEpoch = 1551807007986,
                     executeCount = 1,
                     canRetry = true,
-                    containerId = "1",
+                    containerId = "10001",
                     containerHashId = "c-9de5cd612def4e7caa448ee116fa8560",
                     matrixGroupFlag = true,
                     buildEnv = mapOf("variables.var1" to "aaa", "variables.var2" to "bbb"),
@@ -126,7 +126,6 @@ internal class StagePauseCheckTest {
             customBuildEnv = mapOf("e1" to "123", "e2" to "321"),
             mutexGroup = null
         )
-
         val normalContainer = NormalContainer(
             id = "2",
             name = "构建矩阵demo",
@@ -199,6 +198,9 @@ internal class StagePauseCheckTest {
                 Stage(id = "stage-2", name = "stage-2", containers = listOf(vmContainer, normalContainer))
             )
         )
+        println(model.getStage("stage-2")?.getContainer("1")?.getContainerById("10001"))
+        println(model.getContainer("10001"))
+        println(model.getContainer("20001"))
         println(JsonUtil.toJson(model))
     }
 }

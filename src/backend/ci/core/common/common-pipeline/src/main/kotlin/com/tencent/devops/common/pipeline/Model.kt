@@ -161,11 +161,14 @@ data class Model(
             if (index == 0) {
                 return@forEachIndexed
             }
-            stage.containers.forEach { container ->
-                if (container.id == vmSeqId) {
-                    return container
-                }
-            }
+            return stage.getContainer(vmSeqId) ?: return@forEachIndexed
+        }
+        return null
+    }
+
+    fun getStage(stageId: String): Stage? {
+        stages.forEach { stage ->
+            if (stage.id == stageId) return stage
         }
         return null
     }
