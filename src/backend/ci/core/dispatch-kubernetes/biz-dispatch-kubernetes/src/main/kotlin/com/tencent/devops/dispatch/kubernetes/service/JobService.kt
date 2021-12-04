@@ -11,7 +11,7 @@ import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstContainer
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstPod
-import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -20,6 +20,10 @@ class JobService @Autowired constructor(
     private val podsClient: PodsClient,
     private val jobClient: JobClient
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(JobService::class.java)
+    }
 
     fun createJob(userId: String, jobReq: KubernetesJobReq): KubernetesJobResp {
         val jobName = KubernetesClientUtil.getKubernetesWorkloadOnlyLabelValue(userId)
@@ -31,7 +35,7 @@ class JobService @Autowired constructor(
             KubernetesClientUtil.getClientFailInfo("获取Pod节点信息失败: pod ${jobReq.podNameSelector} 不存在")
         )
         val result = jobClient.create(jobName, jobReq, nodeName.toString())
-        if (!result.isSuccessful()) {
+        if (result.isNotOk()) {
             CommonUtils.onFailure(
                 ErrorCodeEnum.CREATE_JOB_ERROR.errorType,
                 ErrorCodeEnum.CREATE_JOB_ERROR.errorCode,
@@ -44,7 +48,8 @@ class JobService @Autowired constructor(
 
     fun getJobStatus(jobName: String): KubernetesJobStatusResp {
         val result = podsClient.listWithHttpInfo(workloadOnlyLabel = jobName)
-        if (!result.isSuccessful()) {
+        if (result.isNotOk()) {
+            logger.warn("getJobStatus error: ${result.message}")
             return KubernetesJobStatusResp(
                 deleted = false,
                 status = PodStatus.FAILED.value,

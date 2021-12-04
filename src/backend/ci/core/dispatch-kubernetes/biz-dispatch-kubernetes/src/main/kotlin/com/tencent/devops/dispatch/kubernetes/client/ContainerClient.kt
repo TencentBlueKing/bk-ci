@@ -30,18 +30,18 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.PodsClient
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.Action
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
-import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
+import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstDeploy
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstPod
-import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.isSuccessful
+import io.kubernetes.client.openapi.ApiException
 import io.kubernetes.client.openapi.models.V1ContainerStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +62,7 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): Result<V1ContainerStatus> {
         val result = podsClient.listWithHttpInfo(containerName)
-        if (!result.isSuccessful()) {
+        if (result.isNotOk()) {
             // 先不添加重试逻辑，看后续使用
             //           if (retryTime > 0) {
             //               val retryTimeLocal = retryTime - 1
@@ -73,12 +73,12 @@ class ContainerClient @Autowired constructor(
                 ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                 ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 KubernetesClientUtil.getClientFailInfo(
-                    "获取容器状态接口异常（Fail to get container status, http response code: ${result.statusCode}"
+                    "获取容器状态接口异常（Fail to get container status, http response: $result"
                 )
             )
         }
         return Result(
-            status = result.statusCode,
+            status = result.status,
             message = null,
             data = result.data?.getFirstPod()?.status?.containerStatuses?.ifEmpty { null }?.get(0)
         )
@@ -95,13 +95,13 @@ class ContainerClient @Autowired constructor(
         when (buildContainer.type) {
             ContainerType.DEV -> {
                 val resp = deploymentClient.create(buildContainer, containerName)
-                if (!resp.isSuccessful()) {
+                if (resp.isNotOk()) {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
                         errorMessage = KubernetesClientUtil.getClientFailInfo(
-                            "创建容器接口异常 （Fail to create container status, http response code: ${resp.statusCode}"
+                            "创建容器接口异常 （Fail to create container status, http response $resp"
                         )
                     )
                 }
@@ -146,7 +146,7 @@ class ContainerClient @Autowired constructor(
         return when (action) {
             Action.DELETE -> {
                 val result = deploymentClient.delete(containerName)
-                if (!result.isSuccessful()) {
+                if (result.isNotOk()) {
                     OperateContainerResult("", false, result.data?.message)
                 }
                 OperateContainerResult("", true)
@@ -155,19 +155,27 @@ class ContainerClient @Autowired constructor(
                 try {
                     deploymentClient.start(containerName, param)
                 } catch (e: Exception) {
-                    logger.error("start container $containerName error", e)
+                    val message = if (e is ApiException) {
+                        e.responseBody
+                    } else {
+                        e.message
+                    }
+                    logger.error("start container $containerName error: $message")
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        errorMessage = KubernetesClientUtil.getClientFailInfo("启动容器接口错误, ${e.message}")
+                        errorMessage = KubernetesClientUtil.getClientFailInfo("启动容器接口错误, $message")
                     )
                 }
                 OperateContainerResult("", true)
             }
             Action.STOP -> {
                 val result = deploymentClient.stop(containerName)
-                OperateContainerResult("", result.isSuccessful())
+                if (result.isNotOk()) {
+                    logger.error("stop container error: ${result.message}")
+                }
+                OperateContainerResult("", result.isOk())
             }
         }
     }
@@ -176,7 +184,11 @@ class ContainerClient @Autowired constructor(
         containerName: String
     ): OperateContainerResult {
         var replicas = try {
-            deploymentClient.list(containerName).data?.getFirstDeploy()?.spec?.replicas
+            val resp = deploymentClient.list(containerName)
+            if (resp.isNotOk()) {
+                return OperateContainerResult(containerName, false, resp.message)
+            }
+            resp.data?.getFirstDeploy()?.spec?.replicas
         } catch (e: Throwable) {
             return OperateContainerResult(containerName, false, e.message)
         }

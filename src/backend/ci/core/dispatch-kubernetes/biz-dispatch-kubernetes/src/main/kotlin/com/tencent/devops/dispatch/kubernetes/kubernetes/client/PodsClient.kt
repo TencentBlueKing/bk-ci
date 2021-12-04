@@ -27,10 +27,11 @@
 
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
-import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
@@ -50,23 +51,9 @@ class PodsClient @Autowired constructor(
 
     fun listWithHttpInfo(
         workloadOnlyLabel: String
-    ): ApiResponse<V1PodList> {
-        return CoreV1Api().listNamespacedPodWithHttpInfo(
-            k8sConfig.nameSpace,
-            "true",
-            null,
-            null,
-            null,
-            mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
-            null, null, null, null, null
-        )
-    }
-
-    fun list(
-        workloadOnlyLabel: String
-    ): V1PodList? {
-        return try {
-            CoreV1Api().listNamespacedPod(
+    ): Result<V1PodList> {
+        return KubernetesClientUtil.apiHandle {
+            CoreV1Api().listNamespacedPodWithHttpInfo(
                 k8sConfig.nameSpace,
                 "true",
                 null,
@@ -75,8 +62,31 @@ class PodsClient @Autowired constructor(
                 mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
                 null, null, null, null, null
             )
+        }
+    }
+
+    fun list(
+        workloadOnlyLabel: String
+    ): V1PodList? {
+        return try {
+            val resp = KubernetesClientUtil.apiHandle {
+                CoreV1Api().listNamespacedPodWithHttpInfo(
+                    k8sConfig.nameSpace,
+                    "true",
+                    null,
+                    null,
+                    null,
+                    mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
+                    null, null, null, null, null
+                )
+            }
+            if (resp.isNotOk()) {
+                logger.warn("PodsClient list: |$workloadOnlyLabel| error: ${resp.message}")
+                return null
+            }
+            resp.data
         } catch (ignore: Exception) {
-            logger.info("PodsClient logs: |$workloadOnlyLabel| error: ${ignore.message}")
+            logger.warn("PodsClient list: |$workloadOnlyLabel| error: ${ignore.message}")
             return null
         }
     }
@@ -85,14 +95,22 @@ class PodsClient @Autowired constructor(
         podName: String
     ): V1Pod? {
         return try {
-            CoreV1Api().readNamespacedPod(
-                podName,
-                k8sConfig.nameSpace,
-                "true",
-                null,
-                null
-            )
+            val resp = KubernetesClientUtil.apiHandle {
+                CoreV1Api().readNamespacedPodWithHttpInfo(
+                    podName,
+                    k8sConfig.nameSpace,
+                    "true",
+                    null,
+                    null
+                )
+            }
+            if (resp.isNotOk()) {
+                logger.warn("PodsClient read: |$podName| error: ${resp.message}")
+                return null
+            }
+            resp.data
         } catch (ignore: Exception) {
+            logger.warn("PodsClient read: |$podName| error: ${ignore.message}")
             return null
         }
     }
@@ -103,19 +121,26 @@ class PodsClient @Autowired constructor(
         since: Int?
     ): String? {
         return try {
-            CoreV1Api().readNamespacedPodLog(
-                podName,
-                k8sConfig.nameSpace,
-                containerName,
-                null,
-                null,
-                null,
-                "true",
-                null,
-                since,
-                null,
-                null
-            )
+            val resp = KubernetesClientUtil.apiHandle {
+                CoreV1Api().readNamespacedPodLogWithHttpInfo(
+                    podName,
+                    k8sConfig.nameSpace,
+                    containerName,
+                    null,
+                    null,
+                    null,
+                    "true",
+                    null,
+                    since,
+                    null,
+                    null
+                )
+            }
+            if (resp.isNotOk()) {
+                logger.warn("PodsClient logs: |$podName|$containerName|$since| error: ${resp.message}")
+                return null
+            }
+            resp.data
         } catch (ignore: Exception) {
             logger.info("PodsClient logs: |$podName|$containerName|$since| error: ${ignore.message}")
             return null

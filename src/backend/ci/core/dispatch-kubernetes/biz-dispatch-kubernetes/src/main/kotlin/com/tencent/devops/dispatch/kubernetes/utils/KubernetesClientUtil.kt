@@ -27,6 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
+import com.tencent.devops.common.api.pojo.Result
+import io.kubernetes.client.openapi.ApiException
 import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.models.V1Container
 import io.kubernetes.client.openapi.models.V1Deployment
@@ -34,6 +36,7 @@ import io.kubernetes.client.openapi.models.V1DeploymentList
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
 import org.apache.commons.lang3.RandomUtils
+import org.springframework.http.HttpStatus
 
 object KubernetesClientUtil {
 
@@ -60,5 +63,28 @@ object KubernetesClientUtil {
 
     fun V1Pod?.getFirstContainer(): V1Container? {
         return this?.spec?.containers?.ifEmpty { null }?.get(0)
+    }
+
+    fun <T> apiHandle(
+        api: () -> ApiResponse<T>
+    ): Result<T> {
+        return try {
+            HttpStatus.ACCEPTED
+            api().let {
+                Result(
+                    status = if (it.isSuccessful()) {
+                        0
+                    } else {
+                        it.statusCode
+                    },
+                    data = it.data
+                )
+            }
+        } catch (e: ApiException) {
+            Result(
+                status = e.code,
+                message = e.responseBody
+            )
+        }
     }
 }

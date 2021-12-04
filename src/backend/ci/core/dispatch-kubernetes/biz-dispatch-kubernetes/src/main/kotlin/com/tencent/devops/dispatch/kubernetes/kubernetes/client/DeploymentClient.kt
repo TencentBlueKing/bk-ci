@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
 import com.google.gson.Gson
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfiguration
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
@@ -37,10 +38,10 @@ import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.ContainerData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesDataUtils
 import io.kubernetes.client.custom.V1Patch
-import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.AppsV1Api
 import io.kubernetes.client.openapi.models.V1Deployment
 import io.kubernetes.client.openapi.models.V1DeploymentList
@@ -65,7 +66,7 @@ class DeploymentClient @Autowired constructor(
     fun create(
         buildContainer: BuildContainer,
         containerName: String
-    ): ApiResponse<V1Deployment> {
+    ): Result<V1Deployment> {
         val labels = getCoreLabels(containerName)
 
         logger.info("DeploymentClient create containerName: $containerName buildContainer: $buildContainer")
@@ -99,19 +100,24 @@ class DeploymentClient @Autowired constructor(
                 )
             )
         }
-        return AppsV1Api().createNamespacedDeploymentWithHttpInfo(
-            k8sConfig.nameSpace, deployment, null, null, null
-        )
+
+        return KubernetesClientUtil.apiHandle {
+            AppsV1Api().createNamespacedDeploymentWithHttpInfo(
+                k8sConfig.nameSpace, deployment, null, null, null
+            )
+        }
     }
 
     fun delete(
         containerName: String
-    ): ApiResponse<V1Status> {
-        return AppsV1Api().deleteNamespacedDeploymentWithHttpInfo(
-            containerName,
-            k8sConfig.nameSpace,
-            null, null, null, null, null, null
-        )
+    ): Result<V1Status> {
+        return KubernetesClientUtil.apiHandle {
+            AppsV1Api().deleteNamespacedDeploymentWithHttpInfo(
+                containerName,
+                k8sConfig.nameSpace,
+                null, null, null, null, null, null
+            )
+        }
     }
 
     // 目前启动，和停止通过扩，缩容deployment的pod数量实现
@@ -171,7 +177,7 @@ class DeploymentClient @Autowired constructor(
 
     fun stop(
         containerName: String
-    ): ApiResponse<V1Deployment> {
+    ): Result<V1Deployment> {
         val stopJson = Gson().toJson(
             listOf(
                 mapOf(
@@ -181,26 +187,30 @@ class DeploymentClient @Autowired constructor(
                 )
             )
         )
-        return AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
-            containerName,
-            k8sConfig.nameSpace,
-            V1Patch(stopJson),
-            null, null, null, null
-        )
+        return KubernetesClientUtil.apiHandle {
+            AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
+                containerName,
+                k8sConfig.nameSpace,
+                V1Patch(stopJson),
+                null, null, null, null
+            )
+        }
     }
 
     fun list(
         containerName: String
-    ): ApiResponse<V1DeploymentList> {
-        return AppsV1Api().listNamespacedDeploymentWithHttpInfo(
-            k8sConfig.nameSpace,
-            "true",
-            null,
-            null,
-            null,
-            getCoreLabels(containerName).toLabelSelector(),
-            null, null, null, null, null
-        )
+    ): Result<V1DeploymentList> {
+        return KubernetesClientUtil.apiHandle {
+            AppsV1Api().listNamespacedDeploymentWithHttpInfo(
+                k8sConfig.nameSpace,
+                "true",
+                null,
+                null,
+                null,
+                getCoreLabels(containerName).toLabelSelector(),
+                null, null, null, null, null
+            )
+        }
     }
 
     private fun getCoreLabels(containerName: String) = mapOf(dispatchBuildConfig.workloadLabel!! to containerName)

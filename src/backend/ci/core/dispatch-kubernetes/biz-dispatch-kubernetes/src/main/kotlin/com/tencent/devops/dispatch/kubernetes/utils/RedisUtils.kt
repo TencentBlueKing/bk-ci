@@ -22,7 +22,7 @@ class RedisUtils @Autowired constructor(
      * 设置容器创建信息，防止断服或者服务发布时导致的容器创建但未正常关闭
      */
     fun setCreatingContainer(containerName: String, userId: String) =
-            redisOperation.addSetValue(creatingContainerKey, strcatUserAndContainerName(userId, containerName))
+        redisOperation.addSetValue(creatingContainerKey, strcatUserAndContainerName(userId, containerName))
 
     fun getAndRemoveCreatingContainer(): Set<String>? {
         val result = redisOperation.getSetMembers(creatingContainerKey)
@@ -31,10 +31,10 @@ class RedisUtils @Autowired constructor(
     }
 
     fun removeCreatingContainer(containerName: String, userId: String) =
-            redisOperation.removeSetMember(creatingContainerKey, strcatUserAndContainerName(userId, containerName))
+        redisOperation.removeSetMember(creatingContainerKey, strcatUserAndContainerName(userId, containerName))
 
     fun setStartingContainer(containerName: String, userId: String) =
-            redisOperation.addSetValue(startingContainerKey, strcatUserAndContainerName(userId, containerName))
+        redisOperation.addSetValue(startingContainerKey, strcatUserAndContainerName(userId, containerName))
 
     fun getAndRemoveStartingContainers(): Set<String>? {
         val result = redisOperation.getSetMembers(startingContainerKey)
@@ -43,7 +43,7 @@ class RedisUtils @Autowired constructor(
     }
 
     fun removeStartingContainer(containerName: String, userId: String) =
-            redisOperation.removeSetMember(startingContainerKey, strcatUserAndContainerName(userId, containerName))
+        redisOperation.removeSetMember(startingContainerKey, strcatUserAndContainerName(userId, containerName))
 
     /**
      * 设置网关认证信息

@@ -71,13 +71,15 @@ object Pod {
                 spec.restartPolicy(restartPolicy)
             }
             if (!tolerations.isNullOrEmpty()) {
-                spec.tolerations(tolerations.map {
-                    V1Toleration()
-                        .key(it.key)
-                        .operator(it.operator)
-                        .value(it.value)
-                        .effect(it.effecf)
-                })
+                spec.tolerations(
+                    tolerations.map {
+                        V1Toleration()
+                            .key(it.key)
+                            .operator(it.operator)
+                            .value(it.value)
+                            .effect(it.effecf)
+                    }
+                )
             }
             pods.spec(spec)
             return pods
