@@ -31,42 +31,22 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
-import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @Service
 class StartMatrixGroupContainerCmd(
-    private val redisOperation: RedisOperation,
-    private val pipelineTaskService: PipelineTaskService,
-    private val taskBuildDetailService: TaskBuildDetailService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val buildLogPrinter: BuildLogPrinter
 ) : ContainerCmd {
 
     companion object {
@@ -74,11 +54,110 @@ class StartMatrixGroupContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag == true
     }
 
     override fun execute(commandContext: ContainerContext) {
 
+        val parentContainer = commandContext.container
+
+        // 获取组内所有待执行容器
+        val groupContainers = pipelineContainerService.listGroupContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            matrixGroupId = parentContainer.containerId
+        )
+
+        // 构建矩阵只有开始执行和循环刷新执行情况的操作
+        if (commandContext.container.status.isReadyToRun()) {
+            startGroupContainers(commandContext, parentContainer, groupContainers)
+            commandContext.buildStatus = BuildStatus.RUNNING
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            commandContext.latestSummary = "matrix(${commandContext.container.containerId})_group_start"
+        } else {
+
+            val groupStatus = judgeGroupContainers(commandContext, parentContainer, groupContainers)
+
+            if (groupStatus.isFinish()) {
+                commandContext.buildStatus = groupStatus
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
+                commandContext.latestSummary = "matrix(${commandContext.container.containerId})_loop_finish"
+            } else {
+                commandContext.cmdFlowState = CmdFlowState.LOOP
+                commandContext.latestSummary = "matrix(${commandContext.container.containerId})_loop_continue"
+            }
+        }
     }
 
+    private fun judgeGroupContainers(
+        commandContext: ContainerContext,
+        parentContainer: PipelineBuildContainer,
+        groupContainers: List<PipelineBuildContainer>
+    ): BuildStatus {
+        val fastKill = parentContainer.controlOption?.matrixControlOption?.fastKill == true
+        // TODO 做执行情况的刷新和结束判断
+        return BuildStatus.SUCCEED
+    }
+
+    private fun startGroupContainers(
+        commandContext: ContainerContext,
+        parentContainer: PipelineBuildContainer,
+        groupContainers: List<PipelineBuildContainer>
+    ) {
+        val event = commandContext.event
+        val actionType = ActionType.START
+
+        LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|actionType=$actionType" +
+            "j(${event.containerId})|count=${groupContainers.size}|groupContainers=$groupContainers")
+
+        buildLogPrinter.addYellowLine(
+            buildId = event.buildId,
+            message = "Matrix container(${parentContainer.containerId}) start to run " +
+                "${groupContainers.size} inner containers:",
+            tag = VMUtils.genStartVMTaskId(parentContainer.seq.toString()),
+            jobId = parentContainer.containerHashId,
+            executeCount = commandContext.executeCount
+        )
+
+        groupContainers.forEach { container ->
+            buildLogPrinter.addYellowLine(
+                buildId = event.buildId,
+                message = "Container(${container.containerId}) starting...",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
+            LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
+                "|matrixGroupIDd=${parentContainer.containerId}|j(${container.containerId})|count=${groupContainers.size}")
+            sendBuildContainerEvent(commandContext, container, actionType, event.userId)
+        }
+    }
+
+    private fun sendBuildContainerEvent(
+        commandContext: ContainerContext,
+        container: PipelineBuildContainer,
+        actionType: ActionType,
+        userId: String
+    ) {
+        // 通知容器构建消息
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "From_s(${container.stageId})",
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                userId = userId,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerType = container.containerType,
+                containerId = container.containerId,
+                containerHashId = container.containerHashId,
+                actionType = actionType,
+                errorCode = 0,
+                errorTypeName = null,
+                reason = commandContext.latestSummary
+            )
+        )
+    }
 }

@@ -74,20 +74,14 @@ class StartActionTaskContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
         val actionType = commandContext.event.actionType
-
-        // #4158 如果是构建矩阵父容器则跳过插件执行，进行组内容器执行
-        if (commandContext.container.matrixGroupFlag == true) {
-            commandContext.cmdFlowState = CmdFlowState.CONTINUE
-            return
-        } else {
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
-        }
-
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
         when {
             actionType.isStartOrRefresh() || actionType.isEnd() -> {
                 if (!actionType.isTerminate()) {

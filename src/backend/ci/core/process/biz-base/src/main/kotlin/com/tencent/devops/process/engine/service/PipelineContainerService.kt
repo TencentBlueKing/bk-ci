@@ -92,6 +92,26 @@ class PipelineContainerService @Autowired constructor(
         return result
     }
 
+    fun listGroupContainers(
+        projectId: String,
+        buildId: String,
+        matrixGroupId: String
+    ): List<PipelineBuildContainer> {
+        val list = pipelineBuildContainerDao.listByMatrixGroupId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            matrixGroupId = matrixGroupId
+        )
+        val result = mutableListOf<PipelineBuildContainer>()
+        if (list.isNotEmpty()) {
+            list.forEach {
+                result.add(pipelineBuildContainerDao.convert(it)!!)
+            }
+        }
+        return result
+    }
+
     fun listByBuildId(buildId: String, stageId: String? = null): Collection<TPipelineBuildContainerRecord> {
         return pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
     }
@@ -263,7 +283,7 @@ class PipelineContainerService @Autowired constructor(
         var taskSeq = 0
         val containerElements = container.elements
 
-        containerElements.forEach nextElement@{ atomElement ->
+        if (container.matrixGroupFlag != null) containerElements.forEach nextElement@{ atomElement ->
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
             // 计算启动构建机的插件任务的序号
             if (startVMTaskSeq < 0) {
@@ -391,12 +411,14 @@ class PipelineContainerService @Autowired constructor(
                 val controlOption = when (container) {
                     is NormalContainer -> PipelineBuildContainerControlOption(
                         jobControlOption = container.jobControlOption!!,
+                        matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup,
                         containPostTaskFlag = container.containPostTaskFlag
                     )
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
                         jobControlOption = container.jobControlOption!!,
+                        matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup,
                         containPostTaskFlag = container.containPostTaskFlag
@@ -415,7 +437,7 @@ class PipelineContainerService @Autowired constructor(
                         seq = context.containerSeq,
                         status = BuildStatus.QUEUE,
                         controlOption = controlOption,
-                        matrixGroupFlag = false,
+                        matrixGroupFlag = container.matrixGroupFlag,
                         matrixGroupId = null
                     )
                 )
