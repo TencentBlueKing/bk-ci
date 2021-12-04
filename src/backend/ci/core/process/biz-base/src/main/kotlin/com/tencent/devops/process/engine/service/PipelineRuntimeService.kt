@@ -774,24 +774,23 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineInfo.pipelineId,
                         buildId = buildId
                     )
-                } else {
-                    // --- 第3层循环：Element遍历处理 ---
-                    needUpdateStage = pipelineContainerService.prepareBuildContainerTasks(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        container = container,
-                        startParamMap = startParamMap,
-                        context = context,
-                        stage = stage,
-                        buildContainers = buildContainers,
-                        buildTaskList = buildTaskList,
-                        updateContainerExistsRecord = updateContainerExistsRecord,
-                        updateTaskExistsRecord = updateTaskExistsRecord,
-                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                        lastTimeBuildContainerRecords = lastTimeBuildContainerRecords
-                    )
                 }
+                // --- 第3层循环：Element遍历处理 ---
+                needUpdateStage = pipelineContainerService.prepareBuildContainerTasks(
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    container = container,
+                    startParamMap = startParamMap,
+                    context = context,
+                    stage = stage,
+                    buildContainers = buildContainers,
+                    buildTaskList = buildTaskList,
+                    updateContainerExistsRecord = updateContainerExistsRecord,
+                    updateTaskExistsRecord = updateTaskExistsRecord,
+                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    lastTimeBuildContainerRecords = lastTimeBuildContainerRecords
+                )
                 context.containerSeq++
             }
 

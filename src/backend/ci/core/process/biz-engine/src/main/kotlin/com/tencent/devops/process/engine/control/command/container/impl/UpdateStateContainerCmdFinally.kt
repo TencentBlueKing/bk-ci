@@ -72,9 +72,11 @@ class UpdateStateContainerCmdFinally(
             val buildId = commandContext.container.buildId
             val stageId = commandContext.container.stageId
             val containerId = commandContext.container.containerId
+            val matrixGroupId = commandContext.container.matrixGroupId
             LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
-                "${commandContext.buildStatus}|${commandContext.latestSummary}")
-            sendBackStage(commandContext = commandContext)
+                "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}")
+            // #4518 如果该容器不属于某个矩阵时上报stage处理
+            if (matrixGroupId.isNullOrBlank()) sendBackStage(commandContext = commandContext)
         }
     }
 

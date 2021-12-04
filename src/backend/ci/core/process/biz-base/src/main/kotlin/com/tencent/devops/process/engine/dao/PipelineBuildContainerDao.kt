@@ -239,6 +239,21 @@ class PipelineBuildContainerDao {
         }
     }
 
+    fun listByMatrixGroupId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        matrixGroupId: String
+    ): Collection<TPipelineBuildContainerRecord> {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .and(MATRIX_GROUP_ID.eq(matrixGroupId))
+                .orderBy(SEQ.asc()).fetch()
+        }
+    }
+
     fun listBuildContainerInMatrixGroup(
         dslContext: DSLContext,
         projectId: String,
