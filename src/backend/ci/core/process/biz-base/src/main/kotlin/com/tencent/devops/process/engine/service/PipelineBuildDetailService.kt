@@ -356,16 +356,17 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
 
                 override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (id == containerId) {
-                        if (container is VMBuildContainer && container.showBuildResource == true) {
-                            container.name = vmInfo.name
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
                         }
                         update = true
                         return Traverse.BREAK

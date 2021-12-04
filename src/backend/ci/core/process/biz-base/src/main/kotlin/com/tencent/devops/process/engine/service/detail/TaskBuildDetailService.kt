@@ -445,12 +445,13 @@ class TaskBuildDetailService(
                 }
 
                 override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (container.id.equals(containerId)) {
-                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(container.elements.size) }
-                        container.elements.forEach { e ->
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(targetContainer.elements.size) }
+                        targetContainer.elements.forEach { e ->
                             if (e.id.equals(taskId)) {
                                 // 设置插件状态为排队状态
-                                container.status = BuildStatus.QUEUE.name
+                                targetContainer.status = BuildStatus.QUEUE.name
                                 update = true
                                 if (element != null) { // 若element不为null，说明element内的input有改动，需要替换
                                     element.status = null
@@ -466,7 +467,7 @@ class TaskBuildDetailService(
                             }
                         }
                         if (element != null) {
-                            container.elements = newElement
+                            targetContainer.elements = newElement
                         }
                         return Traverse.BREAK
                     }

@@ -1866,7 +1866,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = vmSeqId.toInt(),
+            containerId = vmSeqId,
             vmInfo = vmInfo
         )
     }

@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,6 +75,7 @@ class PipelineContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
     companion object {
@@ -151,6 +153,38 @@ class PipelineContainerService @Autowired constructor(
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime
+        )
+    }
+
+    fun updateMatrixGroupStatus(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        matrixGroupId: String,
+        modelContainer: Container?,
+        controlOption: PipelineBuildContainerControlOption
+    ) {
+        logger.info("[$buildId]|updateMatrixGroupStatus|controlOption=$controlOption|" +
+            "matrixGroupId=$matrixGroupId|stageId=$stageId")
+        pipelineBuildContainerDao.updateControlOption(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = matrixGroupId,
+            controlOption = controlOption
+        )
+        containerBuildDetailService.updateMatrixGroupStatus(
+            buildId = buildId,
+            stageId = stageId,
+            matrixGroupId = matrixGroupId,
+            matrixOption = controlOption.matrixControlOption!!
+        )
+        if (modelContainer != null) containerBuildDetailService.updateMatrixGroupContainer(
+            buildId = buildId,
+            stageId = stageId,
+            matrixGroupId = matrixGroupId,
+            modelContainer = modelContainer
         )
     }
 

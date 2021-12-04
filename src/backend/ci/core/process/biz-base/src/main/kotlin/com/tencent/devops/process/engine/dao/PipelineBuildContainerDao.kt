@@ -225,6 +225,22 @@ class PipelineBuildContainerDao {
         }
     }
 
+    fun updateControlOption(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        controlOption: PipelineBuildContainerControlOption
+    ): Int {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.update(this)
+                .set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
+                .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId))
+                .and(CONTAINER_ID.eq(containerId)).execute()
+        }
+    }
+
     fun listByBuildId(
         dslContext: DSLContext,
         buildId: String,

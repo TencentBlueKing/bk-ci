@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckConditionalSkipStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckInterruptStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckPauseReviewStageCmd
-import com.tencent.devops.process.engine.control.command.container.impl.InitializeMatrixGroupStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.StartContainerStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock

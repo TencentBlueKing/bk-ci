@@ -56,49 +56,24 @@ class StartMatrixGroupContainerCmd(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
             !commandContext.buildStatus.isFinish() &&
+            commandContext.container.status.isReadyToRun() &&
             commandContext.container.matrixGroupFlag == true
     }
 
     override fun execute(commandContext: ContainerContext) {
 
+        // 获取组内所有待执行容器，下发容器启动的事件
         val parentContainer = commandContext.container
-
-        // 获取组内所有待执行容器
         val groupContainers = pipelineContainerService.listGroupContainers(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId,
             matrixGroupId = parentContainer.containerId
         )
+        startGroupContainers(commandContext, parentContainer, groupContainers)
 
-        // 构建矩阵只有开始执行和循环刷新执行情况的操作
-        if (commandContext.container.status.isReadyToRun()) {
-            startGroupContainers(commandContext, parentContainer, groupContainers)
-            commandContext.buildStatus = BuildStatus.RUNNING
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
-            commandContext.latestSummary = "matrix(${commandContext.container.containerId})_group_start"
-        } else {
-
-            val groupStatus = judgeGroupContainers(commandContext, parentContainer, groupContainers)
-
-            if (groupStatus.isFinish()) {
-                commandContext.buildStatus = groupStatus
-                commandContext.cmdFlowState = CmdFlowState.FINALLY
-                commandContext.latestSummary = "matrix(${commandContext.container.containerId})_loop_finish"
-            } else {
-                commandContext.cmdFlowState = CmdFlowState.LOOP
-                commandContext.latestSummary = "matrix(${commandContext.container.containerId})_loop_continue"
-            }
-        }
-    }
-
-    private fun judgeGroupContainers(
-        commandContext: ContainerContext,
-        parentContainer: PipelineBuildContainer,
-        groupContainers: List<PipelineBuildContainer>
-    ): BuildStatus {
-        val fastKill = parentContainer.controlOption?.matrixControlOption?.fastKill == true
-        // TODO 做执行情况的刷新和结束判断
-        return BuildStatus.SUCCEED
+        commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_group_start"
+        commandContext.buildStatus = BuildStatus.RUNNING
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     private fun startGroupContainers(
@@ -109,14 +84,14 @@ class StartMatrixGroupContainerCmd(
         val event = commandContext.event
         val actionType = ActionType.START
 
-        LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|actionType=$actionType" +
+        LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|actionType=$actionType|" +
             "j(${event.containerId})|count=${groupContainers.size}|groupContainers=$groupContainers")
 
         buildLogPrinter.addYellowLine(
             buildId = event.buildId,
             message = "Matrix container(${parentContainer.containerId}) start to run " +
                 "${groupContainers.size} inner containers:",
-            tag = VMUtils.genStartVMTaskId(parentContainer.seq.toString()),
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
             jobId = parentContainer.containerHashId,
             executeCount = commandContext.executeCount
         )
@@ -132,33 +107,23 @@ class StartMatrixGroupContainerCmd(
             LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
                 "|matrixGroupIDd=${parentContainer.containerId}|j(${container.containerId})|" +
                 "count=${groupContainers.size}")
-            sendBuildContainerEvent(commandContext, container, actionType, event.userId)
-        }
-    }
-
-    private fun sendBuildContainerEvent(
-        commandContext: ContainerContext,
-        container: PipelineBuildContainer,
-        actionType: ActionType,
-        userId: String
-    ) {
-        // 通知容器构建消息
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "From_s(${container.stageId})",
-                projectId = container.projectId,
-                pipelineId = container.pipelineId,
-                userId = userId,
-                buildId = container.buildId,
-                stageId = container.stageId,
-                containerType = container.containerType,
-                containerId = container.containerId,
-                containerHashId = container.containerHashId,
-                actionType = actionType,
-                errorCode = 0,
-                errorTypeName = null,
-                reason = commandContext.latestSummary
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "From_s(${container.stageId})",
+                    projectId = container.projectId,
+                    pipelineId = container.pipelineId,
+                    userId = event.userId,
+                    buildId = container.buildId,
+                    stageId = container.stageId,
+                    containerType = container.containerType,
+                    containerId = container.containerId,
+                    containerHashId = container.containerHashId,
+                    actionType = actionType,
+                    errorCode = 0,
+                    errorTypeName = null,
+                    reason = commandContext.latestSummary
+                )
             )
-        )
+        }
     }
 }

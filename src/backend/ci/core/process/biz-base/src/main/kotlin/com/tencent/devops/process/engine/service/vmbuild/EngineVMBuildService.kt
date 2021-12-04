@@ -268,7 +268,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 )
                 containerBuildDetailService.containerStarted(
                     buildId = buildId,
-                    containerId = vmSeqId.toInt(),
+                    containerId = vmSeqId,
                     containerBuildStatus = buildStatus
                 )
             }

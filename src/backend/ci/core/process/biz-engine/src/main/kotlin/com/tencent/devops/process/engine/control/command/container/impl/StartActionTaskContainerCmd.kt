@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent

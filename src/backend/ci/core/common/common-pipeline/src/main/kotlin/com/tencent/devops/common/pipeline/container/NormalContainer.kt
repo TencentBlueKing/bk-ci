@@ -96,10 +96,10 @@ data class NormalContainer(
     override fun getClassType() = classType
 
     override fun getContainerById(vmSeqId: String): Container? {
-        if (id == vmSeqId) return this
+        if (id == vmSeqId || containerId == vmSeqId) return this
         if (groupContainers?.isNotEmpty() == true) {
             groupContainers?.forEach {
-                if (it.id == vmSeqId) return it
+                if (it.id == vmSeqId || containerId == vmSeqId) return it
             }
         }
         return null
