@@ -15,7 +15,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import org.junit.Assert
 import org.junit.Test
@@ -93,14 +93,14 @@ internal class StagePauseCheckTest {
                     id = "10001",
                     name = "构建矩阵demo",
                     elements = listOf(
-                        MatrixStatusElement(
+                        SampleStatusElement(
                             name = "有编译环境市场插件",
                             id = "e-8104cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,
                             executeCount = 1,
                             elapsed = 123
                         ),
-                        MatrixStatusElement(
+                        SampleStatusElement(
                             name = "内置脚本插件",
                             id = "e-1536cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,
@@ -164,7 +164,7 @@ internal class StagePauseCheckTest {
                     id = "20001",
                     name = "构建矩阵demo",
                     elements = listOf(
-                        MatrixStatusElement(
+                        SampleStatusElement(
                             name = "无有编译环境市场插件",
                             id = "e-2314cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,

@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
@@ -56,8 +56,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
- * Stage下发Container事件命令处理
+ * Stage计算构建矩阵事件命令处理
  */
+@Suppress(
+    "ComplexMethod",
+    "LongMethod",
+    "ReturnCount",
+    "NestedBlockDepth"
+)
 @Service
 class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
@@ -87,7 +93,12 @@ class InitializeMatrixGroupStageCmd(
         if (matrixContainers.isEmpty()) return
 
         // 在下发构建机任务前进行构建矩阵计算
-        val count = generateMatrixGroup(commandContext)
+        val count = try {
+            generateMatrixGroup(commandContext)
+        } catch (ignore: Throwable) {
+            LOG.error("ENGINE|${commandContext.stage.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
+                "s(${commandContext.stage.stageId})|matrixContainers=$matrixContainers", ignore)
+        }
 
         LOG.info("ENGINE|${commandContext.stage.buildId}|MATRIX_CONTAINER_INIT|" +
             "s(${commandContext.stage.stageId})|newContainerCount=$count")
@@ -114,6 +125,9 @@ class InitializeMatrixGroupStageCmd(
                     // #4518 开启了矩阵功能但没有矩阵配置，则直接跳过
                     if (parentContainer.matrixGroupFlag == true) {
 
+                        // 当前矩阵组下的新容器
+                        val groupContainers = mutableListOf<PipelineBuildContainer>()
+                        val matrixGroupId = parentContainer.id!!
                         val context = MatrixBuildContext(
                             actionType = ActionType.START,
                             executeCount = commandContext.executeCount,
@@ -133,16 +147,12 @@ class InitializeMatrixGroupStageCmd(
                             retryFailedContainer = variables[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                             skipFailedTask = variables[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
                             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
-                            containerSeq = VMUtils.genMatrixContainerSeq(parentContainer.id!!.toInt(), 0)
+                            containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 0)
                         )
 
                         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-                            "containerId=${parentContainer.id}|containerHashId=${parentContainer.containerHashId}" +
+                            "matrixGroupId=$matrixGroupId|containerHashId=${parentContainer.containerHashId}" +
                             "|context=$context")
-
-                        // 当前矩阵组下的新容器
-                        val groupContainers = mutableListOf<PipelineBuildContainer>()
-                        val matrixGroupId = parentContainer.id!!
 
                         if (parentContainer is VMBuildContainer && parentContainer.matrixControlOption != null) {
 
@@ -151,8 +161,9 @@ class InitializeMatrixGroupStageCmd(
                             val contextCaseList = try {
                                 matrixOption.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
-                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|VM|${event.stageId}|" +
-                                    "containerId=${parentContainer.id}|parentContainer=$parentContainer")
+                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP|VM|" +
+                                    "${event.stageId}|containerId=${parentContainer.id}|" +
+                                    "parentContainer=$parentContainer")
                                 return@nextParentContainer
                             }
 
@@ -160,19 +171,19 @@ class InitializeMatrixGroupStageCmd(
 
                             contextCaseList.forEach { contextCase ->
 
-                                // 包括matrix.xxx的所有上下文
-                                val allContext = contextCase.plus(parentContainer.customBuildEnv ?: mapOf())
+                                // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
+                                val allContext = (parentContainer.customBuildEnv ?: mapOf()).plus(contextCase)
                                 val dispatchInfo = matrixOption.parseRunsOn(allContext)
-
+                                val newContainerSeq = context.containerSeq++
                                 val newContainer = VMBuildContainer(
-                                    id = context.containerSeq.toString(),
-                                    containerId = context.containerSeq.toString(),
+                                    id = newContainerSeq.toString(),
+                                    containerId = newContainerSeq.toString(),
                                     containerHashId = modelContainerIdGenerator.getNextId(),
                                     matrixGroupId = matrixGroupId,
                                     elements = parentContainer.elements.map { parentElement ->
-                                        MatrixStatusElement(
+                                        SampleStatusElement(
                                             name = parentElement.name,
-                                            id = parentElement.id,
+                                            id = VMUtils.genMatrixTaskId(parentElement.id!!, newContainerSeq),
                                             executeCount = commandContext.executeCount
                                         )
                                     }.toList(),
@@ -185,12 +196,18 @@ class InitializeMatrixGroupStageCmd(
                                     // --- TODO 根据自定义的runsOn决定类型调度，已经生成buildEnv等参数，可能存在变量占位符
                                     baseOS = dispatchInfo.baseOS,
                                     vmNames = dispatchInfo.vmNames ?: parentContainer.vmNames,
-                                    dockerBuildVersion = dispatchInfo.dockerBuildVersion ?: parentContainer.dockerBuildVersion,
-                                    dispatchType = dispatchInfo.dispatchType ?: parentContainer.dispatchType,
-                                    buildEnv = dispatchInfo.buildEnv ?: parentContainer.buildEnv,
-                                    thirdPartyAgentId = dispatchInfo.thirdPartyAgentId ?: parentContainer.thirdPartyAgentId,
-                                    thirdPartyAgentEnvId = dispatchInfo.thirdPartyAgentEnvId ?: parentContainer.thirdPartyAgentEnvId,
-                                    thirdPartyWorkspace = dispatchInfo.thirdPartyWorkspace ?: parentContainer.thirdPartyWorkspace
+                                    dockerBuildVersion = dispatchInfo.dockerBuildVersion
+                                        ?: parentContainer.dockerBuildVersion,
+                                    dispatchType = dispatchInfo.dispatchType
+                                        ?: parentContainer.dispatchType,
+                                    buildEnv = dispatchInfo.buildEnv
+                                        ?: parentContainer.buildEnv,
+                                    thirdPartyAgentId = dispatchInfo.thirdPartyAgentId
+                                        ?: parentContainer.thirdPartyAgentId,
+                                    thirdPartyAgentEnvId = dispatchInfo.thirdPartyAgentEnvId
+                                        ?: parentContainer.thirdPartyAgentEnvId,
+                                    thirdPartyWorkspace = dispatchInfo.thirdPartyWorkspace
+                                        ?: parentContainer.thirdPartyWorkspace
                                     // ---
                                 )
 
@@ -212,18 +229,18 @@ class InitializeMatrixGroupStageCmd(
                                 } else {
                                     parentContainer.groupContainers!!.add(newContainer)
                                 }
-
-                                context.containerSeq++
                             }
                         } else if (parentContainer is NormalContainer && parentContainer.matrixControlOption != null) {
 
                             // 每一种上下文组合都是一个新容器
+                            val newContainerSeq = context.containerSeq++
                             val matrixOption = parentContainer.matrixControlOption ?: return@nextParentContainer
                             val contextCaseList = try {
                                 matrixOption.getAllContextCase(commandContext.variables)
                             } catch (ignore: Throwable) {
-                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP||NORMAL|${event.stageId}|" +
-                                    "containerId=${parentContainer.id}|parentContainer=$parentContainer")
+                                LOG.warn("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_SKIP||NORMAL|" +
+                                    "${event.stageId}|containerId=${parentContainer.id}|" +
+                                    "parentContainer=$parentContainer")
                                 return@nextParentContainer
                             }
 
@@ -232,14 +249,14 @@ class InitializeMatrixGroupStageCmd(
                             contextCaseList.forEach { contextCase ->
 
                                 val newContainer = NormalContainer(
-                                    id = context.containerSeq.toString(),
-                                    containerId = context.containerSeq.toString(),
+                                    id = newContainerSeq.toString(),
+                                    containerId = newContainerSeq.toString(),
                                     containerHashId = modelContainerIdGenerator.getNextId(),
                                     matrixGroupId = matrixGroupId,
                                     elements = parentContainer.elements.map { parentElement ->
-                                        MatrixStatusElement(
+                                        SampleStatusElement(
                                             name = parentElement.name,
-                                            id = parentElement.id,
+                                            id = VMUtils.genMatrixTaskId(parentElement.id!!, newContainerSeq),
                                             executeCount = commandContext.executeCount
                                         )
                                     }.toList(),
@@ -267,16 +284,15 @@ class InitializeMatrixGroupStageCmd(
                                 } else {
                                     parentContainer.groupContainers!!.add(newContainer)
                                 }
-
-                                context.containerSeq++
                             }
                         }
 
                         // 新增容器全部添加到Container表中
                         buildContainerList.addAll(groupContainers)
 
-                        LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-                            "${parentContainer.id}|containerHashId=${parentContainer.containerHashId}|context=$context|" +
+                        LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
+                            "|${event.stageId}|${parentContainer.id}|containerHashId=" +
+                            "${parentContainer.containerHashId}|context=$context|" +
                             "groupContainers=$groupContainers|buildTaskList=$buildTaskList")
                     }
                 }

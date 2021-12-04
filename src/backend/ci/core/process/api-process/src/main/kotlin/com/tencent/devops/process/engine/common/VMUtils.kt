@@ -42,7 +42,10 @@ object VMUtils {
 
     fun genVMTaskSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
 
-    fun genMatrixContainerSeq(groupContainerSeq: Int, innerIndex: Int): Int = groupContainerSeq * 1000 + innerIndex
+    fun genMatrixContainerSeq(matrixGroupId: Int, innerIndex: Int): Int = matrixGroupId * 1000 + innerIndex
+
+    // TODO 矩阵分裂后生成的插件如何定义ID
+    fun genMatrixTaskId(elementId: String, containerSeq: Int) = "$elementId-$containerSeq"
 
     fun genStartVMTaskId(containerSeq: String) = "${getStartVmLabel()}$containerSeq"
 

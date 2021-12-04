@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -40,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.common.VMUtils
@@ -61,7 +61,15 @@ import org.springframework.stereotype.Service
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "LongMethod",
+    "ComplexMethod",
+    "NestedBlockDepth",
+    "ReturnCount",
+    "LargeClass"
+)
 class PipelineContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,
@@ -70,6 +78,7 @@ class PipelineContainerService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineContainerService::class.java)
+        private const val ELEMENT_NAME_MAX_LENGTH = 128
     }
 
     fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
@@ -488,9 +497,10 @@ class PipelineContainerService @Autowired constructor(
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
                 taskId = atomElement.id!!,
-                taskName = if (atomElement.name.length > 128) {
-                    atomElement.name.substring(0, 128)
-                } else atomElement.name,
+                taskName = CommonUtils.interceptStringInLength(
+                    string = atomElement.name,
+                    length = ELEMENT_NAME_MAX_LENGTH
+                ) ?: atomElement.getAtomCode(),
                 taskType = atomElement.getClassType(),
                 taskAtom = atomElement.getTaskAtom(),
                 status = status,
@@ -565,7 +575,9 @@ class PipelineContainerService @Autowired constructor(
                 logger.info("[$buildId]|RETRY| not found $startTaskVMId(${container.name})")
             }
 
-            val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq - 1))
+            val endPointTaskId = VMUtils.genEndPointTaskId(
+                VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq - 1)
+            )
             taskRecord = retryDetailModelStatus(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 stage = stage,
