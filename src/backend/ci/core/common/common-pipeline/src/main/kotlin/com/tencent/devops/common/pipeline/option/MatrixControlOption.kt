@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
 import com.tencent.devops.common.pipeline.type.DispatchInfo
@@ -64,7 +63,7 @@ data class MatrixControlOption(
     companion object {
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
-        private const val CONTEXT_KEY_PREFIX = "matrix."
+        const val MATRIX_CONTEXT_KEY_PREFIX = "matrix."
     }
 
     /**
@@ -94,7 +93,7 @@ data class MatrixControlOption(
         matrixParamMap.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
 
         return matrixParamMap.map { list ->
-            list.map { map -> "$CONTEXT_KEY_PREFIX${map.key}" to map.value }.toMap()
+            list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value }.toMap()
         }.toList()
     }
 

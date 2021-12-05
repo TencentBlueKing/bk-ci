@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -105,6 +106,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val redisOperation: RedisOperation
 ) {
 
+    companion object {
+        private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
+        const val ENV_CONTEXT_KEY_PREFIX = "env."
+    }
+
     /**
      * 构建机报告启动完毕
      */
@@ -161,7 +167,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     if (c is VMBuildContainer) {
                         // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
                         context = context.plus(c.customBuildEnv?.map { mit ->
-                            "envs.${mit.key}" to EnvUtils.parseEnv(mit.value, context)
+                            val contextKey = if (mit.key.startsWith(MATRIX_CONTEXT_KEY_PREFIX)) {
+                                mit.key
+                            } else {
+                                "$ENV_CONTEXT_KEY_PREFIX${mit.key}"
+                            }
+                            contextKey to EnvUtils.parseEnv(mit.value, context)
                         }?.toMap() ?: emptyMap())
                     }
                     val buildEnvs = if (c is VMBuildContainer) {
@@ -718,9 +729,5 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
         }
-    }
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
     }
 }
