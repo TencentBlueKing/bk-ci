@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
-import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -65,7 +64,8 @@ import org.springframework.stereotype.Service
     "ComplexMethod",
     "LongMethod",
     "ReturnCount",
-    "NestedBlockDepth"
+    "NestedBlockDepth",
+    "ThrowsCount"
 )
 @Service
 class InitializeMatrixGroupStageCmd(
@@ -73,8 +73,7 @@ class InitializeMatrixGroupStageCmd(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val modelContainerIdGenerator: ModelContainerIdGenerator,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator
+    private val modelContainerIdGenerator: ModelContainerIdGenerator
 ) : ContainerCmd {
 
     companion object {
@@ -179,13 +178,7 @@ class InitializeMatrixGroupStageCmd(
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
-                    elements = modelContainer.elements.map { parentElement ->
-                        SampleStatusElement(
-                            name = parentElement.name,
-                            id = modelTaskIdGenerator.getNextId(),
-                            executeCount = commandContext.executeCount
-                        )
-                    }.toList(),
+                    elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
                     jobControlOption = jobControlOption,
@@ -222,11 +215,22 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupId = matrixGroupId
                 ))
 
+                // 构建详情detail表中只需存SampleStatusElement
+                val detailContainer = newContainer.copy(
+                    elements = newContainer.elements.map {
+                        SampleStatusElement(
+                            name = it.name,
+                            id = it.id,
+                            executeCount = it.executeCount
+                        )
+                    }
+                )
+
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer)
+                    modelContainer.groupContainers = mutableListOf(detailContainer)
                 } else {
-                    modelContainer.groupContainers!!.add(newContainer)
+                    modelContainer.groupContainers!!.add(detailContainer)
                 }
             }
         } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
@@ -245,13 +249,7 @@ class InitializeMatrixGroupStageCmd(
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
-                    elements = modelContainer.elements.map { parentElement ->
-                        SampleStatusElement(
-                            name = parentElement.name,
-                            id = modelTaskIdGenerator.getNextId(),
-                            executeCount = commandContext.executeCount
-                        )
-                    }.toList(),
+                    elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     jobControlOption = jobControlOption.copy(),
                     executeCount = modelContainer.executeCount,
@@ -270,11 +268,22 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupId = matrixGroupId
                 ))
 
+                // 构建详情detail表中只需存SampleStatusElement
+                val detailContainer = newContainer.copy(
+                    elements = newContainer.elements.map {
+                        SampleStatusElement(
+                            name = it.name,
+                            id = it.id,
+                            executeCount = it.executeCount
+                        )
+                    }
+                )
+
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer)
+                    modelContainer.groupContainers = mutableListOf(detailContainer)
                 } else {
-                    modelContainer.groupContainers!!.add(newContainer)
+                    modelContainer.groupContainers!!.add(detailContainer)
                 }
             }
         } else {
