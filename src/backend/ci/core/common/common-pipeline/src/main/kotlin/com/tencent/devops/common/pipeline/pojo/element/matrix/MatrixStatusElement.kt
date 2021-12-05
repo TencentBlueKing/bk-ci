@@ -31,8 +31,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-纯运行状态插件", description = SampleStatusElement.classType)
-data class SampleStatusElement(
+@ApiModel("流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
+data class MatrixStatusElement(
     @ApiModelProperty("任务名称", required = true)
     override var name: String = "状态插件",
     @ApiModelProperty("插件ID", required = false)
@@ -54,7 +54,7 @@ data class SampleStatusElement(
 ) {
 
     companion object {
-        const val classType = "sampleStatus"
+        const val classType = "matrixStatus"
     }
 
     override fun getClassType() = classType
