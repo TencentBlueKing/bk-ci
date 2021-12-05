@@ -403,7 +403,7 @@ class QualityRuleBuildHisService constructor(
 
     fun updateRuleBuildHisStatus(): Int {
         var count = 0
-        val dateTime = LocalDateTime.now()
+        val dateTime = LocalDateTime.now().minusDays(1)
         val timeOutRules = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime)
         logger.info("QUALITY|time_out_rule count is: ${timeOutRules?.size}")
         if (timeOutRules.size > 0) {

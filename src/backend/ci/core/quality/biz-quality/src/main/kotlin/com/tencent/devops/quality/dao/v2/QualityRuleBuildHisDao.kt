@@ -148,7 +148,8 @@ class QualityRuleBuildHisDao @Autowired constructor(
     fun listTimeoutRule(dslContext: DSLContext, dateTime: LocalDateTime): Result<TQualityRuleBuildHisRecord> {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.selectFrom(this)
-                .where(CREATE_TIME.le(dateTime))
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
                 .fetch()
         }
     }
