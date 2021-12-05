@@ -97,10 +97,8 @@ data class NormalContainer(
 
     override fun getContainerById(vmSeqId: String): Container? {
         if (id == vmSeqId || containerId == vmSeqId) return this
-        if (groupContainers?.isNotEmpty() == true) {
-            groupContainers?.forEach {
-                if (it.id == vmSeqId || containerId == vmSeqId) return it
-            }
+        fetchGroupContainers()?.forEach {
+            if (it.id == vmSeqId || containerId == vmSeqId) return it
         }
         return null
     }
@@ -109,5 +107,9 @@ data class NormalContainer(
         groupContainers = mutableListOf()
         matrixControlOption?.finishCount = null
         matrixControlOption?.totalCount = null
+    }
+
+    override fun fetchGroupContainers(): List<Container>? {
+        return groupContainers?.toList()
     }
 }

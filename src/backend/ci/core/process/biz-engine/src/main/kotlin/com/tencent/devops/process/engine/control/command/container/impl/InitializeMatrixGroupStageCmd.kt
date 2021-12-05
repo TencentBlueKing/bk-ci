@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -65,7 +67,8 @@ import org.springframework.stereotype.Service
     "ComplexMethod",
     "LongMethod",
     "ReturnCount",
-    "NestedBlockDepth"
+    "NestedBlockDepth",
+    "ThrowsCount"
 )
 @Service
 class InitializeMatrixGroupStageCmd(
@@ -104,8 +107,14 @@ class InitializeMatrixGroupStageCmd(
         LOG.info("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT|" +
             "matrix(${parentContainer.containerId})|newContainerCount=$count")
 
-        commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
-        commandContext.cmdFlowState = CmdFlowState.CONTINUE
+        if (count > 0) {
+            commandContext.cmdFlowState = CmdFlowState.CONTINUE
+            commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
+        } else {
+            commandContext.buildStatus = BuildStatus.FAILED
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
+        }
     }
 
     private fun generateMatrixGroup(
@@ -174,18 +183,15 @@ class InitializeMatrixGroupStageCmd(
                 val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
                 val dispatchInfo = matrixOption.parseRunsOn(allContext)
                 val newContainerSeq = context.containerSeq++
+
+                // 刷新所有插件的ID，并生成对应的纯状态插件
+                val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = VMBuildContainer(
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
-                    elements = modelContainer.elements.map { parentElement ->
-                        SampleStatusElement(
-                            name = parentElement.name,
-                            id = modelTaskIdGenerator.getNextId(),
-                            executeCount = commandContext.executeCount
-                        )
-                    }.toList(),
+                    elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
                     jobControlOption = jobControlOption,
@@ -193,19 +199,19 @@ class InitializeMatrixGroupStageCmd(
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
                     // --- TODO 根据自定义的runsOn决定类型调度，已经生成buildEnv等参数，可能存在变量占位符
-                    baseOS = dispatchInfo.baseOS,
-                    vmNames = dispatchInfo.vmNames ?: modelContainer.vmNames,
-                    dockerBuildVersion = dispatchInfo.dockerBuildVersion
+                    baseOS = dispatchInfo?.baseOS ?: modelContainer.baseOS,
+                    vmNames = dispatchInfo?.vmNames ?: modelContainer.vmNames,
+                    dockerBuildVersion = dispatchInfo?.dockerBuildVersion
                         ?: modelContainer.dockerBuildVersion,
-                    dispatchType = dispatchInfo.dispatchType
+                    dispatchType = dispatchInfo?.dispatchType
                         ?: modelContainer.dispatchType,
-                    buildEnv = dispatchInfo.buildEnv
+                    buildEnv = dispatchInfo?.buildEnv
                         ?: modelContainer.buildEnv,
-                    thirdPartyAgentId = dispatchInfo.thirdPartyAgentId
+                    thirdPartyAgentId = dispatchInfo?.thirdPartyAgentId
                         ?: modelContainer.thirdPartyAgentId,
-                    thirdPartyAgentEnvId = dispatchInfo.thirdPartyAgentEnvId
+                    thirdPartyAgentEnvId = dispatchInfo?.thirdPartyAgentEnvId
                         ?: modelContainer.thirdPartyAgentEnvId,
-                    thirdPartyWorkspace = dispatchInfo.thirdPartyWorkspace
+                    thirdPartyWorkspace = dispatchInfo?.thirdPartyWorkspace
                         ?: modelContainer.thirdPartyWorkspace
                     // ---
                 )
@@ -224,9 +230,13 @@ class InitializeMatrixGroupStageCmd(
 
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer)
+                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                        elements = statusElements
+                    ))
                 } else {
-                    modelContainer.groupContainers!!.add(newContainer)
+                    modelContainer.groupContainers!!.add(newContainer.copy(
+                        elements = statusElements
+                    ))
                 }
             }
         } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
@@ -240,18 +250,14 @@ class InitializeMatrixGroupStageCmd(
 
             contextCaseList.forEach { contextCase ->
 
+                // 刷新所有插件的ID，并生成对应的纯状态插件
+                val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = NormalContainer(
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
-                    elements = modelContainer.elements.map { parentElement ->
-                        SampleStatusElement(
-                            name = parentElement.name,
-                            id = modelTaskIdGenerator.getNextId(),
-                            executeCount = commandContext.executeCount
-                        )
-                    }.toList(),
+                    elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     jobControlOption = jobControlOption.copy(),
                     executeCount = modelContainer.executeCount,
@@ -272,9 +278,13 @@ class InitializeMatrixGroupStageCmd(
 
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer)
+                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                        elements = statusElements
+                    ))
                 } else {
-                    modelContainer.groupContainers!!.add(newContainer)
+                    modelContainer.groupContainers!!.add(newContainer.copy(
+                        elements = statusElements
+                    ))
                 }
             }
         } else {
@@ -308,5 +318,16 @@ class InitializeMatrixGroupStageCmd(
         )
 
         return buildContainerList.size
+    }
+
+    private fun generateSampleStatusElements(elements: List<Element>): List<SampleStatusElement> {
+        return elements.map {
+            it.id = modelTaskIdGenerator.getNextId()
+            SampleStatusElement(
+                name = it.name,
+                id = it.id,
+                executeCount = it.executeCount
+            )
+        }
     }
 }

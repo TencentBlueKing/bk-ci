@@ -142,8 +142,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 return@forEachIndexed
             }
             s.containers.forEach c@{
-
-                if (vmId.toString() == vmSeqId) {
+                val c = it.getContainerById(vmSeqId)
+                if (c != null) {
                     val container = pipelineContainerService.getContainer(buildId, s.id, vmSeqId)
                         ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
                     // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
@@ -152,27 +152,27 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     }
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
-                        condition = !BuildStatus.parse(it.startVMStatus).isFinish() || retryCount > 0,
-                        exception = OperationException("重复启动构建机/VM Start already: ${it.startVMStatus}")
+                        condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
+                        exception = OperationException("重复启动构建机/VM Start already: ${c.startVMStatus}")
                     )
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
-                    if (it is VMBuildContainer) {
+                    if (c is VMBuildContainer) {
                         // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
-                        context = context.plus(it.customBuildEnv?.map { mit ->
+                        context = context.plus(c.customBuildEnv?.map { mit ->
                             "envs.${mit.key}" to EnvUtils.parseEnv(mit.value, context)
                         }?.toMap() ?: emptyMap())
                     }
-                    val buildEnvs = if (it is VMBuildContainer) {
-                        timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
-                        if (it.buildEnv == null) {
+                    val buildEnvs = if (c is VMBuildContainer) {
+                        timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                        if (c.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
                             val list = ArrayList<BuildEnv>()
-                            it.buildEnv!!.forEach { build ->
+                            c.buildEnv!!.forEach { build ->
                                 val env = containerAppResource.getBuildEnv(
-                                    name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()
+                                    name = build.key, version = build.value, os = c.baseOS.name.toLowerCase()
                                 ).data
                                 if (env != null) {
                                     list.add(env)
@@ -181,8 +181,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             list
                         }
                     } else {
-                        if (it is NormalContainer) {
-                            timeoutMills = transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        if (c is NormalContainer) {
+                            timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                         }
                         emptyList()
                     }
@@ -205,11 +205,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         pipelineId = buildInfo.pipelineId,
                         variables = context,
                         buildEnvs = buildEnvs,
-                        containerId = it.id!!,
-                        containerHashId = it.containerHashId ?: "",
+                        containerId = c.id!!,
+                        containerHashId = c.containerHashId ?: "",
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills!!,
-                        containerType = it.getClassType()
+                        containerType = c.getClassType()
                     )
                 }
                 vmId++

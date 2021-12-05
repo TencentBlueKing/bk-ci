@@ -54,7 +54,7 @@ data class SampleStatusElement(
 ) {
 
     companion object {
-        const val classType = "matrixStatus"
+        const val classType = "sampleStatus"
     }
 
     override fun getClassType() = classType

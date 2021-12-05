@@ -82,4 +82,6 @@ data class TriggerContainer(
     }
 
     override fun retryFreshMatrixOption() = Unit
+
+    override fun fetchGroupContainers(): List<Container>? = null
 }

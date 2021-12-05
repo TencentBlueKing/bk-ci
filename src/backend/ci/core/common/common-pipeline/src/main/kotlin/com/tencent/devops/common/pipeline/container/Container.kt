@@ -73,4 +73,6 @@ interface Container {
     fun getContainerById(vmSeqId: String): Container?
 
     fun retryFreshMatrixOption()
+
+    fun fetchGroupContainers(): List<Container>?
 }

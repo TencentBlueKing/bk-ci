@@ -70,10 +70,10 @@ data class MatrixControlOption(
     /**
      * VMBuildContainer需要根据[runsOnStr]计算调度信息
      */
-    fun parseRunsOn(buildContext: Map<String, String>): DispatchInfo {
+    fun parseRunsOn(buildContext: Map<String, String>): DispatchInfo? {
         val realRunsOnStr = EnvUtils.parseEnv(runsOnStr, buildContext)
         // TODO 根据替换后[realRunsOnStr]生成调度信息
-        return DispatchInfo(VMBaseOS.ALL)
+        return null
     }
 
     /**

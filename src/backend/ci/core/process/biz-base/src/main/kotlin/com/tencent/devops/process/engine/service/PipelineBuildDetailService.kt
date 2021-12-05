@@ -135,7 +135,7 @@ class PipelineBuildDetailService @Autowired constructor(
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
             stage.refreshReviewOption()
-            // #4518 兼容历史构建的containerId作为日志JobId
+            // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
@@ -200,6 +200,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
 
+                    // TODO 此处遍历暂时看不出目的，待调整
                     var containerElapsed = 0L
                     run lit@{
                         stage.containers.forEach {
