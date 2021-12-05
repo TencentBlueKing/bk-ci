@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OPQualityRuleBuildHisResourceImpl @Autowired constructor(
     private val qualityRuleBuildHisService: QualityRuleBuildHisService
-): OPQualityRuleBuildHisResource {
+) : OPQualityRuleBuildHisResource {
     override fun updateStatus(): Result<Int> {
         return Result(qualityRuleBuildHisService.updateRuleBuildHisStatus())
     }
