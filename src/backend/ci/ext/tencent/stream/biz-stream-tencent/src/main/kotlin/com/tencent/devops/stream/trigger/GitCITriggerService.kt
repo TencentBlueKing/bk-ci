@@ -137,6 +137,11 @@ class GitCITriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
+        if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
+            logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
+            return true
+        }
+
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
         return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
@@ -544,7 +549,7 @@ class GitCITriggerService @Autowired constructor(
             "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
                     "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
         )
-        if (gitProjectConf.enableMrBlock && mrEvent) {
+        if (gitProjectConf.enableCommitCheck && gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
                 mergeRequestId = event.mergeRequestId ?: 0L,

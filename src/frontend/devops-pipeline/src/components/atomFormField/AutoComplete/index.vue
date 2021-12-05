@@ -78,6 +78,7 @@
                     if (item[this.settingKey] === this.value) {
                         return item
                     }
+                    return null
                 })
                 return textObj ? textObj[this.displayKey] : this.value
             }
@@ -121,6 +122,7 @@
                         if (item === this.value) {
                             this.focusList = index
                         }
+                        return item
                     })
                 }
             },

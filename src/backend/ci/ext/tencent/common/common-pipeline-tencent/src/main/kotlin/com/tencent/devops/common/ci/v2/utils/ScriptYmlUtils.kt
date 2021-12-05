@@ -38,6 +38,9 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.expression.ExpressionException
+import com.tencent.devops.common.api.expression.Lex
+import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreTriggerOn
@@ -95,6 +98,8 @@ object ScriptYmlUtils {
     private const val formatTrigger = "triggerOn"
 
     private const val MAX_SCHEDULES_BRANCHES = 3
+
+    private const val PARAMETERS_PREFIX = "parameters."
 
     /**
      * 1、解决锚点
@@ -183,7 +188,68 @@ object ScriptYmlUtils {
                 }
             }
         }
-        return newValue
+        // 替换if中没有加括号的
+        val resultValue = replaceIfParameters(newValue, settingMap)
+        return resultValue.toString()
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun replaceIfParameters(
+        newValue: String?,
+        settingMap: Map<String, Any?>
+    ): StringBuffer {
+        val newValueLines = BufferedReader(StringReader(newValue!!))
+        val resultValue = StringBuffer()
+        var line = newValueLines.readLine()
+        while (line != null) {
+            if (line.trim().startsWith("if") || line.trim().startsWith("- if")) {
+                val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
+                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
+                    .removeSuffix("\"")
+                // 去掉花括号
+                val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
+                val originItems: List<Word>
+                // 先语法分析
+                try {
+                    originItems = Lex(baldExpress.toList().toMutableList()).getToken()
+                } catch (e: Exception) {
+                    logger.info("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                    throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                }
+                // 替换变量
+                val items = mutableListOf<Word>()
+                originItems.forEach {
+                    if (it.symbol == "ident") {
+                        items.add(Word(replaceParameters(it, settingMap), it.symbol))
+                    } else {
+                        items.add(Word(it.str, it.symbol))
+                    }
+                }
+                val itemsStr = items.joinToString(" ") { it.str }
+                resultValue.append("$ifPrefix \"${itemsStr}\"").append("\n")
+            } else {
+                resultValue.append(line).append("\n")
+            }
+            line = newValueLines.readLine()
+        }
+        return resultValue
+    }
+
+    private fun replaceParameters(
+        it: Word,
+        settingMap: Map<String, Any?>
+    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+        val realValue = settingMap[it.str] ?: it.str
+        if (realValue is List<*>) {
+            // ["test"]->[test]
+            JsonUtil.toJson(realValue).replace("\"", "")
+                .replace("[ ", "[")
+                .replace(" ]", "]")
+        } else {
+            StringEscapeUtils.escapeJava(realValue.toString())
+        }
+    } else {
+        it.str
     }
 
     private fun formatYamlCustom(yamlStr: String): String {

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import com.tencent.devops.stream.utils.GitCommonUtils
@@ -42,6 +43,8 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.stream.pojo.GitCodeProjectSimpleInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -61,6 +64,10 @@ class StreamProjectService @Autowired constructor(
         private const val STREAM_USER_PROJECT_HISTORY_SET = "stream:user:project:history:set"
         private const val MAX_STREAM_USER_HISTORY_LENGTH = 10
         private const val MAX_STREAM_USER_HISTORY_DAYS = 90L
+        private const val STREAM_GIT_PROJECT_LIST_UPDATE_LOCK_PREFIX = "stream:git:projectList:lock:key:"
+        private const val STREAM_GIT_PROJECT_LIST_PREFIX = "stream:git:projectList:"
+        fun getProjectListKey(userId: String) = STREAM_GIT_PROJECT_LIST_PREFIX + userId
+        fun getProjectListLockKey(userId: String) = STREAM_GIT_PROJECT_LIST_UPDATE_LOCK_PREFIX + userId
     }
 
     fun getProjectList(
@@ -83,20 +90,15 @@ class StreamProjectService @Autowired constructor(
             pageSize
         }
         val token = oauthService.getAndCheckOauthToken(userId).accessToken
-        val gitProjects = streamScmService.getProjectList(
-            accessToken = token,
+        val gitProjects = gitProjects(
+            token = token,
             userId = userId,
-            page = realPage,
-            pageSize = realPageSize,
+            type = type,
+            realPage = realPage,
+            realPageSize = realPageSize,
             search = search,
             orderBy = orderBy ?: GitCodeProjectsOrder.UPDATE,
-            sort = sort ?: GitCodeBranchesSort.DESC,
-            owned = null,
-            minAccessLevel = if (type == GitCIProjectType.MY_PROJECT) {
-                GitAccessLevelEnum.DEVELOPER
-            } else {
-                null
-            }
+            sort = sort ?: GitCodeBranchesSort.DESC
         )
         if (gitProjects.isNullOrEmpty()) {
             return Pagination(false, emptyList())
@@ -129,6 +131,10 @@ class StreamProjectService @Autowired constructor(
                 webUrl = it.webUrl,
                 avatarUrl = it.avatarUrl,
                 description = it.description,
+                buildPushedBranches = project?.buildPushedBranches,
+                buildPushedPullRequest = project?.buildPushedPullRequest,
+                enableMrBlock = project?.enableMrBlock,
+                authUserId = project?.enableUserId,
                 ciInfo = ciInfo
             )
         }
@@ -136,6 +142,68 @@ class StreamProjectService @Autowired constructor(
             hasNext = gitProjects.size == realPageSize,
             records = result
         )
+    }
+
+    private fun gitProjects(
+        token: String,
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        realPage: Int?,
+        realPageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): List<GitCodeProjectInfo>? {
+        val gitProjects = try {
+            streamScmService.getProjectList(
+                accessToken = token,
+                userId = userId,
+                page = realPage,
+                pageSize = realPageSize,
+                search = search,
+                orderBy = orderBy ?: GitCodeProjectsOrder.UPDATE,
+                sort = sort ?: GitCodeBranchesSort.DESC,
+                owned = null,
+                minAccessLevel = if (type == GitCIProjectType.MY_PROJECT) {
+                    GitAccessLevelEnum.DEVELOPER
+                } else {
+                    null
+                }
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "STREAM|gitProjects|stream scm service is unavailable.|userId=$userId|" +
+                    "realPage=$realPage|realPageSize=$realPageSize"
+            )
+            val res = redisOperation.get(getProjectListKey("$userId-$realPage-$realPageSize"))
+            if (res.isNullOrEmpty()) {
+                logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
+                return null
+            }
+            return JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
+        } ?: return null
+        // 每次成功访问工蜂接口就刷新redis
+        val updateLock = RedisLock(redisOperation, getProjectListLockKey("$userId-$realPage-$realPageSize"), 10)
+        updateLock.lock()
+        try {
+            logger.info("STREAM|gitProjects|update redis|userId=$userId|realPage=$realPage|realPageSize=$realPageSize")
+            val newRedisValue = gitProjects.map {
+                GitCodeProjectSimpleInfo(
+                    id = it.id,
+                    pathWithNamespace = it.pathWithNamespace,
+                    description = it.description,
+                    avatarUrl = it.avatarUrl
+                )
+            }
+            redisOperation.set(
+                getProjectListKey("$userId-$realPage-$realPageSize"),
+                JsonUtil.toJson(newRedisValue),
+                TimeUnit.MINUTES.toSeconds(60)
+            )
+        } finally {
+            updateLock.unlock()
+        }
+        return gitProjects
     }
 
     fun addUserProjectHistory(
@@ -189,6 +257,10 @@ class StreamProjectService @Autowired constructor(
                     webUrl = setting.homePage,
                     avatarUrl = setting.gitProjectAvatar,
                     description = setting.gitProjectDesc,
+                    buildPushedBranches = setting.buildPushedBranches,
+                    buildPushedPullRequest = setting.buildPushedPullRequest,
+                    enableMrBlock = setting.enableMrBlock,
+                    authUserId = setting.enableUserId,
                     ciInfo = if (setting.lastCiInfo == null) {
                         CIInfo(
                             enableCI = setting.enableCi ?: false,

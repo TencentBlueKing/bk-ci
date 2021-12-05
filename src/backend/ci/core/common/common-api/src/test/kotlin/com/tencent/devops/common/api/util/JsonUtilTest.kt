@@ -81,9 +81,49 @@ class JsonUtilTest {
 
     @Test
     fun toMutableMapSkipEmpty() {
-        val json = "{}"
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
         val map = JsonUtil.toMutableMapSkipEmpty(json)
         Assert.assertNotNull(map)
+        Assert.assertEquals(map.size, 2)
+        Assert.assertEquals(map["emptyKey"], "")
+
+        map["str_array"] = ArrayList<String>()
+
+        val mt = JsonUtil.toMutableMapSkipEmpty(map)
+        Assert.assertNotNull(mt["a"])
+        Assert.assertNull(mt["emptyKey"])
+        Assert.assertNull(mt["str_array"])
+    }
+
+    @Test
+    fun toMutableMap() {
+        val json = "{\"a\": \"1\" , \"emptyKey\": \"\"}"
+        val map = JsonUtil.toMap(json)
+        Assert.assertNotNull(map)
+        Assert.assertNotNull(map["emptyKey"])
+        Assert.assertEquals(map["a"], "1")
+        Assert.assertEquals(map["emptyKey"], "")
+
+        val map2 = JsonUtil.toMap(map)
+        Assert.assertNotNull(map2)
+        Assert.assertNotNull(map2["emptyKey"])
+        Assert.assertEquals(map2["a"], "1")
+        Assert.assertEquals(map2["emptyKey"], "")
+
+        val mt = JsonUtil.toMutableMap(map)
+        mt["str_array"] = ArrayList<String>()
+
+        println(mt)
+
+        val mutableMap = JsonUtil.toMutableMap(mt)
+        Assert.assertNotNull(mutableMap)
+        Assert.assertNull(mutableMap["emptyKey"])
+        Assert.assertNull(mutableMap["str_array"])
+        Assert.assertEquals(mutableMap["a"], "1")
+        Assert.assertEquals(mutableMap["emptyKey"], null)
+        mutableMap["a"] = "2"
+        Assert.assertEquals(mutableMap["a"], "2")
+        println(mutableMap)
     }
 
     @Test

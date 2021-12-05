@@ -77,7 +77,11 @@ class RobotService @Autowired constructor(
         logger.info("reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId}")
-        if (robotCallBack.content.contains("会话ID")) {
+        if (robotCallBack.eventType == "enter_chat") {
+            // 如为进入机器人单聊, 直接返回空包
+            return true
+        }
+        if (robotCallBack.content.contains("会话ID") || robotCallBack.content.contains("群ID")) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
                 text = MsgInfo(
@@ -103,15 +107,18 @@ class RobotService @Autowired constructor(
         val content = root.getElementsByTagName("Content")
         val userName = root.getElementsByTagName("Name")
         val userId = root.getElementsByTagName("Alias")
+        val eventType = root.getElementsByTagName("Event")
+        logger.info("eventType: $eventType, ${eventType.item(0)}")
         return RobotCallback(
             chatId = chitId.item(0).textContent,
             webhookUrl = webhookUrl.item(0).textContent,
             getChatInfoUrl = getChatInfoUrl.item(0).textContent,
             msgType = msgType.item(0).textContent,
             msgId = msgId.item(0).textContent,
-            content = content.item(0).textContent,
+            content = content?.item(0)?.textContent ?: "",
             name = userName.item(0).textContent,
-            userId = userId.item(0).textContent
+            userId = userId.item(0).textContent,
+            eventType = eventType.item(0).firstChild.textContent
         )
     }
 

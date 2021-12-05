@@ -34,6 +34,7 @@ import com.tencent.devops.stream.pojo.git.GitPushEvent
 import com.tencent.devops.stream.pojo.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.git.isDeleteBranch
 import com.tencent.devops.stream.pojo.git.isDeleteTag
+import com.tencent.devops.stream.pojo.git.isCreateBranch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -76,11 +77,17 @@ class TriggerParameter @Autowired constructor(
     }
 
     private fun pushEventFilter(event: GitPushEvent): Boolean {
+        // 去掉创建分支的触发
+        if (event.isCreateBranch()) {
+            logger.info("${event.checkout_sha} Git push web hook is create branch")
+            return false
+        }
+
         if (event.isDeleteBranch()) {
             return true
         }
         if (event.total_commits_count <= 0) {
-            logger.info("Git push web hook no commit(${event.total_commits_count})")
+            logger.info("${event.checkout_sha} Git push web hook no commit(${event.total_commits_count})")
             return false
         }
         return true

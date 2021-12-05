@@ -234,6 +234,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
+                queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 containerType = task.containerType,
                 customBuildEnv = param.customBuildEnv
             )
@@ -308,7 +309,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         userId = task.starter,
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
-                        buildResult = true,
+                        buildResult = false, // #5046 强制终止为失败
                         routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
                         executeCount = task.executeCount
                     )

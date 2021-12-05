@@ -36,3 +36,23 @@ stages:
           sourceMirrorTicketPair:
             - host: 11
               username: 111
+      - template: steps/codecc.yml
+        parameters:
+          languages:
+            - C_CPP
+          script: |-
+            cd src
+            mkdir build
+            cd build
+            cmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..
+            make -j`nproc`
+          receivers:
+            - ${{ ci.actor }}
+          newDefectJudgeFromDate: '2021-11-01'
+          image: mirrors.tencent.com/ci/tlinux3_ci:latest
+          pyVersion: py3
+          C_CPP_RULE:
+            - standard_cpp
+            - codecc_fast_cpp
+            - pecker_cpp
+            - codecc_default_coverity_cpp
