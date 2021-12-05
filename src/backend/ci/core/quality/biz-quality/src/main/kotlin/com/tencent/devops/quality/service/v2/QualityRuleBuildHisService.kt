@@ -57,6 +57,7 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @Service
@@ -398,5 +399,20 @@ class QualityRuleBuildHisService constructor(
             )
             rule
         }
+    }
+
+    fun updateRuleBuildHisStatus(): Int {
+        var count = 0
+        val dateTime = LocalDateTime.now()
+        val timeOutRules = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime)
+        logger.info("QUALITY|time_out_rule count is: ${timeOutRules?.size}")
+        if (timeOutRules.size > 0) {
+            count = qualityRuleBuildHisDao.updateTimeoutRuleStatus(timeOutRules.map { it.id })
+            logger.info("QUALITY|update_rule_status_count: $count")
+            timeOutRules.map { rule ->
+                qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+            }
+        }
+        return count
     }
 }
