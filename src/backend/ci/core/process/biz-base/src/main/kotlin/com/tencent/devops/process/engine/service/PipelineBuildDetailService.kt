@@ -135,6 +135,11 @@ class PipelineBuildDetailService @Autowired constructor(
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
             stage.refreshReviewOption()
+            // #4518 兼容历史构建的containerId作为日志JobId
+            stage.containers.forEach { container ->
+                container.containerHashId = container.containerHashId ?: container.containerId
+                container.containerId = container.id
+            }
         }
 
         return ModelDetail(
@@ -351,16 +356,17 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
 
                 override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (id == containerId) {
-                        if (container is VMBuildContainer && container.showBuildResource == true) {
-                            container.name = vmInfo.name
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
                         }
                         update = true
                         return Traverse.BREAK

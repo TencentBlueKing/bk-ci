@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckConditionalSkipStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckInterruptStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.CheckPauseReviewStageCmd
-import com.tencent.devops.process.engine.control.command.stage.impl.InitializeContainerStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.StartContainerStageCmd
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock
@@ -49,6 +48,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -63,6 +63,7 @@ class StageControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     private val pipelineStageService: PipelineStageService
 ) {
 
@@ -120,7 +121,7 @@ class StageControl @Autowired constructor(
             containers = containers,
             latestSummary = "init",
             watcher = watcher,
-            variables = variables,
+            variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
             executeCount = executeCount
         )
         watcher.stop()
@@ -129,7 +130,6 @@ class StageControl @Autowired constructor(
             commandCache.get(CheckInterruptStageCmd::class.java), // 快速失败或者中断执行的检查
             commandCache.get(CheckConditionalSkipStageCmd::class.java), // 检查Stage条件跳过处理
             commandCache.get(CheckPauseReviewStageCmd::class.java), // Stage暂停&审核事件处理
-            commandCache.get(InitializeContainerStageCmd::class.java), // 执行matrix运算生成所有Container数据
             commandCache.get(StartContainerStageCmd::class.java), // 正常执行下发Container事件的处理
             commandCache.get(UpdateStateForStageCmdFinally::class.java) // 最终处理Stage状态和后续事件
         )

@@ -25,40 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command.stage.impl
+package com.tencent.devops.common.pipeline.pojo.element.matrix
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.process.engine.control.command.CmdFlowState
-import com.tencent.devops.process.engine.control.command.stage.StageCmd
-import com.tencent.devops.process.engine.control.command.stage.StageContext
-import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.PipelineContainerService
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * Stage下发Container事件命令处理
- */
-@Service
-class InitializeContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
-    private val pipelineContainerService: PipelineContainerService,
-
-    private val pipelineEventDispatcher: PipelineEventDispatcher
-) : StageCmd {
+@ApiModel("流水线模型-纯运行状态插件", description = SampleStatusElement.classType)
+data class SampleStatusElement(
+    @ApiModelProperty("任务名称", required = true)
+    override var name: String = "状态插件",
+    @ApiModelProperty("插件ID", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("执行状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("执行次数", required = false)
+    override var executeCount: Int = 1,
+    @ApiModelProperty("执行时间", required = false)
+    override var elapsed: Long? = null,
+    @ApiModelProperty("启动时间", required = false)
+    override var startEpoch: Long? = null
+) : Element(
+    name = name,
+    status = status,
+    executeCount = executeCount,
+    elapsed = elapsed,
+    startEpoch = startEpoch
+) {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(InitializeContainerStageCmd::class.java)
+        const val classType = "matrixStatus"
     }
 
-    override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
-    }
-
-    override fun execute(commandContext: StageContext) {
-        val stage = commandContext.stage
-        val event = commandContext.event
-
-        commandContext.cmdFlowState = CmdFlowState.CONTINUE
-    }
+    override fun getClassType() = classType
 }

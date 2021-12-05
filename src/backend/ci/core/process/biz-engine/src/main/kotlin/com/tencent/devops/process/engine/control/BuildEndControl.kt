@@ -247,8 +247,8 @@ class BuildEndControl @Autowired constructor(
                             source = javaClass.simpleName,
                             projectId = projectId, pipelineId = pipelineId, userId = it.starter,
                             stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
-                            containerType = it.containerType, taskId = it.taskId,
-                            taskParam = it.taskParams, actionType = ActionType.TERMINATE
+                            containerHashId = it.containerHashId, containerType = it.containerType,
+                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE
                         )
                     )
                 }

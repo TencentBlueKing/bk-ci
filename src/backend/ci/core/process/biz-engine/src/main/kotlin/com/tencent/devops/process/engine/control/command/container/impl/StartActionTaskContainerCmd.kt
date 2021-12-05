@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
@@ -62,7 +61,6 @@ import java.util.concurrent.TimeUnit
 @Service
 class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -75,7 +73,9 @@ class StartActionTaskContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -494,6 +494,7 @@ class StartActionTaskContainerCmd(
                 buildId = task.buildId,
                 stageId = task.stageId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 containerType = task.containerType,
                 taskId = task.taskId,
                 taskParam = task.taskParams,

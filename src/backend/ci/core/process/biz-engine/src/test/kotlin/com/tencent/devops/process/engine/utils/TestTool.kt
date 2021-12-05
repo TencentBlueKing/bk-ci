@@ -45,6 +45,7 @@ object TestTool {
     const val buildId = "b-12345678901234567890123456789012"
     const val pipelineId = "p-12345678901234567890123456789012"
     const val stageId = "stage-1"
+    const val containerHashId = "c-12345678901234567890123456789012"
     private const val firstContainerIdInt = 1
 
     fun genVmBuildContainer(
@@ -62,6 +63,7 @@ object TestTool {
             stageId = stageId,
             containerId = vmSeqId.toString(),
             seq = vmSeqId,
+            containerHashId = containerHashId,
             containerType = vmContainerType,
             status = status,
             startTime = startTime,
@@ -73,7 +75,8 @@ object TestTool {
                 mutexGroup = null
             ),
             cost = containerCost,
-            matrixGroupId = null
+            matrixGroupId = null,
+            matrixGroupFlag = null
         )
     }
 

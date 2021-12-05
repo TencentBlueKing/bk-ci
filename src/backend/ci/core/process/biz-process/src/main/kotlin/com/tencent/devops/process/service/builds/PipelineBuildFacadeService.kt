@@ -1834,7 +1834,7 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val container = pipelineContainerService.getContainer(buildId = buildId, stageId = null, containerSeqId = vmSeqId)
+        val container = pipelineContainerService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
         if (container != null) {
             val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
@@ -1848,6 +1848,7 @@ class PipelineBuildFacadeService(
                         buildId = buildId,
                         stageId = container.stageId,
                         containerId = vmSeqId,
+                        containerHashId = container.containerHashId,
                         containerType = container.containerType,
                         actionType = ActionType.TERMINATE,
                         reason = msg
@@ -1862,7 +1863,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = vmSeqId.toInt(),
+            containerId = vmSeqId,
             vmInfo = vmInfo
         )
     }

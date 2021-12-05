@@ -29,10 +29,12 @@ package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("ReturnCount")
 @ApiModel("流水线模型-普通任务容器")
 data class NormalContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
@@ -56,7 +58,10 @@ data class NormalContainer(
     val conditions: List<NameAndValue>? = null,
     @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
     override var canRetry: Boolean? = null,
+    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, hidden = true)
     override var containerId: String? = null,
+    @ApiModelProperty("容器唯一ID", required = false, hidden = true)
+    override var containerHashId: String? = null,
     @ApiModelProperty("无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")
     val maxQueueMinutes: Int = 60,
@@ -76,11 +81,33 @@ data class NormalContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
-    override var matrixFlag: Boolean? = false
+    override var matrixGroupFlag: Boolean? = false,
+    @ApiModelProperty("构建矩阵配置项", required = false)
+    var matrixControlOption: MatrixControlOption? = null,
+    @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的容器特有字段）", required = false)
+    var matrixGroupId: String? = null,
+    @ApiModelProperty("分裂后的容器集合", required = false)
+    var groupContainers: MutableList<NormalContainer>? = null
 ) : Container {
     companion object {
         const val classType = "normal"
     }
 
     override fun getClassType() = classType
+
+    override fun getContainerById(vmSeqId: String): Container? {
+        if (id == vmSeqId || containerId == vmSeqId) return this
+        if (groupContainers?.isNotEmpty() == true) {
+            groupContainers?.forEach {
+                if (it.id == vmSeqId || containerId == vmSeqId) return it
+            }
+        }
+        return null
+    }
+
+    override fun retryFreshMatrixOption() {
+        groupContainers = mutableListOf()
+        matrixControlOption?.finishCount = null
+        matrixControlOption?.totalCount = null
+    }
 }

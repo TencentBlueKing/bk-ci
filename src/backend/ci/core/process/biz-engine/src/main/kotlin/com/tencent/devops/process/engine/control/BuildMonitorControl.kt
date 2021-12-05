@@ -199,7 +199,7 @@ class BuildMonitorControl @Autowired constructor(
                 buildId = buildId,
                 message = errorInfo.message ?: "Job timeout($minute) min",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
+                jobId = containerHashId,
                 executeCount = executeCount
             )
             // 终止当前容器下的任务
@@ -212,6 +212,7 @@ class BuildMonitorControl @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
+                    containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job timeout($minute) min!",

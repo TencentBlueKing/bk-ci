@@ -179,7 +179,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         variables = variables,
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
-                        containerHashId = it.containerId ?: "",
+                        containerHashId = it.containerHashId ?: "",
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills!!,
                         containerType = it.getClassType()
@@ -234,14 +234,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 pipelineContainerService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
-                    containerSeqId = startUpVMTask.containerId,
+                    containerId = startUpVMTask.containerId,
                     startTime = LocalDateTime.now(),
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
                 )
                 containerBuildDetailService.containerStarted(
                     buildId = buildId,
-                    containerId = vmSeqId.toInt(),
+                    containerId = vmSeqId,
                     containerBuildStatus = buildStatus
                 )
             }
@@ -273,6 +273,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = startUpVMTask.starter,
                 stageId = startUpVMTask.stageId,
                 containerId = startUpVMTask.containerId,
+                containerHashId = startUpVMTask.containerHashId,
                 containerType = startUpVMTask.containerType,
                 actionType = actionType,
                 reason = message
@@ -561,7 +562,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         LOG.info("ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
             "type=$errorType|code=${result.errorCode}|msg=${result.message}]")
-        buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
+        buildLogPrinter.stopLog(
+            buildId = buildId,
+            tag = result.elementId,
+            jobId = result.containerId ?: ""
+        )
     }
 
     /**

@@ -108,6 +108,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             PipelineBuildContainerEvent(
                 source = "pauseContinue",
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 stageId = task.stageId,
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
@@ -121,7 +122,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
-            jobId = task.containerId,
+            jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
     }
@@ -143,13 +144,13 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = task.buildId,
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
-            jobId = task.containerId,
+            jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
         val containerRecord = pipelineContainerService.getContainer(
             buildId = task.buildId,
             stageId = task.stageId,
-            containerSeqId = task.containerId
+            containerId = task.containerId
         )
 
         // 刷新stage状态
@@ -162,6 +163,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 userId = userId,
                 buildId = task.buildId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 stageId = task.stageId,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
@@ -210,7 +212,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         pipelineContainerService.updateContainerStatus(
             buildId = current.buildId,
             stageId = current.stageId,
-            containerSeqId = current.containerId,
+            containerId = current.containerId,
             buildStatus = BuildStatus.QUEUE
         )
     }

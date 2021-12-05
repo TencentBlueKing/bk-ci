@@ -91,7 +91,7 @@ class HeartbeatControl @Autowired constructor(
 
         val container = pipelineContainerService.getContainer(
             buildId = event.buildId,
-            stageId = null, containerSeqId = event.containerId
+            stageId = null, containerId = event.containerId
         ) ?: run {
             LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
             return
@@ -116,7 +116,7 @@ class HeartbeatControl @Autowired constructor(
                     message =
                     "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                     tag = taskMap["taskId"].toString(),
-                    jobId = container.containerId,
+                    jobId = container.containerHashId,
                     executeCount = executeCount
                 )
             }
@@ -128,7 +128,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerId,
+                jobId = container.containerHashId,
                 executeCount = container.executeCount
             )
         }
@@ -143,6 +143,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 stageId = container.stageId,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
                 reason = "Agent心跳超时/Agent Dead，请检查构建机状态",

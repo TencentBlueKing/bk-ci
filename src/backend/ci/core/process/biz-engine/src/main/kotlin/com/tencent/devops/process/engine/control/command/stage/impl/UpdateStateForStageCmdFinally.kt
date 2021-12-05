@@ -278,7 +278,7 @@ class UpdateStateForStageCmdFinally(
                 pipelineContainerService.updateContainerStatus(
                     buildId = c.buildId,
                     stageId = c.stageId,
-                    containerSeqId = c.containerId,
+                    containerId = c.containerId,
                     endTime = LocalDateTime.now(),
                     buildStatus = stageStatus
                 )
@@ -287,7 +287,7 @@ class UpdateStateForStageCmdFinally(
                     buildLogPrinter.addYellowLine(
                         buildId = c.buildId,
                         tag = VMUtils.genStartVMTaskId(c.containerId),
-                        jobId = c.containerId,
+                        jobId = c.containerHashId,
                         executeCount = c.executeCount,
                         message = "job(${c.containerId}) stop by fast kill"
                     )

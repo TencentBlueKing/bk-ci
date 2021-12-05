@@ -60,6 +60,18 @@ class UpdateStateContainerCmdFinally(
     override fun execute(commandContext: ContainerContext) {
         // 更新状态模型
         updateContainerStatus(commandContext = commandContext)
+
+        // 如果是构建矩阵的刷新状态且未完成则重放一个事件保证轮询
+        if (commandContext.container.matrixGroupFlag == true && commandContext.buildStatus.isRunning()) {
+            pipelineEventDispatcher.dispatch(
+                commandContext.event.copy(
+                    actionType = ActionType.REFRESH,
+                    source = commandContext.latestSummary,
+                    reason = "Matrix(${commandContext.container.containerId}) cannot finished"
+                )
+            )
+        }
+
         // 结束时才会释放锁定及返回
         if (commandContext.buildStatus.isFinish()) {
             // 释放互斥组
@@ -72,9 +84,11 @@ class UpdateStateContainerCmdFinally(
             val buildId = commandContext.container.buildId
             val stageId = commandContext.container.stageId
             val containerId = commandContext.container.containerId
+            val matrixGroupId = commandContext.container.matrixGroupId
             LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
-                "${commandContext.buildStatus}|${commandContext.latestSummary}")
-            sendBackStage(commandContext = commandContext)
+                "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}")
+            // #4518 如果该容器不属于某个矩阵时上报stage处理
+            if (matrixGroupId.isNullOrBlank()) sendBackStage(commandContext = commandContext)
         }
     }
 
@@ -112,7 +126,7 @@ class UpdateStateContainerCmdFinally(
         pipelineContainerService.updateContainerStatus(
             buildId = event.buildId,
             stageId = event.stageId,
-            containerSeqId = event.containerId,
+            containerId = event.containerId,
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime
@@ -154,7 +168,7 @@ class UpdateStateContainerCmdFinally(
                 buildId = buildId,
                 message = "[$executeCount]| Finish Job#${this.containerId}| ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
+                jobId = containerHashId ?: "",
                 executeCount = executeCount
             )
         }

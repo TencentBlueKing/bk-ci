@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -43,8 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.enum.RefreshType
-import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
@@ -57,7 +54,6 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
@@ -80,7 +76,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.jooq.impl.DSL
 
-@Suppress("ALL")
 @Service
 class PipelineTaskService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -138,16 +133,16 @@ class PipelineTaskService @Autowired constructor(
                     taskName = taskName,
                     taskType = taskType,
                     taskAtom = taskAtom,
-                    status = com.tencent.devops.common.pipeline.enums.BuildStatus.values()[status],
-                    taskParams = com.tencent.devops.common.api.util.JsonUtil.toMutableMap(taskParams),
-                    additionalOptions = com.tencent.devops.common.api.util.JsonUtil.toOrNull(additionalOptions, com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions::class.java),
+                    status = BuildStatus.values()[status],
+                    taskParams = JsonUtil.toMutableMap(taskParams),
+                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
                     executeCount = executeCount ?: 1,
                     starter = starter,
                     approver = approver,
                     subBuildId = subBuildId,
                     startTime = startTime?.timestampmilli() ?: 0L,
                     endTime = endTime?.timestampmilli() ?: 0L,
-                    errorType = if (errorType == null) null else com.tencent.devops.common.api.pojo.ErrorType.values()[errorType],
+                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
                     errorCode = errorCode,
                     errorMsg = errorMsg
                 )
@@ -170,7 +165,7 @@ class PipelineTaskService @Autowired constructor(
         val listByStatus = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
-            containerSeqId = null,
+            containerId = null,
             statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
         val list = mutableListOf<Map<String, Any>>()
@@ -205,6 +200,22 @@ class PipelineTaskService @Autowired constructor(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId
+        )
+    }
+
+    fun deleteTasksByContainerSeqId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String
+    ): Int {
+        return pipelineBuildTaskDao.deleteBuildTasksByContainerSeqId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId
         )
     }
 
@@ -243,7 +254,7 @@ class PipelineTaskService @Autowired constructor(
         val list = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
-            containerSeqId = containerSeqId,
+            containerId = containerSeqId,
             statusSet = buildStatusSet
         )
         val result = mutableListOf<PipelineBuildTask>()

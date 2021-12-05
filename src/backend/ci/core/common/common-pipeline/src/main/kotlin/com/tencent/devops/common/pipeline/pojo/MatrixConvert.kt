@@ -25,41 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- *
- * @version 1.0
- */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_TASK_START)
-data class PipelineBuildAtomTaskEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String,
-    val containerHashId: String?,
-    val containerType: String,
-    val taskId: String,
-    val taskParam: MutableMap<String, Any>,
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null,
-    val reason: String? = null,
-    /**
-     * 0 表示 没有错误
-     */
-    var errorCode: Int = 0,
-    /**
-     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
-     */
-    var errorTypeName: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+@ApiModel("矩阵笛卡尔参数")
+data class MatrixConvert(
+    @ApiModelProperty("额外的参数组合", required = false)
+    val include: List<Map<String, String>>?,
+    @ApiModelProperty("排除的参数组合", required = false)
+    val exclude: List<Map<String, String>>?,
+    @ApiModelProperty("分裂策略", required = false)
+    var strategy: Map<String, List<String>>?
+)

@@ -213,7 +213,7 @@ class BuildCancelControl @Autowired constructor(
                         pipelineContainerService.updateContainerStatus(
                             buildId = event.buildId,
                             stageId = stageId,
-                            containerSeqId = containerId,
+                            containerId = containerId,
                             startTime = null,
                             endTime = LocalDateTime.now(),
                             buildStatus = switchedStatus
@@ -233,13 +233,13 @@ class BuildCancelControl @Autowired constructor(
                             buildId = event.buildId,
                             message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
                             tag = VMUtils.genStartVMTaskId(container.id!!),
-                            jobId = container.containerId,
+                            jobId = container.containerHashId,
                             executeCount = executeCount
                         )
                         buildLogPrinter.stopLog(
                             buildId = event.buildId,
                             tag = VMUtils.genStartVMTaskId(container.id!!),
-                            jobId = container.containerId,
+                            jobId = container.containerHashId,
                             executeCount = executeCount
                         )
                     }

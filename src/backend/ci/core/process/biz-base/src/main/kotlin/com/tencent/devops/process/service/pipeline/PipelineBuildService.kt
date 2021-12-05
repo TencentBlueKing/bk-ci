@@ -50,7 +50,7 @@ import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -87,7 +87,7 @@ class PipelineBuildService(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
-    private val pipelineElementService: PipelineElementService,
+    private val pipelineElementService: PipelinePostElementService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val templateService: TemplateService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,

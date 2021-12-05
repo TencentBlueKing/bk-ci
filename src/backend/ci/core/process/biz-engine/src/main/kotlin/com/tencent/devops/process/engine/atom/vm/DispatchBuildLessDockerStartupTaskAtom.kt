@@ -158,7 +158,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(buildId, vmSeqId)
 
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!)
 
