@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import org.slf4j.LoggerFactory
@@ -98,6 +99,18 @@ class ExternalScmResourceImpl @Autowired constructor(
                     requestContent = body,
                     event = event,
                     secret = secret
+                )
+            )
+        )
+    }
+
+    override fun webHookCodeP4Commit(body: String): Result<Boolean> {
+        logger.info("p4 webhook|$body")
+        return Result(
+            CodeWebhookEventDispatcher.dispatchEvent(
+                rabbitTemplate = rabbitTemplate,
+                event = P4WebhookEvent(
+                    requestContent = body
                 )
             )
         )

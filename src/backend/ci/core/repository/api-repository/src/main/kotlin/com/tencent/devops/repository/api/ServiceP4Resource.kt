@@ -25,41 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron.environment
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Component
-@Suppress("ALL", "UNUSED")
-class AgentUpgrdeJob @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val updateService: AgentUpgradeService
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
-        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
-    }
+@Api(tags = ["SERVICE_P4"], description = "服务-p4相关")
+@Path("/service/p4")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceP4Resource {
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
-    fun updateCanUpgradeAgentList() {
-        logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateService.updateCanUpgradeAgentList()
-        } catch (ignore: Throwable) {
-            logger.warn("update can upgrade agent list failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
+    @ApiOperation("获取p4文件变更列表")
+    @GET
+    @Path("/{projectId}/{repositoryId}/getChangelistFiles")
+    fun getChangelistFiles(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID或代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<List<P4FileSpec>>
 }

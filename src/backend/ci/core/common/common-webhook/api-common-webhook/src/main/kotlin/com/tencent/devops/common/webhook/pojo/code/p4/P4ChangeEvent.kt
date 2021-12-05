@@ -25,42 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.common.webhook.pojo.code.p4
 
-import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.slf4j.LoggerFactory
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
-class UrlFilter(
-    private val pipelineId: String,
-    private val triggerOnUrl: String,
-    private val repositoryUrl: String,
-    private val includeHost: String? = null
-) : WebhookFilter {
-
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class P4ChangeEvent(
+    val change: Int,
+    override val p4Port: String,
+    @JsonProperty("event_type")
+    override val eventType: CodeEventType
+) : P4Event(
+    p4Port = p4Port,
+    eventType = eventType
+) {
     companion object {
-        private val logger = LoggerFactory.getLogger(UrlFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnUrl:$triggerOnUrl|repositoryUrl:$repositoryUrl" +
-                "|includeHost:$includeHost|url filter"
-        )
-        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
-        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-        return isSameHost(triggerOnHost = triggerRepository.first, host = repository.first) &&
-            triggerRepository.second == repository.second
-    }
-
-    /**
-     * 判断两个域名是否指向同一个服务
-     */
-    private fun isSameHost(triggerOnHost: String, host: String): Boolean {
-        return if (triggerOnHost != host) {
-            val includeHosts = includeHost?.split(",") ?: return false
-            includeHosts.containsAll(setOf(triggerOnHost, host))
-        } else {
-            true
-        }
+        const val classType = "CHANGE"
     }
 }
