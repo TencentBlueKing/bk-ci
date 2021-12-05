@@ -27,7 +27,72 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.networknt.schema.JsonSchema
+import com.networknt.schema.JsonSchemaFactory
+import com.networknt.schema.SpecVersion
+import com.tencent.devops.common.api.util.YamlUtil
+import org.yaml.snakeyaml.Yaml
+
 object MatrixContextUtils {
+
+    private val schemaJson = """
+        {
+            "type": "object",
+            "required": [],
+            "properties": {
+                "include": {
+                    "description": "值格式为：List,用于给 matrix 的指定组合增加额外的属性,或者新增1个或多个组合,每个元素为一个 Object",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [],
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "exclude": {
+                    "description": "值格式为：List,用于排除 matrix  中的一些组合,每个元素为一个 Object",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [],
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "值格式为：Object,定义的每个选项都有键和值，键将作为 matrix 上下文中的属性",
+                    "type": "object",
+                    "required": [],
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "type": "array"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    """
+
+    private val yaml = Yaml()
+
+    private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
+        .objectMapper(YamlUtil.getObjectMapper())
+        .build()
 
     /**
      * 使用循环遍历笛卡尔乘积算法
@@ -44,6 +109,31 @@ object MatrixContextUtils {
         val output = mutableListOf<List<Any>>()
         product(input, output, 0, listOf())
         return output
+    }
+
+    fun schemaCheck(originYaml: String){
+        if (originYaml.isNullOrBlank()){
+            return
+        }
+        val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
+        schemaFactory.getSchema(schemaJson).check(yamlJson)
+    }
+
+    private fun JsonSchema.check(yaml: JsonNode) {
+        validate(yaml).let {
+            if (!it.isNullOrEmpty()) {
+                throw Exception(it.toString())
+            }
+        }
+    }
+
+    // Yaml规则下会将on当成true在消除锚点时会将On替换为true
+    private fun JsonNode.replaceOn(): JsonNode {
+        val realOn = get("true") ?: return this
+        val node = this as ObjectNode
+        node.set<JsonNode>("on", realOn)
+        node.remove("true")
+        return this
     }
 
     /**

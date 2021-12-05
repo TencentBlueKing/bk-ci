@@ -30,10 +30,12 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
@@ -41,6 +43,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -583,5 +586,53 @@ class UserPipelineResourceImpl @Autowired constructor(
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun checkYaml(userId: String, yaml: MatrixPipelineInfo): Result<MatrixPipelineInfo> {
+        val matrixPipelineInfo = MatrixPipelineInfo(
+            include = try {
+                MatrixContextUtils.schemaCheck(
+                    JsonUtil.toJson(
+                        MatrixPipelineInfo(
+                            include = yaml.include,
+                            exclude = null,
+                            strategy = null
+                        )
+                    )
+                )
+                null
+            } catch (e: Exception) {
+                e.message
+            },
+            exclude = try {
+                MatrixContextUtils.schemaCheck(
+                    JsonUtil.toJson(
+                        MatrixPipelineInfo(
+                            include = null,
+                            exclude = yaml.exclude,
+                            strategy = null
+                        )
+                    )
+                )
+                null
+            } catch (e: Exception) {
+                e.message
+            },
+            strategy = try {
+                MatrixContextUtils.schemaCheck(
+                    JsonUtil.toJson(
+                        MatrixPipelineInfo(
+                            include = null,
+                            exclude = null,
+                            strategy = yaml.strategy
+                        )
+                    )
+                )
+                null
+            } catch (e: Exception) {
+                e.message
+            }
+        )
+        return Result(matrixPipelineInfo)
     }
 }
