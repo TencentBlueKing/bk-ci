@@ -122,12 +122,7 @@ data class MatrixControlOption(
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<String>> {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        val strategyMap = try {
-            YamlUtil.to<Map<String, List<String>>>(contextStr)
-        } catch (ignore: Throwable) {
-            throw Exception("yaml parse error :${ignore.message}")
-        }
-        return strategyMap
+        return YamlUtil.to<Map<String, List<String>>>(contextStr)
     }
 
     /**
@@ -155,8 +150,7 @@ data class MatrixControlOption(
             matrixParamMap.removeAll(jsonMap.exclude ?: emptyList()) // 排除特定的参数组合
             matrixParamMap.addAll(jsonMap.include ?: emptyList()) // 追加额外的参数组合
         } catch (ignore: Throwable) {
-            logger.error("convert Strategy from Json error : ${ignore.message}")
-            throw Exception("convert Strategy from Json error : ${ignore.message}")
+            logger.error("convert Strategy from Json error : ${ignore.message}", ignore)
         }
         return matrixParamMap
     }
