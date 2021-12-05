@@ -30,4 +30,6 @@ dependencies {
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
     api("com.cronutils:cron-utils")
+    // jsonschema
+    api("com.networknt:json-schema-validator")
 }
