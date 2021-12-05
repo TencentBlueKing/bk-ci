@@ -61,7 +61,6 @@ import org.springframework.stereotype.Service
  * 流水线Container相关的服务
  * @version 1.0
  */
-@Service
 @Suppress(
     "TooManyFunctions",
     "LongParameterList",
@@ -71,6 +70,7 @@ import org.springframework.stereotype.Service
     "ReturnCount",
     "LargeClass"
 )
+@Service
 class PipelineContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,

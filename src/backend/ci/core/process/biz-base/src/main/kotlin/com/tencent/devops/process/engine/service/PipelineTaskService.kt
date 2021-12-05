@@ -76,6 +76,15 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.jooq.impl.DSL
 
+@Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "LongMethod",
+    "ComplexMethod",
+    "NestedBlockDepth",
+    "ReturnCount",
+    "LargeClass"
+)
 @Service
 class PipelineTaskService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -554,7 +563,7 @@ class PipelineTaskService @Autowired constructor(
         model: Model?,
         taskRecord: PipelineBuildTask
     ): Pair<String, String> {
-        val containerName = findContainerName(model, taskRecord)
+        val containerName = model?.getContainer(taskRecord.containerId) ?: ""
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = taskRecord.taskName
 
@@ -571,21 +580,6 @@ class PipelineTaskService @Autowired constructor(
             expired = true
         )
         return Pair(failTask, failTaskName)
-    }
-
-    @Suppress("ALL")
-    private fun findContainerName(model: Model?, taskRecord: PipelineBuildTask): String {
-        model?.stages?.forEach next@{ stage ->
-            if (stage.id != taskRecord.stageId) {
-                return@next
-            }
-            stage.containers.forEach { container ->
-                if (container.id == taskRecord.containerId) {
-                    return container.name
-                }
-            }
-        }
-        return ""
     }
 
     fun pauseBuild(task: PipelineBuildTask) {

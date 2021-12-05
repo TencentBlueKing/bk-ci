@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "TooManyFunctions")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -57,10 +57,18 @@ class PipelineContextService @Autowired constructor(
         val varMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { c ->
-                    buildJobContext(c, containerId, varMap, stage)
+                stage.containers.forEach { container ->
+                    // containers
+                    buildJobContext(container, containerId, varMap, stage)
                     // steps
-                    buildStepContext(c, varMap, buildVar)
+                    buildStepContext(container, varMap, buildVar)
+                    // groupContainer
+                    container.fetchGroupContainers()?.forEach { c ->
+                        // containers
+                        buildJobContext(c, containerId, varMap, stage)
+                        // steps
+                        buildStepContext(c, varMap, buildVar)
+                    }
                 }
             }
             buildCiContext(varMap, buildVar)

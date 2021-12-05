@@ -190,63 +190,94 @@ class BuildCancelControl @Autowired constructor(
             val stageStatus = BuildStatus.parse(stage.status)
             stage.containers.forEach C@{ container ->
                 val stageId = stage.id ?: ""
-                val containerId = container.id ?: ""
-                val pipelineContainer = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
-                    LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
-                    return@C
-                }
-                val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
-                try {
-                    containerIdLock.lock()
-                    unlockMutexGroup(variables = variables, container = container,
-                        buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
+                cancelContainerPendingTask(
+                    buildId = buildId,
+                    stageId = stageId,
+                    event = event,
+                    variables = variables,
+                    container = container,
+                    stageStatus = stageStatus,
+                    executeCount = executeCount
+                )
+                container.fetchGroupContainers()?.forEach { c ->
+                    cancelContainerPendingTask(
+                        buildId = buildId,
+                        stageId = stageId,
+                        event = event,
+                        variables = variables,
+                        container = c,
+                        stageStatus = stageStatus,
+                        executeCount = executeCount
                     )
-                    // 调整Container状态位
-                    val containerBuildStatus = BuildStatus.parse(container.status)
-                    // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
-                    if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                            containerBuildStatus != BuildStatus.RUNNING) ||
-                        containerBuildStatus == BuildStatus.PREPARE_ENV ||
-                        dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
-                    ) {
-                        val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
-                        pipelineContainerService.updateContainerStatus(
-                            buildId = event.buildId,
-                            stageId = stageId,
-                            containerId = containerId,
-                            startTime = null,
-                            endTime = LocalDateTime.now(),
-                            buildStatus = switchedStatus
-                        )
-                        containerBuildDetailService.updateContainerStatus(
-                            buildId = event.buildId,
-                            containerId = containerId,
-                            buildStatus = switchedStatus
-                        )
-                        // 构建机关机
-                        if (container is VMBuildContainer) {
-                            container.shutdown(event = event, executeCount = executeCount)
-                        } else if (container is NormalContainer) { // 非编译环境关机
-                            container.shutdown(event = event, executeCount = executeCount)
-                        }
-                        buildLogPrinter.addYellowLine(
-                            buildId = event.buildId,
-                            message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
-                            tag = VMUtils.genStartVMTaskId(container.id!!),
-                            jobId = container.containerHashId,
-                            executeCount = executeCount
-                        )
-                        buildLogPrinter.stopLog(
-                            buildId = event.buildId,
-                            tag = VMUtils.genStartVMTaskId(container.id!!),
-                            jobId = container.containerHashId,
-                            executeCount = executeCount
-                        )
-                    }
-                } finally {
-                    containerIdLock.unlock()
                 }
             }
+        }
+    }
+
+    private fun cancelContainerPendingTask(
+        buildId: String,
+        stageId: String,
+        event: PipelineBuildCancelEvent,
+        variables: Map<String, String>,
+        container: Container,
+        stageStatus: BuildStatus,
+        executeCount: Int,
+    ) {
+        val containerId = container.id ?: ""
+        val pipelineContainer = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
+            LOG.warn("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|bad container")
+            return
+        }
+        val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
+        try {
+            containerIdLock.lock()
+            unlockMutexGroup(variables = variables, container = container,
+                buildId = event.buildId, projectId = event.projectId, stageId = stageId
+            )
+            // 调整Container状态位
+            val containerBuildStatus = BuildStatus.parse(container.status)
+            // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
+            if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
+                    containerBuildStatus != BuildStatus.RUNNING) ||
+                containerBuildStatus == BuildStatus.PREPARE_ENV ||
+                dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
+            ) {
+                val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
+                pipelineContainerService.updateContainerStatus(
+                    buildId = event.buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    startTime = null,
+                    endTime = LocalDateTime.now(),
+                    buildStatus = switchedStatus
+                )
+                containerBuildDetailService.updateContainerStatus(
+                    buildId = event.buildId,
+                    containerId = containerId,
+                    buildStatus = switchedStatus
+                )
+                // 构建机关机
+                if (container is VMBuildContainer) {
+                    container.shutdown(event = event, executeCount = executeCount)
+                } else if (container is NormalContainer) { // 非编译环境关机
+                    container.shutdown(event = event, executeCount = executeCount)
+                }
+                buildLogPrinter.addYellowLine(
+                    buildId = event.buildId,
+                    message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
+                    tag = VMUtils.genStartVMTaskId(container.id!!),
+                    jobId = container.containerHashId,
+                    executeCount = executeCount
+                )
+                buildLogPrinter.stopLog(
+                    buildId = event.buildId,
+                    tag = VMUtils.genStartVMTaskId(container.id!!),
+                    jobId = container.containerHashId,
+                    executeCount = executeCount
+                )
+            }
+        } finally {
+            containerIdLock.unlock()
         }
     }
 

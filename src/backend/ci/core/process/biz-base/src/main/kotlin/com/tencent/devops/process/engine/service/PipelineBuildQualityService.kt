@@ -124,6 +124,7 @@ class PipelineBuildQualityService(
                 return@forEachIndexed
             }
             s.containers.forEach {
+                // TODO 构建矩阵支持质量红线相关
                 it.elements.forEach { element ->
                     logger.info("${element.id}, ${element.name}")
                     if ((element is QualityGateInElement ||
@@ -168,6 +169,7 @@ class PipelineBuildQualityService(
     fun addQualityGateReviewUsers(projectId: String, pipelineId: String, buildId: String, model: Model) {
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
+                // TODO 构建矩阵支持质量红线相关
                 container.elements.forEach { element ->
                     if (element is QualityGateInElement && element.status == BuildStatus.REVIEWING.name) {
                         element.reviewUsers = getAuditUserList(

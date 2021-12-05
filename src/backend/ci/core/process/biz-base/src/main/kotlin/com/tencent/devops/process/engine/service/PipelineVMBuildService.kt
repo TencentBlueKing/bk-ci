@@ -128,24 +128,24 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 return@forEachIndexed
             }
             s.containers.forEach c@{
-
-                if (vmId.toString() == vmSeqId) {
+                val c = it.getContainerById(vmSeqId)
+                if (c != null) {
                     // 增加判断状态，如果是已经结束的，抛出异常来拒绝重复启动请求
                     Preconditions.checkTrue(
-                        condition = !BuildStatus.parse(it.startVMStatus).isFinish(),
-                        exception = OperationException("重复启动构建机/Repeat start VM! startVMStatus ${it.startVMStatus}")
+                        condition = !BuildStatus.parse(c.startVMStatus).isFinish(),
+                        exception = OperationException("重复启动构建机/Repeat start VM! startVMStatus ${c.startVMStatus}")
                     )
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
-                    val buildEnvs = if (it is VMBuildContainer) {
-                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
-                        if (it.buildEnv == null) {
+                    val buildEnvs = if (c is VMBuildContainer) {
+                        timeoutMills = Timeout.transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                        if (c.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
                             val list = ArrayList<BuildEnv>()
-                            it.buildEnv!!.forEach { build ->
+                            c.buildEnv!!.forEach { build ->
                                 val env = containerAppResource.getBuildEnv(
-                                    name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()
+                                    name = build.key, version = build.value, os = c.baseOS.name.toLowerCase()
                                 ).data
                                 if (env != null) {
                                     list.add(env)
@@ -154,8 +154,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             list
                         }
                     } else {
-                        if (it is NormalContainer) {
-                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        if (c is NormalContainer) {
+                            timeoutMills = Timeout.transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                         }
                         emptyList()
                     }
@@ -178,11 +178,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         pipelineId = buildInfo.pipelineId,
                         variables = variables,
                         buildEnvs = buildEnvs,
-                        containerId = it.id!!,
-                        containerHashId = it.containerHashId ?: "",
+                        containerId = c.id!!,
+                        containerHashId = c.containerHashId ?: "",
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills!!,
-                        containerType = it.getClassType()
+                        containerType = c.getClassType()
                     )
                 }
                 vmId++
