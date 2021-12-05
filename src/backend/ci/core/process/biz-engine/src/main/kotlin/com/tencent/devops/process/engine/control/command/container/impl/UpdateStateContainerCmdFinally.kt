@@ -67,7 +67,7 @@ class UpdateStateContainerCmdFinally(
                 commandContext.event.copy(
                     actionType = ActionType.REFRESH,
                     source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finished"
+                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
                 )
             )
         }

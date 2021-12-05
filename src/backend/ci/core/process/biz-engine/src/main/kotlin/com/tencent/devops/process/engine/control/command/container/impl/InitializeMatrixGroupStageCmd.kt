@@ -193,19 +193,19 @@ class InitializeMatrixGroupStageCmd(
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
                     // --- TODO 根据自定义的runsOn决定类型调度，已经生成buildEnv等参数，可能存在变量占位符
-                    baseOS = dispatchInfo.baseOS,
-                    vmNames = dispatchInfo.vmNames ?: modelContainer.vmNames,
-                    dockerBuildVersion = dispatchInfo.dockerBuildVersion
+                    baseOS = dispatchInfo?.baseOS ?: modelContainer.baseOS,
+                    vmNames = dispatchInfo?.vmNames ?: modelContainer.vmNames,
+                    dockerBuildVersion = dispatchInfo?.dockerBuildVersion
                         ?: modelContainer.dockerBuildVersion,
-                    dispatchType = dispatchInfo.dispatchType
+                    dispatchType = dispatchInfo?.dispatchType
                         ?: modelContainer.dispatchType,
-                    buildEnv = dispatchInfo.buildEnv
+                    buildEnv = dispatchInfo?.buildEnv
                         ?: modelContainer.buildEnv,
-                    thirdPartyAgentId = dispatchInfo.thirdPartyAgentId
+                    thirdPartyAgentId = dispatchInfo?.thirdPartyAgentId
                         ?: modelContainer.thirdPartyAgentId,
-                    thirdPartyAgentEnvId = dispatchInfo.thirdPartyAgentEnvId
+                    thirdPartyAgentEnvId = dispatchInfo?.thirdPartyAgentEnvId
                         ?: modelContainer.thirdPartyAgentEnvId,
-                    thirdPartyWorkspace = dispatchInfo.thirdPartyWorkspace
+                    thirdPartyWorkspace = dispatchInfo?.thirdPartyWorkspace
                         ?: modelContainer.thirdPartyWorkspace
                     // ---
                 )
