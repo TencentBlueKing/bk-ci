@@ -157,8 +157,10 @@ class UpdateStateForStageCmdFinally(
         event: PipelineBuildStageEvent
     ): Boolean {
 
-        // #5246 只在stage运行成功并配置了红线规则时做准出判断
-        if (stage.checkOut?.ruleIds?.isNotEmpty() != true || !commandContext.buildStatus.isSuccess()) {
+        // #5246 只在stage运行成功（不包括被跳过）并配置了红线规则时做准出判断
+        if (stage.checkOut?.ruleIds?.isNotEmpty() != true ||
+            !commandContext.buildStatus.isSuccess() ||
+            commandContext.buildStatus == BuildStatus.SKIP) {
             return false
         }
 

@@ -32,7 +32,6 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -73,7 +72,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.`in`(NodeType.BCSVM.name, NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())
                 .fetch()
         }
@@ -85,8 +84,6 @@ class NodeDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(
                     NODE_TYPE.`in`(
-                        NodeType.BCSVM.name,
-                        NodeType.CC.name,
                         NodeType.CMDB.name,
                         NodeType.OTHER.name,
                         NodeType.DEVCLOUD.name
@@ -107,32 +104,12 @@ class NodeDao {
         }
     }
 
-    fun countBcsVm(dslContext: DSLContext, projectId: String): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.eq(NodeType.BCSVM.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun countDevCloudVm(dslContext: DSLContext, projectId: String): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.eq(NodeType.DEVCLOUD.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
     fun countImportNode(dslContext: DSLContext, projectId: String): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.`in`(NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.OTHER.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -153,7 +130,7 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .and(NODE_TYPE.`in`(NodeType.BCSVM.name, NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())
                 .fetch()
         }
@@ -173,17 +150,7 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_IP.`in`(ips))
-                .and(NODE_TYPE.`in`(NodeType.BCSVM.name, NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
-                .fetch()
-        }
-    }
-
-    fun listDevCloudNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(NODE_IP.`in`(ips))
-                .and(NODE_TYPE.eq(NodeType.DEVCLOUD.name))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.OTHER.name))
                 .fetch()
         }
     }
@@ -205,7 +172,7 @@ class NodeDao {
         nodeType: List<String>?
     ): Result<TNodeRecord> {
         with(TNode.T_NODE) {
-            val condition = mutableListOf<Condition>(PROJECT_ID.eq(projectId), DISPLAY_NAME.eq(displayName))
+            val condition = mutableListOf(PROJECT_ID.eq(projectId), DISPLAY_NAME.eq(displayName))
             if (nodeType != null && nodeType.isNotEmpty()) {
                 condition.add(NODE_TYPE.`in`(nodeType))
             }
@@ -224,9 +191,7 @@ class NodeDao {
         status: NodeStatus,
         type: NodeType,
         userId: String
-    ): Long
-        /** Node ID **/
-    {
+    ): Long /** Node ID **/ {
         with(TNode.T_NODE) {
             return dslContext.insertInto(
                 this,
@@ -276,19 +241,6 @@ class NodeDao {
         }
     }
 
-    fun insertNodeStringId(
-        dslContext: DSLContext,
-        id: Long,
-        nodeStringId: String
-    ) {
-        with(TNode.T_NODE) {
-            dslContext.update(this)
-                .set(NODE_STRING_ID, nodeStringId)
-                .where(NODE_ID.eq(id))
-                .execute()
-        }
-    }
-
     fun updateNodeStatus(
         dslContext: DSLContext,
         id: Long,
@@ -299,36 +251,6 @@ class NodeDao {
                 .set(NODE_STATUS, status.name)
                 .where(NODE_ID.eq(id))
                 .execute()
-        }
-    }
-
-    fun updateNodeStatus(
-        dslContext: DSLContext,
-        id: Long,
-        status: NodeStatus,
-        expectStatus: NodeStatus
-    ): Int {
-        with(TNode.T_NODE) {
-            return dslContext.update(this)
-                .set(NODE_STATUS, status.name)
-                .where(NODE_ID.eq(id))
-                .and(NODE_STATUS.eq(expectStatus.statusName))
-                .execute()
-        }
-    }
-
-    fun getMaxNodeStringId(
-        dslContext: DSLContext,
-        projectId: String,
-        id: Long
-    ): TNodeRecord? {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(NODE_ID.ne(id))
-                .and(PROJECT_ID.eq(projectId))
-                .orderBy(CREATED_TIME.desc())
-                .limit(1)
-                .fetchOne()
         }
     }
 
@@ -418,67 +340,10 @@ class NodeDao {
         }
     }
 
-    fun listAllNodesByType(dslContext: DSLContext, nodeType: NodeType): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(NODE_TYPE.eq(nodeType.name))
-                .fetch()
-        }
-    }
-
-    fun listAllServerNodes(dslContext: DSLContext): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(
-                    NODE_TYPE.`in`(
-                        NodeType.CC.name,
-                        NodeType.CMDB.name,
-                        NodeType.BCSVM.name,
-                        NodeType.OTHER.name,
-                        NodeType.DEVCLOUD.name
-                    )
-                )
-                .fetch()
-        }
-    }
-
     fun listAllNodes(dslContext: DSLContext): Result<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .fetch()
-        }
-    }
-
-    fun listDevCloudNodesByTaskId(dslContext: DSLContext, taskId: Long): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
-                .fetch()
-        }
-    }
-
-    fun deleteDevCloudNodesByTaskId(dslContext: DSLContext, taskId: Long) {
-        with(TNode.T_NODE) {
-            dslContext.deleteFrom(this)
-                .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
-                .and(NODE_STATUS.eq(NodeStatus.DELETED.name))
-                .execute()
-        }
-    }
-
-    fun updateNode(dslContext: DSLContext, allCmdbNodes: TNodeRecord) {
-        with(TNode.T_NODE) {
-            dslContext.batchUpdate(allCmdbNodes).execute()
-        }
-    }
-
-    fun batchUpdateNode(dslContext: DSLContext, allCmdbNodes: List<TNodeRecord>) {
-        if (allCmdbNodes.isEmpty()) {
-            return
-        }
-
-        with(TNode.T_NODE) {
-            dslContext.batchUpdate(allCmdbNodes).execute()
         }
     }
 

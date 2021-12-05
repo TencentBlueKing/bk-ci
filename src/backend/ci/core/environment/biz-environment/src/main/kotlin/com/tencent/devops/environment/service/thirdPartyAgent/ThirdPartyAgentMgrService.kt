@@ -53,7 +53,6 @@ import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -471,7 +470,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.updateGateway(
                     dslContext = dslContext,
                     agentId = agentRecord.id,
-                    gateway = gateway!!,
+                    gateway = gateway,
                     fileGateway = fileGateway
                 )
             }
@@ -661,7 +660,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     private fun getSharedThirdPartyAgentList(projectId: String, projectEnvName: String): List<ThirdPartyAgent> {
         val sharedProjEnv = projectEnvName.split("@") // sharedProjId@poolName
-        if (sharedProjEnv.size != 2 || sharedProjEnv[0].isNullOrBlank() || sharedProjEnv[1].isNullOrBlank()) {
+        if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
             return emptyList()
         }
         val sharedProjectId = sharedProjEnv[0]
@@ -797,118 +796,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext,
             HashUtil.decodeIdToLong(agentId), projectId
         ) ?: throw NotFoundException("The agent($agentId) is not exist")
+        // #4686 优化导入流程之后构建机启动会自动导入，此web的导入界面需要继续展示让用户可见，以使之保持用户现有操作习惯，
+        var fromStatus = AgentStatus.fromStatus(record.status)
+        if (fromStatus == AgentStatus.IMPORT_OK) {
+            fromStatus = AgentStatus.UN_IMPORT_OK
+        }
         return ThirdPartyAgentStatusWithInfo(
-            status = AgentStatus.fromStatus(record.status),
+            status = fromStatus,
             hostname = record.hostname ?: "",
             ip = record.ip ?: "",
             os = record.detectOs ?: ""
         )
-    }
-
-    fun importAgent(
-        userId: String,
-        projectId: String,
-        agentId: String
-    ) {
-        val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
-            ?: throw NotFoundException("The agent($agentId) is not exist")
-        if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status ||
-            agentRecord.status == AgentStatus.UN_IMPORT.status
-        ) {
-            logger.warn("The agent status(${agentRecord.status}) is NOT OK")
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
-        }
-
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
-        }
-
-        val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
-        if (nodeInfo.isNotEmpty()) {
-            logger.info("Import dev cloud agent, refresh the node status to normal")
-            nodeInfo[0].nodeStatus = NodeStatus.NORMAL.name
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                nodeDao.updateNode(context, nodeInfo[0])
-                thirdPartyAgentDao.updateStatus(
-                    dslContext = context,
-                    id = id,
-                    nodeId = nodeInfo[0].nodeId,
-                    projectId = projectId,
-                    status = AgentStatus.IMPORT_OK
-                )
-                // 不用再写入auth了，因为已经存在了
-
-                webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
-                )
-            }
-            return
-        }
-
-        logger.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-
-            val nodeId = nodeDao.addNode(
-                dslContext = context,
-                projectId = projectId,
-                ip = agentRecord.ip,
-                name = agentRecord.hostname,
-                osName = agentRecord.os.toLowerCase(),
-                status = NodeStatus.NORMAL,
-                type = NodeType.THIRDPARTY,
-                userId = userId
-            )
-
-            val maxNodeRecord = nodeDao.getMaxNodeStringId(context, projectId, nodeId)
-
-            val maxNodeRecordId = if (maxNodeRecord == null) {
-                0
-            } else {
-                val nodeStringId = maxNodeRecord.nodeStringId
-                if (nodeStringId == null) {
-                    0
-                } else {
-                    val split = nodeStringId.split("_")
-                    if (split.size < 3) {
-                        logger.warn("Unknown node string id format($nodeStringId)")
-                        0
-                    } else {
-                        split[2].toInt()
-                    }
-                }
-            }
-
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${maxNodeRecordId + 1}"
-            nodeDao.insertNodeStringIdAndDisplayName(
-                dslContext = context,
-                id = nodeId,
-                nodeStringId = nodeStringId,
-                displayName = nodeStringId,
-                userId = userId
-            )
-
-            val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
-            if (count != 1) {
-                logger.warn("Fail to update the agent($id) to OK status")
-                throw ErrorCodeException(
-                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                    params = arrayOf(id.toString())
-                )
-            }
-            environmentPermissionService.createNode(
-                userId = userId,
-                projectId = projectId,
-                nodeId = nodeId,
-                nodeName = "$nodeStringId(${agentRecord.ip})"
-            )
-            webSocketDispatcher.dispatch(
-                websocketService.buildDetailMessage(projectId, userId)
-            )
-        }
     }
 
     /**
@@ -1076,8 +974,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
             }
 
-            val status = AgentStatus.fromStatus(agentRecord.status)
-            val agentStatus = when (status) {
+            val agentStatus = when (AgentStatus.fromStatus(agentRecord.status)) {
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
                     thirdPartyAgentDao.updateStatus(

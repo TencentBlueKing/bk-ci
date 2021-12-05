@@ -51,6 +51,14 @@ data class ProjectCIInfo(
     val avatarUrl: String?,
     @ApiModelProperty("项目描述")
     val description: String?,
+    @ApiModelProperty("Build pushed branches")
+    val buildPushedBranches: Boolean?,
+    @ApiModelProperty("Build pushed pull request")
+    val buildPushedPullRequest: Boolean?,
+    @ApiModelProperty("是否开启Mr锁定")
+    val enableMrBlock: Boolean?,
+    @ApiModelProperty("当前授权人")
+    val authUserId: String?,
     @ApiModelProperty("CI相关信息")
     val ciInfo: CIInfo?
 )
@@ -59,8 +67,6 @@ data class ProjectCIInfo(
 data class CIInfo(
     @ApiModelProperty("是否开启STREAM")
     val enableCI: Boolean,
-    @ApiModelProperty("授权人")
-    val authUserId: String?,
     @ApiModelProperty("最后一次构建信息")
     val lastBuildMessage: String?,
     @ApiModelProperty("最后一次构建状态")

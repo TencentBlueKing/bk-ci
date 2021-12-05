@@ -349,6 +349,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                 buildId = parentBuildTask.buildId,
                 stageId = parentBuildTask.stageId,
                 containerId = parentBuildTask.containerId,
+                containerHashId = parentBuildTask.containerHashId,
                 containerType = parentBuildTask.containerType,
                 taskId = parentBuildTask.taskId,
                 taskParam = parentBuildTask.taskParams,

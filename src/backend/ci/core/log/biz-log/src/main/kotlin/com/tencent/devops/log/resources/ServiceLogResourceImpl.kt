@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -51,6 +52,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -61,6 +63,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
+            logType = logType,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount
@@ -73,6 +76,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -87,6 +91,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
+            logType = logType,
             num = num,
             fromStart = fromStart,
             start = start,
@@ -104,6 +109,7 @@ class ServiceLogResourceImpl @Autowired constructor(
         buildId: String,
         start: Long,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -115,6 +121,7 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             start = start,
             debug = debug,
+            logType = logType,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount
