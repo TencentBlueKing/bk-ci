@@ -77,8 +77,7 @@ class PipelineContainerService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
     private val containerBuildDetailService: ContainerBuildDetailService,
-    private val pipelineBuildContainerDao: PipelineBuildContainerDao,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator
+    private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineContainerService::class.java)

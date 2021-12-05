@@ -31,11 +31,14 @@ import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -73,7 +76,8 @@ class InitializeMatrixGroupStageCmd(
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val modelContainerIdGenerator: ModelContainerIdGenerator
+    private val modelContainerIdGenerator: ModelContainerIdGenerator,
+    private val modelTaskIdGenerator: ModelTaskIdGenerator
 ) : ContainerCmd {
 
     companion object {
@@ -103,8 +107,14 @@ class InitializeMatrixGroupStageCmd(
         LOG.info("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT|" +
             "matrix(${parentContainer.containerId})|newContainerCount=$count")
 
-        commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
-        commandContext.cmdFlowState = CmdFlowState.CONTINUE
+        if (count > 0) {
+            commandContext.cmdFlowState = CmdFlowState.CONTINUE
+            commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
+        } else {
+            commandContext.buildStatus = BuildStatus.FAILED
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
+        }
     }
 
     private fun generateMatrixGroup(
@@ -173,6 +183,9 @@ class InitializeMatrixGroupStageCmd(
                 val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
                 val dispatchInfo = matrixOption.parseRunsOn(allContext)
                 val newContainerSeq = context.containerSeq++
+
+                // 刷新所有插件的ID，并生成对应的纯状态插件
+                val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = VMBuildContainer(
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
@@ -215,22 +228,15 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupId = matrixGroupId
                 ))
 
-                // 构建详情detail表中只需存SampleStatusElement
-                val detailContainer = newContainer.copy(
-                    elements = newContainer.elements.map {
-                        SampleStatusElement(
-                            name = it.name,
-                            id = it.id,
-                            executeCount = it.executeCount
-                        )
-                    }
-                )
-
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(detailContainer)
+                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                        elements = statusElements
+                    ))
                 } else {
-                    modelContainer.groupContainers!!.add(detailContainer)
+                    modelContainer.groupContainers!!.add(newContainer.copy(
+                        elements = statusElements
+                    ))
                 }
             }
         } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
@@ -244,6 +250,8 @@ class InitializeMatrixGroupStageCmd(
 
             contextCaseList.forEach { contextCase ->
 
+                // 刷新所有插件的ID，并生成对应的纯状态插件
+                val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = NormalContainer(
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
@@ -268,22 +276,15 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupId = matrixGroupId
                 ))
 
-                // 构建详情detail表中只需存SampleStatusElement
-                val detailContainer = newContainer.copy(
-                    elements = newContainer.elements.map {
-                        SampleStatusElement(
-                            name = it.name,
-                            id = it.id,
-                            executeCount = it.executeCount
-                        )
-                    }
-                )
-
                 // 如为空就初始化，如有元素就直接追加
                 if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(detailContainer)
+                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                        elements = statusElements
+                    ))
                 } else {
-                    modelContainer.groupContainers!!.add(detailContainer)
+                    modelContainer.groupContainers!!.add(newContainer.copy(
+                        elements = statusElements
+                    ))
                 }
             }
         } else {
@@ -317,5 +318,16 @@ class InitializeMatrixGroupStageCmd(
         )
 
         return buildContainerList.size
+    }
+
+    private fun generateSampleStatusElements(elements: List<Element>): List<SampleStatusElement> {
+        return elements.map {
+            it.id = modelTaskIdGenerator.getNextId()
+            SampleStatusElement(
+                name = it.name,
+                id = it.id,
+                executeCount = it.executeCount
+            )
+        }
     }
 }
