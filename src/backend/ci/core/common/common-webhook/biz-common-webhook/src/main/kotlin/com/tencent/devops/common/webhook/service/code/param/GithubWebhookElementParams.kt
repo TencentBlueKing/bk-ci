@@ -25,36 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
-import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-class GithubWebHookStartParam(
-    private val params: WebHookParams,
-    private val matcher: GithubWebHookMatcher
-) : ScmWebhookStartParams<CodeGithubWebHookTriggerElement> {
+@Service
+class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTriggerElement> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(GithubWebHookStartParam::class.java)
+    override fun elementClass(): Class<CodeGithubWebHookTriggerElement> {
+        return CodeGithubWebHookTriggerElement::class.java
     }
 
-    override fun getStartParams(element: CodeGithubWebHookTriggerElement): Map<String, Any> {
-        val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
-        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
-        startParams.putAll(matcher.retrieveParams())
-        return startParams
+    override fun getWebhookElementParams(
+        element: CodeGithubWebHookTriggerElement,
+        variables: Map<String, String>
+    ): WebHookParams? {
+        val params = WebHookParams(
+            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                variables = variables
+            )
+        )
+        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.excludeUsers!!, variables)
+        }
+        if (element.branchName == null) {
+            return null
+        }
+        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.eventType = element.eventType
+        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.codeType = CodeType.GITHUB
+        return params
     }
 }

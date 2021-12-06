@@ -25,26 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.webhook.service.code.param
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitTagPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>?,
-    val total_commits_count: Int,
-    val operation_kind: String?,
-    val create_from: String? = null
-) : GitEvent() {
-    companion object {
-        const val classType = "tag_push"
-    }
+interface ScmWebhookElementParams<T : WebHookTriggerElement> {
+
+    fun elementClass(): Class<T>
+
+    fun getWebhookElementParams(
+        element: T,
+        variables: Map<String, String>
+    ): WebHookParams?
 }

@@ -25,26 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+enum class TGitObjectKind(val value: String) {
+    PUSH("push"),
+    TAG_PUSH("tag_push"),
+    MERGE_REQUEST("merge_request"),
+    MANUAL("manual"),
+    SCHEDULE("schedule");
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitTagPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>?,
-    val total_commits_count: Int,
-    val operation_kind: String?,
-    val create_from: String? = null
-) : GitEvent() {
+    // 方便Json初始化使用常量保存，需要同步维护
     companion object {
-        const val classType = "tag_push"
+        const val OBJECT_KIND_MANUAL = "manual"
+        const val OBJECT_KIND_PUSH = "push"
+        const val OBJECT_KIND_TAG_PUSH = "tag_push"
+        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }

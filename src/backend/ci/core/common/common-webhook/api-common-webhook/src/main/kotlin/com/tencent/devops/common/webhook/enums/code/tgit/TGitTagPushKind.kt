@@ -25,26 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+class TGitTagPushKind
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitTagPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>?,
-    val total_commits_count: Int,
-    val operation_kind: String?,
-    val create_from: String? = null
-) : GitEvent() {
-    companion object {
-        const val classType = "tag_push"
-    }
+/**
+ * operation_kind字段
+ * create：创建tag
+ * delete：删除tag
+ * create_from字段：从哪个分支或者commit点创建
+ */
+enum class TGitTagPushOperationKind(val value: String) {
+    CREATE("create"),
+    DELETE("delete")
 }
