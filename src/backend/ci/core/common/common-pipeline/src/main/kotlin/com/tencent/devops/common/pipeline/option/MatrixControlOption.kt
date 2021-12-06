@@ -63,6 +63,7 @@ data class MatrixControlOption(
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
         const val MATRIX_CONTEXT_KEY_PREFIX = "matrix."
+        const val MATRIX_CASE_MAX_COUNT = 256
     }
 
     /**
