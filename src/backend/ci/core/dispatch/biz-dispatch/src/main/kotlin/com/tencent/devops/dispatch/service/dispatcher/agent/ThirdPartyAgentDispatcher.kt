@@ -530,7 +530,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
             return
         }
-        log(buildLogPrinter, event, "retry: ${event.retryTime + 1} | $errorMessage")
+        logDebug(buildLogPrinter, event, "retry: ${event.retryTime + 1} | 构建机繁忙，正在重试中")
 
         event.retryTime += 1
         event.delayMills = 10000
