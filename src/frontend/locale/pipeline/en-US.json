@@ -239,6 +239,7 @@
         "recycleBin": "Recycle bin",
         "restore": "Restore pipeline",
         "title": "Pipelines can be restored",
+        "deleter": "Deleter",
         "deleteTime": "Delete time",
         "createTime": "Create time",
         "restoreSuc": "Restored successfully",
