@@ -21,6 +21,7 @@ spring:
     consul:
       discovery:
         tags: __BK_CI_TURBO_CONSUL_DISCOVERY_TAG__
+        instance-id: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
 
 server:
   port: __BK_CI_TURBO_API_PORT__
@@ -33,6 +34,7 @@ server:
 tbs:
   rootpath: __BK_TURBO_PRIVATE_URL__/gw/
   urltemplate: api/v1/{engine}/resource/{resource_type}
+  dashboard:
 
 devops:
   rootpath: __BK_CI_PUBLIC_URL__
