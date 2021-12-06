@@ -87,8 +87,4 @@ class DispatchTypeParserImpl @Autowired constructor(
             dispatchType.credentialProject = projectId
         }
     }
-
-    override fun parseRunsOn(customInfo: Any, context: Map<String, String>): DispatchType? {
-        return null
-    }
 }
