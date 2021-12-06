@@ -91,7 +91,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun calculateContextMatrix(strategyMap: Map<String, List<String>>?): List<Map<String, Any>> {
+    private fun calculateContextMatrix(strategyMap: Map<String, List<Any>>?): List<Map<String, Any>> {
         if (strategyMap.isNullOrEmpty()) {
             return emptyList()
         }
@@ -119,7 +119,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyJson(buildContext: Map<String, String>): List<Map<String, String>> {
+    private fun convertStrategyJson(buildContext: Map<String, String>): List<Map<String, Any>> {
         // 替换上下文 要考虑带fromJSON()的写法
         val contextStr = ReplacementUtils.replace(
             command = strategyStr,
@@ -134,7 +134,7 @@ data class MatrixControlOption(
                 }
             }
         )
-        val matrixParamMap = mutableListOf<Map<String, String>>()
+        val matrixParamMap = mutableListOf<Map<String, Any>>()
         try {
             val jsonMap = JsonUtil.to(contextStr, MatrixConvert::class.java)
             matrixParamMap.addAll(calculateContextMatrix(jsonMap.strategy))
