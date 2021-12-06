@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.code.p4.api.P4Api
@@ -52,6 +53,34 @@ class P4Service(
         repositoryType: RepositoryType?,
         change: Int
     ): List<P4FileSpec> {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return P4Api(
+            p4port = repository.url,
+            username = username,
+            password = password
+        ).getChangelistFiles(change)
+    }
+
+    override fun getShelvedFiles(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): List<P4FileSpec> {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return P4Api(
+            p4port = repository.url,
+            username = username,
+            password = password
+        ).getShelvedFiles(change)
+    }
+
+    @SuppressWarnings("ThrowsCount")
+    private fun getRepositoryInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Triple<Repository, String, String> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
@@ -84,10 +113,6 @@ class P4Service(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
             )
         }
-        return P4Api(
-            p4port = repository.url,
-            username = username,
-            password = password
-        ).getChangelistFiles(change)
+        return Triple(repository, username, password)
     }
 }
