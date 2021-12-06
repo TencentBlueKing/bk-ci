@@ -45,6 +45,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
@@ -130,6 +131,14 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         } else {
             logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
+    }
+
+    override fun parseRunsOn(
+        runsOn: Any,
+        context: Map<String, String>,
+        customEnv: Map<String, String>
+    ): DispatchType? {
+        return null
     }
 
     private fun genThirdDevCloudDispatchMessage(

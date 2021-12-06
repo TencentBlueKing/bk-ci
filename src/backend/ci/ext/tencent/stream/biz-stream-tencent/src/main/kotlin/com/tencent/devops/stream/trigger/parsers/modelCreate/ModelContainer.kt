@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -116,8 +117,8 @@ class ModelContainer @Autowired constructor(
             return null
         }
 
-        val runsOnStr = if (poolName.trimStart().startsWith("\${{ matrix.") ||
-            poolName.trimStart().startsWith("\${{matrix.")
+        val runsOnStr = if (poolName.trimStart().startsWith("\${{ $MATRIX_CONTEXT_KEY_PREFIX") ||
+            poolName.trimStart().startsWith("\${{$MATRIX_CONTEXT_KEY_PREFIX")
         ) {
             poolName
         } else {
