@@ -146,29 +146,6 @@ class ModelElement @Autowired constructor(
         job: Job,
         additionalOptions: ElementAdditionalOptions
     ): Element {
-        val linux = LinuxScriptElement(
-            name = step.name ?: "run",
-            id = step.id,
-            scriptType = BuildScriptType.SHELL,
-            script = step.run!!,
-            continueNoneZero = false,
-            additionalOptions = additionalOptions
-        )
-        val runElement = if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            linux
-        } else {
-            when (job.runsOn.agentSelector!!.first()) {
-                "linux" -> linux
-                "macos" -> linux
-                "windows" -> WindowsScriptElement(
-                    name = step.name ?: "run",
-                    id = step.id,
-                    scriptType = BuildScriptType.BAT,
-                    script = step.run!!
-                )
-                else -> linux
-            }
-        }
         return if (marketRunTask) {
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
@@ -180,7 +157,31 @@ class ModelElement @Autowired constructor(
                 data = data,
                 additionalOptions = additionalOptions
             )
-        } else runElement
+        } else {
+            val linux = LinuxScriptElement(
+                name = step.name ?: "run",
+                id = step.id,
+                scriptType = BuildScriptType.SHELL,
+                script = step.run!!,
+                continueNoneZero = false,
+                additionalOptions = additionalOptions
+            )
+            if (job.runsOn.agentSelector.isNullOrEmpty()) {
+                linux
+            } else {
+                when (job.runsOn.agentSelector!!.first()) {
+                    "linux" -> linux
+                    "macos" -> linux
+                    "windows" -> WindowsScriptElement(
+                        name = step.name ?: "run",
+                        id = step.id,
+                        scriptType = BuildScriptType.BAT,
+                        script = step.run!!
+                    )
+                    else -> linux
+                }
+            }
+        }
     }
 
     private fun makeCheckoutElement(
