@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
  * @Version 1.0
  */
 interface DispatchTypeParser {
+
     fun parse(
         userId: String,
         projectId: String,
@@ -42,4 +43,9 @@ interface DispatchTypeParser {
         buildId: String,
         dispatchType: DispatchType
     )
+
+    /**
+     * VMBuildContainer需要根据[customInfo]和上下文[context]计算调度类型
+     */
+    fun parseRunsOn(customInfo: Any, context: Map<String, String>): DispatchType?
 }
