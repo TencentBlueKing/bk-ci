@@ -2,38 +2,10 @@ package com.tencent.devops.common.pipeline.option
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.pipeline.pojo.MatrixConvert
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 import org.junit.Assert
 import org.junit.Test
-import org.yaml.snakeyaml.Yaml
 import java.util.Random
-
-@ApiModel("matrix流水线编辑校验yaml模型")
-data class MatrixPipelineInfo(
-    @ApiModelProperty("作为输入值时:额外的参数组合(String)/作为输出值时:校验结果", required = false)
-    val include: String?,
-    @ApiModelProperty("作为输入值时:排除的参数组合(String)/作为输出值时:校验结果", required = false)
-    val exclude: String?,
-    @ApiModelProperty("作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
-    var strategy: String?
-) {
-    fun MatrixPipelineInfo.toMatrixConvert(): MatrixConvert {
-        return MatrixConvert(
-            include = run { YamlUtil.to<List<Map<String, String>>>(include ?: return null) },
-            exclude = run { YamlUtil.to<List<Map<String, String>>>(exclude ?: return  ) },
-            strategy = run {
-                try {
-                    YamlUtil.to<Map<String, List<String>>>(strategy ?: return null)
-                } catch (ignore: Throwable) {
-                    throw Exception("yaml parse error :${ignore.message}")
-                }
-            }
-        )
-    }
-}
 
 internal class MatrixControlOptionTest {
 
@@ -49,98 +21,6 @@ internal class MatrixControlOptionTest {
         println("loopCartesianProduct cost:${timeAEnd - timeAStart}ms")
         println("recursiveCartesianProduct cost:${timeBEnd - timeBStart}ms")
         Assert.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
-    }
-
-    private val yaml = Yaml()
-
-    @Test
-    fun checkYaml() {
-        val yamlstr = MatrixPipelineInfo(
-            include = """
-                - a: 11
-                  b: 33
-                - a: 22
-                  b: 44
-        """,
-            exclude = """
-                - a: 1
-                  b: 3
-                - a: 2
-                  b: 4
-            """,
-            strategy = """
-                    os: [docker,macos]
-                    var1: [a,b,c]
-                    var2: [1,2,3]
-        """
-        )
-
-        println(
-            YamlUtil.toYaml(
-                YamlUtil.to < Any::class.java > (JsonUtil.toJson(
-                    MatrixPipelineInfo(
-                        include = yamlstr.include,
-                        exclude = null,
-                        strategy = null
-                    )
-                ),
-            )
-        ))
-        println(
-            JsonUtil.toJson(
-                MatrixPipelineInfo(
-                    include = null,
-                    exclude = null,
-                    strategy = null
-                )
-            )
-        )
-
-        val matrixPipelineInfo = MatrixPipelineInfo(
-            include = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = yamlstr.include,
-                            exclude = null,
-                            strategy = null
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            },
-            exclude = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = null,
-                            exclude = yamlstr.exclude,
-                            strategy = null
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            },
-            strategy = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = null,
-                            exclude = null,
-                            strategy = yamlstr.strategy
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            }
-        )
-        println(JsonUtil.toJson(matrixPipelineInfo))
     }
 
     @Test
