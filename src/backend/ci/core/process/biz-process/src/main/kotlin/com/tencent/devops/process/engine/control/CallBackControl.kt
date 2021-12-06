@@ -295,6 +295,7 @@ class CallBackControl @Autowired constructor(
                 status = "",
                 jobs = jobs
             )
+            logger.info("parseModel ${model.name}|${stage.stageName}|${stage.name}|")
             stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 
