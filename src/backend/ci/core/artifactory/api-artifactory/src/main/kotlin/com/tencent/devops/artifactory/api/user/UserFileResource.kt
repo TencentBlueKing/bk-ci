@@ -97,9 +97,9 @@ interface UserFileResource {
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam("本地文件", required = false)
-        @QueryParam("local")
-        local: Boolean?,
+        @ApiParam("是否为logo文件", required = false)
+        @QueryParam("logo")
+        logo: Boolean?,
         @Context
         response: HttpServletResponse
     )
@@ -114,9 +114,6 @@ interface UserFileResource {
         @ApiParam("文件路径", required = true)
         @PathParam("filePath")
         filePath: String,
-        @ApiParam("本地文件", required = false)
-        @QueryParam("local")
-        local: Boolean?,
         @Context
         response: HttpServletResponse
     )
