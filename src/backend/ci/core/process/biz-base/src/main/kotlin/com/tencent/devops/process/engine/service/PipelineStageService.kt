@@ -168,7 +168,7 @@ class PipelineStageService @Autowired constructor(
                     dslContext = context, buildId = buildId,
                     stageId = stageId, controlOption = controlOption!!,
                     // #5246 所有质量红线检查都不影响stage原构建状态
-                    buildStatus = buildStage.status,
+                    buildStatus = buildStage.status, initStartTime = true,
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(
@@ -341,11 +341,12 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         qualityRequest: StageQualityRequest,
         inOrOut: Boolean,
-        check: StagePauseCheck
+        check: StagePauseCheck,
+        timeout: Boolean? = false
     ) {
         with(buildStage) {
             logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
-                "inOrOut=$inOrOut|request=$qualityRequest")
+                "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout")
             val stageNextStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.SUCCEED
             pipelineBuildStageDao.updateStatus(
                 dslContext = dslContext, buildId = buildId, stageId = stageId,

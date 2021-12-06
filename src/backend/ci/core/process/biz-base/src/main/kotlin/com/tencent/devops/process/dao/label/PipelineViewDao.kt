@@ -48,7 +48,8 @@ class PipelineViewDao {
         isProject: Boolean,
         filterByPipelineName: String,
         filterByCreator: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
@@ -61,7 +62,8 @@ class PipelineViewDao {
                 FILTER_BY_CREATOR,
                 CREATE_TIME,
                 UPDATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -71,7 +73,8 @@ class PipelineViewDao {
                     filterByCreator,
                     now,
                     now,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -85,7 +88,8 @@ class PipelineViewDao {
         logic: String,
         isProject: Boolean,
         filters: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
@@ -100,7 +104,8 @@ class PipelineViewDao {
                 FILTERS,
                 CREATE_TIME,
                 UPDATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -112,7 +117,8 @@ class PipelineViewDao {
                     filters,
                     now,
                     now,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
