@@ -469,7 +469,7 @@ class QualityRuleCheckService @Autowired constructor(
             }
         }
 
-        logger.info("QUALITY|checkMetaList is|$checkMetaList, metadataMap is|$metadataMap")
+        logger.info("QUALITY|checkMetaList is|$checkMetaList, metadataMap is|$metadataMap, indicators is: $indicators")
 
         // 遍历每个指标
         indicators.forEach { indicator ->
@@ -478,7 +478,7 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
             val filterMetadataList = if (indicator.isScriptElementIndicator()) {
-                listOf(metadataList
+                listOf(checkMetaList
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
                     .findLast { indicator.enName == it.enName })
             } else {
