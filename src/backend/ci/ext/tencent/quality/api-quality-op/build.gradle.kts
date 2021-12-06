@@ -26,13 +26,10 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:quality:biz-quality"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:scm:api-scm"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:quality:api-quality-op"))
+    api(project(":core:common:common-api"))
+    api(project(":core:quality:api-quality"))
+}
+
+plugins {
+    `task-deploy-to-maven`
 }
