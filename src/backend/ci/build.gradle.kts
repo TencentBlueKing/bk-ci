@@ -34,6 +34,7 @@ allprojects {
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
+            dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("org.apache.commons:commons-text:${Versions.CommonText}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")

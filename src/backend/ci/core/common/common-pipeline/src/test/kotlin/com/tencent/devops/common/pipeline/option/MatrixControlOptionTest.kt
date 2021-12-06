@@ -18,8 +18,8 @@ internal class MatrixControlOptionTest {
         val timeBStart = System.currentTimeMillis()
         val b = MatrixContextUtils.recursiveCartesianProduct(array2d)
         val timeBEnd = System.currentTimeMillis()
-        println("loopCartesianProduct cost:${timeAEnd-timeAStart}ms")
-        println("recursiveCartesianProduct cost:${timeBEnd-timeBStart}ms")
+        println("loopCartesianProduct cost:${timeAEnd - timeAStart}ms")
+        println("recursiveCartesianProduct cost:${timeBEnd - timeBStart}ms")
         Assert.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
     }
 

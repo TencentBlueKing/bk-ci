@@ -52,6 +52,9 @@ object MatrixContextUtils {
                             "anyOf": [
                                 {
                                     "type": "string"
+                                },
+                                {
+                                    "type": "integer"
                                 }
                             ]
                         }
@@ -67,6 +70,9 @@ object MatrixContextUtils {
                             "anyOf": [
                                 {
                                     "type": "string"
+                                },
+                                {
+                                    "type": "integer"
                                 }
                             ]
                         }

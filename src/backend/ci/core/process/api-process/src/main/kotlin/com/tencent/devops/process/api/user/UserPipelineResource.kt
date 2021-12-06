@@ -564,7 +564,7 @@ interface UserPipelineResource {
 
     @ApiOperation("校验matrix yaml格式")
     @POST
-    @Path("/checkYaml")
+    @Path("/yaml/check")
     fun checkYaml(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

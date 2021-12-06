@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.util.YamlUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.util.regex.Pattern
 
 @ApiModel("matrix流水线编辑校验yaml模型")
 data class MatrixPipelineInfo(
@@ -38,4 +40,22 @@ data class MatrixPipelineInfo(
     val exclude: String?,
     @ApiModelProperty("作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
     var strategy: String?
-)
+) {
+    fun toMatrixConvert(): Any {
+        return mapOf(
+            "include" to if (!this.include.isNullOrBlank()) {
+                YamlUtil.to<Any>(this.include)
+            } else null,
+            "exclude" to if (!this.exclude.isNullOrBlank()) {
+                YamlUtil.to<Any>(this.exclude)
+            } else null,
+            "strategy" to if (!this.strategy.isNullOrBlank()) {
+                val pattern = Pattern.compile("^(\\\$\\{\\{fromJSON\\()([^(^)]+)(\\)\\}\\})\$")
+                val matcher = pattern.matcher(this.strategy!!)
+                if (!matcher.find()) {
+                    YamlUtil.to<Any>(this.strategy!!)
+                } else null
+            } else null
+        )
+    }
+}

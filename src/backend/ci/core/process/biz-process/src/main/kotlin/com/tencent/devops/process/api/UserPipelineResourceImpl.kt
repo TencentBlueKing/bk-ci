@@ -30,12 +30,10 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
@@ -66,6 +64,7 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.util.MatrixYamlCheckUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -85,11 +84,13 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.CREATE
-        ))
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.CREATE
+            )
+        )
     }
 
     override fun pipelineExist(userId: String, projectId: String, pipelineName: String): Result<Boolean> {
@@ -331,22 +332,26 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
         checkParam(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
-        ))
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
         checkParam(userId, projectId)
-        return Result(pipelineInfoFacadeService.getPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
-            version = version)
+        return Result(
+            pipelineInfoFacadeService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS,
+                version = version
+            )
         )
     }
 
@@ -363,11 +368,13 @@ class UserPipelineResourceImpl @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
         )
-        return Result(pipelineRemoteAuthService.generateAuth(
-            pipelineId = pipelineId,
-            projectId = projectId,
-            userId = userId
-        ))
+        return Result(
+            pipelineRemoteAuthService.generateAuth(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                userId = userId
+            )
+        )
     }
 
     override fun softDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
@@ -378,15 +385,17 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
         )
-        auditService.createAudit(Audit(
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            resourceId = pipelineId,
-            resourceName = deletePipeline.pipelineName,
-            userId = userId,
-            action = "delete",
-            actionContent = "删除流水线/Delete Pipeline",
-            projectId = projectId
-        ))
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = deletePipeline.pipelineName,
+                userId = userId,
+                action = "delete",
+                actionContent = "删除流水线/Delete Pipeline",
+                projectId = projectId
+            )
+        )
         return Result(true)
     }
 
@@ -401,16 +410,19 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version)
-        auditService.createAudit(Audit(
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-            resourceId = pipelineId,
-            resourceName = pipelineName,
-            userId = userId,
-            action = "delete",
-            actionContent = "删除版本/Delete Ver.$version",
-            projectId = projectId
-        ))
+            version = version
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = pipelineName,
+                userId = userId,
+                action = "delete",
+                actionContent = "删除版本/Delete Ver.$version",
+                projectId = projectId
+            )
+        )
         return Result(true)
     }
 
@@ -553,11 +565,13 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineInfo: PipelineModelAndSetting,
         projectId: String
     ): Result<String?> {
-        return Result(pipelineInfoFacadeService.uploadPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineModelAndSetting = pipelineInfo
-        ))
+        return Result(
+            pipelineInfoFacadeService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = pipelineInfo
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {
@@ -589,50 +603,6 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: MatrixPipelineInfo): Result<MatrixPipelineInfo> {
-        val matrixPipelineInfo = MatrixPipelineInfo(
-            include = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = yaml.include,
-                            exclude = null,
-                            strategy = null
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            },
-            exclude = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = null,
-                            exclude = yaml.exclude,
-                            strategy = null
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            },
-            strategy = try {
-                MatrixContextUtils.schemaCheck(
-                    JsonUtil.toJson(
-                        MatrixPipelineInfo(
-                            include = null,
-                            exclude = null,
-                            strategy = yaml.strategy
-                        )
-                    )
-                )
-                null
-            } catch (e: Exception) {
-                e.message
-            }
-        )
-        return Result(matrixPipelineInfo)
+        return Result(MatrixYamlCheckUtils.checkYaml(yaml))
     }
 }
