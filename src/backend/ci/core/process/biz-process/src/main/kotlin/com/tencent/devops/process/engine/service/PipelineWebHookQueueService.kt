@@ -46,6 +46,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -153,6 +154,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                         targetProjectId = targetProjectId,
                         targetBranch = targetBranch
                     )
+                    val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_WEBHOOK_QUEUE").data
                     if (webHookBuildHistory != null && webHookBuildHistory.isNotEmpty()) {
                         webHookBuildHistory.forEach { queue ->
                             logger.info("webhook queue on webhook trigger|$projectId|$pipelineId|${queue.buildId} " +
@@ -191,7 +193,8 @@ class PipelineWebHookQueueService @Autowired constructor(
                                 targetProjectId = targetProjectId,
                                 targetRepoName = targetRepoName,
                                 targetBranch = targetBranch,
-                                buildId = buildId
+                                buildId = buildId,
+                                id = id
                             )
                         }
                     } else {
@@ -205,7 +208,8 @@ class PipelineWebHookQueueService @Autowired constructor(
                             targetProjectId = targetProjectId,
                             targetRepoName = targetRepoName,
                             targetBranch = targetBranch,
-                            buildId = buildId
+                            buildId = buildId,
+                            id = id
                         )
                     }
                 }
