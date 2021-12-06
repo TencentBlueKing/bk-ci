@@ -175,7 +175,6 @@ class CallBackControl @Autowired constructor(
             projectId = event.projectId,
             trigger = modelDetail.trigger,
             stageId = event.stageId,
-            stageName = getStageName(modelDetail.model, event.stageId),
             taskId = event.taskId
         )
 
@@ -290,7 +289,12 @@ class CallBackControl @Autowired constructor(
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
             val jobs = mutableListOf<SimpleJob>()
-            val stage = SimpleStage(stageName = "Stage-${pos + 1}", status = "", jobs = jobs)
+            val stage = SimpleStage(
+                stageName = "Stage-${pos + 1}",
+                name = s.name ?: "",
+                status = "",
+                jobs = jobs
+            )
             stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 
