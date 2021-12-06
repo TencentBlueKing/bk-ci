@@ -271,20 +271,6 @@ class CallBackControl @Autowired constructor(
         }
     }
 
-    private fun getStageName(model: Model, stageId: String?): String {
-        var stageName = ""
-        if (stageId.isNullOrBlank()) {
-            return stageName
-        }
-        model.stages.forEach {
-            if (it.id == stageId) {
-                stageName = it.name ?: ""
-                return@forEach
-            }
-        }
-        return stageName
-    }
-
     internal fun parseModel(model: Model): List<SimpleStage> {
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
