@@ -56,6 +56,7 @@ object GitRequestEventHandle {
             commitId = gitPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            commitAuthorName = latestCommit?.author?.name,
             userId = gitPushEvent.user_name,
             totalCommitCount = gitPushEvent.total_commits_count.toLong(),
             mergeRequestId = null,
@@ -85,6 +86,7 @@ object GitRequestEventHandle {
             commitId = latestCommit.id,
             commitMsg = latestCommit.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit.timestamp),
+            commitAuthorName = latestCommit.author.name,
             userId = gitMrEvent.user.username,
             totalCommitCount = 0,
             mergeRequestId = gitMrEvent.object_attributes.iid,
@@ -109,6 +111,7 @@ object GitRequestEventHandle {
             commitId = gitTagPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            commitAuthorName = latestCommit?.author?.name,
             userId = gitTagPushEvent.user_name,
             totalCommitCount = gitTagPushEvent.total_commits_count.toLong(),
             mergeRequestId = null,
@@ -132,6 +135,7 @@ object GitRequestEventHandle {
             commitId = triggerBuildReq.commitId ?: "",
             commitMsg = triggerBuildReq.customCommitMsg,
             commitTimeStamp = getCommitTimeStamp(null),
+            commitAuthorName = userId,
             userId = userId,
             totalCommitCount = 0,
             mergeRequestId = null,
@@ -146,7 +150,8 @@ object GitRequestEventHandle {
         streamTimerEvent: StreamTimerBuildEvent,
         buildBranch: String,
         buildCommit: String,
-        buildCommitMessage: String
+        buildCommitMessage: String,
+        buildCommitAuthorName: String
     ): GitRequestEvent {
         return GitRequestEvent(
             id = null,
@@ -160,6 +165,7 @@ object GitRequestEventHandle {
             commitId = buildCommit,
             commitMsg = buildCommitMessage,
             commitTimeStamp = getCommitTimeStamp(null),
+            commitAuthorName = buildCommitAuthorName,
             userId = streamTimerEvent.userId,
             totalCommitCount = 0,
             mergeRequestId = null,
