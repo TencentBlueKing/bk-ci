@@ -27,7 +27,9 @@
 
 package com.tencent.devops.buildless.service
 
+import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
@@ -42,18 +44,19 @@ import org.springframework.stereotype.Service
 @Service
 class BuildLessTaskService(
     private val redisUtils: RedisUtils,
-    private val client: Client
+    private val dispatchClient: DispatchClient
 ) {
 
    fun claimBuildLessTask(containerId: String): BuildLessTask? {
        val buildLessTask = redisUtils.popBuildLessReadyTask()
        if (buildLessTask != null) {
-           logger.info("Container: $containerId claim buildLessTask: $buildLessTask")
-           client.get(ServiceDockerHostResource::class).updateContainerId(
-               buildId = buildLessTask.buildId,
-               vmSeqId = buildLessTask.vmSeqId,
+           logger.info("====> container: $containerId claim buildLessTask: $buildLessTask")
+           dispatchClient.updateContainerId(
+               buildLessTask = buildLessTask,
                containerId = containerId
            )
+
+           redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
        }
 
        return buildLessTask

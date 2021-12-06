@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
+import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -75,5 +77,16 @@ interface ServiceDockerHostResource {
         @ApiParam("容器信息", required = true)
         @QueryParam("containerId")
         containerId: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("/dockerIp/{dockerIp}/refresh")
+    @ApiOperation("刷新Docker构建机状态")
+    fun refresh(
+        @ApiParam("构建机信息", required = true)
+        @PathParam("dockerIp")
+        dockerIp: String,
+        @ApiParam("构建机信息", required = true)
+        dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 }

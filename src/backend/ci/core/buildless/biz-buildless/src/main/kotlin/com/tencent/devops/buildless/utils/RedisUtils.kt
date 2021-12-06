@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -42,27 +43,27 @@ class RedisUtils @Autowired constructor(
         containerId: String,
         status: ContainerStatus = ContainerStatus.IDLE
     ) {
-        redisOperation.hset(buildlessPoolKey(), containerId, status.name)
+        redisOperation.hset(buildLessPoolKey(), containerId, status.name)
     }
 
-    fun getIdleContainer(): String? {
-        val keys = redisOperation.hkeys(buildlessPoolKey())
-        keys?.forEach {
-            val value = redisOperation.hget(buildlessPoolKey(), it)
-            if (value != null && value == ContainerStatus.IDLE.name) {
-                return it
-            }
-        }
+    fun getIdleContainer(): Long {
+        val hValues = redisOperation.hvalues(buildLessPoolKey()) ?: return 0
 
-        return null
+        return hValues.stream()
+            .filter { s -> s == ContainerStatus.IDLE.name }
+            .count()
     }
 
-    fun deleteBuildlessPoolContainer(containerId: String) {
-        redisOperation.hdelete(buildlessPoolKey(), containerId)
+    fun deleteBuildLessPoolContainer(containerId: String) {
+        redisOperation.hdelete(buildLessPoolKey(), containerId)
     }
 
-    fun addBuildLessReadyTask(buildLessTask: BuildLessTask) {
+    fun leftPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
         redisOperation.leftPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
+    }
+
+    fun rightPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
+        redisOperation.rightPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
     }
 
     fun popBuildLessReadyTask(): BuildLessTask? {
@@ -74,8 +75,19 @@ class RedisUtils @Autowired constructor(
         return JsonUtil.to(resultString, BuildLessTask::class.java)
     }
 
-    private fun buildlessPoolKey() =
-        "buildless:contianer_pool"
+    fun getBuildLessReadyTaskCount(): Long {
+        return redisOperation.listSize(buildLessReadyTaskKey()) ?: 0L
+    }
 
-    private fun buildLessReadyTaskKey() = "buildless:ready_task"
+    private fun buildLessPoolKey(): String {
+        return "buildless:contianer_pool:${CommonUtils.getInnerIP()}"
+    }
+
+    private fun buildLessReadyTaskKey(): String {
+        return "buildless:ready_task:${CommonUtils.getHostIp()}"
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RedisUtils::class.java)
+    }
 }

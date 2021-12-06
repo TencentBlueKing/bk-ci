@@ -38,4 +38,11 @@ interface Ip4Service {
         repositoryType: RepositoryType?,
         change: Int
     ): List<P4FileSpec>
+
+    fun getShelvedFiles(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): List<P4FileSpec>
 }

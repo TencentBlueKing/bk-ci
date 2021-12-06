@@ -57,6 +57,7 @@ const val ENV_DOCKER_HOST_PORT = "docker_host_port"
 const val ENV_LOG_SAVE_MODE = "devops_log_save_mode"
 const val COMMON_DOCKER_SIGN = "devops_slave_model"
 const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
+const val ENV_CONTAINER_NAME = "ENV_CONTAINER_NAME"
 
 /**
  * 用于识别dockervm | devcloud |构建机类型
@@ -69,4 +70,5 @@ const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // doc
 const val ENTRY_POINT_CMD = "/data/init.sh"
 const val SLEEP_ENTRY_POINT_CMD = "/data/sleep.sh"
 
-const val MAX_CONTAINER_NUM = 100
+const val MAX_CONTAINER_POOL_SIZE = 10
+const val CORE_CONTAINER_POOL_SIZE = 15

@@ -199,7 +199,7 @@ class DockerHostUtils @Autowired constructor(
         vmSeqId: String,
         containerId: String,
         newIp: String,
-        driftIpInfo: String
+        driftIpInfo: String = ""
     ) {
         val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
             dslContext = dslContext,
