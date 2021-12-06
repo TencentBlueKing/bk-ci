@@ -54,7 +54,7 @@ class ServiceArchiveAtomResourceImpl @Autowired constructor(
     }
 
     override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        val filePath = when(artifactoryRealm) {
+        val filePath = when (artifactoryRealm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$projectCode/$atomCode"
             REALM_BK_REPO -> "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_PLUGIN/$projectCode/$atomCode"
             else -> throw IllegalArgumentException()
