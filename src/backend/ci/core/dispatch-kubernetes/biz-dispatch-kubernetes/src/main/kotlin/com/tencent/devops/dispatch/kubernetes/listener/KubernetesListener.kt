@@ -152,7 +152,7 @@ class KubernetesListener @Autowired constructor(
             if (null == lastIdleContainer || containerChanged) {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                            "create new container, poolNo: $poolNo"
+                        "create new container, poolNo: $poolNo"
                 )
                 containerService.createNewContainer(
                     dispatchMessage = dispatchMessage,
@@ -174,7 +174,7 @@ class KubernetesListener @Autowired constructor(
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                            "start idle container, containerName: $lastIdleContainer"
+                        "start idle container, containerName: $lastIdleContainer"
                 )
                 containerService.startContainer(
                     containerName = lastIdleContainer,
@@ -197,7 +197,7 @@ class KubernetesListener @Autowired constructor(
         } catch (e: BuildFailureException) {
             logger.error(
                 "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "create deployment failed. msg:${e.message}."
+                    "create deployment failed. msg:${e.message}."
             )
             onFailure(
                 errorType = e.errorType,

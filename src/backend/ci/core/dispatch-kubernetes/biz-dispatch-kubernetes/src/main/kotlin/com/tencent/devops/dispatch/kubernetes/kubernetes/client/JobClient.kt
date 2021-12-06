@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.kubernetes.kubernetes.client
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.common.NFS_VOLUME_NAME_PREFIX
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfiguration
@@ -12,8 +13,8 @@ import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.NodeSelector
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.PodData
 import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesJobReq
+import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesDataUtils
-import io.kubernetes.client.openapi.ApiResponse
 import io.kubernetes.client.openapi.apis.BatchV1Api
 import io.kubernetes.client.openapi.models.V1Job
 import org.slf4j.LoggerFactory
@@ -36,33 +37,35 @@ class JobClient @Autowired constructor(
         jobName: String,
         jobReq: KubernetesJobReq,
         nodeName: String?
-    ): ApiResponse<V1Job> {
+    ): Result<V1Job> {
         val labels = jobReq.params?.labels?.toMutableMap()?.apply {
             putAll(getCoreLabels(jobName))
         } ?: getCoreLabels(jobName)
 
         val nfsVolumeNames = mutableListOf<String>()
         val volumes = kubernetesDataUtils.getPodVolume().toMutableList().apply {
-            addAll(jobReq.params?.nfsVolume?.map { nfs ->
-                val name = "${NFS_VOLUME_NAME_PREFIX}_${System.currentTimeMillis()}"
-                nfsVolumeNames.add(name)
-                NfsVolume(
-                    name = name,
-                    path = nfs.path,
-                    server = nfs.server
-                )
-            } ?: emptyList()
+            addAll(
+                jobReq.params?.nfsVolume?.map { nfs ->
+                    val name = "${NFS_VOLUME_NAME_PREFIX}_${System.currentTimeMillis()}"
+                    nfsVolumeNames.add(name)
+                    NfsVolume(
+                        name = name,
+                        path = nfs.path,
+                        server = nfs.server
+                    )
+                } ?: emptyList()
             )
         }
         val volumeMounts = kubernetesDataUtils.getPodVolumeMount().toMutableList().apply {
             var index = -1
-            addAll(jobReq.params?.nfsVolume?.map { nfs ->
-                index++
-                VolumeMount(
-                    name = nfsVolumeNames[index],
-                    mountPath = nfs.mountPath
-                )
-            } ?: emptyList()
+            addAll(
+                jobReq.params?.nfsVolume?.map { nfs ->
+                    index++
+                    VolumeMount(
+                        name = nfsVolumeNames[index],
+                        mountPath = nfs.mountPath
+                    )
+                } ?: emptyList()
             )
         }
 
@@ -101,11 +104,13 @@ class JobClient @Autowired constructor(
                 )
             )
         }
-        return BatchV1Api().createNamespacedJobWithHttpInfo(
-            k8sConfig.nameSpace,
-            job,
-            null, null, null
-        )
+        return KubernetesClientUtil.apiHandle {
+            BatchV1Api().createNamespacedJobWithHttpInfo(
+                k8sConfig.nameSpace,
+                job,
+                null, null, null
+            )
+        }
     }
 
     private fun getCoreLabels(jobName: String) = mapOf(dispatchBuildConfig.workloadLabel!! to jobName)

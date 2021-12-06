@@ -37,8 +37,8 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import java.util.Base64
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 object CommonUtils {
 

@@ -33,13 +33,13 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.client.ContainerClient
+import com.tencent.devops.dispatch.kubernetes.common.BUILD_NODE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.common.BUILD_NODE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.PipelineBuildConfig
 import com.tencent.devops.dispatch.kubernetes.dao.BuildContainerPoolNoDao
@@ -241,7 +241,7 @@ class ContainerService @Autowired constructor(
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                            "start deployment success, wait for agent startup..."
+                        "start deployment success, wait for agent startup..."
                 )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
@@ -383,8 +383,8 @@ class ContainerService @Autowired constructor(
             // 下发删除，不管成功失败
             logger.info(
                 "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
-                        "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
-                        dispatchMessage.buildId
+                    "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
+                    dispatchMessage.buildId
             )
             containerClient.operateContainer(containerName, Action.DELETE, null).let {
                 if (!it.result) {
@@ -406,9 +406,9 @@ class ContainerService @Autowired constructor(
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(
                 "buildId: ${dispatchMessage.buildId}, " +
-                        "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
-                        "old image: $images, " +
-                        "new image: ${dispatchMessage.dispatchMessage}"
+                    "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                    "old image: $images, " +
+                    "new image: ${dispatchMessage.dispatchMessage}"
             )
             return true
         }

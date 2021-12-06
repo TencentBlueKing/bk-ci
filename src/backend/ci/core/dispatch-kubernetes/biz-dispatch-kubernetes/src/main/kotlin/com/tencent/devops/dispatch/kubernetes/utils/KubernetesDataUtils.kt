@@ -27,7 +27,8 @@ class KubernetesDataUtils @Autowired constructor(
                     name = k8sConfig.configMapName!!,
                     key = dispatchBuildConfig.volumeConfigMapKey!!,
                     path = dispatchBuildConfig.volumeConfigMapPath!!
-                )),
+                )
+            ),
             HostPathVolume(
                 name = DATA_VOLUME_NAME,
                 hostPath = HostPath(
