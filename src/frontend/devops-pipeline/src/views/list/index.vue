@@ -256,7 +256,7 @@
         max-width: 80%;
         height: 59px;
         .manage-view-btn {
-            margin-top: 20px;
+            margin-top: 17px;
             width: 24px;
             height: 24px;
             border: 2px dotted $borderWeightColor;
@@ -308,9 +308,13 @@
             }
             .prev,
             .next {
-                line-height: 68px !important;
+                height: 59px !important;
+                line-height: 59px !important;
             }
         }
+    }
+    .bk-tab-label-list-has-bar {
+        height: 59px !important;
     }
     .label-button {
         margin-right: -5px;
