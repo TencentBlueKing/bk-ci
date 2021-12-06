@@ -29,6 +29,7 @@ package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
@@ -140,6 +141,24 @@ class QualityRuleBuildHisDao @Autowired constructor(
             innerDslContext.update(this)
                 .set(GATE_KEEPERS, gateKeepers)
                 .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun listTimeoutRule(dslContext: DSLContext, dateTime: LocalDateTime): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .fetch()
+        }
+    }
+
+    fun updateTimeoutRuleStatus(ruleBuildIds: Collection<Long>): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, RuleInterceptResult.INTERCEPT.name)
+                .where(ID.`in`(ruleBuildIds))
                 .execute()
         }
     }
