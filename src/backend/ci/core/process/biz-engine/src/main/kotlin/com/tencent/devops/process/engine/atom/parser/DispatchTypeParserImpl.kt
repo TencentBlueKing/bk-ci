@@ -88,11 +88,7 @@ class DispatchTypeParserImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(
-        runsOn: Any,
-        context: Map<String, String>,
-        customEnv: Map<String, String>
-    ): DispatchType? {
+    override fun parseRunsOn(runsOn: Any, context: Map<String, String>): DispatchType? {
         return null
     }
 }
