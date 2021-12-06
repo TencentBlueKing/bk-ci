@@ -269,15 +269,15 @@ class QualityRuleBuildHisService constructor(
 
     fun convertVariables(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3) {
         ruleList.forEach { it ->
-            val indicatorThreshold = it.indicators.map { indicator ->
+            it.indicators.forEach { indicator ->
                 indicator.threshold = EnvUtils.parseEnv(
                     indicator.threshold,
                     buildCheckParamsV3.runtimeVariable ?: mapOf()
                 )
             }
             val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
-                indicatorThreshold.joinToString(","))
-            logger.info("QUALITY|convert_indicatorThreshold|$indicatorThreshold|COUNT|$indicatorCount")
+                it.indicators.joinToString(","))
+            logger.info("QUALITY|convert_indicatorThreshold|${it.indicators}|COUNT|$indicatorCount")
 
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
