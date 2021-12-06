@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
@@ -602,7 +604,25 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun checkYaml(userId: String, yaml: MatrixPipelineInfo): Result<MatrixPipelineInfo> {
+    override fun checkYaml(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yaml: MatrixPipelineInfo
+    ): Result<MatrixPipelineInfo> {
+        checkParam(userId, projectId)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
         return Result(MatrixYamlCheckUtils.checkYaml(yaml))
     }
 }
