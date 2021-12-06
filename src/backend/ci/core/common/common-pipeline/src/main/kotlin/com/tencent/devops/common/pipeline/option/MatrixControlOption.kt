@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
-import com.tencent.devops.common.pipeline.type.DispatchInfo
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -70,20 +69,20 @@ data class MatrixControlOption(
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到矩阵参数表
      */
     fun getAllContextCase(buildContext: Map<String, String>): List<Map<String, String>> {
-        val matrixParamMap = mutableListOf<Map<String, Any>>()
+        val caseList = mutableListOf<Map<String, Any>>()
         try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            matrixParamMap.addAll(calculateContextMatrix(convertStrategyYaml(buildContext)))
+            caseList.addAll(calculateContextMatrix(convertStrategyYaml(buildContext)))
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
-            matrixParamMap.addAll(convertStrategyJson(buildContext))
+            caseList.addAll(convertStrategyJson(buildContext))
         }
 
         // #4518 先排除再追加
-        matrixParamMap.removeAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext))) // 排除特定的参数组合
-        matrixParamMap.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
+        caseList.removeAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext))) // 排除特定的参数组合
+        caseList.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
 
-        return matrixParamMap.map { list ->
+        return caseList.map { list ->
             list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
         }.toList()
     }
