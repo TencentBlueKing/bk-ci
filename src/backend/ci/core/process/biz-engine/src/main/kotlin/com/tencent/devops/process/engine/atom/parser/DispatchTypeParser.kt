@@ -45,7 +45,7 @@ interface DispatchTypeParser {
     )
 
     /**
-     * VMBuildContainer需要根据[runsOn]和上下文[context]计算调度类型
+     * VMBuildContainer需要根据[customInfo]和上下文[context]计算调度类型
      */
-    fun parseRunsOn(runsOn: Any, context: Map<String, String>): DispatchType?
+    fun parseRunsOn(customInfo: Any, context: Map<String, String>): DispatchType?
 }
