@@ -84,9 +84,11 @@ data class NormalContainer(
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
-    @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的容器特有字段）", required = false)
+    @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
     var matrixGroupId: String? = null,
-    @ApiModelProperty("分裂后的容器集合", required = false)
+    @ApiModelProperty("当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
+    var matrixContext: Map<String, String>? = null,
+    @ApiModelProperty("分裂后的容器集合（分裂后的父容器特有字段）", required = false)
     var groupContainers: MutableList<NormalContainer>? = null
 ) : Container {
     companion object {

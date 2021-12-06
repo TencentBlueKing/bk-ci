@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.exception.DependNotFoundException
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -178,11 +179,14 @@ class InitializeMatrixGroupStageCmd(
 
             // 每一种上下文组合都是一个新容器
             matrixOption = modelContainer.matrixControlOption!!
-
-            val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
             val jobControlOption = modelContainer.jobControlOption!!
+            val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
+            if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
+                throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
+                    "the limit($MATRIX_CASE_MAX_COUNT)")
+            }
 
-            contextCaseList.forEach { contextCase ->
+            contextCaseList.forEachIndexed { index, contextCase ->
 
                 // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                 val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
@@ -201,10 +205,12 @@ class InitializeMatrixGroupStageCmd(
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = VMBuildContainer(
+                    name = VMUtils.genContainerName(matrixGroupId.toInt(), index),
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
+                    matrixContext = contextCase,
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
@@ -254,15 +260,17 @@ class InitializeMatrixGroupStageCmd(
             val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
             val jobControlOption = modelContainer.jobControlOption!!
 
-            contextCaseList.forEach { contextCase ->
+            contextCaseList.forEachIndexed { index, contextCase ->
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = NormalContainer(
+                    name = VMUtils.genContainerName(matrixGroupId.toInt(), index),
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
                     matrixGroupId = matrixGroupId,
+                    matrixContext = contextCase,
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     jobControlOption = jobControlOption.copy(),
@@ -294,7 +302,7 @@ class InitializeMatrixGroupStageCmd(
                 }
             }
         } else {
-            throw throw DependNotFoundException("matrix(${parentContainer.containerId}) option not found")
+            throw DependNotFoundException("matrix(${parentContainer.containerId}) option not found")
         }
 
         // 新增容器全部添加到Container表中
