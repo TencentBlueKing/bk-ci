@@ -221,8 +221,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName
             )
-            // 社区版插件归档bkrepo后删除local参数
-            val logoUrl = (it["logoUrl"] as? String)?.plus("&local=true")
+            val logoUrl = (it["logoUrl"] as? String)?.plus("&logo=true")
             val icon = it["icon"] as? String
             val categoryFlag = it["category"] as Byte
             val summary = it["summary"] as? String
