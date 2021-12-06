@@ -25,51 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceP4Resource
-import com.tencent.devops.repository.service.scm.Ip4Service
-import com.tencent.devops.scm.code.p4.api.P4FileSpec
-import org.springframework.beans.factory.annotation.Autowired
+class TGitTagPushKind
 
-@RestResource
-class ServiceP4ResourceImpl @Autowired constructor(
-    private val p4Service: Ip4Service
-) : ServiceP4Resource {
-
-    override fun getChangelistFiles(
-        projectId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?,
-        change: Int
-    ): Result<List<P4FileSpec>> {
-
-        return Result(
-            p4Service.getChangelistFiles(
-                projectId = projectId,
-                repositoryId = repositoryId,
-                repositoryType = repositoryType,
-                change = change
-            )
-        )
-    }
-
-    override fun getShelvedFiles(
-        projectId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?,
-        change: Int
-    ): Result<List<P4FileSpec>> {
-        return Result(
-            p4Service.getShelvedFiles(
-                projectId = projectId,
-                repositoryId = repositoryId,
-                repositoryType = repositoryType,
-                change = change
-            )
-        )
-    }
+/**
+ * operation_kind字段
+ * create：创建tag
+ * delete：删除tag
+ * create_from字段：从哪个分支或者commit点创建
+ */
+enum class TGitTagPushOperationKind(val value: String) {
+    CREATE("create"),
+    DELETE("delete")
 }
