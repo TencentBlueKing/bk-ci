@@ -118,7 +118,6 @@ interface UserArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("根据元数据获取文件和属性")
-    // @Path("/projects/{projectId}/searchFileAndProperty")
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
@@ -133,7 +132,6 @@ interface UserArtifactoryResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("获取文件信息")
-    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(

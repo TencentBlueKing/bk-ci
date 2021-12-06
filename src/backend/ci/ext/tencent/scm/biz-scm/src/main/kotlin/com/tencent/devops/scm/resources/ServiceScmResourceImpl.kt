@@ -209,7 +209,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
             token = token,
             region = region,
             userName = userName,
-            event = event, hookUrl = hookUrl
+            event = event,
+            hookUrl = hookUrl
         )
         return Result(true)
     }

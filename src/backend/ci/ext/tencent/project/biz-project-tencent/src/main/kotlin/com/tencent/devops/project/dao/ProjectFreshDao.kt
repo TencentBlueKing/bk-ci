@@ -112,4 +112,17 @@ class ProjectFreshDao {
                 .execute()
         }
     }
+
+    fun getProjectInfoByProjectName(
+        dslContext: DSLContext,
+        userId: String,
+        projectName: String
+    ): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_NAME.eq(projectName))
+                .limit(1)
+                .fetchAny()
+        }
+    }
 }

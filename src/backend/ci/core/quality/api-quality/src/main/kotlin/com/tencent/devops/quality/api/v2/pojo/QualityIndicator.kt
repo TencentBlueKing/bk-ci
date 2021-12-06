@@ -48,7 +48,8 @@ data class QualityIndicator(
     val tag: String?,
     val metadataList: List<Metadata>,
     val desc: String?,
-    val logPrompt: String
+    val logPrompt: String,
+    val enable: Boolean?
 ) {
     data class Metadata(
         val hashId: String,
@@ -81,7 +82,8 @@ data class QualityIndicator(
             tag = this.tag,
             metadataList = this.metadataList,
             desc = this.desc,
-            logPrompt = this.logPrompt
+            logPrompt = this.logPrompt,
+            enable = this.enable
         )
     }
 }

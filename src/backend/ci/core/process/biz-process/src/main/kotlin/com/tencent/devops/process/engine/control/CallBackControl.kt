@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
@@ -53,6 +54,7 @@ import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -78,7 +80,8 @@ import javax.net.ssl.X509TrustManager
 class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectPipelineCallBackService: ProjectPipelineCallBackService
+    private val projectPipelineCallBackService: ProjectPipelineCallBackService,
+    private val client: Client
 ) {
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
@@ -224,7 +227,7 @@ class CallBackControl @Autowired constructor(
             callbackClient.newCall(request).execute()
         } catch (e: Exception) {
             logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                "url=${callBack.callBackUrl}|${callBack.events}|$requestBody", e)
+                "url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
@@ -259,7 +262,9 @@ class CallBackControl @Autowired constructor(
                 responseCode = 0,
                 responseBody = "",
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
             ))
         } catch (e: Throwable) {
             logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)

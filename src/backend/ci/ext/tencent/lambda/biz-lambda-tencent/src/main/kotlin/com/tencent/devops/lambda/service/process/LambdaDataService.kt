@@ -55,6 +55,7 @@ import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIS
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
@@ -89,6 +90,7 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
+    private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient
 ) {
 
@@ -153,20 +155,6 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
-        return if (!task.taskAtom.isNullOrBlank()) {
-            task.taskAtom
-        } else {
-            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
-            if (taskParams.keys.contains("atomCode")) {
-                taskParams["atomCode"] as String
-            } else {
-                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
-                ""
-            }
-        }
-    }
-
     private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
         try {
             val startTime = task.startTime?.timestampmilli() ?: 0
@@ -200,6 +188,10 @@ class LambdaDataService @Autowired constructor(
                             costTime = buildContainer.cost.toLong(),
                             executeCount = buildContainer.executeCount,
                             conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
+                            errorType = task.errorType,
+                            errorCode = task.errorCode,
+                            errorMsg = task.errorMsg,
+                            baseOS = taskParamMap["baseOS"] as String,
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
@@ -240,10 +232,12 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
+
                 val dataPlatTaskDetail = DataPlatTaskDetail(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     projectEnglishName = task.projectId,
+                    vmSeqId = task.containerId,
                     type = "task",
                     itemId = task.taskId,
                     atomCode = task.atomCode,
@@ -498,6 +492,12 @@ class LambdaDataService @Autowired constructor(
             } else {
                 Duration.between(startTime, endTime).toMillis()
             }
+
+            val labelList = mutableListOf<String>()
+            lambdaPipelineLabelDao.getLables(dslContext, pipelineId)?.forEach { label ->
+                labelList.add(label["name"] as String)
+            }
+
             DataPlatBuildHistory(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 templateId = templateCache.get(pipelineId),
@@ -536,7 +536,9 @@ class LambdaDataService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo,
-                startUser = startUser
+                startUser = startUser,
+                channel = channel,
+                labels = labelList
             )
         }
     }

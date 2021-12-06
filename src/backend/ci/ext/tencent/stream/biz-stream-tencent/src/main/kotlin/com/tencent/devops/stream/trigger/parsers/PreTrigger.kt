@@ -27,10 +27,11 @@
 
 package com.tencent.devops.stream.trigger.parsers
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.stream.config.StreamPreTriggerConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitCommitRepository
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommitRepository
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
@@ -49,6 +50,7 @@ class PreTrigger @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PreTrigger::class.java)
         private const val DEVELOPER = 30
+        private val SKIP_CI_KEYS = setOf("skip ci", "ci skip", "no ci", "ci.skip")
     }
 
     // 开启研发商店插件的ci
@@ -90,6 +92,15 @@ class PreTrigger @Autowired constructor(
                 logger.error("create from store atom error: ${e.message}")
             }
         }
+    }
+
+    fun skipStream(event: GitPushEvent): Boolean {
+        event.push_options?.keys?.forEach {
+            if (it in SKIP_CI_KEYS) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun getRealUser(requestEvent: GitRequestEvent, token: String): String? {

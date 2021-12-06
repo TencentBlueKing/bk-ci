@@ -50,7 +50,7 @@ import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.utils.CommitCheckUtils
@@ -155,6 +155,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun startBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
@@ -166,8 +167,10 @@ class StreamYamlBaseBuild @Autowired constructor(
         // 修改流水线并启动构建，需要加锁保证事务性
         var buildId = ""
         try {
-            logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
+            logger.info(
+                "GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
+            )
             buildId = startupPipelineBuild(
                 processClient = processClient,
                 model = model,
@@ -176,14 +179,16 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 pipelineName = pipeline.displayName
             )
-            logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+            logger.info(
+                "GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
+            )
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 成功构建的添加 流水线-分支 记录
             if (!event.isFork() &&
                 (event.objectKind == TGitObjectKind.PUSH.value ||
-                event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
+                        event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
             ) {
                 streamPipelineBranchService.saveOrUpdate(
                     gitProjectId = gitCIBasicSetting.gitProjectId,
@@ -191,8 +196,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     branch = event.branch
                 )
             }
-            // 推送启动构建消息,当人工触发时不推送构建消息
-            if (CommitCheckUtils.needSendCheck(event)) {
+            if (CommitCheckUtils.needSendCheck(event, gitCIBasicSetting)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
                     description = triggerMessageUtil.getCommitCheckDesc(
@@ -216,11 +220,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             }
             return BuildId(buildId)
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
-                e
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                ignore
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
             gitCIEventSaveService.saveRunNotBuildEvent(
@@ -232,7 +236,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
-                reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
+                reasonDetail = ignore.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
                 commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
@@ -242,11 +246,15 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         } finally {
             if (buildId.isNotEmpty()) {
-                kafkaClient.send(STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(StreamBuildInfo(
-                    buildId = buildId,
-                    streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
-                    washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                )))
+                kafkaClient.send(
+                    STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(
+                        StreamBuildInfo(
+                            buildId = buildId,
+                            streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
+                            washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        )
+                    )
+                )
             }
         }
 
@@ -285,8 +293,10 @@ class StreamYamlBaseBuild @Autowired constructor(
                 return true
             }
         } catch (e: Exception) {
-            logger.error("get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
-                "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}")
+            logger.error(
+                "get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
+                        "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}"
+            )
             return true
         }
         return false
