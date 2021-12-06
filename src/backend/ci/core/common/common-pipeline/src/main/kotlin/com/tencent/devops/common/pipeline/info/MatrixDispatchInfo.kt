@@ -25,21 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.atom.parser
+package com.tencent.devops.common.pipeline.info
 
 import com.tencent.devops.common.pipeline.type.DispatchType
 
-/**
- * @Description
- * @Date 2019/11/17
- * @Version 1.0
- */
-interface DispatchTypeParser {
-    fun parse(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        dispatchType: DispatchType
-    )
+abstract class MatrixDispatchInfo(
+    open val name: String
+) {
+
+    /**
+     * VMBuildContainer需要根据上下文[context]计算调度类型
+     */
+    abstract fun parseRunsOn(context: Map<String, String>): DispatchType?
 }
