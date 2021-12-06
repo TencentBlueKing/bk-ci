@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -198,9 +197,9 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         file: File,
         isVmBuildEnv: Boolean
     ) {
-        val path = "/ms/artifactory/api/build/artifactories/file/download?local=true&filePath=${
+        val path = "/ms/artifactory/api/build/artifactories/file/download?filePath=${
             URLEncoder.encode(
-                "$BK_CI_ATOM_DIR/$atomFilePath",
+                "/bk-store/plugin/$atomFilePath",
                 "UTF-8"
             )
         }"
