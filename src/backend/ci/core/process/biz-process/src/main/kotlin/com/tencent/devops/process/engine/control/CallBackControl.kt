@@ -175,6 +175,7 @@ class CallBackControl @Autowired constructor(
             projectId = event.projectId,
             trigger = modelDetail.trigger,
             stageId = event.stageId,
+            stageName = getStageName(modelDetail.model, event.stageId),
             taskId = event.taskId
         )
 
@@ -269,6 +270,20 @@ class CallBackControl @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)
         }
+    }
+
+    private fun getStageName(model: Model, stageId: String?): String {
+        var stageName = ""
+        if (stageId.isNullOrBlank()) {
+            return stageName
+        }
+        model.stages.forEach {
+            if (it.id == stageId) {
+                stageName = it.name ?: ""
+                return@forEach
+            }
+        }
+        return stageName
     }
 
     internal fun parseModel(model: Model): List<SimpleStage> {
