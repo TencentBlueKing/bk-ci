@@ -57,7 +57,7 @@ class ServiceArchiveAtomResourceImpl @Autowired constructor(
         val filePath = when (artifactoryRealm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$projectCode/$atomCode"
             REALM_BK_REPO -> "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_PLUGIN/$projectCode/$atomCode"
-            else -> throw IllegalArgumentException()
+            else -> throw IllegalArgumentException("Unknown artifactory realm")
         }
         archiveFileService.deleteFile(userId, filePath)
         return Result(true)
