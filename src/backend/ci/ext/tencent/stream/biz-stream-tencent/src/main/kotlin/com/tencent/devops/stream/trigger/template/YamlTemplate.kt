@@ -47,7 +47,7 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.template.pojo.TemplateDeepTreeNode

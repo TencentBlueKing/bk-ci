@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.template.pojo
 
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 
 data class GetTemplateParam(

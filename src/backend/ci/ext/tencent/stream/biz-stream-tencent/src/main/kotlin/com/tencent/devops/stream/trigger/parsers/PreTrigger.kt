@@ -27,11 +27,11 @@
 
 package com.tencent.devops.stream.trigger.parsers
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.stream.config.StreamPreTriggerConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitCommitRepository
-import com.tencent.devops.stream.pojo.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommitRepository
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
