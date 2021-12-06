@@ -29,7 +29,13 @@ class ArchiveAtomToBkRepoServiceImpl(
         return System.getProperty("java.io.tmpdir")
     }
 
-    override fun handleArchiveFile(disposition: FormDataContentDisposition, inputStream: InputStream, projectCode: String, atomCode: String, version: String) {
+    override fun handleArchiveFile(
+        disposition: FormDataContentDisposition,
+        inputStream: InputStream,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ) {
         unzipFile(
             disposition = disposition,
             inputStream = inputStream,
