@@ -745,7 +745,6 @@ class ExperienceService @Autowired constructor(
                 }
             }
         }
-
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
