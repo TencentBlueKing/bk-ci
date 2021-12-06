@@ -255,9 +255,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String,
         event: String?,
-        hookUrl: String?,
-        includePaths: String?,
-        excludePaths: String?
+        hookUrl: String?
     ) {
         logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
@@ -298,11 +296,7 @@ class ScmService @Autowired constructor(
                 userName = userName,
                 event = event
             )
-                .addWebHook(
-                    hookUrl = realHookUrl,
-                    includePaths = includePaths,
-                    excludePaths = excludePaths
-                )
+                .addWebHook(hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
