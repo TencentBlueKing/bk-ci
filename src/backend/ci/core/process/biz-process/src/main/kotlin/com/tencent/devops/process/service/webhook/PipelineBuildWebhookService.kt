@@ -71,6 +71,7 @@ import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -404,7 +405,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                         taskId = element.id!!,
                         taskName = element.name,
                         success = true,
-                        triggerResult = buildId
+                        triggerResult = buildId,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
                 } catch (ignore: Exception) {
