@@ -199,7 +199,16 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
-        val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
+        val fileDetail = try {
+            bkRepoService.show(userId, projectId, artifactoryType, path)
+        } catch (e: Exception) {
+            logger.error("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                defaultMessage = "请联系流水线负责人授予下载构件权限。"
+            )
+        }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
