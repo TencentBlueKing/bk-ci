@@ -62,4 +62,22 @@ interface ServiceP4Resource {
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
+
+    @ApiOperation("获取p4 shelve文件变更列表")
+    @GET
+    @Path("/getShelvedFiles")
+    fun getShelvedFiles(
+        @ApiParam("p4Port", required = true)
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam("p4 username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("p4 password", required = true)
+        @QueryParam("password")
+        password: String,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<List<P4FileSpec>>
 }

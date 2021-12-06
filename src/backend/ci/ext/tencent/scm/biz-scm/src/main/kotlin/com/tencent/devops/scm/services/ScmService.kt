@@ -218,6 +218,7 @@ class ScmService @Autowired constructor(
         return TokenCheckResult(true, "OK")
     }
 
+    @SuppressWarnings("LongMethod", "NestedBlockDepth", "ThrowsCount", "LongParameterList")
     fun addWebHook(
         projectName: String,
         url: String,
@@ -228,12 +229,9 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String,
         event: String? = null,
-        hookUrl: String? = null,
-        includePaths: String?,
-        excludePaths: String?
+        hookUrl: String? = null
     ) {
-        logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl|" +
-            "$includePaths|$excludePaths] Start to add web hook")
+        logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {
@@ -293,11 +291,7 @@ class ScmService @Autowired constructor(
                 userName = userName,
                 event = event
             )
-                .addWebHook(
-                    hookUrl = realHookUrl,
-                    includePaths = includePaths,
-                    excludePaths = excludePaths
-                )
+                .addWebHook(hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
