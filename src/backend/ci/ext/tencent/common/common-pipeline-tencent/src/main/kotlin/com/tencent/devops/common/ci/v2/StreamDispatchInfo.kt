@@ -25,17 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:scm:api-scm"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-}
+package com.tencent.devops.common.ci.v2
 
-plugins {
-    `task-deploy-to-maven`
-}
+/**
+ * 具体构建时需要的所有配置信息
+ */
+data class StreamDispatchInfo(
+    val job: Job,
+    val projectCode: String,
+    val resources: Resources? = null
+)

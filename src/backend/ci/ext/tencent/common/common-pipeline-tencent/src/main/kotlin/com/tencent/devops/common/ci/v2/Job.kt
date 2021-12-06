@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
@@ -56,7 +57,10 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList()
+    val dependOn: List<String>? = emptyList(),
+    // 组装DispatchType时专用字段
+    @JsonIgnore
+    var defaultImage: String? = null
 )
 
 data class Container(
