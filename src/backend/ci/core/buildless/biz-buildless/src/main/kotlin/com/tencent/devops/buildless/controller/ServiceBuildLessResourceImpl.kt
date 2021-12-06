@@ -28,39 +28,49 @@
 package com.tencent.devops.buildless.controller
 
 import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
-import com.tencent.devops.buildless.exception.DockerServiceException
+import com.tencent.devops.buildless.common.ErrorCodeEnum
+import com.tencent.devops.buildless.exception.BuildLessException
+import com.tencent.devops.buildless.exception.NoIdleContainerException
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.buildless.service.BuildlessContainerService
+import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceBuildlessResourceImpl @Autowired constructor(
-    private val buildlessContainerService: BuildlessContainerService
+class ServiceBuildLessResourceImpl @Autowired constructor(
+    private val buildLessContainerService: BuildLessContainerService
 ) : ServiceBuildlessResource {
     override fun startBuild(buildLessEndInfo: BuildLessStartInfo): Result<String> {
-        return try {
-            logger.warn("Create agentLess container, dockerHostBuildInfo: $buildLessEndInfo")
-            Result(buildlessContainerService.createContainer(buildLessEndInfo))
-        } catch (e: DockerServiceException) {
-            logger.error("Create container failed, rollback build. buildId: ${buildLessEndInfo.buildId}," +
-                    " vmSeqId: ${buildLessEndInfo.vmSeqId}")
-            Result(e.errorCode, "构建环境启动失败: ${e.message}", "")
+        with(buildLessEndInfo) {
+            return try {
+                logger.warn("Allocate container, dockerHostBuildInfo: $this")
+                buildLessContainerService.allocateContainer(this)
+                Result("")
+            } catch (e: NoIdleContainerException) {
+                logger.warn("$buildId|$vmSeqId|$executionCount No idle container, reject the execution.")
+                Result(e.errorCode, "")
+            } catch (e: BuildLessException) {
+                logger.error("$buildId|$vmSeqId|$executionCount allocate container failed. ${e.message}")
+                Result(e.errorCode, ": ${e.message}", "")
+            } catch (e: Exception) {
+                logger.error("$buildId|$vmSeqId|$executionCount allocate container failed.", e)
+                Result(ErrorCodeEnum.SYSTEM_ERROR.errorCode, ": ${e.message}", "")
+            }
         }
     }
 
     override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
         logger.warn("${buildLessEndInfo.buildId}|${buildLessEndInfo.vmSeqId} Stop the container, " +
                 "containerId: ${buildLessEndInfo.containerId}")
-        buildlessContainerService.stopContainer(buildLessEndInfo)
+        buildLessContainerService.stopContainer(buildLessEndInfo)
 
         return Result(true)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ServiceBuildlessResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceBuildLessResourceImpl::class.java)
     }
 }

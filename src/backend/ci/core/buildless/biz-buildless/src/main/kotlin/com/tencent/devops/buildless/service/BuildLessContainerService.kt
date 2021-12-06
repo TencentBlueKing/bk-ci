@@ -38,12 +38,11 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
-import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.DockerHostConfig
-import com.tencent.devops.buildless.exception.DockerServiceException
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
@@ -69,10 +68,11 @@ import org.springframework.stereotype.Service
  */
 
 @Service
-class BuildlessContainerService(
-    private val dockerHostConfig: DockerHostConfig,
+class BuildLessContainerService(
+    private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
-    private val redisUtils: RedisUtils
+    private val dockerHostConfig: DockerHostConfig,
+    private val rejectedExecutionFactory: RejectedExecutionFactory
 ) {
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -80,14 +80,14 @@ class BuildlessContainerService(
         .withApiVersion(dockerHostConfig.apiVersion)
         .build()
 
-    var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+    final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
         .dockerHost(config.dockerHost)
         .sslConfig(config.sslConfig)
         .connectTimeout(5000)
         .readTimeout(30000)
         .build()
 
-    var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
         .dockerHost(config.dockerHost)
         .sslConfig(config.sslConfig)
         .connectTimeout(5000)
@@ -104,50 +104,40 @@ class BuildlessContainerService(
         .withDockerHttpClient(longHttpClient)
         .build()
 
-    /**
-     * 检验容器池的大小
-     */
-    fun getRunningPool(): Int {
-        val containerInfo = httpLongDockerCli
-            .listContainersCmd()
-            .withStatusFilter(setOf("running"))
-            .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
-            .exec()
+    fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
+        val idlePoolSize = redisUtils.getIdleContainer()
+        val readyTaskCount = redisUtils.getBuildLessReadyTaskCount()
 
-        return containerInfo.size
-    }
+        // 无空闲容器并且还有部分任务在排队
+        if (idlePoolSize == 0L && readyTaskCount > 0) {
+            val continueAllocate = rejectedExecutionFactory
+                .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
+                .rejectedExecution(buildLessStartInfo)
 
-    fun createContainer(dockerHostBuildInfo: BuildLessStartInfo): String {
-        try {
-            // 校验当前容器池是否有可用资源
-            val idlePoolSize = redisUtils.getIdleContainer()
-            val runningPool = getRunningPool()
-            if (idlePoolSize == 0L &&
-                (runningPool in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE)) {
-                createBuildlessPoolContainer()
+            if (!continueAllocate) {
+                return
             }
-
-            redisUtils.addBuildLessReadyTask(BuildLessTask(
-                projectId = dockerHostBuildInfo.projectId,
-                pipelineId = dockerHostBuildInfo.pipelineId,
-                buildId = dockerHostBuildInfo.buildId,
-                poolNo = dockerHostBuildInfo.poolNo,
-                vmSeqId = dockerHostBuildInfo.vmSeqId,
-                agentId = dockerHostBuildInfo.agentId,
-                secretKey = dockerHostBuildInfo.secretKey
-            ))
-            return ""
-        } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
-            throw DockerServiceException(
-                errorType = ErrorCodeEnum.CREATE_CONTAINER_ERROR.errorType,
-                errorCode = ErrorCodeEnum.CREATE_CONTAINER_ERROR.errorCode,
-                errorMsg = "[${dockerHostBuildInfo.buildId}]|Create container failed"
-            )
         }
+
+        // 无可空闲容器并且当前容器数小于最大容器数
+        val runningPool = getRunningPoolCount()
+        if (idlePoolSize == 0L &&
+            (runningPool in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE)) {
+            createBuildLessPoolContainer()
+        }
+
+        redisUtils.leftPushBuildLessReadyTask(BuildLessTask(
+            projectId = buildLessStartInfo.projectId,
+            pipelineId = buildLessStartInfo.pipelineId,
+            buildId = buildLessStartInfo.buildId,
+            executionCount = buildLessStartInfo.executionCount,
+            vmSeqId = buildLessStartInfo.vmSeqId,
+            agentId = buildLessStartInfo.agentId,
+            secretKey = buildLessStartInfo.secretKey
+        ))
     }
 
-    fun createBuildlessPoolContainer(): String {
+    fun createBuildLessPoolContainer(): String {
         val imageName = "mirrors.tencent.com/ci/tlinux_ci:0.5.0.4"
 
         val volumeApps = Volume(dockerHostConfig.volumeApps)
@@ -205,11 +195,11 @@ class BuildlessContainerService(
 
             // 从缓存中删除容器状态
             logger.info("===> $buildId|$vmSeqId remove container: $containerId from pool.")
-            redisUtils.deleteBuildlessPoolContainer(buildLessEndInfo.containerId)
+            redisUtils.deleteBuildLessPoolContainer(buildLessEndInfo.containerId)
         }
 
         // 容器销毁后接着拉起新的容器
-        createBuildlessPoolContainer()
+        createBuildLessPoolContainer()
     }
 
     fun stopContainer(containerId: String, buildId: String) {
@@ -244,7 +234,20 @@ class BuildlessContainerService(
         }
     }
 
+    /**
+     * 检验容器池的大小
+     */
+    fun getRunningPoolCount(): Int {
+        val containerInfo = httpLongDockerCli
+            .listContainersCmd()
+            .withStatusFilter(setOf("running"))
+            .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
+            .exec()
+
+        return containerInfo.size
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildlessContainerService::class.java)
+        private val logger = LoggerFactory.getLogger(BuildLessContainerService::class.java)
     }
 }

@@ -43,23 +43,27 @@ class RedisUtils @Autowired constructor(
         containerId: String,
         status: ContainerStatus = ContainerStatus.IDLE
     ) {
-        redisOperation.hset(buildlessPoolKey(), containerId, status.name)
+        redisOperation.hset(buildLessPoolKey(), containerId, status.name)
     }
 
     fun getIdleContainer(): Long {
-        val hValues = redisOperation.hvalues(buildlessPoolKey()) ?: return 0
+        val hValues = redisOperation.hvalues(buildLessPoolKey()) ?: return 0
 
         return hValues.stream()
             .filter { s -> s == ContainerStatus.IDLE.name }
             .count()
     }
 
-    fun deleteBuildlessPoolContainer(containerId: String) {
-        redisOperation.hdelete(buildlessPoolKey(), containerId)
+    fun deleteBuildLessPoolContainer(containerId: String) {
+        redisOperation.hdelete(buildLessPoolKey(), containerId)
     }
 
-    fun addBuildLessReadyTask(buildLessTask: BuildLessTask) {
+    fun leftPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
         redisOperation.leftPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
+    }
+
+    fun rightPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
+        redisOperation.rightPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
     }
 
     fun popBuildLessReadyTask(): BuildLessTask? {
@@ -71,7 +75,11 @@ class RedisUtils @Autowired constructor(
         return JsonUtil.to(resultString, BuildLessTask::class.java)
     }
 
-    private fun buildlessPoolKey(): String {
+    fun getBuildLessReadyTaskCount(): Long {
+        return redisOperation.listSize(buildLessReadyTaskKey()) ?: 0L
+    }
+
+    private fun buildLessPoolKey(): String {
         return "buildless:contianer_pool:${CommonUtils.getInnerIP()}"
     }
 

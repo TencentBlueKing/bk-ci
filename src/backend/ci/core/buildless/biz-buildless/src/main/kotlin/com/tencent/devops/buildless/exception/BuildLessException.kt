@@ -25,44 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.service
+package com.tencent.devops.buildless.exception
 
-import com.tencent.devops.buildless.client.DispatchClient
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.utils.ContainerStatus
-import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.ErrorType
 
-
-/**
- * 无构建环境Task服务
- */
-
-@Service
-class BuildLessTaskService(
-    private val redisUtils: RedisUtils,
-    private val dispatchClient: DispatchClient
-) {
-
-   fun claimBuildLessTask(containerId: String): BuildLessTask? {
-       val buildLessTask = redisUtils.popBuildLessReadyTask()
-       if (buildLessTask != null) {
-           logger.info("====> container: $containerId claim buildLessTask: $buildLessTask")
-           dispatchClient.updateContainerId(
-               buildLessTask = buildLessTask,
-               containerId = containerId
-           )
-
-           redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
-       }
-
-       return buildLessTask
-   }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessTaskService::class.java)
-    }
-}
+open class BuildLessException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    errorMsg: String
+) : Exception(errorMsg)

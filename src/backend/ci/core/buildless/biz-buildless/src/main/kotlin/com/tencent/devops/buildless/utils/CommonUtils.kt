@@ -28,12 +28,11 @@
 package com.tencent.devops.buildless.utils
 
 import org.slf4j.LoggerFactory
-import java.io.IOException
+import org.springframework.beans.factory.annotation.Value
 import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
-import java.net.Socket
 import java.net.UnknownHostException
 import java.util.Enumeration
 
@@ -41,19 +40,13 @@ object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
-    private const val dockerHubUrl = "https://index.docker.io/v1/"
-
     private var hostIp: String? = null
 
-    fun isPortUsing(host: String, port: Int): Boolean {
-        return try {
-            // 建立一个Socket连接
-            val address = InetAddress.getByName(host)
-            Socket(address, port)
-            true
-        } catch (e: IOException) {
-            false
-        }
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
+
+    fun isGary(): Boolean {
+        return consulTag.contains("gray")
     }
 
     fun getHostIp(): String {
@@ -143,70 +136,5 @@ object CommonUtils {
         }
 
         return null
-    }
-
-    fun normalizeImageName(imageNameStr: String): String {
-        val (url, name, tag) = parseImage(imageNameStr)
-        return when (url) {
-            dockerHubUrl -> "$name:$tag"
-            else -> "$url/$name:$tag"
-        }
-    }
-
-    private fun parseImage(imageNameInput: String): Triple<String, String, String> {
-        val (url, name, tag) = parseImageWithoutTrim(imageNameInput)
-        return Triple(url.trim(), name.trim(), tag.trim())
-    }
-
-    @Suppress("ALL")
-    private fun parseImageWithoutTrim(imageNameInput: String): Triple<String, String, String> {
-        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-        val arry = imageNameStr.split(":")
-        if (arry.size == 1) {
-            val str = imageNameStr.split("/")
-            return if (str.size == 1) {
-                Triple(dockerHubUrl, imageNameStr, "latest")
-            } else {
-                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-            }
-        } else if (arry.size == 2) {
-            val str = imageNameStr.split("/")
-            when {
-                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-                str.size >= 2 -> return if (str[0].contains(":")) {
-                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-                } else {
-                    if (str.last().contains(":")) {
-                        val nameTag = str.last().split(":")
-                        Triple(str[0],
-                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-                            nameTag[1])
-                    } else {
-                        Triple(str[0], str.last(), "latest")
-                    }
-                }
-                else -> {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-            }
-        } else if (arry.size == 3) {
-            val str = imageNameStr.split("/")
-            if (str.size >= 2) {
-                val tail = imageNameStr.removePrefix(str[0] + "/")
-                val nameAndTag = tail.split(":")
-                if (nameAndTag.size != 2) {
-                    logger.error("image name invalid: $imageNameStr")
-                    throw Exception("image name invalid.")
-                }
-                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-            } else {
-                logger.error("image name invalid: $imageNameStr")
-                throw Exception("image name invalid.")
-            }
-        } else {
-            logger.error("image name invalid: $imageNameStr")
-            throw Exception("image name invalid.")
-        }
     }
 }

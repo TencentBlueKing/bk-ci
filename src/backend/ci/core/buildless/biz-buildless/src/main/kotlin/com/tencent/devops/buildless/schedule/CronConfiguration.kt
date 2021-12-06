@@ -25,44 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.service
+package com.tencent.devops.buildless.schedule
 
 import com.tencent.devops.buildless.client.DispatchClient
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.utils.ContainerStatus
-import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
-
+import com.tencent.devops.buildless.service.BuildLessContainerService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.config.IntervalTask
+import org.springframework.scheduling.config.ScheduledTaskRegistrar
+import java.util.Random
+import java.util.concurrent.Executors
 
 /**
- * 无构建环境Task服务
+ * 配置化定时任务
+ * @version 1.0
  */
 
-@Service
-class BuildLessTaskService(
-    private val redisUtils: RedisUtils,
-    private val dispatchClient: DispatchClient
-) {
+@Configuration
+@EnableScheduling
+class CronConfiguration @Autowired constructor(
+    private val dispatchClient: DispatchClient,
+    private val buildlessContainerService: BuildLessContainerService,
+) : SchedulingConfigurer {
 
-   fun claimBuildLessTask(containerId: String): BuildLessTask? {
-       val buildLessTask = redisUtils.popBuildLessReadyTask()
-       if (buildLessTask != null) {
-           logger.info("====> container: $containerId claim buildLessTask: $buildLessTask")
-           dispatchClient.updateContainerId(
-               buildLessTask = buildLessTask,
-               containerId = containerId
-           )
+    override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
+        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
+        val random = (Random().nextInt(15) % (15 - 8 + 1) + 8) * 100
 
-           redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
-       }
-
-       return buildLessTask
-   }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessTaskService::class.java)
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                {
+                    val containerRunningsCount = buildlessContainerService.getRunningPoolCount()
+                    dispatchClient.refreshStatus(containerRunningsCount)
+                }, 5 * random.toLong(), random.toLong()
+            )
+        )
     }
 }

@@ -25,44 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.service
+package com.tencent.devops.buildless.rejected
 
-import com.tencent.devops.buildless.client.DispatchClient
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.utils.ContainerStatus
-import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-
-/**
- * 无构建环境Task服务
- */
-
 @Service
-class BuildLessTaskService(
-    private val redisUtils: RedisUtils,
-    private val dispatchClient: DispatchClient
-) {
+class FollowPolicy : RejectedExecutionHandler {
+    override fun rejectedExecution(buildLessStartInfo: BuildLessStartInfo): Boolean {
+        with(buildLessStartInfo) {
+            logger.info("$buildId|$vmSeqId|$executionCount follow allocate container.")
 
-   fun claimBuildLessTask(containerId: String): BuildLessTask? {
-       val buildLessTask = redisUtils.popBuildLessReadyTask()
-       if (buildLessTask != null) {
-           logger.info("====> container: $containerId claim buildLessTask: $buildLessTask")
-           dispatchClient.updateContainerId(
-               buildLessTask = buildLessTask,
-               containerId = containerId
-           )
-
-           redisUtils.setBuildlessPoolContainer(containerId, ContainerStatus.BUSY)
-       }
-
-       return buildLessTask
-   }
+            return true
+        }
+    }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessTaskService::class.java)
+        private val logger = LoggerFactory.getLogger(FollowPolicy::class.java)
     }
 }

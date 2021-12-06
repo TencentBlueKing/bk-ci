@@ -34,6 +34,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
+import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory
@@ -41,8 +43,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource@Suppress("ALL")
 class ServiceDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dispatchDockerService: DispatchDockerService,
     private val dockerHostZoneTaskService: DockerHostZoneTaskService,
-    private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
     override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
         checkParams(page, pageSize)
@@ -61,6 +64,10 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     override fun updateContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean> {
         dockerHostBuildService.updateContainerId(buildId, vmSeqId, containerId)
         return Result(true)
+    }
+
+    override fun refresh(dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
+        return Result(dispatchDockerService.updateBuildLessStatus("buildless", dockerIp, dockerIpInfoVO))
     }
 
     companion object {

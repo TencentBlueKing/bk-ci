@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -194,25 +195,6 @@ class DockerHostClient @Autowired constructor(
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
     }
 
-    fun startBuildLessBuild(
-        dockerHostBuildInfo: DockerHostBuildInfo
-    ) {
-        with(dockerHostBuildInfo) {
-            client.get(ServiceBuildlessResource::class).startBuild(
-                BuildLessStartInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    agentId = agentId,
-                    secretKey = secretKey,
-                    buildType = buildType.name,
-                )
-            )
-        }
-    }
-
     fun startAgentLessBuild(
         agentLessDockerIp: String,
         agentLessDockerPort: Int,
@@ -295,9 +277,30 @@ class DockerHostClient @Autowired constructor(
 
         // 测试
         if (event.projectId == "test-sawyer2") {
-            startBuildLessBuild(requestBody)
+            startBuildLessBuild(agentId, secretKey, event)
         } else {
             dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
+        }
+    }
+
+    private fun startBuildLessBuild(
+        agentId: String,
+        secretKey: String,
+        event: PipelineBuildLessStartupDispatchEvent
+    ) {
+        with(event) {
+            client.get(ServiceBuildlessResource::class).startBuild(
+                BuildLessStartInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = Integer.valueOf(vmSeqId),
+                    executionCount = event.executeCount ?: 1,
+                    agentId = agentId,
+                    secretKey = secretKey,
+                    rejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+                )
+            )
         }
     }
 

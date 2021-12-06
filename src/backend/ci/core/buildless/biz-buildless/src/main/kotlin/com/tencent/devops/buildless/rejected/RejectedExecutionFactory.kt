@@ -25,12 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.exception
+package com.tencent.devops.buildless.rejected
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.buildless.pojo.RejectedExecutionType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-open class DockerServiceException(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+@Component
+class RejectedExecutionFactory @Autowired constructor(
+    private val abortPolicy: AbortPolicy,
+    private val followPolicy: FollowPolicy,
+    private val jumpPolicy: JumpPolicy
+) {
+
+    fun getRejectedExecutionHandler(rejectedExecutionType: RejectedExecutionType): RejectedExecutionHandler {
+        return when (rejectedExecutionType) {
+            RejectedExecutionType.ABORT_POLICY -> {
+                abortPolicy
+            }
+            RejectedExecutionType.FOLLOW_POLICY -> {
+                followPolicy
+            }
+            RejectedExecutionType.JUMP_POLICY -> {
+                jumpPolicy
+            }
+        }
+    }
+}

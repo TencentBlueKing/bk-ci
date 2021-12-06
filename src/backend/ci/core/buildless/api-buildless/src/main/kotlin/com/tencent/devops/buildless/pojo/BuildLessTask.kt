@@ -7,5 +7,5 @@ data class BuildLessTask(
     val buildId: String,
     val vmSeqId: Int,
     val secretKey: String,
-    val poolNo: Int
+    val executionCount: Int
 )
