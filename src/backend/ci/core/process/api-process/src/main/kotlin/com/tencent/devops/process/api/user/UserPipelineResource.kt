@@ -563,11 +563,17 @@ interface UserPipelineResource {
 
     @ApiOperation("校验matrix yaml格式")
     @POST
-    @Path("/matrix/check")
+    @Path("/{projectId}/{pipelineId}/matrix/check")
     fun checkYaml(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam("yaml内容", required = true)
         yaml: MatrixPipelineInfo
     ): Result<MatrixPipelineInfo>
