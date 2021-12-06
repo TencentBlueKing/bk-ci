@@ -25,24 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.atom.parser
+package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
- * @Description
- * @Date 2019/11/17
- * @Version 1.0
+ * 解析矩阵自定义的编译环境
  */
 interface DispatchTypeParser {
-
-    fun parse(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        dispatchType: DispatchType
-    )
 
     /**
      * VMBuildContainer需要根据[runsOnStr]计算调度类型

@@ -67,19 +67,10 @@ data class MatrixControlOption(
     }
 
     /**
-     * VMBuildContainer需要根据[runsOnStr]计算调度信息
-     */
-    fun parseRunsOn(buildContext: Map<String, String>): DispatchInfo? {
-        val realRunsOnStr = EnvUtils.parseEnv(runsOnStr, buildContext)
-        // TODO 根据替换后[realRunsOnStr]生成调度信息
-        return null
-    }
-
-    /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到矩阵参数表
      */
     fun getAllContextCase(buildContext: Map<String, String>): List<Map<String, String>> {
-        val matrixParamMap = mutableListOf<Map<String, String>>()
+        val matrixParamMap = mutableListOf<Map<String, Any>>()
         try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
             matrixParamMap.addAll(calculateContextMatrix(convertStrategyYaml(buildContext)))
@@ -93,24 +84,24 @@ data class MatrixControlOption(
         matrixParamMap.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
 
         return matrixParamMap.map { list ->
-            list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value }.toMap()
+            list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
         }.toList()
     }
 
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun calculateContextMatrix(strategyMap: Map<String, List<String>>?): List<Map<String, String>> {
+    private fun calculateContextMatrix(strategyMap: Map<String, List<String>>?): List<Map<String, Any>> {
         if (strategyMap.isNullOrEmpty()) {
             return emptyList()
         }
-        val caseList = mutableListOf<Map<String, String>>()
+        val caseList = mutableListOf<Map<String, Any>>()
         val keyList = strategyMap.keys
         MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
             .forEach { valueList ->
-                val case = mutableMapOf<String, String>()
+                val case = mutableMapOf<String, Any>()
                 keyList.forEachIndexed { index, key ->
-                    case[key] = valueList[index].toString()
+                    case[key] = valueList[index]
                 }
                 caseList.add(case)
             }
@@ -120,9 +111,9 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<String>> {
+    private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<Any>> {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return YamlUtil.to<Map<String, List<String>>>(contextStr)
+        return YamlUtil.to<Map<String, List<Any>>>(contextStr)
     }
 
     /**
@@ -159,12 +150,12 @@ data class MatrixControlOption(
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?): List<Map<String, String>> {
+    private fun convertCase(str: String?): List<Map<String, Any>> {
         if (str.isNullOrBlank()) {
             return emptyList()
         }
         val includeCaseList = try {
-            YamlUtil.to<List<Map<String, String>>>(str)
+            YamlUtil.to<List<Map<String, Any>>>(str)
         } catch (ignore: Throwable) {
             emptyList()
         }

@@ -28,15 +28,19 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.exception.DependNotFoundException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -77,7 +81,8 @@ class InitializeMatrixGroupStageCmd(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator
+    private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val dispatchTypeParser: DispatchTypeParser
 ) : ContainerCmd {
 
     companion object {
@@ -181,7 +186,16 @@ class InitializeMatrixGroupStageCmd(
 
                 // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                 val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
-                val dispatchInfo = matrixOption.parseRunsOn(allContext)
+
+                // 对自定义构建环境的做特殊解析
+                // customDispatchType决定customBaseOS是否计算，请勿填充默认值
+                val customDispatchType = matrixOption.runsOnStr?.let { self ->
+                    dispatchTypeParser.parseRunsOn(EnvUtils.parseEnv(self, allContext))
+                }
+                val customBaseOS = customDispatchType.let { self ->
+                    if (self is ThirdPartyAgentEnvDispatchType) VMBaseOS.ALL else null
+                }
+
                 val newContainerSeq = context.containerSeq++
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
@@ -198,22 +212,14 @@ class InitializeMatrixGroupStageCmd(
                     executeCount = modelContainer.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
-                    // --- TODO 根据自定义的runsOn决定类型调度，已经生成buildEnv等参数，可能存在变量占位符
-                    baseOS = dispatchInfo?.baseOS ?: modelContainer.baseOS,
-                    vmNames = dispatchInfo?.vmNames ?: modelContainer.vmNames,
-                    dockerBuildVersion = dispatchInfo?.dockerBuildVersion
-                        ?: modelContainer.dockerBuildVersion,
-                    dispatchType = dispatchInfo?.dispatchType
-                        ?: modelContainer.dispatchType,
-                    buildEnv = dispatchInfo?.buildEnv
-                        ?: modelContainer.buildEnv,
-                    thirdPartyAgentId = dispatchInfo?.thirdPartyAgentId
-                        ?: modelContainer.thirdPartyAgentId,
-                    thirdPartyAgentEnvId = dispatchInfo?.thirdPartyAgentEnvId
-                        ?: modelContainer.thirdPartyAgentEnvId,
-                    thirdPartyWorkspace = dispatchInfo?.thirdPartyWorkspace
-                        ?: modelContainer.thirdPartyWorkspace
-                    // ---
+                    baseOS = customBaseOS ?: modelContainer.baseOS,
+                    vmNames = modelContainer.vmNames,
+                    dockerBuildVersion = modelContainer.dockerBuildVersion,
+                    dispatchType = customDispatchType ?: modelContainer.dispatchType,
+                    buildEnv = modelContainer.buildEnv,
+                    thirdPartyAgentId = modelContainer.thirdPartyAgentId,
+                    thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId,
+                    thirdPartyWorkspace = modelContainer.thirdPartyWorkspace
                 )
 
                 groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
