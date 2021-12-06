@@ -331,7 +331,7 @@ object Runner {
         LoggerService.addFoldEndLine("-----")
     }
 
-    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.", "matrix.")
 
     /**
      * 显示用户预定义变量

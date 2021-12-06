@@ -42,7 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
-import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
@@ -59,7 +59,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = SampleStatusElement::class, name = SampleStatusElement.classType),
+    JsonSubTypes.Type(value = MatrixStatusElement::class, name = MatrixStatusElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitlabWebHookTriggerElement::class, name = CodeGitlabWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeSVNWebHookTriggerElement::class, name = CodeSVNWebHookTriggerElement.classType),

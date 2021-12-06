@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -559,4 +560,16 @@ interface UserPipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
+
+
+    @ApiOperation("校验matrix yaml格式")
+    @POST
+    @Path("/checkYaml")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("yaml内容", required = true)
+        yaml: MatrixPipelineInfo
+    ): Result<MatrixPipelineInfo>
 }
