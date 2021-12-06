@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.matrix.SampleStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -320,10 +320,10 @@ class InitializeMatrixGroupStageCmd(
         return buildContainerList.size
     }
 
-    private fun generateSampleStatusElements(elements: List<Element>): List<SampleStatusElement> {
+    private fun generateSampleStatusElements(elements: List<Element>): List<MatrixStatusElement> {
         return elements.map {
             it.id = modelTaskIdGenerator.getNextId()
-            SampleStatusElement(
+            MatrixStatusElement(
                 name = it.name,
                 id = it.id,
                 executeCount = it.executeCount
