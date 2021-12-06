@@ -181,6 +181,7 @@ class PipelineDockerIPInfoDao {
                     .set(DISK_IO_LOAD, dockerIpInfoVO.averageDiskIOLoad)
                     .set(ENABLE, dockerIpInfoVO.enable)
                     .set(GRAY_ENV, dockerIpInfoVO.grayEnv)
+                    .set(CLUSTER_NAME, dockerIpInfoVO.clusterType!!.name)
                     .set(GMT_MODIFIED, LocalDateTime.now())
                     .where(DOCKER_IP.eq(dockerIp))
                     .and(DOCKER_HOST_PORT.eq(dockerIpInfoVO.dockerHostPort))

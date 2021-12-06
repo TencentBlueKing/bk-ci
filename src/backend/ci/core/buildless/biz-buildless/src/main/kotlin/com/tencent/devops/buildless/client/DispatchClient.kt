@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -67,7 +68,8 @@ class DispatchClient @Autowired constructor(
             enable = true,
             grayEnv = CommonUtils.isGary(),
             specialOn = null,
-            createTime = null
+            createTime = null,
+            clusterType = DockerHostClusterType.BUILD_LESS
         )
 
         try {
