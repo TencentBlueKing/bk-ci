@@ -840,7 +840,7 @@ class ExperienceService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 defaultMessage = "用户没有流水线执行权限",
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
             )
         }
 

@@ -174,7 +174,7 @@ class ExperienceDao {
                 SIZE,
                 SCHEME,
                 BUILD_ID,
-                PIPELINE_ID,
+                PIPELINE_ID
             ).values(
                 projectId,
                 name,
