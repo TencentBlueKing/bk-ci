@@ -104,6 +104,7 @@
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             containerStatus: String,
             containerDisabled: Boolean,
             editable: {
@@ -212,13 +213,14 @@
 
             continueExecute (elementIndex) {
                 if (this.isExecStop) return
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     showPanelType: 'PAUSE',
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -314,12 +316,13 @@
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -469,7 +472,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            width: 240px;
+            // width: 240px;
             height: $itemHeight;
             margin: 0 0 11px 0;
             background-color: white;

@@ -15,14 +15,17 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
+            <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status]" style="display:block" @click.stop="toggleShowAtom"></i>
         </h3>
         <atom-list
+            v-show="container.isOpen !== false"
             :container="container"
             :editable="editable"
             :is-preview="isPreview"
             :can-skip-element="canSkipElement"
             :stage-index="stageIndex"
             :container-index="containerIndex"
+            :container-group-index="containerGroupIndex"
             :container-status="container.status"
             :container-disabled="containerDisabled"
         >
@@ -33,6 +36,7 @@
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import { hashID, randomString } from '@/utils/util'
+    import { bus } from '@/utils/bus'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
@@ -50,6 +54,7 @@
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageLength: Number,
             containerLength: Number,
             stageDisabled: Boolean,
@@ -86,6 +91,9 @@
             ]),
             isEditPage () {
                 return this.$route.name === 'pipelinesEdit' || this.$route.name === 'templateEdit'
+            },
+            isDetailPage () {
+                return this.$route.name === 'pipelinesDetail'
             },
             containerCls () {
                 if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
@@ -125,12 +133,18 @@
                     }
                 }
                 return `${this.$t('storeMap.dependOn')} 【${val}】`
+            },
+            showMatrixStatus () {
+                return this.isDetailPage && this.containerGroupIndex !== undefined
             }
         },
         watch: {
             'preContainer.elements.length': function (newVal, oldVal) {
                 if (newVal !== oldVal) {
-                    this.$forceUpdate()
+                    bus.$emit('update-container-line', {
+                        stageIndex: this.stageIndex,
+                        containerIndex: this.containerIndex
+                    })
                 }
             },
             'container.runContainer' (newVal) {
@@ -180,13 +194,13 @@
                 }
             },
             showContainerPanel () {
-                const { stageIndex, containerIndex } = this
-                console.log(stageIndex, containerIndex, 553)
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
                         stageIndex,
-                        containerIndex
+                        containerIndex,
+                        containerGroupIndex
                     }
                 })
             },
@@ -223,6 +237,13 @@
                         message: this.$t('editPage.copyJobFail')
                     })
                 }
+            },
+            toggleShowAtom () {
+                this.container.isOpen = !this.container.isOpen
+                bus.$emit('update-container-line', {
+                    stageIndex: this.stageIndex,
+                    containerIndex: this.containerIndex + 1
+                })
             }
         }
     }
@@ -240,7 +261,7 @@
             align-items: center;
             position: relative;
             margin: 0 0 16px 0;
-            width: 240px;
+            // width: 240px;
             z-index: 3;
             > .container-name {
                 @include ellipsis();
@@ -266,6 +287,17 @@
                 position: absolute;
                 height: 100%;
                 right: 0;
+            }
+            .fold-atom-icon {
+                display: block;
+                padding: 2px;
+                border: 1px solid;
+                border-radius: 50%;
+                position: absolute;
+                font-size: 11px;
+                bottom: -10px;
+                background: #fff;
+                left: 44%;
             }
             .copyJob {
                 display: none;
@@ -299,37 +331,6 @@
                 }
             }
 
-        }
-
-        .connect-line {
-            position: absolute;
-            top: $itemHeight / 2 - 4;
-            stroke: $primaryColor;
-            stroke-width: 1;
-            fill: none;
-            z-index: 0;
-
-             &.left {
-                left: -$svgWidth + 4;
-
-            }
-            &.right {
-                right: -$StageMargin - $addIconLeft - $addBtnSize - 2;
-            }
-
-            &.first-connect-line {
-                height: 76px;
-                width: $svgWidth;
-                top: -$stageEntryHeight / 2 - 2 - 16px;
-                &.left {
-                    left: -$svgWidth - $addBtnSize / 2 + 4;
-                }
-                &.right {
-                    left: auto;
-                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
-
-                }
-            }
         }
     }
 </style>

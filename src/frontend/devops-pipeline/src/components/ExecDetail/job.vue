@@ -18,6 +18,7 @@
             />
             <container-content v-show="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
+                :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
@@ -65,7 +66,16 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                return currentStage.containers[editingElementPos.containerIndex]
+                
+                try {
+                    if (editingElementPos.containerGroupIndex === undefined) {
+                        return currentStage.containers[editingElementPos.containerIndex]
+                    } else {
+                        return currentStage.containers[editingElementPos.containerIndex].groupContainers[editingElementPos.containerGroupIndex]
+                    }
+                } catch (_) {
+                    return {}
+                }
             },
 
             pluginList () {

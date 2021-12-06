@@ -259,6 +259,7 @@
         },
         props: {
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -323,8 +324,8 @@
                 return getContainers(stage)
             },
             container () {
-                const { containers, containerIndex } = this
-                return this.getContainer(containers, containerIndex)
+                const { containers, containerIndex, containerGroupIndex } = this
+                return this.getContainer(containers, containerIndex, containerGroupIndex)
             },
             isPublicResourceType () {
                 return this.isPublicResource(this.container)

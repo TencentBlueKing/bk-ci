@@ -1,7 +1,7 @@
 <template>
     <accordion show-checkbox :show-content="enableMatrix" key="otherChoice" is-version="true">
         <header class="var-header" slot="header">
-            <span>{{ $t('editPage.enableMatrix') }}</span>{{enableMatrix}}
+            <span>{{ $t('editPage.enableMatrix') }}</span>
             <input class="accordion-checkbox" :disabled="disabled" :checked="enableMatrix" type="checkbox" @click.stop @change="toggleMatrix" />
         </header>
         <div slot="content" class="bk-form bk-form-vertical">

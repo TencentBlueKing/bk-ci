@@ -1,67 +1,47 @@
 <template>
     <section>
-        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [containerCls]: true }" @click.stop="showContainerPanel">
-            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
-                {{ containerSerialNum }}
-            </status-icon>
-            <p class="container-name">
-                <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
-            </p>
-            <container-type :container="container" v-if="!showCheckedToatal"></container-type>
-            <span @click.stop v-if="showCheckedToatal && canSkipElement">
-                <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
-            </span>
-        </h3>
-        <Job v-for="(job, jobIndex) in computedJobs"
-            :key="job.containerId"
-            :stage-index="stageIndex"
-            :container-index="jobIndex"
-            :stage-length="stageLength"
-            :editable="editable"
-            :is-preview="false"
-            :can-skip-element="canSkipElement"
-            :stage-disabled="stageDisabled"
-            :container-length="computedJobs.length"
-            :container="job">
-        </Job>
-        <!-- <stage-container v-for="(container, index) in computedContainer"
-            :key="container.containerId"
-            :stage-index="stageIndex"
-            :pre-container="containers[index - 1]"
-            :container-index="index"
-            :stage-length="stageLength"
-            :editable="editable"
-            :is-preview="isPreview"
-            :can-skip-element="canSkipElement"
-            :stage-disabled="stageDisabled"
-            :container-length="computedContainer.length"
-            :container="container">
-        </stage-container> -->
-        <!-- <atom-list
-            :container="container"
-            :editable="editable"
-            :is-preview="isPreview"
-            :can-skip-element="canSkipElement"
-            :stage-index="stageIndex"
-            :container-index="containerIndex"
-            :container-status="container.status"
-            :container-disabled="containerDisabled"
-        >
-        </atom-list> -->
+        <div class="matrix-container">
+            <div class="matrix-header">
+                <div class="matrix-name">
+                    <i class="fold-icon devops-icon" :class="container.isOpen ? 'icon-angle-up' : 'icon-angle-down'" style="display:block" @click.stop="toggleMatrixOpen"></i>
+                    <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">构建矩阵</span>
+                </div>
+                <div class="matrix-status">
+                    <matrix-status type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
+                    </matrix-status>
+                    <span :title="statusDesc" class="status-desc" :class="container.status">{{statusDesc}}</span>
+                </div>
+                
+            </div>
+            <section class="matrix-body" v-if="container.isOpen">
+                <Job v-for="(job, jobIndex) in computedJobs"
+                    :key="job.containerId"
+                    :stage-index="stageIndex"
+                    :container-index="containerIndex"
+                    :container-group-index="jobIndex"
+                    :stage-length="stageLength"
+                    :container-length="computedJobs.length"
+                    :container="job"
+                    :editable="false"
+                    :stage-disabled="stageDisabled">
+                </Job>
+            </section>
+        </div>
+
     </section>
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import { hashID, randomString } from '@/utils/util'
-    import ContainerType from './ContainerType'
-    // import AtomList from './AtomList'
-    import StatusIcon from './StatusIcon'
+    import Vue from 'vue'
+    import { mapActions } from 'vuex'
+    import Job from './Job'
+    import MatrixStatus from './MatrixStatus'
+    import { bus } from '@/utils/bus'
 
     export default {
         components: {
-            StatusIcon,
-            ContainerType
+            MatrixStatus,
+            Job
         },
         props: {
             preContainer: Object,
@@ -74,63 +54,35 @@
             editable: {
                 type: Boolean,
                 default: true
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            }
-        },
-        data () {
-            return {
-                showContainerName: false,
-                showAtomName: false,
-                cruveHeight: 0
             }
         },
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'pipeline',
-                'pipelineLimit'
-            ]),
-            ...mapGetters('atom', [
-                'isTriggerContainer',
-
-                'getAllContainers'
-            ]),
-            couputedJob () {
-                return []
-            },
-            isEditPage () {
-                return this.$route.name === 'pipelinesEdit' || this.$route.name === 'templateEdit'
-            },
-            containerCls () {
-                if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
-                    return 'DISABLED'
+            statusDesc () {
+                let desc = ''
+                if (this.container.status) {
+                    if (this.container.status === 'RUNNING') {
+                        const option = this.container.matrixControlOption || {}
+                        if (option && option.totalCount) {
+                            const finishCount = option.finishCount || 0
+                            desc = `${(finishCount / option.totalCount).toFixed(2) * 100}% (${finishCount}/${option.totalCount})`
+                        } else {
+                            desc = this.$t(`details.statusMap.${this.container.status}`)
+                        }
+                    } else {
+                        desc = this.$t(`details.statusMap.${this.container.status}`)
+                    }
                 }
-                
-                return this.container && this.container.status ? this.container.status : ''
+                return desc
             },
-            showCheckedToatal () {
-                const { isTriggerContainer, container, $route } = this
-                return $route.path.indexOf('preview') > 0 && !isTriggerContainer(container)
-            },
-            showCopyJob () {
-                const { isTriggerContainer, container, $route } = this
-                return $route.path.indexOf('edit') > 0 && !isTriggerContainer(container) && this.editable
-            },
-            containerSerialNum () {
-                return `${this.stageIndex + 1}-${this.containerIndex + 1}`
-            },
-            isOnlyOneContainer () {
-                return this.containerLength === 1
-            },
-            projectId () {
-                return this.$route.params.projectId
+            computedJobs () {
+                this.container.groupContainers.map(container => {
+                    Vue.set(container, 'isOpen', false)
+                    container.elements.forEach((element, index) => {
+                        const eleItem = this.container.elements[index] || {}
+                        Object.assign(element, eleItem)
+                    })
+                })
+                return this.container.groupContainers
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
@@ -148,61 +100,19 @@
                 return `${this.$t('storeMap.dependOn')} 【${val}】`
             }
         },
-        watch: {
-            'preContainer.elements.length': function (newVal, oldVal) {
-                if (newVal !== oldVal) {
-                    this.$forceUpdate()
-                }
-            },
-            'container.runContainer' (newVal) {
-                const { container, updateContainer } = this
-                const { elements } = container
-                if (this.containerDisabled && newVal) return
-                elements.filter(item => (item.additionalOptions === undefined || item.additionalOptions.enable)).map(item => {
-                    item.canElementSkip = newVal
-                    return false
-                })
-                updateContainer({
-                    container,
-                    newParam: {
-                        elements
-                    }
-                })
-            }
-        },
-        mounted () {
+        created () {
             if (this.containerDisabled) {
                 this.container.runContainer = false
             }
+            Vue.set(this.container, 'isOpen', false)
         },
         methods: {
             ...mapActions('atom', [
-                'togglePropertyPanel',
-                'addAtom',
-                'deleteAtom',
-                'updateContainer',
-                'setPipelineEditing',
-                'deleteContainer',
-                'deleteStage'
+                'togglePropertyPanel'
             ]),
-            deleteJob () {
-                const { containerIndex, stageIndex } = this
-                const containers = this.pipeline.stages[stageIndex].containers || []
-
-                if (containers.length === 1) {
-                    this.deleteStage({
-                        stageIndex
-                    })
-                } else {
-                    this.deleteContainer({
-                        stageIndex,
-                        containerIndex
-                    })
-                }
-            },
+            
             showContainerPanel () {
                 const { stageIndex, containerIndex } = this
-                console.log(stageIndex, containerIndex, 553)
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
@@ -211,39 +121,13 @@
                     }
                 })
             },
-            copyContainer () {
-                if (this.containerLength >= this.pipelineLimit.jobLimit) {
-                    this.$showTips({
-                        theme: 'error',
-                        message: this.$t('storeMap.jobLimit') + this.pipelineLimit.jobLimit
-                    })
-                    return
-                }
-                try {
-                    const copyContainer = JSON.parse(JSON.stringify(this.container))
-                    const container = {
-                        ...copyContainer,
-                        containerId: `c-${hashID(32)}`,
-                        jobId: `job_${randomString(3)}`,
-                        elements: copyContainer.elements.map(element => ({
-                            ...element,
-                            id: `e-${hashID(32)}`
-                        })),
-                        jobControlOption: copyContainer.jobControlOption ? {
-                            ...copyContainer.jobControlOption,
-                            dependOnType: 'ID',
-                            dependOnId: []
-                        } : undefined
-                    }
-                    this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
-                    this.setPipelineEditing(true)
-                } catch (e) {
-                    console.error(e)
-                    this.$showTips({
-                        theme: 'error',
-                        message: this.$t('editPage.copyJobFail')
-                    })
-                }
+
+            toggleMatrixOpen  () {
+                this.container.isOpen = !this.container.isOpen
+                bus.$emit('update-container-line', {
+                    stageIndex: this.stageIndex,
+                    containerIndex: this.containerIndex + 1
+                })
             }
         }
     }
@@ -252,6 +136,44 @@
 <style lang="scss">
     @import "./Stage";
     .devops-stage-container {
+        .matrix-container {
+            border: 1px solid #B5C0D5;
+            padding: 10px;
+        }
+        .matrix-header {
+            display: flex;
+            align-items: center;
+            cursor: default;
+            justify-content: space-between;
+            height: 20px;
+            .matrix-name {
+                display: flex;
+                align-items: center;
+                font-size: 14px;
+                color: #222222;
+                .fold-icon {
+                    margin-right: 10px;
+                    cursor: pointer;
+                }
+            }
+            .matrix-status {
+                display: flex;
+                align-items: center;
+                color: $primaryColor;
+                .status-desc {
+                    font-size: 12px;
+                    max-width: 110px;
+                    overflow: hidden;
+                    text-overflow:ellipsis;
+                    white-space: nowrap;
+                }
+            }
+        }
+
+        .matrix-body {
+            margin-top: 12px;
+        }
+
         .container-title {
             display: flex;
             height: $itemHeight;
@@ -261,7 +183,7 @@
             align-items: center;
             position: relative;
             margin: 0 0 16px 0;
-            width: 240px;
+            // width: 240px;
             z-index: 3;
             > .container-name {
                 @include ellipsis();
@@ -288,15 +210,6 @@
                 height: 100%;
                 right: 0;
             }
-            .copyJob {
-                display: none;
-                margin-right: 10px;
-                fill: #c4c6cd;
-                cursor: pointer;
-                &:hover {
-                    fill: $primaryColor;
-                }
-            }
             .close {
                 @include add-plus-icon(#2E2E3A, #2E2E3A, #c4c6cd, 16px, true);
                 @include add-plus-icon-hover($dangerColor, $dangerColor, white);
@@ -308,47 +221,6 @@
                 &:before, &:after {
                     left: 7px;
                     top: 4px;
-                }
-            }
-
-            &:hover {
-                .copyJob, .close {
-                    display: block;
-                }
-                .hover-hide {
-                    display: none;
-                }
-            }
-
-        }
-
-        .connect-line {
-            position: absolute;
-            top: $itemHeight / 2 - 4;
-            stroke: $primaryColor;
-            stroke-width: 1;
-            fill: none;
-            z-index: 0;
-
-             &.left {
-                left: -$svgWidth + 4;
-
-            }
-            &.right {
-                right: -$StageMargin - $addIconLeft - $addBtnSize - 2;
-            }
-
-            &.first-connect-line {
-                height: 76px;
-                width: $svgWidth;
-                top: -$stageEntryHeight / 2 - 2 - 16px;
-                &.left {
-                    left: -$svgWidth - $addBtnSize / 2 + 4;
-                }
-                &.right {
-                    left: auto;
-                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
-
                 }
             }
         }

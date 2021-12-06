@@ -26,6 +26,7 @@
         props: {
             elementIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -67,8 +68,8 @@
                 return getContainers(stage)
             },
             container () {
-                const { containerIndex, containers, getContainer } = this
-                return getContainer(containers, containerIndex)
+                const { containerIndex, containerGroupIndex, containers, getContainer } = this
+                return getContainer(containers, containerIndex, containerGroupIndex)
             },
             element () {
                 const { container, elementIndex, getElement } = this
@@ -86,6 +87,9 @@
                 }
                 return ''
             }
+        },
+        created () {
+            console.log(this.stageIndex, this.containerIndex, this.containerGroupIndex, this.elementIndex, 'atomPanel')
         },
         methods: {
             ...mapActions('atom', [
