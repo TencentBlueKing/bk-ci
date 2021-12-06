@@ -88,7 +88,7 @@ class DispatchTypeParserImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(runsOnStr: String): DispatchType? {
+    override fun parseRunsOn(runsOn: Any, context: Map<String, String>): DispatchType? {
         return null
     }
 }

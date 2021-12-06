@@ -51,8 +51,8 @@ data class MatrixControlOption(
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
     val maxConcurrency: Int? = 20,
-    @ApiModelProperty("自定义调度类型（可能为占位符如 matrix.os）", required = false)
-    var runsOnStr: String? = null,
+    @ApiModelProperty("自定义调度类型（用于生成DispatchType的任意对象）", required = false)
+    var runsOnStr: Any? = null, // DispatchTypeParser的传入和解析保持一致即可
     @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("完成执行的数量", required = false)

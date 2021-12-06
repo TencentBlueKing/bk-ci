@@ -190,7 +190,7 @@ class InitializeMatrixGroupStageCmd(
                 // 对自定义构建环境的做特殊解析
                 // customDispatchType决定customBaseOS是否计算，请勿填充默认值
                 val customDispatchType = matrixOption.runsOnStr?.let { self ->
-                    dispatchTypeParser.parseRunsOn(EnvUtils.parseEnv(self, allContext))
+                    dispatchTypeParser.parseRunsOn(self, allContext)
                 }
                 val customBaseOS = customDispatchType.let { self ->
                     if (self is ThirdPartyAgentEnvDispatchType) VMBaseOS.ALL else null
