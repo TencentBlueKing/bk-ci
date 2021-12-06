@@ -7,7 +7,6 @@ object Versions {
     const val BouncyCastle = "1.46"
     const val Dom4j = "1.6.1"
     const val JsonSchema = "2.2.6"
-    const val NetworkntJsonSchema = "1.0.63"
     const val Jasypt = "3.0.3"
     const val Swagger = "1.6.2"
     const val Mockito = "1.10.19"
@@ -35,4 +34,5 @@ object Versions {
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
     const val Oshi = "5.8.3"
+    const val YamlSchema = "1.0.49"
 }
