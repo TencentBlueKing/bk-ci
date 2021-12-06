@@ -411,6 +411,20 @@ class QualityRuleBuildHisService constructor(
             logger.info("QUALITY|update_rule_status_count: $count")
             timeOutRules.map { rule ->
                 qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+                val trigger = client.get(ServiceBuildResource::class).qualityTriggerStage(
+                    userId = rule.createUser,
+                    projectId = rule.projectId,
+                    pipelineId = rule.pipelineId,
+                    buildId = rule.buildId,
+                    stageId = rule.stageId,
+                    qualityRequest = StageQualityRequest(
+                        position = rule.rulePos,
+                        pass = false,
+                        checkTimes = 1
+                    )
+                ).data ?: false
+                logger.info("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
+                        "buildId: ${rule.buildId}, trigger: $trigger")
             }
         }
         return count
