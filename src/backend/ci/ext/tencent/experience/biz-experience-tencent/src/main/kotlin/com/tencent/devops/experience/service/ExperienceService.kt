@@ -677,8 +677,9 @@ class ExperienceService @Autowired constructor(
 
             val extraUsers =
                 experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-            val groupIdToUserIdsMap =
-                experienceBaseService.getGroupIdToInnerUserIds(experienceBaseService.getGroupIdsByRecordId(experienceId))
+            val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
+                experienceBaseService.getGroupIdsByRecordId(experienceId)
+            )
 
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
