@@ -112,6 +112,7 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -183,7 +184,8 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
                 template = JsonUtil.toJson(template, formatted = false),
-                storeFlag = false
+                storeFlag = false,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             pipelineSettingDao.insertNewSetting(
@@ -232,7 +234,8 @@ class TemplateFacadeService @Autowired constructor(
                 logoUrl = template.logoUrl,
                 srcTemplateId = srcTemplateId,
                 storeFlag = false,
-                weight = 0
+                weight = 0,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             if (copyTemplateReq.isCopySetting) {
@@ -290,7 +293,8 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
                 template = template,
-                storeFlag = false
+                storeFlag = false,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             if (saveAsTemplateReq.isCopySetting) {
@@ -445,7 +449,8 @@ class TemplateFacadeService @Autowired constructor(
                 logoUrl = latestTemplate.logoUrl,
                 srcTemplateId = latestTemplate.srcTemplateId,
                 storeFlag = latestTemplate.storeFlag,
-                weight = latestTemplate.weight
+                weight = latestTemplate.weight,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
             logger.info("Get the update template version $version")
         }
@@ -2117,7 +2122,8 @@ class TemplateFacadeService @Autowired constructor(
                     logoUrl = addMarketTemplateRequest.logoUrl,
                     srcTemplateId = templateCode,
                     storeFlag = true,
-                    weight = 0
+                    weight = 0,
+                    version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
                 )
                 pipelineSettingDao.insertNewSetting(
                     dslContext = context,
@@ -2197,5 +2203,6 @@ class TemplateFacadeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val INIT_TEMPLATE_NAME = "init"
+        private const val TEMPLATE_BIZ_TAG_NAME = "TEMPLATE"
     }
 }

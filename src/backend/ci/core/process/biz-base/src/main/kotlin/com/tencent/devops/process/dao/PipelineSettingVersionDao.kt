@@ -36,6 +36,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
+@Suppress("LongParameterList")
 @Repository
 class PipelineSettingVersionDao {
 
@@ -47,7 +48,8 @@ class PipelineSettingVersionDao {
         version: Int = 1,
         isTemplate: Boolean = false,
         successNotifyTypes: String = "",
-        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
+        id: Long? = null
     ): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.insertInto(
@@ -63,7 +65,8 @@ class PipelineSettingVersionDao {
                 SUCCESS_CONTENT,
                 FAIL_CONTENT,
                 IS_TEMPLATE,
-                VERSION
+                VERSION,
+                ID
             )
                 .values(
                     projectId,
@@ -77,13 +80,20 @@ class PipelineSettingVersionDao {
                     NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
                     isTemplate,
-                    version
+                    version,
+                    id
                 )
                 .execute()
         }
     }
 
-    fun saveSetting(dslContext: DSLContext, setting: PipelineSetting, version: Int, isTemplate: Boolean = false): Int {
+    fun saveSetting(
+        dslContext: DSLContext,
+        setting: PipelineSetting,
+        version: Int,
+        isTemplate: Boolean = false,
+        id: Long? = null
+    ): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.insertInto(
                 this,
@@ -104,7 +114,8 @@ class PipelineSettingVersionDao {
                 SUCCESS_CONTENT,
                 FAIL_CONTENT,
                 IS_TEMPLATE,
-                VERSION
+                VERSION,
+                ID
             )
                 .values(
                     setting.projectId,
@@ -124,7 +135,8 @@ class PipelineSettingVersionDao {
                     setting.successSubscription.content,
                     setting.failSubscription.content,
                     isTemplate,
-                    version
+                    version,
+                    id
                 )
                 .execute()
         }
