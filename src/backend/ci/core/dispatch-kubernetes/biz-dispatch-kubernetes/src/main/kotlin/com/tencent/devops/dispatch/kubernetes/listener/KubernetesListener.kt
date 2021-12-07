@@ -31,6 +31,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -76,15 +77,25 @@ class KubernetesListener @Autowired constructor(
         private val logger = LoggerFactory.getLogger(KubernetesListener::class.java)
     }
 
-    override fun getStartupQueue() = ".kubernetes"
+    override fun getStartupQueue() = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
 
-    override fun getShutdownQueue() = ".kubernetes"
+    override fun getShutdownQueue() = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
+
+    override fun getStartupDemoteQueue(): String = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
 
     override fun getVmType() = JobQuotaVmType.KUBERNETES
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("On start up - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
 
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        logger.info("On startup demote - ($dispatchMessage)")
+        startup(dispatchMessage)
+    }
+
+    private fun startup(dispatchMessage: DispatchMessage) {
         val dispatch = dispatchMessage.dispatchType as KubernetesDispatchType
         printLogs(
             dispatchMessage = dispatchMessage,
@@ -152,7 +163,7 @@ class KubernetesListener @Autowired constructor(
             if (null == lastIdleContainer || containerChanged) {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "create new container, poolNo: $poolNo"
+                            "create new container, poolNo: $poolNo"
                 )
                 containerService.createNewContainer(
                     dispatchMessage = dispatchMessage,
@@ -174,7 +185,7 @@ class KubernetesListener @Autowired constructor(
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                        "start idle container, containerName: $lastIdleContainer"
+                            "start idle container, containerName: $lastIdleContainer"
                 )
                 containerService.startContainer(
                     containerName = lastIdleContainer,
@@ -197,7 +208,7 @@ class KubernetesListener @Autowired constructor(
         } catch (e: BuildFailureException) {
             logger.error(
                 "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                    "create deployment failed. msg:${e.message}."
+                        "create deployment failed. msg:${e.message}."
             )
             onFailure(
                 errorType = e.errorType,
