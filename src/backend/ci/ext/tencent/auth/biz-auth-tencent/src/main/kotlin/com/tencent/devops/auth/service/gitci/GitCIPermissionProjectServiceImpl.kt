@@ -91,13 +91,20 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
             logger.warn("$userId is not gitCI user")
             return false
         }
-
-        val checkResult = client.getScm(ServiceGitCiResource::class)
-            .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
-        if (!checkResult) {
-            logger.warn("$projectCode $userId is project check fail")
+        val projectUser = mutableListOf<String>()
+        client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = 0,
+            pageSize = 100,
+            search = userId
+        ).data?.forEach {
+            projectUser.add(it.username)
         }
-        return checkResult
+        if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
+            return true
+        }
+        logger.warn("$projectCode $userId is project check fail")
+        return false
     }
 
     companion object {
