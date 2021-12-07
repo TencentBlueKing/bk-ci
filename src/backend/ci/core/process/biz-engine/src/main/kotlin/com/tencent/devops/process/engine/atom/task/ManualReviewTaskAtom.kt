@@ -130,7 +130,9 @@ class ManualReviewTaskAtom(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc
-                )
+                ),
+                position = null,
+                stageId = null
             )
         )
 
