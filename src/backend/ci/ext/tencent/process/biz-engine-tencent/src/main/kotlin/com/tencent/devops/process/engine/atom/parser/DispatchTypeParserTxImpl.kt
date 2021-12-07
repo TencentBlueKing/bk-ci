@@ -35,6 +35,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
+import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -136,17 +137,19 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(customInfo: Any, context: Map<String, String>): DispatchType? {
+    override fun parseRunsOn(customInfo: MatrixDispatchInfo, context: Map<String, String>): DispatchType? {
         // 此处可以支持多种解析
-        if (customInfo !is StreamDispatchInfo) return null
-        return StreamDispatchUtils.getDispatchType(
-            client = client,
-            objectMapper = objectMapper,
-            job = customInfo.job,
-            projectCode = customInfo.projectCode,
-            resources = customInfo.resources,
-            context = context
-        )
+        return when {
+            customInfo is StreamDispatchInfo -> StreamDispatchUtils.getDispatchType(
+                client = client,
+                objectMapper = objectMapper,
+                job = customInfo.job,
+                projectCode = customInfo.projectCode,
+                resources = customInfo.resources,
+                context = context
+            )
+            else -> null
+        }
     }
 
     private fun genThirdDevCloudDispatchMessage(

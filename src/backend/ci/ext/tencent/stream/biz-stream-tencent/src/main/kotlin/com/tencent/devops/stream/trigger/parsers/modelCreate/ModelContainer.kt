@@ -35,6 +35,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.Strategy
+import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -100,23 +101,23 @@ class ModelContainer @Autowired constructor(
                 resources = resources
             ),
             matrixGroupFlag = job.strategy != null,
-            matrixControlOption = getMatrixControlOption(job.strategy, job.runsOn.poolName)
+            matrixControlOption = getMatrixControlOption(projectCode, job, resources)
         )
         containerList.add(vmContainer)
     }
 
-    private fun getMatrixControlOption(strategy: Strategy?, poolName: String): MatrixControlOption? {
-        if (strategy == null) {
-            return null
-        }
+    private fun getMatrixControlOption(projectCode: String, job: Job, resources: Resources?): MatrixControlOption? {
 
-        val runsOnStr = if (poolName.trimStart().startsWith("\${{ $MATRIX_CONTEXT_KEY_PREFIX") ||
-            poolName.trimStart().startsWith("\${{$MATRIX_CONTEXT_KEY_PREFIX")
-        ) {
-            poolName
-        } else {
-            null
-        }
+        val strategy = job.strategy ?: return null
+
+        val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
+            StreamDispatchInfo(
+                name = "dispatchInfo_${job.name}",
+                job = job,
+                projectCode = projectCode,
+                resources = resources
+            )
+        } else null
 
         with(strategy) {
             if (matrix is Map<*, *>) {
@@ -142,14 +143,14 @@ class ModelContainer @Autowired constructor(
                     excludeCaseStr = exclude,
                     fastKill = fastKill,
                     maxConcurrency = maxParallel,
-                    runsOnStr = runsOnStr
+                    customDispatchInfo = dispatchInfo
                 )
             } else {
                 return MatrixControlOption(
                     strategyStr = matrix.toString(),
                     fastKill = fastKill,
                     maxConcurrency = maxParallel,
-                    runsOnStr = runsOnStr
+                    customDispatchInfo = dispatchInfo
                 )
             }
         }

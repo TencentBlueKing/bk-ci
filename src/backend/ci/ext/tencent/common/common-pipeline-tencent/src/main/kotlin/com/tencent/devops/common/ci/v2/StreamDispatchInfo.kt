@@ -27,11 +27,14 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
+
 /**
  * 具体构建时需要的所有配置信息
  */
 data class StreamDispatchInfo(
+    override val name: String,
     val job: Job,
     val projectCode: String,
     val resources: Resources? = null
-)
+) : MatrixDispatchInfo(name)
