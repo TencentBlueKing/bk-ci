@@ -192,7 +192,8 @@ object SignUtils {
                                 replaceBundleId = replaceBundleId,
                                 keychainAccessGroups = keychainAccessGroups,
                                 replaceKeyList = replaceKeyList,
-                                codeSignPath = codeSignPath
+                                codeSignPath = codeSignPath,
+                                codesignExternalStr = codesignExternalStr
                             )
                             if (!success) return false
                         }

@@ -49,4 +49,18 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         ).getChangelistFiles(change)
         return Result(changeListFiles)
     }
+
+    override fun getShelvedFiles(
+        p4Port: String,
+        username: String,
+        password: String,
+        change: Int
+    ): Result<List<P4FileSpec>> {
+        val shelvedFiles = P4Api(
+            p4port = p4Port,
+            username = username,
+            password = password
+        ).getShelvedFiles(change)
+        return Result(shelvedFiles)
+    }
 }

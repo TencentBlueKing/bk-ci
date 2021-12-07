@@ -108,7 +108,7 @@ data class RunsOn(
     val workspace: String? = null,
     @ApiModelProperty(name = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
-    val queueTimeoutMinutes: Int? = 10,
+    val queueTimeoutMinutes: Int? = null,
     val needs: Map<String, String>? = null
 )
 

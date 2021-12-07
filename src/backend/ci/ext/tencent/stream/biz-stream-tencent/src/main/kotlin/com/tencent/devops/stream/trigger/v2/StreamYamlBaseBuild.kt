@@ -50,7 +50,7 @@ import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.utils.CommitCheckUtils
@@ -155,6 +155,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("LongParameterList")
     fun startBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
@@ -219,11 +220,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                 )
             }
             return BuildId(buildId)
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             logger.error(
                 "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                         "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
-                e
+                ignore
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
             gitCIEventSaveService.saveRunNotBuildEvent(
@@ -235,7 +236,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
                 reason = TriggerReason.PIPELINE_RUN_ERROR.name,
-                reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
+                reasonDetail = ignore.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId,
                 sendCommitCheck = true,
                 commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
