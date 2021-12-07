@@ -56,4 +56,20 @@ class ServiceP4ResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getShelvedFiles(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): Result<List<P4FileSpec>> {
+        return Result(
+            p4Service.getShelvedFiles(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType,
+                change = change
+            )
+        )
+    }
 }

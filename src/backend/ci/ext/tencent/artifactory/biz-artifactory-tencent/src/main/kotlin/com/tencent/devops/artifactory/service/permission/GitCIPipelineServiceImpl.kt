@@ -2,6 +2,7 @@ package com.tencent.devops.artifactory.service.permission
 
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -33,14 +34,22 @@ class GitCIPipelineServiceImpl @Autowired constructor(
         pipelineId: String?,
         permission: AuthPermission?
     ): Boolean {
-        logger.info("GitCIPipelineService user:$userId projectId: $projectId")
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
-            projectCode = projectId,
-            resourceCode = null
-        ).data ?: false
+        logger.info("GitCIPipelineService |$userId|$projectId|$pipelineId|$permission|")
+        return if (pipelineId != null) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                userId = userId,
+                token = tokenCheckService.getSystemToken(null) ?: "",
+                action = permission?.value ?: "",
+                projectCode = projectId,
+                resourceCode = null
+            ).data ?: false
+        } else {
+            client.get(ServiceProjectAuthResource::class).isProjectUser(
+                token = tokenCheckService.getSystemToken(null) ?: "",
+                userId = userId,
+                projectCode = projectId
+            ).data ?: false
+        }
     }
 
     override fun filterPipeline(user: String, projectId: String): List<String> {

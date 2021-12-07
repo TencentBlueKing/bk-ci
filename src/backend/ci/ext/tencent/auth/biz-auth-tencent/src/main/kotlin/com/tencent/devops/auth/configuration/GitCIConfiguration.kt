@@ -43,8 +43,9 @@ class GitCIConfiguration {
     fun gitCIPermissionServiceImpl(
         client: Client,
         managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService)
+        projectInfoService: GitCiProjectInfoService,
+        projectServiceImpl: GitCIPermissionProjectServiceImpl
+    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService, projectServiceImpl)
 
     @Bean
     fun gitCIPermissionProjectServiceImpl(
