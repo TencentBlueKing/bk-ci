@@ -276,7 +276,7 @@ class QualityRuleBuildHisService constructor(
                 )
             }
             val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
-                it.indicators.map { QualityIndicator::threshold }.joinToString(","))
+                it.indicators.map { indicator -> indicator.threshold }.joinToString(","))
             logger.info("QUALITY|convert_indicatorThreshold|${it.indicators}|COUNT|$indicatorCount")
 
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
