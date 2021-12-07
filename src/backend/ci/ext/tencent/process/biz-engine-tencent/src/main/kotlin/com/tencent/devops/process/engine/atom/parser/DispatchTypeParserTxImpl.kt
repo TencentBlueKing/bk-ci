@@ -146,7 +146,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 job = customInfo.job,
                 projectCode = customInfo.projectCode,
                 resources = customInfo.resources,
-                context = context
+                context = context,
+                containsMatrix = true
             )
             else -> null
         }

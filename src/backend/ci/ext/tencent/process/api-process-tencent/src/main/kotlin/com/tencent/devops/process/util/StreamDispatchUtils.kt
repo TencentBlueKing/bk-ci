@@ -68,7 +68,8 @@ object StreamDispatchUtils {
         job: Job,
         projectCode: String,
         resources: Resources? = null,
-        context: Map<String, String>? = null
+        context: Map<String, String>? = null,
+        containsMatrix: Boolean? = false
     ): DispatchType {
         // macos构建机
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
@@ -159,7 +160,11 @@ object StreamDispatchUtils {
             return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
         }
 
-        throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
+        if (containsMatrix == true) {
+            return GitCIDispatchType(job.defaultImage!!)
+        } else {
+            throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
+        }
     }
 
     @Suppress("NestedBlockDepth")

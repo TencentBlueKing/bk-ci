@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CONTEXT_KEY_PREFIX
@@ -77,7 +78,14 @@ class ModelContainer @Autowired constructor(
     ) {
         // 提前读取准备默认镜像
         job.defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
-
+        val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
+            StreamDispatchInfo(
+                name = "dispatchInfo_${job.name}",
+                job = job,
+                projectCode = projectCode,
+                resources = resources
+            )
+        } else null
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
@@ -98,26 +106,21 @@ class ModelContainer @Autowired constructor(
                 objectMapper = objectMapper,
                 job = job,
                 projectCode = projectCode,
-                resources = resources
+                resources = resources,
+                containsMatrix = dispatchInfo != null
             ),
             matrixGroupFlag = job.strategy != null,
-            matrixControlOption = getMatrixControlOption(projectCode, job, resources)
+            matrixControlOption = getMatrixControlOption(job, dispatchInfo)
         )
         containerList.add(vmContainer)
     }
 
-    private fun getMatrixControlOption(projectCode: String, job: Job, resources: Resources?): MatrixControlOption? {
+    private fun getMatrixControlOption(
+        job: Job,
+        dispatchInfo: StreamDispatchInfo?
+    ): MatrixControlOption? {
 
         val strategy = job.strategy ?: return null
-
-        val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
-            StreamDispatchInfo(
-                name = "dispatchInfo_${job.name}",
-                job = job,
-                projectCode = projectCode,
-                resources = resources
-            )
-        } else null
 
         with(strategy) {
             if (matrix is Map<*, *>) {
