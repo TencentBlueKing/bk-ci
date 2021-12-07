@@ -114,6 +114,9 @@ interface UserFileResource {
         @ApiParam("文件路径", required = true)
         @PathParam("filePath")
         filePath: String,
+        @ApiParam("是否为logo文件", required = false)
+        @QueryParam("logo")
+        logo: Boolean?,
         @Context
         response: HttpServletResponse
     )

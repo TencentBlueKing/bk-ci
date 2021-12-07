@@ -96,7 +96,7 @@ class UserFileResourceImpl @Autowired constructor(
         archiveFileService.downloadFile(userId, filePath, response, logo)
     }
 
-    override fun downloadFileExt(userId: String, filePath: String, response: HttpServletResponse) {
-        downloadFile(userId, filePath, false, response)
+    override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
+        downloadFile(userId, filePath, logo, response)
     }
 }
