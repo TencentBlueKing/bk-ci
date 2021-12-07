@@ -54,7 +54,7 @@ class BuildLessTaskService(
                containerId = containerId
            )
 
-           redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
+           redisUtils.deleteBuildLessPoolContainer(containerId)
        }
 
        return buildLessTask
