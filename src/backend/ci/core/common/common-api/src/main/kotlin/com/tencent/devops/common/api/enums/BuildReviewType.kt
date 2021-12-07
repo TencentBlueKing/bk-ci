@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.bean
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
-
-class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
-    override fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String,
-        stageId: String?,
-        runtimeVariable: Map<String, String>?
-    ): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
+/**
+ *
+ * Powered By Tencent
+ */
+enum class BuildReviewType {
+    TASK_REVIEW,
+    STAGE_REVIEW,
+    QUALITY_CHECK_IN,
+    QUALITY_CHECK_OUT
 }

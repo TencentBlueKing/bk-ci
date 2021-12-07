@@ -25,21 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.bean
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
-    override fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String,
-        stageId: String?,
-        runtimeVariable: Map<String, String>?
-    ): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
-}
+/**
+ * 构建产生红线检查的广播事件，用于通知等
+ * @author royalhuang
+ * @version 1.0
+ */
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT)
+data class PipelineBuildQualityCheckBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0,
+    val buildId: String,
+    val status: String,
+    val stageId: String?,
+    val taskId: String?,
+    val ruleIds: List<String>?
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
