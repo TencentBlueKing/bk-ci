@@ -58,6 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.stream.pojo.v2.QualityElementInfo
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.AntPathMatcher
 
 @Component
@@ -66,6 +67,9 @@ class ModelStage @Autowired constructor(
     private val modelContainer: ModelContainer,
     private val modelElement: ModelElement
 ) {
+
+    @Value("\${stream.marketRun.atomCode:#{null}}")
+    private val runPlugInAtomCode: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
@@ -116,7 +120,14 @@ class ModelStage @Autowired constructor(
 
             // 添加红线指标判断需要的数据
             elementList.forEach { ele ->
-                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode()))
+                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode().let {
+                    // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
+                    if (it == runPlugInAtomCode) {
+                        "run"
+                    } else {
+                        it
+                    }
+                }))
             }
         }
 
