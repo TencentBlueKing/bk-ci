@@ -30,14 +30,14 @@ package com.tencent.devops.quality.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.op.OPQualityRuleBuildHisResource
-import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
+import com.tencent.devops.quality.service.OPQualityRuleBuildHisService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OPQualityRuleBuildHisResourceImpl @Autowired constructor(
-    private val qualityRuleBuildHisService: QualityRuleBuildHisService
+    private val opQualityRuleBuildHisService: OPQualityRuleBuildHisService
 ) : OPQualityRuleBuildHisResource {
     override fun updateStatus(): Result<Int> {
-        return Result(qualityRuleBuildHisService.updateRuleBuildHisStatus())
+        return Result(opQualityRuleBuildHisService.updateRuleBuildHisStatus())
     }
 }

@@ -414,38 +414,4 @@ class QualityRuleBuildHisService constructor(
             rule
         }
     }
-
-    fun updateRuleBuildHisStatus(): Int {
-        var count = 0
-        val dateTime = LocalDateTime.now().minusDays(1)
-        val timeOutRules = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime)
-        logger.info("QUALITY|time_out_rule count is: ${timeOutRules?.size}")
-        if (timeOutRules.size > 0) {
-            count = qualityRuleBuildHisDao.updateTimeoutRuleStatus(timeOutRules.map { it.id })
-            logger.info("QUALITY|update_rule_status_count: $count")
-            timeOutRules.map { rule ->
-                try {
-                    val trigger = client.get(ServiceBuildResource::class).qualityTriggerStage(
-                        userId = rule.createUser,
-                        projectId = rule.projectId,
-                        pipelineId = rule.pipelineId,
-                        buildId = rule.buildId,
-                        stageId = rule.stageId,
-                        qualityRequest = StageQualityRequest(
-                            position = rule.rulePos,
-                            pass = false,
-                            checkTimes = 1
-                        )
-                    ).data ?: false
-                    qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
-                    logger.info("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
-                            "buildId: ${rule.buildId}, trigger: $trigger")
-                } catch (e: Exception) {
-                    logger.error("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
-                            "buildId: ${rule.buildId} has triggered")
-                }
-            }
-        }
-        return count
-    }
 }
