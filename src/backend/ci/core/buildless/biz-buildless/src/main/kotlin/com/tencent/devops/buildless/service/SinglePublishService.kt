@@ -25,21 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.controller
+package com.tencent.devops.buildless.service
 
-import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.service.BuildLessTaskService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.HostConfig
+import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
+import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
+import com.tencent.devops.buildless.utils.RandomUtil
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@RestResource
-class BuildBuildlessResourceImpl @Autowired constructor(
-    private val buildlessTaskService: BuildLessTaskService
-) : BuildBuildLessResource {
 
-    override fun claimBuildLessTask(containerId: String): BuildLessTask? {
-        return buildlessTaskService.claimBuildLessTask(containerId)
+/**
+ * 创建容器单例类
+ */
+
+class SinglePublishService {
+
+    fun createBuildLessPoolContainer(
+        env: List<String>,
+        hostConfig: HostConfig,
+        httpDockerCli: DockerClient
+    ): String {
+        val imageName = "mirrors.tencent.com/ci/tlinux_ci:0.5.0.4"
+        val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
+
+        val container = httpDockerCli.createContainerCmd(imageName)
+            .withName(containerName)
+            .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
+            .withCmd("/bin/sh", ENTRY_POINT_CMD)
+            .withEnv(env)
+            .withHostConfig(hostConfig)
+            .exec()
+
+        httpDockerCli.startContainerCmd(container.id).exec()
+        logger.info("===> created container $container")
+
+        return container.id
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SinglePublishService::class.java)
+
+        fun getInstance() = Helper.instance
+    }
+
+    private object Helper {
+        val instance = SinglePublishService()
     }
 }

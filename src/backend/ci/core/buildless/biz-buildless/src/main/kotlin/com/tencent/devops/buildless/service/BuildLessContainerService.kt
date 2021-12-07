@@ -126,8 +126,6 @@ class BuildLessContainerService(
     }
 
     fun createBuildLessPoolContainer(): String {
-        val imageName = "mirrors.tencent.com/ci/tlinux_ci:0.5.0.4"
-
         val volumeApps = Volume(dockerHostConfig.volumeApps)
         val volumeInit = Volume(dockerHostConfig.volumeInit)
         val volumeSleep = Volume(dockerHostConfig.volumeSleep)
@@ -142,39 +140,30 @@ class BuildLessContainerService(
             Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
         )
 
-        val container = httpDockerCli.createContainerCmd(imageName)
-            .withName(containerName)
-            .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
-            .withCmd("/bin/sh", ENTRY_POINT_CMD)
-            .withEnv(
-                listOf(
-                    "$ENV_KEY_GATEWAY=$gateway",
-                    "TERM=xterm-256color",
-                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-                    "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-                    "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-                    "$ENV_CONTAINER_NAME=$containerName"
-                )
-            )
-            .withHostConfig(
-                // CPU and memory Limit
-                HostConfig()
-                    .withMemory(dockerHostConfig.memory)
-                    .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
-                    .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
-                    .withBinds(binds)
-                    .withNetworkMode("bridge")
-            )
-            .exec()
+        val containerId = SinglePublishService.getInstance().createBuildLessPoolContainer(
+            env = listOf(
+                "$ENV_KEY_GATEWAY=$gateway",
+                "TERM=xterm-256color",
+                "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
+                "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
+                "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+                "$ENV_CONTAINER_NAME=$containerName"
+            ),
+            hostConfig = HostConfig()
+                .withMemory(dockerHostConfig.memory)
+                .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
+                .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                .withBinds(binds)
+                .withNetworkMode("bridge"),
+            httpDockerCli = httpDockerCli
+        )
 
-        httpDockerCli.startContainerCmd(container.id).exec()
 
-        redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
-        logger.info("===> created container $container")
+        redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.IDLE)
 
-        return container.id
+        return containerId
     }
 
     fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
