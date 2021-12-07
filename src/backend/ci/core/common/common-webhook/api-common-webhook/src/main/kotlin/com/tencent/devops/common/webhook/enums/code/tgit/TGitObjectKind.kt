@@ -25,51 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceP4Resource
-import com.tencent.devops.repository.service.scm.Ip4Service
-import com.tencent.devops.scm.code.p4.api.P4FileSpec
-import org.springframework.beans.factory.annotation.Autowired
+enum class TGitObjectKind(val value: String) {
+    PUSH("push"),
+    TAG_PUSH("tag_push"),
+    MERGE_REQUEST("merge_request"),
+    MANUAL("manual"),
+    SCHEDULE("schedule");
 
-@RestResource
-class ServiceP4ResourceImpl @Autowired constructor(
-    private val p4Service: Ip4Service
-) : ServiceP4Resource {
-
-    override fun getChangelistFiles(
-        projectId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?,
-        change: Int
-    ): Result<List<P4FileSpec>> {
-
-        return Result(
-            p4Service.getChangelistFiles(
-                projectId = projectId,
-                repositoryId = repositoryId,
-                repositoryType = repositoryType,
-                change = change
-            )
-        )
-    }
-
-    override fun getShelvedFiles(
-        projectId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?,
-        change: Int
-    ): Result<List<P4FileSpec>> {
-        return Result(
-            p4Service.getShelvedFiles(
-                projectId = projectId,
-                repositoryId = repositoryId,
-                repositoryType = repositoryType,
-                change = change
-            )
-        )
+    // 方便Json初始化使用常量保存，需要同步维护
+    companion object {
+        const val OBJECT_KIND_MANUAL = "manual"
+        const val OBJECT_KIND_PUSH = "push"
+        const val OBJECT_KIND_TAG_PUSH = "tag_push"
+        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+        const val OBJECT_KIND_SCHEDULE = "schedule"
     }
 }
