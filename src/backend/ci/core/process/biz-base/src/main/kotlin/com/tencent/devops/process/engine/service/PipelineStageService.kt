@@ -448,7 +448,9 @@ class PipelineStageService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: "")
-                )
+                ),
+                position = ControlPointPosition.BEFORE_POSITION,
+                stageId = stage.stageId
             )
         )
     }
@@ -482,6 +484,7 @@ class PipelineStageService @Autowired constructor(
                 templateId = null,
                 interceptName = null,
                 ruleBuildIds = check?.ruleIds!!.toSet(),
+                stageId = stage.stageId,
                 runtimeVariable = buildContext
             )
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
