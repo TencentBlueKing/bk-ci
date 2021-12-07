@@ -47,7 +47,7 @@ internal class MatrixControlOptionTest {
                     ),
                     // +0 重复值加入无效
                     mapOf(
-                        "os" to "docker",
+                        "os" to "macos",
                         "var1" to "a",
                         "var2" to "1"
                     )
