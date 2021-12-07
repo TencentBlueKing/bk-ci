@@ -25,34 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.api
+package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
-@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
-@Path("/op/thirdPartyAgent")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpThirdPartyAgentUpgradeResource {
+class P4WebHookMatcher(
+    override val event: P4Event
+) : AbstractScmWebhookMatcher<P4Event>(event) {
 
-    @ApiOperation("设置agent最大并发升级数量")
-    @POST
-    @Path("/agents/setMaxParallelUpgradeCount")
-    fun setMaxParallelUpgradeCount(
-        @ApiParam("maxParallelUpgradeCount", required = true)
-        maxParallelUpgradeCount: Int
-    ): Result<Boolean>
+    companion object {
+        private val logger = LoggerFactory.getLogger(P4WebHookMatcher::class.java)
+    }
 
-    @ApiOperation("获取agent最大并发升级数量")
-    @POST
-    @Path("/agents/getMaxParallelUpgradeCount")
-    fun getMaxParallelUpgradeCount(): Result<Int?>
+    override fun isMatch(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): ScmWebhookMatcher.MatchResult {
+        if (repository !is CodeP4Repository) {
+            logger.warn("$pipelineId|The repo($repository) is not code p4 repo for p4 web hook")
+            return ScmWebhookMatcher.MatchResult(isMatch = false)
+        }
+        return eventHandler.isMatch(
+            event = event,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repository = repository,
+            webHookParams = webHookParams
+        )
+    }
+
+    override fun getCodeType() = CodeType.P4
 }

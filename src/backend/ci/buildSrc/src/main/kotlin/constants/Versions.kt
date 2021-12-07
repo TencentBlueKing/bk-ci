@@ -35,4 +35,5 @@ object Versions {
     const val PinyinPlus = "1.0"
     const val Oshi = "5.8.3"
     const val Leaf = "1.0.1-RELEASE"
+    const val p4 = "2021.1.2163843"
 }
