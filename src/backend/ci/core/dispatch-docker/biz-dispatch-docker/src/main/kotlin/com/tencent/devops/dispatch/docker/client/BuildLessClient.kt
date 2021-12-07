@@ -201,6 +201,7 @@ class BuildLessClient @Autowired constructor(
                 if (resp.isSuccessful) {
                     val responseBody = resp.body()!!.string()
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+                    LOG.info("Response buildLess $buildLogKey status: ${response["status"]}")
                     when {
                         response["status"] == 0 -> {
                             LOG.info("Success buildLess $buildLogKey")
