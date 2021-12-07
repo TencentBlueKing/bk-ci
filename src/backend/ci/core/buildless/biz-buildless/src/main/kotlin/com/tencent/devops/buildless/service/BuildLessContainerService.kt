@@ -97,7 +97,7 @@ class BuildLessContainerService(
         val readyTaskCount = redisUtils.getBuildLessReadyTaskCount()
 
         // 无空闲容器并且还有部分任务在排队
-        if (idlePoolSize == 0L && readyTaskCount > 0) {
+        if (idlePoolSize == null && readyTaskCount > 0) {
             val continueAllocate = rejectedExecutionFactory
                 .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
                 .rejectedExecution(buildLessStartInfo)
@@ -109,7 +109,7 @@ class BuildLessContainerService(
 
         // 无可空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
-        if (idlePoolSize == 0L &&
+        if (idlePoolSize == null &&
             (runningPool in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE)) {
             createBuildLessPoolContainer(true)
         }
@@ -184,10 +184,6 @@ class BuildLessContainerService(
     fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
         with(buildLessEndInfo) {
             stopContainer(containerId, buildId)
-
-            // 从缓存中删除容器状态
-            logger.info("===> $buildId|$vmSeqId remove container: $containerId from pool.")
-            redisUtils.deleteBuildLessPoolContainer(buildLessEndInfo.containerId)
         }
 
         // 容器销毁后接着拉起新的容器

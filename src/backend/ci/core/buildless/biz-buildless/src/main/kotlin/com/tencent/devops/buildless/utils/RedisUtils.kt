@@ -44,19 +44,11 @@ class RedisUtils @Autowired constructor(
         status: ContainerStatus = ContainerStatus.IDLE
     ) {
 
-        redisOperation.hset(buildLessPoolKey(), formatContainerId(containerId), status.name)
+        redisOperation.leftPush(buildLessPoolKey(), formatContainerId(containerId))
     }
 
-    fun getIdleContainer(): Long {
-        val hValues = redisOperation.hvalues(buildLessPoolKey()) ?: return 0
-
-        return hValues.stream()
-            .filter { s -> s == ContainerStatus.IDLE.name }
-            .count()
-    }
-
-    fun deleteBuildLessPoolContainer(containerId: String) {
-        redisOperation.hdelete(buildLessPoolKey(), formatContainerId(containerId))
+    fun getIdleContainer(): String? {
+        return redisOperation.rightPop(buildLessPoolKey())
     }
 
     fun leftPushBuildLessReadyTask(buildLessTask: BuildLessTask) {

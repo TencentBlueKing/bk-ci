@@ -207,7 +207,7 @@ class BuildLessClient @Autowired constructor(
                             LOG.info("Success buildLess $buildLogKey")
                         }
                         // 母机无空闲容器资源
-                        arrayOf("2127003").contains(response["status"]) -> {
+                        response["status"] == 2127003 -> {
                             doRetry(
                                 retryTime = retryTime,
                                 dockerIp = dockerIp,
@@ -273,9 +273,6 @@ class BuildLessClient @Autowired constructor(
         errorMessage: String?,
         unAvailableIpList: Set<String>?
     ) {
-        // 当前IP此刻不可用，将IP状态置为false
-        pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
-
         val buildLog = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime"
         if (retryTime < RETRY_BUILD_TIME) {
             LOG.warn("$buildLog start build less failed in $dockerIp, retry. error: $errorMessage")

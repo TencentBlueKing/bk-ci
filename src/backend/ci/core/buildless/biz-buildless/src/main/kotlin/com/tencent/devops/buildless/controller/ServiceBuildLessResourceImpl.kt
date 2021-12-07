@@ -51,7 +51,7 @@ class ServiceBuildLessResourceImpl @Autowired constructor(
                 Result("")
             } catch (e: NoIdleContainerException) {
                 logger.warn("$buildId|$vmSeqId|$executionCount No idle container, reject the execution.")
-                Result(e.errorCode, "")
+                Result(e.errorCode, e.message)
             } catch (e: BuildLessException) {
                 logger.error("$buildId|$vmSeqId|$executionCount allocate container failed. ${e.message}")
                 Result(e.errorCode, ": ${e.message}", "")
