@@ -96,13 +96,13 @@ data class MatrixControlOption(
         if (strategyMap.isNullOrEmpty()) {
             return emptyList()
         }
-        val caseList = mutableListOf<Map<String, Any>>()
+        val caseList = mutableListOf<Map<String, String>>()
         val keyList = strategyMap.keys
         MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
             .forEach { valueList ->
-                val case = mutableMapOf<String, Any>()
+                val case = mutableMapOf<String, String>()
                 keyList.forEachIndexed { index, key ->
-                    case[key] = valueList[index]
+                    case[key] = valueList[index].toString()
                 }
                 caseList.add(case)
             }
@@ -114,7 +114,7 @@ data class MatrixControlOption(
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<Any>> {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return YamlUtil.to<Map<String, List<Any>>>(contextStr)
+        return YamlUtil.to<Map<String, List<String>>>(contextStr)
     }
 
     /**
@@ -155,7 +155,7 @@ data class MatrixControlOption(
             return emptyList()
         }
         val includeCaseList = try {
-            YamlUtil.to<List<Map<String, Any>>>(str)
+            YamlUtil.to<List<Map<String, String>>>(str)
         } catch (ignore: Throwable) {
             emptyList()
         }
