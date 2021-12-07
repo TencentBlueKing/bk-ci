@@ -27,11 +27,11 @@
 
 package com.tencent.devops.stream.trigger.parsers
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.stream.config.StreamPreTriggerConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitCommitRepository
-import com.tencent.devops.stream.pojo.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommitRepository
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
@@ -95,8 +95,16 @@ class PreTrigger @Autowired constructor(
     }
 
     fun skipStream(event: GitPushEvent): Boolean {
+        // 判断commitMsg
+        event.commits?.filter { it.id == event.after }?.forEach { commit ->
+            SKIP_CI_KEYS.forEach { key ->
+                if (commit.message.contains(key)) {
+                    return true
+                }
+            }
+        }
         event.push_options?.keys?.forEach {
-            if (it in SKIP_CI_KEYS) {
+            if (it == "ci.skip") {
                 return true
             }
         }

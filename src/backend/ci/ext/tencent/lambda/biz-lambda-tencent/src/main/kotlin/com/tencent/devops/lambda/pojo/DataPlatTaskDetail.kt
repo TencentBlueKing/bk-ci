@@ -31,6 +31,7 @@ import org.json.simple.JSONObject
 data class DataPlatTaskDetail(
     val pipelineId: String,
     val buildId: String,
+    val vmSeqId: String,
     val type: String,
     val projectEnglishName: String,
     val itemId: String,

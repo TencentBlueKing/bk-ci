@@ -79,7 +79,9 @@ data class GitCIBasicSetting(
     @ApiModelProperty("项目最后一次构建的CI信息")
     val lastCiInfo: CIInfo?,
     @ApiModelProperty("项目下构建是否发送commitCheck")
-    val enableCommitCheck: Boolean = true
+    val enableCommitCheck: Boolean = true,
+    @ApiModelProperty("项目下构建是否发送mrComment")
+    val enableMrComment: Boolean = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾工蜂页面修改配置")

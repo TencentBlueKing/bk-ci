@@ -30,6 +30,7 @@ package com.tencent.devops.quality.bean
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
@@ -44,13 +45,26 @@ class GitCIQualityPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         val project = client.getScm(ServiceGitCiResource::class)
             .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
             .data ?: return ""
-        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
+        val urlParam = StringBuffer("")
+        if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
+            when (position) {
+                ControlPointPosition.BEFORE_POSITION -> {
+                    urlParam.append("?checkIn=$stageId")
+                }
+                ControlPointPosition.AFTER_POSITION -> {
+                    urlParam.append("?checkOut=$stageId")
+                }
+            }
+        }
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${project.pathWithNamespace}"
         return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 

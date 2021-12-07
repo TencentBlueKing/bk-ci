@@ -72,9 +72,11 @@ dependencies {
     api("com.vmware:vijava")
     api("org.json:json")
     api(group = "org.apache.ant", name = "ant")
+    api(project(":core:common:common-webhook:biz-common-webhook"))
 
     // jsonschema
     api("com.networknt:json-schema-validator")
 
     testImplementation(project(":core:common:common-test"))
+
 }

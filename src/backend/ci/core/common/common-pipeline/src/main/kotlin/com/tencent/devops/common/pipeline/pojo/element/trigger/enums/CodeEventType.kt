@@ -57,5 +57,6 @@ enum class CodeEventType {
     FIX_DELETE,
     FORM_COMMIT,
     SHELVE_COMMIT,
-    SHELVE_DELETE;
+    SHELVE_DELETE,
+    SHELVE_SUBMIT;
 }

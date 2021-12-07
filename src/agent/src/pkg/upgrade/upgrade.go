@@ -135,5 +135,9 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 		return false, false, errors.New("check agent md5 failed")
 	}
 
-	return agentMd5 != newAgentMd5 || daemonMd5 != newDaemonMd5, workerMd5 != newWorkerMd5,nil
+	logs.Info("newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
+	logs.Info("newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
+	logs.Info("newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
+	// #4686 devopsDaemon 暂时不考虑单独的替换升级，windows 无法自动升级，仅当devopsAgent有变化时升级。
+	return agentMd5 != newAgentMd5, workerMd5 != newWorkerMd5,nil
 }

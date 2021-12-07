@@ -28,12 +28,10 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
-import com.tencent.devops.stream.pojo.git.isCreateBranch
-import com.tencent.devops.stream.pojo.git.isDeleteBranch
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import org.slf4j.LoggerFactory
 
 object TriggerParameter {

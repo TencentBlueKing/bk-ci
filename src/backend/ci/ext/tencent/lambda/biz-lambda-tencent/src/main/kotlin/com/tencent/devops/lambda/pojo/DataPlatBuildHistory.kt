@@ -97,5 +97,9 @@ data class DataPlatBuildHistory(
     @ApiModelProperty("流水线任务执行错误", required = false)
     var errorInfoList: String?,
     @ApiModelProperty("启动用户", required = false)
-    var startUser: String?
+    var startUser: String?,
+    @ApiModelProperty("渠道", required = false)
+    var channel: String?,
+    @ApiModelProperty("流水线标签", required = false)
+    var labels: List<String>?
 )
