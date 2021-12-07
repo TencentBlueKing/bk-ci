@@ -36,7 +36,6 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
