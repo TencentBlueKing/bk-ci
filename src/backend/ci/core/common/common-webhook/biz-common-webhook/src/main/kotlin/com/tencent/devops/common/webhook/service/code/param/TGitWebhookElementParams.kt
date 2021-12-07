@@ -25,25 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
-import java.lang.IllegalArgumentException
+import org.springframework.stereotype.Service
 
-@Suppress("ALL")
-class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWebHookTriggerElement> {
+@Service
+class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
+        return CodeTGitWebHookTriggerElement::class.java
+    }
 
     override fun getWebhookElementParams(
-        element: CodeGitGenericWebHookTriggerElement,
+        element: CodeTGitWebHookTriggerElement,
         variables: Map<String, String>
-    ): WebHookParams {
+    ): WebHookParams? {
         val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
@@ -51,46 +52,32 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
             )
         )
         with(element.data.input) {
-            params.eventType = CodeEventType.valueOf(eventType)
-            params.codeType = getCodeType(scmType)
-
             params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
                 ""
             } else {
                 EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
             }
-            params.includeUsers = if (includeUsers == null || includeUsers!!.isEmpty()) {
-                ""
-            } else {
-                EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
+            if (branchName == null) {
+                return null
             }
             params.block = block ?: false
-            params.branchName = EnvUtils.parseEnv(branchName ?: "", variables)
+            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
-            params.relativePath = EnvUtils.parseEnv(relativePath ?: "", variables)
+            params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            params.codeType = CodeType.GIT
             params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
             params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
             params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
-        }
-        return params
-    }
-
-    private fun getCodeType(scmType: String): CodeType {
-        return when (scmType) {
-            ScmType.CODE_SVN.name ->
-                CodeType.SVN
-            ScmType.CODE_TGIT.name ->
-                CodeType.TGIT
-            ScmType.CODE_GIT.name ->
-                CodeType.GIT
-            ScmType.GITHUB.name ->
-                CodeType.GITHUB
-            ScmType.CODE_GITLAB.name ->
-                CodeType.GITLAB
-            else -> throw IllegalArgumentException("Unknown scm type")
+            params.includeCrState = if (includeCrState.isNullOrEmpty()) {
+                ""
+            } else {
+                includeCrState!!.joinToString(",")
+            }
+            return params
         }
     }
 }

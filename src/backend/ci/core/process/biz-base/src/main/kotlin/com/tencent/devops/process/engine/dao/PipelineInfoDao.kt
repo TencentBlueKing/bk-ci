@@ -60,7 +60,8 @@ class PipelineInfoDao {
         channelCode: ChannelCode,
         manualStartup: Boolean,
         canElementSkip: Boolean,
-        taskCount: Int
+        taskCount: Int,
+        id: Long? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -78,7 +79,8 @@ class PipelineInfoDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT,
-                PIPELINE_NAME_PINYIN
+                PIPELINE_NAME_PINYIN,
+                ID
             )
                 .values(
                     pipelineId,
@@ -92,7 +94,8 @@ class PipelineInfoDao {
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
-                    nameToPinyin(pipelineName)
+                    nameToPinyin(pipelineName),
+                    id
                 )
                 .execute()
         }

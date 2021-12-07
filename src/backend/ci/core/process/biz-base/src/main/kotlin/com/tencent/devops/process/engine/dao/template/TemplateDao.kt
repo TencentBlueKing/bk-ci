@@ -57,12 +57,13 @@ class TemplateDao {
         versionName: String,
         userId: String,
         template: String,
-        storeFlag: Boolean
+        storeFlag: Boolean,
+        version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.insertInto(
                 this,
-                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG
+                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG, VERSION
             )
                 .values(
                     projectId,
@@ -72,7 +73,8 @@ class TemplateDao {
                     userId,
                     LocalDateTime.now(),
                     template,
-                    storeFlag
+                    storeFlag,
+                    version
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -92,7 +94,8 @@ class TemplateDao {
         logoUrl: String?,
         srcTemplateId: String?,
         storeFlag: Boolean,
-        weight: Int
+        weight: Int,
+        version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.insertInto(
@@ -109,7 +112,8 @@ class TemplateDao {
                 LOGO_URL,
                 SRC_TEMPLATE_ID,
                 STORE_FLAG,
-                WEIGHT
+                WEIGHT,
+                VERSION
             )
                 .values(
                     projectId,
@@ -124,7 +128,8 @@ class TemplateDao {
                     logoUrl,
                     srcTemplateId,
                     storeFlag,
-                    weight
+                    weight,
+                    version
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version

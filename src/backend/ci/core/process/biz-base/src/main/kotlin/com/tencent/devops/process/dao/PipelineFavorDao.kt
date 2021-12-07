@@ -45,7 +45,8 @@ class PipelineFavorDao {
         dslContext: DSLContext,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        id: Long? = null
     ) {
         logger.info("Create the pipeline favor for pipeline $pipelineId of project $projectId by user $userId")
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
@@ -54,13 +55,15 @@ class PipelineFavorDao {
                 PROJECT_ID,
                 PIPELINE_ID,
                 CREATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
                     pipelineId,
                     LocalDateTime.now(),
-                    userId
+                    userId,
+                    id
                 )
                 .onDuplicateKeyIgnore()
                 .execute()

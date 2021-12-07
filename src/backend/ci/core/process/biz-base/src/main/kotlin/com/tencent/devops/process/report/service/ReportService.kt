@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.report.dao.ReportDao
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -95,7 +96,8 @@ class ReportService @Autowired constructor(
                 elementId = taskId,
                 indexFile = indexFilePath,
                 name = name,
-                type = reportType.name
+                type = reportType.name,
+                id = client.get(ServiceAllocIdResource::class).generateSegmentId("REPORT").data
             )
 //        } else {
 //            reportDao.update(

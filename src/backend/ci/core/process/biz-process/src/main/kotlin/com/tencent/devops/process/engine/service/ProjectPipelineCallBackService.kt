@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.service.trace.TraceTag
@@ -47,6 +48,7 @@ import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
@@ -67,7 +69,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectPipelineCallbackDao: ProjectPipelineCallbackDao,
     private val projectPipelineCallbackHistoryDao: ProjectPipelineCallbackHistoryDao,
-    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
+    private val client: Client
 ) {
 
     companion object {
@@ -115,7 +118,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     events = projectPipelineCallBack.events,
                     userId = userId,
                     callbackUrl = projectPipelineCallBack.callBackUrl,
-                    secretToken = projectPipelineCallBack.secretToken
+                    secretToken = projectPipelineCallBack.secretToken,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PROJECT_PIPELINE_CALLBACK").data
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -220,7 +224,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                id = id
             )
         }
     }
@@ -349,7 +354,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     responseCode = responseCode,
                     responseBody = responseBody,
                     startTime = startTime,
-                    endTime = System.currentTimeMillis()
+                    endTime = System.currentTimeMillis(),
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
                 )
             )
         }
