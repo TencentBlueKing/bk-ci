@@ -43,7 +43,10 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
-
+import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
+import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
+import com.tencent.devops.common.ci.v2.stageCheck.ReviewVariable
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -60,6 +63,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -371,8 +375,30 @@ class TXPipelineExportService @Autowired constructor(
                     },
                     fastKill = if (stage.fastKill == true) true else null,
                     jobs = jobs,
-                    // TODO 暂时不支持准入准出的导出
-                    checkIn = null,
+                    checkIn = PreStageCheck(
+                        reviews = PreStageReviews(
+                            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
+                            variables = stage.checkIn?.reviewParams?.associate {
+                                it.key to ReviewVariable(
+                                    label = it.chineseName ?: it.key,
+                                    type = when (it.valueType) {
+                                        ManualReviewParamType.TEXTAREA -> "TEXTAREA"
+                                        ManualReviewParamType.ENUM -> "SELECTOR"
+                                        ManualReviewParamType.MULTIPLE -> "SELECTOR-MULTIPLE"
+                                        ManualReviewParamType.BOOLEAN -> "BOOL"
+                                        else -> "INPUT"
+                                    },
+                                    default = it.value,
+                                    values = it.options?.map { mit -> mit.key },
+                                    description = it.desc
+                                )
+                            },
+                            description = stage.checkIn?.reviewDesc
+                        ),
+                        gates = null,
+                        timeoutHours = stage.checkIn?.timeout
+                    ),
+                    // TODO 暂时不支持准出和gates的导出
                     checkOut = null
                 )
             )
@@ -1028,6 +1054,7 @@ class TXPipelineExportService @Autowired constructor(
                     }
                 }
             }
+            val ciName = PipelineVarUtil.fetchReverseVarName(originKey)
             val namespace = lastExistingOutputElements.stepAtom?.data?.get("namespace") as String?
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
                 originKey.replace("${namespace}_", "")
@@ -1048,6 +1075,8 @@ class TXPipelineExportService @Autowired constructor(
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
+            } else if (!ciName.isNullOrBlank()) {
+                "\${{ $ciName }}"
             } else {
                 "\${{ $originKeyWithNamespace }}"
             }

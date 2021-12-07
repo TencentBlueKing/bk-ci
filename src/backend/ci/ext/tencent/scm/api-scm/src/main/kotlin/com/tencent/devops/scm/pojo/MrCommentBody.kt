@@ -25,18 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import com.tencent.devops.leaf.plugin.annotation.EnableLeafServer
-import org.springframework.context.annotation.ComponentScan
+import io.swagger.annotations.ApiParam
 
-@MicroService
-@ComponentScan("com.tencent.devops.common", "com.tencent.devops.project")
-@EnableLeafServer
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
-}
+data class MrCommentBody(
+    @ApiParam("报表数据", required = true)
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+)
