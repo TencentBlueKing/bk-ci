@@ -1256,7 +1256,12 @@ class PipelineRuntimeService @Autowired constructor(
                 }
 
                 // 保存链路信息
-                addTraceVar(projectId = pipelineInfo.projectId, pipelineId = pipelineInfo.pipelineId, buildId = buildId)
+                addTraceVar(
+                    transactionContext = transactionContext,
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId
+                )
 
                 // 上一次存在的需要重试的任务直接Update，否则就插入
                 if (updateExistsRecord.isEmpty()) {
@@ -2181,20 +2186,14 @@ class PipelineRuntimeService @Autowired constructor(
         ) == 1
     }
 
-    private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
-        val bizId = MDC.get(TraceTag.BIZID)
-        if (!bizId.isNullOrEmpty()) {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                buildVariableService.batchSetVariable(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
-                )
-            }
-        }
+    private fun addTraceVar(transactionContext: DSLContext, projectId: String, pipelineId: String, buildId: String) {
+        buildVariableService.batchSetVariable(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
+        )
     }
 
     fun updateBuildHistoryStageState(projectId: String, buildId: String, allStageStatus: List<BuildStageStatus>) {
