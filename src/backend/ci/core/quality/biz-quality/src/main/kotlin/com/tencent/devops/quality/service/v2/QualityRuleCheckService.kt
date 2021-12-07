@@ -200,7 +200,7 @@ class QualityRuleCheckService @Autowired constructor(
         qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
         // 更新gateKeepers
-        qualityRuleBuildHisService.convertGateKeepers(ruleList, buildCheckParams)
+        qualityRuleBuildHisService.convertVariables(ruleList, buildCheckParams)
 
         val params = BuildCheckParams(
             buildCheckParams.projectId,
