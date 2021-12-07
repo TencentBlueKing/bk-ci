@@ -30,13 +30,13 @@ package com.tencent.devops.stream.v2.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.stream.utils.ElementUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
+import com.tencent.devops.stream.listener.BuildEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -57,7 +57,7 @@ class StreamQualityService {
         client: Client,
         gitProjectId: Long,
         pipelineName: String,
-        event: PipelineBuildFinishBroadCastEvent
+        event: BuildEvent
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         try {
             val projectId = event.projectId

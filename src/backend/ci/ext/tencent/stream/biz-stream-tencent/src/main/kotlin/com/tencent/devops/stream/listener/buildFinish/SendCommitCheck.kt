@@ -2,6 +2,7 @@ package com.tencent.devops.stream.listener.buildFinish
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.client.Client
@@ -11,6 +12,13 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
+import com.tencent.devops.stream.listener.StreamBuildListenerContext
+import com.tencent.devops.stream.listener.StreamFinishContextV1
+import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
+import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
+import com.tencent.devops.stream.listener.getBuildStatus
+import com.tencent.devops.stream.listener.getGitCommitCheckState
+import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -38,15 +46,20 @@ class SendCommitCheck @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
+        private const val BUILD_RUNNING_DESC = "Your pipeline「%s」is running."
         private const val BUILD_STAGE_SUCCESS_DESC =
             "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
         private const val BUILD_SUCCESS_DESC = "Your pipeline「%s」 is succeed."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Your pipeline「%s」 is failed."
+        private const val BUILD_GATE_REVIEW_DESC =
+            "Pending: Gate access requirement is not met. Gatekeeper approval is needed."
+        private const val BUILD_MANUAL_REVIEW_DESC =
+            "Pending: Pipeline approval is needed."
     }
 
     fun sendCommitCheck(
-        context: StreamFinishContext
+        context: StreamBuildListenerContext
     ) {
         // 当人工触发时不推送CommitCheck消息, 此处与下面重复是为了兼容V1
         if (!context.requestEvent.sendCommitCheck()) {
@@ -55,7 +68,7 @@ class SendCommitCheck @Autowired constructor(
 
         try {
             when (context) {
-                is StreamFinishContextV2 -> {
+                is StreamBuildListenerContextV2 -> {
                     if (CommitCheckUtils.needSendCheck(context.requestEvent, context.streamSetting)) {
                         sendCommitCheckV2(context)
                     }
@@ -70,7 +83,7 @@ class SendCommitCheck @Autowired constructor(
     }
 
     private fun sendCommitCheckV2(
-        context: StreamFinishContextV2
+        context: StreamBuildListenerContextV2
     ) {
         with(context) {
             // gitRequestEvent中存的为mriid不是mrid
@@ -91,64 +104,130 @@ class SendCommitCheck @Autowired constructor(
                     } else {
                         ""
                     },
-                    userId = buildFinishEvent.userId
+                    userId = buildEvent.userId
                 ),
                 mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
                     gitEvent.object_attributes.id
                 } else {
                     null
                 },
-                buildId = buildFinishEvent.buildId,
-                userId = buildFinishEvent.userId,
+                buildId = buildEvent.buildId,
+                userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
                 context = "${pipeline.filePath}@${requestEvent.objectKind.toUpperCase()}",
                 gitCIBasicSetting = streamSetting,
-                pipelineId = buildFinishEvent.pipelineId,
+                pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
-                reportData = streamQualityService.getQualityGitMrResult(
-                    client = client,
-                    gitProjectId = streamSetting.gitProjectId,
-                    pipelineName = pipeline.displayName,
-                    event = buildFinishEvent
-                ),
-                targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
-                    homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
-                    gitProjectId = streamSetting.gitProjectId,
-                    pipelineId = pipeline.pipelineId,
-                    buildId = buildFinishEvent.buildId
-                )
+                reportData = getGateRepoData(),
+                targetUrl = getTargetUrl(context)
             )
         }
     }
 
+    private fun StreamBuildListenerContextV2.getGateRepoData():
+            Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
+        // 中间阶段不由stream这边发红线的评论，quality发送
+        if (this is StreamBuildStageListenerContextV2) {
+            return Pair(listOf(), mutableMapOf())
+        }
+        return streamQualityService.getQualityGitMrResult(
+            client = client,
+            gitProjectId = streamSetting.gitProjectId,
+            pipelineName = pipeline.displayName,
+            event = buildEvent
+        )
+    }
+
     // 根据状态切换描述
-    private fun getDescByBuildStatus(context: StreamFinishContextV2): String {
+    private fun getDescByBuildStatus(context: StreamBuildListenerContextV2): String {
         val pipelineName = context.pipeline.displayName
-        return when {
-            (context.isSuccess()) -> {
-                if (context.buildStatus == BuildStatus.STAGE_SUCCESS) {
-                    val (name, reason) = getReviewInfo(context)
-                    BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
-                } else {
-                    BUILD_SUCCESS_DESC.format(pipelineName)
-                }
+        return when (context.getBuildStatus()) {
+            BuildStatus.REVIEWING -> {
+                getStageReviewDesc(context, pipelineName)
             }
-            context.buildStatus.isCancel() -> {
-                BUILD_CANCEL_DESC.format(pipelineName)
+            BuildStatus.REVIEW_PROCESSED -> {
+                BUILD_RUNNING_DESC.format(pipelineName)
             }
             else -> {
-                BUILD_FAILED_DESC.format(pipelineName)
+                getFinishDesc(context, pipelineName)
             }
         }
     }
 
-    private fun getReviewInfo(context: StreamFinishContextV2): Pair<String, String> {
+    private fun getStageReviewDesc(
+        context: StreamBuildListenerContextV2,
+        pipelineName: String
+    ): String {
+        if (context !is StreamBuildStageListenerContextV2) {
+            return BUILD_RUNNING_DESC.format(pipelineName)
+        }
+        return when (context.reviewType) {
+            BuildReviewType.STAGE_REVIEW -> {
+                BUILD_MANUAL_REVIEW_DESC
+            }
+            BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {
+                BUILD_GATE_REVIEW_DESC
+            }
+            // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
+            BuildReviewType.TASK_REVIEW -> {
+                logger.warn("buildReviewListener event not match: ${context.reviewType}")
+                BUILD_RUNNING_DESC.format(pipelineName)
+            }
+        }
+    }
+
+    private fun getFinishDesc(
+        context: StreamBuildListenerContextV2,
+        pipelineName: String
+    ) = when {
+        (context.isSuccess()) -> {
+            if (context.getBuildStatus() == BuildStatus.STAGE_SUCCESS) {
+                val (name, reason) = getReviewInfo(context)
+                BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
+            } else {
+                BUILD_SUCCESS_DESC.format(pipelineName)
+            }
+        }
+        context.getBuildStatus().isCancel() -> {
+            BUILD_CANCEL_DESC.format(pipelineName)
+        }
+        else -> {
+            BUILD_FAILED_DESC.format(pipelineName)
+        }
+    }
+
+    private fun getTargetUrl(
+        context: StreamBuildListenerContextV2
+    ): String {
+        var checkIn: Boolean
+        var checkOut: Boolean
+        with(context) {
+            if (context !is StreamBuildStageListenerContextV2) {
+                checkIn = false
+                checkOut = false
+            } else {
+                val pair = context.reviewType.isCheckInOrOut()
+                checkIn = pair.first
+                checkOut = pair.second
+            }
+            return GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = config.v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                gitProjectId = streamSetting.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                buildId = buildEvent.buildId,
+                openCheckIn = checkIn,
+                openCheckOut = checkOut
+            )
+        }
+    }
+
+    private fun getReviewInfo(context: StreamBuildListenerContextV2): Pair<String, String> {
         val model = try {
             client.get(ServiceBuildResource::class).getBuildDetail(
-                userId = context.buildFinishEvent.userId,
-                projectId = context.buildFinishEvent.projectId,
-                pipelineId = context.buildFinishEvent.pipelineId,
-                buildId = context.buildFinishEvent.buildId,
+                userId = context.buildEvent.userId,
+                projectId = context.buildEvent.projectId,
+                pipelineId = context.buildEvent.pipelineId,
+                buildId = context.buildEvent.buildId,
                 channelCode = ChannelCode.GIT
             ).data!!.model
         } catch (e: Exception) {
@@ -176,8 +255,8 @@ class SendCommitCheck @Autowired constructor(
                 description = requestEvent.commitMsg ?: "",
                 mergeRequestId = requestEvent.mergeRequestId,
                 pipelineId = pipeline.pipelineId,
-                buildId = buildFinishEvent.buildId,
-                userId = buildFinishEvent.userId,
+                buildId = buildEvent.buildId,
+                userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
                 context = "${pipeline.displayName}(${pipeline.filePath})",
                 gitProjectConf = streamSetting
@@ -188,3 +267,19 @@ class SendCommitCheck @Autowired constructor(
 
 // 当人工触发时不推送CommitCheck消息
 private fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+
+private fun BuildReviewType.isCheckInOrOut(): Pair<Boolean, Boolean> {
+    return when (this) {
+        // 人工审核目前只在checkIn
+        BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN -> {
+            Pair(true, false)
+        }
+        BuildReviewType.QUALITY_CHECK_OUT -> {
+            Pair(false, true)
+        }
+        // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
+        BuildReviewType.TASK_REVIEW -> {
+            Pair(false, false)
+        }
+    }
+}

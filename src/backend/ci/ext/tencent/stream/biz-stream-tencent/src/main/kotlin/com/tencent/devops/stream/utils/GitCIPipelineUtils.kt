@@ -33,8 +33,23 @@ object GitCIPipelineUtils {
 
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
 
-    fun genGitCIV2BuildUrl(homePage: String, gitProjectId: Long, pipelineId: String, buildId: String) =
-        "$homePage/pipeline/$pipelineId/detail/$buildId/#$gitProjectId"
+    fun genGitCIV2BuildUrl(
+        homePage: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String,
+        openCheckIn: Boolean = false,
+        openCheckOut: Boolean = false
+    ): String {
+        var url = "$homePage/pipeline/$pipelineId/detail/$buildId/#$gitProjectId"
+        if (openCheckIn) {
+            url = url.plus("?checkIn=1")
+        }
+        if (openCheckOut) {
+            url = url.plus("?checkOut=1")
+        }
+        return url
+    }
 
     fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
 }
