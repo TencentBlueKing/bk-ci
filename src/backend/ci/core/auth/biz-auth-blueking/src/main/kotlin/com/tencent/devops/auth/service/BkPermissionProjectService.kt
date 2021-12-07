@@ -12,7 +12,6 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @Suppress("LongParameterList")
 class BkPermissionProjectService @Autowired constructor(
