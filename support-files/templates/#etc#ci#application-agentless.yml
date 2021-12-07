@@ -71,8 +71,6 @@ dockerCli:
   landunEnv: prod
   clearLocalImageCron: 0 0 2 * * ?
   localImageCacheDays: 7
-  # 外部域名对应的IP
-  publicHostIP: __BK_CI_PUBLIC_HOST_IP__
 
   # 无编译构建容器配置
   memoryLimitBytes: 2147483648

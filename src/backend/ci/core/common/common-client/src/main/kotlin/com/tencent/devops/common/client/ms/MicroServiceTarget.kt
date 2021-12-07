@@ -32,10 +32,10 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
-import org.apache.commons.lang3.StringUtils
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
@@ -73,10 +73,10 @@ class MicroServiceTarget<T> constructor(
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
-        val svrName = if (StringUtils.isBlank(namespace)) {
-            serviceName
+        val svrName = if (KubernetesUtils.inContainer()) {
+            KubernetesUtils.getSvrName(serviceName)
         } else {
-            "$serviceSuffix-$serviceName"
+            serviceName
         }
         val instances = msCache.get(svrName)
         val matchTagInstances = ArrayList<ServiceInstance>()
@@ -117,7 +117,7 @@ class MicroServiceTarget<T> constructor(
 
     override fun apply(input: RequestTemplate?): Request {
         if (input!!.url().indexOf("http") != 0) {
-            input.insert(0, url())
+            input.target(url())
         }
         return input.request()
     }

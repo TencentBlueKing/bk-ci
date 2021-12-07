@@ -186,9 +186,6 @@ class DockerHostConfig {
     @Value("\${dockerCli.landunEnv}")
     var landunEnv: String? = null
 
-    @Value("\${dockerCli.publicHostIP}")
-    var publicHostIP: String? = null
-
     @Value("\${dockerCli.localImageCacheDays}")
     var localImageCacheDays: Int = 7
 

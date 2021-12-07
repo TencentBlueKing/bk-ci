@@ -77,5 +77,3 @@ dockerCli:
   landunEnv: prod
   clearLocalImageCron: 0 0 2 * * ?
   localImageCacheDays: 7
-  # 外部域名对应的IP
-  publicHostIP: __BK_CI_PUBLIC_HOST_IP__

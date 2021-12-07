@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Feign
 import feign.MethodMetadata
@@ -48,7 +49,6 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -265,7 +265,7 @@ class Client @Autowired constructor(
     private fun findServiceName(clz: KClass<*>): String {
         // 单体结构，不分微服务的方式
         if (!assemblyServiceName.isNullOrBlank()) {
-            return assemblyServiceName!!
+            return assemblyServiceName
         }
         val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
@@ -279,7 +279,7 @@ class Client @Autowired constructor(
             }
         }
 
-        return if (serviceSuffix.isNullOrBlank()||StringUtils.isNotBlank(System.getenv("NAMESPACE"))) {
+        return if (serviceSuffix.isNullOrBlank() || KubernetesUtils.inContainer()) {
             serviceName
         } else {
             "$serviceName$serviceSuffix"
