@@ -36,6 +36,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -145,11 +146,35 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun listTimeoutRule(dslContext: DSLContext, dateTime: LocalDateTime): Result<TQualityRuleBuildHisRecord> {
+    fun updateIndicatorThreshold(ruleBuildId: Long, indicatorThreshold: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(INDICATOR_THRESHOLDS, indicatorThreshold)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun listTimeOutRuleCount(dslContext: DSLContext, dateTime: LocalDateTime): Int? {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectCount().from(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun listTimeoutRule(
+        dslContext: DSLContext,
+        dateTime: LocalDateTime,
+        limit: Int,
+        offset: Int
+    ): Result<TQualityRuleBuildHisRecord> {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.selectFrom(this)
                 .where(STATUS.eq(RuleInterceptResult.WAIT.name))
                 .and(CREATE_TIME.lt(dateTime))
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }
