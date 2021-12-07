@@ -39,11 +39,12 @@ class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
-    fun setBuildlessPoolContainer(
+    fun setBuildLessPoolContainer(
         containerId: String,
         status: ContainerStatus = ContainerStatus.IDLE
     ) {
-        redisOperation.hset(buildLessPoolKey(), containerId, status.name)
+
+        redisOperation.hset(buildLessPoolKey(), formatContainerId(containerId), status.name)
     }
 
     fun getIdleContainer(): Long {
@@ -55,7 +56,7 @@ class RedisUtils @Autowired constructor(
     }
 
     fun deleteBuildLessPoolContainer(containerId: String) {
-        redisOperation.hdelete(buildLessPoolKey(), containerId)
+        redisOperation.hdelete(buildLessPoolKey(), formatContainerId(containerId))
     }
 
     fun leftPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
@@ -85,6 +86,14 @@ class RedisUtils @Autowired constructor(
 
     private fun buildLessReadyTaskKey(): String {
         return "buildless:ready_task:${CommonUtils.getHostIp()}"
+    }
+
+    private fun formatContainerId(containerId: String): String {
+        return if (containerId.length > 12) {
+            containerId.substring(0, 12)
+        } else {
+            containerId
+        }
     }
 
     companion object {

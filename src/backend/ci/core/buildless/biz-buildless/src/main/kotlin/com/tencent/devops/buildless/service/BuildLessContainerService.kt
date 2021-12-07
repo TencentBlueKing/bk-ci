@@ -84,24 +84,12 @@ class BuildLessContainerService(
         .dockerHost(config.dockerHost)
         .sslConfig(config.sslConfig)
         .connectTimeout(5000)
-        .readTimeout(30000)
-        .build()
-
-    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(300000)
+        .readTimeout(120000)
         .build()
 
     val httpDockerCli: DockerClient = DockerClientBuilder
         .getInstance(config)
         .withDockerHttpClient(httpClient)
-        .build()
-
-    val httpLongDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(longHttpClient)
         .build()
 
     fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
@@ -154,7 +142,7 @@ class BuildLessContainerService(
             Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
         )
 
-        val container = httpLongDockerCli.createContainerCmd(imageName)
+        val container = httpDockerCli.createContainerCmd(imageName)
             .withName(containerName)
             .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
@@ -181,9 +169,9 @@ class BuildLessContainerService(
             )
             .exec()
 
-        httpLongDockerCli.startContainerCmd(container.id).exec()
+        httpDockerCli.startContainerCmd(container.id).exec()
 
-        redisUtils.setBuildlessPoolContainer(container.id, ContainerStatus.IDLE)
+        redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
         logger.info("===> created container $container")
 
         return container.id
@@ -238,7 +226,7 @@ class BuildLessContainerService(
      * 检验容器池的大小
      */
     fun getRunningPoolCount(): Int {
-        val containerInfo = httpLongDockerCli
+        val containerInfo = httpDockerCli
             .listContainersCmd()
             .withStatusFilter(setOf("running"))
             .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
