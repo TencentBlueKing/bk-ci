@@ -285,7 +285,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
-                var logoUrl = (it["LOGO_URL"] as? String)?.plus("&logo=true")
+                var logoUrl = it["LOGO_URL"] as? String
+                logoUrl = if (logoUrl?.contains("?") == true) {
+                    logoUrl.plus("&logo=true")
+                } else {
+                    logoUrl?.plus("?logo=true")
+                }
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
                     logoUrl = RegexUtils.trimProtocol(logoUrl)
                 }

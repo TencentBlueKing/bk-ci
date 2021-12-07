@@ -144,7 +144,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ) {
         response.contentType = MimeUtil.mediaType(filePath)
         val path = if (logo == true) {
-            "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC$filePath"
+            "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/" +
+                URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
         } else {
             filePath
         }
