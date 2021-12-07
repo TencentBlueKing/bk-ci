@@ -40,12 +40,12 @@ class ContainerPoolSchedule @Autowired constructor(
     private val buildlessContainerService: BuildLessContainerService,
     private val redisUtils: RedisUtils
 ) {
-    @Scheduled(cron = "* 0/2 * * * ?")
+    @Scheduled(cron = "0 0/2 * * * ?")
     fun execute() {
         val coreSize = buildlessContainerService.getRunningPoolCount()
         logger.info("Scheduler coreSize: $coreSize")
         if (coreSize >= CORE_CONTAINER_POOL_SIZE) return
-        for (i in 1 until (CORE_CONTAINER_POOL_SIZE - coreSize)) {
+        for (i in 1 until (CORE_CONTAINER_POOL_SIZE - coreSize + 1)) {
             logger.info("Scheduler create container $i")
             buildlessContainerService.createBuildLessPoolContainer()
         }
