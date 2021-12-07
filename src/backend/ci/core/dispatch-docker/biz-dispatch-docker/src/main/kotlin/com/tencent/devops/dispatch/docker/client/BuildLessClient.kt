@@ -205,6 +205,12 @@ class BuildLessClient @Autowired constructor(
                     when {
                         response["status"] == 0 -> {
                             LOG.info("Success buildLess $buildLogKey")
+                            pipelineDockerBuildDao.updateDockerIp(
+                                dslContext = dslContext,
+                                buildId = buildLessStartInfo.buildId,
+                                vmSeqId = buildLessStartInfo.vmSeqId,
+                                dockerIp = dockerIp
+                            )
                         }
                         // 母机无空闲容器资源
                         response["status"] == 2127003 -> {
