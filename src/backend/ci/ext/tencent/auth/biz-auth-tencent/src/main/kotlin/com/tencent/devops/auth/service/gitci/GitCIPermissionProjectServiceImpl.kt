@@ -70,11 +70,22 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
 
-        // 判断是否为开源项目, 校验非管理员 若是开源项目直接放行。若是管理员，则需判断是否为项目成员。 区分list和down
-        if (projectInfoService.checkProjectPublic(gitProjectId) && group != null && group != BkAuthGroup.MANAGER) {
+        // 判断是否为开源项目, 校验非管理员 若是开源项目直接放行
+        if (projectInfoService.checkProjectPublic(gitProjectId)) {
             return true
         }
+        return checkProjectUser(userId, gitProjectId, projectCode)
+    }
 
+    override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
+        return true
+    }
+
+    override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
+        return emptyList()
+    }
+
+    fun checkProjectUser(userId: String, gitProjectId: String, projectCode: String): Boolean {
         val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
         if (gitUserId.isNullOrEmpty()) {
             GitCIPermissionServiceImpl.logger.warn("$userId is not gitCI user")
@@ -87,14 +98,6 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
             logger.warn("$projectCode $userId is project check fail")
         }
         return checkResult
-    }
-
-    override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
-        return true
-    }
-
-    override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
-        return emptyList()
     }
 
     companion object {
