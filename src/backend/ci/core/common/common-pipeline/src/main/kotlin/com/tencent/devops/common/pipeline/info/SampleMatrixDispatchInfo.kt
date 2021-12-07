@@ -27,13 +27,6 @@
 
 package com.tencent.devops.common.pipeline.info
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-
 data class SampleMatrixDispatchInfo(
     override val name: String
-) : MatrixDispatchInfo(name) {
-
-    override fun parseRunsOn(context: Map<String, String>): DispatchType? {
-        return null
-    }
-}
+) : MatrixDispatchInfo(name)
