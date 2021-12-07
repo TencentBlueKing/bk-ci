@@ -24,22 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.quality.pojo
 
-package com.tencent.devops.quality.bean
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
+@ApiModel("红线报告消息类型")
+data class QualityReportMessage(
 
-class DefaultQualityUrlBean constructor(private val commonConfig: CommonConfig) : QualityUrlBean {
-    override fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String,
-        stageId: String?,
-        runtimeVariable: Map<String, String>?
-    ): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-    }
-}
+    @ApiModelProperty("项目id")
+    var projectId: String = "",
+    @ApiModelProperty("流水线id")
+    var pipelineId: String = "",
+    @ApiModelProperty("构建id")
+    var buildId: String = ""
+)

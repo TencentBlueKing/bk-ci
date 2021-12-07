@@ -36,6 +36,8 @@ interface PipelineUrlBean {
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String?,
+        stageId: String?,
         needShortUrl: Boolean = true
     ): String
 
