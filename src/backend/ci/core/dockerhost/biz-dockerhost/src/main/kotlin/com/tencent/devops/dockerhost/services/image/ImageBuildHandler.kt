@@ -6,6 +6,7 @@ import com.github.dockerjava.api.model.AuthConfigurations
 import com.github.dockerjava.api.model.BuildResponseItem
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.services.Handler
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -16,7 +17,7 @@ import java.nio.file.Paths
 class ImageBuildHandler(
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
-) : Handler<ImageHandlerContext>() {
+) : Handler<ImageHandlerContext>(dockerHostConfig, dockerHostBuildApi) {
     override fun handlerRequest(handlerContext: ImageHandlerContext) {
         with(handlerContext) {
             val authConfigurations = AuthConfigurations()
@@ -30,11 +31,18 @@ class ImageBuildHandler(
                 authConfigurations.addConfig(baseConfig)
             }
 
-            val workspace = getWorkspace(pipelineId, vmSeqId.toInt(), dockerBuildParam.poolNo ?: "0")
+            val workspace = getWorkspace(pipelineId, vmSeqId, dockerBuildParam.poolNo ?: "0")
             val buildDir = Paths.get(workspace + dockerBuildParam.buildDir).normalize().toString()
             val dockerfilePath = Paths.get(workspace + dockerBuildParam.dockerFile).normalize().toString()
-            val baseDirectory = File(buildDir)
-            val dockerfile = File(dockerfilePath)
+            var baseDirectory = File(buildDir)
+            var dockerfile = File(dockerfilePath)
+
+            if (!baseDirectory.exists()) {
+                baseDirectory = File(Paths.get(workspace + "upper/" + dockerBuildParam.buildDir)
+                    .normalize().toString())
+                dockerfile = File(Paths.get(workspace + "upper/" + dockerBuildParam.dockerFile)
+                    .normalize().toString())
+            }
 
             val imageNameTagSet = mutableSetOf<String>()
             if (dockerBuildParam.imageTagList.isNotEmpty()) {
@@ -74,7 +82,7 @@ class ImageBuildHandler(
             step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
                 .awaitImageId()
 
-            nextHandler?.handlerRequest(this)
+            nextHandler.get()?.handlerRequest(this)
         }
     }
 

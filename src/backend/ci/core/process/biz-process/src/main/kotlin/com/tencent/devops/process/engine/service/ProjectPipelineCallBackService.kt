@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.service.trace.TraceTag
@@ -47,6 +48,8 @@ import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,7 +69,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectPipelineCallbackDao: ProjectPipelineCallbackDao,
     private val projectPipelineCallbackHistoryDao: ProjectPipelineCallbackHistoryDao,
-    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
+    private val client: Client
 ) {
 
     companion object {
@@ -84,13 +88,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
     ): CreateCallBackResult {
         // 验证用户是否为管理员
         validAuth(userId, projectId, BkAuthGroup.MANAGER)
-        // 验证url的合法性
-        val regex = Regex(
-            pattern = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]",
-            option = RegexOption.IGNORE_CASE
-        )
-        val regexResult = url.matches(regex)
-        if (!regexResult) {
+        if (!validUrl(projectId, url)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
@@ -120,7 +118,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     events = projectPipelineCallBack.events,
                     userId = userId,
                     callbackUrl = projectPipelineCallBack.callBackUrl,
-                    secretToken = projectPipelineCallBack.secretToken
+                    secretToken = projectPipelineCallBack.secretToken,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PROJECT_PIPELINE_CALLBACK").data
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -132,6 +131,16 @@ class ProjectPipelineCallBackService @Autowired constructor(
             successEvents = successEvents,
             failureEvents = failureEvents
         )
+    }
+
+    private fun validUrl(projectId: String, url: String): Boolean {
+        return try {
+            HttpUrl.get(url)
+            true
+        } catch (e: IllegalArgumentException) {
+            logger.warn("$projectId|callback url Invalid: ${e.message}")
+            false
+        }
     }
 
     fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
@@ -213,7 +222,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                id = id
             )
         }
     }
@@ -342,7 +352,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     responseCode = responseCode,
                     responseBody = responseBody,
                     startTime = startTime,
-                    endTime = System.currentTimeMillis()
+                    endTime = System.currentTimeMillis(),
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
                 )
             )
         }

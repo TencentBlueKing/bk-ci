@@ -60,7 +60,7 @@ data class Pipeline(
     val latestBuildNum: Int?,
     @ApiModelProperty("最后构建任务名称", required = false)
     val latestBuildTaskName: String?,
-    @ApiModelProperty("最后任务预计执行时间（秒）", required = false)
+    @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
     @ApiModelProperty("最后构建实例ID", required = false)
     val latestBuildId: String?,
@@ -89,5 +89,7 @@ data class Pipeline(
     @ApiModelProperty("流水线分组和标签", required = false)
     var groupLabel: List<PipelineGroupLabels>? = null,
     @ApiModelProperty("最后自定义构建版本号", required = false)
-    val latestBuildNumAlias: String? = null
+    val latestBuildNumAlias: String? = null,
+    @ApiModelProperty("自定义构建号规则", required = false)
+    val buildNumRule: String? = null
 )

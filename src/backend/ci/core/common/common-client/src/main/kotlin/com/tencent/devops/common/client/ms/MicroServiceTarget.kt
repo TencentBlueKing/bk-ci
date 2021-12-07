@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.client.ms
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.consul.ConsulContent
@@ -38,6 +40,7 @@ import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 class MicroServiceTarget<T> constructor(
@@ -46,6 +49,20 @@ class MicroServiceTarget<T> constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
     private val tag: String?
 ) : FeignTarget<T> {
+    private val msCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(1, TimeUnit.SECONDS)
+            .build(object : CacheLoader<String, List<ServiceInstance>>() {
+                override fun load(svrName: String): List<ServiceInstance> {
+                    val instances = compositeDiscoveryClient.getInstances(svrName)
+                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
+                    if (instances.isEmpty()) {
+                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
+                    }
+                    return instances
+                }
+            })
 
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
@@ -61,13 +78,7 @@ class MicroServiceTarget<T> constructor(
         } else {
             "$serviceSuffix-$serviceName"
         }
-
-        val instances = compositeDiscoveryClient.getInstances(svrName)
-            ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-        if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-        }
-
+        val instances = msCache.get(svrName)
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag

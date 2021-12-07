@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
@@ -48,12 +49,25 @@ class RedisAutoConfiguration {
     @Value("\${spring.redis.name:#{null}}")
     private var redisName: String? = null
 
-    @Bean
+    @Primary
+    @Bean("redisOperation")
     fun redisOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
         val template = RedisTemplate<String, String>()
         template.setConnectionFactory(factory)
         template.keySerializer = StringRedisSerializer()
         template.valueSerializer = StringRedisSerializer()
+        template.afterPropertiesSet()
+        return RedisOperation(template, redisName)
+    }
+
+    @Bean("redisStringHashOperation")
+    fun redisStringHashOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
+        val template = RedisTemplate<String, String>()
+        template.setConnectionFactory(factory)
+        template.keySerializer = StringRedisSerializer()
+        template.valueSerializer = StringRedisSerializer()
+        template.hashValueSerializer = StringRedisSerializer()
+        template.hashKeySerializer = StringRedisSerializer()
         template.afterPropertiesSet()
         return RedisOperation(template, redisName)
     }

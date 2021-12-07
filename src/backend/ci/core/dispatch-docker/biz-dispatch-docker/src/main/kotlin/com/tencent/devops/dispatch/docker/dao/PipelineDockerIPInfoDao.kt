@@ -254,12 +254,22 @@ class PipelineDockerIPInfoDao {
     fun getDockerIpList(
         dslContext: DSLContext,
         enable: Boolean,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType? = null
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            val conditions =
+                mutableListOf<Condition>(
+                    ENABLE.eq(enable),
+                    GRAY_ENV.eq(grayEnv)
+                )
+
+            if (clusterName != null) {
+                conditions.add(CLUSTER_NAME.eq(clusterName.name))
+            }
+
             return dslContext.selectFrom(this)
-                .where(ENABLE.eq(enable))
-                .and(GRAY_ENV.eq(grayEnv))
+                .where(conditions)
                 .fetch()
         }
     }
@@ -274,6 +284,20 @@ class PipelineDockerIPInfoDao {
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getAllDockerIpCount(
+        dslContext: DSLContext,
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
+    ): Long? {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(GRAY_ENV.eq(grayEnv))
+                .and(CLUSTER_NAME.eq(clusterName.name))
+                .fetchOne(0, Long::class.java)
         }
     }
 

@@ -2,7 +2,7 @@
     <div class="version-sideslider-container">
         <div class="pipeline-latest" @click="showVersionSideslider = true">{{latestPipelineVersionInfo}}</div>
         <bk-sideslider
-            width="580"
+            :width="580"
             :title="$t('template.versionList')"
             :is-show.sync="showVersionSideslider"
             :quick-close="true"
@@ -120,7 +120,7 @@
                     this.PIPELINE_SETTING_MUTATION({ pipelineSetting: settingData })
                     this.SET_PIPELINE_EDITING(true)
                     theme = 'success'
-                    message = this.$t(`subpage.loadPipelineVersionSuccess`, { version })
+                    message = this.$t('subpage.loadPipelineVersionSuccess', { version })
                     this.showVersionSideslider = false
                 }).catch(err => {
                     theme = 'error'

@@ -36,5 +36,10 @@ enum class DockerHostClusterType {
     /**
      * 无编译环境构建机群
      */
-    AGENT_LESS
+    AGENT_LESS,
+
+    /**
+     * mac构建机群
+     */
+    MACOS
 }

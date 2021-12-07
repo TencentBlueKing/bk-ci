@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -168,6 +168,9 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
+                if (!actionType.isStartOrRefresh()) {
+                    needTerminate = true
+                }
             } else if (t.status.isRunning()) { // 当前有运行中任务
                 // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
                 breakFlag = actionType.isStartOrRefresh()
@@ -358,7 +361,32 @@ class StartActionTaskContainerCmd(
         containerContext: ContainerContext,
         currentTask: PipelineBuildTask
     ): PipelineBuildTask? {
-        // 终止将直接返回
+
+        var toDoTask: PipelineBuildTask? = null
+
+        val pipelineBuildTask = containerContext.containerTasks
+            .filter { it.taskId.startsWith(VMUtils.getStopVmLabel()) } // 找构建环境关机任务
+            .getOrNull(0) // 取第一个关机任务，如果没有返回空
+
+        if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
+            toDoTask = pipelineBuildTask
+            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
+                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            val endTask = containerContext.containerTasks
+                .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
+                .getOrNull(0)
+            // issues_5530 stop插件执行后会发送shutdown,无需构建机再跑endBuild逻辑,避免造成并发问题。
+            // 若stop先到，endBuild未执行。则end插件就一直处于queue状态。导致暂停插件无法终止。
+            if (endTask != null && endTask.status != BuildStatus.RUNNING) {
+                pipelineRuntimeService.updateTaskStatus(
+                    task = endTask,
+                    buildStatus = BuildStatus.SUCCEED,
+                    userId = endTask.starter
+                )
+            }
+        }
+
+        // 终止打印终止原因
         if (isTerminate(containerContext)) {
             buildLogPrinter.addRedLine(
                 buildId = currentTask.buildId,
@@ -367,11 +395,25 @@ class StartActionTaskContainerCmd(
                 jobId = currentTask.containerHashId,
                 executeCount = currentTask.executeCount ?: 1
             )
+            containerContext.buildStatus = BuildStatus.CANCELED
         } else {
             containerContext.buildStatus = BuildStatus.PAUSE
+            if (containerContext.event.actionType.isEnd()) {
+                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
+                containerContext.event.actionType = ActionType.REFRESH
+            }
         }
+//        else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+//            containerContext.buildStatus = BuildStatus.PAUSE
+//        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
+//            containerContext.buildStatus = BuildStatus.RUNNING
+//            if (containerContext.event.actionType.isEnd()) {
+//                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
+//                containerContext.event.actionType = ActionType.REFRESH
+//            }
+//        }
 
-        return null
+        return toDoTask
     }
 
     fun ElementPostInfo.findPostActionTask(

@@ -30,12 +30,8 @@ package com.tencent.devops.dockerhost.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-@Suppress("ALL")
 @Component
 class DockerHostConfig {
-
-//    @Value("\${dockerCli.dockerHost:unix:///var/run/docker.sock}")
-//    val dockerHost: String? = null
 
     @Value("\${dockerCli.dockerConfig:/root/.docke}")
     var dockerConfig: String? = null
@@ -160,6 +156,9 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathHosts}")
     var hostPathHosts: String? = null
 
+    @Value("\${dockerCli.hostPathOverlayfsCache:#{null}}")
+    var hostPathOverlayfsCache: String? = "/data/overlayfscache"
+
     @Value("\${dockerCli.shareProjectCodeWhiteList}")
     var shareProjectCodeWhiteList: String? = null
 
@@ -258,4 +257,22 @@ class DockerHostConfig {
      */
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
+
+    /**
+     * bazel overlayfs lower层路径
+     */
+    @Value("\${dockerCli.bazelLowerPath:/data/bazelcache}")
+    var bazelLowerPath: String? = null
+
+    /**
+     * bazel overlayfs upper路径
+     */
+    @Value("\${dockerCli.bazelUpperPath:/data/landun/thirdparty/bazel_cache}")
+    var bazelUpperPath: String? = null
+
+    /**
+     * bazel 缓存容器路径
+     */
+    @Value("\${dockerCli.bazelContainerPath:/root/.bazelcache}")
+    var bazelContainerPath: String? = null
 }

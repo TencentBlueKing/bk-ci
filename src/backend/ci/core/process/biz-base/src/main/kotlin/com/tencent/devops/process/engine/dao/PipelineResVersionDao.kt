@@ -43,6 +43,7 @@ class PipelineResVersionDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -52,6 +53,7 @@ class PipelineResVersionDao {
         val modelString = JsonUtil.toJson(model, formatted = false)
         create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             version = version,
@@ -62,6 +64,7 @@ class PipelineResVersionDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -71,13 +74,14 @@ class PipelineResVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 VERSION_NAME,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
-            ).values(pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
+            ).values(projectId, pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)

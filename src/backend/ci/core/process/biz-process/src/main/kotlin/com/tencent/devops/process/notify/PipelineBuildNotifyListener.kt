@@ -56,7 +56,12 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 event.sendReviewNotify(
                     templateCode = notifyTemplateEnumType.templateCode,
                     reviewUrl = pipelineUrlBean.genBuildDetailUrl(
-                        projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                        projectCode = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        position = event.position,
+                        stageId = event.stageId,
+                        needShortUrl = true
                     ),
                     reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
                         projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId

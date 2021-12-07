@@ -27,7 +27,13 @@
 
 package com.tencent.devops.process.pojo.classify
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线标签模型")
 data class PipelineGroupLabels(
+    @ApiModelProperty("流水线名字", required = false)
     val groupName: String,
+    @ApiModelProperty("标签名字", required = false)
     val labelName: MutableList<String/*labelName*/>
 )

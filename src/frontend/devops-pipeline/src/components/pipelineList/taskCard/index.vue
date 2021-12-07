@@ -133,7 +133,7 @@
         mixins: [mixins],
         props: {
             canManualStartup: {
-                type: Boolean,
+                type: [Boolean, Number],
                 default: true
             },
             hasPermission: {

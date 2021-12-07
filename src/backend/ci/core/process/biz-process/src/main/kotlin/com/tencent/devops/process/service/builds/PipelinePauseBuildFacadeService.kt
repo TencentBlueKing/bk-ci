@@ -119,6 +119,7 @@ class PipelinePauseBuildFacadeService(
         if (element != null) {
             findAndSaveDiff(
                 element = element,
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
                 taskRecord = taskRecord
@@ -154,6 +155,17 @@ class PipelinePauseBuildFacadeService(
         val newInputData = ParameterUtils.getElementInput(newElement)
 
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: return isDiff
+
+        if (newInputData!!.toString() != oldInputData.toString()) {
+            logger.info("pause continue value diff,new| $newInputData, old|$oldInputData")
+            isDiff = true
+        }
+
+        if (newInputData!!.keys != oldInputData.keys) {
+            logger.info("pause continue keys diff,new| ${newInputData.keys}, old|${oldInputData.keys}")
+            isDiff = true
+        }
+
         newInputData?.keys?.forEach {
             val oldData = oldInputData[it]
             val newData = newInputData[it]
@@ -188,6 +200,7 @@ class PipelinePauseBuildFacadeService(
 
     private fun findAndSaveDiff(
         element: Element,
+        projectId: String,
         buildId: String,
         taskId: String,
         taskRecord: PipelineBuildTask
@@ -211,6 +224,7 @@ class PipelinePauseBuildFacadeService(
 
         if (isDiff) {
             pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
                 newValue = newElementStr,

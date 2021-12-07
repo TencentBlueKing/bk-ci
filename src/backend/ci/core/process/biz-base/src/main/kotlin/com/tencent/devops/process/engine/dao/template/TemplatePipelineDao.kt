@@ -35,9 +35,11 @@ import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -50,6 +52,7 @@ class TemplatePipelineDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         instanceType: String,
         rootTemplateId: String,
@@ -64,6 +67,7 @@ class TemplatePipelineDao {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 INSTANCE_TYPE,
                 ROOT_TEMPLATE_ID,
@@ -78,6 +82,7 @@ class TemplatePipelineDao {
                 PARAM
             )
                 .values(
+                    projectId,
                     pipelineId,
                     instanceType,
                     rootTemplateId,
@@ -136,6 +141,21 @@ class TemplatePipelineDao {
         }
     }
 
+    fun listByPipelinesId(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
+    ): Result<out Record> {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.select(PIPELINE_ID.`as`("pipelineId"), TEMPLATE_ID.`as`("templateId"))
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .and(INSTANCE_TYPE.eq(instanceType))
+                .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
+                .fetch()
+        }
+    }
+
     fun listPipeline(
         dslContext: DSLContext,
         instanceType: String,
@@ -185,46 +205,47 @@ class TemplatePipelineDao {
         instanceType: String,
         page: Int? = null,
         pageSize: Int? = null,
-        searchKey: String? = null
+        searchKey: String? = null,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
     ): SQLPage<TTemplatePipelineRecord> {
-        if (!searchKey.isNullOrBlank()) {
-            val nameLikedPipelineIds =
-                with(TPipelineSetting.T_PIPELINE_SETTING) {
-                    dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(IS_TEMPLATE.eq(false))
-                        .and(NAME.like("%$searchKey%"))
-                        .fetch()
-                        .map { it.pipelineId }
-                        .toSet()
-                }
-            with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-                val baseStep = dslContext.selectFrom(this)
-                    .where(TEMPLATE_ID.eq(templateId))
-                    .and(PIPELINE_ID.`in`(nameLikedPipelineIds))
-                    .and(INSTANCE_TYPE.eq(instanceType))
-                    .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
-                val allCount = baseStep.count()
-                val records = if (null != page && null != pageSize) {
-                    baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-                } else {
-                    baseStep.fetch()
-                }
-                return SQLPage(allCount.toLong(), records)
+        val nameLikedPipelineIds = if (!searchKey.isNullOrBlank()) {
+            with(TPipelineSetting.T_PIPELINE_SETTING) {
+                dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(IS_TEMPLATE.eq(false))
+                    .and(NAME.like("%$searchKey%"))
+                    .fetch()
+                    .map { it.pipelineId }
+                    .toSet()
             }
-        }
+        } else null
 
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val baseStep = dslContext.selectFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
-                .and(INSTANCE_TYPE.eq(instanceType))
+
+            if (!searchKey.isNullOrBlank()) {
+                baseStep.and(PIPELINE_ID.`in`(nameLikedPipelineIds))
+            }
+            baseStep.and(INSTANCE_TYPE.eq(instanceType))
                 .and(DELETED.eq(false)) // #4012 模板实例列表需要隐藏 回收站的流水线
+            when (sortType) {
+                TemplateSortTypeEnum.VERSION -> {
+                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc())
+                }
+                TemplateSortTypeEnum.UPDATE_TIME -> {
+                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+                }
+                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+            }
             val allCount = baseStep.count()
             val records = if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             } else {
                 baseStep.fetch()
             }
+
             return SQLPage(allCount.toLong(), records)
         }
     }

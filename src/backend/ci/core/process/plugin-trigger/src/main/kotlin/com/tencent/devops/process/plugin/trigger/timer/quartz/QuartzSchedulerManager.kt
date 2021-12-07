@@ -30,10 +30,14 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import org.quartz.Scheduler
 import org.quartz.impl.StdSchedulerFactory
+import org.springframework.boot.autoconfigure.quartz.QuartzProperties
+import java.util.Properties
 
-class QuartzSchedulerManager : SchedulerManager() {
+class QuartzSchedulerManager(
+    private val quartzProperties: QuartzProperties
+) : SchedulerManager() {
 
-    private var scheduler: Scheduler = StdSchedulerFactory().scheduler
+    private var scheduler: Scheduler = initSchedulerFactory().scheduler
 
     private val triggerGroup = "bkTriggerGroup"
 
@@ -54,5 +58,21 @@ class QuartzSchedulerManager : SchedulerManager() {
 
     override fun getScheduler(): Scheduler {
         return scheduler
+    }
+
+    private fun initSchedulerFactory(): StdSchedulerFactory {
+        val properties = Properties()
+        properties.putAll(quartzProperties.properties)
+        if (properties[PROP_THREAD_COUNT] == null) {
+            properties.setProperty(PROP_THREAD_COUNT, DEFAULT_THREAD_COUNT.toString())
+        }
+        val stdSchedulerFactory = StdSchedulerFactory()
+        stdSchedulerFactory.initialize(properties)
+        return stdSchedulerFactory
+    }
+
+    companion object {
+        private const val PROP_THREAD_COUNT = "org.quartz.threadPool.threadCount"
+        private const val DEFAULT_THREAD_COUNT = 10
     }
 }

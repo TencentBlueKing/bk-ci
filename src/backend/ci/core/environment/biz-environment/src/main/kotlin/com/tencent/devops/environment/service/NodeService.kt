@@ -41,6 +41,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -56,6 +57,7 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
+import org.slf4j.LoggerFactory
 
 @Service@Suppress("ALL")
 class NodeService @Autowired constructor(
@@ -66,8 +68,13 @@ class NodeService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val nodeWebsocketService: NodeWebsocketService,
-    private val webSocketDispatcher: WebSocketDispatcher
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val slaveGatewayDao: SlaveGatewayDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(NodeService::class.java)
+    }
 
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
@@ -335,13 +342,6 @@ class NodeService @Autowired constructor(
             params = arrayOf(nodeHashId)
         )
         when (node.nodeType) {
-            NodeType.CC.name -> {
-                if (userId == node.operator || userId == node.bakOperator) {
-                    nodeDao.updateCreatedUser(dslContext = dslContext, nodeId = nodeId, userId = userId)
-                } else {
-                    throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
-                }
-            }
             NodeType.CMDB.name -> {
                 val isOperator = userId == node.operator
                 val isBakOperator = node.bakOperator.split(";").contains(userId)
@@ -475,6 +475,17 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 }
             )
+        }
+    }
+
+    fun refreshGateway(oldToNewMap: Map<String, String>): Boolean {
+        return try {
+            slaveGatewayDao.refreshGateway(dslContext, oldToNewMap)
+            thirdPartyAgentDao.refreshGateway(dslContext, oldToNewMap)
+            true
+        } catch (ignore: Throwable) {
+            logger.error("AUTH|refreshGateway failed with error: ", ignore)
+            false
         }
     }
 }

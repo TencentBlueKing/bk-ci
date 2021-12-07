@@ -46,8 +46,6 @@ import java.io.IOException
 @Component
 class DockerHostImageService(
     private val dockerHostConfig: DockerHostConfig,
-/*    private val dockerHostBuildApi: DockerHostBuildResourceApi,
-    private val dockerHostImageScanService: DockerHostImageScanService,*/
     private val imageBuildHandler: ImageBuildHandler,
     private val imageScanHandler: ImageScanHandler,
     private val imagePushHandler: ImagePushHandler,
@@ -70,15 +68,9 @@ class DockerHostImageService(
     ): Pair<Boolean, String?> {
         lateinit var dockerClient: DockerClient
         try {
-            val repoAddr = dockerBuildParam.repoAddr
-            val userName = dockerBuildParam.userName
-            val password = dockerBuildParam.password
             val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerConfig(dockerHostConfig.dockerConfig)
                 .withApiVersion(dockerHostConfig.apiVersion)
-                .withRegistryUrl(repoAddr)
-                .withRegistryUsername(userName)
-                .withRegistryPassword(password)
                 .build()
 
             val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
@@ -94,8 +86,9 @@ class DockerHostImageService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                vmSeqId = vmSeqId,
-                userName = userName,
+                vmSeqId = vmSeqId.toInt(),
+                poolNo = dockerBuildParam.poolNo!!.toInt(),
+                userName = dockerBuildParam.userId,
                 dockerBuildParam = dockerBuildParam,
                 dockerClient = dockerClient,
                 pipelineTaskId = elementId,

@@ -182,12 +182,10 @@ class StageBuildDetailService(
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
-        buildStatus: BuildStatus,
         checkIn: StagePauseCheck?,
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
-        logger.info("[$buildId]|stage_check_quality|buildStatus=$buildStatus|stageId=$stageId" +
-            "|checkIn=$checkIn|checkOut=$checkOut")
+        logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
             var update = false
@@ -207,7 +205,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, buildStatus)
+        }, BuildStatus.RUNNING)
         return allStageStatus ?: emptyList()
     }
 

@@ -27,11 +27,18 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.TPipelineResource
+import com.tencent.devops.model.process.tables.TPipelineResourceVersion
+import com.tencent.devops.model.process.tables.TTemplatePipeline
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
+import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -40,6 +47,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Repository
 class ProcessDao {
 
@@ -144,11 +152,12 @@ class ProcessDao {
         dslContext: DSLContext,
         pipelineId: String,
         maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
     ): Long {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime)
-            return dslContext.select(DSL.max(BUILD_NUM))
+            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime, geTimeFlag)
+            return dslContext.selectCount()
                 .from(this)
                 .where(conditions)
                 .fetchOne(0, Long::class.java)!!
@@ -158,7 +167,8 @@ class ProcessDao {
     private fun TPipelineBuildHistory.getQueryBuildHistoryCondition(
         pipelineId: String,
         maxBuildNum: Int?,
-        maxStartTime: LocalDateTime?
+        maxStartTime: LocalDateTime?,
+        geTimeFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(PIPELINE_ID.eq(pipelineId))
@@ -166,7 +176,11 @@ class ProcessDao {
             conditions.add(BUILD_NUM.le(maxBuildNum))
         }
         if (maxStartTime != null) {
-            conditions.add(START_TIME.lt(maxStartTime))
+            if (geTimeFlag != true) {
+                conditions.add(START_TIME.lt(maxStartTime))
+            } else {
+                conditions.add(START_TIME.ge(maxStartTime))
+            }
         }
         return conditions
     }
@@ -178,10 +192,11 @@ class ProcessDao {
         handlePageSize: Int,
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
-        maxStartTime: LocalDateTime? = null
+        maxStartTime: LocalDateTime? = null,
+        geTimeFlag: Boolean? = null
     ): Result<out Record>? {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime)
+            val conditions = getQueryBuildHistoryCondition(pipelineId, maxBuildNum, maxStartTime, geTimeFlag)
             val baseStep = dslContext.select(BUILD_ID)
                 .from(this)
                 .where(conditions)
@@ -190,7 +205,7 @@ class ProcessDao {
             } else {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
-            return baseStep.fetch()
+            return baseStep.orderBy(BUILD_ID).fetch()
         }
     }
 
@@ -209,6 +224,102 @@ class ProcessDao {
                         .and(PIPELINE_ID.`in`(pipelineIdList))
                 )
                 .fetch()
+        }
+    }
+
+    fun getPipelineBuildDetailList(
+        dslContext: DSLContext,
+        buildIdList: List<String>
+    ): Result<TPipelineBuildDetailRecord>? {
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.`in`(buildIdList))
+                .fetch()
+        }
+    }
+
+    fun updatePipelineBuildDetailProject(
+        dslContext: DSLContext,
+        buildId: String,
+        projectId: String,
+        model: String? = null
+    ) {
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            val baseStep = dslContext.update(this)
+            if (!model.isNullOrBlank()) {
+                baseStep.set(MODEL, model)
+            }
+            baseStep.set(PROJECT_ID, projectId).where(BUILD_ID.eq(buildId)).execute()
+        }
+    }
+
+    fun getPipelineResourceList(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Result<TPipelineResourceRecord>? {
+        with(TPipelineResource.T_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetch()
+        }
+    }
+
+    fun updatePipelineResourceProject(
+        dslContext: DSLContext,
+        pipelineId: String,
+        version: Int,
+        projectId: String,
+        model: String? = null
+    ) {
+        with(TPipelineResource.T_PIPELINE_RESOURCE) {
+            val baseStep = dslContext.update(this)
+            if (!model.isNullOrBlank()) {
+                baseStep.set(MODEL, model)
+            }
+            baseStep.set(PROJECT_ID, projectId)
+                .where(PIPELINE_ID.eq(pipelineId).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun getPipelineResourceVersionList(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Result<TPipelineResourceVersionRecord>? {
+        with(TPipelineResourceVersion.T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetch()
+        }
+    }
+
+    fun updatePipelineResourceVersionProject(
+        dslContext: DSLContext,
+        pipelineId: String,
+        version: Int,
+        projectId: String,
+        model: String? = null
+    ) {
+        with(TPipelineResourceVersion.T_PIPELINE_RESOURCE_VERSION) {
+            val baseStep = dslContext.update(this)
+            if (!model.isNullOrBlank()) {
+                baseStep.set(MODEL, model)
+            }
+            baseStep.set(PROJECT_ID, projectId)
+                .where(PIPELINE_ID.eq(pipelineId).and(VERSION.eq(version)))
+                .execute()
+        }
+    }
+
+    fun updateTemplatePipelineProject(
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectId: String
+    ) {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.update(this).set(PROJECT_ID, projectId)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 }

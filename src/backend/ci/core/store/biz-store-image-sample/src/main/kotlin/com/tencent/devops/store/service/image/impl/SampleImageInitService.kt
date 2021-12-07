@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.pojo.common.BusinessConfigRequest
@@ -64,10 +65,13 @@ class SampleImageInitService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(SampleImageInitService::class.java)
 
     @Suppress("ALL")
-    fun imageInit(): Result<Boolean> {
-        val projectCode = "demo"
-        val userId = "admin"
-        logger.info("begin init bkci image")
+    fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
+        val projectCode = imageInitRequest?.projectCode ?: "demo"
+        val userId = imageInitRequest?.userId ?: "admin"
+        val imageCode = imageInitRequest?.imageCode ?: "bkci"
+        val accessToken = imageInitRequest?.accessToken ?: ""
+        val ticketId = imageInitRequest?.ticketId
+        logger.info("begin init image: $imageInitRequest")
         // 创建demo项目
         val demoProjectResult = client.get(ServiceProjectResource::class).get(projectCode)
         if (demoProjectResult.isNotOk()) {
@@ -81,9 +85,9 @@ class SampleImageInitService @Autowired constructor(
             val createDemoProjectResult = client.get(ServiceProjectResource::class).create(
                 userId = userId,
                 projectCreateInfo = ProjectCreateInfo(
-                    projectName = "Demo",
+                    projectName = imageInitRequest?.projectCode ?: "Demo",
                     englishName = projectCode,
-                    description = "demo project"
+                    description = imageInitRequest?.projectDesc ?: "demo project"
                 )
             )
             if (createDemoProjectResult.isNotOk() || createDemoProjectResult.data != true) {
@@ -94,21 +98,21 @@ class SampleImageInitService @Autowired constructor(
                 )
             }
         }
-        val imageCode = "bkci"
+
         // 新增镜像
         val imageCount = imageDao.countByCode(dslContext, imageCode)
         if (imageCount != 0) {
             return Result(true)
         }
         val addImageResult = imageReleaseService.addMarketImage(
-            accessToken = "",
+            accessToken = accessToken,
             userId = userId,
             imageCode = imageCode,
             marketImageRelRequest = MarketImageRelRequest(
                 projectCode = projectCode,
                 imageName = imageCode,
                 imageSourceType = ImageType.THIRD,
-                ticketId = null
+                ticketId = ticketId
             ),
             needAuth = false
         )
@@ -129,20 +133,22 @@ class SampleImageInitService @Autowired constructor(
                 labelIdList = null,
                 category = "PIPELINE_JOB",
                 agentTypeScope = ImageAgentTypeEnum.getAllAgentTypes(),
-                summary = "CI basic image based on tlinux2.2",
-                description = "Docker public build machine base image",
-                logoUrl = "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png",
-                iconData = null,
-                ticketId = null,
+                summary = imageInitRequest?.summary ?: "CI basic image based on tlinux2.2",
+                description = imageInitRequest?.description ?: "Docker public build machine base image",
+                logoUrl = imageInitRequest?.logoUrl
+                    ?: "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png",
+                iconData = imageInitRequest?.iconData,
+                ticketId = ticketId,
                 imageSourceType = ImageType.THIRD,
-                imageRepoUrl = "",
-                imageRepoName = "bkci/ci",
-                imageTag = "latest",
-                dockerFileType = "INPUT",
-                dockerFileContent = "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
+                imageRepoUrl = imageInitRequest?.imageRepoUrl ?: "",
+                imageRepoName = imageInitRequest?.imageRepoName ?: "bkci/ci",
+                imageTag = imageInitRequest?.imageTag ?: "latest",
+                dockerFileType = imageInitRequest?.dockerFileType ?: "INPUT",
+                dockerFileContent = imageInitRequest?.dockerFileContent
+                    ?: "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
                 version = "1.0.0",
                 releaseType = ReleaseTypeEnum.NEW,
-                versionContent = "bkci",
+                versionContent = imageInitRequest?.versionContent ?: "bkci",
                 publisher = userId
             ),
             checkLatest = false,

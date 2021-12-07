@@ -7,12 +7,16 @@
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
-    "husky": "^3.0.7",
+    "gulp-svg-sprite": "^1.5.0",
+    "husky": "^7.0.2",
     "lerna": "3.17.0",
     "lint-staged": "^10.2.11",
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
-    "vue-eslint-parser": "^7.11.0"
+    "svg-sprite-loader": "^6.0.9",
+    "webpack-bundle-analyzer": "^4.4.2",
+    "webpack-cli": "^4.9.0",
+    "webpack-dev-server": "^4.3.1"
   },
   "scripts": {
     "start": "lerna bootstrap",
@@ -22,12 +26,6 @@
     "build:external": "lerna run public:external --parallel",
     "changelog": "conventional-changelog -c changelog.config.js -p github -i CHANGELOG.md -s",
     "public": "gulp -d frontend"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
   },
   "lint-staged": {
     "*.{js,ts,tsx,vue}": [
@@ -44,5 +42,8 @@
     "devops-quality",
     "devops-nav",
     "devops-turbo"
-  ]
+  ],
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
 }

@@ -27,10 +27,19 @@
 
 package com.tencent.devops.process.pojo.app.pipeline
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("手机侧项目模型")
 data class AppProject(
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("激活的流水线数量", required = false)
     val activePipelineCount: Int,
+    @ApiModelProperty("项目名称", required = false)
     val projectName: String,
+    @ApiModelProperty("项目logo", required = false)
     val projectLogo: String,
+    @ApiModelProperty("项目是否已审核，作废字段", required = false)
     val approvalStatus: String
 )

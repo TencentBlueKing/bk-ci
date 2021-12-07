@@ -29,15 +29,27 @@ package com.tencent.devops.process.pojo.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("流水线http回调模型")
 data class PipelineWebhook(
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("流水线id", required = false)
     val pipelineId: String,
+    @ApiModelProperty("代码库类型，见ScmType枚举", required = false)
     val repositoryType: ScmType,
+    @ApiModelProperty("代码库标识类型， ID 代码库HashId / NAME 别名", required = false)
     val repoType: RepositoryType?,
+    @ApiModelProperty("代码库HashId，repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
     val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
+    @ApiModelProperty("代码库别名", required = false)
     val repoName: String?,
+    @ApiModelProperty("代码库自增ID，唯一", required = false)
     val id: Long? = null,
+    @ApiModelProperty("项目名称", required = false)
     var projectName: String? = null,
+    @ApiModelProperty("拉取当前代码库所在的插件ID", required = false)
     val taskId: String? = null
 )

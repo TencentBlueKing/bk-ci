@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -36,31 +37,36 @@ import org.slf4j.LoggerFactory
 object CredentialUtils {
 
     fun getCredential(repository: Repository, credentials: List<String>, credentialType: CredentialType): Credential {
-        if (repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
-            // 兼容老的数据，老的数据是用的是password, 新的是username_password
-            return if (credentialType == CredentialType.USERNAME_PASSWORD) {
-                if (credentials.size <= 1) {
-                    logger.warn("Fail to get the username($credentials) of the svn repo $repository")
+        when {
+            repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP -> {
+                // 兼容老的数据，老的数据是用的是password, 新的是username_password
+                return if (credentialType == CredentialType.USERNAME_PASSWORD) {
+                    if (credentials.size <= 1) {
+                        logger.warn("Fail to get the username($credentials) of the svn repo $repository")
+                        Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
+                    } else {
+                        Credential(username = credentials[0], privateKey = credentials[1], passPhrase = null)
+                    }
+                } else {
                     Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
-                } else {
-                    Credential(username = credentials[0], privateKey = credentials[1], passPhrase = null)
                 }
-            } else {
-                Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
             }
-        } else {
-            val privateKey = credentials[0]
-            val passPhrase = if (credentials.size > 1) {
-                val p = credentials[1]
-                if (p.isEmpty()) {
+            repository is CodeP4Repository && credentialType == CredentialType.USERNAME_PASSWORD ->
+                return Credential(username = credentials[0], privateKey = "", passPhrase = credentials[1])
+            else -> {
+                val privateKey = credentials[0]
+                val passPhrase = if (credentials.size > 1) {
+                    val p = credentials[1]
+                    if (p.isEmpty()) {
+                        null
+                    } else {
+                        p
+                    }
+                } else {
                     null
-                } else {
-                    p
                 }
-            } else {
-                null
+                return Credential(username = repository.userName, privateKey = privateKey, passPhrase = passPhrase)
             }
-            return Credential(username = repository.userName, privateKey = privateKey, passPhrase = passPhrase)
         }
     }
 

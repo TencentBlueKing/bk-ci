@@ -96,8 +96,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
@@ -160,7 +160,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            checkManualStartup = true
         )
     }
 

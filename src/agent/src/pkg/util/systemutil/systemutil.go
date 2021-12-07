@@ -35,7 +35,7 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
-
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/astaxie/beego/logs"
 	"github.com/gofrs/flock"
@@ -142,25 +142,56 @@ func GetHostName() string {
 	return name
 }
 
-func GetAgentIp() string {
+// GetAgentIp 返回本机IP，但允许忽略指定的IP ignoreIps, 如果所有IP都命中ignoreIps，则最终会返回127.0.0.1或者真正通信的IP
+func GetAgentIp(ignoreIps []string) string {
 	defaultIp := "127.0.0.1"
 	ip, err := getLocalIp()
 	if err == nil {
-		return ip
+		defaultIp = ip
+		logs.Info("get local ip %s", defaultIp)
 	} else {
 		logs.Warn("failed to get ip by udp", err)
 	}
-	addrs, err := net.InterfaceAddrs()
+
+	ncs, err := net.Interfaces()
 	if err != nil {
 		return defaultIp
 	}
-	for _, addr := range addrs {
-		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-			if ipNet.IP.IsGlobalUnicast() {
-				return ipNet.IP.String()
+	for _, nc := range ncs {
+		if nc.HardwareAddr == nil { // #3626 二次确认，需要排除虚拟网卡情况
+			logs.Info("%s have no MAC, skip!", nc.Name)
+			continue
+		}
+		addresses, err := nc.Addrs()
+		if err != nil {
+			logs.Warn("can not get addr for [%s]: %s", nc.Name, err.Error())
+			continue
+		}
+
+		for _, addr := range addresses {
+			ipNet, ok := addr.(*net.IPNet)
+			if !ok || // 异常
+				ipNet.IP.IsLoopback() ||
+				ipNet.IP.IsLinkLocalUnicast() || // 链路本地地址（Link-local address）
+				!ipNet.IP.IsGlobalUnicast() ||
+				ipNet.IP.To4() == nil {
+				continue
+			}
+
+			logs.Info("localIp=%s|net=%s|flag=%s|ip=%s", ip, nc.Name, nc.Flags, ipNet.IP)
+			if util.Contains(ignoreIps, ipNet.IP.String()) {
+				logs.Info("skipIp=%s", ipNet.IP)
+				continue
+			}
+			if ip == ipNet.IP.String() {
+				return ip // 匹配到该通信IP是真正的网卡IP
+			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
+				logs.Info("localIp=%s|change defaultIp [%s] to [%s]", ip, defaultIp, ipNet.IP.String())
+				defaultIp = ipNet.IP.String()
 			}
 		}
 	}
+
 	return defaultIp
 }
 
@@ -208,7 +239,7 @@ func CheckProcess(name string) bool {
 	return true
 }
 
-// 网关初始化顺序在前, 上报与devops网关通信的网卡ip
+// getLocalIp 网关初始化顺序在前, 上报与devops网关通信的网卡ip
 func getLocalIp() (string, error) {
 	gateway := DevopsGateway
 	if !strings.HasPrefix(gateway, "http") {

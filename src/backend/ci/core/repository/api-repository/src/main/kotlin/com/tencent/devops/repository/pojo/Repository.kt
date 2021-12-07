@@ -38,7 +38,8 @@ import io.swagger.annotations.ApiModel
     JsonSubTypes.Type(value = CodeGitRepository::class, name = CodeGitRepository.classType),
     JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
     JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
-    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType)
+    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
+    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
 )
 interface Repository {
     val aliasName: String

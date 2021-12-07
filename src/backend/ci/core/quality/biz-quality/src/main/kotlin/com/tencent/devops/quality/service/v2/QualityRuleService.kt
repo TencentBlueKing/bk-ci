@@ -335,7 +335,8 @@ class QualityRuleService @Autowired constructor(
                 tag = it.tag,
                 metadataList = it.metadataList,
                 desc = it.desc,
-                logPrompt = it.logPrompt
+                logPrompt = it.logPrompt,
+                enable = it.enable
             )
         }
         return QualityRule(
@@ -366,7 +367,10 @@ class QualityRuleService @Autowired constructor(
                 listOf()
             } else ruleOperation.auditUser.split(","),
             auditTimeoutMinutes = ruleOperation.auditTimeout ?: 15,
-            gatewayId = record.gatewayId
+            gatewayId = record.gatewayId,
+            gateKeepers = listOf(),
+            stageId = "1",
+            status = null
         )
     }
 

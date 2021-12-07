@@ -52,7 +52,7 @@ const mutations = {
     },
     // 删除某个标签分组
     removeTagGroupById (state, { groupId }) {
-        state.tagGroupList.map((item, index) => {
+        state.tagGroupList.forEach((item, index) => {
             if (item.id === groupId) {
                 state.tagGroupList.splice(index, 1)
             }
@@ -60,7 +60,7 @@ const mutations = {
     },
     // 修改某个分组名称
     modifyTagGroupById (state, { id, name }) {
-        state.tagGroupList.map((item, index) => {
+        state.tagGroupList.forEach((item, index) => {
             if (item.id === id) {
                 state.tagGroupList[index].name = name
             }
@@ -122,33 +122,33 @@ const actions = {
     /**
      * 删除标签分组
     */
-    deleteGroup ({ commit, state, dispatch }, { groupId }) {
+    deleteGroup ({ commit, state, dispatch }, { projectId, groupId }) {
         // return {groupId}
-        return ajax.delete(`${prefix}/pipelineGroups/groups?groupId=${groupId}`).then(response => {
+        return ajax.delete(`${prefix}/pipelineGroups/groups?projectId=${projectId}&groupId=${groupId}`).then(response => {
             return response.data
         })
     },
     /**
      * 添加标签
     */
-    addTag ({ commit, state, dispatch }, { groupId, name }) {
-        return ajax.post(`${prefix}/pipelineGroups/labels`, { groupId, name }).then(response => {
+    addTag ({ commit, state, dispatch }, { projectId, groupId, name }) {
+        return ajax.post(`${prefix}/pipelineGroups/labels?projectId=${projectId}`, { groupId, name }).then(response => {
             return response.data
         })
     },
     /**
      * 修改标签名称
     */
-    modifyTag ({ commit, state, dispatch }, { id, groupId, name }) {
-        return ajax.put(`${prefix}/pipelineGroups/labels`, { id, groupId, name }).then(response => {
+    modifyTag ({ commit, state, dispatch }, { projectId, id, groupId, name }) {
+        return ajax.put(`${prefix}/pipelineGroups/labels?projectId=${projectId}`, { id, groupId, name }).then(response => {
             return response.data
         })
     },
     /**
      * 删除标签
     */
-    deleteTag ({ commit, state, dispatch }, { labelId }) {
-        return ajax.delete(`${prefix}/pipelineGroups/labels?labelId=${labelId}`).then(response => {
+    deleteTag ({ commit, state, dispatch }, { projectId, labelId }) {
+        return ajax.delete(`${prefix}/pipelineGroups/labels?projectId=${projectId}&labelId=${labelId}`).then(response => {
             return response.data
         })
     },
