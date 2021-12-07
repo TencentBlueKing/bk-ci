@@ -88,6 +88,7 @@ allprojects {
             dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
                 entry("pinyin-plus")
             }
+            dependency("com.perforce:p4java:${Versions.p4}")
         }
     }
 

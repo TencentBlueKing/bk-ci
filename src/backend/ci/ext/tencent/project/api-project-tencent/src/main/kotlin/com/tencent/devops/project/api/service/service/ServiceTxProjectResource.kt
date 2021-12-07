@@ -391,4 +391,16 @@ interface ServiceTxProjectResource {
         @QueryParam("projectName")
         projectName: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/getProjectInfoByProjectName")
+    @ApiOperation("根据项目名称查询项目信息")
+    fun getProjectInfoByProjectName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<ProjectVO>?
 }

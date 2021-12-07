@@ -73,5 +73,7 @@ data class IpaSignInfo(
     @ApiModelProperty("待替换的plist信息", required = false)
     var replaceKeyList: Map<String, String>? = null,
     @ApiModelProperty("指定xcode签名工具版本", required = false)
-    var codeSignVersion: String? = null
+    var codeSignVersion: String? = null,
+    @ApiModelProperty("codesign插件额外参数", required = false)
+    var codesignExternalStr: String? = null
 )
