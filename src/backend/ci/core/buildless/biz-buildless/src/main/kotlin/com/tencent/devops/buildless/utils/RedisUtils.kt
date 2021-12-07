@@ -43,11 +43,12 @@ class RedisUtils @Autowired constructor(
         containerId: String,
         status: ContainerStatus = ContainerStatus.IDLE
     ) {
-
+        logger.info("----> buildLessPoolKey leftPush $containerId")
         redisOperation.leftPush(buildLessPoolKey(), formatContainerId(containerId))
     }
 
     fun getIdleContainer(): String? {
+        logger.info("----> buildLessPoolKey rightPop")
         return redisOperation.rightPop(buildLessPoolKey())
     }
 

@@ -279,12 +279,13 @@ class BuildLessClient @Autowired constructor(
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 过滤重试前异常IP, 并重新获取可用ip
-            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(
+            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = buildLessStartInfo.projectId,
                 pipelineId = buildLessStartInfo.pipelineId,
                 vmSeqId = buildLessStartInfo.vmSeqId.toString(),
+                specialIpSet = emptySet(),
                 unAvailableIpList = unAvailableIpListLocal,
-                clusterType = DockerHostClusterType.BUILD_LESS
+                clusterName = DockerHostClusterType.BUILD_LESS
             )
             startBuildLess(
                 dockerIp = dockerIpLocalPair.first,
@@ -296,12 +297,13 @@ class BuildLessClient @Autowired constructor(
         } else {
             LOG.warn("$$buildLog reached retry limit, switch FOLLOW policy.")
             // 清空之前不可以记录, 并重新获取可用ip，强制调用
-            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(
+            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = buildLessStartInfo.projectId,
                 pipelineId = buildLessStartInfo.pipelineId,
                 vmSeqId = buildLessStartInfo.vmSeqId.toString(),
+                specialIpSet = emptySet(),
                 unAvailableIpList = emptySet(),
-                clusterType = DockerHostClusterType.BUILD_LESS
+                clusterName = DockerHostClusterType.BUILD_LESS
             )
             startBuildLess(
                 dockerIp = dockerIpLocalPair.first,

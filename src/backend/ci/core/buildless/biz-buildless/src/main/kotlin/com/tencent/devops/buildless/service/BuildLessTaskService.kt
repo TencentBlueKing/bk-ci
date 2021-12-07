@@ -47,7 +47,7 @@ class BuildLessTaskService(
    fun claimBuildLessTask(containerId: String): BuildLessTask? {
        val buildLessTask = redisUtils.popBuildLessReadyTask()
        if (buildLessTask != null) {
-           logger.info("====> container: $containerId claim buildLessTask: $buildLessTask")
+           logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
            dispatchClient.updateContainerId(
                buildLessTask = buildLessTask,
                containerId = containerId
