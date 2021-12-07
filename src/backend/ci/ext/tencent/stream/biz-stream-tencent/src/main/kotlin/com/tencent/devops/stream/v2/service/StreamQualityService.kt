@@ -57,7 +57,8 @@ class StreamQualityService {
         client: Client,
         gitProjectId: Long,
         pipelineName: String,
-        event: BuildEvent
+        event: BuildEvent,
+        ruleIds: List<String>?
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         try {
             val projectId = event.projectId
@@ -66,7 +67,13 @@ class StreamQualityService {
 
             val titleData = listOf(
                 event.status,
-                DateTimeUtil.formatMilliTime(System.currentTimeMillis() - (event.startTime ?: 0L)),
+                if (event.startTime == null) {
+                    "--"
+                } else {
+                    DateTimeUtil.formatMilliTime(
+                        System.currentTimeMillis() - (event.startTime)
+                    )
+                },
                 CodeEventType.MERGE_REQUEST.name,
                 pipelineName,
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
@@ -82,7 +89,12 @@ class StreamQualityService {
             // value：指标、预期、结果、状态
             val resultMap = mutableMapOf<String, MutableList<List<String>>>()
             client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId).data?.forEach { ruleIntercept ->
+                .listRuleHistory(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    ruleIds = ruleIds
+                ).data?.forEach { ruleIntercept ->
                     ruleIntercept.resultMsg.forEach { interceptItem ->
                         val indicator = client.get(ServiceQualityIndicatorResource::class)
                             .get(projectId, interceptItem.indicatorId).data

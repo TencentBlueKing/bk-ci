@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.scm.pojo
 
-object GitCIPipelineUtils {
+import io.swagger.annotations.ApiParam
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
-
-    fun genGitCIV2BuildUrl(
-        homePage: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+data class MrCommentBody(
+    @ApiParam("报表数据", required = true)
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+)

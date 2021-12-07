@@ -1,4 +1,31 @@
-package com.tencent.devops.stream.listener.buildFinish
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.stream.listener.components
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -19,7 +46,6 @@ import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
 import com.tencent.devops.stream.listener.getBuildStatus
 import com.tencent.devops.stream.listener.getGitCommitCheckState
 import com.tencent.devops.stream.listener.isSuccess
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -28,7 +54,6 @@ import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.service.StreamQualityService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,8 +66,7 @@ class SendCommitCheck @Autowired constructor(
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils,
-    private val streamQualityService: StreamQualityService
+    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
@@ -62,7 +86,7 @@ class SendCommitCheck @Autowired constructor(
         context: StreamBuildListenerContext
     ) {
         // 当人工触发时不推送CommitCheck消息, 此处与下面重复是为了兼容V1
-        if (!context.requestEvent.sendCommitCheck()) {
+        if (context.requestEvent.objectKind == TGitObjectKind.MANUAL.value) {
             return
         }
 
@@ -106,11 +130,8 @@ class SendCommitCheck @Autowired constructor(
                     },
                     userId = buildEvent.userId
                 ),
-                mergeRequestId = if (gitEvent is GitMergeRequestEvent) {
-                    gitEvent.object_attributes.id
-                } else {
-                    null
-                },
+                // 由stage event红线评论发送
+                mergeRequestId = null,
                 buildId = buildEvent.buildId,
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
@@ -118,24 +139,9 @@ class SendCommitCheck @Autowired constructor(
                 gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
-                reportData = getGateRepoData(),
                 targetUrl = getTargetUrl(context)
             )
         }
-    }
-
-    private fun StreamBuildListenerContextV2.getGateRepoData():
-            Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
-        // 中间阶段不由stream这边发红线的评论，quality发送
-        if (this is StreamBuildStageListenerContextV2) {
-            return Pair(listOf(), mutableMapOf())
-        }
-        return streamQualityService.getQualityGitMrResult(
-            client = client,
-            gitProjectId = streamSetting.gitProjectId,
-            pipelineName = pipeline.displayName,
-            event = buildEvent
-        )
     }
 
     // 根据状态切换描述
@@ -199,14 +205,14 @@ class SendCommitCheck @Autowired constructor(
     private fun getTargetUrl(
         context: StreamBuildListenerContextV2
     ): String {
-        var checkIn: Boolean
-        var checkOut: Boolean
+        var checkIn: String?
+        var checkOut: String?
         with(context) {
             if (context !is StreamBuildStageListenerContextV2) {
-                checkIn = false
-                checkOut = false
+                checkIn = null
+                checkOut = null
             } else {
-                val pair = context.reviewType.isCheckInOrOut()
+                val pair = context.isCheckInOrOut()
                 checkIn = pair.first
                 checkOut = pair.second
             }
@@ -215,8 +221,8 @@ class SendCommitCheck @Autowired constructor(
                 gitProjectId = streamSetting.gitProjectId,
                 pipelineId = pipeline.pipelineId,
                 buildId = buildEvent.buildId,
-                openCheckIn = checkIn,
-                openCheckOut = checkOut
+                openCheckInId = checkIn,
+                openCheckOutId = checkOut
             )
         }
     }
@@ -265,21 +271,18 @@ class SendCommitCheck @Autowired constructor(
     }
 }
 
-// 当人工触发时不推送CommitCheck消息
-private fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
-
-private fun BuildReviewType.isCheckInOrOut(): Pair<Boolean, Boolean> {
-    return when (this) {
+private fun StreamBuildStageListenerContextV2.isCheckInOrOut(): Pair<String?, String?> {
+    return when (this.reviewType) {
         // 人工审核目前只在checkIn
         BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN -> {
-            Pair(true, false)
+            Pair(this.buildEvent.stageId, null)
         }
         BuildReviewType.QUALITY_CHECK_OUT -> {
-            Pair(false, true)
+            Pair(null, this.buildEvent.stageId)
         }
         // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
         BuildReviewType.TASK_REVIEW -> {
-            Pair(false, false)
+            Pair(null, null)
         }
     }
 }

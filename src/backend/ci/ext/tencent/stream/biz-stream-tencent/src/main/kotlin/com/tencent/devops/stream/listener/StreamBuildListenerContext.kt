@@ -18,7 +18,7 @@ interface StreamBuildListenerContext {
 
 // 获取整体的构建状态
 fun StreamBuildListenerContext.isSuccess() =
-    (getBuildStatus().isSuccess() || getBuildStatus() == BuildStatus.STAGE_SUCCESS)
+    (getBuildStatus() == BuildStatus.SUCCEED || getBuildStatus() == BuildStatus.STAGE_SUCCESS)
 
 // 获取commit checkState
 fun StreamBuildListenerContext.getGitCommitCheckState(): GitCICommitCheckState {
@@ -76,7 +76,8 @@ data class BuildEvent(
     val userId: String,
     val buildId: String,
     val status: String,
-    val startTime: Long?
+    val startTime: Long?,
+    val stageId: String? = null
 )
 
 // 先建立一个Build临时对象，看后续用的多不，多的话拆处集成

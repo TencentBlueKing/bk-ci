@@ -20,11 +20,16 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
         return Result(streamBasicSettingService.fixProjectInfo())
     }
 
-    override fun updateBasicSetting(gitProjectId: Long, enableCommitCheck: Boolean): Result<Boolean> {
+    override fun updateBasicSetting(
+        gitProjectId: Long,
+        enableCommitCheck: Boolean?,
+        enableMrComment: Boolean?
+    ): Result<Boolean> {
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableCommitCheck = enableCommitCheck
+                enableCommitCheck = enableCommitCheck,
+                enableMrComment = enableMrComment
             )
         )
     }

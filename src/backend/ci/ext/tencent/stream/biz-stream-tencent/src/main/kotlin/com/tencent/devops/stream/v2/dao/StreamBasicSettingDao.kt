@@ -192,7 +192,8 @@ class StreamBasicSettingDao {
         creatorCenterName: String?,
         enableCommitCheck: Boolean?,
         pathWithNamespace: String?,
-        nameWithNamespace: String
+        nameWithNamespace: String,
+        enableMrComment: Boolean?
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -225,6 +226,9 @@ class StreamBasicSettingDao {
             }
             if (enableCommitCheck != null) {
                 dsl.set(ENABLE_COMMIT_CHECK, enableCommitCheck)
+            }
+            if (enableMrComment != null) {
+                dsl.set(ENABLE_MR_COMMENT, enableMrComment)
             }
             if (pathWithNamespace != null) {
                 dsl.set(PATH_WITH_NAME_SPACE, pathWithNamespace)
@@ -275,7 +279,8 @@ class StreamBasicSettingDao {
                     },
                     enableCommitCheck = conf.enableCommitCheck,
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
-                    pathWithNamespace = conf.pathWithNameSpace
+                    pathWithNamespace = conf.pathWithNameSpace,
+                    enableMrComment = conf.enableMrComment
                 )
             }
         }

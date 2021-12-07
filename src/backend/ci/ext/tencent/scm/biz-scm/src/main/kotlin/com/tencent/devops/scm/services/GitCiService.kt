@@ -37,6 +37,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.code.git.api.GitOauthApi
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
@@ -45,6 +47,8 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
+import com.tencent.devops.scm.utils.QualityUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -412,6 +416,35 @@ class GitCiService {
             }
             val data = response.body()?.string() ?: return emptyList()
             return JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
+        }
+    }
+
+    fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: MrCommentBody
+    ) {
+        logger.info("$gitProjectId|$mrId|addMrComment")
+        try {
+            GitOauthApi().addMRComment(
+                host = "$gitCIUrl/api/v3",
+                token = token,
+                projectName = gitProjectId,
+                requestId = mrId,
+                message = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
+            )
+        } catch (e: Exception) {
+            logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
+            val code = if (e is GitApiException) {
+                e.code
+            } else {
+                Response.Status.BAD_REQUEST.statusCode
+            }
+            throw CustomException(
+                status = Response.Status.fromStatusCode(code),
+                message = "($code)${e.message}"
+            )
         }
     }
 

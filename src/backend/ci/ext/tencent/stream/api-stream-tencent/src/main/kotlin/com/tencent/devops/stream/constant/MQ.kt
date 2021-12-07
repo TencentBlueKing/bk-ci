@@ -34,6 +34,7 @@ object MQ {
 
     // 接受stage审核和红线的广播事件
     const val QUEUE_PIPELINE_BUILD_REVIEW_STREAM = "q.engine.pipeline.build.review.stream"
+    const val QUEUE_PIPELINE_BUILD_QUALITY_CHECK_STREAM = "q.engine.pipeline.build.quality.check.stream"
 
     // Stream webhook请求
     const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
