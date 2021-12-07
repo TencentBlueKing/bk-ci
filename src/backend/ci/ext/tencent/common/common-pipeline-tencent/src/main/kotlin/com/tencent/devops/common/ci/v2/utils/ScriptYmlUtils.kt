@@ -64,8 +64,8 @@ import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck

@@ -426,3 +426,13 @@ wework:
   enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
   duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
   enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
+  
+# 分布式ID配置
+leaf:
+  segment:
+    allocStrategyDaoBeanName: jooqIDAllocDaoImpl
+    enable: true
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
+  name: leaf    

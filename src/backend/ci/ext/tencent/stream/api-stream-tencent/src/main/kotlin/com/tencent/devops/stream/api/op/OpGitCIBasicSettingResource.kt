@@ -17,7 +17,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = arrayOf("OP_STREAM_SERVICES"), description = "stream basic setting 管理")
+@Api(tags = ["OP_STREAM_SERVICES"], description = "stream basic setting 管理")
 @Path("/op/basic/setting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,7 +48,10 @@ interface OpGitCIBasicSettingResource {
         gitProjectId: Long,
         @ApiParam(value = "是否开启commitCheck", required = true)
         @QueryParam("enableCommitCheck")
-        enableCommitCheck: Boolean
+        enableCommitCheck: Boolean?,
+        @ApiParam(value = "是否开启MrComment", required = true)
+        @QueryParam("enableMrComment")
+        enableMrComment: Boolean?
     ): Result<Boolean>
 
     @ApiOperation("填充存量流水线的带有名空间的项目名称")

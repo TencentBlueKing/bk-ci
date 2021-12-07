@@ -35,4 +35,5 @@ dependencies {
     api("org.apache.commons:commons-text")
     api("org.yaml:snakeyaml")
     api("com.github.fge:json-schema-validator")
+    api(project(":core:common:common-webhook:api-common-webhook"))
 }

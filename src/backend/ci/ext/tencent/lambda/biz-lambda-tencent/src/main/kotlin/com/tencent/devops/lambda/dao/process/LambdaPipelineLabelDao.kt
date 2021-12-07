@@ -24,23 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.dao.process
 
-package com.tencent.devops.common.ci.v2.enums.gitEventKind
+import com.tencent.devops.model.process.tables.TPipelineLabel
+import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-// TODO:  后续开源中应该将其抽象汇总为Stream的触发方式
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule");
+@Repository
+class LambdaPipelineLabelDao {
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
+    fun getLables(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Result<out Record>? {
+        val a = TPipelineLabel.T_PIPELINE_LABEL.`as`("a")
+        val b = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("b")
+
+        return dslContext.select(
+            a.NAME.`as`("name")
+        ).from(b).join(a).on(b.LABEL_ID.eq(a.ID)).where(b.PIPELINE_ID.eq(pipelineId)).fetch()
     }
 }

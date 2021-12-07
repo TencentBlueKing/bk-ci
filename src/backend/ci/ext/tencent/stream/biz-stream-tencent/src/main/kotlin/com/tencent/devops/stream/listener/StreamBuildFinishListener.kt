@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.listener.buildFinish
+package com.tencent.devops.stream.listener
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -45,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import com.tencent.devops.stream.constant.MQ as StreamMQ
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.listener.buildFinish.notify.SendNotify
+import com.tencent.devops.stream.listener.components.SendCommitCheck
+import com.tencent.devops.stream.listener.notify.SendNotify
 import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService
@@ -111,13 +112,22 @@ class StreamBuildFinishListener @Autowired constructor(
             val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
                 ?: throw OperationException("git ci pipeline not exist")
 
+            val newBuildEvent = BuildEvent(
+                projectId = buildFinishEvent.projectId,
+                pipelineId = buildFinishEvent.pipelineId,
+                userId = buildFinishEvent.userId,
+                buildId = buildFinishEvent.buildId,
+                status = buildFinishEvent.status,
+                startTime = buildFinishEvent.startTime
+            )
+
             // 检查yml版本，根据yml版本选择不同的实现，构造上下文对象
             val context = if (buildEvent.isV2()) {
                 if (v2GitSetting == null) {
                     throw OperationException("git ci v2 projectCode not exist")
                 }
-                StreamFinishContextV2(
-                    buildFinishEvent = buildFinishEvent,
+                StreamBuildListenerContextV2(
+                    buildEvent = newBuildEvent,
                     requestEvent = requestEvent,
                     streamBuildEvent = buildEvent,
                     pipeline = pipeline,
@@ -132,7 +142,8 @@ class StreamBuildFinishListener @Autowired constructor(
                     requestEvent = requestEvent,
                     streamBuildEvent = buildEvent,
                     pipeline = pipeline,
-                    streamSetting = gitProjectConf
+                    streamSetting = gitProjectConf,
+                    buildEvent = newBuildEvent
                 )
             }
 
@@ -150,7 +161,7 @@ class StreamBuildFinishListener @Autowired constructor(
                             requestEvent,
                             gitProjectId
                         ),
-                        lastBuildStatus = context.buildStatus,
+                        lastBuildStatus = context.getBuildStatus(),
                         lastBuildPipelineId = buildFinishEvent.pipelineId,
                         lastBuildId = buildFinishEvent.buildId
                     )
