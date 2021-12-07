@@ -88,7 +88,7 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     fun checkProjectUser(userId: String, gitProjectId: String, projectCode: String): Boolean {
         val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
         if (gitUserId.isNullOrEmpty()) {
-            GitCIPermissionServiceImpl.logger.warn("$userId is not gitCI user")
+            logger.warn("$userId is not gitCI user")
             return false
         }
 

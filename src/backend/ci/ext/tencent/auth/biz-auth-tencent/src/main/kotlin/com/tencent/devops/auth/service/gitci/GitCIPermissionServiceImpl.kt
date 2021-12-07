@@ -81,7 +81,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         // 查看,下载只需要校验是否为项目成员, 不做developer, oauth相关的校验
         if (isProjectActionList(action)) {
             return if (action == AuthPermission.DOWNLOAD.value) {
-                // down需要是项目成员
+                // download需要是项目成员
                 val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
                 projectServiceImpl.checkProjectUser(userId, gitProjectId, projectCode)
             } else {
