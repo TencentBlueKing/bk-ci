@@ -260,7 +260,7 @@
 
         function joinUrl (urlArr) {
             const link = urlArr[urlArr.length - 1]
-            if (/http(s)?:\/\//.test(link)) {
+            if (/^(http(s)?:)?\/\//.test(link)) {
                 return link
             }
             if (Array.isArray(urlArr)) {

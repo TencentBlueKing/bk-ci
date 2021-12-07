@@ -57,6 +57,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -461,6 +462,32 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             CodeEventType.REVIEW -> CodeGitWebhookEvent.REVIEW_EVENTS.value
             else -> null
         }
+    }
+
+    fun addP4Webhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): String {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
+            ?: throw ErrorCodeException(
+                defaultMessage = "不是p4代码仓库",
+                errorCode = RepositoryMessageCode.P4_INVALID
+            )
+        val credential = getCredential(projectId, repo)
+        client.get(ServiceScmResource::class).addWebHook(
+            projectName = repo.projectName,
+            url = repo.url,
+            type = ScmType.CODE_P4,
+            privateKey = null,
+            passPhrase = credential.passPhrase,
+            token = null,
+            region = null,
+            userName = credential.username,
+            event = codeEventType?.name
+        )
+        return repo.projectName
     }
 
     fun addGithubCheckRuns(

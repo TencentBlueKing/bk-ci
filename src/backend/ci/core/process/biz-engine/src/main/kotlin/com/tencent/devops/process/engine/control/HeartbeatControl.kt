@@ -37,7 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,7 +52,7 @@ class HeartbeatControl @Autowired constructor(
 ) {
 
     companion object {
-        private const val TIMEOUT_IN_MS = 2 * 60 * 1000 // timeout in 2 minutes
+        private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
         private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
         private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }

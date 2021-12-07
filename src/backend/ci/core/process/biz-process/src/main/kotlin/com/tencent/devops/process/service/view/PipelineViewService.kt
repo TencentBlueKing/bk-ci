@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -60,6 +61,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -77,7 +79,8 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val client: Client
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
@@ -337,7 +340,8 @@ class PipelineViewService @Autowired constructor(
                     isProject = pipelineView.projected,
                     filters = objectMapper.writerFor(object :
                         TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters),
-                    userId = userId
+                    userId = userId,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data
                 )
                 encode(viewId)
             }

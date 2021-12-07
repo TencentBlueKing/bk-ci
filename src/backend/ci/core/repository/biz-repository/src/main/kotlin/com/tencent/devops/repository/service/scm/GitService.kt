@@ -366,6 +366,26 @@ class GitService @Autowired constructor(
         }
     }
 
+    override fun getUserInfoByToken(token: String): GitUserInfo {
+        logger.info("Start to get the user info by token[$token]")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitUrl}/user?access_token=$token"
+            logger.info("getToken url>> $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body()!!.string()
+                return objectMapper.readValue(data, GitUserInfo::class.java)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
+        }
+    }
+
     override fun getRedirectUrl(authParamJsonStr: String): String {
         logger.info("getRedirectUrl authParamJsonStr is: $authParamJsonStr")
         val authParamDecodeJsonStr = URLDecoder.decode(authParamJsonStr, "UTF-8")

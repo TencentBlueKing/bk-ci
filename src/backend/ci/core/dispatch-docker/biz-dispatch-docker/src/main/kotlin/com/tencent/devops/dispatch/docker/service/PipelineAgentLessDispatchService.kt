@@ -37,7 +37,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -90,11 +89,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        if (!jobQuotaService.checkJobQuotaAgentLess(event, JobQuotaVmType.AGENTLESS)) {
-            LOG.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
-            return
-        }
-
         val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
             projectId = event.projectId,
             pipelineId = event.pipelineId,
@@ -104,9 +98,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             clusterName = DockerHostClusterType.AGENT_LESS
         )
         dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
-
-        // 启动成功，增加构建次数
-        jobQuotaService.addRunningJob(event.projectId, JobQuotaVmType.AGENTLESS, event.buildId, event.vmSeqId)
     }
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
@@ -127,8 +118,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             }
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
-            // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-            jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }
     }
 

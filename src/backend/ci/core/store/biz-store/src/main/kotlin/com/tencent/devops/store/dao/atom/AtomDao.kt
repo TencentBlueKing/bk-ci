@@ -53,7 +53,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
@@ -69,7 +68,8 @@ class AtomDao : AtomBaseDao() {
         atomRequest: AtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -92,7 +92,8 @@ class AtomDao : AtomBaseDao() {
                 CREATOR,
                 MODIFIER
             )
-                .values(id,
+                .values(
+                    id,
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
@@ -157,8 +158,10 @@ class AtomDao : AtomBaseDao() {
      */
     fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                .and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).where(
+                ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
+                    .and(CLASSIFY_ID.eq(classifyId))
+            ).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -173,8 +176,10 @@ class AtomDao : AtomBaseDao() {
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         return dslContext.selectCount().from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
-            .where(a.ATOM_STATUS.`in`(atomStatusList)
-                .and(a.CLASSIFY_ID.eq(classifyId)))
+            .where(
+                a.ATOM_STATUS.`in`(atomStatusList)
+                    .and(a.CLASSIFY_ID.eq(classifyId))
+            )
             .fetchOne(0, Int::class.java)!!
     }
 
@@ -367,17 +372,17 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(atomName)) conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8")))
-        if (null != atomType) conditions.add(ATOM_TYPE.eq(atomType.type.toByte()))
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(
-                serviceScope,
-                true
-            )
-        ) conditions.add(SERVICE_SCOPE.contains(serviceScope))
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) conditions.add(OS.contains(os))
-        if (null != category) conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(CLASSIFY_ID.eq(classifyId))
-        if (null != atomStatus) conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
+        atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
+        atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
+        serviceScope?.let {
+            if (!"all".equals(serviceScope, true)) {
+                conditions.add(SERVICE_SCOPE.contains(serviceScope))
+            }
+        }
+        os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
+        category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
+        classifyId?.let { conditions.add(CLASSIFY_ID.eq(classifyId)) }
+        atomStatus?.let { conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte())) }
         return conditions
     }
 
@@ -602,10 +607,18 @@ class AtomDao : AtomBaseDao() {
             classifyId = classifyId
         ) // 开发者测试插件查询条件组装
         // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-        defaultAtomCondition.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
-            .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
-        normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
-            .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
+        defaultAtomCondition.add(
+            a.ATOM_CODE.notIn(
+                dslContext.select(a.ATOM_CODE)
+                    .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
+            )
+        )
+        normalAtomConditions.add(
+            a.ATOM_CODE.notIn(
+                dslContext.select(a.ATOM_CODE)
+                    .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
+            )
+        )
         val defaultAtomCount = dslContext.selectCount().from(a)
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount =
@@ -639,15 +652,19 @@ class AtomDao : AtomBaseDao() {
         classifyId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(serviceScope, true)) {
-            conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
+        serviceScope?.let {
+            if (!"all".equals(serviceScope, true)) {
+                conditions.add(a.SERVICE_SCOPE.contains(serviceScope))
+            }
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) {
-            conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
+        os?.let {
+            if (!"all".equals(os, true)) {
+                conditions.add(a.OS.contains(os).or(a.BUILD_LESS_RUN_FLAG.eq(true)))
+            }
         }
-        if (null != category) conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(a.CLASSIFY_ID.eq(classifyId))
+        category?.let { conditions.add(a.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
+        classifyId?.let { conditions.add(a.CLASSIFY_ID.eq(classifyId)) }
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         return conditions
     }
@@ -679,11 +696,21 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?
     ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
-        conditions.add(a.ATOM_STATUS.`in`(listOf(
-            AtomStatusEnum.TESTING.status.toByte(),
-            AtomStatusEnum.AUDITING.status.toByte()
-        ))) // 只查测试中和审核中的插件
+        val conditions = setQueryAtomBaseCondition(
+            serviceScope = serviceScope,
+            a = a,
+            os = os,
+            category = category,
+            classifyId = classifyId
+        )
+        conditions.add(
+            a.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.TESTING.status.toByte(),
+                    AtomStatusEnum.AUDITING.status.toByte()
+                )
+            )
+        ) // 只查测试中和审核中的插件
         conditions.add(c.PROJECT_CODE.eq(projectCode))
         conditions.add(c.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
         conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
@@ -755,15 +782,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun convertString(str: String?): Map<String, Any> {
-        return if (!StringUtils.isEmpty(str)) {
-            JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
-        } else {
-            mapOf()
-        }
-    }
-
     fun serviceListAllAtom(dslContext: DSLContext) {
         with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
@@ -808,7 +826,7 @@ class AtomDao : AtomBaseDao() {
     ): Int {
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, dslContext)
 
-        return dslContext.select(ta.ATOM_CODE.countDistinct())
+        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
             .from(ta)
             .join(tspr)
             .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
@@ -850,8 +868,10 @@ class AtomDao : AtomBaseDao() {
         )
             .from(ta)
             .join(t)
-            .on(ta.ATOM_CODE.eq(t.field("atomCode", String::class.java))
-                .and(ta.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
+            .on(
+                ta.ATOM_CODE.eq(t.field("atomCode", String::class.java))
+                    .and(ta.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java)))
+            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)
@@ -954,8 +974,8 @@ class AtomDao : AtomBaseDao() {
     fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                    .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
-                    .fetch()
+                .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
+                .fetch()
         }
     }
 

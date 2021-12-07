@@ -68,13 +68,31 @@ interface BuildDockerHostResource {
     @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
     @ApiOperation("获取蓝盾项目的docker性能配置")
     fun getResourceConfig(
-        @ApiParam("蓝盾项目ID", required = true)
+        @ApiParam("蓝盾流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("蓝盾项目ID", required = true)
+        @ApiParam("JOB ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<DockerResourceOptionsVO>
+
+    @GET
+    @Path("/qpc/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    @ApiOperation("获取蓝盾项目的docker性能配置")
+    fun getQpcGitProjectList(
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("JOB ID", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("POOLNo", required = true)
+        @QueryParam("poolNo")
+        poolNo: Int
+    ): Result<List<String>>
 
     @ApiOperation("上报日志信息")
     @POST

@@ -52,6 +52,7 @@ data class PipelineBuildTask(
     val executeCount: Int? = 1,
     var starter: String,
     val approver: String?,
+    var subProjectId: String?,
     var subBuildId: String?,
     val startTime: LocalDateTime? = null,
     val endTime: LocalDateTime? = null,

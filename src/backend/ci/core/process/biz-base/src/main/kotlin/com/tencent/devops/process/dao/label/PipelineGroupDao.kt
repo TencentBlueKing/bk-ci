@@ -45,7 +45,8 @@ class PipelineGroupDao {
         dslContext: DSLContext,
         projectId: String,
         name: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         logger.info("Create the pipeline group for project $projectId with name $name by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
@@ -57,7 +58,8 @@ class PipelineGroupDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                UPDATE_USER
+                UPDATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -65,7 +67,8 @@ class PipelineGroupDao {
                     now,
                     now,
                     userId,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -121,6 +124,14 @@ class PipelineGroupDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun get(dslContext: DSLContext, id: Long): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 

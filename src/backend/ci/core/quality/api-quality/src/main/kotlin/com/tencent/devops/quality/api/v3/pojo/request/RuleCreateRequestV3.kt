@@ -49,7 +49,11 @@ data class RuleCreateRequestV3(
     @ApiModelProperty("操作类型结合", required = false)
     val opList: List<CreateRequestOp>?,
     @ApiModelProperty("红线匹配的id", required = false)
-    val gatewayId: String?
+    val gatewayId: String?,
+    @ApiModelProperty("红线把关人", required = false)
+    val gateKeepers: List<String>?,
+    @ApiModelProperty("红线所在stage", required = false)
+    val stageId: String
 ) {
     data class CreateRequestIndicator(
         val atomCode: String,

@@ -126,11 +126,11 @@
                     { label: '系统指标', value: 'systemIndicators' }
                 ],
                 operationMap: {
-                    'LT': '<',
-                    'LE': '<=',
-                    'GT': '>',
-                    'GE': '>=',
-                    'EQ': '='
+                    LT: '<',
+                    LE: '<=',
+                    GT: '>',
+                    GE: '>=',
+                    EQ: '='
                 },
                 loading: {
                     isLoading: false,
@@ -180,7 +180,7 @@
                     })
                     
                     if (this.currentTab === 'all') {
-                        this.metaDataList.map(item => {
+                        this.metaDataList.forEach(item => {
                             if (item.key !== 'all') {
                                 this.renderList.push(item)
                             }
@@ -214,7 +214,7 @@
                 this.currentTab = val
                 this.renderList.splice(0, this.renderList.length)
                 if (val === 'all') {
-                    this.metaDataList.map(item => {
+                    this.metaDataList.forEach(item => {
                         if (item.key !== 'all') {
                             this.renderList.push(item)
                         }

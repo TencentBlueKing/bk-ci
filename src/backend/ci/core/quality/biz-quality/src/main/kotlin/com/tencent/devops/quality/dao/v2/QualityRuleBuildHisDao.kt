@@ -68,7 +68,9 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 INDICATOR_THRESHOLDS,
                 OPERATION_LIST,
                 CREATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                GATE_KEEPERS,
+                STAGE_ID
             ).values(
                 projectId,
                 pipelineId,
@@ -83,7 +85,9 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 indicatorIds.joinToString(",") { it.threshold },
                 JsonUtil.toJson(ruleRequest.opList ?: listOf<RuleCreateRequestV3.CreateRequestOp>()),
                 LocalDateTime.now(),
-                userId
+                userId,
+                ruleRequest.gateKeepers?.joinToString(",") ?: "",
+                ruleRequest.stageId
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -110,6 +114,41 @@ class QualityRuleBuildHisDao @Autowired constructor(
             innerDslContext.update(this)
                 .set(BUILD_ID, buildId)
                 .where(ID.`in`(ruleBuildIds))
+                .execute()
+        }
+    }
+
+    fun updateStatus(ruleBuildId: Long, ruleResult: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, ruleResult)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun listStageRules(dslContext: DSLContext, buildId: String, stageId: String): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(STAGE_ID.eq(stageId)))
+                .fetch()
+        }
+    }
+
+    fun updateGateKeepers(ruleBuildId: Long, gateKeepers: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(GATE_KEEPERS, gateKeepers)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun updateIndicatorThreshold(ruleBuildId: Long, indicatorThreshold: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(INDICATOR_THRESHOLDS, indicatorThreshold)
+                .where(ID.eq(ruleBuildId))
                 .execute()
         }
     }

@@ -38,8 +38,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -49,9 +47,11 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -60,7 +60,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
-    private val vmBuildService: PipelineVMBuildService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
 
@@ -87,26 +86,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
             errorType = errorType,
             errorCode = errorCode,
             errorMsg = errorMsg
-        ))
-    }
-
-    override fun vmStarted(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        vmName: String
-    ): Result<Boolean> {
-        checkParam(projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        return Result(vmBuildService.vmStartedByDispatch(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            vmName = vmName
         ))
     }
 
@@ -161,7 +140,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         taskId: String?,
         failedContainer: Boolean?,
         skipFailedTask: Boolean?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        checkManualStartup: Boolean?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -178,7 +158,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             skipFailedTask = skipFailedTask,
             isMobile = false,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            checkManualStartup = checkManualStartup ?: false
         )))
     }
 
@@ -509,6 +490,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
             stageId = stageId,
             isCancel = cancel ?: false,
             reviewRequest = reviewRequest
+        )
+        return Result(true)
+    }
+
+    override fun qualityTriggerStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        qualityRequest: StageQualityRequest
+    ): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        pipelineBuildFacadeService.qualityTriggerStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            qualityRequest = qualityRequest
         )
         return Result(true)
     }

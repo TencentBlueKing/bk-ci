@@ -85,6 +85,7 @@
     "store": "研发商店",
     "buildNum": "构建号",
     "propertyBar": "属性栏",
+    "pipelineNameTips": "请输入流水线名称",
     "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
     "pipelineDesc": "描述",
     "pipelineDescInputTips": "请输入100字符以内的描述内容",

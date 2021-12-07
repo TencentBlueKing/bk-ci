@@ -27,8 +27,15 @@
 
 package com.tencent.devops.process.pojo.classify
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线更新模型")
 data class PipelineGroupUpdate(
+    @ApiModelProperty("流水线id", required = false)
     val id: String,
+    @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("流水线名字", required = false)
     val name: String
 )

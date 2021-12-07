@@ -36,9 +36,11 @@
                                 :key="service.id"
                                 class="collect-item"
                             >
+                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="service-logo" />
                                 <logo
+                                    v-else
                                     class="service-logo"
-                                    :name="getServiceLogoByPath(service.link_new)"
+                                    :name="service.logoUrl"
                                     size="18"
                                 />
                                 <a
@@ -77,7 +79,7 @@
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { State, Getter, Action } from 'vuex-class'
-    import { getServiceLogoByPath, urlJoin, getServiceAliasByPath } from '../../utils/util'
+    import { getServiceLogoByPath, urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
     import { clickoutside } from '../../directives/index'
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
@@ -101,6 +103,7 @@
         @Action toggleServiceCollect
         show: boolean = false
         showNewServiveTips: boolean = false
+        isAbsoluteUrl = isAbsoluteUrl
 
         get newServiceList (): object[] {
             const newServiceList = localStorage.getItem('newServiceList')
@@ -160,11 +163,11 @@
         }
 
         gotoPage ({ link_new: linkNew }) {
-            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage['link_new'])
+            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
 
-            if (cAlias === nAlias && this.currentPage && this.currentPage['inject_type'] === 'iframe') {
+            if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
                 eventBus.$emit('goHome')
                 return
             }
@@ -293,6 +296,8 @@
                         }
                     }
                     .service-logo {
+                        width: 18px;
+                        height: 18px;
                         margin-right: 10px;
                     }
                     .service-id {

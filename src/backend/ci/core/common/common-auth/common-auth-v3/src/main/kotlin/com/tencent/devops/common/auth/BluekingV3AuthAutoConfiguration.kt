@@ -95,7 +95,6 @@ class BluekingV3AuthAutoConfiguration {
     @Primary
     fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
         BluekingV3ResourceApi(
-            grantServiceImpl = grantService(),
             iamConfiguration = iamConfiguration(),
             iamEsbService = iamEsbService()
         )

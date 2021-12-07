@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.codecc.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BlueShieldResponse(
     val res: Int,
@@ -35,12 +36,16 @@ data class BlueShieldResponse(
     val data: List<Item>
 ) {
     data class Item(
+        @ApiModelProperty(name = "proj_id")
         @JsonProperty("proj_id", required = false)
         val taskId: String,
+        @ApiModelProperty(name = "remain_defect_count")
         @JsonProperty("remain_defect_count", required = false)
         val remainCount: Int,
+        @ApiModelProperty(name = "repair_defect_count")
         @JsonProperty("repair_defect_count", required = false)
         val repairCount: Int,
+        @ApiModelProperty(name = "repair_defect_serious_map")
         @JsonProperty("repair_defect_serious_map", required = false)
         val seriousMap: MutableMap<String, Int>
     )

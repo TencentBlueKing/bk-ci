@@ -38,34 +38,41 @@ import java.time.LocalDateTime
 /**
  * 流水线标签
  */
+@Suppress("LongParameterList")
 @Repository
 class PipelineLabelDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         name: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ) {
         logger.info("Create the pipeline label for group $groupId with name $name by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 GROUP_ID,
                 NAME,
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                UPDATE_USER
+                UPDATE_USER,
+                ID
             )
                 .values(
+                    projectId,
                     groupId,
                     name,
                     now,
                     now,
                     userId,
-                    userId
+                    userId,
+                    id
                 )
                 .execute()
         }
@@ -144,6 +151,17 @@ class PipelineLabelDao {
             return dslContext.selectFrom(this)
                 .where(GROUP_ID.`in`(groupId))
                 .fetch()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        id: Long
+    ): TPipelineLabelRecord? {
+        with(TPipelineLabel.T_PIPELINE_LABEL) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchAny()
         }
     }
 

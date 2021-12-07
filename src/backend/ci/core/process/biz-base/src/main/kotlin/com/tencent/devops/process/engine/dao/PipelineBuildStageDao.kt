@@ -233,7 +233,8 @@ class PipelineBuildStageDao {
         buildStatus: BuildStatus,
         controlOption: PipelineBuildStageControlOption? = null,
         checkIn: StagePauseCheck? = null,
-        checkOut: StagePauseCheck? = null
+        checkOut: StagePauseCheck? = null,
+        initStartTime: Boolean? = false
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -247,7 +248,7 @@ class PipelineBuildStageDao {
                     END_TIME.cast(java.sql.Timestamp::class.java)
                 )
                 )
-            } else if (buildStatus.isRunning()) {
+            } else if (buildStatus.isRunning() || initStartTime == true) {
                 update.set(START_TIME, LocalDateTime.now())
             }
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))

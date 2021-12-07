@@ -167,6 +167,10 @@ class QualityIndicatorService @Autowired constructor(
         } ?: listOf()
     }
 
+    fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        return if (elementType in QualityIndicator.SCRIPT_ELEMENT) listOf() else serviceList(elementType, enNameSet)
+    }
+
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {
         val dataRecords = indicatorDao.listSystemDescByPage(dslContext, page, pageSize)
         val data = indicatorRecordToIndicatorData(dataRecords)
@@ -540,7 +544,8 @@ class QualityIndicatorService @Autowired constructor(
             tag = indicator.tag,
             metadataList = metadata,
             desc = indicator.desc,
-            logPrompt = indicator.logPrompt
+            logPrompt = indicator.logPrompt,
+            enable = indicator.enable ?: false
         )
     }
 

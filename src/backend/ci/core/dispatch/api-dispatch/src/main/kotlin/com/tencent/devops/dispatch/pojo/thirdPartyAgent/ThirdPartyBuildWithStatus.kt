@@ -27,12 +27,23 @@
 
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("第三方构建信息模型")
 data class ThirdPartyBuildWithStatus(
+    @ApiModelProperty("项目id")
     val projectId: String,
+    @ApiModelProperty("构建id")
     val buildId: String,
+    @ApiModelProperty("构建环境id")
     val vmSeqId: String,
+    @ApiModelProperty("工作空间")
     val workspace: String,
+    @ApiModelProperty("流水线id")
     val pipelineId: String?,
+    @ApiModelProperty("是否成功")
     val success: Boolean,
+    @ApiModelProperty("message信息")
     val message: String?
 )

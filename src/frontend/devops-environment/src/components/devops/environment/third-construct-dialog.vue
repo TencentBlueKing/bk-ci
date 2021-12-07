@@ -12,8 +12,8 @@
                     <label class="bk-label env-item-label">{{ $t('environment.nodeInfo.model') }}：</label>
                     <div class="bk-form-content" style="margin-top:4px;">
                         <bk-radio-group v-model="constructImportForm.model">
-                            <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
                             <bk-radio :value="'LINUX'" :disabled="isAgent">Linux</bk-radio>
+                            <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
                             <bk-radio :value="'WINDOWS'" :disabled="isAgent">Windows</bk-radio>
                         </bk-radio-group>
                     </div>

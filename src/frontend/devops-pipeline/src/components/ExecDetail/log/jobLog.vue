@@ -213,7 +213,7 @@
         height: 15px;
         margin: 0 9px;
         padding: 1px 0;
-        /deep/ svg {
+        ::v-deep svg {
             width: 14px;
             height: 14px;
         }
