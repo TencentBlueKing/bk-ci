@@ -37,7 +37,5 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 data class WebhookElementParams(
     val repositoryConfig: RepositoryConfig,
     val scmType: ScmType,
-    val eventType: CodeEventType?,
-    val includePaths: String? = null,
-    val excludePaths: String? = null
+    val eventType: CodeEventType?
 )

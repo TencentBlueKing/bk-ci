@@ -34,8 +34,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.pojo.Experience
+import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
+import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@SuppressWarnings("ThrowsCount")
 class ServiceExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceBaseService: ExperienceBaseService,
@@ -79,12 +82,57 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
     }
 
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
+    override fun edit(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        experience: ExperienceUpdate
+    ): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.edit(userId, projectId, experienceHashId, experience)
+        return Result(true)
+    }
+
+    override fun listForBuild(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<ExperienceInfoForBuild>> {
+        return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
+    }
+
+    override fun offline(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.updateOnline(
+            userId ?: experienceService.getCreatorById(experienceHashId),
+            projectId,
+            experienceHashId,
+            false
+        )
+        return Result(true)
+    }
+
+    override fun online(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, experienceHashId)
+        experienceService.updateOnline(
+            userId ?: experienceService.getCreatorById(experienceHashId),
+            projectId,
+            experienceHashId,
+            true
+        )
+        return Result(true)
+    }
+
+    private fun checkParam(userId: String?, projectId: String, experienceHashId: String = "default") {
+        if (userId != null && userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
         if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (experienceHashId.isBlank()) {
+            throw ParamBlankException("Invalid experienceHashId")
         }
     }
 

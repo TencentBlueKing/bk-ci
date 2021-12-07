@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
@@ -72,7 +72,8 @@ class ModelCreate @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        webhookParams: Map<String, String> = mapOf()
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -101,7 +102,8 @@ class ModelCreate @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             event = event,
             v2GitUrl = v2GitUrl,
-            originEvent = originEvent
+            originEvent = originEvent,
+            webhookParams = webhookParams
         )
 
         val triggerContainer = TriggerContainer(
