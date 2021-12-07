@@ -48,18 +48,20 @@ data class KubernetesDispatchType(
     override var imageName: String? = "",
     // docker资源配置ID
     var performanceConfigId: Int = 0
-) : StoreDispatchType(dockerBuildVersion = if (kubernetesBuildVersion.isNullOrBlank()) {
-    imageCode
-} else {
-    kubernetesBuildVersion
-},
+) : StoreDispatchType(
+    dockerBuildVersion = if (kubernetesBuildVersion.isNullOrBlank()) {
+        imageCode
+    } else {
+        kubernetesBuildVersion
+    },
     routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES,
     imageType = imageType,
     credentialId = credentialId,
     credentialProject = credentialProject,
     imageCode = imageCode,
     imageVersion = imageVersion,
-    imageName = imageName) {
+    imageName = imageName
+) {
 
     override fun cleanDataBeforeSave() {
         this.kubernetesBuildVersion = this.kubernetesBuildVersion?.trim()
