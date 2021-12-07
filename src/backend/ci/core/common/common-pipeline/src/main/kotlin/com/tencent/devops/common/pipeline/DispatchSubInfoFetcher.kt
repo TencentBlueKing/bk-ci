@@ -25,28 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.atom.parser
+package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
- * @Description
- * @Date 2019/11/17
- * @Version 1.0
+ * 扩展DispatchInfo的子类
  */
-interface DispatchTypeParser {
-
-    fun parse(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        dispatchType: DispatchType
-    )
+interface DispatchSubInfoFetcher {
 
     /**
-     * VMBuildContainer需要根据[customInfo]和上下文[context]计算调度类型
+     * 返回扩展的子类
      */
-    fun parseRunsOn(customInfo: DispatchInfo, context: Map<String, String>): DispatchType?
+    fun jsonSubInfo(): Map<String, Class<out DispatchInfo>>
 }

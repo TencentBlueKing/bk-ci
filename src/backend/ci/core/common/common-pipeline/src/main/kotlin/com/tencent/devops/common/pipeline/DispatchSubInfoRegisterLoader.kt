@@ -25,8 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.info
+package com.tencent.devops.common.pipeline
 
-data class SampleMatrixDispatchInfo(
-    override val name: String
-) : MatrixDispatchInfo(name)
+import com.fasterxml.jackson.databind.jsontype.NamedType
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.tencent.devops.common.api.util.JsonUtil
+import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
+
+object DispatchSubInfoRegisterLoader {
+
+    private val logger = LoggerFactory.getLogger(DispatchSubInfoRegisterLoader::class.java)
+
+    fun registerElement() {
+
+        val clazz = DispatchSubInfoFetcher::class.java
+        var fetcheries = ServiceLoader.load(clazz)
+
+        if (!fetcheries.iterator().hasNext()) {
+            fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
+        }
+        val infoSubModule = SimpleModule()
+        fetcheries.forEach { fetcher ->
+            logger.info("[DISPATCH_FETCHER]| ${fetcher.javaClass}")
+            val jsonSubTypes = fetcher.jsonSubInfo()
+            jsonSubTypes.forEach { (classTypeName, clazz) ->
+                infoSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                logger.info("[REGISTER_DISPATCH]|$clazz for $classTypeName")
+            }
+        }
+
+        JsonUtil.registerModule(infoSubModule)
+    }
+}

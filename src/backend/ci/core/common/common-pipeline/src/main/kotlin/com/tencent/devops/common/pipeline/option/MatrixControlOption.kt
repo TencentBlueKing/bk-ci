@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.pojo.MatrixConvert
 import io.swagger.annotations.ApiModelProperty
@@ -53,7 +53,7 @@ data class MatrixControlOption(
     @ApiModelProperty("Job运行的最大并发量", required = false)
     val maxConcurrency: Int? = 20,
     @ApiModelProperty("自定义调度类型（用于生成DispatchType的任意对象）", required = false)
-    var customDispatchInfo: MatrixDispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
+    var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
     @ApiModelProperty("矩阵组的总数量", required = false)
     var totalCount: Int? = null,
     @ApiModelProperty("完成执行的数量", required = false)
@@ -86,7 +86,9 @@ data class MatrixControlOption(
 
         return caseList.map { list ->
             list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
-        }.toList().distinct()
+        }
+            .toList()
+            .distinct()
     }
 
     /**

@@ -25,8 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.info
+package com.tencent.devops.common.pipeline.matrix
 
-abstract class MatrixDispatchInfo(
-    open val name: String
-)
+data class SampleDispatchInfo(
+    override val name: String
+) : DispatchInfo(name)
