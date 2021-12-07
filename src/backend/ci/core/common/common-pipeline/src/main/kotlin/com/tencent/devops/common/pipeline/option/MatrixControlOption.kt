@@ -86,7 +86,7 @@ data class MatrixControlOption(
 
         return caseList.map { list ->
             list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
-        }.toList().distinctBy { it }
+        }.toList().distinct()
     }
 
     /**
