@@ -34,5 +34,5 @@ dependencies {
     api(project(":core:auth:api-auth"))
     api(project(":ext:tencent:scm:api-scm"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:quality:api-quality-op"))
+    api(project(":ext:tencent:quality:api-quality-tencent"))
 }
