@@ -57,7 +57,6 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @Service
