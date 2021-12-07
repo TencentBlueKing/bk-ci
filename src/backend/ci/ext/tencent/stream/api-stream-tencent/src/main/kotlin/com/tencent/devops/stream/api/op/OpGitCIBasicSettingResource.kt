@@ -50,4 +50,9 @@ interface OpGitCIBasicSettingResource {
         @QueryParam("enableCommitCheck")
         enableCommitCheck: Boolean
     ): Result<Boolean>
+
+    @ApiOperation("填充存量流水线的带有名空间的项目名称")
+    @GET
+    @Path("/fixNameSpace")
+    fun fixProjectNameSpace(): Result<Int>
 }

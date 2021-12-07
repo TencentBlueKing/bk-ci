@@ -72,6 +72,10 @@ data class GitCIBasicSetting(
     val gitProjectDesc: String?,
     @ApiModelProperty("GIT项目的头像信息")
     val gitProjectAvatar: String?,
+    @ApiModelProperty("带有名空间的项目名称")
+    val nameWithNamespace: String,
+    @ApiModelProperty("带有名空间的项目路径")
+    val pathWithNamespace: String?,
     @ApiModelProperty("项目最后一次构建的CI信息")
     val lastCiInfo: CIInfo?,
     @ApiModelProperty("项目下构建是否发送commitCheck")

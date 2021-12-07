@@ -77,7 +77,9 @@ class StreamBasicSettingDao {
                         CREATOR_CENTER_NAME,
                         GIT_PROJECT_DESC,
                         GIT_PROJECT_AVATAR,
-                        LAST_CI_INFO
+                        LAST_CI_INFO,
+                        NAME_WITH_NAME_SPACE,
+                        PATH_WITH_NAME_SPACE
                     ).values(
                         conf.gitProjectId,
                         conf.name,
@@ -102,7 +104,9 @@ class StreamBasicSettingDao {
                             null
                         } else {
                             JsonUtil.toJson(conf.lastCiInfo!!)
-                        }
+                        },
+                        conf.nameWithNamespace,
+                        conf.pathWithNamespace
                     ).execute()
                 } else {
                     context.update(this)
@@ -116,6 +120,8 @@ class StreamBasicSettingDao {
                         .set(CREATOR_BG_NAME, conf.creatorBgName)
                         .set(CREATOR_DEPT_NAME, conf.creatorDeptName)
                         .set(CREATOR_CENTER_NAME, conf.creatorCenterName)
+                        .set(NAME_WITH_NAME_SPACE, conf.nameWithNamespace)
+                        .set(PATH_WITH_NAME_SPACE, conf.pathWithNamespace)
                         .where(ID.eq(conf.gitProjectId))
                         .execute()
                 }
@@ -132,7 +138,9 @@ class StreamBasicSettingDao {
         httpUrl: String,
         homePage: String,
         desc: String?,
-        avatar: String?
+        avatar: String?,
+        pathWithNamespace: String?,
+        nameWithNamespace: String
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -142,11 +150,15 @@ class StreamBasicSettingDao {
                 .set(GIT_HTTP_URL, httpUrl)
                 .set(GIT_SSH_URL, sshUrl)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(NAME_WITH_NAME_SPACE, nameWithNamespace)
             if (desc != null) {
                 dsl.set(GIT_PROJECT_DESC, desc)
             }
             if (avatar != null) {
                 dsl.set(GIT_PROJECT_AVATAR, avatar)
+            }
+            if (pathWithNamespace != null) {
+                dsl.set(PATH_WITH_NAME_SPACE, pathWithNamespace)
             }
             dsl.where(ID.eq(gitProjectId))
                 .execute()
@@ -178,7 +190,9 @@ class StreamBasicSettingDao {
         creatorBgName: String?,
         creatorDeptName: String?,
         creatorCenterName: String?,
-        enableCommitCheck: Boolean?
+        enableCommitCheck: Boolean?,
+        pathWithNamespace: String?,
+        nameWithNamespace: String
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             val dsl = dslContext.update(this)
@@ -212,7 +226,11 @@ class StreamBasicSettingDao {
             if (enableCommitCheck != null) {
                 dsl.set(ENABLE_COMMIT_CHECK, enableCommitCheck)
             }
+            if (pathWithNamespace != null) {
+                dsl.set(PATH_WITH_NAME_SPACE, pathWithNamespace)
+            }
             dsl.set(UPDATE_TIME, LocalDateTime.now())
+                .set(NAME_WITH_NAME_SPACE, nameWithNamespace)
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -255,7 +273,53 @@ class StreamBasicSettingDao {
                     } else {
                         null
                     },
-                    enableCommitCheck = conf.enableCommitCheck
+                    enableCommitCheck = conf.enableCommitCheck,
+                    nameWithNamespace = conf.nameWithNameSpace ?: "",
+                    pathWithNamespace = conf.pathWithNameSpace
+                )
+            }
+        }
+    }
+
+    fun getSettingByPathWithNameSpace(
+        dslContext: DSLContext,
+        pathWithNamespace: String,
+        hasLastInfo: Boolean = false
+    ): GitCIBasicSetting? {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            val conf = dslContext.selectFrom(this)
+                .where(PATH_WITH_NAME_SPACE.eq(pathWithNamespace))
+                .fetchAny()
+            if (conf == null) {
+                return null
+            } else {
+                return GitCIBasicSetting(
+                    gitProjectId = conf.id,
+                    name = conf.name,
+                    url = conf.url,
+                    homepage = conf.homePage,
+                    gitHttpUrl = conf.gitHttpUrl,
+                    gitSshUrl = conf.gitSshUrl,
+                    enableCi = conf.enableCi,
+                    buildPushedBranches = conf.buildPushedBranches,
+                    buildPushedPullRequest = conf.buildPushedPullRequest,
+                    createTime = conf.createTime.timestampmilli(),
+                    updateTime = conf.updateTime.timestampmilli(),
+                    projectCode = conf.projectCode,
+                    enableMrBlock = conf.enableMrBlock,
+                    enableUserId = conf.enableUserId,
+                    creatorBgName = conf.creatorBgName,
+                    creatorDeptName = conf.creatorDeptName,
+                    creatorCenterName = conf.creatorCenterName,
+                    gitProjectDesc = conf.gitProjectDesc,
+                    gitProjectAvatar = conf.gitProjectAvatar,
+                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    } else {
+                        null
+                    },
+                    nameWithNamespace = conf.nameWithNameSpace ?: "",
+                    pathWithNamespace = conf.pathWithNameSpace
                 )
             }
         }
@@ -267,6 +331,30 @@ class StreamBasicSettingDao {
                 .where(GIT_HTTP_URL.eq(""))
                 .limit(100)
                 .fetch()
+        }
+    }
+
+    fun getProjectNoNameSpace(dslContext: DSLContext): List<TGitBasicSettingRecord> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.selectFrom(this)
+                .where(PATH_WITH_NAME_SPACE.isNull)
+                .limit(100)
+                .fetch()
+        }
+    }
+
+    fun fixProjectNameSpace(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pathWithNamespace: String,
+        nameWithNamespace: String
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(PATH_WITH_NAME_SPACE, pathWithNamespace)
+                .set(NAME_WITH_NAME_SPACE, nameWithNamespace)
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 

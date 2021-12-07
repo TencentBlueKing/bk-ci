@@ -28,12 +28,12 @@
 package com.tencent.devops.stream.trigger.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.common.exception.YamlBlankException
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam

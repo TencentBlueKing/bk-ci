@@ -422,7 +422,8 @@ class ExperienceDownloadService @Autowired constructor(
             "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
                     HashUtil.encodeLongId(experiencePublicRecord.recordId)
         } else {
-            "bkdevopsapp://app/experience/expDetail/${experiencePublicRecord.recordId}"
+            "bkdevopsapp://app/experience/expDetail/" +
+                    HashUtil.encodeLongId(experiencePublicRecord.id)
         }
 
         val shortUrlRequest = CreateShortUrlRequest(
