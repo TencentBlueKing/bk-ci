@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -79,7 +80,12 @@ class GitCIPermissionServiceImpl @Autowired constructor(
 
         // 查看,下载只需要校验是否为项目成员, 不做developer, oauth相关的校验
         if (isProjectActionList(action)) {
-            return projectServiceImpl.isProjectUser(userId, projectCode, null)
+            val group = if (action == AuthPermission.DOWNLOAD.value) {
+                BkAuthGroup.MANAGER
+            } else {
+                null
+            }
+            return projectServiceImpl.isProjectUser(userId, projectCode, group)
         }
 
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)

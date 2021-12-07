@@ -70,8 +70,8 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
 
-        // 判断是否为开源项目
-        if (projectInfoService.checkProjectPublic(gitProjectId)) {
+        // 判断是否为开源项目, 校验非管理员 若是开源项目直接放行。若是管理员，则需判断是否为项目成员。 区分list和down
+        if (projectInfoService.checkProjectPublic(gitProjectId) && group != null && group != BkAuthGroup.MANAGER) {
             return true
         }
 
