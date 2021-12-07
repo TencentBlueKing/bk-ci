@@ -38,6 +38,7 @@ import java.time.LocalDateTime
 /**
  * 流水线标签
  */
+@Suppress("LongParameterList")
 @Repository
 class PipelineLabelDao {
 
@@ -46,7 +47,8 @@ class PipelineLabelDao {
         projectId: String,
         groupId: Long,
         name: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ) {
         logger.info("Create the pipeline label for group $groupId with name $name by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
@@ -59,7 +61,8 @@ class PipelineLabelDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                UPDATE_USER
+                UPDATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -68,7 +71,8 @@ class PipelineLabelDao {
                     now,
                     now,
                     userId,
-                    userId
+                    userId,
+                    id
                 )
                 .execute()
         }

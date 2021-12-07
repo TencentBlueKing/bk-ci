@@ -25,31 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.loader
 
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.param.ScmWebhookElementParams
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
-class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
-    override fun getWebhookElementParams(
-        element: CodeP4WebHookTriggerElement,
-        variables: Map<String, String>
-    ): WebHookParams? {
-        val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                variables = variables
-            )
-        )
-        with(element.data.input) {
-            params.eventType = eventType
-            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.codeType = CodeType.P4
-            return params
-        }
+object WebhookElementParamsRegistrar {
+    private val logger = LoggerFactory.getLogger(WebhookElementParamsRegistrar::class.java)
+
+    private val webhookElementParamsMaps = ConcurrentHashMap<String, ScmWebhookElementParams<*>>()
+
+    /**
+     * 注册webhook事件启动参数处理类
+     */
+    fun register(webhookElementParams: ScmWebhookElementParams<out WebHookTriggerElement>) {
+        logger.info("[REGISTER]| ${webhookElementParams.javaClass} for ${webhookElementParams.elementClass()}")
+        webhookElementParamsMaps[webhookElementParams.elementClass().canonicalName] = webhookElementParams
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : WebHookTriggerElement> getService(element: T): ScmWebhookElementParams<T> {
+        return (webhookElementParamsMaps[element::class.qualifiedName] as ScmWebhookElementParams<T>?)
+            ?: throw IllegalArgumentException("${element::class.qualifiedName} service is not found")
     }
 }

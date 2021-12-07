@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
@@ -71,6 +72,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -98,7 +100,8 @@ class PipelineRepositoryService constructor(
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val versionConfigure: VersionConfigure,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val client: Client
 ) {
 
     fun deployPipeline(
@@ -396,6 +399,7 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineInfoDao.create(
@@ -409,7 +413,8 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode,
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
-                taskCount = taskCount
+                taskCount = taskCount,
+                id = id
             )
             model.latestVersion = 1
             pipelineResDao.create(
@@ -466,7 +471,9 @@ class PipelineRepositoryService constructor(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            failNotifyTypes = notifyTypes
+                            failNotifyTypes = notifyTypes,
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
                         )
                     }
                 } else {
@@ -946,7 +953,13 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = old.maxPipelineResNum
                     )
                 }
-                pipelineSettingVersionDao.saveSetting(context, setting, version = version)
+                pipelineSettingVersionDao.saveSetting(
+                    dslContext = context,
+                    setting = setting,
+                    version = version,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
+                )
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
         }
@@ -1058,5 +1071,6 @@ class PipelineRepositoryService constructor(
     companion object {
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
+        private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
     }
 }

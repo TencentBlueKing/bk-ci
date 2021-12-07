@@ -107,6 +107,26 @@ class MQConfiguration @Autowired constructor() {
     }
 
     /**
+     * 构建审核步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildReviewFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 构建红线检查步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildQualityCheckFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 构建结束广播交换机
      */
     @Bean

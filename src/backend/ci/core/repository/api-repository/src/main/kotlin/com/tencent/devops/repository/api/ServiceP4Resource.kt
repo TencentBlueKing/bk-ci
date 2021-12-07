@@ -64,4 +64,22 @@ interface ServiceP4Resource {
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
+
+    @ApiOperation("获取p4 shelve文件变更列表")
+    @GET
+    @Path("/{projectId}/{repositoryId}/getShelvedFiles")
+    fun getShelvedFiles(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID或代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<List<P4FileSpec>>
 }

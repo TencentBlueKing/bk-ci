@@ -25,27 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import org.springframework.stereotype.Service
 
-class SvnWebHookStartParam(
-    private val matcher: SvnWebHookMatcher
-) : ScmWebhookStartParams<CodeSVNWebHookTriggerElement> {
+@Service
+class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
 
-    override fun getStartParams(element: CodeSVNWebHookTriggerElement): Map<String, Any> {
-        val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_SVN_WEBHOOK_RELATIVE_PATH] = element.relativePath ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS] = element.excludePaths ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
-        startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
-        startParams.putAll(matcher.retrieveParams())
-        return startParams
+    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
+        return CodeP4WebHookTriggerElement::class.java
+    }
+
+    override fun getWebhookElementParams(
+        element: CodeP4WebHookTriggerElement,
+        variables: Map<String, String>
+    ): WebHookParams {
+        val params = WebHookParams(
+            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                variables = variables
+            )
+        )
+        with(element.data.input) {
+            params.eventType = eventType
+            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
+            params.codeType = CodeType.P4
+            return params
+        }
     }
 }
