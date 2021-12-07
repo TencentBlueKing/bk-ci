@@ -27,14 +27,6 @@
 
 package com.tencent.devops.common.pipeline.info
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-
 abstract class MatrixDispatchInfo(
     open val name: String
-) {
-
-    /**
-     * VMBuildContainer需要根据上下文[context]计算调度类型
-     */
-    abstract fun parseRunsOn(context: Map<String, String>): DispatchType?
-}
+)
