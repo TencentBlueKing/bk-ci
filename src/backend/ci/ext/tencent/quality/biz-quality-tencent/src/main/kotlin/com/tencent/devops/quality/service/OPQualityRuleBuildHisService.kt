@@ -55,7 +55,7 @@ class OPQualityRuleBuildHisService @Autowired constructor(
         val dateTime = LocalDateTime.now().minusDays(1)
         val ruleCount = qualityRuleBuildHisDao.listTimeOutRuleCount(dslContext, dateTime)
         val timeOutRules = mutableListOf<TQualityRuleBuildHisRecord>()
-        if (null != ruleCount && count < ruleCount) {
+        while (null != ruleCount && count < ruleCount) {
             timeOutRules.addAll(qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime, 50, count))
             count += 50
         }
