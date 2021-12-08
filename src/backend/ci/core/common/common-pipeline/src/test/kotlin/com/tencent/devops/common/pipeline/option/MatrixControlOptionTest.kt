@@ -18,27 +18,36 @@ internal class MatrixControlOptionTest {
                     var1: [a,b,c]
                     var2: [1,2,3]
                 """,
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +1
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +1
                     mapOf(
                         "os" to "macos",
                         "var1" to "d",
                         "var2" to "4"
                     ),
+                    // +0 一样的值只会加入一个
                     mapOf(
                         "os" to "macos",
                         "var1" to "d",
                         "var2" to "4"
                     ),
-                    // +0 重复值不加入
+                    // +1 多一个变量也是一个新组合
                     mapOf(
-                        "os" to "docker",
+                        "os" to "macos",
+                        "var1" to "d",
+                        "var2" to "4",
+                        "var3" to "6"
+                    ),
+                    // +0 重复值加入无效
+                    mapOf(
+                        "os" to "macos",
                         "var1" to "a",
                         "var2" to "1"
                     )
@@ -54,7 +63,7 @@ internal class MatrixControlOptionTest {
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
+            totalCount = 10, // 2*3*3 + 3 -1
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50

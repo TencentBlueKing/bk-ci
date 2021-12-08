@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
@@ -48,5 +48,5 @@ interface DispatchTypeParser {
     /**
      * VMBuildContainer需要根据[customInfo]和上下文[context]计算调度类型
      */
-    fun parseRunsOn(customInfo: MatrixDispatchInfo, context: Map<String, String>): DispatchType?
+    fun parseRunsOn(customInfo: DispatchInfo, context: Map<String, String>): DispatchType?
 }

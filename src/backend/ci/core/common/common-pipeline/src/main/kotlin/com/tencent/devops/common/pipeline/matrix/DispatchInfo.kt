@@ -25,8 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.info
+package com.tencent.devops.common.pipeline.matrix
 
-abstract class MatrixDispatchInfo(
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
+/**
+ * 用于矩阵分列后自定义构建环境指定
+ */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "dispatchInfo",
+    visible = false
+)
+@JsonSubTypes.Type(value = SampleDispatchInfo::class, name = "SAMPLE")
+abstract class DispatchInfo(
     open val name: String
 )

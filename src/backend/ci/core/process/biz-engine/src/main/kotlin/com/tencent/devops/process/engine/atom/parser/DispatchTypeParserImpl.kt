@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -89,7 +89,7 @@ class DispatchTypeParserImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(customInfo: MatrixDispatchInfo, context: Map<String, String>): DispatchType? {
+    override fun parseRunsOn(customInfo: DispatchInfo, context: Map<String, String>): DispatchType? {
         return null
     }
 }

@@ -33,28 +33,28 @@ import com.tencent.devops.common.api.util.JsonUtil
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
-object DispatchSubTypeRegisterLoader {
+object DispatchSubInfoRegisterLoader {
 
-    private val logger = LoggerFactory.getLogger(DispatchSubTypeRegisterLoader::class.java)
+    private val logger = LoggerFactory.getLogger(DispatchSubInfoRegisterLoader::class.java)
 
-    fun registerType() {
+    fun registerInfo() {
 
-        val clazz = DispatchSubTypeFetcher::class.java
+        val clazz = DispatchSubInfoFetcher::class.java
         var fetcheries = ServiceLoader.load(clazz)
 
         if (!fetcheries.iterator().hasNext()) {
             fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
         }
-        val typeSubModule = SimpleModule()
+        val infoSubModule = SimpleModule()
         fetcheries.forEach { fetcher ->
             logger.info("[DISPATCH_FETCHER]| ${fetcher.javaClass}")
-            val jsonSubTypes = fetcher.jsonSubTypes()
+            val jsonSubTypes = fetcher.jsonSubInfo()
             jsonSubTypes.forEach { (classTypeName, clazz) ->
-                typeSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                infoSubModule.registerSubtypes(NamedType(clazz, classTypeName))
                 logger.info("[REGISTER_DISPATCH]|$clazz for $classTypeName")
             }
         }
 
-        JsonUtil.registerModule(typeSubModule)
+        JsonUtil.registerModule(infoSubModule)
     }
 }
