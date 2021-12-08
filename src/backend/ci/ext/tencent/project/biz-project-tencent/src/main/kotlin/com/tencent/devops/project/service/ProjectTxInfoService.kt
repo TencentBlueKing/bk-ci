@@ -34,6 +34,7 @@ import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
+import com.tencent.devops.stream.constant.GitCIConstant
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +49,6 @@ class ProjectTxInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
-        private const val MAX_PROJECT_NAME_LENGTH = 64
     }
 
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
@@ -73,7 +73,7 @@ class ProjectTxInfoService @Autowired constructor(
         projectName: String
     ): Boolean {
         // projectName表字段长度调整到64位限制
-        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
+        if (projectName.isEmpty() || projectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
