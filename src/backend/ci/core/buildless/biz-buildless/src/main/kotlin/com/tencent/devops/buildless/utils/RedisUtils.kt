@@ -47,7 +47,11 @@ class RedisUtils @Autowired constructor(
         redisOperation.leftPush(buildLessPoolKey(), formatContainerId(containerId))
     }
 
-    fun getIdleContainer(): String? {
+    fun getIdleContainer(): Long {
+        return redisOperation.listSize(buildLessPoolKey()) ?: 0L
+    }
+
+    fun popIdleContainer(): String? {
         logger.info("----> buildLessPoolKey rightPop")
         return redisOperation.rightPop(buildLessPoolKey())
     }
