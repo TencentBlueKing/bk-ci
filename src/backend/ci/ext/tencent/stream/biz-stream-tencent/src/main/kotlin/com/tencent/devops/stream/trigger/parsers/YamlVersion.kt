@@ -29,7 +29,7 @@ package com.tencent.devops.stream.trigger.parsers
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.v2.service.StreamScmService
 import java.util.Base64
 import org.springframework.beans.factory.annotation.Autowired

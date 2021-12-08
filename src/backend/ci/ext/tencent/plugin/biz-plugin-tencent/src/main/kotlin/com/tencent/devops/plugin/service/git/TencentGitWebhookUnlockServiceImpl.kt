@@ -29,11 +29,11 @@ package com.tencent.devops.plugin.service.git
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
-import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -54,7 +54,9 @@ class TencentGitWebhookUnlockServiceImpl @Autowired constructor(
         val manualUnlock = variables[BK_REPO_GIT_MANUAL_UNLOCK]?.toBoolean() ?: false
         val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
         val repoName = variables[PIPELINE_REPO_NAME]
-        logger.info("Add git webhook unlock event|projectId:$projectId|manualUnlock:$manualUnlock|mrId:$mrId|repoName:$repoName")
+        logger.info(
+            "Add git webhook unlock event|projectId:$projectId|manualUnlock:$manualUnlock|mrId:$mrId|repoName:$repoName"
+        )
         if (mrId == null || !manualUnlock || repoName == null) {
             return
         }

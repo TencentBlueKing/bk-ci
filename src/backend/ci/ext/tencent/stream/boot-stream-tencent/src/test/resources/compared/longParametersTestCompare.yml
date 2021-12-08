@@ -26,7 +26,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
-      queue-timeout-minutes: 10
+      queue-timeout-minutes: null
       needs: null
     services: []
     if: null
