@@ -36,7 +36,7 @@ import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -53,7 +53,7 @@ import javax.ws.rs.NotFoundException
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
 
-    private val api = ApiFactory.create(ReportSDKApi::class)
+    private val api = ArtifactApiFactory.create(ReportSDKApi::class)
 
     private val regex = Pattern.compile("[,|;]")
 
