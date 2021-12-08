@@ -29,10 +29,12 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.GitlabWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.P4WebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import org.springframework.stereotype.Service
@@ -48,4 +50,6 @@ class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
     override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
 
     override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
+
+    override fun createP4WebHookMatcher(event: P4Event): ScmWebhookMatcher = P4WebHookMatcher(event)
 }

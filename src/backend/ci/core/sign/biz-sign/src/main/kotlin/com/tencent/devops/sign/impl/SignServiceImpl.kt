@@ -323,7 +323,8 @@ class SignServiceImpl @Autowired constructor(
             universalLinks = ipaSignInfo.universalLinks,
             keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
             replaceKeyList = ipaSignInfo.replaceKeyList,
-            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
+            codesignExternalStr = ipaSignInfo.codesignExternalStr
         )
     }
 
@@ -348,7 +349,8 @@ class SignServiceImpl @Autowired constructor(
             certId = ipaSignInfo.certId,
             wildcardInfo = wildcardInfo,
             replaceKeyList = ipaSignInfo.replaceKeyList,
-            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
+            codesignExternalStr = ipaSignInfo.codesignExternalStr
         )
     }
 

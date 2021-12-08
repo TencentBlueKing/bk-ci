@@ -74,7 +74,8 @@ object PipelineWebhookBuildLogContext {
         taskId: String,
         taskName: String,
         success: Boolean,
-        triggerResult: String?
+        triggerResult: String?,
+        id: Long? = null
     ) {
         val webhookLog = currentTriggerLog.get()
         webhookLog.detail.add(
@@ -88,7 +89,8 @@ object PipelineWebhookBuildLogContext {
                 taskName = taskName,
                 success = success,
                 triggerResult = triggerResult,
-                createdTime = LocalDateTime.now().timestampmilli()
+                createdTime = LocalDateTime.now().timestampmilli(),
+                id = id
             )
         )
     }
