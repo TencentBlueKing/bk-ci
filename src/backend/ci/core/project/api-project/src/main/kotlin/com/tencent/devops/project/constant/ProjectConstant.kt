@@ -28,5 +28,6 @@
 package com.tencent.devops.project.constant
 
 object ProjectConstant {
-    const val NAME_LENGTH = 64
+    const val NAME_MAX_LENGTH = 64
+    const val NAME_MIN_LENGTH = 2
 }
