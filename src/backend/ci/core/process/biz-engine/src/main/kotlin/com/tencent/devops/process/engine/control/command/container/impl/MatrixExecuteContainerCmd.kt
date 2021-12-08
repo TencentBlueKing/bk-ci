@@ -38,10 +38,13 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import kotlin.math.min
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LongMethod")
 @Service
 class MatrixExecuteContainerCmd(
     private val pipelineContainerService: PipelineContainerService,
@@ -51,6 +54,7 @@ class MatrixExecuteContainerCmd(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(MatrixExecuteContainerCmd::class.java)
+        private const val MATRIX_LOOP_TIME_MILLS = 5000
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -83,7 +87,9 @@ class MatrixExecuteContainerCmd(
             commandContext.cmdFlowState = CmdFlowState.FINALLY
             commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_loop_finish"
         } else {
+            // 矩阵事件每5秒轮询一次
             commandContext.cmdFlowState = CmdFlowState.LOOP
+            commandContext.delayMills = MATRIX_LOOP_TIME_MILLS
             commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_loop_continue"
         }
     }
@@ -97,17 +103,17 @@ class MatrixExecuteContainerCmd(
         val matrixOption = parentContainer.controlOption?.matrixControlOption!!
 
         var failedCount = 0
+        var runningCount = 0
         var finishCount = 0
+        val containersToRun = mutableListOf<PipelineBuildContainer>()
 
         groupContainers.forEach { container ->
             when {
                 container.status.isReadyToRun() -> {
-                    sendBuildContainerEvent(
-                        container = container,
-                        actionType = ActionType.START,
-                        userId = event.userId,
-                        reason = commandContext.latestSummary
-                    )
+                    containersToRun.add(container)
+                }
+                container.status.isRunning() -> {
+                    runningCount++
                 }
                 container.status.isFinish() -> {
                     if (container.status.isFailure()) failedCount++
@@ -117,42 +123,39 @@ class MatrixExecuteContainerCmd(
         }
 
         // 判断是否要进行fastKill
-        if (failedCount > 0 && matrixOption.fastKill == true) {
-
-            LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_FAST_KILL|${event.stageId}|" +
-                "j(${event.containerId})|count=${groupContainers.size}|groupContainers=$groupContainers")
-
+        val fastKill = failedCount > 0 && matrixOption.fastKill == true
+        if (fastKill) {
             buildLogPrinter.addYellowLine(
                 buildId = event.buildId,
                 message = "Matrix(${parentContainer.containerId}) failed containers " +
-                    "count($failedCount), start to kill conatainers",
+                    "count($failedCount), start to kill containers",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
                 executeCount = commandContext.executeCount
             )
+            terminateGroupContainers(commandContext, event, parentContainer, groupContainers)
+        }
 
-            groupContainers.forEach { container ->
-                if (!container.status.isFinish()) {
-                    sendBuildContainerEvent(
-                        container = container,
-                        actionType = ActionType.TERMINATE,
-                        userId = event.userId,
-                        reason = "from_matrix(${parentContainer.containerId})_fastKill"
-                    )
-                    buildLogPrinter.addYellowLine(
-                        buildId = event.buildId,
-                        message = "Matrix(${parentContainer.containerId}) try to stop " +
-                            "container(${container.containerId})",
-                        tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                        jobId = parentContainer.containerHashId,
-                        executeCount = commandContext.executeCount
-                    )
-                }
-            }
+        val maxConcurrency = min(
+            matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
+            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+        )
+
+        // 如果不需要fastKill，则给前N个待执行的容器下发启动事件，N为并发上限减去正在运行的数量
+        if (!fastKill && containersToRun.isNotEmpty() && runningCount < maxConcurrency) {
+            startGroupContainers(
+                commandContext = commandContext,
+                event = event,
+                parentContainer = parentContainer,
+                containersToRun = containersToRun,
+                runningCount = runningCount,
+                maxConcurrency = maxConcurrency
+            )
         }
 
         // 实时刷新数据库状态
         matrixOption.finishCount = finishCount
+
         pipelineContainerService.updateMatrixGroupStatus(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId,
@@ -170,6 +173,65 @@ class MatrixExecuteContainerCmd(
             }
         } else {
             BuildStatus.RUNNING
+        }
+    }
+
+    private fun startGroupContainers(
+        event: PipelineBuildContainerEvent,
+        commandContext: ContainerContext,
+        parentContainer: PipelineBuildContainer,
+        containersToRun: MutableList<PipelineBuildContainer>,
+        runningCount: Int,
+        maxConcurrency: Int
+    ) {
+        LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|" +
+            "matrix(${event.containerId})|containersToRun=$containersToRun")
+        containersToRun.take(maxConcurrency - runningCount)
+            .forEach { container ->
+                buildLogPrinter.addYellowLine(
+                    buildId = event.buildId,
+                    message = "Container(${container.containerId}) starting...",
+                    tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                    jobId = parentContainer.containerHashId,
+                    executeCount = commandContext.executeCount
+                )
+                LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
+                    "|matrixGroupId=${parentContainer.containerId}|j(${container.containerId})")
+                sendBuildContainerEvent(
+                    container = container,
+                    actionType = ActionType.START,
+                    userId = event.userId,
+                    reason = commandContext.latestSummary
+                )
+            }
+    }
+
+    private fun terminateGroupContainers(
+        commandContext: ContainerContext,
+        event: PipelineBuildContainerEvent,
+        parentContainer: PipelineBuildContainer,
+        groupContainers: List<PipelineBuildContainer>
+    ) {
+        LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_FAST_KILL|${event.stageId}|" +
+            "j(${event.containerId})|count=${groupContainers.size}|groupContainers=$groupContainers")
+
+        groupContainers.forEach { container ->
+            if (!container.status.isFinish()) {
+                sendBuildContainerEvent(
+                    container = container,
+                    actionType = ActionType.TERMINATE,
+                    userId = event.userId,
+                    reason = "from_matrix(${parentContainer.containerId})_fastKill"
+                )
+                buildLogPrinter.addYellowLine(
+                    buildId = event.buildId,
+                    message = "Matrix(${parentContainer.containerId}) try to stop " +
+                        "container(${container.containerId})",
+                    tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                    jobId = parentContainer.containerHashId,
+                    executeCount = commandContext.executeCount
+                )
+            }
         }
     }
 
