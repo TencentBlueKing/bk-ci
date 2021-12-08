@@ -25,35 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiParam
 
-@Service
-class FileGatewayService @Autowired constructor(
-    val redisOperation: RedisOperation
-) {
-    @Value("\${artifactory.fileDevnetGateway:}")
-    private lateinit var fileDevnetGateway: String
-
-    @Value("\${artifactory.fileIdcGateway:}")
-    private lateinit var fileIdcGateway: String
-
-    fun getFileGateway(projectId: String): FileGatewayInfo {
-        val allGray = redisOperation.get(FILE_GATEWAY_ALL_GRAY_KEY) == "true"
-        return if (allGray || redisOperation.isMember(FILE_GATEWAY_GRAY_KEY, projectId)) {
-            FileGatewayInfo(fileDevnetGateway, fileIdcGateway)
-        } else {
-            FileGatewayInfo("", "")
-        }
-    }
-
-    companion object {
-        private const val FILE_GATEWAY_GRAY_KEY = "artifactory:fileGatewayGray:projects"
-        private const val FILE_GATEWAY_ALL_GRAY_KEY = "artifactory:fileGatewayGray:all"
-    }
-}
+data class MrCommentBody(
+    @ApiParam("报表数据", required = true)
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+)

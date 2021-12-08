@@ -25,19 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources.builds
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:quality:api-quality"))
+}
 
-import com.tencent.devops.artifactory.api.builds.BuildFileGatewayResource
-import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.artifactory.service.FileGatewayService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-
-@RestResource
-class BuildFileGatewayResourceImpl(
-    private val fileGatewayService: FileGatewayService
-) : BuildFileGatewayResource {
-    override fun getFileGateway(projectId: String): Result<FileGatewayInfo> {
-        return Result(fileGatewayService.getFileGateway(projectId))
-    }
+plugins {
+    `task-deploy-to-maven`
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.template
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Extends
+import com.tencent.devops.common.ci.v2.GitNotices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
@@ -262,11 +263,20 @@ class YamlTemplate(
                 deepTree
             )
         }
+        // notices只用做一次模板替换没有嵌套模板
+        if (templateObject["notices"] != null) {
+            val notices = mutableListOf<GitNotices>()
+            val temNotices = transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
+            temNotices.forEach {
+                notices.add(YamlObjects.getNotice(filePath, it))
+            }
+            preYamlObject.notices = notices
+        }
+
         // 将不用替换的直接传入
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
         preYamlObject.resources = newYaml.resources
-        preYamlObject.notices = newYaml.notices
         // 用户没写就用模板的名字
         if (preYamlObject.name.isNullOrBlank()) {
             preYamlObject.name = newYaml.name

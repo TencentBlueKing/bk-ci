@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.quality.resources
 
-data class QueryNodeInfo(
-    var createdBy: String,
-    var createdDate: String,
-    var lastModifiedBy: String,
-    var lastModifiedDate: String,
-    var folder: Boolean,
-    var path: String,
-    var name: String,
-    var fullPath: String,
-    var size: Long,
-    var sha256: String? = null,
-    var md5: String? = null,
-    var projectId: String,
-    var repoName: String,
-    var metadata: Map<String, String>
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.quality.api.op.OPQualityRuleBuildHisResource
+import com.tencent.devops.quality.service.OPQualityRuleBuildHisService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OPQualityRuleBuildHisResourceImpl @Autowired constructor(
+    private val opQualityRuleBuildHisService: OPQualityRuleBuildHisService
+) : OPQualityRuleBuildHisResource {
+    override fun updateStatus(): Result<Int> {
+        return Result(opQualityRuleBuildHisService.updateRuleBuildHisStatus())
+    }
+}

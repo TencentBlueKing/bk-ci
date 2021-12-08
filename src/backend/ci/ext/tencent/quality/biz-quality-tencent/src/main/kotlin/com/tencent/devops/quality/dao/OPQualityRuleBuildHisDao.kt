@@ -25,33 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.builds
+package com.tencent.devops.quality.dao
 
-import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
+import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@Api(tags = ["BUILD_URL"], description = "文件网关")
-@Path("/build/fileGateway")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildFileGatewayResource {
+@Repository
+class OPQualityRuleBuildHisDao {
 
-    @ApiOperation("获取项目文件网关配置")
-    @Path("/get")
-    @GET
-    fun getFileGateway(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String
-    ): Result<FileGatewayInfo>
+    fun listTimeoutRule(
+        dslContext: DSLContext,
+        dateTime: LocalDateTime,
+        limit: Int,
+        startId: Long
+    ): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .and(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
 }

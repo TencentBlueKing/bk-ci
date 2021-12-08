@@ -25,12 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.quality.api.op
 
-data class QueryData(
-    var count: Int,
-    var page: Int,
-    var pageSize: Int,
-    var totalPages: Int,
-    var records: List<QueryNodeInfo>
-)
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_RULE_BUILD_HIS"], description = "质量红线-红线构建")
+@Path("/op/qualityRuleBuildHis")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPQualityRuleBuildHisResource {
+
+    @ApiOperation("修改红线状态")
+    @Path("/updateStatus")
+    @GET
+    fun updateStatus(): Result<Int>
+}
