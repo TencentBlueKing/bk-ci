@@ -49,6 +49,7 @@ class ProjectTxInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
+        private const val MAX_PROJECT_NAME_LENGTH = 64
     }
 
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
@@ -73,7 +74,7 @@ class ProjectTxInfoService @Autowired constructor(
         projectName: String
     ): Boolean {
         // projectName表字段长度调整到64位限制
-        if (projectName.isEmpty() || projectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
