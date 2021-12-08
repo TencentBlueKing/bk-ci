@@ -45,6 +45,7 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
+import com.tencent.devops.project.constant.ProjectConstant.NAME_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -684,7 +685,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     companion object {
         const val Width = 128
         const val Height = 128
-        const val NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
