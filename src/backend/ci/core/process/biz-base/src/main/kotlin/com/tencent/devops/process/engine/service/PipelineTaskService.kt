@@ -251,7 +251,7 @@ class PipelineTaskService @Autowired constructor(
             dslContext = transactionContext ?: dslContext,
             buildId = buildId,
             taskId = taskId,
-            taskParam = JsonUtil.toJson(taskParam, formatted = false)
+            taskParam = taskParam
         )
     }
 
