@@ -37,7 +37,7 @@ object DispatchSubInfoRegisterLoader {
 
     private val logger = LoggerFactory.getLogger(DispatchSubInfoRegisterLoader::class.java)
 
-    fun registerElement() {
+    fun registerInfo() {
 
         val clazz = DispatchSubInfoFetcher::class.java
         var fetcheries = ServiceLoader.load(clazz)

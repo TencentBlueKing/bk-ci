@@ -37,7 +37,7 @@ object DispatchSubTypeRegisterLoader {
 
     private val logger = LoggerFactory.getLogger(DispatchSubTypeRegisterLoader::class.java)
 
-    fun registerElement() {
+    fun registerType() {
 
         val clazz = DispatchSubTypeFetcher::class.java
         var fetcheries = ServiceLoader.load(clazz)
