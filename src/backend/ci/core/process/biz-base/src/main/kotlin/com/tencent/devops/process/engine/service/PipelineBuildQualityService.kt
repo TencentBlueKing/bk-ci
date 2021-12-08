@@ -422,6 +422,7 @@ class PipelineBuildQualityService(
             taskId = interceptTask,
             position = position,
             templateId = templateId,
+            stageId = "",
             runtimeVariable = runVariables
         )
         val result = if (position == ControlPointPosition.AFTER_POSITION &&

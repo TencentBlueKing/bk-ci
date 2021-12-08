@@ -38,12 +38,14 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -51,10 +53,15 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
+import com.tencent.devops.process.engine.pojo.WebhookElementParams
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -62,7 +69,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 
 /**
  * 流水线webhook存储服务
@@ -86,7 +92,8 @@ class PipelineWebhookService @Autowired constructor(
     fun addWebhook(
         projectId: String,
         pipelineId: String,
-        version: Int?
+        version: Int?,
+        userId: String
     ) {
         val model = getModel(pipelineId, version)
         if (model == null) {
@@ -98,28 +105,50 @@ class PipelineWebhookService @Autowired constructor(
             param.id to param.defaultValue.toString()
         }
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
+        val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->
-            val (repositoryConfig, scmType, eventType) = getElementRepositoryConfig(element, variable = params)
+            val webhookElementParams = getElementRepositoryConfig(element, variable = params)
                 ?: return@forEach
-            logger.info("$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
-            try {
-                saveWebhook(
-                    pipelineWebhook = PipelineWebhook(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        repositoryType = scmType,
-                        repoType = repositoryConfig.repositoryType,
-                        repoHashId = repositoryConfig.repositoryHashId,
-                        repoName = repositoryConfig.repositoryName,
-                        taskId = element.id
-                    ),
-                    codeEventType = eventType,
-                    repositoryConfig = repositoryConfig,
-                    createPipelineFlag = true
-                )
-            } catch (ignore: Exception) {
-                logger.error("$projectId|$pipelineId|add webhook failed", ignore)
+            with(webhookElementParams) {
+                try {
+                    logger.info("$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
+                    saveWebhook(
+                        pipelineWebhook = PipelineWebhook(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            repositoryType = scmType,
+                            repoType = repositoryConfig.repositoryType,
+                            repoHashId = repositoryConfig.repositoryHashId,
+                            repoName = repositoryConfig.repositoryName,
+                            taskId = element.id
+                        ),
+                        codeEventType = eventType,
+                        repositoryConfig = repositoryConfig,
+                        createPipelineFlag = true
+                    )
+                } catch (ignore: Exception) {
+                    failedElementNames.add("- ${element.name}: ${ignore.message}")
+                    logger.error("$projectId|$pipelineId|add webhook failed", ignore)
+                }
             }
+        }
+        if (failedElementNames.isNotEmpty()) {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                SendNotifyMessageTemplateRequest(
+                    templateCode =
+                    PipelineNotifyTemplateEnum.PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE.templateCode,
+                    receivers = mutableSetOf(userId),
+                    notifyType = mutableSetOf(NotifyType.RTX.name),
+                    titleParams = mapOf("pipelineName" to model.name),
+                    bodyParams = mapOf(
+                        "pipelineName" to model.name,
+                        "elementNames" to failedElementNames.joinToString(""),
+                        "pipelineEditUrl" to pipelineEditUrl(projectId, pipelineId)
+                    ),
+                    cc = null,
+                    bcc = null
+                )
+            )
         }
     }
 
@@ -142,7 +171,11 @@ class PipelineWebhookService @Autowired constructor(
         }
 
         if (continueFlag) {
-            val projectName = registerWebhook(pipelineWebhook, repositoryConfig, codeEventType)
+            val projectName = registerWebhook(
+                pipelineWebhook = pipelineWebhook,
+                repositoryConfig = repositoryConfig,
+                codeEventType = codeEventType
+            )
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
                 pipelineWebhook.projectName = getProjectName(projectName)
@@ -185,6 +218,12 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_TGIT -> {
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
+                ScmType.CODE_P4 ->
+                    scmProxyService.addP4Webhook(
+                        projectId = pipelineWebhook.projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    )
                 else -> {
                     null
                 }
@@ -193,6 +232,9 @@ class PipelineWebhookService @Autowired constructor(
             redisLock.unlock()
         }
     }
+
+    private fun pipelineEditUrl(projectId: String, pipelineId: String) =
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/edit"
 
     fun deleteWebhook(pipelineId: String, userId: String): Result<Boolean> {
         logger.info("delete $pipelineId webhook by $userId")
@@ -244,6 +286,9 @@ class PipelineWebhookService @Autowired constructor(
             }
             CodeTGitWebHookTriggerElement.classType -> {
                 ScmType.CODE_TGIT
+            }
+            CodeP4WebHookTriggerElement.classType -> {
+                ScmType.CODE_P4
             }
             else -> {
                 throw IllegalArgumentException("Unknown web hook type($type)")
@@ -450,37 +495,59 @@ class PipelineWebhookService @Autowired constructor(
     private fun getElementRepositoryConfig(
         element: Element,
         variable: Map<String, String>
-    ): Triple<RepositoryConfig, ScmType, CodeEventType?>? {
+    ): WebhookElementParams? {
         if (element !is WebHookTriggerElement) {
             return null
         }
-        val (scmType, eventType) = when (element) {
+        val elementRepositoryConfig = RepositoryConfigUtils.buildConfig(element)
+        val realRepositoryConfig = with(elementRepositoryConfig) {
+            getRepositoryConfig(
+                repoHashId = repositoryHashId,
+                repoName = repositoryName,
+                repoType = repositoryType,
+                variable = variable
+            )
+        }
+        return when (element) {
             is CodeGitWebHookTriggerElement ->
-                Pair(ScmType.CODE_GIT, element.eventType)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_GIT,
+                    eventType = element.eventType
+                )
             is CodeGithubWebHookTriggerElement ->
-                Pair(ScmType.GITHUB, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.GITHUB,
+                    eventType = null
+                )
             is CodeGitlabWebHookTriggerElement ->
-                Pair(ScmType.CODE_GITLAB, element.eventType)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_GITLAB,
+                    eventType = element.eventType
+                )
             is CodeSVNWebHookTriggerElement ->
-                Pair(ScmType.CODE_SVN, null)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_SVN,
+                    eventType = null
+                )
             is CodeTGitWebHookTriggerElement ->
-                Pair(ScmType.CODE_TGIT, element.data.input.eventType)
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_TGIT,
+                    eventType = element.data.input.eventType
+                )
+            is CodeP4WebHookTriggerElement ->
+                WebhookElementParams(
+                    repositoryConfig = realRepositoryConfig,
+                    scmType = ScmType.CODE_P4,
+                    eventType = element.data.input.eventType
+                )
             else ->
                 throw InvalidParamException("Unknown code element -> $element")
         }
-        val repositoryConfig = RepositoryConfigUtils.buildConfig(element)
-        return Triple(
-            with(repositoryConfig) {
-                getRepositoryConfig(
-                    repoHashId = repositoryHashId,
-                    repoName = repositoryName,
-                    repoType = repositoryType,
-                    variable = variable
-                )
-            },
-            scmType,
-            eventType
-        )
     }
 
     fun listWebhook(

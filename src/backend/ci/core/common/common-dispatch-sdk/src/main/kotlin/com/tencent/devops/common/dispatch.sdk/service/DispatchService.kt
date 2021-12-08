@@ -210,7 +210,7 @@ class DispatchService constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e)
+            logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e.message)
         }
     }
 

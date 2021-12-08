@@ -46,6 +46,6 @@ class ScmExceptionMapper : ExceptionMapper<ScmException> {
         val status = Response.Status.BAD_REQUEST
         return Response.status(status)
             .type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, "${exception.scmType}|${exception.message}")).build()
+            .entity(Result<Void>(status.statusCode, "${exception.message}")).build()
     }
 }
