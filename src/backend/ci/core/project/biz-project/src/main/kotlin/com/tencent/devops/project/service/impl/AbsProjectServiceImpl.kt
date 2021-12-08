@@ -100,7 +100,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.isEmpty() || name.length > 32) {
+                if (name.isEmpty() || name.length > NAME_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -114,8 +114,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 个字符+数字，以小写字母开头
-                if (name.length < 2 || name.length > 32) {
+                // 2 ~ 64 个字符+数字，以小写字母开头
+                if (name.length < 2 || name.length > NAME_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
@@ -684,6 +684,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     companion object {
         const val Width = 128
         const val Height = 128
+        const val NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
