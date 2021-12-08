@@ -80,7 +80,7 @@ class OPQualityRuleBuildHisService @Autowired constructor(
                 }
             }
             count = records.size
-            currId = records?.last().id
+            currId = records.last()?.id ?: 0
         }
         return count
     }
