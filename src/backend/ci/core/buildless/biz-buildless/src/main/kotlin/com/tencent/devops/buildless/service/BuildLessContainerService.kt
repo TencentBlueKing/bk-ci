@@ -94,10 +94,10 @@ class BuildLessContainerService(
 
     fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
         val idlePoolSize = redisUtils.getIdleContainer()
-        val readyTaskCount = redisUtils.getBuildLessReadyTaskCount()
 
-        // 无空闲容器并且还有部分任务在排队
-        if (idlePoolSize == 0L && readyTaskCount > 0) {
+        // 无空闲容器时执行拒绝策略
+        logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
+        if (idlePoolSize == 0L) {
             val continueAllocate = rejectedExecutionFactory
                 .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
                 .rejectedExecution(buildLessStartInfo)
@@ -109,8 +109,8 @@ class BuildLessContainerService(
 
         // 无可空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
-        if (idlePoolSize == 0L &&
-            (runningPool in (CORE_CONTAINER_POOL_SIZE + 1) until MAX_CONTAINER_POOL_SIZE)) {
+        logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} runningPool: $runningPool")
+        if (idlePoolSize == 0L && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
             createBuildLessPoolContainer(true)
         }
 
