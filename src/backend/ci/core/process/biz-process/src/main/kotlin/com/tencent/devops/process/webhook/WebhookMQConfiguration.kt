@@ -54,6 +54,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@SuppressWarnings("TooManyFunctions")
 class WebhookMQConfiguration @Autowired constructor() {
 
     @Bean
@@ -283,6 +284,50 @@ class WebhookMQConfiguration @Autowired constructor() {
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
             queue = tgitEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
+    }
+
+    // p4 消息队列配置
+    @Bean
+    fun p4EventExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_P4_BUILD_REQUEST_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun p4EventQueue(): Queue {
+        return Queue(MQ.QUEUE_P4_BUILD_REQUEST_EVENT, true)
+    }
+
+    @Bean
+    fun p4EventBind(
+        @Autowired p4EventQueue: Queue,
+        @Autowired p4EventExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(p4EventQueue).to(p4EventExchange).with(MQ.ROUTE_P4_BUILD_REQUEST_EVENT)
+    }
+
+    @Bean
+    fun p4EventListener(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired p4EventQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired webhookEventListener: WebhookEventListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        logger.info("Start p4 commit event listener")
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = p4EventQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 1,
