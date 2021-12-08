@@ -836,7 +836,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    fun getPipelineChannel(pipelineId: String): ChannelCode? {
+    fun getPipelineChannel(projectId: String, pipelineId: String): ChannelCode? {
         if (pipelineChannelCache.getIfPresent(pipelineId) != null) {
             return pipelineChannelCache.getIfPresent(pipelineId)
         }

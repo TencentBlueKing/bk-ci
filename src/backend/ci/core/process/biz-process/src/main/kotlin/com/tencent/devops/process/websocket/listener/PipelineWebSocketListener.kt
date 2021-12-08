@@ -48,7 +48,7 @@ class PipelineWebSocketListener @Autowired constructor(
 
     override fun run(event: PipelineBuildWebSocketPushEvent) {
 
-        val channelCode = pipelineInfoFacadeService.getPipelineChannel(event.pipelineId)
+        val channelCode = pipelineInfoFacadeService.getPipelineChannel(event.projectId, event.pipelineId)
         // 非页面类的流水线,直接返回。 不占用redis资源
         if (channelCode != null && !ChannelCode.webChannel(channelCode)) {
             return
