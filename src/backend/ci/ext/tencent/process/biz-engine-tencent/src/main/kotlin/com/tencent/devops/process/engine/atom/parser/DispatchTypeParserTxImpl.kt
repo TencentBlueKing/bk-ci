@@ -35,7 +35,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
-import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -137,7 +137,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(customInfo: MatrixDispatchInfo, context: Map<String, String>): DispatchType? {
+    override fun parseRunsOn(customInfo: DispatchInfo, context: Map<String, String>): DispatchType? {
         // 此处可以支持多种解析
         return when {
             customInfo is StreamDispatchInfo -> StreamDispatchUtils.getDispatchType(
