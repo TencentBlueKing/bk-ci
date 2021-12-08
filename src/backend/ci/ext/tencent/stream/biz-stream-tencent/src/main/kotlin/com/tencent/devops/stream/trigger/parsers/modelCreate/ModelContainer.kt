@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.info.MatrixDispatchInfo
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CONTEXT_KEY_PREFIX
@@ -124,10 +123,6 @@ class ModelContainer @Autowired constructor(
 
         with(strategy) {
             if (matrix is Map<*, *>) {
-                val json = matrix as MutableMap<String, Any>
-                json.remove("include")
-                json.remove("exclude")
-
                 val yaml = matrix as MutableMap<String, Any>
                 val include = if ("include" in yaml.keys && yaml["include"] != null) {
                     YamlUtil.toYaml(yaml["include"]!!)
@@ -139,6 +134,9 @@ class ModelContainer @Autowired constructor(
                 } else {
                     null
                 }
+                val json = matrix as MutableMap<String, Any>
+                json.remove("include")
+                json.remove("exclude")
 
                 return MatrixControlOption(
                     strategyStr = JsonUtil.toJson(json),
