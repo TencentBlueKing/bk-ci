@@ -29,8 +29,9 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -46,7 +47,7 @@ import okhttp3.RequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
-class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
+class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoResourceApi = BkRepoResourceApi()
 
     private fun getParentFolder(path: String): String {
@@ -56,6 +57,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     private fun getFileName(path: String): String {
         return path.removeSuffix("/").split("/").last()
+    }
+
+    override fun getRealm(): String {
+        return REALM_BK_REPO
     }
 
     override fun getFileDownloadUrls(
@@ -103,8 +108,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义文件失败")
         } catch (e: Exception) {
             logger.error(e.message ?: "")
             throw TaskExecuteException(
@@ -163,8 +168,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(response)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传流水线文件失败")
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -190,7 +195,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         isVmBuildEnv: Boolean
     ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
-        val header = mutableMapOf("X-BKREPO-UID" to user)
+        val header = HashMap<String, String>()
+        header["X-BKREPO-UID"] = user
         val request = buildGet(url, header, isVmBuildEnv)
         download(request, destPath)
     }
