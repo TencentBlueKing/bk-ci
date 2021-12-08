@@ -431,10 +431,17 @@ class StreamBasicSettingService @Autowired constructor(
             // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
             try {
                 val timeStamp = System.currentTimeMillis().toString()
+                var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                    deletedProjectName = deletedProjectName.substring(
+                        deletedProjectName.length -
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                    )
+                }
                 client.get(ServiceTxProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                    projectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                    projectName = deletedProjectName
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")
