@@ -73,7 +73,7 @@ class UpdateStateForStageCmdFinally(
 
         // 不在当前重试范围的请求。 比如 重试Stage-3，他之前的Stage直接跳过
         if (stage.status.isFinish() && stage.executeCount < commandContext.executeCount) {
-            return nextOrFinish(event, stage, commandContext)
+            return nextOrFinish(event, stage, commandContext, false)
         }
 
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
@@ -88,7 +88,7 @@ class UpdateStateForStageCmdFinally(
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
                 pipelineStageService.pauseStage(stage)
             } else {
-                nextOrFinish(event, stage, commandContext)
+                nextOrFinish(event, stage, commandContext, true)
                 sendStageEndCallBack(stage, event)
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
@@ -97,7 +97,7 @@ class UpdateStateForStageCmdFinally(
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage)
             }
-            nextOrFinish(event, stage, commandContext)
+            nextOrFinish(event, stage, commandContext, true)
             sendStageEndCallBack(stage, event)
         }
     }
@@ -111,10 +111,15 @@ class UpdateStateForStageCmdFinally(
         )
     }
 
-    private fun nextOrFinish(event: PipelineBuildStageEvent, stage: PipelineBuildStage, commandContext: StageContext) {
+    private fun nextOrFinish(
+        event: PipelineBuildStageEvent,
+        stage: PipelineBuildStage,
+        commandContext: StageContext,
+        needCheckQuality: Boolean
+    ) {
 
-        // #5019 在结束阶段做stage准出判断
-        if (qualityCheckOutAndBreak(stage, commandContext, event)) return
+        // #5019 在结束阶段做stage准出判断，如果不需要红线检查则直接跳过
+        if (needCheckQuality && qualityCheckOutAndBreak(stage, commandContext, event)) return
 
         val nextStage: PipelineBuildStage?
 

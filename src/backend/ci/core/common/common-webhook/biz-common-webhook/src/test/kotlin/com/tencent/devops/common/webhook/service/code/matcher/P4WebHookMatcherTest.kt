@@ -105,7 +105,7 @@ class P4WebHookMatcherTest {
                 repositoryName = null
             ),
             eventType = CodeEventType.CHANGE_COMMIT,
-            includePaths = "//demo/...",
+            includePaths = "//demo/**",
             excludePaths = ""
         )
         Assert.assertTrue(
@@ -123,7 +123,7 @@ class P4WebHookMatcherTest {
                 repositoryName = null
             ),
             eventType = CodeEventType.CHANGE_COMMIT,
-            includePaths = "//depot/...",
+            includePaths = "//depot/**",
             excludePaths = ""
         )
         Assert.assertFalse(

@@ -51,7 +51,7 @@ data class MatrixControlOption(
     @ApiModelProperty("是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
     @ApiModelProperty("Job运行的最大并发量", required = false)
-    val maxConcurrency: Int? = 20,
+    var maxConcurrency: Int? = 5,
     @ApiModelProperty("自定义调度类型（用于生成DispatchType的任意对象）", required = false)
     var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
     @ApiModelProperty("矩阵组的总数量", required = false)
@@ -86,9 +86,7 @@ data class MatrixControlOption(
 
         return caseList.map { list ->
             list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
-        }
-            .toList()
-            .distinct()
+        }.toList().distinct()
     }
 
     /**

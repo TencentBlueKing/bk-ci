@@ -221,7 +221,7 @@ class BuildCancelControl @Autowired constructor(
         variables: Map<String, String>,
         container: Container,
         stageStatus: BuildStatus,
-        executeCount: Int,
+        executeCount: Int
     ) {
         val containerId = container.id ?: ""
         val pipelineContainer = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {

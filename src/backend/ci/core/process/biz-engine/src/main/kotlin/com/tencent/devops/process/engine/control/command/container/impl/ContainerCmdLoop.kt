@@ -54,7 +54,10 @@ class ContainerCmdLoop(
             LOG.info("ENGINE|$buildId|${commandContext.event.source}]|EVENT_LOOP|$stageId|j($containerId)")
         }
         pipelineEventDispatcher.dispatch(
-            commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
+            commandContext.event.copy(
+                delayMills = commandContext.delayMills ?: DEFAULT_LOOP_TIME_MILLS,
+                source = commandContext.latestSummary
+            )
         )
     }
 }

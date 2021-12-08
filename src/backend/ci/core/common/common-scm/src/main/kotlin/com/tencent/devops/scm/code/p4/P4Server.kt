@@ -129,6 +129,10 @@ class P4Server(
         return server.getChangelistFiles(change)
     }
 
+    fun getShelvedFiles(change: Int): List<IFileSpec> {
+        return server.getShelvedFiles(change)
+    }
+
     override fun close() {
         disconnect()
     }
