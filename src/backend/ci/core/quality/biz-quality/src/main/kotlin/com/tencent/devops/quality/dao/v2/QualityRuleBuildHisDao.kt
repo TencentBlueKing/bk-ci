@@ -143,4 +143,13 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 .execute()
         }
     }
+
+    fun updateIndicatorThreshold(ruleBuildId: Long, indicatorThreshold: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(INDICATOR_THRESHOLDS, indicatorThreshold)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
 }

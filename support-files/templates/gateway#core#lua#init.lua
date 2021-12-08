@@ -83,7 +83,8 @@ config = {
     host = "__BK_CI_HOST__",
     domain = "__BK_CI_JFROG_FQDN__",
     user = "__BK_CI_JFROG_USER__",
-    password = "__BK_CI_JFROG_PASSWORD__"
+    password = "__BK_CI_JFROG_PASSWORD__",
+	realm = "__BK_CI_ARTIFACTORY_REALM__"
   },
   influxdb = {
     ip = "__BK_CI_INFLUXDB_HOST__",

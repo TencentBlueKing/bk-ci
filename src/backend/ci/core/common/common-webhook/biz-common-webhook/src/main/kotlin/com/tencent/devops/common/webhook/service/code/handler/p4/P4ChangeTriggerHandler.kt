@@ -43,7 +43,7 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.BK_REPO_P4_WEBHOOK_CHANGE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
@@ -56,7 +56,7 @@ class P4ChangeTriggerHandler(
 
     override fun getUrl(event: P4ChangeEvent) = event.p4Port
 
-    override fun getUsername(event: P4ChangeEvent) = ""
+    override fun getUsername(event: P4ChangeEvent) = event.user ?: ""
 
     override fun getRevision(event: P4ChangeEvent) = event.change.toString()
 
@@ -105,8 +105,7 @@ class P4ChangeTriggerHandler(
                             pathFilterType = PathFilterType.RegexBasedFilter,
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
-                            includedPaths = WebhookUtils.convert(includePaths)
-                                .map { it.replace("...", "**") },
+                            includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths)
                         )
                     ).doFilter(response)

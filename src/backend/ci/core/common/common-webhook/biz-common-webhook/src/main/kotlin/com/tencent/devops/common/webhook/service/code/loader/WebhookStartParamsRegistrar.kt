@@ -25,11 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code
+package com.tencent.devops.common.webhook.service.code.loader
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.param.ScmWebhookStartParams
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
-interface ScmWebhookStartParams<in T : WebHookTriggerElement> {
+object WebhookStartParamsRegistrar {
+    private val logger = LoggerFactory.getLogger(WebhookStartParamsRegistrar::class.java)
 
-    fun getStartParams(element: T): Map<String, Any>
+    private val webhookStartParamsMaps = ConcurrentHashMap<String, ScmWebhookStartParams<*>>()
+
+    /**
+     * 注册webhook事件启动参数处理类
+     */
+    fun register(webhookStartParams: ScmWebhookStartParams<out WebHookTriggerElement>) {
+        logger.info("[REGISTER]| ${webhookStartParams.javaClass} for ${webhookStartParams.elementClass()}")
+        webhookStartParamsMaps[webhookStartParams.elementClass().canonicalName] = webhookStartParams
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : WebHookTriggerElement> getService(element: T): ScmWebhookStartParams<T> {
+        return (webhookStartParamsMaps[element::class.qualifiedName] as ScmWebhookStartParams<T>?)
+            ?: throw IllegalArgumentException("${element::class.qualifiedName} service is not found")
+    }
 }

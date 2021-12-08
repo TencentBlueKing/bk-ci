@@ -25,15 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+/*
+ * action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新，或源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    MERGE("merge")
+}
 
-interface ScmWebhookElementParams<in T : WebHookTriggerElement> {
-
-    fun getWebhookElementParams(
-        element: T,
-        variables: Map<String, String>
-    ): WebHookParams?
+/*
+ * extension_action字段
+ * open：新建MR
+ * close：MR被关闭
+ * reopen：MR重新被打开
+ * update：MR本身信息更新
+ * push-update：源分支有代码push
+ * merge：代码已合并
+ */
+enum class TGitMergeExtensionActionKind(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    UPDATE("update"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge")
 }

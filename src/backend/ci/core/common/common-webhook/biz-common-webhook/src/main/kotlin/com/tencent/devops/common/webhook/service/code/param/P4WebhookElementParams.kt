@@ -25,39 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
+import org.springframework.stereotype.Service
 
-class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTriggerElement> {
+@Service
+class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerElement> {
+
+    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
+        return CodeP4WebHookTriggerElement::class.java
+    }
 
     override fun getWebhookElementParams(
-        element: CodeGithubWebHookTriggerElement,
+        element: CodeP4WebHookTriggerElement,
         variables: Map<String, String>
-    ): WebHookParams? {
+    ): WebHookParams {
         val params = WebHookParams(
             repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
                 repositoryConfig = RepositoryConfigUtils.buildConfig(element),
                 variables = variables
             )
         )
-        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
-            ""
-        } else {
-            EnvUtils.parseEnv(element.excludeUsers!!, variables)
+        with(element.data.input) {
+            params.eventType = eventType
+            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
+            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            params.codeType = CodeType.P4
+            return params
         }
-        if (element.branchName == null) {
-            return null
-        }
-        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-        params.eventType = element.eventType
-        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-        params.codeType = CodeType.GITHUB
-        return params
     }
 }

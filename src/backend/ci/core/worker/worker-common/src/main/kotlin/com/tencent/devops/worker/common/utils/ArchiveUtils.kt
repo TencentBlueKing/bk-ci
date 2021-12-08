@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
@@ -48,8 +48,8 @@ import java.nio.file.attribute.BasicFileAttributes
 
 object ArchiveUtils {
 
-    private val api = ApiFactory.create(ArchiveSDKApi::class)
     private val logger = LoggerFactory.getLogger(ArchiveUtils::class.java)
+    private val api = ArtifactApiFactory.create(ArchiveSDKApi::class)
     private const val MAX_FILE_COUNT = 100
 
     fun archiveCustomFiles(
