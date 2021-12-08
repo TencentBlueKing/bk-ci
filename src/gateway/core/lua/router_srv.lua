@@ -86,7 +86,7 @@ end
 ngx.var.target = target
 
 -- 特殊逻辑
-if(config.artifactory.realm == "local")
+if(ngx.var.url_prefix ~= nil and config.artifactory.realm == "local")
     then
        ngx.var.url_prefix = "http://"..ngx.var.target.."/resource/bk-plugin-fe/"
     else
