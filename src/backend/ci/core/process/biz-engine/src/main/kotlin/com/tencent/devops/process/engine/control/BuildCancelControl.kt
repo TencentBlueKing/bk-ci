@@ -61,7 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ComplexCondition", "TooManyFunctions")
 @Service
 class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,

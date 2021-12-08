@@ -172,7 +172,7 @@ class InitializeMatrixGroupStageCmd(
             retryFailedContainer = variables[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
             skipFailedTask = variables[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
-            containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 0)
+            containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 1)
         )
 
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
