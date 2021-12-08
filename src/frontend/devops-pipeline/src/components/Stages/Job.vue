@@ -16,6 +16,9 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
             <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status]" style="display:block" @click.stop="toggleShowAtom"></i>
+            <!-- <span v-if="showMatrixStatus" @click.stop="toggleShowAtom">
+                <Logo size="18" name="icon-angle-left" style="fill: red" class="fold-atom-icon" :class="container.status"></Logo>
+            </span> -->
         </h3>
         <atom-list
             v-show="container.isOpen !== false"

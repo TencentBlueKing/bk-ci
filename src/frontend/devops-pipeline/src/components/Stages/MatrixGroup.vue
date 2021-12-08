@@ -1,17 +1,16 @@
 <template>
     <section>
         <div class="matrix-container">
-            <div class="matrix-header">
-                <div class="matrix-name">
-                    <i class="fold-icon devops-icon" :class="container.isOpen ? 'icon-angle-up' : 'icon-angle-down'" style="display:block" @click.stop="toggleMatrixOpen"></i>
-                    <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">构建矩阵</span>
+            <div class="matrix-header" @click="showContainerPanel">
+                <div class="matrix-name" @click.stop="toggleMatrixOpen">
+                    <i class="fold-icon devops-icon" :class="container.isOpen ? 'icon-angle-up' : 'icon-angle-down'" style="display:block"></i>
+                    <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">作业矩阵</span>
                 </div>
                 <div class="matrix-status">
                     <matrix-status type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                     </matrix-status>
                     <span :title="statusDesc" class="status-desc" :class="container.status">{{statusDesc}}</span>
                 </div>
-                
             </div>
             <section class="matrix-body" v-if="container.isOpen">
                 <Job v-for="(job, jobIndex) in computedJobs"
@@ -104,7 +103,7 @@
             if (this.containerDisabled) {
                 this.container.runContainer = false
             }
-            Vue.set(this.container, 'isOpen', false)
+            Vue.set(this.container, 'isOpen', true)
         },
         methods: {
             ...mapActions('atom', [
@@ -143,7 +142,7 @@
         .matrix-header {
             display: flex;
             align-items: center;
-            cursor: default;
+            cursor: pointer;
             justify-content: space-between;
             height: 20px;
             .matrix-name {
@@ -153,7 +152,6 @@
                 color: #222222;
                 .fold-icon {
                     margin-right: 10px;
-                    cursor: pointer;
                 }
             }
             .matrix-status {

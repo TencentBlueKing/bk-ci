@@ -88,7 +88,6 @@
             })
         },
         updated () {
-            console.log('updated', this.container)
             this.updateCruveConnectHeight()
         },
         methods: {
