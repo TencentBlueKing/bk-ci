@@ -28,68 +28,31 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.REALM_LOCAL
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
 import java.io.File
 
-@Suppress("ALL")
-class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
+@ApiPriority(priority = 9)
+class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
+    private val bkrepoResourceApi = BkRepoResourceApi()
 
     override fun getRealm(): String {
-        return REALM_LOCAL
-    }
-
-    override fun uploadReport(
-        file: File,
-        taskId: String,
-        relativePath: String,
-        buildVariables: BuildVariables,
-        token: String?
-    ) {
-        val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
-        logger.info("[${buildVariables.buildId}]| purePath=$purePath")
-        val url = "/ms/artifactory/api/build/artifactories/file/archive" +
-                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
-
-        val fileBody = RequestBody.create(MultipartFormData, file)
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", file.name, fileBody)
-            .build()
-
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
-
-        val response = request(request, "上传自定义报告失败")
-
-        try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") {
-                throw RemoteServiceException("上传流水线文件失败")
-            }
-        } catch (ignored: Exception) {
-            LoggerService.addNormalLine(ignored.message ?: "")
-            throw RemoteServiceException("report archive fail: $response")
-        }
+        return REALM_BK_REPO
     }
 
     override fun getRootUrl(taskId: String): Result<String> {
-        val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
+        val path = "/ms/process/api/build/reports/$taskId/rootUrl"
         val request = buildGet(path)
         val responseContent = request(request, "获取报告跟路径失败")
         return objectMapper.readValue(responseContent)
@@ -109,17 +72,69 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
-                objectMapper.writeValueAsString(reportEmail)
-            )
+            val requestBody = RequestBody.create(MediaType.parse(
+                "application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
             buildPost(path, requestBody)
         }
         val responseContent = request(request, "创建报告失败")
         return objectMapper.readValue(responseContent)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ReportResourceApi::class.java)
+    private fun uploadBkRepoReportByToken(
+        file: File,
+        token: String,
+        task: String,
+        relativePath: String,
+        buildVariables: BuildVariables
+    ) {
+        val pipelineId = buildVariables.pipelineId
+        val buildId = buildVariables.buildId
+        bkrepoResourceApi.uploadFileByToken(
+            file = file,
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
+            token = token,
+            buildVariables = buildVariables,
+            parseAppMetadata = false
+        )
+    }
+
+    private fun uploadBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+        val projectId = buildVariables.projectId
+        val pipelineId = buildVariables.pipelineId
+        val buildId = buildVariables.buildId
+        val path = relativePath.removePrefix("/")
+        val url = "/bkrepo/api/build/generic/$projectId/report/$pipelineId/$buildId/$elementId/$path"
+
+        val request = buildPut(
+            path = url,
+            requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
+            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+        )
+        val responseContent = request(request, "上传自定义报告失败")
+        try {
+            val obj = objectMapper.readTree(responseContent)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义报告失败")
+        } catch (e: Exception) {
+            LoggerService.addNormalLine(e.message ?: "")
+            throw RemoteServiceException("report archive fail: $responseContent")
+        }
+    }
+
+    override fun uploadReport(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        if (bkrepoResourceApi.tokenAccess()) {
+            uploadBkRepoReportByToken(file, token!!, taskId, relativePath, buildVariables)
+        } else {
+            uploadBkRepoReport(file, taskId, relativePath, buildVariables)
+        }
+        bkrepoResourceApi.setPipelineMetadata("report", buildVariables)
     }
 }
