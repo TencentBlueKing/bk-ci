@@ -28,7 +28,8 @@
 package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -43,8 +44,12 @@ import okhttp3.RequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
-class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
+class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     private val bkrepoResourceApi = BkRepoResourceApi()
+
+    override fun getRealm(): String {
+        return REALM_BK_REPO
+    }
 
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/process/api/build/reports/$taskId/rootUrl"
@@ -110,11 +115,11 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         )
         val responseContent = request(request, "上传自定义报告失败")
         try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+            val obj = objectMapper.readTree(responseContent)
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义报告失败")
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
-            throw RuntimeException("report archive fail: $responseContent")
+            throw RemoteServiceException("report archive fail: $responseContent")
         }
     }
 

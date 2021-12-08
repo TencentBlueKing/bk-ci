@@ -25,12 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.artifactory.resources
 
-data class QueryData(
-    var count: Int,
-    var page: Int,
-    var pageSize: Int,
-    var totalPages: Int,
-    var records: List<QueryNodeInfo>
-)
+import com.tencent.devops.artifactory.api.builds.BuildFileGatewayResource
+import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.artifactory.service.FileGatewayService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
+@RestResource
+class BuildFileGatewayResourceImpl(
+    private val fileGatewayService: FileGatewayService
+) : BuildFileGatewayResource {
+    override fun getFileGateway(projectId: String): Result<FileGatewayInfo> {
+        return Result(fileGatewayService.getFileGateway(projectId))
+    }
+}
