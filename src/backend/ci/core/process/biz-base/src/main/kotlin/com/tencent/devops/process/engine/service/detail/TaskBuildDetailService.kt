@@ -444,7 +444,7 @@ class TaskBuildDetailService(
                     return if (stage.id.equals(stageId)) Traverse.CONTINUE else Traverse.SKIP
                 }
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer != null) {
                         val newElement: ArrayList<Element> by lazy { ArrayList<Element>(targetContainer.elements.size) }
