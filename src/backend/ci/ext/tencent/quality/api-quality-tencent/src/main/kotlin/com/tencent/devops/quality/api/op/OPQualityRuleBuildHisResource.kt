@@ -25,14 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:quality:biz-quality"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:scm:api-scm"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:quality:api-quality-tencent"))
+package com.tencent.devops.quality.api.op
+
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_RULE_BUILD_HIS"], description = "质量红线-红线构建")
+@Path("/op/qualityRuleBuildHis")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPQualityRuleBuildHisResource {
+
+    @ApiOperation("修改红线状态")
+    @Path("/updateStatus")
+    @GET
+    fun updateStatus(): Result<Int>
 }

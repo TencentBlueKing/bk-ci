@@ -25,14 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:quality:biz-quality"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:scm:api-scm"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:quality:api-quality-tencent"))
+package com.tencent.devops.quality.dao
+
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
+import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class OPQualityRuleBuildHisDao {
+
+    fun listTimeoutRule(
+        dslContext: DSLContext,
+        dateTime: LocalDateTime,
+        limit: Int,
+        startId: Long
+    ): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .and(ID.gt(startId))
+                .limit(limit)
+                .fetch()
+        }
+    }
 }
