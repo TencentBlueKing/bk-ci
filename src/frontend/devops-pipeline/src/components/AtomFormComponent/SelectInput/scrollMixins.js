@@ -128,7 +128,7 @@ export default {
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-                this.getMultipleDisplayName(this.displayName, 'name')
+                this.getMultipleDisplayName && this.getMultipleDisplayName(this.displayName, 'name')
             } else {
                 let option = {}
                 if (this.hasGroup) {

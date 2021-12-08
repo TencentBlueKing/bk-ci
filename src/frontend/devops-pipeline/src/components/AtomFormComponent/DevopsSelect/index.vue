@@ -208,9 +208,9 @@
             },
 
             clearValue () {
-                this.handleChange(this.name, this.isMultiple ? [] : '')
                 this.displayName = ''
                 this.selectedMap = {}
+                this.handleChange(this.name, this.isMultiple ? [] : '')
                 this.$refs.inputArea.focus()
             },
 
