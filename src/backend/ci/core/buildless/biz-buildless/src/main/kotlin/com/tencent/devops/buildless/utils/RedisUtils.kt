@@ -40,8 +40,7 @@ class RedisUtils @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     fun setBuildLessPoolContainer(
-        containerId: String,
-        status: ContainerStatus = ContainerStatus.IDLE
+        containerId: String
     ) {
         logger.info("----> buildLessPoolKey leftPush $containerId")
         redisOperation.leftPush(buildLessPoolKey(), formatContainerId(containerId))

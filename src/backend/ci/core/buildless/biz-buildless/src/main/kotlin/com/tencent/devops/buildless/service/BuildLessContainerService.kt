@@ -93,11 +93,11 @@ class BuildLessContainerService(
         .build()
 
     fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
-        val idlePoolSize = redisUtils.getIdleContainer()
+        val idlePoolSize = redisUtils.popIdleContainer()
 
         // 无空闲容器时执行拒绝策略
         logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
-        if (idlePoolSize == 0L) {
+        if (idlePoolSize == null) {
             val continueAllocate = rejectedExecutionFactory
                 .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
                 .rejectedExecution(buildLessStartInfo)
@@ -110,7 +110,7 @@ class BuildLessContainerService(
         // 无可空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
         logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} runningPool: $runningPool")
-        if (idlePoolSize == 0L && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
+        if (idlePoolSize == null && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
             createBuildLessPoolContainer(true)
         }
 
@@ -177,7 +177,10 @@ class BuildLessContainerService(
 
         httpDockerCli.startContainerCmd(container.id).exec()
 
-        redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
+        // 超卖创建的容器不放入构建池
+        if (!oversold) {
+            redisUtils.setBuildLessPoolContainer(container.id)
+        }
         logger.info("===> created container $container")
     }
 

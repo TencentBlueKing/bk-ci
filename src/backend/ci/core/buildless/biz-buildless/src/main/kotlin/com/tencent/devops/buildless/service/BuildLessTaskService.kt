@@ -53,7 +53,7 @@ class BuildLessTaskService(
                containerId = containerId
            )
 
-           redisUtils.popIdleContainer()
+           // redisUtils.popIdleContainer()
        }
 
        return buildLessTask
