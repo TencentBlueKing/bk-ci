@@ -25,52 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.report
+package com.tencent.devops.worker.common.api.archive
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.report.ReportEmail
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
-import java.io.File
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-interface ReportSDKApi : WorkerRestApiSDK {
-    /**
-     * 获取Api对应的Realm
-     */
-    fun getRealm(): String
+class ArtifactoryConfigResourceApi : AbstractBuildResourceApi() {
 
-    /**
-     * 获取报告跟路径
-     * @param taskId 创建这个报告的任务插件id
-     * @return 链接地址
-     */
-    fun getRootUrl(taskId: String): Result<String>
-
-    /**
-     * 创建报告要上传的记录
-     */
-    fun createReportRecord(
-        taskId: String,
-        indexFile: String,
-        name: String,
-        reportType: String? = ReportTypeEnum.INTERNAL.name,
-        reportEmail: ReportEmail? = null
-    ): Result<Boolean>
-
-    /**
-     * 归档报告
-     * @param file 报告首页文件
-     * @param taskId 当前插件任务id
-     * @param relativePath 报告首页所在的本地文件相对路径
-     * @param buildVariables 构建变量
-     * @param token 令牌
-     */
-    fun uploadReport(
-        file: File,
-        taskId: String,
-        relativePath: String,
-        buildVariables: BuildVariables,
-        token: String? = null
-    )
+    fun getRealm(): String {
+        val path = "/ms/artifactory/api/build/artifactories/conf/realm"
+        val request = buildGet(path)
+        val responseContent = request(request, "get artifactory realm error")
+        return objectMapper.readValue<Result<String>>(responseContent).data!!
+    }
 }
