@@ -28,10 +28,9 @@
 package com.tencent.devops.quality.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.StageQualityRequest
-import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.OPQualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
 import org.jooq.DSLContext
@@ -42,7 +41,7 @@ import java.time.LocalDateTime
 
 @Service
 class OPQualityRuleBuildHisService @Autowired constructor(
-    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val qualityRuleBuildHisDao: OPQualityRuleBuildHisDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
     private val dslContext: DSLContext,
     private val client: Client
@@ -51,20 +50,14 @@ class OPQualityRuleBuildHisService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(QualityRuleBuildHisService::class.java)
 
     fun updateRuleBuildHisStatus(): Int {
-        var count = 0
+        var currId = 0L
+        var count = 50
+        val limit = 50
         val dateTime = LocalDateTime.now().minusDays(1)
-        val ruleCount = qualityRuleBuildHisDao.listTimeOutRuleCount(dslContext, dateTime)
-        val timeOutRules = mutableListOf<TQualityRuleBuildHisRecord>()
-        while (null != ruleCount && count < ruleCount) {
-            timeOutRules.addAll(qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime, 50, count))
-            count += 50
-        }
-        logger.info("QUALITY|time_out_rule count is: $ruleCount")
-        if (timeOutRules.size > 0) {
-            count = qualityRuleBuildHisDao.updateTimeoutRuleStatus(timeOutRules.map { it.id })
-            logger.info("QUALITY|update_rule_status_count: $count")
-            val processClient = client.get(ServiceBuildResource::class)
-            timeOutRules.map { rule ->
+        val processClient = client.get(ServiceBuildResource::class)
+        while (count > 0) {
+            val records = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime, limit, currId)
+            records.forEach { rule ->
                 try {
                     val trigger = processClient.qualityTriggerStage(
                         userId = rule.createUser,
@@ -86,6 +79,8 @@ class OPQualityRuleBuildHisService @Autowired constructor(
                             "buildId: ${rule.buildId} has triggered")
                 }
             }
+            count = records.size
+            currId = records.last().id
         }
         return count
     }
