@@ -62,9 +62,9 @@ class ContainerBuildDetailService(
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
-                    logger.info("[$buildId]|containerPreparing|id=$id&containerId=$containerId|startVMStatus " +
+                    logger.info("[$buildId]|containerPreparing|containerId=$containerId|startVMStatus " +
                         "changed from ${targetContainer?.startVMStatus} to RUNNING")
                     if (targetContainer != null) {
                         targetContainer.startEpoch = System.currentTimeMillis()
@@ -91,7 +91,7 @@ class ContainerBuildDetailService(
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer != null) {
                         if (targetContainer.startEpoch != null) {
@@ -125,7 +125,7 @@ class ContainerBuildDetailService(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 val targetContainer = container.getContainerById(containerId)
                 if (targetContainer != null) {
                     update = true
@@ -160,7 +160,7 @@ class ContainerBuildDetailService(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
                     update = true
                     if (container is VMBuildContainer && modelContainer is VMBuildContainer) {
@@ -191,7 +191,7 @@ class ContainerBuildDetailService(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
                     update = true
                     if (container is VMBuildContainer) {
@@ -218,7 +218,7 @@ class ContainerBuildDetailService(
 
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer !is TriggerContainer && targetContainer != null) {
                         // 兼容id字段

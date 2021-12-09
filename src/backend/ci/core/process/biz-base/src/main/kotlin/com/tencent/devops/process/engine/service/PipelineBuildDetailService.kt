@@ -191,7 +191,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 val status = BuildStatus.parse(container.status)
                 if (status == BuildStatus.PREPARE_ENV) {
                     if (container.startEpoch == null) {
@@ -273,7 +273,7 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (!container.status.isNullOrBlank() && BuildStatus.valueOf(container.status!!).isRunning()) {
                     container.status = buildStatus.name
                     update = true
@@ -363,7 +363,7 @@ class PipelineBuildDetailService @Autowired constructor(
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer != null) {
                         if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {

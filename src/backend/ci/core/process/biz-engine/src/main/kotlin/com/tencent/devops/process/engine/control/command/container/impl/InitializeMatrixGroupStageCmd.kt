@@ -54,12 +54,15 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import kotlin.math.min
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -73,7 +76,8 @@ import org.springframework.stereotype.Service
     "LongMethod",
     "ReturnCount",
     "NestedBlockDepth",
-    "ThrowsCount"
+    "ThrowsCount",
+    "LongParameterList"
 )
 @Service
 class InitializeMatrixGroupStageCmd(
@@ -114,12 +118,13 @@ class InitializeMatrixGroupStageCmd(
             "matrix(${parentContainer.containerId})|newContainerCount=$count")
 
         if (count > 0) {
-            commandContext.cmdFlowState = CmdFlowState.CONTINUE
-            commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
+            commandContext.buildStatus = BuildStatus.RUNNING
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
         } else {
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.cmdFlowState = CmdFlowState.FINALLY
-            commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
+            commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
         }
     }
 
@@ -167,7 +172,7 @@ class InitializeMatrixGroupStageCmd(
             retryFailedContainer = variables[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
             skipFailedTask = variables[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
-            containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 0)
+            containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 1)
         )
 
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
@@ -308,6 +313,10 @@ class InitializeMatrixGroupStageCmd(
         // 新增容器全部添加到Container表中
         buildContainerList.addAll(groupContainers)
         matrixOption.totalCount = groupContainers.size
+        matrixOption.maxConcurrency = min(
+            matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
+            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+        )
 
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
             "|${event.stageId}|${modelContainer.id}|containerHashId=" +

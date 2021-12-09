@@ -61,7 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ComplexCondition", "TooManyFunctions")
 @Service
 class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,
@@ -221,7 +221,7 @@ class BuildCancelControl @Autowired constructor(
         variables: Map<String, String>,
         container: Container,
         stageStatus: BuildStatus,
-        executeCount: Int,
+        executeCount: Int
     ) {
         val containerId = container.id ?: ""
         val pipelineContainer = pipelineContainerService.getContainer(buildId, stageId, containerId) ?: run {
