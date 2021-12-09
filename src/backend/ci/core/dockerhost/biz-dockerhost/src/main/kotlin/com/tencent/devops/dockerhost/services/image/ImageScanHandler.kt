@@ -16,12 +16,7 @@ class ImageScanHandler(
         with(handlerContext) {
             if (scanFlag) {
                 val result = dockerHostImageScanService.scanningDocker(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId.toString(),
-                    userName = userName,
-                    imageTagSet = imageTagSet,
+                    imageHandlerContext = this,
                     dockerClient = dockerClient
                 )
 
