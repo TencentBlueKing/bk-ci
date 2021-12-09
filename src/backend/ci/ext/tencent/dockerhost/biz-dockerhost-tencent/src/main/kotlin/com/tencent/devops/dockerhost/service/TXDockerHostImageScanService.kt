@@ -31,7 +31,7 @@ class TXDockerHostImageScanService(
         buildId: String,
         vmSeqId: String,
         userName: String,
-        imageTagSet: MutableSet<String>,
+        imageId: String,
         dockerClient: DockerClient
     ): String {
         lateinit var longDockerClient: DockerClient
@@ -52,7 +52,7 @@ class TXDockerHostImageScanService(
 
             // 取任意一个tag扫描就可以
             val imageTag = imageTagSet.first()
-            val inputStream = longDockerClient.saveImageCmd(imageTag.substringBeforeLast(":"))
+            /*val inputStream = longDockerClient.saveImageCmd(imageTag.substringBeforeLast(":"))
                 .withTag(imageTag.substringAfterLast(":"))
                 .exec()
 
@@ -60,11 +60,11 @@ class TXDockerHostImageScanService(
                 .digest(imageTag.toByteArray()))
             val imageSavedPath = "$dockerSavedPath/$uniqueImageCode.tar"
             val targetSavedImagesFile = File(imageSavedPath)
-            FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)
+            FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)*/
 
             try {
-                logger.info("[$buildId]|[$vmSeqId] start scan dockeriamge, imageSavedPath: $imageSavedPath")
-                val script = "dockerscan -t $imageSavedPath -p $pipelineId -u $imageTag -i dev " +
+                logger.info("[$buildId]|[$vmSeqId] start scan dockerimage, imageId: $imageId")
+                val script = "dockerscan -t $imageId -p $pipelineId -u $imageTag -i dev " +
                         "-T $projectId -b $buildId -n $userName"
                 val scanResult = ShellUtil.executeEnhance(script)
                 logger.info("[$buildId]|[$vmSeqId] scan docker $imageTag result: $scanResult")
@@ -77,8 +77,7 @@ class TXDockerHostImageScanService(
                 logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
             } finally {
                 // longDockerClient.removeImageCmd(imageTag).exec()
-                File(imageSavedPath).delete()
-                logger.info("[$buildId]|[$vmSeqId] Remove local image success")
+                // logger.info("[$buildId]|[$vmSeqId] Remove local image success")
             }
         } catch (e: Exception) {
             logger.error("[$buildId]|[$vmSeqId] scan docker error.", e)
