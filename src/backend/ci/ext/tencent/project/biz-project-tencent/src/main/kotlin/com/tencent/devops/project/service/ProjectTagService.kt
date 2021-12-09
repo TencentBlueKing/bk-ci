@@ -76,13 +76,11 @@ class ProjectTagService @Autowired constructor(
             projectIds = projectTagUpdateDTO.projectCodeList!!,
             routerTag = projectTagUpdateDTO.routerTag
         )
-        executePool.submit {
-            refreshRouterByProject(
-                routerTag = projectTagUpdateDTO.routerTag,
-                redisOperation = redisOperation,
-                projectCodeIds = projectTagUpdateDTO.projectCodeList!!
-            )
-        }
+        refreshRouterByProject(
+            routerTag = projectTagUpdateDTO.routerTag,
+            redisOperation = redisOperation,
+            projectCodeIds = projectTagUpdateDTO.projectCodeList!!
+        )
         return Result(true)
     }
 

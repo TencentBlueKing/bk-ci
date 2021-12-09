@@ -3,7 +3,7 @@ package com.tencent.devops.stream.listener.buildFinish
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -13,8 +13,8 @@ import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.CommitCheckUtils
