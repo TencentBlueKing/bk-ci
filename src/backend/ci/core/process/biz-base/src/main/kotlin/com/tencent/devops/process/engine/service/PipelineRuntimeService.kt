@@ -887,11 +887,6 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = startBuildStatus,
                         cancelUser = ""
                     )
-                    pipelineBuildDao.updateBuildParameters(
-                        dslContext = transactionContext,
-                        buildId = buildId,
-                        buildParameters = originStartParams
-                    )
                 } else { // 创建构建记录
                     val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
                         val parsedValue = pipelineRuleService.parsePipelineRule(
