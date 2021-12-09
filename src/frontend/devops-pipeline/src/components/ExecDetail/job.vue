@@ -9,7 +9,19 @@
             <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
         <template v-slot:content>
-            <job-log v-show="currentTab === 'log'"
+            
+            <plugin-log :id="currentJob.containerHashId"
+                :build-id="execDetail.id"
+                :current-tab="currentTab"
+                :execute-count="currentJob.executeCount"
+                type="containerLog"
+                ref="jobLog"
+                v-show="currentTab === 'log'"
+                v-if="currentJob.matrixGroupFlag"
+            />
+            <job-log
+                v-else
+                v-show="currentTab === 'log'"
                 :plugin-list="pluginList"
                 :build-id="execDetail.id"
                 :down-load-link="downLoadJobLink"
@@ -30,6 +42,7 @@
 <script>
     import { mapState } from 'vuex'
     import jobLog from './log/jobLog'
+    import pluginLog from './log/pluginLog'
     import detailContainer from './detailContainer'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
 
@@ -37,6 +50,7 @@
         components: {
             detailContainer,
             jobLog,
+            pluginLog,
             ContainerContent
         },
 

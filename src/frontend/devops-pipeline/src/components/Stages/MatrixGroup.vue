@@ -3,7 +3,7 @@
         <div class="matrix-container">
             <div class="matrix-header" @click="showContainerPanel">
                 <div class="matrix-name" @click.stop="toggleMatrixOpen">
-                    <i class="fold-icon devops-icon" :class="container.isOpen ? 'icon-angle-up' : 'icon-angle-down'" style="display:block"></i>
+                    <i class="fold-icon devops-icon" :class="container.isOpen !== false ? 'icon-angle-up' : 'icon-angle-down'" style="display:block"></i>
                     <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">{{$t('editPage.jobMatrix')}}</span>
                 </div>
                 <div class="matrix-status">
@@ -12,7 +12,7 @@
                     <span :title="statusDesc" class="status-desc" :class="container.status">{{statusDesc}}</span>
                 </div>
             </div>
-            <section class="matrix-body" v-if="container.isOpen">
+            <section class="matrix-body" v-if="container.isOpen !== false">
                 <Job v-for="(job, jobIndex) in computedJobs"
                     :key="job.containerId"
                     :stage-index="stageIndex"
@@ -78,7 +78,7 @@
                     Vue.set(container, 'isOpen', false)
                     container.elements.forEach((element, index) => {
                         const eleItem = this.container.elements[index] || {}
-                        Object.assign(element, eleItem)
+                        Object.assign(element, eleItem, { id: element.id })
                     })
                 })
                 return this.container.groupContainers
