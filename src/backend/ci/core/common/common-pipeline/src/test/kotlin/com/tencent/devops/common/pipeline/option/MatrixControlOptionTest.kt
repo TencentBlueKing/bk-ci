@@ -10,7 +10,7 @@ import java.util.Random
 internal class MatrixControlOptionTest {
 
     @Test
-    fun convertCase(){
+    fun convertCase() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = """

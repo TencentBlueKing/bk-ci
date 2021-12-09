@@ -28,7 +28,6 @@
 package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
-import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
  * 扩展DispatchInfo的子类

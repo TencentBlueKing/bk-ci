@@ -326,7 +326,7 @@ class PipelineContainerService @Autowired constructor(
         var taskSeq = 0
         val containerElements = container.elements
 
-        if (container.matrixGroupFlag != null) containerElements.forEach nextElement@{ atomElement ->
+        if (container.matrixGroupFlag != true) containerElements.forEach nextElement@{ atomElement ->
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
             // 计算启动构建机的插件任务的序号
             if (startVMTaskSeq < 0) {
