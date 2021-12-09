@@ -9,7 +9,7 @@ interface DockerHostImageScanService {
         buildId: String,
         vmSeqId: String,
         userName: String,
-        imageTagSet: MutableSet<String>,
+        imageId: String,
         dockerClient: DockerClient
     ): String
 }
