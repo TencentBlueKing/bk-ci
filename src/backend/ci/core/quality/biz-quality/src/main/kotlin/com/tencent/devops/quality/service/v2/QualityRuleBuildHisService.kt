@@ -291,7 +291,7 @@ class QualityRuleBuildHisService constructor(
     }
 
     fun updateStatus(ruleBuildId: Long, status: String): Int {
-        val count = qualityRuleBuildHisDao.updateStatus(ruleBuildId, status)
+        val count = qualityRuleBuildHisDao.updateStatus(listOf(ruleBuildId), status)
         logger.info("finish to update rule his status: $count, $ruleBuildId, $status")
         return count
     }

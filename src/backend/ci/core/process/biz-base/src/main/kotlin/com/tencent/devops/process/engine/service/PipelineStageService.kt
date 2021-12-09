@@ -407,7 +407,8 @@ class PipelineStageService @Autowired constructor(
                     buildId = buildStage.buildId, userId = userId,
                     reviewType = reviewType,
                     status = reviewStatus.name,
-                    stageId = buildStage.stageId, taskId = null
+                    stageId = buildStage.stageId, taskId = null,
+                    timeout = timeout
                 ),
                 PipelineBuildStageEvent(
                     source = source, projectId = projectId,

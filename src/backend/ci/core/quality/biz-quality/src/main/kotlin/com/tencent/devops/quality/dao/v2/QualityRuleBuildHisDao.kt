@@ -101,6 +101,21 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
+    fun listBuildHisRules(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        ruleBuildId: String
+    ): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(ruleBuildId))
+                .fetch()
+        }
+    }
+
     fun cleanQualityRule(daysAgo: Long): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             // delete data days ago
@@ -110,7 +125,7 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String): Int {
+    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String?): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)
                 .set(BUILD_ID, buildId)
@@ -119,11 +134,11 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun updateStatus(ruleBuildId: Long, ruleResult: String): Int {
+    fun updateStatus(ruleBuildIds: Collection<Long>, ruleResult: String?): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)
                 .set(STATUS, ruleResult)
-                .where(ID.eq(ruleBuildId))
+                .where(ID.`in`(ruleBuildIds))
                 .execute()
         }
     }
