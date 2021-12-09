@@ -58,7 +58,8 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val redisUtils: RedisUtils,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val buildLessWhitelistService: BuildLessWhitelistService
 ) {
     fun startUpBuildLess(event: PipelineBuildLessStartupDispatchEvent) {
         val pipelineId = event.pipelineId
@@ -91,7 +92,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        if (event.projectId == "test-sawyer2") {
+        if (buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
             val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -142,7 +143,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                if (record.projectId == "test-sawyer2") {
+                if (buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
                     buildLessClient.endBuild(
                         projectId = record.projectId,
                         pipelineId = record.pipelineId,

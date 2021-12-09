@@ -51,6 +51,9 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeLogs:/data/logs/}")
     var volumeLogs: String? = null
 
+    @Value("\${dockerCli.volumeWorkspace:/data/devops/workspace}")
+    var volumeWorkspace: String? = null
+
     @Value("\${dockerCli.hostPathApps:#{null}}")
     var hostPathApps: String? = null
 
@@ -62,6 +65,9 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.hostPathLogs:#{null}}")
     var hostPathLogs: String? = null
+
+    @Value("\${dockerCli.hostPathWorkspace:#{null}}")
+    var hostPathWorkspace: String? = null
 
     @Value("\${dockerCli.memoryLimitBytes:34359738368}")
     var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G

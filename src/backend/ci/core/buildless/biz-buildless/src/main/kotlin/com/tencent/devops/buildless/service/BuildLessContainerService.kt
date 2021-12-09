@@ -136,6 +136,7 @@ class BuildLessContainerService(
         val volumeInit = Volume(dockerHostConfig.volumeInit)
         val volumeSleep = Volume(dockerHostConfig.volumeSleep)
         val volumeLogs = Volume(dockerHostConfig.volumeLogs)
+        val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
 
         val gateway = dockerHostConfig.gateway
         val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
@@ -143,7 +144,8 @@ class BuildLessContainerService(
             Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
             Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
+            Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs),
+            Bind(dockerHostConfig.hostPathWorkspace + "/$containerName", volumeWs)
         )
 
         // 创建之前校验当前缓存中的空闲容器数，超卖情况下校验规则不一致
@@ -180,9 +182,7 @@ class BuildLessContainerService(
 
         httpDockerCli.startContainerCmd(container.id).exec()
 
-        // 超卖创建的容器不放入构建池
         redisUtils.setBuildLessPoolContainer(container.id)
-
         redisUtils.increIdleContainer(1)
         logger.info("===> created container $container")
     }
