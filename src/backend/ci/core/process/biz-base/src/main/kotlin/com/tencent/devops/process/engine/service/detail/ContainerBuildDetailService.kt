@@ -119,7 +119,7 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun updateContainerStatus(buildId: String, containerId: String, buildStatus: BuildStatus) {
+    fun updateContainerStatus(buildId: String, containerId: String, buildStatus: BuildStatus, executeCount: Int) {
         logger.info("[$buildId]|container_end|containerId=$containerId|status=$buildStatus")
         update(buildId, object : ModelInterface {
 
@@ -130,6 +130,7 @@ class ContainerBuildDetailService(
                 if (targetContainer != null) {
                     update = true
                     targetContainer.status = buildStatus.name
+                    targetContainer.executeCount = executeCount
                     if (buildStatus.isFinish() &&
                         (targetContainer.startVMStatus == null ||
                             !BuildStatus.valueOf(targetContainer.startVMStatus!!).isFinish())

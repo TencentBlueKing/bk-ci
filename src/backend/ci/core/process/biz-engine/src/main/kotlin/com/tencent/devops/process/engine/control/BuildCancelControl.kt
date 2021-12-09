@@ -254,7 +254,8 @@ class BuildCancelControl @Autowired constructor(
                 containerBuildDetailService.updateContainerStatus(
                     buildId = event.buildId,
                     containerId = containerId,
-                    buildStatus = switchedStatus
+                    buildStatus = switchedStatus,
+                    executeCount = executeCount
                 )
                 // 构建机关机
                 if (container is VMBuildContainer) {

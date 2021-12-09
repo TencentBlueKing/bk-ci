@@ -61,17 +61,6 @@ class UpdateStateContainerCmdFinally(
         // 更新状态模型
         updateContainerStatus(commandContext = commandContext)
 
-        // 如果是构建矩阵的刷新状态且未完成则重放一个事件保证轮询
-        if (commandContext.container.matrixGroupFlag == true && commandContext.buildStatus.isRunning()) {
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(
-                    actionType = ActionType.REFRESH,
-                    source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
-                )
-            )
-        }
-
         // 结束时才会释放锁定及返回
         if (commandContext.buildStatus.isFinish()) {
             // 释放互斥组
@@ -89,6 +78,15 @@ class UpdateStateContainerCmdFinally(
                 "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}")
             // #4518 如果该容器不属于某个矩阵时上报stage处理
             if (matrixGroupId.isNullOrBlank()) sendBackStage(commandContext = commandContext)
+        } else if (commandContext.container.matrixGroupFlag == true) {
+            // 如果是构建矩阵的刷新状态且未完成则重放一个事件保证轮询
+            pipelineEventDispatcher.dispatch(
+                commandContext.event.copy(
+                    actionType = ActionType.REFRESH,
+                    source = commandContext.latestSummary,
+                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
+                )
+            )
         }
     }
 
@@ -141,7 +139,8 @@ class UpdateStateContainerCmdFinally(
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
             containerBuildDetailService.updateContainerStatus(
-                buildId = event.buildId, containerId = event.containerId, buildStatus = buildStatus
+                buildId = event.buildId, containerId = event.containerId,
+                buildStatus = buildStatus, executeCount = commandContext.executeCount
             )
         }
     }
