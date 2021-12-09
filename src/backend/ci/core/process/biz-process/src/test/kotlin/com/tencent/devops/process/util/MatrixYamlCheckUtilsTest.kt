@@ -1,6 +1,7 @@
 package com.tencent.devops.process.util
 
-import com.tencent.devops.process.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import org.junit.Test
 import org.junit.Assert
 

@@ -40,9 +40,12 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -339,6 +342,24 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
+            try {
+                when {
+                    c.matrixGroupFlag != true -> {
+                        // c.matrixGroupFlag 不为 true 时 不需要做yaml检查
+                    }
+                    c is NormalContainer -> {
+                        matrixYamlCheck(c.matrixControlOption)
+                    }
+                    c is VMBuildContainer -> {
+                        matrixYamlCheck(c.matrixControlOption)
+                    }
+                }
+            } catch (e: Exception) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
+                    defaultMessage = "矩阵 yaml 格式错误"
+                )
+            }
 
             // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
             c.id = containerSeqId.get().toString()
@@ -393,6 +414,18 @@ class PipelineRepositoryService constructor(
                 )
             }
         }
+    }
+
+    private fun matrixYamlCheck(matrixControlOption: MatrixControlOption?) {
+        MatrixContextUtils.schemaCheck(
+            JsonUtil.toJson(
+                MatrixPipelineInfo(
+                    include = matrixControlOption?.includeCaseStr,
+                    exclude = matrixControlOption?.excludeCaseStr,
+                    strategy = matrixControlOption?.strategyStr
+                ).toMatrixConvert()
+            )
+        )
     }
 
     private fun create(
@@ -913,7 +946,8 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 excludePipelineId = setting.pipelineId,
                 pipelineName = setting.pipelineName
-            )) {
+            )
+        ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
@@ -946,7 +980,8 @@ class PipelineRepositoryService constructor(
                     setting = setting,
                     version = version,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
-                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
+                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
+                    ).data
                 )
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
