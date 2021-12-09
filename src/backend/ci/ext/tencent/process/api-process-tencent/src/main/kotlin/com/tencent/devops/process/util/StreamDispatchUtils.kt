@@ -54,6 +54,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
+@Suppress("NestedBlockDepth", "ComplexMethod")
 object StreamDispatchUtils {
 
     private val logger = LoggerFactory.getLogger(StreamDispatchUtils::class.java)
@@ -84,7 +85,6 @@ object StreamDispatchUtils {
         ParamBlankException::class,
         CustomException::class
     )
-    @Suppress("NestedBlockDepth")
     fun getDispatchType(
         client: Client,
         objectMapper: ObjectMapper,
@@ -191,7 +191,6 @@ object StreamDispatchUtils {
         }
     }
 
-    @Suppress("NestedBlockDepth")
     private fun getEnvName(client: Client, poolName: String, pools: List<ResourcesPools>?): String {
         if (pools.isNullOrEmpty()) {
             return poolName

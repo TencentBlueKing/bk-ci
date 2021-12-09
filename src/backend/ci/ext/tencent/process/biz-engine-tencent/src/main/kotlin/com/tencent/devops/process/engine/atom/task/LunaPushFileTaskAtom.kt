@@ -72,7 +72,12 @@ class LunaPushFileTaskAtom @Autowired constructor(
         val pipelineId = task.pipelineId
         val userId = task.starter
 
-        val ticketsMap = CommonCredentialUtils.getCredential(client, projectId, ticketId, CredentialType.APPID_SECRETKEY)
+        val ticketsMap = CommonCredentialUtils.getCredential(
+            client = client,
+            projectId = projectId,
+            credentialId = ticketId,
+            type = CredentialType.APPID_SECRETKEY
+        )
 
         val uploadParams = LunaUploadParam(
             userId,
