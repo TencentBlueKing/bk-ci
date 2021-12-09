@@ -117,8 +117,8 @@ object MatrixContextUtils {
         return output
     }
 
-    fun schemaCheck(originYaml: String){
-        if (originYaml.isNullOrBlank()){
+    fun schemaCheck(originYaml: String) {
+        if (originYaml.isNullOrBlank()) {
             return
         }
         val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
