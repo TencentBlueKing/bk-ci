@@ -2,17 +2,13 @@ package com.tencent.devops.dockerhost
 
 import com.github.dockerjava.api.DockerClient
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
+import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 import org.springframework.stereotype.Component
 
 @Component
 class SampleDockerHostImageScanService : DockerHostImageScanService {
     override fun scanningDocker(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        userName: String,
-        imageId: String,
+        imageHandlerContext: ImageHandlerContext,
         dockerClient: DockerClient
     ): String {
         // do something before push images
