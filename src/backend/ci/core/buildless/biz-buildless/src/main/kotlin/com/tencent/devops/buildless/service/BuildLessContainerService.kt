@@ -108,6 +108,7 @@ class BuildLessContainerService(
 
         // 已经进入需求池，所以减1
         redisUtils.increIdleContainer(-1)
+        redisUtils.popIdleContainer()
 
         // 无空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
@@ -180,9 +181,7 @@ class BuildLessContainerService(
         httpDockerCli.startContainerCmd(container.id).exec()
 
         // 超卖创建的容器不放入构建池
-        if (!oversold) {
-            redisUtils.setBuildLessPoolContainer(container.id)
-        }
+        redisUtils.setBuildLessPoolContainer(container.id)
 
         redisUtils.increIdleContainer(1)
         logger.info("===> created container $container")
