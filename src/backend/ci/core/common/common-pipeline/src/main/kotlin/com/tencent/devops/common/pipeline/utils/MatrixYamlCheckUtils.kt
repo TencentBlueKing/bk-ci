@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import com.tencent.devops.process.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 
 object MatrixYamlCheckUtils {
     fun checkYaml(yaml: MatrixPipelineInfo): MatrixPipelineInfo {

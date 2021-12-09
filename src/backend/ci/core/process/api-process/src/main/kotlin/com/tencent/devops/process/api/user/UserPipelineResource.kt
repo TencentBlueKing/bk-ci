@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
