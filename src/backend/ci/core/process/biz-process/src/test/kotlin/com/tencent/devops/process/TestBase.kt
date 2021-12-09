@@ -66,7 +66,7 @@ open class TestBase {
         const val stageId = "stage-1"
         const val firstContainerId = "1"
         const val firstContainerIdInt = 1
-        const val taskId = "e-12345678901234567890123456789012"
+        const val containerHashId = "c-12345678901234567890123456789012"
         const val atomCode = "atomCode"
         const val userId = "user0"
     }
@@ -231,7 +231,9 @@ open class TestBase {
                 mutexGroup = null
             ),
             cost = containerCost,
-            matrixGroupId = null
+            matrixGroupId = null,
+            matrixGroupFlag = false,
+            containerHashId = containerHashId
         )
     }
 
