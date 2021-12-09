@@ -150,7 +150,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     resources = customInfo.resources,
                     context = context,
                     containsMatrix = true
-                ), StreamDispatchUtils.getBaseOs(customInfo.job)
+                ), StreamDispatchUtils.getBaseOs(customInfo.job, context)
             )
             else -> null
         }

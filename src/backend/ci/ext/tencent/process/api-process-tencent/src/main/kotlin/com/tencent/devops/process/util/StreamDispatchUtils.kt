@@ -58,14 +58,16 @@ object StreamDispatchUtils {
 
     private val logger = LoggerFactory.getLogger(StreamDispatchUtils::class.java)
 
-    fun getBaseOs(job: Job): VMBaseOS {
+    fun getBaseOs(job: Job, context: Map<String, String>? = null): VMBaseOS {
+        val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         // 公共构建机池
-        if (job.runsOn.poolName == JobRunsOnType.DOCKER.type) {
+        if (poolName == JobRunsOnType.DOCKER.type) {
             return VMBaseOS.LINUX
-        } else if (job.runsOn.poolName.startsWith("macos")) {
+        } else if (poolName.startsWith("macos")) {
             return VMBaseOS.MACOS
         }
 
+        // agentSelector 不支持占位符
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
             return VMBaseOS.ALL
         }
@@ -165,7 +167,7 @@ object StreamDispatchUtils {
                     }
 
                     containerPool = Pool(
-                        container = container.image,
+                        container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
                         credential = Credential(
                             user = user,
                             password = password
