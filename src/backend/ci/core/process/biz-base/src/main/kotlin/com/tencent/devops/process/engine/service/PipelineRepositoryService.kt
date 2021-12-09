@@ -364,7 +364,8 @@ class PipelineRepositoryService constructor(
             } catch (e: Exception) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
-                    defaultMessage = "矩阵 yaml 格式错误"
+                    params = arrayOf(c.name),
+                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误"
                 )
             }
 
