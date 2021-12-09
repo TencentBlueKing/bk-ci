@@ -47,7 +47,6 @@ import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.CommonUtils
-import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
@@ -93,11 +92,11 @@ class BuildLessContainerService(
         .build()
 
     fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
-        val idlePoolSize = redisUtils.popIdleContainer()
+        val idlePoolSize = redisUtils.getIdlePoolSize()
 
         // 无空闲容器时执行拒绝策略
         logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
-        if (idlePoolSize == null) {
+        if (idlePoolSize <= 0L) {
             val continueAllocate = rejectedExecutionFactory
                 .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
                 .rejectedExecution(buildLessStartInfo)
@@ -107,10 +106,13 @@ class BuildLessContainerService(
             }
         }
 
-        // 无可空闲容器并且当前容器数小于最大容器数
+        // 已经进入需求池，所以减1
+        redisUtils.increIdleContainer(-1)
+
+        // 无空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
         logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} runningPool: $runningPool")
-        if (idlePoolSize == null && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
+        if (idlePoolSize <= 0L && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
             createBuildLessPoolContainer(true)
         }
 
@@ -143,7 +145,7 @@ class BuildLessContainerService(
             Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs)
         )
 
-        // 创建之前校验当前缓存中的空闲容器数
+        // 创建之前校验当前缓存中的空闲容器数，超卖情况下校验规则不一致
         val runningContainerCount = getRunningPoolCount()
         if (!oversold && runningContainerCount >= CORE_CONTAINER_POOL_SIZE) return
         if (oversold && runningContainerCount >= MAX_CONTAINER_POOL_SIZE) return
@@ -181,6 +183,8 @@ class BuildLessContainerService(
         if (!oversold) {
             redisUtils.setBuildLessPoolContainer(container.id)
         }
+
+        redisUtils.increIdleContainer(1)
         logger.info("===> created container $container")
     }
 

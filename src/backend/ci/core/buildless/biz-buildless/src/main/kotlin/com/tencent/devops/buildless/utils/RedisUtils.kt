@@ -55,6 +55,14 @@ class RedisUtils @Autowired constructor(
         return redisOperation.rightPop(buildLessPoolKey())
     }
 
+    fun increIdleContainer(incr: Long) {
+        redisOperation.increment(idlePoolKey(), incr)
+    }
+
+    fun getIdlePoolSize(): Long {
+        return redisOperation.get(idlePoolKey())?.toLong() ?: 0L
+    }
+
     fun leftPushBuildLessReadyTask(buildLessTask: BuildLessTask) {
         redisOperation.leftPush(buildLessReadyTaskKey(), JsonUtil.toJson(buildLessTask))
     }
@@ -74,6 +82,10 @@ class RedisUtils @Autowired constructor(
 
     fun getBuildLessReadyTaskCount(): Long {
         return redisOperation.listSize(buildLessReadyTaskKey()) ?: 0L
+    }
+
+    private fun idlePoolKey(): String {
+        return "buildless:idle_pool:${CommonUtils.getInnerIP()}"
     }
 
     private fun buildLessPoolKey(): String {
