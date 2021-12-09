@@ -404,34 +404,68 @@ class QualityHistoryService @Autowired constructor(
         val ruleIdToNameMap = ruleBuildHis.map { it.hashId to it.name }.toMap()
         val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
             null, null, null, null, null)
-        return recordList.map {
-            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
-            val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
-            val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
-            val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
-            val ruleResult = if (buildHis?.status != null) buildHis.status!!.name else it.result
-            RuleInterceptHistory(
-                hashId = HashUtil.encodeLongId(it.id),
-                num = it.projectNum,
-                timestamp = it.createTime.timestamp(),
-                interceptResult = RuleInterceptResult.valueOf(ruleResult),
-                ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
-                pipelineId = it.pipelineId,
-                pipelineName = "",
-                buildId = it.buildId,
-                buildNo = "",
-                checkTimes = it.checkTimes,
-                remark = "",
-                interceptList = interceptList,
-                qualityRuleBuildHisOpt = QualityRuleBuildHisOpt(
-                    HashUtil.encodeLongId(it.id),
-                    buildHis?.gateKeepers ?: null,
-                    ruleBuildHisOpt?.stageId ?: "",
-                    ruleBuildHisOpt?.gateOptUser ?: "",
-                    ruleBuildHisOpt?.gateOptTime ?: ""
+        if (recordList.isEmpty()) {
+            return ruleBuildHis.map { rule ->
+                val ruleInterceptRecords =  rule.indicators.map {
+                    QualityRuleInterceptRecord(
+                        indicatorId = it.hashId,
+                        indicatorName = it.cnName,
+                        indicatorType = null,
+                        operation = it.operation,
+                        value = it.threshold,
+                        actualValue = null,
+                        controlPoint = "",
+                        pass = false,
+                        detail = null,
+                        logPrompt = null
+                    )
+                }
+                RuleInterceptHistory(
+                    hashId = rule.hashId,
+                    num = 0,
+                    timestamp = LocalDateTime.now().timestamp(),
+                    interceptResult = RuleInterceptResult.UNCHECK,
+                    ruleHashId = "",
+                    ruleName = rule.name,
+                    pipelineId = pipelineId ?: "",
+                    pipelineName = "",
+                    buildId = buildId ?: "",
+                    buildNo = "",
+                    checkTimes = 0,
+                    remark = "",
+                    interceptList = ruleInterceptRecords
                 )
-            )
+            }
+        } else {
+            return recordList.map {
+                val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+                val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
+                val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
+                val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
+                val ruleResult = if (buildHis?.status != null) buildHis.status!!.name else it.result
+                RuleInterceptHistory(
+                    hashId = HashUtil.encodeLongId(it.id),
+                    num = it.projectNum,
+                    timestamp = it.createTime.timestamp(),
+                    interceptResult = RuleInterceptResult.valueOf(ruleResult),
+                    ruleHashId = hisRuleHashId,
+                    ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                    pipelineId = it.pipelineId,
+                    pipelineName = "",
+                    buildId = it.buildId,
+                    buildNo = "",
+                    checkTimes = it.checkTimes,
+                    remark = "",
+                    interceptList = interceptList,
+                    qualityRuleBuildHisOpt = QualityRuleBuildHisOpt(
+                        HashUtil.encodeLongId(it.id),
+                        buildHis?.gateKeepers ?: null,
+                        ruleBuildHisOpt?.stageId ?: "",
+                        ruleBuildHisOpt?.gateOptUser ?: "",
+                        ruleBuildHisOpt?.gateOptTime ?: ""
+                    )
+                )
+            }
         }
     }
 
