@@ -29,19 +29,19 @@ _M = {}
 ]]
 function _M:auth_agent()
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_build_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-BUILD-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-BUILD-ID")
         ngx.exit(401)
         return
     end
@@ -72,7 +72,7 @@ function _M:auth_agent()
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
@@ -80,7 +80,7 @@ function _M:auth_agent()
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -96,31 +96,31 @@ function _M:auth_agent()
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.agentId == nil then
-                    ngx.log(ngx.STDERR, "agentId is null: ")
+                    ngx.log(ngx.ERR, "agentId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.agentId ~= reqAgentId then
-                    ngx.log(ngx.STDERR, "agentId not match")
+                    ngx.log(ngx.ERR, "agentId not match")
                     ngx.exit(401)
                     return
                 end
@@ -133,6 +133,8 @@ function _M:auth_agent()
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
@@ -155,13 +157,13 @@ end
 ]]
 function _M:auth_docker()
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -188,7 +190,7 @@ function _M:auth_docker()
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
@@ -196,13 +198,13 @@ function _M:auth_docker()
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -218,19 +220,19 @@ function _M:auth_docker()
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -243,6 +245,8 @@ function _M:auth_docker()
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
@@ -265,15 +269,14 @@ end
 -- }
 ]]
 function _M:auth_plugin_agent()
-    -- 
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -300,7 +303,7 @@ function _M:auth_plugin_agent()
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
@@ -308,7 +311,7 @@ function _M:auth_plugin_agent()
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -324,25 +327,25 @@ function _M:auth_plugin_agent()
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -355,6 +358,8 @@ function _M:auth_plugin_agent()
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
@@ -367,10 +372,10 @@ function _M:auth_plugin_agent()
 end
 
 -- 校验MACOS公共构建机
-function _M:auth_macos()
+function _M:auth_macos(checkVersion)
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
+        ngx.log(ngx.ERR, "failed to get client ip: ", err)
         ngx.exit(401)
         return
     end
@@ -382,7 +387,13 @@ function _M:auth_macos()
         return
     else
         --- 获取对应的buildId
-        local redRes, err = red:get("devops_macos_" .. client_ip)
+        local redKey = nil
+        if checkVersion == true then
+            redKey = "dispatcher:devops_macos_" .. client_ip
+        else
+            redKey = "devops_macos_" .. client_ip
+        end
+        local redRes, err = red:get(redKey)
         --- 将redis连接放回pool中
         local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not ok then
@@ -395,15 +406,15 @@ function _M:auth_macos()
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "client ip: ", client_ip)
-                ngx.log(ngx.STDERR, "redis result is null: ")
+                ngx.log(ngx.ERR, "client ip: ", client_ip)
+                ngx.log(ngx.ERR, "redis result is null: ")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -417,23 +428,37 @@ function _M:auth_macos()
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                 end
 
                 if obj.secretKey == nil then
-                    ngx.log(ngx.STDERR, "secretKey is null: ")
+                    ngx.log(ngx.ERR, "secretKey is null: ")
                 end
 
                 if obj.id == nil then
-                    ngx.log(ngx.STDERR, "id is null: ")
+                    ngx.log(ngx.ERR, "id is null: ")
+                end
+
+                local systemVersion = ""
+                local xcodeVersion = ""
+                if checkVersion == true then
+                    if obj.systemVersion == nil then
+                        ngx.log(ngx.ERR, "systemVersion is null: ")
+                    end
+
+                    if obj.xcodeVersion == nil then
+                        ngx.log(ngx.ERR, "xcodeVersion is null: ")
+                    end
+                    systemVersion = obj.systemVersion
+                    xcodeVersion = obj.xcodeVersion
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
@@ -444,6 +469,8 @@ function _M:auth_macos()
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.id
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = systemVersion
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = xcodeVersion
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
@@ -469,7 +496,7 @@ function _M:auth_other()
     -- 公共构建机
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
+        ngx.log(ngx.ERR, "failed to get client ip: ", err)
         ngx.exit(401)
         return
     end
@@ -494,8 +521,8 @@ function _M:auth_other()
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "client ip: ", client_ip)
-                ngx.log(ngx.STDERR, "redis result is null: ")
+                ngx.log(ngx.ERR, "client ip: ", client_ip)
+                ngx.log(ngx.ERR, "redis result is null: ")
                 ngx.exit(401)
                 return
             else
@@ -503,7 +530,7 @@ function _M:auth_other()
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -517,19 +544,19 @@ function _M:auth_other()
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
@@ -540,6 +567,8 @@ function _M:auth_other()
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
