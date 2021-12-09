@@ -83,7 +83,14 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "ReturnCount")
+@Suppress(
+    "LongParameterList",
+    "LargeClass",
+    "TooManyFunctions",
+    "LongMethod",
+    "ReturnCount",
+    "ComplexMethod"
+)
 @Service
 class PipelineRepositoryService constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,

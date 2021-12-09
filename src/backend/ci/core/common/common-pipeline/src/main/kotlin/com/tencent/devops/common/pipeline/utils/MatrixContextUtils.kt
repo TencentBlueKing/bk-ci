@@ -37,7 +37,7 @@ import org.yaml.snakeyaml.Yaml
 
 object MatrixContextUtils {
 
-    private val schemaJson = """
+    private const val schemaJson = """
         {
             "type": "object",
             "required": [],
