@@ -110,6 +110,7 @@ class DockerService @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
@@ -140,7 +141,8 @@ class DockerService @Autowired constructor(
             registryUser = dockerRunParam.registryUser,
             registryPwd = dockerRunParam.registryPwd,
             dockerRunParam = dockerRunParam,
-            qpcUniquePath = qpcUniquePath
+            qpcUniquePath = qpcUniquePath,
+            pipelineTaskId = pipelineTaskId
         )
 
         containerPullImageHandler.setNextHandler(containerCustomizedRunHandler).handlerRequest(containerHandlerContext)
