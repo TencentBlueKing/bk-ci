@@ -12,6 +12,7 @@ data class ImageHandlerContext(
     val dockerBuildParam: DockerBuildParam,
     var result: String? = null,
     var imageTagSet: MutableSet<String> = mutableSetOf(),
+    var imageId: String = "",
     override val projectId: String,
     override val pipelineId: String,
     override val buildId: String,
