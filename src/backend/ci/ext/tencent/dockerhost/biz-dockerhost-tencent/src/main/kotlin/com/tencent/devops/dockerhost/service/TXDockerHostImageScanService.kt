@@ -8,14 +8,11 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.script.ShellUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
-import org.apache.commons.io.FileUtils
+import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.io.File
 import java.io.IOException
-import java.security.MessageDigest
-import java.util.concurrent.Executors
 
 @Component
 class TXDockerHostImageScanService(
@@ -26,14 +23,11 @@ class TXDockerHostImageScanService(
     var dockerSavedPath: String? = "/data/dockersavedimages"
 
     override fun scanningDocker(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        userName: String,
-        imageId: String,
+        imageHandlerContext: ImageHandlerContext,
         dockerClient: DockerClient
     ): String {
+        val logSuffix = "[${imageHandlerContext.buildId}]|[${imageHandlerContext.vmSeqId}]"
+
         lateinit var longDockerClient: DockerClient
         try {
             val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -51,7 +45,7 @@ class TXDockerHostImageScanService(
             longDockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
             // 取任意一个tag扫描就可以
-            val imageTag = imageTagSet.first()
+            val imageTag = imageHandlerContext.imageTagSet.first()
             /*val inputStream = longDockerClient.saveImageCmd(imageTag.substringBeforeLast(":"))
                 .withTag(imageTag.substringAfterLast(":"))
                 .exec()
@@ -63,29 +57,27 @@ class TXDockerHostImageScanService(
             FileUtils.copyInputStreamToFile(inputStream, targetSavedImagesFile)*/
 
             try {
-                logger.info("[$buildId]|[$vmSeqId] start scan dockerimage, imageId: $imageId")
-                val script = "dockerscan -t $imageId -p $pipelineId -u $imageTag -i dev " +
-                        "-T $projectId -b $buildId -n $userName"
+                logger.info("$logSuffix start scan dockerimage, imageId: ${imageHandlerContext.imageId}")
+                val script = "dockerscan -t ${imageHandlerContext.imageId} -p ${imageHandlerContext.pipelineId} " +
+                        "-u $imageTag -i dev -T ${imageHandlerContext.projectId} -b ${imageHandlerContext.buildId} " +
+                        "-n ${imageHandlerContext.userName}"
                 val scanResult = ShellUtil.executeEnhance(script)
-                logger.info("[$buildId]|[$vmSeqId] scan docker $imageTag result: $scanResult")
+                logger.info("$logSuffix scan docker $imageTag result: $scanResult")
 
-                logger.info("[$buildId]|[$vmSeqId] scan image success, now remove local image, " +
+                logger.info("$logSuffix scan image success, now remove local image, " +
                         "image name and tag: $imageTag")
 
                 return scanResult
             } catch (e: Throwable) {
-                logger.error("[$buildId]|[$vmSeqId] Docker image scan failed, msg: ${e.message}")
-            } finally {
-                // longDockerClient.removeImageCmd(imageTag).exec()
-                // logger.info("[$buildId]|[$vmSeqId] Remove local image success")
+                logger.error("$logSuffix Docker image scan failed, msg: ${e.message}")
             }
         } catch (e: Exception) {
-            logger.error("[$buildId]|[$vmSeqId] scan docker error.", e)
+            logger.error("$logSuffix scan docker error.", e)
         } finally {
             try {
                 longDockerClient.close()
             } catch (e: IOException) {
-                logger.error("[$buildId]|[$vmSeqId] Long docker client close exception: ${e.message}")
+                logger.error("$logSuffix Long docker client close exception: ${e.message}")
             }
         }
 
