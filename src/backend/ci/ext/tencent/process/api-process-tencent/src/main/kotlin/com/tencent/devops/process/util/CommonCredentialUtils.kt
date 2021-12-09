@@ -39,7 +39,12 @@ object CommonCredentialUtils {
 
     private val logger = LoggerFactory.getLogger(CommonCredentialUtils::class.java)
 
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
