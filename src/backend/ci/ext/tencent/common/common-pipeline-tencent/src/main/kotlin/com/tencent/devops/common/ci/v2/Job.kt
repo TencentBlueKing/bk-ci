@@ -57,10 +57,7 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList(),
-    // 组装DispatchType时专用字段
-    @JsonIgnore
-    var defaultImage: String? = null
+    val dependOn: List<String>? = emptyList()
 )
 
 data class Container(

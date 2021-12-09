@@ -74,13 +74,13 @@ class ModelContainer @Autowired constructor(
         finalStage: Boolean = false,
         resources: Resources? = null
     ) {
-        // 提前读取准备默认镜像
-        job.defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
+        val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
                 name = "dispatchInfo_${job.name}",
                 job = job,
                 projectCode = projectCode,
+                defaultImage = defaultImage,
                 resources = resources
             )
         } else null
@@ -104,6 +104,7 @@ class ModelContainer @Autowired constructor(
                 objectMapper = objectMapper,
                 job = job,
                 projectCode = projectCode,
+                defaultImage = defaultImage,
                 resources = resources,
                 containsMatrix = dispatchInfo != null
             ),

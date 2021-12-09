@@ -36,5 +36,6 @@ data class StreamDispatchInfo(
     override val name: String,
     val job: Job,
     val projectCode: String,
+    var defaultImage: String,
     val resources: Resources? = null
 ) : DispatchInfo(name)

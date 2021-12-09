@@ -90,6 +90,7 @@ object StreamDispatchUtils {
         objectMapper: ObjectMapper,
         job: Job,
         projectCode: String,
+        defaultImage: String,
         resources: Resources? = null,
         context: Map<String, String>? = null,
         containsMatrix: Boolean? = false
@@ -118,7 +119,7 @@ object StreamDispatchUtils {
         // 公共docker构建机
         if (poolName == "docker") {
             var containerPool = Pool(
-                container = job.defaultImage,
+                container = defaultImage,
                 credential = Credential(
                     user = "",
                     password = ""
@@ -184,7 +185,7 @@ object StreamDispatchUtils {
         }
 
         if (containsMatrix == true) {
-            return GitCIDispatchType(job.defaultImage!!)
+            return GitCIDispatchType(defaultImage)
         } else {
             throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
         }

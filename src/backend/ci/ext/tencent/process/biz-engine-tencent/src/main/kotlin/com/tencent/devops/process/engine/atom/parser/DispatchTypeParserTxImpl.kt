@@ -147,6 +147,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     objectMapper = objectMapper,
                     job = customInfo.job,
                     projectCode = customInfo.projectCode,
+                    defaultImage = customInfo.defaultImage,
                     resources = customInfo.resources,
                     context = context,
                     containsMatrix = true
