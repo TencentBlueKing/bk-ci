@@ -597,22 +597,4 @@ class PipelineBuildSummaryDao {
             dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
-
-    fun listOrderSummaryByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): Result<TPipelineBuildSummaryRecord> {
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
-            val size = pipelineIds.size + 1
-            val args = arrayOfNulls<Field<out Any>?>(size)
-            args[0] = DSL.field("PIPELINE_ID")
-            var index = 1
-            pipelineIds.forEach { pipelineId ->
-                args[index++] = DSL.`val`(pipelineId)
-            }
-            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
-            query.fetch()
-        }
-    }
 }

@@ -128,14 +128,14 @@ class PipelineTaskService @Autowired constructor(
             )
 
         val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
-        val pipelineIds = pipelineTasks?.map { it[KEY_PIPELINE_ID] as String }
+        val pipelineIds = pipelineTasks?.map { it[KEY_PIPELINE_ID] as String }?.toSet()
         var pipelineNameMap: MutableMap<String, String>? = null
         if (pipelineIds != null && pipelineIds.isNotEmpty()) {
             pipelineNameMap = mutableMapOf()
             val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(
                 dslContext = dslContext,
                 atomCode = atomCode,
-                pipelineIdList = pipelineIds
+                pipelineIds = pipelineIds
             )
             pipelineAtoms?.forEach {
                 val version = it[KEY_VERSION] as? String ?: return@forEach
@@ -147,7 +147,7 @@ class PipelineTaskService @Autowired constructor(
                 }
             }
             val pipelineInfoRecords =
-                pipelineInfoDao.listInfoByPipelineIds(dslContext = dslContext, pipelineIds = pipelineIds.toSet())
+                pipelineInfoDao.listInfoByPipelineIds(dslContext = dslContext, pipelineIds = pipelineIds)
             pipelineInfoRecords.forEach {
                 pipelineNameMap[it.pipelineId] = it.pipelineName
             }

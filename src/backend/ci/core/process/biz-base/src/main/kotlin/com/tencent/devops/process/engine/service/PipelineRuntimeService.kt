@@ -720,7 +720,13 @@ class PipelineRuntimeService @Autowired constructor(
         }
         val values = BuildStatus.values()
         val currentTimestamp = System.currentTimeMillis()
+        val historyBuildIds = mutableListOf<String>()
         records.forEach {
+            val buildId = it.buildId
+            if (historyBuildIds.contains(buildId)) {
+                return@forEach
+            }
+            historyBuildIds.add(buildId)
             result.add(genBuildHistory(it, values, currentTimestamp))
         }
         return result

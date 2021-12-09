@@ -997,6 +997,10 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineIds = pipelineIds
             )
+            val simplePipelines = mutableListOf<SimplePipeline>()
+            if (pipelines.isEmpty()) {
+                return simplePipelines
+            }
             watcher.start("listTemplate")
             val templatePipelineIds = templatePipelineDao.listByPipelines(
                 dslContext = dslContext,
@@ -1004,18 +1008,26 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId
             ).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
             watcher.stop()
-            return pipelines.map {
-                SimplePipeline(
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    pipelineName = it.pipelineName,
-                    pipelineDesc = it.pipelineDesc,
-                    taskCount = it.taskCount,
-                    isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
-                    id = it.id
+            val simplePipelineIds = mutableListOf<String>()
+            pipelines.forEach {
+                val pipelineId = it.pipelineId
+                if (simplePipelineIds.contains(pipelineId)) {
+                    return@forEach
+                }
+                simplePipelines.add(
+                    SimplePipeline(
+                        projectId = it.projectId,
+                        pipelineId = it.pipelineId,
+                        pipelineName = it.pipelineName,
+                        pipelineDesc = it.pipelineDesc,
+                        taskCount = it.taskCount,
+                        isDelete = it.delete,
+                        instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
+                        id = it.id
+                    )
                 )
             }
+            return simplePipelines
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
         }
@@ -1457,19 +1469,35 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineIds = pipelineIds,
             projectId = null
         )
-        return pipelineInfos.map {
-            SimplePipeline(
-                projectId = it.projectId,
-                pipelineId = it.pipelineId,
-                pipelineName = it.pipelineName,
-                pipelineDesc = it.pipelineDesc,
-                taskCount = it.taskCount,
-                isDelete = it.delete,
-                instanceFromTemplate = false,
-                id = it.id,
-                createUser = it.creator
+        return generateSimplePipelines(pipelineInfos)
+    }
+
+    private fun generateSimplePipelines(pipelineInfos: Result<TPipelineInfoRecord>): MutableList<SimplePipeline> {
+        val simplePipelines = mutableListOf<SimplePipeline>()
+        if (pipelineInfos.isEmpty()) {
+            return simplePipelines
+        }
+        val simplePipelineIds = mutableListOf<String>()
+        pipelineInfos.forEach {
+            val pipelineId = it.pipelineId
+            if (simplePipelineIds.contains(pipelineId)) {
+                return@forEach
+            }
+            simplePipelines.add(
+                SimplePipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = false,
+                    id = it.id,
+                    createUser = it.creator
+                )
             )
         }
+        return simplePipelines
     }
 
     fun getByAutoIds(
@@ -1481,18 +1509,6 @@ class PipelineListFacadeService @Autowired constructor(
             ids = ids,
             projectId = projectId
         )
-        return pipelines.map {
-            SimplePipeline(
-                projectId = it.projectId,
-                pipelineId = it.pipelineId,
-                pipelineName = it.pipelineName,
-                pipelineDesc = it.pipelineDesc,
-                taskCount = it.taskCount,
-                isDelete = it.delete,
-                instanceFromTemplate = false,
-                id = it.id,
-                createUser = it.creator
-            )
-        }
+        return generateSimplePipelines(pipelines)
     }
 }
