@@ -12,7 +12,7 @@ class SampleDockerHostImageScanService : DockerHostImageScanService {
         buildId: String,
         vmSeqId: String,
         userName: String,
-        imageTagSet: MutableSet<String>,
+        imageId: String,
         dockerClient: DockerClient
     ): String {
         // do something before push images
