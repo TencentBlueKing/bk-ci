@@ -79,8 +79,10 @@ class ImageBuildHandler(
             args.map { it.trim().split("=") }.forEach {
                 step.withBuildArg(it.first(), it.last())
             }
-            step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
+            val imageId = step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
                 .awaitImageId()
+
+            logger.info("==========imageId: $imageId")
 
             nextHandler.get()?.handlerRequest(this)
         }
