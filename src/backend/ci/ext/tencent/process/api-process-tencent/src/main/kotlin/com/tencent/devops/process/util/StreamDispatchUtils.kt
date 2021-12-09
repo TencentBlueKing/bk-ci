@@ -39,9 +39,11 @@ import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.ResourcesPools
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -55,6 +57,25 @@ import javax.ws.rs.core.Response
 object StreamDispatchUtils {
 
     private val logger = LoggerFactory.getLogger(StreamDispatchUtils::class.java)
+
+    fun getBaseOs(job: Job): VMBaseOS {
+        // 公共构建机池
+        if (job.runsOn.poolName == JobRunsOnType.DOCKER.type) {
+            return VMBaseOS.LINUX
+        } else if (job.runsOn.poolName.startsWith("macos")) {
+            return VMBaseOS.MACOS
+        }
+
+        if (job.runsOn.agentSelector.isNullOrEmpty()) {
+            return VMBaseOS.ALL
+        }
+        return when (job.runsOn.agentSelector!![0]) {
+            "linux" -> VMBaseOS.LINUX
+            "macos" -> VMBaseOS.MACOS
+            "windows" -> VMBaseOS.WINDOWS
+            else -> VMBaseOS.LINUX
+        }
+    }
 
     @Throws(
         JsonProcessingException::class,

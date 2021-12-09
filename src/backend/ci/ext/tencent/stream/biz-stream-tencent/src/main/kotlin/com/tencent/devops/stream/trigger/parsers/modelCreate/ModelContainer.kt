@@ -88,7 +88,7 @@ class ModelContainer @Autowired constructor(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
-            baseOS = getBaseOs(job),
+            baseOS = StreamDispatchUtils.getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
@@ -222,25 +222,6 @@ class ModelContainer @Autowired constructor(
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,
                 continueWhenFailed = job.continueOnError
             )
-        }
-    }
-
-    private fun getBaseOs(job: Job): VMBaseOS {
-        // 公共构建机池
-        if (job.runsOn.poolName == JobRunsOnType.DOCKER.type) {
-            return VMBaseOS.LINUX
-        } else if (job.runsOn.poolName.startsWith("macos")) {
-            return VMBaseOS.MACOS
-        }
-
-        if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.ALL
-        }
-        return when (job.runsOn.agentSelector!![0]) {
-            "linux" -> VMBaseOS.LINUX
-            "macos" -> VMBaseOS.MACOS
-            "windows" -> VMBaseOS.WINDOWS
-            else -> VMBaseOS.LINUX
         }
     }
 }
