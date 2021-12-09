@@ -190,9 +190,7 @@ class PipelineModelTaskDao {
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
-                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION),
-                CREATE_TIME.`as`(KEY_CREATE_TIME),
-                UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION)
             )
                 .from(this)
                 .where(condition)
@@ -257,7 +255,7 @@ class PipelineModelTaskDao {
     fun listByAtomCodeAndPipelineIds(
         dslContext: DSLContext,
         atomCode: String,
-        pipelineIdList: List<String>
+        pipelineIds: Set<String>
     ): Result<out Record>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = getListByAtomCodeCond(this, atomCode, null)
@@ -268,7 +266,7 @@ class PipelineModelTaskDao {
             )
                 .from(this)
                 .where(condition)
-                .and(PIPELINE_ID.`in`(pipelineIdList))
+                .and(PIPELINE_ID.`in`(pipelineIds))
 
             return baseStep.fetch()
         }

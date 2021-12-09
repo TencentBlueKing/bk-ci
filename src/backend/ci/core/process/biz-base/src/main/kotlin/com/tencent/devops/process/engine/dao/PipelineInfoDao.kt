@@ -35,12 +35,10 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -441,24 +439,6 @@ class PipelineInfoDao {
                     dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.`in`(pipelineIds))
                 }
             if (filterDelete) query.and(DELETE.eq(false))
-            query.fetch()
-        }
-    }
-
-    @Suppress("SpreadOperator")
-    fun listOrderInfoByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): Result<TPipelineInfoRecord> {
-        return with(T_PIPELINE_INFO) {
-            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
-            val args = arrayOfNulls<Field<out Any>?>(pipelineIds.size + 1)
-            args[0] = DSL.field("PIPELINE_ID")
-            var index = 1
-            pipelineIds.forEach { pipelineId ->
-                args[index++] = DSL.`val`(pipelineId)
-            }
-            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
             query.fetch()
         }
     }
