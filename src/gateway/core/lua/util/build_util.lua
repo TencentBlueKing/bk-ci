@@ -60,15 +60,10 @@ function _M:auth_agent()
         --- 获取对应的buildId
         local redRes, err = red:get("third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId ..
                                         "_" .. reqVmSid)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
@@ -178,15 +173,10 @@ function _M:auth_docker()
         return
     else
         local redRes, err = red:get("docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
@@ -291,15 +281,10 @@ function _M:auth_plugin_agent()
         return
     else
         local redRes, err = red:get("plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
@@ -394,20 +379,15 @@ function _M:auth_macos(checkVersion)
             redKey = "devops_macos_" .. client_ip
         end
         local redRes, err = red:get(redKey)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         --- 处理获取到的buildID
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.ERR, "client ip: ", client_ip)
-                ngx.log(ngx.ERR, "redis result is null: ")
+                ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
                 ngx.exit(401)
                 return
             else
@@ -509,15 +489,11 @@ function _M:auth_other()
     else
         --- 获取对应的buildId
         local redRes, err = red:get(client_ip)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         --- 处理获取到的buildID
         if not redRes then
             ngx.log(ngx.ERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
