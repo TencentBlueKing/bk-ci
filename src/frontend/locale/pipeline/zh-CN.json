@@ -725,6 +725,7 @@
         "inputEnv": "按环境别名输入",
         "mutexGroup": "设置互斥组",
         "enableMatrix": "启用作业矩阵",
+        "jobMatrix": "Job矩阵",
         "jobOption": "流程控制选项",
         "atomOption": "流程控制选项",
         "paramsTips": "可以在插件中引用该变量",

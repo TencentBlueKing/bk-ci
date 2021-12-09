@@ -4,7 +4,7 @@
             <div class="matrix-header" @click="showContainerPanel">
                 <div class="matrix-name" @click.stop="toggleMatrixOpen">
                     <i class="fold-icon devops-icon" :class="container.isOpen ? 'icon-angle-up' : 'icon-angle-down'" style="display:block"></i>
-                    <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">作业矩阵</span>
+                    <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">{{$t('editPage.jobMatrix')}}</span>
                 </div>
                 <div class="matrix-status">
                     <matrix-status type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">

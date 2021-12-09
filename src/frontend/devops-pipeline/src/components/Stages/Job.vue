@@ -15,10 +15,8 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
+            <i v-if="isEditPage && container.matrixGroupFlag" class="matrix-flag-icon bk-devops-icon icon-matrix"></i>
             <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status]" style="display:block" @click.stop="toggleShowAtom"></i>
-            <!-- <span v-if="showMatrixStatus" @click.stop="toggleShowAtom">
-                <Logo size="18" name="icon-angle-left" style="fill: red" class="fold-atom-icon" :class="container.status"></Logo>
-            </span> -->
         </h3>
         <atom-list
             v-show="container.isOpen !== false"
@@ -290,6 +288,11 @@
                 position: absolute;
                 height: 100%;
                 right: 0;
+            }
+            .matrix-flag-icon {
+                position: absolute;
+                top: 0px;
+                font-size: 16px;
             }
             .fold-atom-icon {
                 display: block;
