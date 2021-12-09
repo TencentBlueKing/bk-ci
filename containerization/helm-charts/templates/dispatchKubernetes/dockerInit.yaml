@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: dispatch-kubernetes-init
-  namespace: default
+  namespace: {{ .Release.Namespace }}
 data:
   initsh.properties: |
     #!/bin/bash
