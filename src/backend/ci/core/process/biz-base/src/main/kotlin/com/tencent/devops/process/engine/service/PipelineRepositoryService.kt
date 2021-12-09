@@ -345,6 +345,7 @@ class PipelineRepositoryService constructor(
             try {
                 when {
                     c.matrixGroupFlag != true -> {
+                        // c.matrixGroupFlag 不为 true 时 不需要做yaml检查
                     }
                     c is NormalContainer -> {
                         matrixYamlCheck(c.matrixControlOption)
