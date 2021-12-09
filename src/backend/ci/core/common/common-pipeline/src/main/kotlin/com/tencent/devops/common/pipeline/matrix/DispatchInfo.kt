@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 /**
  * 用于矩阵分列后自定义构建环境指定
  */
+@Suppress("ALL")
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,

@@ -983,7 +983,8 @@ class PipelineRuntimeService @Autowired constructor(
                     logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
                     pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 } else {
-                    logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateTaskExistsRecord.size}")
+                    logger.info("batch store to pipelineBuildTask, " +
+                        "updateExistsRecord size: ${updateTaskExistsRecord.size}")
                     pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
                 }
 
