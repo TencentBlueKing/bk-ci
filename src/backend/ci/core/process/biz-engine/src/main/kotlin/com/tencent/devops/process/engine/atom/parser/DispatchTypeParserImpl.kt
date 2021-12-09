@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -89,7 +90,7 @@ class DispatchTypeParserImpl @Autowired constructor(
         }
     }
 
-    override fun parseRunsOn(customInfo: DispatchInfo, context: Map<String, String>): DispatchType? {
+    override fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): Pair<DispatchType, VMBaseOS>? {
         return null
     }
 }
