@@ -27,29 +27,51 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.client.consul.ConsulConstants.singelProjectRedisKey
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectRouteTagService @Autowired constructor(
-    val projectService: ProjectService
+    val projectService: ProjectService,
+    val redisOperation: RedisOperation
 ) {
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
     private val tag: String? = null
 
-    @Value("\${prod.tag:#{null}}")
+    @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
     // 判断当前项目流量与当前集群匹配
     fun checkProjectTag(projectId: String): Boolean {
+        // 优先走缓存
+        if (redisOperation.get(singelProjectRedisKey(projectId)) != null) {
+            val cacheCheck = projectClusterCheck(redisOperation.get(singelProjectRedisKey(projectId))!!)
+            // cache校验成功直接返回
+            if (cacheCheck) {
+                return cacheCheck
+            }
+        }
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
-        val routerTag = projectInfo.routerTag
+        logger.info("checkProjectTag $projectId cache not match, get from db. ${projectInfo.routerTag}")
+        // 请求源大量来自定时任务, redis缓存2分钟
+        redisOperation.set(singelProjectRedisKey(projectId), projectInfo.routerTag ?: "", 120L)
+        return projectClusterCheck(projectInfo.routerTag)
+    }
+
+    private fun projectClusterCheck(routerTag: String?): Boolean {
         // 默认集群是不会有routerTag的信息
-        if (routerTag.isNullOrEmpty()) {
+        if (routerTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
             return tag == prodTag
         }
         return tag == routerTag
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ProjectRouteTagService::class.java)
     }
 }

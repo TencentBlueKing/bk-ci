@@ -59,6 +59,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
                         projectCode = event.projectId,
                         pipelineId = event.pipelineId,
                         buildId = event.buildId,
+                        position = event.position,
+                        stageId = event.stageId,
                         needShortUrl = true
                     ),
                     reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
