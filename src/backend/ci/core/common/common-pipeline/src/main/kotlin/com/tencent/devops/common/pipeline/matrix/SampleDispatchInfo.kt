@@ -27,6 +27,12 @@
 
 package com.tencent.devops.common.pipeline.matrix
 
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.type.DispatchType
+
 data class SampleDispatchInfo(
-    override val name: String
+    override val name: String,
+    val dispatchType: DispatchType,
+    val baseOS: VMBaseOS,
+    val buildEnv: Map<String, String>?
 ) : DispatchInfo(name)
