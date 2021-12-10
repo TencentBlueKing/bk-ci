@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 
 object MatrixYamlCheckUtils {
+
     fun checkYaml(yaml: MatrixPipelineInfo): MatrixPipelineInfo {
         val matrixPipelineInfo = MatrixPipelineInfo(
             include = try {
