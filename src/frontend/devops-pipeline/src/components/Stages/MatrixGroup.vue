@@ -12,7 +12,7 @@
                     <span :title="statusDesc" class="status-desc" :class="container.status">{{statusDesc}}</span>
                 </div>
             </div>
-            <section class="matrix-body" v-if="container.isOpen !== false">
+            <section class="matrix-body" v-if="container.isOpen !== false && computedJobs.length">
                 <Job v-for="(job, jobIndex) in computedJobs"
                     :key="job.containerId"
                     :stage-index="stageIndex"
@@ -75,7 +75,9 @@
             },
             computedJobs () {
                 this.container.groupContainers.map(container => {
-                    Vue.set(container, 'isOpen', false)
+                    if (container.isOpen === undefined) {
+                        Vue.set(container, 'isOpen', false)
+                    }
                     container.elements.forEach((element, index) => {
                         const eleItem = this.container.elements[index] || {}
                         Object.assign(element, eleItem, { id: element.id })
@@ -97,6 +99,23 @@
                     }
                 }
                 return `${this.$t('storeMap.dependOn')} 【${val}】`
+            }
+        },
+        // websocket重新推送会覆盖上一次的折叠和打开状态, 记住上一次状态
+        watch: {
+            'container.groupContainers' (val, oldVal) {
+                if (val.length > 0 && val.length === oldVal.length) {
+                    for (let i = 0; i < val.length; i++) {
+                        if (val[i].isOpen === undefined && oldVal[i] !== undefined) {
+                            Vue.set(val[i], 'isOpen', oldVal[i].isOpen)
+                        }
+                    }
+                }
+            },
+            'container.isOpen' (val, oldVal) {
+                if (val === undefined && oldVal !== undefined) {
+                    Vue.set(this.container, 'isOpen', !!oldVal)
+                }
             }
         },
         created () {
