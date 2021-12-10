@@ -387,9 +387,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     PIPELINE_ELEMENT_ID to task.taskId
                 )
 
+                buildVariable.putAll(extMap)
                 PipelineVarUtil.fillOldVar(buildVariable)
                 buildVariable.putAll(allVariable)
-                buildVariable.putAll(extMap)
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
