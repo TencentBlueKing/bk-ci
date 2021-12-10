@@ -58,6 +58,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
             val turboTaskId = getTurboTask(task.projectId, task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
+            extMap["turbo.task.id"] = turboTaskId
         }
 
         extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
