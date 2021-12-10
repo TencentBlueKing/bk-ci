@@ -101,7 +101,7 @@ type WorkSettingsResp struct {
 type WorkerKeyConfigParam struct {
 	BatchMode bool   `json:"batch_mode"`
 	ProjectID string `json:"project_id"`
-	Scene     string `json:scene"`
+	Scene     string `json:"scene"`
 }
 
 // CommonConfigParam describe the param to update common controller config

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
@@ -111,12 +120,12 @@ func GetApp(ct ClientType) *commandCli.App {
 			Usage: "save the original command exit code in file bk_origin_exit_code",
 		},
 		commandCli.IntFlag{
-			Name:  "max_jobs",
+			Name: "max_jobs",
 			Usage: "max parallel jobs for compiling, if the jobs given by server is larger, " +
 				"then use the max_jobs instead",
 		},
 		commandCli.IntFlag{
-			Name:  "max_local_jobs",
+			Name: "max_local_jobs",
 			Usage: "max parallel jobs for compiling when degraded to local, if local cpu number is larger, " +
 				"then use the max_local_jobs instead",
 		},
@@ -146,7 +155,7 @@ func GetApp(ct ClientType) *commandCli.App {
 				Usage: "gcc/g++ version of this build, if it is no specified, will be set the one in project settings",
 			},
 			commandCli.StringFlag{
-				Name:  "ccache_enabled, c",
+				Name: "ccache_enabled, c",
 				Usage: "true/false, decide whether the build use ccache in localhost. if it is no specified, " +
 					"will be set the one in project settings",
 			},
@@ -180,7 +189,7 @@ func GetApp(ct ClientType) *commandCli.App {
 				Usage: "gcc/g++ version of this build, if it is no specified, will be set the one in project settings",
 			},
 			commandCli.StringFlag{
-				Name:  "ccache_enabled, c",
+				Name: "ccache_enabled, c",
 				Usage: "true/false, decide whether the build use ccache in localhost. if it is no specified, " +
 					"will be set the one in project settings",
 			},
@@ -202,7 +211,7 @@ func GetApp(ct ClientType) *commandCli.App {
 				Usage: "gcc/g++ version of this build, if it is no specified, will be set the one in project settings",
 			},
 			commandCli.StringFlag{
-				Name:  "ccache_enabled, c",
+				Name: "ccache_enabled, c",
 				Usage: "true/false, decide whether the build use ccache in localhost. if it is no specified, " +
 					"will be set the one in project settings",
 			},
@@ -220,7 +229,7 @@ func GetApp(ct ClientType) *commandCli.App {
 				Usage: "gcc/g++ version of this build, if it is no specified, will be set the one in project settings",
 			},
 			commandCli.StringFlag{
-				Name:  "ccache_enabled, c",
+				Name: "ccache_enabled, c",
 				Usage: "true/false, decide whether the build use ccache in localhost. if it is no specified, " +
 					"will be set the one in project settings",
 			},

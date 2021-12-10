@@ -348,7 +348,7 @@ func (m *mgr) ExecuteLocalTask(
 	}
 
 	if !work.Basic().Info().IsWorking() {
-		blog.Errorf("mgr: execute local task for work(%s) from pid(%d) failed: ",
+		blog.Errorf("mgr: execute local task for work(%s) from pid(%d) failed: %v",
 			workID, req.Pid, types.ErrWorkIsNotWorking)
 		return nil, types.ErrWorkIsNotWorking
 	}

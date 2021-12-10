@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package fastbuild
 
 import (
@@ -358,7 +367,7 @@ func (m *mysql) UpdateProjectInfo(projectID string, projectInfo map[string]inter
 
 	if err := m.db.Model(&TableProjectInfo{}).Where("project_id = ?", projectID).
 		Updates(projectInfo).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", projectID, projectInfo, err)
+		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", EngineName, projectID, projectInfo, err)
 		return err
 	}
 
@@ -490,7 +499,7 @@ func (m *mysql) UpdateProjectSetting(projectID string, projectSetting map[string
 
 	if err := m.db.Model(&TableProjectSetting{}).Where("project_id = ?", projectID).
 		Updates(projectSetting).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v",
+		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v", EngineName,
 			projectID, projectSetting, err)
 		return err
 	}

@@ -133,7 +133,7 @@ func NewDisttaskEngine(
 		directMgr: directMgr,
 	}
 	if err = egn.initBrokers(); err != nil {
-		blog.Errorf("engine(%s) init brokers failed: %fv", EngineName, err)
+		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
 		return nil, err
 	}
 
@@ -803,7 +803,7 @@ func (de *disttaskEngine) releaseDirectTask(task *distTask) error {
 	resources, err := de.directMgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try to release direct task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 

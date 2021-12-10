@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package distccmac
 
 import (
@@ -8,7 +17,7 @@ import (
 	"build-booster/common/blog"
 	"build-booster/common/codec"
 	"build-booster/common/http/httpclient"
-	"build-booster/common/store/distcc_server"
+	ds "build-booster/common/store/distcc_server"
 	"build-booster/server/config"
 	"build-booster/server/pkg/engine"
 	"build-booster/server/pkg/engine/distcc"
@@ -353,7 +362,7 @@ func (de *distccMacEngine) launchTask(taskID string) error {
 	resources, err := de.mgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 

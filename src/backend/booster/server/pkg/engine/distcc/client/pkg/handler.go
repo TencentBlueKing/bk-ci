@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
@@ -217,7 +226,7 @@ func checkLocalGccVersion(remoteGccVersion string) error {
 }
 
 func checkLocalClangVersion(remoteClangVersion string) error {
-	cmd := exec.Command("/bin/bash", "-c", "clang --version | grep version | " +
+	cmd := exec.Command("/bin/bash", "-c", "clang --version | grep version | "+
 		"sed 's/.*version \\([0-9]*.[0-9]*.[0-9]*\\).*/\\1/g'")
 	output, err := cmd.Output()
 	if err != nil {

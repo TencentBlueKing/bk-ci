@@ -74,8 +74,7 @@ func NewMySQL(conf engine.MySQLConf) (MySQL, error) {
 	m := &mysql{
 		db: db,
 	}
-	if err = m.ensureTables(&TableTask{}, &TableProjectSetting{}, &TableProjectInfo{}, &TableWhitelist{}, &TableGcc{});
-		err != nil {
+	if err = m.ensureTables(&TableTask{}, &TableProjectSetting{}, &TableProjectInfo{}, &TableWhitelist{}, &TableGcc{}); err != nil {
 		blog.Errorf("engine(%s) mysql ensure tables failed: %v", EngineName, err)
 		return nil, err
 	}
@@ -184,8 +183,7 @@ func (m *mysql) UpdateTask(taskID string, task map[string]interface{}) error {
 func (m *mysql) DeleteTask(taskID string) error {
 	defer timeMetricRecord("delete_task")()
 
-	if err := m.db.Model(&TableTask{}).Where("task_id = ?", taskID).Update("disabled", true).Error;
-		err != nil {
+	if err := m.db.Model(&TableTask{}).Where("task_id = ?", taskID).Update("disabled", true).Error; err != nil {
 		blog.Errorf("engine(%s) mysql delete task(%s) failed: %v", EngineName, taskID, err)
 		return err
 	}
@@ -317,9 +315,8 @@ func (m *mysql) UpdateProjectInfo(projectID string, projectInfo map[string]inter
 
 	projectInfo["disabled"] = false
 
-	if err := m.db.Model(&TableProjectInfo{}).Where("project_id = ?", projectID).Updates(projectInfo).Error;
-		err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", projectID, projectInfo, err)
+	if err := m.db.Model(&TableProjectInfo{}).Where("project_id = ?", projectID).Updates(projectInfo).Error; err != nil {
+		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", EngineName, projectID, projectInfo, err)
 		return err
 	}
 
@@ -444,7 +441,7 @@ func (m *mysql) UpdateProjectSetting(projectID string, projectSetting map[string
 
 	if err := m.db.Model(&TableProjectSetting{}).Where("project_id = ?", projectID).
 		Updates(projectSetting).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v",
+		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v", EngineName,
 			projectID, projectSetting, err)
 		return err
 	}

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package apisjob
 
 import (
@@ -606,7 +615,7 @@ func (ae *apisEngine) sendTaskMessage(taskID string, extra []byte) ([]byte, erro
 		return ae.sendMessageRecordStats(taskID, msg.RecordStats)
 	default:
 		err := engine.ErrorUnknownMessageType
-		blog.Errorf("engine(%s) try sending task(%s) message type(%d) failed: %v",
+		blog.Errorf("engine(%s) try sending task(%s) message type(%s) failed: %v",
 			EngineName, taskID, msg.Type, err)
 		return nil, err
 	}
@@ -625,7 +634,7 @@ func (ae *apisEngine) sendMessageRecordStats(taskID string, stats MessageRecordS
 	var data []byte
 	if err := codec.EncJSON(stats.Agents, &data); err != nil {
 		blog.Errorf("engine(%s) try code task(%s) message failed: %v, message: %+v",
-			EngineName, taskID, stats)
+			EngineName, taskID, err, stats)
 		return nil, err
 	}
 	task.AgentsInfo = string(data)

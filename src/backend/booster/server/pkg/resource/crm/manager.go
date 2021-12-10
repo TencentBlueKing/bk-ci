@@ -871,7 +871,7 @@ func (rm *resourceManager) scale(resourceID, user string, function op.InstanceFi
 		hasBroker = true
 		if err = rm.scale(r.brokerResourceID, user, function); err != nil {
 			blog.Errorf("crm: try scaling resource(%s) broker(%s) user(%s) failed: %v",
-				resourceID, r.brokerResourceID, err)
+				resourceID, r.brokerResourceID, user, err)
 			return err
 		}
 	}

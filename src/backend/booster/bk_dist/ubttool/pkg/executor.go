@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -19,7 +21,7 @@ import (
 	dcSyscall "build-booster/bk_dist/common/syscall"
 	dcTypes "build-booster/bk_dist/common/types"
 	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/bk_dist/controller/pkg/api/v1"
+	v1 "build-booster/bk_dist/controller/pkg/api/v1"
 	"build-booster/common/blog"
 )
 
