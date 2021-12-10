@@ -76,6 +76,10 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+                entry("log4j-api")
+                entry("log4j-core")
+            }
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
