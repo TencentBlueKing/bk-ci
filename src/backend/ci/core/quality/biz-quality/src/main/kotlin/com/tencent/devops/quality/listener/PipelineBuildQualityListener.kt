@@ -128,7 +128,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try{
-            logger.info("QUALITY|pipelineTimeoutListener retryEvent: $pipelineTimeoutEvent")
+            logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: $pipelineTimeoutEvent")
             if (pipelineTimeoutEvent.timeout == true) {
                 val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                     dslContext = dslContext,
