@@ -199,8 +199,9 @@ class InitializeMatrixGroupStageCmd(
                 val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
                     dispatchTypeParser.parseInfo(self, allContext)
                 }
-                val customDispatchType = parsedInfo?.first
-                val customBaseOS = parsedInfo?.second
+                val customDispatchType = parsedInfo?.dispatchType
+                val customBaseOS = parsedInfo?.baseOS
+                val customBuildEnv = parsedInfo?.buildEnv
 
                 val newContainerSeq = context.containerSeq++
 
@@ -224,7 +225,7 @@ class InitializeMatrixGroupStageCmd(
                     vmNames = modelContainer.vmNames,
                     dockerBuildVersion = modelContainer.dockerBuildVersion,
                     dispatchType = customDispatchType ?: modelContainer.dispatchType,
-                    buildEnv = modelContainer.buildEnv,
+                    buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                     thirdPartyAgentId = modelContainer.thirdPartyAgentId,
                     thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId,
                     thirdPartyWorkspace = modelContainer.thirdPartyWorkspace
