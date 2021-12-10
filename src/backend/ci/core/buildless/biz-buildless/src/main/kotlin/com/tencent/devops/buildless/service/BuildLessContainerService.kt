@@ -47,6 +47,7 @@ import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.CommonUtils
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
@@ -60,6 +61,7 @@ import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.streams.toList
 
 
 /**
@@ -107,8 +109,7 @@ class BuildLessContainerService(
         }
 
         // 已经进入需求池，所以减1
-        redisUtils.increIdleContainer(-1)
-        redisUtils.popIdleContainer()
+        redisUtils.increIdlePool(-1)
 
         // 无空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
@@ -182,8 +183,8 @@ class BuildLessContainerService(
 
         httpDockerCli.startContainerCmd(container.id).exec()
 
-        redisUtils.setBuildLessPoolContainer(container.id)
-        redisUtils.increIdleContainer(1)
+        redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
+        redisUtils.increIdlePool(1)
         logger.info("===> created container $container")
     }
 
@@ -225,6 +226,8 @@ class BuildLessContainerService(
                 "[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored",
                 ignored
             )
+        } finally {
+            redisUtils.deleteBuildLessPoolContainer(containerId)
         }
     }
 
@@ -237,6 +240,16 @@ class BuildLessContainerService(
             .withStatusFilter(setOf("running"))
             .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .exec()
+
+        // 同步缓存中的容器状态
+        val containerIds = containerInfo.stream().map { it.id }.toList()
+        logger.info("----> running containers: $containerIds")
+        val buildLessPoolContainerList = redisUtils.getBuildLessPoolContainerList()
+        buildLessPoolContainerList.forEach { key, value ->
+            if (!containerIds.contains(key)) {
+                redisUtils.deleteBuildLessPoolContainer(key)
+            }
+        }
 
         return containerInfo.size
     }

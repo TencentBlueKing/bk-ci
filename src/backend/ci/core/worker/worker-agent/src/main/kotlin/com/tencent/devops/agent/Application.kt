@@ -118,15 +118,15 @@ fun main(args: Array<String>) {
 private fun waitBuildLessJobStart() {
     var startFlag: Boolean = false
     val dockerHostIp = DockerEnv.getDockerHostIp()
-    val dockerHostPort = DockerEnv.getDockerHostPort()
+    val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+    println("BuildLess loopUrl: $loopUrl")
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
-    println("BuildLess loopUrl: $loopUrl")
     do {
         try {
             OkhttpUtils.doHttp(request).use { resp ->
@@ -136,6 +136,7 @@ private fun waitBuildLessJobStart() {
                         when (t) {
                             "agentId" -> System.setProperty(AGENT_ID, u)
                             "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                            "projectId" -> System.setProperty("devops_project_id", u)
                         }
                     }
                     startFlag = true

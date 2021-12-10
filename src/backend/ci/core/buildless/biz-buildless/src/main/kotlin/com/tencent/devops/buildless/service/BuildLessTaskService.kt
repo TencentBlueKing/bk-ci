@@ -29,6 +29,7 @@ package com.tencent.devops.buildless.service
 
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.RedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -53,7 +54,7 @@ class BuildLessTaskService(
                containerId = containerId
            )
 
-           // redisUtils.popIdleContainer()
+           redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
        }
 
        return buildLessTask

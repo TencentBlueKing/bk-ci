@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 interface OPBuildLessWhiteListResource {
 
     @GET
-    @Path("/pipeline-whitelist/list")
+    @Path("/buildless-whitelist/list")
     @ApiOperation("获取无编译环境配置白名单列表")
     fun getPipelineWhitelist(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -59,7 +59,7 @@ interface OPBuildLessWhiteListResource {
     ): Result<List<String>>
 
     @POST
-    @Path("/pipeline-whitelist/projects/{projectId}/add")
+    @Path("/buildless-whitelist/projects/{projectId}/add")
     @ApiOperation("新增无编译环境配置白名单")
     fun addPipelineWhitelist(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -71,7 +71,7 @@ interface OPBuildLessWhiteListResource {
     ): Result<Boolean>
 
     @DELETE
-    @Path("/pipeline-whitelist/projects/{projectId}/delete")
+    @Path("/buildless-whitelist/projects/{projectId}/delete")
     @ApiOperation("删除无编译环境配置白名单")
     fun deletePipelineWhitelist(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)

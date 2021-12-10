@@ -40,18 +40,23 @@ class RedisUtils @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     fun setBuildLessPoolContainer(
-        containerId: String
+        containerId: String,
+        containerStatus: ContainerStatus
     ) {
-        logger.info("----> buildLessPoolKey leftPush $containerId")
-        redisOperation.leftPush(buildLessPoolKey(), formatContainerId(containerId))
+        logger.info("----> buildLessPoolKey hset $containerId idle.")
+        redisOperation.hset(buildLessPoolKey(), formatContainerId(containerId), containerStatus.name)
     }
 
-    fun popIdleContainer(): String? {
-        logger.info("----> buildLessPoolKey rightPop")
-        return redisOperation.rightPop(buildLessPoolKey())
+    fun deleteBuildLessPoolContainer(containerId: String) {
+        logger.info("----> buildLessPoolKey hdelete $containerId")
+        redisOperation.hdelete(buildLessPoolKey(), formatContainerId(containerId))
     }
 
-    fun increIdleContainer(incr: Long) {
+    fun getBuildLessPoolContainerList(): MutableMap<String, String> {
+        return redisOperation.hentries(buildLessPoolKey()) ?: mutableMapOf()
+    }
+
+    fun increIdlePool(incr: Long) {
         redisOperation.increment(idlePoolKey(), incr)
     }
 

@@ -33,14 +33,13 @@ import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.RandomUtil
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
 
 /**
  * 创建容器单例类
  */
 
-class SinglePublishService {
+class SinglePublishContainer {
 
     fun createBuildLessPoolContainer(
         env: List<String>,
@@ -65,12 +64,12 @@ class SinglePublishService {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SinglePublishService::class.java)
+        private val logger = LoggerFactory.getLogger(SinglePublishContainer::class.java)
 
         fun getInstance() = Helper.instance
     }
 
     private object Helper {
-        val instance = SinglePublishService()
+        val instance = SinglePublishContainer()
     }
 }
