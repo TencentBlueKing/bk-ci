@@ -205,7 +205,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val DEFAULT_RETRY_TIME = 5
         private const val sleepTimeMills = 5000L
         private const val CONNECT_TIMEOUT = 5L
-        private const val READ_TIMEOUT = 1500L
+        private const val READ_TIMEOUT = 60L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!

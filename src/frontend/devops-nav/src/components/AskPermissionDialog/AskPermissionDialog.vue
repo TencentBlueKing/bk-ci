@@ -72,7 +72,7 @@
 
         created () {
             eventBus.$on('update-permission-props', props => {
-                Object.keys(props).map(prop => {
+                Object.keys(props).forEach(prop => {
                     this[prop] = props[prop]
                 })
                 this.showDialog = true

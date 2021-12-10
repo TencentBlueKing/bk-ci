@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -216,4 +217,21 @@ interface ApigwEnvironmentResourceV3 {
         @QueryParam("sortDirection")
         sortDirection: String? = null
     ): Result<List<AgentPipelineRef>>
+
+    @ApiOperation("设置环境共享")
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/share")
+    fun setShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam(value = "共享的项目列表", required = true)
+        sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean>
 }
