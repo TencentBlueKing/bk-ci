@@ -125,7 +125,7 @@ class BuildLessClient @Autowired constructor(
                 executionCount = event.executeCount ?: 1,
                 agentId = agentId,
                 secretKey = secretKey,
-                rejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+                rejectedExecutionType = RejectedExecutionType.ABORT_POLICY
             )
 
             val enableIpCount = pipelineDockerIPInfoDao.getEnableDockerIpCount(

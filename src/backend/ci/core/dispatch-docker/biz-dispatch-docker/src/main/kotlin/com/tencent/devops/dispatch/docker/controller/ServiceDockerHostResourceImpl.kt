@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dispatchDockerService: DispatchDockerService,
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService,
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
 ) : ServiceDockerHostResource {
     override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
         checkParams(page, pageSize)

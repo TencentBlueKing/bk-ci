@@ -34,18 +34,16 @@ import com.tencent.devops.buildless.utils.RedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-
 /**
  * 无构建环境Task服务
  */
-
 @Service
 class BuildLessTaskService(
     private val redisUtils: RedisUtils,
     private val dispatchClient: DispatchClient
 ) {
 
-   fun claimBuildLessTask(containerId: String): BuildLessTask? {
+    fun claimBuildLessTask(containerId: String): BuildLessTask? {
        val buildLessTask = redisUtils.popBuildLessReadyTask()
        if (buildLessTask != null) {
            logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
@@ -58,7 +56,7 @@ class BuildLessTaskService(
        }
 
        return buildLessTask
-   }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildLessTaskService::class.java)

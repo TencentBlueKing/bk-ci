@@ -47,7 +47,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class CronConfiguration @Autowired constructor(
     private val dispatchClient: DispatchClient,
-    private val buildLessContainerService: BuildLessContainerService,
+    private val buildLessContainerService: BuildLessContainerService
 ) : SchedulingConfigurer {
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {

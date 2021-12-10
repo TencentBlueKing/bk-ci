@@ -34,7 +34,6 @@ import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.RandomUtil
 import org.slf4j.LoggerFactory
 
-
 /**
  * 创建容器单例类
  */

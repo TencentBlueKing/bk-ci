@@ -30,7 +30,6 @@ package com.tencent.devops.buildless.controller
 import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
