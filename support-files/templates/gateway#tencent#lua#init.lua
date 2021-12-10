@@ -85,7 +85,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         password = "__INFLUXDB_PASSWORD__"
     },
     itlogin = {ip = "__BKCI_ITLOGIN_IP__", port = "__BKCI_ITLOGIN_PORT__", host = "__BKCI_ITLOGIN_HOST__"},
-    bkrepo = {domain = "__BKREPO_HOST__", user = "__BKREPO_USER__", password = "__BKREPO_PASSWORD__"},
+    bkrepo = {
+        domain = "__BKREPO_HOST__",
+        user = "__BKREPO_USER__",
+        password = "__BKREPO_PASSWORD__",
+        static_domain = "__BKREPO_STATIC_HOST__"
+    },
     prebuild = {domain = "__BKCI_PREBUILD_FQDN__", port = "__BKCI_PREBUILD_PORT__"},
     dayuHost = "__BKCI_DAYU_URL__",
     externalHost = "__BKCI_EXTERNAL_HOST__",

@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.db.PageUtils
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.turbo.dao.mongotemplate.TurboPlanDao
 import com.tencent.devops.turbo.dao.repository.TurboPlanRepository
 import com.tencent.devops.turbo.dto.DistccRequestBody
@@ -28,16 +29,16 @@ import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
-@Suppress("MaxLineLength", "ComplexMethod", "NestedBlockDepth")
+@Suppress("MaxLineLength", "ComplexMethod", "NestedBlockDepth", "SpringJavaInjectionPointsAutowiringInspection")
 @Service
 class TurboPlanService @Autowired constructor(
     private val turboPlanDao: TurboPlanDao,
     private val turboPlanRepository: TurboPlanRepository,
     private val turboPlanInstanceService: TurboPlanInstanceService,
-    private val turboEngineConfigService: TurboEngineConfigService
+    private val turboEngineConfigService: TurboEngineConfigService,
+    private val serviceProjectResource: ServiceProjectResource
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TurboPlanService::class.java)
@@ -109,7 +110,6 @@ class TurboPlanService @Autowired constructor(
     /**
      * 新增加速方案
      */
-    @Transactional
     fun addNewTurboPlan(turboPlanModel: TurboPlanModel, user: String): String? {
         logger.info("add turbo plan, engine code: ${turboPlanModel.engineCode}, plan name: ${turboPlanModel.planName}")
         var turboPlanEntity: TTurboPlanEntity? = null
@@ -127,6 +127,25 @@ class TurboPlanService @Autowired constructor(
                     errorMessage = "plan name already exists"
                 )
             }
+
+            // 2. 通过projectId获取组织架构信息
+            val projectVO = try {
+                if (!turboPlanModel.projectId.isNullOrBlank()) {
+                    val projectResult = serviceProjectResource.get(turboPlanModel.projectId!!)
+                    if (projectResult.isOk() && projectResult.data != null) {
+                        projectResult.data
+                    } else {
+                        null
+                    }
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                logger.info("get project info failed, message: ${e.message}")
+                null
+            }
+
             // 2. 保存记录
 
             turboPlanEntity = TTurboPlanEntity(
@@ -138,6 +157,12 @@ class TurboPlanService @Autowired constructor(
                 configParam = configParam,
                 whiteList = "0.0.0.0",
                 openStatus = openStatus,
+                bgId = projectVO?.bgId,
+                bgName = projectVO?.bgName,
+                deptId = projectVO?.deptId,
+                deptName = projectVO?.deptName,
+                centerId = projectVO?.centerId,
+                centerName = projectVO?.centerName,
                 updatedBy = user,
                 updatedDate = LocalDateTime.now(),
                 createdBy = user,
@@ -273,6 +298,8 @@ class TurboPlanService @Autowired constructor(
                 )
             }
         } catch (e: Exception) {
+            e.printStackTrace()
+            logger.info("submit tbs data fail! error message: ${e.message}")
             throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "同步数据至加速后端失败")
         }
     }

@@ -29,12 +29,14 @@
 package main
 
 import (
+	"fmt"
 	"encoding/json"
 	"os"
 	"os/exec"
 	"runtime"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"github.com/astaxie/beego/logs"
@@ -44,6 +46,10 @@ import (
 const daemonProcess = "daemon"
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(config.AgentVersion)
+		systemutil.ExitProcess(0)
+	}
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()

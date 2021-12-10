@@ -27,12 +27,12 @@
 
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
-import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
@@ -43,10 +43,12 @@ import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
+import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
@@ -76,6 +78,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .maximumSize(500)
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*deptId*/, List<String>>()
+
+    private val userDeptCache = CacheBuilder.newBuilder()
+        .maximumSize(500)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, Set<String>>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
@@ -198,15 +205,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserParentDept(userId: String): Int {
-        val deptSearch = SearchProfileDeptEntity(
-            id = userId,
-            with_family = true,
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId
-        )
-        val deptSearchResponse = callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
-        val deptId = getUserDept(deptSearchResponse)
+        val deptSearchResponse = getUserDeptFamily(userId)
+        val deptId = getUserLastDeptId(deptSearchResponse)
         val parentSearch = SearchRetrieveDeptEntity(
             id = deptId,
             bk_app_code = appCode!!,
@@ -229,6 +229,27 @@ class AuthDeptServiceImpl @Autowired constructor(
             accessToken = null
         )
         return getDeptInfo(search)
+    }
+
+    override fun getUserDeptInfo(userId: String): Set<String> {
+        if (userDeptCache.getIfPresent(userId) != null) {
+            return userDeptCache.getIfPresent(userId)!!
+        }
+        val deptFamilyInfo = getUserDeptFamily(userId)
+        val userDeptIds = getUserDeptTreeIds(deptFamilyInfo)
+        userDeptCache.put(userId, userDeptIds)
+        return userDeptIds
+    }
+
+    private fun getUserDeptFamily(userId: String): String {
+        val deptSearch = SearchProfileDeptEntity(
+            id = userId,
+            with_family = true,
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId
+        )
+        return callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
     }
 
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
@@ -269,7 +290,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             }
             val responseStr = it.body()!!.string()
             logger.info("user center response： $responseStr")
-            val responseDTO = JsonUtil.fromJson(responseStr, ResponseDTO::class.java)
+            val responseDTO = JsonUtil.to(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
                 throw RemoteServiceException(
@@ -282,13 +303,13 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     fun findUserName(str: String): List<String> {
-        val dataMap = JsonUtil.fromJson(str, Map::class.java)
-        val userInfoList = JsonUtil.fromJson(JsonUtil.toJson(dataMap[HTTP_RESULT]), List::class.java)
+        val dataMap = JsonUtil.to(str, Map::class.java)
+        val userInfoList = JsonUtil.to(JsonUtil.toJson(dataMap[HTTP_RESULT]!!), List::class.java)
         val users = mutableListOf<String>()
         userInfoList.forEach {
-            val userInfo = JsonUtil.toJson(it)
-            val userInfoMap = JsonUtil.fromJson(userInfo, Map::class.java)
-            val userName = userInfoMap.get("username").toString()
+            val userInfo = JsonUtil.toJson(it!!)
+            val userInfoMap = JsonUtil.to(userInfo, Map::class.java)
+            val userName = userInfoMap["username"].toString()
             users.add(userName)
         }
 
@@ -296,17 +317,29 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     private fun getParentDept(responseData: String): Int {
-        val dataMap = JsonUtil.fromJson(responseData, Map::class.java)
+        val dataMap = JsonUtil.to(responseData, Map::class.java)
         return dataMap["parent"]?.toString()?.toInt() ?: 0
     }
 
-    fun getUserDept(responseData: String): Int {
-        val deptInfo = JsonUtil.fromJson(responseData, List::class.java)
+    private fun getUserLastDeptId(responseData: String): Int {
+        val deptInfo = JsonUtil.to(responseData, List::class.java)
         val any = deptInfo[0] as Any
         if (any is Map<*, *>) {
             return any["id"].toString().toInt()
         }
         return 0
+    }
+
+    fun getUserDeptTreeIds(responseData: String): Set<String> {
+        val deptInfo = JsonUtil.to(responseData, object : TypeReference<List<UserDeptTreeInfo>>() {})
+        val deptTreeId = mutableSetOf<String>()
+        val deptTree = deptInfo[0]
+        deptTreeId.add(deptTree.id)
+        val family = deptTree.family
+        family.forEach {
+            deptTreeId.add(it.id.toString())
+        }
+        return deptTreeId
     }
 
     /**

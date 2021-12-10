@@ -61,6 +61,7 @@ allprojects {
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
+            dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")
@@ -87,6 +88,7 @@ allprojects {
             dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
                 entry("pinyin-plus")
             }
+            dependency("com.perforce:p4java:${Versions.p4}")
         }
     }
 

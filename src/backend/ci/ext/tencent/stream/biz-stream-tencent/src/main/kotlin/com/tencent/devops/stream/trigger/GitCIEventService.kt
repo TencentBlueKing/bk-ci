@@ -34,7 +34,7 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.dao.StreamUserMessageDao
@@ -111,10 +111,12 @@ class GitCIEventService @Autowired constructor(
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
+        val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
         // 人工触发不发送
-        if (event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck) {
-            val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
-                ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
+        if (gitBasicSetting.enableCommitCheck &&
+            event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck
+        ) {
             val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,

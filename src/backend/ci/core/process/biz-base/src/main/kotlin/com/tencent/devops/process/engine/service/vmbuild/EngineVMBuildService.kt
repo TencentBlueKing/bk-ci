@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
+import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -385,9 +386,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
                 )
-                buildVariable.putAll(extMap)
+
                 PipelineVarUtil.fillOldVar(buildVariable)
                 buildVariable.putAll(allVariable)
+                buildVariable.putAll(extMap)
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
@@ -409,7 +411,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             vmSeqId = vmSeqId
                         ),
                         value = task.atomCode!!,
-                        expiredInSecond = transMinuteTimeoutToMills(task.additionalOptions?.timeout?.toInt()).second
+                        expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
                 BuildTask(

@@ -43,31 +43,35 @@ import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.pojo.v2.project.GitProjectInfoWithProject
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamProjectService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIGitCodeResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
     private val client: Client,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val streamScmService: StreamScmService,
     private val oauthService: StreamOauthService,
     private val permissionService: GitCIV2PermissionService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val streamProjectService: StreamProjectService
 ) : UserGitCIGitCodeResource {
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserGitCIGitCodeResourceImpl::class.java)
+    }
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitProjectInfoWithProject?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
-        val projectInfo = streamScmService.getProjectInfo(
-            token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
-            gitProjectId = gitProjectId,
-            useAccessToken = true
-        ) ?: return Result(null)
+        val projectInfo = getProjectInfo(gitProjectId) ?: return Result(null)
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
@@ -94,6 +98,37 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                     avatarUrl = avatarUrl,
                     routerTag = routerTag
                 )
+            )
+        }
+    }
+
+    private fun getProjectInfo(gitProjectId: String): GitCIProjectInfo? {
+        return try {
+            streamScmService.getProjectInfo(
+                token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
+                gitProjectId = gitProjectId,
+                useAccessToken = true
+            )
+        } catch (e: Exception) {
+            logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
+            val setting = try {
+                streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
+            } catch (e: NumberFormatException) {
+                streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
+            } ?: return null
+            logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
+            GitCIProjectInfo(
+                gitProjectId = setting.gitProjectId,
+                name = setting.name,
+                homepage = setting.homepage,
+                gitHttpUrl = setting.gitHttpUrl.replace("https", "http"),
+                gitHttpsUrl = setting.gitHttpUrl,
+                gitSshUrl = setting.gitSshUrl,
+                nameWithNamespace = setting.nameWithNamespace,
+                pathWithNamespace = setting.pathWithNamespace,
+                defaultBranch = "master",
+                description = setting.gitProjectDesc,
+                avatarUrl = setting.gitProjectAvatar
             )
         }
     }

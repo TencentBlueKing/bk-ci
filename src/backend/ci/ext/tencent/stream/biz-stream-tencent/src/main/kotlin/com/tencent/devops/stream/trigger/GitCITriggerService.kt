@@ -45,15 +45,15 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -507,7 +507,7 @@ class GitCITriggerService @Autowired constructor(
             "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
                     "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
         )
-        if (gitProjectConf.enableMrBlock && mrEvent) {
+        if (gitProjectConf.enableCommitCheck && gitProjectConf.enableMrBlock && mrEvent) {
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
                 mergeRequestId = event.mergeRequestId ?: 0L,

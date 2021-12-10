@@ -3,7 +3,7 @@ package com.tencent.devops.stream.listener.buildFinish
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -13,10 +13,11 @@ import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
+import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamQualityService
@@ -47,7 +48,7 @@ class SendCommitCheck @Autowired constructor(
     fun sendCommitCheck(
         context: StreamFinishContext
     ) {
-        // 当人工触发时不推送CommitCheck消息
+        // 当人工触发时不推送CommitCheck消息, 此处与下面重复是为了兼容V1
         if (!context.requestEvent.sendCommitCheck()) {
             return
         }
@@ -55,7 +56,9 @@ class SendCommitCheck @Autowired constructor(
         try {
             when (context) {
                 is StreamFinishContextV2 -> {
-                    sendCommitCheckV2(context)
+                    if (CommitCheckUtils.needSendCheck(context.requestEvent, context.streamSetting)) {
+                        sendCommitCheckV2(context)
+                    }
                 }
                 is StreamFinishContextV1 -> {
                     sendCommitCheckV1(context)

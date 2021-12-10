@@ -32,25 +32,28 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 
 @Service
 class ScmService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val svnConfig: SVNConfig,
+    private val p4Config: P4Config,
     private val scmMonitorService: ScmMonitorService
 ) {
 
@@ -215,6 +218,7 @@ class ScmService @Autowired constructor(
         return TokenCheckResult(true, "OK")
     }
 
+    @SuppressWarnings("LongMethod", "NestedBlockDepth", "ThrowsCount", "LongParameterList")
     fun addWebHook(
         projectName: String,
         url: String,
@@ -237,39 +241,57 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_GIT -> {
                         if (gitConfig.gitHookUrl.isBlank()) {
                             logger.warn("The git webhook url is not settle")
-                            throw RuntimeException("The git hook url is not settle")
+                            throw IllegalArgumentException("The git hook url is not settle")
                         }
                         gitConfig.gitHookUrl
                     }
                     ScmType.CODE_GITLAB -> {
                         if (gitConfig.gitlabHookUrl.isBlank()) {
                             logger.warn("The gitlab webhook url is not settle")
-                            throw RuntimeException("The gitlab webhook url is not settle")
+                            throw IllegalArgumentException("The gitlab webhook url is not settle")
                         }
                         gitConfig.gitlabHookUrl
                     }
                     ScmType.CODE_SVN -> {
                         if (svnConfig.svnHookUrl.isBlank()) {
                             logger.warn("The svn webhook url is not settle")
-                            throw RuntimeException("The svn webhook url is not settle")
+                            throw IllegalArgumentException("The svn webhook url is not settle")
                         }
                         svnConfig.svnHookUrl
                     }
                     ScmType.CODE_TGIT -> {
                         if (gitConfig.tGitHookUrl.isBlank()) {
                             logger.warn("The tgit webhook url is not settle")
-                            throw RuntimeException("The tgit webhook url is not settle")
+                            throw IllegalArgumentException("The tgit webhook url is not settle")
                         }
                         gitConfig.tGitHookUrl
                     }
+                    ScmType.CODE_P4 -> {
+                        if (p4Config.p4HookUrl.isBlank()) {
+                            logger.warn("The p4 webhook url is not settle")
+                            throw IllegalArgumentException("The p4 webhook url is not settle")
+                        }
+                        p4Config.p4HookUrl
+                    }
                     else -> {
                         logger.warn("Unknown repository type ($type) when add webhook")
-                        throw RuntimeException("Unknown repository type ($type) when add webhook")
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                     }
                 }
             }
-            ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, event)
-                .addWebHook(realHookUrl)
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event
+            )
+                .addWebHook(hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }

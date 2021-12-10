@@ -34,6 +34,7 @@ import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
@@ -52,7 +53,8 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class ScmService @Autowired constructor(
     private val svnConfig: SVNConfig,
-    private val gitConfig: GitConfig
+    private val gitConfig: GitConfig,
+    private val p4Config: P4Config
 ) : IScmService {
 
     override fun getLatestRevision(
@@ -259,7 +261,7 @@ class ScmService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {
-                hookUrl!!
+                hookUrl
             } else {
                 when (type) {
                     ScmType.CODE_GIT -> {
@@ -273,6 +275,9 @@ class ScmService @Autowired constructor(
                     }
                     ScmType.CODE_TGIT -> {
                         gitConfig.tGitHookUrl
+                    }
+                    ScmType.CODE_P4 -> {
+                        p4Config.p4HookUrl
                     }
                     else -> {
                         throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
@@ -291,7 +296,7 @@ class ScmService @Autowired constructor(
                 userName = userName,
                 event = event
             )
-                .addWebHook(realHookUrl)
+                .addWebHook(hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }

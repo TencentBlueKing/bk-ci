@@ -50,6 +50,7 @@ class ScmClient @Autowired constructor(
     private val v2GitUrl: String? = null
 
     // 用来进行展示状态的CommitCheck
+    // 目前只有V1使用，v2已经全部迁到代码库接口
     fun pushCommitCheck(
         commitId: String,
         description: String,

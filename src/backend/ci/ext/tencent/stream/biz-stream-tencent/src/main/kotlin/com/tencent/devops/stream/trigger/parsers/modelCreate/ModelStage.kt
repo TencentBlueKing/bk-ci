@@ -144,11 +144,11 @@ class ModelStage @Autowired constructor(
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
+        check.timeout = stageCheck.timeoutHours
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
             check.reviewDesc = stageCheck.reviews?.description
             check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
-            check.timeout = stageCheck.timeoutHours
             check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
             }?.toMutableList()
