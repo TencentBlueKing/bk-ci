@@ -2,13 +2,13 @@
 ## Download the docker.jar
 export LANG="zh_CN.UTF-8"
 
-URL=${devops_gateway}/ms/dispatch-docker/api/build/dockers
+URL=${devops_gateway}/static/local/files/jar/worker-agent.jar
 cd /data/devops
-echo "start to download the docker.jar..." > /data/devops/logs/docker.log
+echo "start to download the docker.jar..." >> /data/devops/logs/docker.log
 
 curl -k -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}"  -o docker.jar ${URL}
 
-echo "download the docker.jar finished, ready to start it..." >> /data/devops/logs/docker.log 
+echo "download the docker.jar finished, ready to start it..." >> /data/devops/logs/docker.log
 md5sum docker.jar >> /data/devops/logs/docker.log 2>&1
 fileSize=`wc -c docker.jar | awk '{print $1}'`
 echo $fileSize >> /data/devops/logs/docker.log
@@ -18,4 +18,3 @@ then
 fi
 
 /usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlandun.env=prod -Dbuild.type=DOCKER -Ddevops.gateway=${devops_gateway}  -jar docker.jar $@ >> /data/devops/logs/docker.log 2>&1
-#/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dlandun.env=dev -jar docker.jar $@ >> /data/devops/logs/docker.log

@@ -1,0 +1,47 @@
+{{- if .Values.bklog.file.collectEnabled }}
+# Container Log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: {{ include "common.names.fullname" . }}-bklog-file
+spec:
+  dataId: {{ .Values.bklog.file.dataId }}
+
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 4 }}
+      {{- if .Values.commonLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+      {{- end }}
+      app.kubernetes.io/component: microservice
+  path:
+    - /data/logs/*-.log
+  encoding: 'utf-8'
+  multiline:
+    pattern: '^[0-2][0-9][0-9][0-9].[0-1][0-9].[0-3][0-9]'
+    maxLines: 200
+    timeout: '2s'
+  ext_meta:
+    logSourceType: "file"
+{{- end }}
+{{- if .Values.bklog.std.collectEnabled }}
+---
+# Stdout
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: {{ include "common.names.fullname" . }}-bklog-std
+spec:
+  dataId: {{ .Values.bklog.std.dataId }}
+  logConfigType: std_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 4 }}
+      {{- if .Values.commonLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+      {{- end }}
+      app.kubernetes.io/component: microservice
+  ext_meta:
+    logSourceType: "std"
+{{- end }}

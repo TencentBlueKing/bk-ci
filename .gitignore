@@ -35,3 +35,13 @@ out
 .codecc
 build.yml
 *.ipa
+containerization/helm-charts/values.yaml
+containerization/helm-charts/templates/configmap/tpl/
+containerization/docker-images/ci
+containerization/docker-images/*.gz
+containerization/values.json
+containerization/helm-charts/bk-ci*.tgz
+src/backend/turbo/**/build/
+src/backend/turbo/release/
+src/backend/turbo/containerization/
+containerization/bk-ci*.tgz

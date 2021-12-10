@@ -32,11 +32,12 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.springframework.cloud.client.ServiceInstance
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -45,7 +46,7 @@ import java.util.concurrent.TimeUnit
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
-    private val consulClient: ConsulDiscoveryClient,
+    private val compositeDiscoveryClient: CompositeDiscoveryClient,
     private val tag: String?
 ) : FeignTarget<T> {
     private val msCache =
@@ -53,11 +54,11 @@ class MicroServiceTarget<T> constructor(
             .maximumSize(1000)
             .expireAfterWrite(1, TimeUnit.SECONDS)
             .build(object : CacheLoader<String, List<ServiceInstance>>() {
-                override fun load(s: String): List<ServiceInstance> {
-                    val instances = consulClient.getInstances(s)
-                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
+                override fun load(svrName: String): List<ServiceInstance> {
+                    val instances = compositeDiscoveryClient.getInstances(svrName)
+                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
                     if (instances.isEmpty()) {
-                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
+                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
                     }
                     return instances
                 }
@@ -66,10 +67,18 @@ class MicroServiceTarget<T> constructor(
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
+    private val namespace = System.getenv("NAMESPACE")
+    private val serviceSuffix = System.getenv("SERVICE_PREFIX")
+
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
-        val instances = msCache.get(serviceName)
+        val svrName = if (KubernetesUtils.inContainer()) {
+            KubernetesUtils.getSvrName(serviceName)
+        } else {
+            serviceName
+        }
+        val instances = msCache.get(svrName)
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
@@ -79,8 +88,12 @@ class MicroServiceTarget<T> constructor(
         } else tag
 
         instances.forEach { serviceInstance ->
-            if (serviceInstance is ConsulServiceInstance && serviceInstance.tags.contains(useConsulTag)) {
+            if (serviceInstance is ConsulServiceInstance) {
                 // 已经用过的不选择
+                if (serviceInstance.tags.contains(useConsulTag) && !usedInstance.contains(serviceInstance.url())) {
+                    matchTagInstances.add(serviceInstance)
+                }
+            } else {
                 if (!usedInstance.contains(serviceInstance.url())) {
                     matchTagInstances.add(serviceInstance)
                 }
@@ -93,7 +106,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$useConsulTag]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]-[$useConsulTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }
@@ -104,7 +117,7 @@ class MicroServiceTarget<T> constructor(
 
     override fun apply(input: RequestTemplate?): Request {
         if (input!!.url().indexOf("http") != 0) {
-            input.insert(0, url())
+            input.target(url())
         }
         return input.request()
     }

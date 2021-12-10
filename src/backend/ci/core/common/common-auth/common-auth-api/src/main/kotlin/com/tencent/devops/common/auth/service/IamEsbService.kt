@@ -82,7 +82,7 @@ class IamEsbService {
     }
 
     fun getPermissionUrl(iamPermissionUrl: EsbPermissionUrlReq): String? {
-        var url = "/api/c/compapi/v2/iam/application/"
+        var url = "api/c/compapi/v2/iam/application/"
         url = getAuthRequestUrl(url)
         iamPermissionUrl.bk_app_code = appCode!!
         iamPermissionUrl.bk_app_secret = appSecret!!

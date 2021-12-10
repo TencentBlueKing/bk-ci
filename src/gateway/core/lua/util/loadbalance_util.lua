@@ -18,6 +18,12 @@
 _M = {}
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
+
+    -- 容器环境
+    if ngx.var.namespace ~= '' and ngx.var.namespace ~= nil then
+        return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
+    end
+
     -- 获取consul查询域名
     local query_subdomain = devops_tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
 
