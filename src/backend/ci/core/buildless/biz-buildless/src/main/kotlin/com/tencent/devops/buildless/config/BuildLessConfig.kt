@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class DockerHostConfig {
+class BuildLessConfig {
 
     @Value("\${dockerCli.dockerConfig:/root/.docke}")
     var dockerConfig: String? = null
@@ -86,4 +86,10 @@ class DockerHostConfig {
 
     @Value("\${gateway:#{null}}")
     var gateway: String? = null
+
+    @Value("\${containerPool.coreSize:20}")
+    var coreContainerPool: Int = 20 // 构建机初始化容器池大小
+
+    @Value("\${containerPool.maxSize:30}")
+    var maxContainerPool: Int = 30 // 构建机最大可创建容器池大小
 }

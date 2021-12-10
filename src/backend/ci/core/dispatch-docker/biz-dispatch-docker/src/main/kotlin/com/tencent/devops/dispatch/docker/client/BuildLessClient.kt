@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
@@ -65,12 +66,12 @@ class BuildLessClient @Autowired constructor(
     private val dockerHostUtils: DockerHostUtils,
     private val dslContext: DSLContext,
     private val dockerHostProxyService: DockerHostProxyService,
-    private val redisUtils: RedisUtils
+    private val redisUtils: RedisUtils,
+    private val gray: Gray
 ) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildLessClient::class.java)
-        private const val RETRY_BUILD_TIME = 2
     }
 
     fun startBuildLess(
@@ -127,7 +128,17 @@ class BuildLessClient @Autowired constructor(
                 rejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
             )
 
-            startBuildLess(agentLessDockerIp, agentLessDockerPort, buildLessStartInfo)
+            val enableIpCount = pipelineDockerIPInfoDao.getEnableDockerIpCount(
+                dslContext = dslContext,
+                grayEnv = gray.isGray(),
+                clusterName = DockerHostClusterType.BUILD_LESS
+            )
+            startBuildLess(
+                dockerIp = agentLessDockerIp,
+                dockerHostPort = agentLessDockerPort,
+                buildLessStartInfo = buildLessStartInfo,
+                retryMax = (enableIpCount / 2).toInt()
+            )
         }
     }
 
@@ -180,6 +191,7 @@ class BuildLessClient @Autowired constructor(
         dockerHostPort: Int,
         buildLessStartInfo: BuildLessStartInfo,
         retryTime: Int = 0,
+        retryMax: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
         val request = dockerHostProxyService.getDockerHostProxyRequest(
@@ -216,6 +228,7 @@ class BuildLessClient @Autowired constructor(
                         response["status"] == 2127003 -> {
                             doRetry(
                                 retryTime = retryTime,
+                                retryMax = retryMax,
                                 dockerIp = dockerIp,
                                 buildLessStartInfo = buildLessStartInfo,
                                 errorMessage = response["message"] as String,
@@ -235,6 +248,7 @@ class BuildLessClient @Autowired constructor(
                     // 接口异常重试
                     doRetry(
                         retryTime = retryTime,
+                        retryMax = retryMax,
                         dockerIp = dockerIp,
                         buildLessStartInfo = buildLessStartInfo,
                         errorMessage = resp.message(),
@@ -247,6 +261,7 @@ class BuildLessClient @Autowired constructor(
             if (e.message == "connect timed out") {
                 doRetry(
                     retryTime = retryTime,
+                    retryMax = retryMax,
                     dockerIp = dockerIp,
                     buildLessStartInfo = buildLessStartInfo,
                     errorMessage = e.message,
@@ -264,6 +279,7 @@ class BuildLessClient @Autowired constructor(
             // 对Host unreachable场景重试
             doRetry(
                 retryTime = retryTime,
+                retryMax = retryMax,
                 dockerIp = dockerIp,
                 buildLessStartInfo = buildLessStartInfo,
                 errorMessage = e.message,
@@ -274,13 +290,14 @@ class BuildLessClient @Autowired constructor(
 
     private fun doRetry(
         retryTime: Int,
+        retryMax: Int,
         dockerIp: String,
         buildLessStartInfo: BuildLessStartInfo,
         errorMessage: String?,
         unAvailableIpList: Set<String>?
     ) {
         val buildLog = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime"
-        if (retryTime < RETRY_BUILD_TIME) {
+        if (retryTime < retryMax) {
             LOG.warn("$buildLog start build less failed in $dockerIp, retry. error: $errorMessage")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1

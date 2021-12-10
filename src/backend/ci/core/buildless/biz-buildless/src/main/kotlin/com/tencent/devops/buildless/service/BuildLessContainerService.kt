@@ -38,24 +38,23 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
-import com.tencent.devops.buildless.config.DockerHostConfig
+import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
-import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.ContainerStatus
 import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
+import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_WORKSPACE
 import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
-import com.tencent.devops.buildless.utils.MAX_CONTAINER_POOL_SIZE
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.service.config.CommonConfig
@@ -72,13 +71,13 @@ import kotlin.streams.toList
 class BuildLessContainerService(
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
-    private val dockerHostConfig: DockerHostConfig,
+    private val buildLessConfig: BuildLessConfig,
     private val rejectedExecutionFactory: RejectedExecutionFactory
 ) {
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-        .withDockerConfig(dockerHostConfig.dockerConfig)
-        .withApiVersion(dockerHostConfig.apiVersion)
+        .withDockerConfig(buildLessConfig.dockerConfig)
+        .withApiVersion(buildLessConfig.apiVersion)
         .build()
 
     final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
@@ -111,10 +110,11 @@ class BuildLessContainerService(
         // 已经进入需求池，所以减1
         redisUtils.increIdlePool(-1)
 
-        // 无空闲容器并且当前容器数小于最大容器数
+        // FOLLOW或JUMP策略下，无空闲容器并且当前容器数小于最大容器数
         val runningPool = getRunningPoolCount()
         logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} runningPool: $runningPool")
-        if (idlePoolSize <= 0L && (runningPool in CORE_CONTAINER_POOL_SIZE until MAX_CONTAINER_POOL_SIZE)) {
+        if (idlePoolSize <= 0L &&
+            (runningPool in buildLessConfig.coreContainerPool until buildLessConfig.maxContainerPool)) {
             createBuildLessPoolContainer(true)
         }
 
@@ -133,26 +133,28 @@ class BuildLessContainerService(
     fun createBuildLessPoolContainer(oversold: Boolean = false) {
         val imageName = "mirrors.tencent.com/ci/tlinux_ci:0.5.0.4"
 
-        val volumeApps = Volume(dockerHostConfig.volumeApps)
-        val volumeInit = Volume(dockerHostConfig.volumeInit)
-        val volumeSleep = Volume(dockerHostConfig.volumeSleep)
-        val volumeLogs = Volume(dockerHostConfig.volumeLogs)
-        val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
+        val volumeApps = Volume(buildLessConfig.volumeApps)
+        val volumeInit = Volume(buildLessConfig.volumeInit)
+        val volumeSleep = Volume(buildLessConfig.volumeSleep)
+        val volumeLogs = Volume(buildLessConfig.volumeLogs)
+        val volumeWs = Volume(buildLessConfig.volumeWorkspace)
 
-        val gateway = dockerHostConfig.gateway
+        val gateway = buildLessConfig.gateway
         val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
+
+        val hostWorkspace = buildLessConfig.hostPathWorkspace + "/$containerName"
         val binds = Binds(
-            Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-            Bind(dockerHostConfig.hostPathLogs + "/$containerName", volumeLogs),
-            Bind(dockerHostConfig.hostPathWorkspace + "/$containerName", volumeWs)
+            Bind(buildLessConfig.hostPathApps, volumeApps, AccessMode.ro),
+            Bind(buildLessConfig.hostPathInit, volumeInit, AccessMode.ro),
+            Bind(buildLessConfig.hostPathSleep, volumeSleep, AccessMode.ro),
+            Bind(buildLessConfig.hostPathLogs + "/$containerName", volumeLogs),
+            Bind(hostWorkspace, volumeWs)
         )
 
         // 创建之前校验当前缓存中的空闲容器数，超卖情况下校验规则不一致
         val runningContainerCount = getRunningPoolCount()
-        if (!oversold && runningContainerCount >= CORE_CONTAINER_POOL_SIZE) return
-        if (oversold && runningContainerCount >= MAX_CONTAINER_POOL_SIZE) return
+        if (!oversold && runningContainerCount >= buildLessConfig.coreContainerPool) return
+        if (oversold && runningContainerCount >= buildLessConfig.maxContainerPool) return
 
         val container = httpDockerCli.createContainerCmd(imageName)
             .withName(containerName)
@@ -167,15 +169,16 @@ class BuildLessContainerService(
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-                    "$ENV_CONTAINER_NAME=$containerName"
+                    "$ENV_CONTAINER_NAME=$containerName",
+                    "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$hostWorkspace",
                 )
             )
             .withHostConfig(
                 // CPU and memory Limit
                 HostConfig()
-                    .withMemory(dockerHostConfig.memory)
-                    .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
-                    .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                    .withMemory(buildLessConfig.memory)
+                    .withCpuQuota(buildLessConfig.cpuQuota.toLong())
+                    .withCpuPeriod(buildLessConfig.cpuPeriod.toLong())
                     .withBinds(binds)
                     .withNetworkMode("bridge")
             )
@@ -242,7 +245,13 @@ class BuildLessContainerService(
             .exec()
 
         // 同步缓存中的容器状态
-        val containerIds = containerInfo.stream().map { it.id }.toList()
+        val containerIds = containerInfo.stream().map {
+            if (it.id.length > 12) {
+                it.id.substring(0, 12)
+            } else {
+                it.id
+            }
+        }.toList()
         logger.info("----> running containers: $containerIds")
         val buildLessPoolContainerList = redisUtils.getBuildLessPoolContainerList()
         buildLessPoolContainerList.forEach { key, value ->

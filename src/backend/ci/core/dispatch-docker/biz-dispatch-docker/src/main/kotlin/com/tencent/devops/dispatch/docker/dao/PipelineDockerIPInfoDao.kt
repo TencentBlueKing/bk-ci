@@ -338,13 +338,15 @@ class PipelineDockerIPInfoDao {
 
     fun getEnableDockerIpCount(
         dslContext: DSLContext,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
     ): Long {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
+                .and(CLUSTER_NAME.eq(clusterName.name))
                 .fetchOne(0, Long::class.java)!!
         }
     }

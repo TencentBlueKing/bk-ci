@@ -68,7 +68,3 @@ const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
 const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
 
 const val ENTRY_POINT_CMD = "/data/init.sh"
-const val SLEEP_ENTRY_POINT_CMD = "/data/sleep.sh"
-
-const val MAX_CONTAINER_POOL_SIZE = 15
-const val CORE_CONTAINER_POOL_SIZE = 10
