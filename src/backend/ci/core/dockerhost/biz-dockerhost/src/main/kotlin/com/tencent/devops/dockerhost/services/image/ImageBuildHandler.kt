@@ -81,7 +81,7 @@ class ImageBuildHandler(
                 step.withBuildArg(it.first(), it.last())
             }
             val imageId = step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
-                .awaitImageId()
+                .awaitImageId(60, TimeUnit.MINUTES)
             this.imageId = imageId
             logger.info("[$buildId]|[$vmSeqId] Build docker image mageId: $imageId")
 
