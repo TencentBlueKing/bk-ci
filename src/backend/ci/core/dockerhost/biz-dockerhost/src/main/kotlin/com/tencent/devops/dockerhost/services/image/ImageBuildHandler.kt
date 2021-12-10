@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 
 @Service
 class ImageBuildHandler(
@@ -80,7 +81,7 @@ class ImageBuildHandler(
                 step.withBuildArg(it.first(), it.last())
             }
             val imageId = step.exec(MyBuildImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
-                .awaitImageId()
+                .awaitImageId(60, TimeUnit.MINUTES)
             this.imageId = imageId
             logger.info("[$buildId]|[$vmSeqId] Build docker image mageId: $imageId")
 
