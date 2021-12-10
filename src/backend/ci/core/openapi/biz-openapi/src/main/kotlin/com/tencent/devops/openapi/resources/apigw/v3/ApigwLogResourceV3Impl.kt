@@ -47,7 +47,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwLogResourceV3 {
 
-    @Value("\${gateway.url:#{null}}")
+    @Value("\${devopsGateway.api:#{null}}")
     private val gatewayUrl: String? = ""
 
     override fun getInitLogs(
@@ -160,7 +160,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
             "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
                 "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
         )
-        val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
+        val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
         path.append(projectId)
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
 
