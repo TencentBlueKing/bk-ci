@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
