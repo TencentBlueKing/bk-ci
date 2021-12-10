@@ -29,14 +29,11 @@ package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "trigger_type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = P4ChangeEvent::class, name = P4ChangeEvent.classType)
+    JsonSubTypes.Type(value = P4ChangeEvent::class, name = P4ChangeEvent.classType),
+    JsonSubTypes.Type(value = P4ShelveEvent::class, name = P4ShelveEvent.classType)
 )
-open class P4Event(
-    open val p4Port: String,
-    open val eventType: CodeEventType
-) : CodeWebhookEvent
+open class P4Event : CodeWebhookEvent

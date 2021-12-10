@@ -467,9 +467,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addP4Webhook(
         projectId: String,
         repositoryConfig: RepositoryConfig,
-        codeEventType: CodeEventType?,
-        includePaths: String?,
-        excludePaths: String?
+        codeEventType: CodeEventType?
     ): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
@@ -487,9 +485,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = null,
             region = null,
             userName = credential.username,
-            event = codeEventType?.name,
-            includePaths = includePaths,
-            excludePaths = excludePaths
+            event = codeEventType?.name
         )
         return repo.projectName
     }
