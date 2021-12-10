@@ -326,7 +326,7 @@ class PipelineContainerService @Autowired constructor(
         var taskSeq = 0
         val containerElements = container.elements
 
-        if (container.matrixGroupFlag != true) containerElements.forEach nextElement@{ atomElement ->
+        containerElements.forEach nextElement@{ atomElement ->
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
             // 计算启动构建机的插件任务的序号
             if (startVMTaskSeq < 0) {
@@ -346,21 +346,23 @@ class PipelineContainerService @Autowired constructor(
                 return@nextElement
             }
 
-            // 全新构建
+            // 全新构建，其中构建矩阵不需要添加待执行插件
             if (lastTimeBuildTaskRecords.isEmpty()) {
-                context.taskCount++
-                addBuildTaskToList(
-                    buildTaskList = buildTaskList,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = context.userId,
-                    stage = stage,
-                    container = container,
-                    taskSeq = taskSeq,
-                    atomElement = atomElement,
-                    status = status
-                )
+                if (container.matrixGroupFlag != true) {
+                    context.taskCount++
+                    addBuildTaskToList(
+                        buildTaskList = buildTaskList,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        userId = context.userId,
+                        stage = stage,
+                        container = container,
+                        taskSeq = taskSeq,
+                        atomElement = atomElement,
+                        status = status
+                    )
+                }
                 needUpdateContainer = true
             } else {
                 // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
@@ -414,7 +416,7 @@ class PipelineContainerService @Autowired constructor(
             }
 
             // 确认是否要启动构建机/无编译环境
-            if (!needStartVM && startVMTaskSeq > 0) {
+            if (!needStartVM && startVMTaskSeq > 0 && container.matrixGroupFlag != true) {
                 needStartVM = true
             }
         }
