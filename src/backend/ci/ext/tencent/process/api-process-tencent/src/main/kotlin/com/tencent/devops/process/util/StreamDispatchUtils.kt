@@ -80,6 +80,16 @@ object StreamDispatchUtils {
         }
     }
 
+    fun getBuildEnv(job: Job, context: Map<String, String>? = null): Map<String, String>? {
+        return if (job.runsOn.selfHosted == false) {
+            job.runsOn.needs?.map { it ->
+                it.key to EnvUtils.parseEnv(it.value, context ?: mapOf())
+            }?.toMap()
+        } else {
+            null
+        }
+    }
+
     @Throws(
         JsonProcessingException::class,
         ParamBlankException::class,

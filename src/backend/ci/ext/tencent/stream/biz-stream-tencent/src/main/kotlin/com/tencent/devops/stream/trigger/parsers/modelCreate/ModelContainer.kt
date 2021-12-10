@@ -90,11 +90,7 @@ class ModelContainer @Autowired constructor(
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
-            buildEnv = if (job.runsOn.selfHosted == false) {
-                job.runsOn.needs
-            } else {
-                null
-            },
+            buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
             jobControlOption = getJobControlOption(job, finalStage),
             dispatchType = StreamDispatchUtils.getDispatchType(

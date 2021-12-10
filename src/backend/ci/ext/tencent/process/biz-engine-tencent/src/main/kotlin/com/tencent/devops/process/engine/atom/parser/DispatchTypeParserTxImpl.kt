@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -138,11 +139,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
-    override fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): Pair<DispatchType, VMBaseOS>? {
+    override fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): SampleDispatchInfo? {
         // 此处可以支持多种解析
         return when (customInfo) {
-            is StreamDispatchInfo -> Pair(
-                StreamDispatchUtils.getDispatchType(
+            is StreamDispatchInfo -> SampleDispatchInfo(
+                name = customInfo.name,
+                dispatchType = StreamDispatchUtils.getDispatchType(
                     client = client,
                     objectMapper = objectMapper,
                     job = customInfo.job,
@@ -151,7 +153,9 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     resources = customInfo.resources,
                     context = context,
                     containsMatrix = true
-                ), StreamDispatchUtils.getBaseOs(customInfo.job, context)
+                ),
+                baseOS = StreamDispatchUtils.getBaseOs(customInfo.job, context),
+                buildEnv = StreamDispatchUtils.getBuildEnv(customInfo.job, context)
             )
             else -> null
         }
