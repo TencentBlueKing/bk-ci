@@ -43,7 +43,7 @@ import java.util.regex.Pattern
  */
 data class MatrixControlOption(
     @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
-    val strategyStr: String, // Map<String, List<String>>
+    val strategyStr: String? = null, // Map<String, List<String>>
     @ApiModelProperty("额外的参数组合（变量名到特殊值映射的数组）", required = false)
     val includeCaseStr: String? = null, // List<Map<String, String>>
     @ApiModelProperty("排除的参数组合（变量名到特殊值映射的数组）", required = false)
@@ -123,7 +123,7 @@ data class MatrixControlOption(
     private fun convertStrategyJson(buildContext: Map<String, String>): List<Map<String, Any>> {
         // 替换上下文 要考虑带fromJSON()的写法
         val contextStr = ReplacementUtils.replace(
-            command = strategyStr,
+            command = strategyStr ?: return emptyList(),
             replacement = object : ReplacementUtils.KeyReplacement {
                 override fun getReplacement(key: String): String? {
                     // 匹配fromJSON()
