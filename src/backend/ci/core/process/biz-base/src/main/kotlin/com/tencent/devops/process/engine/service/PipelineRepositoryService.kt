@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -425,6 +426,9 @@ class PipelineRepositoryService constructor(
     }
 
     private fun matrixYamlCheck(matrixControlOption: MatrixControlOption?) {
+        if (matrixControlOption?.strategyStr.isNullOrBlank() == true) {
+            throw DependNotFoundException("Matrix Yaml is blank")
+        }
         MatrixContextUtils.schemaCheck(
             JsonUtil.toJson(
                 MatrixPipelineInfo(
