@@ -287,6 +287,7 @@ include(":ext:tencent:monitoring:model-monitoring")
 include(":ext:tencent:monitoring:model-monitoring-tencent")
 
 include(":ext:tencent:quality")
+include(":ext:tencent:quality:api-quality-tencent")
 include(":ext:tencent:quality:biz-quality-tencent")
 include(":ext:tencent:quality:boot-quality-tencent")
 
