@@ -91,6 +91,8 @@ class DockerService @Autowired constructor(
             )
         })
         buildTask[getKey(vmSeqId, buildId)] = future
+
+        logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|future:$future")
         return true
     }
 
