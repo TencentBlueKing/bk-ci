@@ -44,18 +44,18 @@ class BuildLessTaskService(
 ) {
 
     fun claimBuildLessTask(containerId: String): BuildLessTask? {
-       val buildLessTask = redisUtils.popBuildLessReadyTask()
-       if (buildLessTask != null) {
-           logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
-           dispatchClient.updateContainerId(
-               buildLessTask = buildLessTask,
-               containerId = containerId
-           )
+        val buildLessTask = redisUtils.popBuildLessReadyTask()
+        if (buildLessTask != null) {
+            logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
+            dispatchClient.updateContainerId(
+                buildLessTask = buildLessTask,
+                containerId = containerId
+            )
 
-           redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
-       }
+            redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
+        }
 
-       return buildLessTask
+        return buildLessTask
     }
 
     companion object {

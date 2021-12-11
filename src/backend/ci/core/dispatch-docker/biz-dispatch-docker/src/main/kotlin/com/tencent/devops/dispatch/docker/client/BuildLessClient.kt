@@ -232,7 +232,7 @@ class BuildLessClient @Autowired constructor(
                                 dockerIp = dockerIp,
                                 buildLessStartInfo = buildLessStartInfo,
                                 errorMessage = response["message"] as String,
-                                unAvailableIpList = unAvailableIpList,
+                                unAvailableIpList = unAvailableIpList
                             )
                         }
                         else -> {
