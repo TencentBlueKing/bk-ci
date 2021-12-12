@@ -6,9 +6,10 @@ plugins {
 }
 
 repositories {
-    maven { url = URI("https://mirrors.tencent.com/nexus/repository/maven-public/") }
-//    mavenCentral()
-//    jcenter()
+    mavenLocal()
+    maven(url = "https://plugins.gradle.org/m2/")
+    mavenCentral()
+    jcenter()
 }
 
 kotlinDslPluginOptions {
