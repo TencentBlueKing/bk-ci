@@ -86,10 +86,15 @@ data class MatrixControlOption(
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return MatrixConfig(
-            strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
-            include = mutableListOf(), exclude = mutableListOf()
-        )
+        return try {
+            // 兼容在strategy里塞入json格式的情况
+            JsonUtil.to(contextStr,MatrixConfig::class.java)
+        } catch (e: Exception) {
+            MatrixConfig(
+                strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
+                include = mutableListOf(), exclude = mutableListOf()
+            )
+        }
     }
 
     /**
