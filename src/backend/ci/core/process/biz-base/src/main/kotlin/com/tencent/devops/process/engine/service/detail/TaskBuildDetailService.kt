@@ -52,7 +52,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
@@ -141,7 +141,8 @@ class TaskBuildDetailService(
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
-                        } else if (e is MatrixStatusElement && e.originClassType == ManualReviewUserTaskElement.classType) {
+                        } else if (e is MatrixStatusElement &&
+                            e.originClassType == ManualReviewUserTaskElement.classType) {
                             e.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()

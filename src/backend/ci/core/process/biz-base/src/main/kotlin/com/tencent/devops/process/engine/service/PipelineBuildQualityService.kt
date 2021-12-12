@@ -63,8 +63,15 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "NestedBlockDepth", "LongMethod", "ComplexMethod", "ThrowsCount", "MagicNumber")
-
+@Suppress(
+    "LongParameterList",
+    "NestedBlockDepth",
+    "LongMethod",
+    "ComplexMethod",
+    "ThrowsCount",
+    "MagicNumber",
+    "ReturnCount"
+)
 @Service
 class PipelineBuildQualityService(
     private val client: Client,
@@ -142,17 +149,12 @@ class PipelineBuildQualityService(
                 }
                 c.fetchGroupContainers()?.forEach {
                     it.elements.forEach nextElement@{ element ->
-                        if (element.id != elementId) return@nextElement
+                        if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
                         logger.info("${element.id}, ${element.name}")
-                        when (element) {
-                            is QualityGateInElement -> {
-                                find = true
-                                taskType = element.interceptTask!!
-                            }
-                            is QualityGateOutElement -> {
-                                find = true
-                                taskType = element.interceptTask!!
-                            }
+                        if (element.originClassType == QualityGateInElement.classType ||
+                            element.originClassType == QualityGateOutElement.classType) {
+                            find = true
+                            taskType = element.interceptTask!!
                         }
                         return@nextStage
                     }
