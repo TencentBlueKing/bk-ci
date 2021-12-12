@@ -413,7 +413,7 @@ class InitializeMatrixGroupStageCmd(
         )
         this.strategy.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
-                buildId = buildId, message = "$key: $valueList:",
+                buildId = buildId, message = "$key: $valueList",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
         }
