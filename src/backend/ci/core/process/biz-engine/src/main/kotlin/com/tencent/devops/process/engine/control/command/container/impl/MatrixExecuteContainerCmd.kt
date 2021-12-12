@@ -115,6 +115,10 @@ class MatrixExecuteContainerCmd(
         groupContainers: List<PipelineBuildContainer>
     ): BuildStatus {
         val event = commandContext.event
+        val buildId = commandContext.container.buildId
+        val containerHashId = commandContext.container.containerHashId
+        val taskId = VMUtils.genStartVMTaskId(commandContext.container.containerId)
+        val executeCount = commandContext.executeCount
         val matrixOption = parentContainer.controlOption?.matrixControlOption!!
 
         var failedCount = 0
@@ -140,13 +144,14 @@ class MatrixExecuteContainerCmd(
         // 判断是否要进行fastKill
         val fastKill = failedCount > 0 && matrixOption.fastKill == true
         if (fastKill) {
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "", tag = taskId,
+                jobId = containerHashId, executeCount = executeCount
+            )
             buildLogPrinter.addYellowLine(
-                buildId = event.buildId,
-                message = "[MATRIX] Matrix(${parentContainer.containerId}) failed containers " +
-                    "count($failedCount), start to kill containers",
-                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+                buildId = buildId, message = "[MATRIX] Matrix(${parentContainer.containerId}) " +
+                "failed containers count($failedCount), start to kill containers",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             terminateGroupContainers(commandContext, event, parentContainer, groupContainers)
         }
@@ -158,12 +163,9 @@ class MatrixExecuteContainerCmd(
 
         // 如果不需要fastKill，则给前N个待执行的容器下发启动事件，N为并发上限减去正在运行的数量
         if (!fastKill && containersToRun.isNotEmpty() && runningCount < maxConcurrency) {
-            buildLogPrinter.addYellowLine(
-                buildId = parentContainer.buildId,
-                message = "[MATRIX] Start to execute jobs:",
-                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+            buildLogPrinter.addDebugLine(
+                buildId = buildId, message = "start to execute jobs: $containersToRun",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             startGroupContainers(
                 commandContext = commandContext,
@@ -188,13 +190,15 @@ class MatrixExecuteContainerCmd(
         )
 
         return if (finishCount == matrixOption.totalCount) {
-            buildLogPrinter.addYellowLine(
-                buildId = parentContainer.buildId,
-                message = "[MATRIX] Job execution completed",
-                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                jobId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "", tag = taskId,
+                jobId = containerHashId, executeCount = executeCount
             )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "[MATRIX] Job execution completed",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+
             if (failedCount > 0) {
                 BuildStatus.FAILED
             } else {
@@ -219,7 +223,8 @@ class MatrixExecuteContainerCmd(
             .forEach { container ->
                 buildLogPrinter.addDebugLine(
                     buildId = event.buildId,
-                    message = "Container with id(${container.containerId}) starting...",
+                    message = "Container with id(${container.containerId}) and " +
+                        "matrixGroupId(${parentContainer.containerId}）starting...",
                     tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                     jobId = parentContainer.containerHashId,
                     executeCount = commandContext.executeCount

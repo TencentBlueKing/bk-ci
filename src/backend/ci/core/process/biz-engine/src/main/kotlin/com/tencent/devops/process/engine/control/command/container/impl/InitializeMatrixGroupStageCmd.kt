@@ -108,7 +108,7 @@ class InitializeMatrixGroupStageCmd(
         // 在下发构建机任务前进行构建矩阵计算
         val parentContainer = commandContext.container
         val count = try {
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = parentContainer.buildId,
                 message = "Start preparing to generate build matrix...",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
@@ -406,6 +406,10 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "[MATRIX] Job strategy:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
         this.strategy.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList:",
@@ -414,28 +418,40 @@ class InitializeMatrixGroupStageCmd(
         }
 
         // 打印追加参数
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
-        )
-        buildLogPrinter.addYellowLine(
-            buildId = buildId, message = "[MATRIX] Include cases:",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
-        )
-        printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
+        if (this.include.isNotEmpty()) {
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "[MATRIX] Include cases:",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
+        }
 
         // 打印排除参数
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
-        )
-        buildLogPrinter.addYellowLine(
-            buildId = buildId, message = "[MATRIX] Exclude cases:",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
-        )
-        printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+        if (this.exclude.isNotEmpty()) {
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "[MATRIX] Exclude cases:",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+        }
 
-        // 打印排除参数
+        // 打印最终结果
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -445,10 +461,16 @@ class InitializeMatrixGroupStageCmd(
             "${contextCaseList.size} jobs are generated:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
         contextCaseList.forEach { contextCase ->
             val nameBuilder = StringBuilder("$containerName(")
+            var index = 0
             contextCase.forEach { (key, value) ->
-                nameBuilder.append("$key:$value")
+                if (index++ == 0) nameBuilder.append("$key:$value")
+                else nameBuilder.append(", $key:$value")
             }
             nameBuilder.append(")")
             buildLogPrinter.addLine(
