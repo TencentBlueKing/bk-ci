@@ -105,6 +105,13 @@ class PipelineCodeccService @Autowired constructor(
                         return coverityApi.getReport(projectId, pipelineId, e.codeCCTaskId!!, userId)
                     }
                 }
+                c.fetchGroupContainers()?.forEach {
+                    it.elements.forEach { e ->
+                        if (e is LinuxPaasCodeCCScriptElement && e.codeCCTaskId != null) {
+                            return coverityApi.getReport(projectId, pipelineId, e.codeCCTaskId!!, userId)
+                        }
+                    }
+                }
             }
         }
         return null

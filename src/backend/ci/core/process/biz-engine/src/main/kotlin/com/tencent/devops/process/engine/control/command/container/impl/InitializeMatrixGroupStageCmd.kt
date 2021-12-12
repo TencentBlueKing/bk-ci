@@ -382,7 +382,8 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = it.name,
                 id = it.id,
-                executeCount = it.executeCount
+                executeCount = it.executeCount,
+                originClassType = it.getClassType()
             )
         }
     }

@@ -98,14 +98,16 @@ internal class StagePauseCheckTest {
                             id = "e-8104cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,
                             executeCount = 1,
-                            elapsed = 123
+                            elapsed = 123,
+                            originClassType = ""
                         ),
                         MatrixStatusElement(
                             name = "内置脚本插件",
                             id = "e-1536cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,
                             executeCount = 1,
-                            elapsed = 321
+                            elapsed = 321,
+                            originClassType = ""
                         )
                     ),
                     status = BuildStatus.SUCCEED.name,
@@ -168,7 +170,8 @@ internal class StagePauseCheckTest {
                             id = "e-2314cd612def4e7caa448ee116fa8560",
                             status = BuildStatus.SUCCEED.name,
                             executeCount = 1,
-                            elapsed = 234
+                            elapsed = 234,
+                            originClassType = ""
                         )
                     ),
                     status = BuildStatus.SUCCEED.name,
