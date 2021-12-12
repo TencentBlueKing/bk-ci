@@ -45,8 +45,8 @@ object MatrixYamlCheckUtils {
                     )
                 )
                 null
-            } catch (e: Exception) {
-                e.message
+            } catch (ignore: Throwable) {
+                ignore.message
             },
             exclude = try {
                 MatrixContextUtils.schemaCheck(
@@ -59,8 +59,8 @@ object MatrixYamlCheckUtils {
                     )
                 )
                 null
-            } catch (e: Exception) {
-                e.message
+            } catch (ignore: Throwable) {
+                ignore.message
             },
             strategy = try {
                 MatrixContextUtils.schemaCheck(
@@ -73,8 +73,8 @@ object MatrixYamlCheckUtils {
                     )
                 )
                 null
-            } catch (e: Exception) {
-                e.message
+            } catch (ignore: Throwable) {
+                ignore.message
             }
         )
         return matrixPipelineInfo

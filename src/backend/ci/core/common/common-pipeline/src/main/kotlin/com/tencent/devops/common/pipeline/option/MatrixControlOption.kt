@@ -32,8 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import com.tencent.devops.common.pipeline.pojo.MatrixConvert
+import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -63,67 +62,50 @@ data class MatrixControlOption(
     companion object {
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
-        const val MATRIX_CONTEXT_KEY_PREFIX = "matrix."
         const val MATRIX_CASE_MAX_COUNT = 256
     }
 
     /**
-     * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到矩阵参数表
+     * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
      */
-    fun getAllContextCase(buildContext: Map<String, String>): List<Map<String, String>> {
-        val caseList = mutableListOf<Map<String, Any>>()
-        try {
+    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
+        val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            caseList.addAll(calculateContextMatrix(convertStrategyYaml(buildContext)))
+            convertStrategyYaml(buildContext)
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
-            caseList.addAll(convertStrategyJson(buildContext))
+            convertStrategyJson(buildContext)
         }
-
-        // #4518 先排除再追加
-        caseList.removeAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext))) // 排除特定的参数组合
-        caseList.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext))) // 追加额外的参数组合
-
-        return caseList.map { list ->
-            list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
-        }.toList().distinct()
+        matrixConfig.include.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
+        matrixConfig.exclude.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
+        return matrixConfig
     }
 
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun calculateContextMatrix(strategyMap: Map<String, List<Any>>?): List<Map<String, Any>> {
-        if (strategyMap.isNullOrEmpty()) {
-            return emptyList()
-        }
-        val caseList = mutableListOf<Map<String, String>>()
-        val keyList = strategyMap.keys
-        MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
-            .forEach { valueList ->
-                val case = mutableMapOf<String, String>()
-                keyList.forEachIndexed { index, key ->
-                    case[key] = valueList[index].toString()
-                }
-                caseList.add(case)
-            }
-        return caseList
-    }
-
-    /**
-     * 根据[strategyStr]生成对应的矩阵参数表
-     */
-    private fun convertStrategyYaml(buildContext: Map<String, String>): Map<String, List<Any>> {
+    private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return YamlUtil.to<Map<String, List<String>>>(contextStr)
+        return try {
+            // 兼容在strategy里塞入json格式的情况
+            JsonUtil.to(contextStr, MatrixConfig::class.java)
+        } catch (ignore: Exception) {
+            MatrixConfig(
+                strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
+                include = mutableListOf(), exclude = mutableListOf()
+            )
+        }
     }
 
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyJson(buildContext: Map<String, String>): List<Map<String, Any>> {
+    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
         // 替换上下文 要考虑带fromJSON()的写法
         val contextStr = ReplacementUtils.replace(
-            command = strategyStr ?: return emptyList(),
+            command = strategyStr ?: return MatrixConfig(
+                emptyMap(), mutableListOf(), mutableListOf()
+            ),
             replacement = object : ReplacementUtils.KeyReplacement {
                 // 内外源不一致，此处多传一个doubleCurlyBraces只为实现内部版接口
                 override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
@@ -136,22 +118,13 @@ data class MatrixControlOption(
                 }
             }
         )
-        val matrixParamMap = mutableListOf<Map<String, Any>>()
-        try {
-            val jsonMap = JsonUtil.to(contextStr, MatrixConvert::class.java)
-            matrixParamMap.addAll(calculateContextMatrix(jsonMap.strategy))
-            matrixParamMap.removeAll(jsonMap.exclude ?: emptyList()) // 排除特定的参数组合
-            matrixParamMap.addAll(jsonMap.include ?: emptyList()) // 追加额外的参数组合
-        } catch (ignore: Throwable) {
-            logger.error("convert Strategy from Json error : ${ignore.message}", ignore)
-        }
-        return matrixParamMap
+        return JsonUtil.to(contextStr, MatrixConfig::class.java)
     }
 
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?): List<Map<String, Any>> {
+    private fun convertCase(str: String?): List<Map<String, String>> {
         if (str.isNullOrBlank()) {
             return emptyList()
         }

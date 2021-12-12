@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
+import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.util.YamlUtil
 import org.yaml.snakeyaml.Yaml
 
@@ -118,7 +119,7 @@ object MatrixContextUtils {
     }
 
     fun schemaCheck(originYaml: String) {
-        if (originYaml.isNullOrBlank()) {
+        if (originYaml.isBlank()) {
             return
         }
         val yamlJson = YamlUtil.getObjectMapper().readTree(YamlUtil.toYaml(yaml.load(originYaml))).replaceOn()
@@ -128,7 +129,7 @@ object MatrixContextUtils {
     private fun JsonSchema.check(yaml: JsonNode) {
         validate(yaml).let {
             if (!it.isNullOrEmpty()) {
-                throw Exception(it.toString())
+                throw ExecuteException(it.toString())
             }
         }
     }

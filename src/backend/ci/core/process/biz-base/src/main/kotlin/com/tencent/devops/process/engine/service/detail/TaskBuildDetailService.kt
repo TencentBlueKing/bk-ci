@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.redis.RedisOperation
@@ -51,7 +52,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
@@ -133,7 +134,6 @@ class TaskBuildDetailService(
                     if (e.id == taskId) {
                         if (e is ManualReviewUserTaskElement) {
                             e.status = BuildStatus.REVIEWING.name
-                            //                        c.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers.forEach { reviewUser ->
@@ -141,7 +141,19 @@ class TaskBuildDetailService(
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
-                        } else if (e is QualityGateInElement || e is QualityGateOutElement) {
+                        } else if (e is MatrixStatusElement &&
+                            e.originClassType == ManualReviewUserTaskElement.classType) {
+                            e.status = BuildStatus.REVIEWING.name
+                            // Replace the review user with environment
+                            val list = mutableListOf<String>()
+                            e.reviewUsers.forEach { reviewUser ->
+                                list.addAll(buildVariableService.replaceTemplate(buildId, reviewUser).split(delimiters))
+                            }
+                            e.reviewUsers.clear()
+                            e.reviewUsers.addAll(list)
+                        } else if (e is QualityGateInElement || e is QualityGateOutElement ||
+                            e.getTaskAtom() == QualityGateInElement.classType ||
+                            e.getTaskAtom() == QualityGateOutElement.classType) {
                             e.status = BuildStatus.REVIEWING.name
                             c.status = BuildStatus.REVIEWING.name
                         } else {

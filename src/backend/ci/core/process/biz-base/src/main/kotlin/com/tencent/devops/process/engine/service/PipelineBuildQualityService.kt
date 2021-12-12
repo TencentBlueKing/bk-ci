@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.service.utils.LogUtils
@@ -62,8 +63,15 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "NestedBlockDepth", "LongMethod", "ComplexMethod", "ThrowsCount", "MagicNumber")
-
+@Suppress(
+    "LongParameterList",
+    "NestedBlockDepth",
+    "LongMethod",
+    "ComplexMethod",
+    "ThrowsCount",
+    "MagicNumber",
+    "ReturnCount"
+)
 @Service
 class PipelineBuildQualityService(
     private val client: Client,
@@ -119,24 +127,36 @@ class PipelineBuildQualityService(
 
         var find = false
         var taskType = ""
-        model.stages.forEachIndexed { index, s ->
+        model.stages.forEachIndexed nextStage@{ index, s ->
             if (index == 0) {
-                return@forEachIndexed
+                return@nextStage
             }
-            s.containers.forEach {
-                // TODO 构建矩阵支持质量红线相关
-                it.elements.forEach { element ->
+            s.containers.forEach nextContainer@{ c ->
+                c.elements.forEach nextElement@{ element ->
+                    if (element.id != elementId) return@nextElement
                     logger.info("${element.id}, ${element.name}")
-                    if ((element is QualityGateInElement ||
-                            element is QualityGateOutElement) && element.id == elementId) {
-                        find = true
-                        if (element is QualityGateInElement) {
+                    when (element) {
+                        is QualityGateInElement -> {
+                            find = true
                             taskType = element.interceptTask!!
                         }
-                        if (element is QualityGateOutElement) {
+                        is QualityGateOutElement -> {
+                            find = true
                             taskType = element.interceptTask!!
                         }
-                        return@forEachIndexed
+                    }
+                    return@nextStage
+                }
+                c.fetchGroupContainers()?.forEach {
+                    it.elements.forEach nextElement@{ element ->
+                        if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
+                        logger.info("${element.id}, ${element.name}")
+                        if (element.originClassType == QualityGateInElement.classType ||
+                            element.originClassType == QualityGateOutElement.classType) {
+                            find = true
+                            taskType = element.interceptTask!!
+                        }
+                        return@nextStage
                     }
                 }
             }
