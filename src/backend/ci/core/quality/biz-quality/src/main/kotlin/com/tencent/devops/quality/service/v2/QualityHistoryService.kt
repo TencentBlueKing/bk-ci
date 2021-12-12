@@ -545,7 +545,7 @@ class QualityHistoryService @Autowired constructor(
 
         recordList.filter { it.result == RuleInterceptResult.FAIL.name }.forEach { record ->
             val buildHisRuleStatus = ruleIdToRuleMap[record.ruleId]?.status
-            if ( buildHisRuleStatus != null) {
+            if (buildHisRuleStatus != null) {
                 record.result = buildHisRuleStatus.name
             }
         }
