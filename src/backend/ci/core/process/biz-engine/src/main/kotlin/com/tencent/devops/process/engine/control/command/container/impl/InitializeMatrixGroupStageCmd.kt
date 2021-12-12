@@ -473,10 +473,10 @@ class InitializeMatrixGroupStageCmd(
             var index = 0
             case.forEach { (key, value) ->
                 if (index++ == 0) buildLogPrinter.addLine(
-                    buildId = buildId, message = "- $key: $value:",
+                    buildId = buildId, message = "- $key: $value",
                     tag = taskId, jobId = containerHashId, executeCount = executeCount
                 ) else buildLogPrinter.addLine(
-                    buildId = buildId, message = "  $key: $value:",
+                    buildId = buildId, message = "  $key: $value",
                     tag = taskId, jobId = containerHashId, executeCount = executeCount
                 )
             }

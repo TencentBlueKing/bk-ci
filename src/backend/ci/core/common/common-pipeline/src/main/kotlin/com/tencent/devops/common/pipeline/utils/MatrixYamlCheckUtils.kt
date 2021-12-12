@@ -75,7 +75,7 @@ object MatrixYamlCheckUtils {
                 null
             } catch (ignore: Throwable) {
                 ignore.message
-            },
+            }
         )
         return matrixPipelineInfo
     }
