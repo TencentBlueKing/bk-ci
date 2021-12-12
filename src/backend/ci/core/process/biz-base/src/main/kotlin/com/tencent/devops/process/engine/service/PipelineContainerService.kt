@@ -412,6 +412,10 @@ class PipelineContainerService @Autowired constructor(
                         }
                     }
                     needUpdateContainer = true
+                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFailure()) {
+                    // 构建矩阵没有对应的重试插件，单独进行重试判断
+                    setRetryBuildContainer(container, context.executeCount)
+                    needUpdateContainer = true
                 }
             }
 
@@ -508,48 +512,6 @@ class PipelineContainerService @Autowired constructor(
             }
         }
         return target
-    }
-
-    private fun addBuildTaskToList(
-        buildTaskList: MutableList<PipelineBuildTask>,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        taskSeq: Int,
-        atomElement: Element,
-        status: BuildStatus
-    ) {
-        buildTaskList.add(
-            PipelineBuildTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stage.id!!,
-                containerId = container.id!!,
-                containerHashId = container.containerHashId ?: "",
-                containerType = container.getClassType(),
-                taskSeq = taskSeq,
-                taskId = atomElement.id!!,
-                taskName = CommonUtils.interceptStringInLength(
-                    string = atomElement.name,
-                    length = ELEMENT_NAME_MAX_LENGTH
-                ) ?: atomElement.getAtomCode(),
-                taskType = atomElement.getClassType(),
-                taskAtom = atomElement.getTaskAtom(),
-                status = status,
-                taskParams = atomElement.genTaskParams(),
-                additionalOptions = atomElement.additionalOptions,
-                executeCount = 1,
-                starter = userId,
-                approver = null,
-                subProjectId = null,
-                subBuildId = null,
-                atomCode = atomElement.getAtomCode()
-            )
-        )
     }
 
     private fun supplyVMTask(
@@ -700,12 +662,7 @@ class PipelineContainerService @Autowired constructor(
         stage.status = null
         stage.startEpoch = null
         stage.elapsed = null
-        container.status = null // 重置状态为空
-        container.startEpoch = null
-        container.elementElapsed = null
-        container.systemElapsed = null
-        container.startVMStatus = null
-        container.executeCount = target.executeCount
+        setRetryBuildContainer(container, target.executeCount)
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
                 atomElement.status = null
@@ -719,6 +676,15 @@ class PipelineContainerService @Autowired constructor(
             atomElement.canRetry = false
             target.taskParams = JsonUtil.toJson(atomElement.genTaskParams(), formatted = false) // 更新参数
         }
+    }
+
+    private fun setRetryBuildContainer(container: Container, executeCount: Int) {
+        container.status = null // 重置状态为空
+        container.startEpoch = null
+        container.elementElapsed = null
+        container.systemElapsed = null
+        container.startVMStatus = null
+        container.executeCount = executeCount
     }
 
     private fun findPostTask(
@@ -755,5 +721,47 @@ class PipelineContainerService @Autowired constructor(
             }
         }
         return -1
+    }
+
+    private fun addBuildTaskToList(
+        buildTaskList: MutableList<PipelineBuildTask>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        stage: Stage,
+        container: Container,
+        taskSeq: Int,
+        atomElement: Element,
+        status: BuildStatus
+    ) {
+        buildTaskList.add(
+            PipelineBuildTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stage.id!!,
+                containerId = container.id!!,
+                containerHashId = container.containerHashId ?: "",
+                containerType = container.getClassType(),
+                taskSeq = taskSeq,
+                taskId = atomElement.id!!,
+                taskName = CommonUtils.interceptStringInLength(
+                    string = atomElement.name,
+                    length = ELEMENT_NAME_MAX_LENGTH
+                ) ?: atomElement.getAtomCode(),
+                taskType = atomElement.getClassType(),
+                taskAtom = atomElement.getTaskAtom(),
+                status = status,
+                taskParams = atomElement.genTaskParams(),
+                additionalOptions = atomElement.additionalOptions,
+                executeCount = 1,
+                starter = userId,
+                approver = null,
+                subProjectId = null,
+                subBuildId = null,
+                atomCode = atomElement.getAtomCode()
+            )
+        )
     }
 }

@@ -188,13 +188,6 @@ class MatrixExecuteContainerCmd(
             "matrix(${event.containerId})|containersToRun=$containersToRun")
         containersToRun.take(maxConcurrency - runningCount)
             .forEach { container ->
-                buildLogPrinter.addYellowLine(
-                    buildId = event.buildId,
-                    message = "Container(${container.containerId}) starting...",
-                    tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                    jobId = parentContainer.containerHashId,
-                    executeCount = commandContext.executeCount
-                )
                 LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
                     "|matrixGroupId=${parentContainer.containerId}|j(${container.containerId})")
                 sendBuildContainerEvent(

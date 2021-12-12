@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -85,7 +86,8 @@ class InitializeMatrixGroupStageCmd(
     private val pipelineTaskService: PipelineTaskService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
-    private val dispatchTypeParser: DispatchTypeParser
+    private val dispatchTypeParser: DispatchTypeParser,
+    private val buildLogPrinter: BuildLogPrinter
 ) : ContainerCmd {
 
     companion object {
@@ -104,6 +106,13 @@ class InitializeMatrixGroupStageCmd(
         // 在下发构建机任务前进行构建矩阵计算
         val parentContainer = commandContext.container
         val count = try {
+            buildLogPrinter.addYellowLine(
+                buildId = parentContainer.buildId,
+                message = "Start preparing to generate build matrix...",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             generateMatrixGroup(commandContext, parentContainer)
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
@@ -183,13 +192,14 @@ class InitializeMatrixGroupStageCmd(
             // 每一种上下文组合都是一个新容器
             matrixOption = modelContainer.matrixControlOption!!
             val jobControlOption = modelContainer.jobControlOption!!
+            val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
                     "the limit($MATRIX_CASE_MAX_COUNT)")
             }
 
-            contextCaseList.forEachIndexed { index, contextCase ->
+            contextCaseList.forEach { contextCase ->
 
                 // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                 val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
@@ -208,7 +218,7 @@ class InitializeMatrixGroupStageCmd(
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = VMBuildContainer(
-                    name = VMUtils.genContainerName(matrixGroupId.toInt(), index),
+                    name = modelContainer.name,
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
@@ -259,16 +269,16 @@ class InitializeMatrixGroupStageCmd(
             // 每一种上下文组合都是一个新容器
             val newContainerSeq = context.containerSeq++
             matrixOption = modelContainer.matrixControlOption!!
-
+            val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
             val jobControlOption = modelContainer.jobControlOption!!
 
-            contextCaseList.forEachIndexed { index, contextCase ->
+            contextCaseList.forEach { contextCase ->
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val statusElements = generateSampleStatusElements(modelContainer.elements)
                 val newContainer = NormalContainer(
-                    name = VMUtils.genContainerName(matrixGroupId.toInt(), index),
+                    name = modelContainer.name,
                     id = newContainerSeq.toString(),
                     containerId = newContainerSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
@@ -343,7 +353,9 @@ class InitializeMatrixGroupStageCmd(
 
     private fun generateSampleStatusElements(elements: List<Element>): List<MatrixStatusElement> {
         return elements.map {
+            // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
             it.id = modelTaskIdGenerator.getNextId()
+            it.canRetry = false
             MatrixStatusElement(
                 name = it.name,
                 id = it.id,
