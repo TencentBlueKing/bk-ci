@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
-import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
+import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -62,25 +62,7 @@ data class MatrixControlOption(
     companion object {
         private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
-        const val MATRIX_CONTEXT_KEY_PREFIX = "matrix."
         const val MATRIX_CASE_MAX_COUNT = 256
-    }
-
-    /**
-     * 矩阵参数表
-     */
-    fun getAllContextCase(buildContext: Map<String, String>): List<Map<String, String>> {
-        val caseList = mutableListOf<Map<String, Any>>()
-        val matrixConfig = convertMatrixConfig(buildContext)
-        caseList.addAll(calculateContextMatrix(matrixConfig.strategy))
-
-        // 先对json中的额外和排除做增删
-        caseList.removeAll(matrixConfig.exclude) // 排除特定的参数组合
-        caseList.addAll(matrixConfig.include) // 追加额外的参数组合
-
-        return caseList.map { list ->
-            list.map { map -> "$MATRIX_CONTEXT_KEY_PREFIX${map.key}" to map.value.toString() }.toMap()
-        }.toList().distinct()
     }
 
     /**
@@ -97,26 +79,6 @@ data class MatrixControlOption(
         matrixConfig.include.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
         matrixConfig.exclude.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
         return matrixConfig
-    }
-
-    /**
-     * 根据[strategyStr]生成对应的矩阵参数表
-     */
-    private fun calculateContextMatrix(strategyMap: Map<String, List<Any>>?): List<Map<String, Any>> {
-        if (strategyMap.isNullOrEmpty()) {
-            return emptyList()
-        }
-        val caseList = mutableListOf<Map<String, String>>()
-        val keyList = strategyMap.keys
-        MatrixContextUtils.loopCartesianProduct(strategyMap.values.toList())
-            .forEach { valueList ->
-                val case = mutableMapOf<String, String>()
-                keyList.forEachIndexed { index, key ->
-                    case[key] = valueList[index].toString()
-                }
-                caseList.add(case)
-            }
-        return caseList
     }
 
     /**
@@ -168,12 +130,3 @@ data class MatrixControlOption(
         return includeCaseList
     }
 }
-
-data class MatrixConfig(
-    @ApiModelProperty("分裂策略", required = true)
-    var strategy: Map<String, List<String>>,
-    @ApiModelProperty("额外的参数组合", required = true)
-    val include: MutableList<Map<String, String>>,
-    @ApiModelProperty("排除的参数组合", required = false)
-    val exclude: MutableList<Map<String, String>>
-)

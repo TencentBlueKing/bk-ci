@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -193,7 +194,7 @@ class InitializeMatrixGroupStageCmd(
             matrixOption = modelContainer.matrixControlOption!!
             val jobControlOption = modelContainer.jobControlOption!!
             val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
+            val contextCaseList = matrixConfig.getAllContextCase()
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
                     "the limit($MATRIX_CASE_MAX_COUNT)")
@@ -270,7 +271,7 @@ class InitializeMatrixGroupStageCmd(
             val newContainerSeq = context.containerSeq++
             matrixOption = modelContainer.matrixControlOption!!
             val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            val contextCaseList = matrixOption.getAllContextCase(commandContext.variables)
+            val contextCaseList = matrixConfig.getAllContextCase()
             val jobControlOption = modelContainer.jobControlOption!!
 
             contextCaseList.forEach { contextCase ->
@@ -362,5 +363,9 @@ class InitializeMatrixGroupStageCmd(
                 executeCount = it.executeCount
             )
         }
+    }
+
+    private fun printMatrixConfig(config: MatrixConfig) {
+
     }
 }
