@@ -68,7 +68,7 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -135,7 +135,7 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -227,7 +227,7 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.getAllContextCase(emptyMap())
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -322,7 +322,7 @@ internal class MatrixControlOptionTest {
                     }
         """
         )
-        val contextCase = matrixControlOption.getAllContextCase(buildContext)
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllContextCase()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")

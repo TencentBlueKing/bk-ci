@@ -195,6 +195,7 @@ class InitializeMatrixGroupStageCmd(
             val jobControlOption = modelContainer.jobControlOption!!
             val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             val contextCaseList = matrixConfig.getAllContextCase()
+            printMatrixConfig(matrixConfig)
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
                     "the limit($MATRIX_CASE_MAX_COUNT)")
