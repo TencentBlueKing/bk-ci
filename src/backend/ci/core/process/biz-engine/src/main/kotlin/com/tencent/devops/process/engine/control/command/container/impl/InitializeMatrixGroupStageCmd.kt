@@ -195,7 +195,10 @@ class InitializeMatrixGroupStageCmd(
             val jobControlOption = modelContainer.jobControlOption!!
             val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             val contextCaseList = matrixConfig.getAllContextCase()
-            printMatrixConfig(matrixConfig)
+
+            // 输出结果信息到矩阵的构建日志中
+            matrixConfig.printMatrixConfig(commandContext)
+
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
                     "the limit($MATRIX_CASE_MAX_COUNT)")
@@ -270,10 +273,13 @@ class InitializeMatrixGroupStageCmd(
 
             // 每一种上下文组合都是一个新容器
             val newContainerSeq = context.containerSeq++
+            val jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
             val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             val contextCaseList = matrixConfig.getAllContextCase()
-            val jobControlOption = modelContainer.jobControlOption!!
+
+            // 输出结果信息到矩阵的构建日志中
+            matrixConfig.printMatrixConfig(commandContext)
 
             contextCaseList.forEach { contextCase ->
 
@@ -366,7 +372,69 @@ class InitializeMatrixGroupStageCmd(
         }
     }
 
-    private fun printMatrixConfig(config: MatrixConfig) {
+    private fun MatrixConfig.printMatrixConfig(commandContext: ContainerContext) {
+        val buildId = commandContext.container.buildId
+        val containerHashId = commandContext.container.containerHashId
+        val taskId = VMUtils.genStartVMTaskId(commandContext.container.containerId)
+        val executeCount = commandContext.executeCount
 
+        // 打印参数矩阵
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "[Calculated matrix]",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        this.strategy.forEach { (key, valueList) ->
+            buildLogPrinter.addLine(
+                buildId = buildId, message = "$key: $valueList:",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+        }
+
+        // 打印追加参数
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "[Include case]",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
+
+        // 打印排除参数
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "[Exclude case]",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+    }
+
+    private fun MatrixConfig.printMatrixCases(
+        buildId: String,
+        taskId: String,
+        containerHashId: String?,
+        executeCount: Int,
+        cases: List<Map<String, String>>
+    ) {
+        cases.forEach { case ->
+            var index = 0
+            case.forEach { (key, value) ->
+                if (index++ == 0) buildLogPrinter.addLine(
+                    buildId = buildId, message = "- $key: $value:",
+                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                ) else buildLogPrinter.addLine(
+                    buildId = buildId, message = "  $key: $value:",
+                    tag = taskId, jobId = containerHashId, executeCount = executeCount
+                )
+            }
+        }
     }
 }

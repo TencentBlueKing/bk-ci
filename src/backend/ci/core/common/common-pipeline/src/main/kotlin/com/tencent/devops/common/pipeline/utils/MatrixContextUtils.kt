@@ -102,26 +102,6 @@ object MatrixContextUtils {
         .build()
 
     /**
-     * 根据[strategyMap]矩阵生成所有参数组合列表
-     */
-    fun calculateContextMatrix(strategyMap: Map<String, List<Any>>?): List<Map<String, Any>> {
-        if (strategyMap.isNullOrEmpty()) {
-            return emptyList()
-        }
-        val caseList = mutableListOf<Map<String, String>>()
-        val keyList = strategyMap.keys
-        loopCartesianProduct(strategyMap.values.toList())
-            .forEach { valueList ->
-                val case = mutableMapOf<String, String>()
-                keyList.forEachIndexed { index, key ->
-                    case[key] = valueList[index].toString()
-                }
-                caseList.add(case)
-            }
-        return caseList
-    }
-
-    /**
      * 使用循环遍历笛卡尔乘积算法
      */
     fun loopCartesianProduct(input: List<List<Any>>): List<List<Any>> =
