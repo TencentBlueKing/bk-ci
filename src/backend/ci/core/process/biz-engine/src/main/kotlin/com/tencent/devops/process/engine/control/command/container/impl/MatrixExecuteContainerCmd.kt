@@ -74,8 +74,23 @@ class MatrixExecuteContainerCmd(
             matrixGroupId = parentContainer.containerId
         )
         val groupStatus = try {
+            buildLogPrinter.addDebugLine(
+                buildId = parentContainer.buildId,
+                message = "Matrix loop(${parentContainer.containerId}) judge containers",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             judgeGroupContainers(commandContext, parentContainer, groupContainers)
         } catch (ignore: Throwable) {
+            buildLogPrinter.addDebugLine(
+                buildId = parentContainer.buildId,
+                message = "Matrix loop(${parentContainer.containerId}) judge containers " +
+                    "error: ${ignore.message}",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_LOOP_MONITOR_FAILED|" +
                 "matrix(${parentContainer.containerId})|groupContainers=$groupContainers" +
                 "parentContainer=$parentContainer", ignore)
@@ -127,7 +142,7 @@ class MatrixExecuteContainerCmd(
         if (fastKill) {
             buildLogPrinter.addYellowLine(
                 buildId = event.buildId,
-                message = "Matrix(${parentContainer.containerId}) failed containers " +
+                message = "[MATRIX] Matrix(${parentContainer.containerId}) failed containers " +
                     "count($failedCount), start to kill containers",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
@@ -143,6 +158,13 @@ class MatrixExecuteContainerCmd(
 
         // 如果不需要fastKill，则给前N个待执行的容器下发启动事件，N为并发上限减去正在运行的数量
         if (!fastKill && containersToRun.isNotEmpty() && runningCount < maxConcurrency) {
+            buildLogPrinter.addYellowLine(
+                buildId = parentContainer.buildId,
+                message = "[MATRIX] Start to execute jobs:",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             startGroupContainers(
                 commandContext = commandContext,
                 event = event,
@@ -166,6 +188,13 @@ class MatrixExecuteContainerCmd(
         )
 
         return if (finishCount == matrixOption.totalCount) {
+            buildLogPrinter.addYellowLine(
+                buildId = parentContainer.buildId,
+                message = "[MATRIX] Job execution completed",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             if (failedCount > 0) {
                 BuildStatus.FAILED
             } else {
@@ -188,6 +217,13 @@ class MatrixExecuteContainerCmd(
             "matrix(${event.containerId})|containersToRun=$containersToRun")
         containersToRun.take(maxConcurrency - runningCount)
             .forEach { container ->
+                buildLogPrinter.addDebugLine(
+                    buildId = event.buildId,
+                    message = "Container with id(${container.containerId}) starting...",
+                    tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                    jobId = parentContainer.containerHashId,
+                    executeCount = commandContext.executeCount
+                )
                 LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
                     "|matrixGroupId=${parentContainer.containerId}|j(${container.containerId})")
                 sendBuildContainerEvent(
@@ -218,7 +254,7 @@ class MatrixExecuteContainerCmd(
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = event.buildId,
-                    message = "Matrix(${parentContainer.containerId}) try to stop " +
+                    message = "[MATRIX] Matrix(${parentContainer.containerId}) try to stop " +
                         "container(${container.containerId})",
                     tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                     jobId = parentContainer.containerHashId,

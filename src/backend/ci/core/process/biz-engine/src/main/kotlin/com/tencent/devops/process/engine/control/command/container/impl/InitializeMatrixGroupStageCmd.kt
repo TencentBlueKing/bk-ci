@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import java.lang.StringBuilder
 import kotlin.math.min
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -119,6 +120,13 @@ class InitializeMatrixGroupStageCmd(
             LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
                 "matrix(${parentContainer.containerId})|" +
                 "parentContainer=$parentContainer", ignore)
+            buildLogPrinter.addRedLine(
+                buildId = parentContainer.buildId,
+                message = "Abnormal matrix calculation: ${ignore.message}",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
             0
         }
 
@@ -188,16 +196,15 @@ class InitializeMatrixGroupStageCmd(
             "|context=$context")
 
         val matrixOption: MatrixControlOption
+        val matrixConfig: MatrixConfig
+        val contextCaseList: List<Map<String, String>>
         if (modelContainer is VMBuildContainer && modelContainer.matrixControlOption != null) {
 
             // 每一种上下文组合都是一个新容器
-            matrixOption = modelContainer.matrixControlOption!!
             val jobControlOption = modelContainer.jobControlOption!!
-            val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            val contextCaseList = matrixConfig.getAllContextCase()
-
-            // 输出结果信息到矩阵的构建日志中
-            matrixConfig.printMatrixConfig(commandContext)
+            matrixOption = modelContainer.matrixControlOption!!
+            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
+            contextCaseList = matrixConfig.getAllContextCase()
 
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
@@ -275,11 +282,8 @@ class InitializeMatrixGroupStageCmd(
             val newContainerSeq = context.containerSeq++
             val jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
-            val matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            val contextCaseList = matrixConfig.getAllContextCase()
-
-            // 输出结果信息到矩阵的构建日志中
-            matrixConfig.printMatrixConfig(commandContext)
+            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
+            contextCaseList = matrixConfig.getAllContextCase()
 
             contextCaseList.forEach { contextCase ->
 
@@ -326,6 +330,9 @@ class InitializeMatrixGroupStageCmd(
             throw DependNotFoundException("matrix(${parentContainer.containerId}) option not found")
         }
 
+        // 输出结果信息到矩阵的构建日志中
+        matrixConfig.printMatrixResult(commandContext, modelContainer.name, contextCaseList)
+
         // 新增容器全部添加到Container表中
         buildContainerList.addAll(groupContainers)
         matrixOption.totalCount = groupContainers.size
@@ -345,6 +352,14 @@ class InitializeMatrixGroupStageCmd(
             pipelineContainerService.batchSave(transactionContext, buildContainerList)
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
+
+        buildLogPrinter.addYellowLine(
+            buildId = parentContainer.buildId,
+            message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            jobId = parentContainer.containerHashId,
+            executeCount = commandContext.executeCount
+        )
 
         // 在详情中刷新所有分裂后的矩阵
         pipelineContainerService.updateMatrixGroupStatus(
@@ -372,7 +387,11 @@ class InitializeMatrixGroupStageCmd(
         }
     }
 
-    private fun MatrixConfig.printMatrixConfig(commandContext: ContainerContext) {
+    private fun MatrixConfig.printMatrixResult(
+        commandContext: ContainerContext,
+        containerName: String,
+        contextCaseList: List<Map<String, String>>
+    ) {
         val buildId = commandContext.container.buildId
         val containerHashId = commandContext.container.containerHashId
         val taskId = VMUtils.genStartVMTaskId(commandContext.container.containerId)
@@ -384,7 +403,7 @@ class InitializeMatrixGroupStageCmd(
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         buildLogPrinter.addYellowLine(
-            buildId = buildId, message = "[Calculated matrix]",
+            buildId = buildId, message = "[MATRIX] Job strategy:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         this.strategy.forEach { (key, valueList) ->
@@ -400,7 +419,7 @@ class InitializeMatrixGroupStageCmd(
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         buildLogPrinter.addYellowLine(
-            buildId = buildId, message = "[Include case]",
+            buildId = buildId, message = "[MATRIX] Include cases:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
@@ -411,13 +430,39 @@ class InitializeMatrixGroupStageCmd(
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         buildLogPrinter.addYellowLine(
-            buildId = buildId, message = "[Exclude case]",
+            buildId = buildId, message = "[MATRIX] Exclude cases:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+
+        // 打印排除参数
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "[MATRIX] After calculated, " +
+            "${contextCaseList.size} jobs are generated:",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
+        contextCaseList.forEach { contextCase ->
+            val nameBuilder = StringBuilder("$containerName(")
+            contextCase.forEach { (key, value) ->
+                nameBuilder.append("$key:$value")
+            }
+            nameBuilder.append(")")
+            buildLogPrinter.addLine(
+                buildId = buildId, message = nameBuilder.toString(),
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
+        }
+        buildLogPrinter.addLine(
+            buildId = buildId, message = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
     }
 
-    private fun MatrixConfig.printMatrixCases(
+    private fun printMatrixCases(
         buildId: String,
         taskId: String,
         containerHashId: String?,
