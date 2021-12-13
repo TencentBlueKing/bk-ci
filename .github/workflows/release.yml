@@ -87,7 +87,10 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+        run: |
+          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+          -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/" \
+          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
 
       - name: Gradle Build Turbo Service
         working-directory: src/backend/turbo
