@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -281,11 +280,7 @@ class ProjectTagService @Autowired constructor(
     fun checkProjectTag(projectId: String): Boolean {
         // 优先走缓存
         if (redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId) != null) {
-            val cacheCheck = projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
-            // cache校验成功直接返回
-            if (cacheCheck) {
-                return cacheCheck
-            }
+            return projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
         }
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
         logger.info("refreshRouterByProject $projectId|${projectInfo.routerTag}| by checkProjectTag")
