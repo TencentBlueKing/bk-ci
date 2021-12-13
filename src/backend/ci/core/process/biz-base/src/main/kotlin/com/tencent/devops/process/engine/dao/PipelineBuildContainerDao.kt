@@ -253,7 +253,7 @@ class PipelineBuildContainerDao {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
             if (containsMatrix == false) {
-                conditionStep.and(MATRIX_GROUP_ID.isNull))
+                conditionStep.and(MATRIX_GROUP_ID.isNull)
             }
             conditionStep.orderBy(SEQ.asc()).fetch()
         }
