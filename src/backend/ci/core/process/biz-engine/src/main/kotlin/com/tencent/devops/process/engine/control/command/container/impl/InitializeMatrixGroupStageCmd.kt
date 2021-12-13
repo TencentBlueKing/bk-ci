@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -198,10 +199,13 @@ class InitializeMatrixGroupStageCmd(
         val matrixOption: MatrixControlOption
         val matrixConfig: MatrixConfig
         val contextCaseList: List<Map<String, String>>
+        val jobControlOption: JobControlOption
+        val executeCount = modelContainer.executeCount ?: 1
+
+        // 每一种上下文组合都是一个新容器
         if (modelContainer is VMBuildContainer && modelContainer.matrixControlOption != null) {
 
-            // 每一种上下文组合都是一个新容器
-            val jobControlOption = modelContainer.jobControlOption!!
+            jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             contextCaseList = matrixConfig.getAllContextCase()
@@ -228,7 +232,7 @@ class InitializeMatrixGroupStageCmd(
                 val newContainerSeq = context.containerSeq++
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
-                val statusElements = generateSampleStatusElements(modelContainer.elements)
+                val statusElements = generateSampleStatusElements(modelContainer.elements, executeCount)
                 val newContainer = VMBuildContainer(
                     name = modelContainer.name,
                     id = newContainerSeq.toString(),
@@ -240,7 +244,7 @@ class InitializeMatrixGroupStageCmd(
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
                     jobControlOption = jobControlOption,
-                    executeCount = modelContainer.executeCount,
+                    executeCount = executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
                     baseOS = customBaseOS ?: modelContainer.baseOS,
@@ -278,9 +282,7 @@ class InitializeMatrixGroupStageCmd(
             }
         } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
 
-            // 每一种上下文组合都是一个新容器
-            val newContainerSeq = context.containerSeq++
-            val jobControlOption = modelContainer.jobControlOption!!
+            jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
             contextCaseList = matrixConfig.getAllContextCase()
@@ -288,7 +290,8 @@ class InitializeMatrixGroupStageCmd(
             contextCaseList.forEach { contextCase ->
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
-                val statusElements = generateSampleStatusElements(modelContainer.elements)
+                val newContainerSeq = context.containerSeq++
+                val statusElements = generateSampleStatusElements(modelContainer.elements, executeCount)
                 val newContainer = NormalContainer(
                     name = modelContainer.name,
                     id = newContainerSeq.toString(),
@@ -299,7 +302,7 @@ class InitializeMatrixGroupStageCmd(
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     jobControlOption = jobControlOption.copy(),
-                    executeCount = modelContainer.executeCount,
+                    executeCount = executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag
                 )
 
@@ -331,7 +334,7 @@ class InitializeMatrixGroupStageCmd(
         }
 
         // 输出结果信息到矩阵的构建日志中
-        matrixConfig.printMatrixResult(commandContext, modelContainer.name, contextCaseList)
+        matrixConfig.printMatrixResult(commandContext, modelContainer.name, contextCaseList, executeCount)
 
         // 新增容器全部添加到Container表中
         buildContainerList.addAll(groupContainers)
@@ -358,7 +361,7 @@ class InitializeMatrixGroupStageCmd(
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
             jobId = parentContainer.containerHashId,
-            executeCount = commandContext.executeCount
+            executeCount = executeCount
         )
 
         // 在详情中刷新所有分裂后的矩阵
@@ -374,7 +377,7 @@ class InitializeMatrixGroupStageCmd(
         return buildContainerList.size
     }
 
-    private fun generateSampleStatusElements(elements: List<Element>): List<MatrixStatusElement> {
+    private fun generateSampleStatusElements(elements: List<Element>, executeCount: Int): List<MatrixStatusElement> {
         return elements.map {
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
             it.id = modelTaskIdGenerator.getNextId()
@@ -382,7 +385,7 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = it.name,
                 id = it.id,
-                executeCount = it.executeCount,
+                executeCount = executeCount,
                 originClassType = it.getClassType()
             )
         }
@@ -391,12 +394,12 @@ class InitializeMatrixGroupStageCmd(
     private fun MatrixConfig.printMatrixResult(
         commandContext: ContainerContext,
         containerName: String,
-        contextCaseList: List<Map<String, String>>
+        contextCaseList: List<Map<String, String>>,
+        executeCount: Int
     ) {
         val buildId = commandContext.container.buildId
         val containerHashId = commandContext.container.containerHashId
         val taskId = VMUtils.genStartVMTaskId(commandContext.container.containerId)
-        val executeCount = commandContext.executeCount
 
         // 打印参数矩阵
         buildLogPrinter.addLine(
