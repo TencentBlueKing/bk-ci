@@ -56,6 +56,10 @@ class RedisUtils @Autowired constructor(
         return redisOperation.hentries(buildLessPoolKey()) ?: mutableMapOf()
     }
 
+    fun getBuildLessPoolContainer(containerId: String): String {
+        return redisOperation.hget(buildLessPoolKey(), containerId) ?: ContainerStatus.BUSY.name
+    }
+
     fun getBuildLessPoolContainerIdle(): Int {
         val values = redisOperation.hvalues(buildLessPoolKey())
 

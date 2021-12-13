@@ -44,6 +44,12 @@ class BuildLessTaskService(
 ) {
 
     fun claimBuildLessTask(containerId: String): BuildLessTask? {
+        // 校验当前容器状态是否正常
+        val containerStatus = redisUtils.getBuildLessPoolContainer(containerId)
+        if (containerStatus == ContainerStatus.BUSY.name) {
+            return null
+        }
+
         val buildLessTask = redisUtils.popBuildLessReadyTask()
         if (buildLessTask != null) {
             logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
