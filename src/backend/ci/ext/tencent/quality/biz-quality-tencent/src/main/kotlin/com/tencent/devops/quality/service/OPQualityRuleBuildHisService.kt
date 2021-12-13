@@ -28,9 +28,11 @@
 package com.tencent.devops.quality.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.dao.OPQualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
 import org.jooq.DSLContext
@@ -42,6 +44,7 @@ import java.time.LocalDateTime
 @Service
 class OPQualityRuleBuildHisService @Autowired constructor(
     private val qualityRuleBuildHisDao: OPQualityRuleBuildHisDao,
+    private val buildHisDao: QualityRuleBuildHisDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
     private val dslContext: DSLContext,
     private val client: Client
@@ -59,6 +62,7 @@ class OPQualityRuleBuildHisService @Autowired constructor(
             val records = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime, limit, currId)
             records.forEach { rule ->
                 try {
+                    buildHisDao.updateStatus(rule.id, RuleInterceptResult.INTERCEPT.name)
                     val trigger = processClient.qualityTriggerStage(
                         userId = rule.createUser,
                         projectId = rule.projectId,
@@ -80,7 +84,7 @@ class OPQualityRuleBuildHisService @Autowired constructor(
                 }
             }
             count = records.size
-            currId = records.last()?.id ?: 0
+            currId = records.lastOrNull()?.id ?: 0
         }
         return count
     }
