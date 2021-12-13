@@ -215,7 +215,7 @@ class BuildLessClient @Autowired constructor(
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     LOG.info("Response buildLess $buildLogKey status: ${response["status"]}")
                     dealWithResponse(
-                       response = response,
+                        response = response,
                         buildLessStartInfo = buildLessStartInfo,
                         dockerIp = dockerIp,
                         retryTime = retryTime,
