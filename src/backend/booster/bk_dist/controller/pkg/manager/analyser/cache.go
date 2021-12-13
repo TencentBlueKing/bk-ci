@@ -18,10 +18,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	dcFile "build-booster/bk_dist/common/file"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/common/blog"
-	"build-booster/common/util"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 // NewFileCache get and init an empty file cache

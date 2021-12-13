@@ -18,16 +18,16 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonHttp "build-booster/common/http"
-	"build-booster/common/http/httpclient"
-	"build-booster/common/http/httpserver"
-	"build-booster/common/metric/controllers"
-	"build-booster/server/config"
-	selfMetric "build-booster/server/pkg/metric"
-	"build-booster/server/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonHttp "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/common/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 )
 
 // const vars

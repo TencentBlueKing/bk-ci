@@ -12,10 +12,10 @@ package fastbuild
 import (
 	"fmt"
 
-	"build-booster/common/blog"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
 
 	"github.com/jinzhu/gorm"
 )

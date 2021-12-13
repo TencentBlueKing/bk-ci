@@ -15,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/worker/pkg/cache"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/common/blog"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/cache"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 var defaultCM cache.Manager

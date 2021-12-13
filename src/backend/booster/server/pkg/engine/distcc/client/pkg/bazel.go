@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common/codec"
-	"build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
 
 	commandCli "github.com/urfave/cli"
 )

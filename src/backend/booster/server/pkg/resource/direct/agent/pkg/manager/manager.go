@@ -25,16 +25,16 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonHttp "build-booster/common/http"
-	"build-booster/common/http/httpclient"
-	"build-booster/server/pkg/resource/direct/agent/config"
-	register_discover "build-booster/server/pkg/resource/direct/agent/pkg/register-discover"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonHttp "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/config"
+	register_discover "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/register-discover"
 
-	localCommon "build-booster/server/pkg/resource/direct/agent/pkg/common"
-	"build-booster/server/pkg/resource/direct/agent/pkg/types"
+	localCommon "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/common"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/types"
 )
 
 // Manager : to report resouce and manage local application

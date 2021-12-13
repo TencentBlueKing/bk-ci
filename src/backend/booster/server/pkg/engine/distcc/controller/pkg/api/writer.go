@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
-	"build-booster/common/blog"
-	http2 "build-booster/common/http"
-	commonTypes "build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
 
 	"github.com/emicklei/go-restful"
 )

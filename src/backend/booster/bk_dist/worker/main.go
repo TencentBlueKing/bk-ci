@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"os"
 
-	"build-booster/bk_dist/worker/config"
-	"build-booster/bk_dist/worker/pkg"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 func main() {

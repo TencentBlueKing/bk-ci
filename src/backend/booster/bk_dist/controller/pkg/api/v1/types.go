@@ -12,10 +12,10 @@ package v1
 import (
 	"os/user"
 
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/pkg/api"
-	v2 "build-booster/server/pkg/api/v2"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
+	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
 
 	"google.golang.org/protobuf/proto"
 )

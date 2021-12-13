@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strings"
 
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // ensure compiler exist in args.

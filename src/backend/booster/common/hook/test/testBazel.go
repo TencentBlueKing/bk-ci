@@ -12,8 +12,8 @@
 package main
 
 import (
-	"build-booster/common/hook"
 	"fmt"
+	"github.com/Tencent/bk-ci/src/booster/common/hook"
 )
 
 func main() {

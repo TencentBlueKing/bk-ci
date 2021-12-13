@@ -14,9 +14,9 @@ import (
 	"reflect"
 	"time"
 
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	selfMetric "build-booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
 
 	// 启用mysql driver
 	_ "github.com/jinzhu/gorm/dialects/mysql"

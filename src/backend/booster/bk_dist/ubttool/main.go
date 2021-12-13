@@ -10,7 +10,7 @@
 package main
 
 import (
-	"build-booster/bk_dist/ubttool/command"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/ubttool/command"
 )
 
 func main() {

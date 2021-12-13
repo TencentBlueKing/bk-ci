@@ -23,9 +23,9 @@ import (
 	"strings"
 	"syscall"
 
-	"build-booster/bk_dist/common/env"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 const (

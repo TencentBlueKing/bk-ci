@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
 // APIResponse response for api request

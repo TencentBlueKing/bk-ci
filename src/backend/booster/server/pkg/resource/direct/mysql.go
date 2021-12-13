@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"time"
 
-	"build-booster/common/blog"
-	commonMySQL "build-booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 
 	"github.com/jinzhu/gorm"
 	// 启用mysql driver

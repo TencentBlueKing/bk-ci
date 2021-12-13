@@ -12,7 +12,7 @@ package types
 import (
 	"time"
 
-	commonTypes "build-booster/common/types"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
 )
 
 // Task : compile task data struct

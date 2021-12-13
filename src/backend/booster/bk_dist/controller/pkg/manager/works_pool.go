@@ -10,22 +10,23 @@
 package manager
 
 import (
-	"build-booster/bk_dist/controller/pkg/manager/recorder"
 	"fmt"
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/common/sdk"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/config"
-	"build-booster/bk_dist/controller/pkg/manager/basic"
-	"build-booster/bk_dist/controller/pkg/manager/local"
-	"build-booster/bk_dist/controller/pkg/manager/remote"
-	"build-booster/bk_dist/controller/pkg/manager/resource"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common/blog"
-	"build-booster/common/util"
-	v2 "build-booster/server/pkg/api/v2"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/recorder"
+
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/basic"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/local"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/remote"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/resource"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
+	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
 )
 
 var (

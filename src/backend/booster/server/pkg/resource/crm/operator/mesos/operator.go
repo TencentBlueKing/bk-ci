@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonHttp "build-booster/common/http"
-	"build-booster/common/http/httpclient"
-	commonTypes "build-booster/common/types"
-	"build-booster/server/config"
-	op "build-booster/server/pkg/resource/crm/operator"
-	"build-booster/server/pkg/resource/crm/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonHttp "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/types"
 )
 
 const (
@@ -46,8 +46,8 @@ const (
 
 	templateContentConstraint = "{\"unionData\":[{\"name\":\"__crm_constraint_key__\"," +
 		"\"operate\":\"LIKE\",\"type\":3,\"text\":{\"value\":\"__crm_constraint_value__\"}}]}"
-	templateContentEnv        = "{\"name\":\"__crm_env_key__\",\"value\":\"__crm_env_value__\"}"
-	templateContentPorts      = "{\"hostPort\":0,\"name\":\"__crm_ports_names__\"," +
+	templateContentEnv   = "{\"name\":\"__crm_env_key__\",\"value\":\"__crm_env_value__\"}"
+	templateContentPorts = "{\"hostPort\":0,\"name\":\"__crm_ports_names__\"," +
 		"\"protocol\":\"__crm_ports_protocol__\"}"
 )
 

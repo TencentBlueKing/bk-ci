@@ -15,10 +15,10 @@ import (
 	"strings"
 	"sync/atomic"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/shadertool/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/shadertool/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
 func defaultCPULimit(custom int) int {

@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine/distcc/controller/config"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/store"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/store"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/types"
 )
 
 // Strategy provide a manager to decide the settings changes to distcc turbo settings.

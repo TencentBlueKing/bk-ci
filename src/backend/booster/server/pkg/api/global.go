@@ -10,10 +10,10 @@
 package api
 
 import (
-	"build-booster/common/http/httpserver"
-	"build-booster/server/config"
-	"build-booster/server/pkg/manager"
-	"build-booster/server/pkg/rd"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/rd"
 )
 
 // ServerAPIResource describe all the server api resources

@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
 // Cleaner checks all the terminated status(finish or failed), find out the no-released-yet tasks, collect the

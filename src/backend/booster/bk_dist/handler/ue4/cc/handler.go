@@ -17,13 +17,13 @@ import (
 	"runtime"
 	"strings"
 
-	dcEnv "build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	commonUtil "build-booster/bk_dist/handler/common"
-	"build-booster/common/blog"
+	dcEnv "github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	commonUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/handler/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 const (

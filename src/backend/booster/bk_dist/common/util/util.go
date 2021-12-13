@@ -22,10 +22,10 @@ import (
 	"strings"
 	"time"
 
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 
 	"github.com/pierrec/lz4"
 	"github.com/shirou/gopsutil/process"

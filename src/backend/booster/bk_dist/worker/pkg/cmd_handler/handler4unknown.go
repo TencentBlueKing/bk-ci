@@ -12,10 +12,10 @@ package pbcmd
 import (
 	"time"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/common/blog"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 var ()

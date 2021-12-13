@@ -10,12 +10,12 @@
 package pkg
 
 import (
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/http/httpserver"
-	"build-booster/server/pkg/resource/direct/agent/config"
-	"build-booster/server/pkg/resource/direct/agent/pkg/api"
-	"build-booster/server/pkg/resource/direct/agent/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/types"
 )
 
 // FbAgent : fast build agent

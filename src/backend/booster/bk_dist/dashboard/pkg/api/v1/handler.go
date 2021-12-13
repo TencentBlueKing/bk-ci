@@ -10,15 +10,16 @@
 package v1
 
 import (
-	"build-booster/common/compress"
-	"build-booster/server/pkg/engine/disttask"
 	"strconv"
 	"strings"
 	"time"
 
-	"build-booster/bk_dist/dashboard/pkg/api"
-	"build-booster/common/blog"
-	commonMySQL "build-booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/common/compress"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
+
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/dashboard/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 
 	"github.com/emicklei/go-restful"
 )

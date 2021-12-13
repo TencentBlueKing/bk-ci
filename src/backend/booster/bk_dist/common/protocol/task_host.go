@@ -10,13 +10,14 @@
 package protocol
 
 import (
-	"build-booster/bk_dist/common/env"
-	"build-booster/common/blog"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // define const vars

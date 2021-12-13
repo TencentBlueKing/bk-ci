@@ -1,4 +1,4 @@
-module build-booster
+module github.com/Tencent/bk-ci/src/booster
 
 go 1.13
 

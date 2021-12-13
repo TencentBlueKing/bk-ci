@@ -15,9 +15,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/bk_dist/idleloop/pkg"
-	"build-booster/common/blog"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/idleloop/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/shirou/gopsutil/process"
 	commandCli "github.com/urfave/cli"

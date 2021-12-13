@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
-	"build-booster/server/pkg/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/metric/controllers"
 )
 
 // Tracker will track the task in status starting, and since the server is ready for serving, make the task

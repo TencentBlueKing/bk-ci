@@ -10,7 +10,6 @@
 package pbcmd
 
 import (
-	"build-booster/bk_dist/common/env"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,13 +19,15 @@ import (
 	"time"
 	"unicode/utf8"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	dcFile "build-booster/bk_dist/common/file"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/bk_dist/worker/pkg/types"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // Handle4DispatchReq handler for dispatch task request

@@ -13,12 +13,12 @@ import (
 	"fmt"
 	"path/filepath"
 
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
-	"build-booster/bk_dist/handler"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
 )
 
 // NewTextureCompressor get a new tc handler

@@ -17,11 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	v1 "build-booster/bk_dist/controller/pkg/api/v1"
-	"build-booster/bk_dist/ubttool/common"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	v1 "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/ubttool/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/google/shlex"
 )

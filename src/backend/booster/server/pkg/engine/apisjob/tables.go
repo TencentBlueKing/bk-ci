@@ -10,7 +10,7 @@
 package apisjob
 
 import (
-	"build-booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
 const (

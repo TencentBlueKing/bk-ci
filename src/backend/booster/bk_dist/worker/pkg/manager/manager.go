@@ -22,14 +22,14 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/worker/config"
-	pbcmd "build-booster/bk_dist/worker/pkg/cmd_handler"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/common/blog"
-	commonUtil "build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/config"
+	pbcmd "github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/cmd_handler"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonUtil "github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 // Manager manager hosts

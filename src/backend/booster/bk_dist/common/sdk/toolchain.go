@@ -13,10 +13,10 @@ import (
 	"fmt"
 	"strings"
 
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // type ToolChainKey string

@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
-	"build-booster/server/pkg/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/metric/controllers"
 )
 
 // Keeper monitor the tasks since creating, until terminated status(failed or finish). Include following checks:

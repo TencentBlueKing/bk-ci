@@ -10,7 +10,6 @@
 package pkg
 
 import (
-	"build-booster/common/hook"
 	"fmt"
 	"net"
 	"os"
@@ -19,6 +18,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/Tencent/bk-ci/src/booster/common/hook"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"plugin"
 
-	"build-booster/bk_dist/handler"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
 )
 
 const (

@@ -15,12 +15,12 @@ import (
 	"sync"
 	"time"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/bk_dist/controller/config"
-	"build-booster/bk_dist/controller/pkg/manager/recorder"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/recorder"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
 const (

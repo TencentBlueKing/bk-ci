@@ -12,11 +12,11 @@ package v1
 import (
 	"sync"
 
-	"build-booster/gateway/pkg/api"
-	"build-booster/gateway/pkg/api/v1/apisjob"
-	"build-booster/gateway/pkg/api/v1/distcc"
-	"build-booster/gateway/pkg/api/v1/disttask"
-	"build-booster/gateway/pkg/api/v1/fastbuild"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1/apisjob"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1/distcc"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1/disttask"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1/fastbuild"
 
 	"github.com/emicklei/go-restful"
 )

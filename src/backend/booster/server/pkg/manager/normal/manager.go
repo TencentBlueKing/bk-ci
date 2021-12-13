@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/util"
-	"build-booster/server/pkg/engine"
-	mgr "build-booster/server/pkg/manager"
-	"build-booster/server/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	mgr "github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 )
 
 type manager struct {

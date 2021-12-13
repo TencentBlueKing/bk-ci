@@ -11,13 +11,13 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/http/httpclient"
-	"build-booster/common/util"
-	"build-booster/server/config"
-	"build-booster/server/pkg/rd"
-	op "build-booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/rd"
+	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
 )
 
 const (

@@ -14,9 +14,9 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"build-booster/bk_dist/ubttool/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/ubttool/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
 func resolveActionJSON(filename string) (*common.UE4Action, error) {

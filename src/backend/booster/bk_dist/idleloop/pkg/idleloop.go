@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/shirou/gopsutil/process"
 )

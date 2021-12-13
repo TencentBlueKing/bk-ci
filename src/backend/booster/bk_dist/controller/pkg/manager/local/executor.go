@@ -14,15 +14,15 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
-	"build-booster/bk_dist/controller/pkg/manager/recorder"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/bk_dist/handler"
-	"build-booster/bk_dist/handler/handlermap"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/recorder"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/handlermap"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 const (

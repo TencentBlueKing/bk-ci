@@ -10,10 +10,10 @@
 package config
 
 import (
-	"build-booster/common/conf"
-	"build-booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/static"
 
-	dcConfig "build-booster/bk_dist/common/config"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
 )
 
 // ServerConfig : server config

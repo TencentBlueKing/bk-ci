@@ -14,12 +14,12 @@ import (
 	"strings"
 	"sync"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/resource/crm"
-	"build-booster/server/pkg/resource/crm/operator"
-	"build-booster/server/pkg/resource/direct"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
 
 	"github.com/jinzhu/gorm"
 )

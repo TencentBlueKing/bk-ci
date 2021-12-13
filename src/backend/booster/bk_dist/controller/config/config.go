@@ -12,9 +12,9 @@ package config
 import (
 	"runtime"
 
-	"build-booster/common/codec"
-	"build-booster/common/conf"
-	"build-booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/static"
 )
 
 // ServerConfig : server config

@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"os"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/resource/direct/agent/config"
-	"build-booster/server/pkg/resource/direct/agent/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg"
 )
 
 func main() {

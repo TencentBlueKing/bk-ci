@@ -10,16 +10,17 @@
 package pkg
 
 import (
-	"build-booster/bk_dist/controller/config"
-	"build-booster/bk_dist/controller/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
+
 	// 初始化api资源
-	_ "build-booster/bk_dist/controller/pkg/api/v1"
-	"build-booster/bk_dist/controller/pkg/dashboard"
-	"build-booster/bk_dist/controller/pkg/manager"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/http/httpserver"
+	_ "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/dashboard"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
 )
 
 // Server local server

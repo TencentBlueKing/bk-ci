@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
 )
 
 type RoleType string

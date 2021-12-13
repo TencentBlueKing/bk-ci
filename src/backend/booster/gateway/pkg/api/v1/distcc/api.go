@@ -10,8 +10,8 @@
 package distcc
 
 import (
-	"build-booster/gateway/pkg/api"
-	"build-booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
 )
 
 const (

@@ -16,12 +16,12 @@ import (
 	"sync"
 	"time"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/config"
-	"build-booster/bk_dist/controller/pkg/manager/analyser"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/analyser"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 
 	"github.com/shirou/gopsutil/net"
 )

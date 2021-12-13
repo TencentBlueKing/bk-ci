@@ -12,13 +12,13 @@ package custom
 import (
 	"fmt"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
-	"build-booster/bk_dist/handler"
-	"build-booster/bk_dist/handler/custom/plugin"
-	"build-booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/custom/plugin"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
 
 type Type int

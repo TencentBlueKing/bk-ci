@@ -15,9 +15,9 @@ import (
 	"net"
 	"net/http"
 
-	"build-booster/common"
-	"build-booster/common/http/httpclient"
-	"build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
 )
 
 const (

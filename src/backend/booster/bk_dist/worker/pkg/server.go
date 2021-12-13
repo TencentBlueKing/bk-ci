@@ -14,11 +14,11 @@ import (
 	"net"
 	"strconv"
 
-	"build-booster/bk_dist/common/env"
-	"build-booster/bk_dist/worker/config"
-	"build-booster/bk_dist/worker/pkg/manager"
-	"build-booster/common"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // Server server

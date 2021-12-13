@@ -15,13 +15,13 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	commonTypes "build-booster/common/types"
-	"build-booster/gateway/pkg/api"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
 
 	"github.com/emicklei/go-restful"
 )

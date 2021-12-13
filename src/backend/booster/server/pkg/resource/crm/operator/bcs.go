@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/metric/controllers"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
-	rsc "build-booster/server/pkg/resource"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	rsc "github.com/Tencent/bk-ci/src/booster/server/pkg/resource"
 )
 
 // Operator define a bcs handler to do all operations.

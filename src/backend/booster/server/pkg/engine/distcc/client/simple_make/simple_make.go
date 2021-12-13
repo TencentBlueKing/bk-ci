@@ -18,8 +18,8 @@ import (
 	"reflect"
 	"strings"
 
-	"build-booster/common/codec"
-	"build-booster/server/pkg/engine/distcc/client/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/client/pkg"
 )
 
 const (

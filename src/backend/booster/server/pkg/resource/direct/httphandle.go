@@ -13,12 +13,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	http2 "build-booster/common/http"
-	"build-booster/common/http/httpserver"
-	commonTypes "build-booster/common/types"
-	"build-booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
 
 	"github.com/emicklei/go-restful"
 )
