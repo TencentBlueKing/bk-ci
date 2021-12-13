@@ -103,8 +103,8 @@ class ScmClient @Autowired constructor(
         state: GitCICommitCheckState,
         block: Boolean,
         gitCIBasicSetting: GitCIBasicSetting,
-        // 详情是否跳转request界面
-        jumpRequest: Boolean,
+        // 详情是否跳转v2 notification界面
+        jumpNotification: Boolean,
         description: String?
     ) = try {
         val titleData = mutableListOf<String>()
@@ -121,8 +121,11 @@ class ScmClient @Autowired constructor(
             region = null,
             commitId = commitId,
             state = state.value,
-            targetUrl = if (jumpRequest) {
-                GitCIPipelineUtils.genGitCIV1RequestUrl(homePage = gitCIBasicSetting.homepage)
+            targetUrl = if (jumpNotification) {
+                GitCIPipelineUtils.genGitCIV2NotificationsUrl(
+                    streamUrl = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    gitProjectId = gitCIBasicSetting.gitProjectId.toString()
+                )
             } else {
                 ""
             },

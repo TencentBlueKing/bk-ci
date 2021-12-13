@@ -516,7 +516,7 @@ class GitCITriggerService @Autowired constructor(
                 state = state,
                 context = noPipelineBuildEvent,
                 gitCIBasicSetting = gitProjectConf,
-                jumpRequest = false,
+                jumpNotification = false,
                 description = null
             )
         }

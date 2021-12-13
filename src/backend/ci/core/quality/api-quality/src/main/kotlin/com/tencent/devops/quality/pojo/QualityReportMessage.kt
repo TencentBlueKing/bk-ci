@@ -24,20 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.quality.pojo
 
-package com.tencent.devops.artifactory.resources.builds
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.artifactory.api.builds.BuildFileGatewayResource
-import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.artifactory.service.FileGatewayService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+@ApiModel("红线报告消息类型")
+data class QualityReportMessage(
 
-@RestResource
-class BuildFileGatewayResourceImpl(
-    private val fileGatewayService: FileGatewayService
-) : BuildFileGatewayResource {
-    override fun getFileGateway(projectId: String): Result<FileGatewayInfo> {
-        return Result(fileGatewayService.getFileGateway(projectId))
-    }
-}
+    @ApiModelProperty("项目id")
+    var projectId: String = "",
+    @ApiModelProperty("流水线id")
+    var pipelineId: String = "",
+    @ApiModelProperty("构建id")
+    var buildId: String = ""
+)

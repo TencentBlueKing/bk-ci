@@ -1,10 +1,9 @@
-package com.tencent.devops.stream.listener.buildFinish.notify
+package com.tencent.devops.stream.listener.notify
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.listener.V2NotifyTemplate
 import com.tencent.devops.stream.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import java.util.Date

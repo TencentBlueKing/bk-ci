@@ -4,6 +4,15 @@ parameters:
   - name: username
     type: string
     default: world
+  - name: receiversMessage
+    type: array
+    default:
+      - "${{ci.actor}}"
+  - name: receiversChat
+    type: array
+  - name: receiversEmail
+    type: array
+    default: [ "${{ci.actor}}" ]
 
 variables:
   DEPLOY_TYPE:
@@ -196,4 +205,19 @@ notices:
     chat-id:
       - xxxxxxxx
     content: this is a wework-chat notice,content is hello.
+  - type: email
+    title: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    receivers: ${{parameters.receiversEmail}}
+    ccs: ${{parameters.receiversEmail}}
+    if: FAILURE
+  - type: wework-message
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    receivers: ${{parameters.receiversMessage}}
+    if: FAILURE
+  - type: wework-chat
+    chat-id: ${{parameters.receiversChat}}
+      # - ww230072302
+    content: ${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败
+    if: FAILURE
 

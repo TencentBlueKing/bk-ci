@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.pojo
+package com.tencent.devops.common.api.enums
 
-data class QueryNodeInfo(
-    var createdBy: String,
-    var createdDate: String,
-    var lastModifiedBy: String,
-    var lastModifiedDate: String,
-    var folder: Boolean,
-    var path: String,
-    var name: String,
-    var fullPath: String,
-    var size: Long,
-    var sha256: String? = null,
-    var md5: String? = null,
-    var projectId: String,
-    var repoName: String,
-    var metadata: Map<String, String>
-)
+/**
+ *
+ * Powered By Tencent
+ */
+enum class BuildReviewType {
+    TASK_REVIEW,
+    STAGE_REVIEW,
+    QUALITY_CHECK_IN,
+    QUALITY_CHECK_OUT
+}

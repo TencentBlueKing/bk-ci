@@ -1,8 +1,7 @@
-package com.tencent.devops.stream.listener.buildFinish.notify
+package com.tencent.devops.stream.listener.notify
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.listener.RtxCustomApi
 import com.tencent.devops.stream.pojo.rtxCustom.MessageType
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
