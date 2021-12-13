@@ -219,23 +219,23 @@ class MatrixExecuteContainerCmd(
         LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|" +
             "matrix(${event.containerId})|containersToRun=$containersToRun")
         containersToRun.forEach { container ->
-                buildLogPrinter.addDebugLine(
-                    buildId = event.buildId,
-                    message = "Container with id(${container.containerId}) and " +
-                        "matrixGroupId(${parentContainer.containerId}）starting...",
-                    tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                    jobId = parentContainer.containerHashId,
-                    executeCount = commandContext.executeCount
-                )
-                LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
-                    "|matrixGroupId=${parentContainer.containerId}|j(${container.containerId})")
-                sendBuildContainerEvent(
-                    container = container,
-                    actionType = ActionType.START,
-                    userId = event.userId,
-                    reason = commandContext.latestSummary
-                )
-            }
+            buildLogPrinter.addDebugLine(
+                buildId = event.buildId,
+                message = "Container with id(${container.containerId}) and " +
+                    "matrixGroupId(${parentContainer.containerId}）starting...",
+                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+                jobId = parentContainer.containerHashId,
+                executeCount = commandContext.executeCount
+            )
+            LOG.info("ENGINE|${event.buildId}|sendMatrixContainerEvent|START|${event.stageId}" +
+                "|matrixGroupId=${parentContainer.containerId}|j(${container.containerId})")
+            sendBuildContainerEvent(
+                container = container,
+                actionType = ActionType.START,
+                userId = event.userId,
+                reason = commandContext.latestSummary
+            )
+        }
     }
 
     private fun terminateGroupContainers(
