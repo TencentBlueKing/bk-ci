@@ -76,8 +76,8 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
-        matrixConfig.exclude.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
+        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
+        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
         return matrixConfig
     }
 
@@ -90,14 +90,14 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             return strategyStr
         }
-        result.putAll(matrixConfig.strategy)
-        with(matrixConfig.include) {
+        result.putAll(matrixConfig.strategy ?: emptyMap())
+        with(matrixConfig.include ?: mutableListOf()) {
             this.addAll(convertCase(includeCaseStr))
             if (this.size > 0) {
                 result["include"] = this
             }
         }
-        with(matrixConfig.exclude) {
+        with(matrixConfig.exclude ?: mutableListOf()) {
             this.addAll(convertCase(excludeCaseStr))
             if (this.size > 0) {
                 result["exclude"] = this
