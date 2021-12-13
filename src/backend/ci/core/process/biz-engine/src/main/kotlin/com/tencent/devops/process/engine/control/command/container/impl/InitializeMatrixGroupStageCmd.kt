@@ -362,6 +362,20 @@ class InitializeMatrixGroupStageCmd(
             jobId = parentContainer.containerHashId,
             executeCount = context.executeCount
         )
+        buildLogPrinter.addLine(
+            buildId = parentContainer.buildId,
+            message = "",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            jobId = parentContainer.containerHashId,
+            executeCount = context.executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = parentContainer.buildId,
+            message = "[MATRIX] Start to run...",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            jobId = parentContainer.containerHashId,
+            executeCount = context.executeCount
+        )
 
         // 在详情中刷新所有分裂后的矩阵
         pipelineContainerService.updateMatrixGroupStatus(
