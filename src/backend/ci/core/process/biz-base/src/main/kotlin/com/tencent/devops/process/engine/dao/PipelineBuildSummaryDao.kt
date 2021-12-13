@@ -44,11 +44,9 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Field
 import org.jooq.Result
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
