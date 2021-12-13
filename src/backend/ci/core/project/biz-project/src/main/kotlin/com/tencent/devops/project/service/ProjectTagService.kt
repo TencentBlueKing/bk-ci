@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -54,7 +55,8 @@ class ProjectTagService @Autowired constructor(
     val projectTagDao: ProjectTagDao,
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val projectService: ProjectService
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -64,6 +66,13 @@ class ProjectTagService @Autowired constructor(
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
+
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
+
 
     fun updateTagByProject(
         projectTagUpdateDTO: ProjectTagUpdateDTO
@@ -266,6 +275,33 @@ class ProjectTagService @Autowired constructor(
         } finally {
             logger.info("refreshRouterByChannel success")
         }
+    }
+
+    // 判断当前项目流量与当前集群匹配
+    fun checkProjectTag(projectId: String): Boolean {
+        // 优先走缓存
+        if (redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId) != null) {
+            val cacheCheck = projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
+            // cache校验成功直接返回
+            if (cacheCheck) {
+                return cacheCheck
+            }
+        }
+        val projectInfo = projectService.getByEnglishName(projectId) ?: return false
+        logger.info("refreshRouterByProject $projectId|${projectInfo.routerTag}| by checkProjectTag")
+        // 请求源大量来自定时任务, 刷新缓存
+        refreshRouterByProject(projectInfo.routerTag ?: "", arrayListOf(projectId), redisOperation)
+
+        return projectClusterCheck(projectInfo.routerTag)
+    }
+
+    private fun projectClusterCheck(routerTag: String?): Boolean {
+        // 默认集群是不会有routerTag的信息
+        if (routerTag.isNullOrBlank()) {
+            // 只有默认集群在routerTag为空的时候才返回true
+            return tag == prodTag
+        }
+        return tag == routerTag
     }
 
     private fun checkRouteTag(routerTag: String) {
