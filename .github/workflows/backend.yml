@@ -20,6 +20,14 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,9 +35,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: init mysql
       run: |
-        sudo /etc/init.d/mysql start
         export MYSQL_PWD=root
-        for i in *.sql;do echo $i;mysql -h localhost -uroot < $i;done
+        for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
       working-directory: support-files/sql
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
@@ -44,4 +51,7 @@ jobs:
           ${{ runner.os }}-gradle-
     - name: Gradle Build
       working-directory: src/backend/ci
-      run: ./gradlew test clean :boot-assembly:classes -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+      run: |
+        ./gradlew test clean :boot-assembly:classes \
+        -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/" \
+        -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
