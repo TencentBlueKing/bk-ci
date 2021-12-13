@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import kotlin.math.max
 import kotlin.math.min
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -76,7 +77,7 @@ class MatrixExecuteContainerCmd(
         val groupStatus = try {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix loop(${parentContainer.containerId}) judge containers",
+                message = "Matrix status loop: ${commandContext.buildStatus}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
                 executeCount = commandContext.executeCount
@@ -85,7 +86,7 @@ class MatrixExecuteContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix loop(${parentContainer.containerId}) judge containers " +
+                message = "Matrix status loop: ${commandContext.buildStatus} with " +
                     "error: ${ignore.message}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
@@ -162,18 +163,18 @@ class MatrixExecuteContainerCmd(
         )
 
         // 如果不需要fastKill，则给前N个待执行的容器下发启动事件，N为并发上限减去正在运行的数量
-        if (!fastKill && containersToRun.isNotEmpty() && runningCount < maxConcurrency) {
+        if (!fastKill && containersToRun.isNotEmpty()) {
+            val countCanRun = max(0, maxConcurrency - runningCount)
             buildLogPrinter.addDebugLine(
-                buildId = buildId, message = "start to execute jobs: $containersToRun",
+                buildId = buildId, message = "Try to execute jobs: runningCount=$runningCount, " +
+                "maxConcurrency=$maxConcurrency, countCanRun=$countCanRun",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             startGroupContainers(
                 commandContext = commandContext,
                 event = event,
                 parentContainer = parentContainer,
-                containersToRun = containersToRun,
-                runningCount = runningCount,
-                maxConcurrency = maxConcurrency
+                containersToRun = containersToRun.take(countCanRun)
             )
         }
 
@@ -213,14 +214,11 @@ class MatrixExecuteContainerCmd(
         event: PipelineBuildContainerEvent,
         commandContext: ContainerContext,
         parentContainer: PipelineBuildContainer,
-        containersToRun: MutableList<PipelineBuildContainer>,
-        runningCount: Int,
-        maxConcurrency: Int
+        containersToRun: List<PipelineBuildContainer>
     ) {
         LOG.info("ENGINE|${event.buildId}|MATRIX_GROUP_START|${event.stageId}|" +
             "matrix(${event.containerId})|containersToRun=$containersToRun")
-        containersToRun.take(maxConcurrency - runningCount)
-            .forEach { container ->
+        containersToRun.forEach { container ->
                 buildLogPrinter.addDebugLine(
                     buildId = event.buildId,
                     message = "Container with id(${container.containerId}) and " +
