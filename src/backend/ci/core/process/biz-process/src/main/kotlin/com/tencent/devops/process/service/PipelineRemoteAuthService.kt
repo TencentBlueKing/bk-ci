@@ -95,7 +95,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
-        return client.get(ServiceBuildResource::class).manualStartupNew(
+        return client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
