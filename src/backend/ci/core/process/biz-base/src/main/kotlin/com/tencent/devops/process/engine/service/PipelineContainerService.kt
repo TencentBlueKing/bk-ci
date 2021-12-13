@@ -412,7 +412,7 @@ class PipelineContainerService @Autowired constructor(
                         }
                     }
                     needUpdateContainer = true
-                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFailure()) {
+                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
                     setRetryBuildContainer(container, context.executeCount)
                     needUpdateContainer = true
@@ -755,7 +755,7 @@ class PipelineContainerService @Autowired constructor(
                 status = status,
                 taskParams = atomElement.genTaskParams(),
                 additionalOptions = atomElement.additionalOptions,
-                executeCount = 1,
+                executeCount = container.executeCount,
                 starter = userId,
                 approver = null,
                 subProjectId = null,

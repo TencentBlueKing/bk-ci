@@ -76,9 +76,34 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
-        matrixConfig.exclude.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
+        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
+        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
         return matrixConfig
+    }
+
+    fun convertMatrixToYamlConfig(): Any? {
+        val result = mutableMapOf<String, Any>()
+        val matrixConfig = try {
+            // 由于yaml和json结构不同，就不放在同一函数进行解析了
+            convertStrategyYaml(emptyMap())
+        } catch (ignore: Throwable) {
+            logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
+            return strategyStr
+        }
+        result.putAll(matrixConfig.strategy ?: emptyMap())
+        with(matrixConfig.include ?: mutableListOf()) {
+            this.addAll(convertCase(includeCaseStr))
+            if (this.size > 0) {
+                result["include"] = this
+            }
+        }
+        with(matrixConfig.exclude ?: mutableListOf()) {
+            this.addAll(convertCase(excludeCaseStr))
+            if (this.size > 0) {
+                result["exclude"] = this
+            }
+        }
+        return result
     }
 
     /**
@@ -88,7 +113,12 @@ data class MatrixControlOption(
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         return try {
             // 兼容在strategy里塞入json格式的情况
-            JsonUtil.to(contextStr, MatrixConfig::class.java)
+            val matrixConfig = JsonUtil.to(contextStr, MatrixConfig::class.java)
+            MatrixConfig(
+                strategy = matrixConfig.strategy ?: emptyMap(),
+                include = matrixConfig.include ?: mutableListOf(),
+                exclude = matrixConfig.exclude ?: mutableListOf()
+            )
         } catch (ignore: Exception) {
             MatrixConfig(
                 strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
