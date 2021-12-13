@@ -56,8 +56,18 @@ class RedisUtils @Autowired constructor(
         return redisOperation.hentries(buildLessPoolKey()) ?: mutableMapOf()
     }
 
+    fun getBuildLessPoolContainerIdle(): Int {
+        val values = redisOperation.hvalues(buildLessPoolKey())
+
+        return values?.stream()?.filter { it == ContainerStatus.IDLE.name }?.count()?.toInt() ?: 0
+    }
+
     fun increIdlePool(incr: Long) {
         redisOperation.increment(idlePoolKey(), incr)
+    }
+
+    fun setIdlePool(idleSize: Int) {
+        redisOperation.set(idlePoolKey(), idleSize.toString())
     }
 
     fun getIdlePoolSize(): Long {
@@ -81,7 +91,7 @@ class RedisUtils @Autowired constructor(
         return JsonUtil.to(resultString, BuildLessTask::class.java)
     }
 
-    fun getBuildLessReadyTaskCount(): Long {
+    fun getBuildLessReadyTaskSize(): Long {
         return redisOperation.listSize(buildLessReadyTaskKey()) ?: 0L
     }
 

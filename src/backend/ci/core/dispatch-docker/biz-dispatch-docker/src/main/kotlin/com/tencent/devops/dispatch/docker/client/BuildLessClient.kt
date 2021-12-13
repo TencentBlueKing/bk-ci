@@ -214,36 +214,14 @@ class BuildLessClient @Autowired constructor(
                     val responseBody = resp.body()!!.string()
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     LOG.info("Response buildLess $buildLogKey status: ${response["status"]}")
-                    when {
-                        response["status"] == 0 -> {
-                            LOG.info("Success buildLess $buildLogKey")
-                            pipelineDockerBuildDao.updateDockerIp(
-                                dslContext = dslContext,
-                                buildId = buildLessStartInfo.buildId,
-                                vmSeqId = buildLessStartInfo.vmSeqId,
-                                dockerIp = dockerIp
-                            )
-                        }
-                        // 母机无空闲容器资源
-                        response["status"] == 2127003 -> {
-                            doRetry(
-                                retryTime = retryTime,
-                                retryMax = retryMax,
-                                dockerIp = dockerIp,
-                                buildLessStartInfo = buildLessStartInfo,
-                                errorMessage = response["message"] as String,
-                                unAvailableIpList = unAvailableIpList
-                            )
-                        }
-                        else -> {
-                            // 非可重试异常码，不重试直接失败
-                            doFail(
-                                dockerIp = dockerIp,
-                                event = buildLessStartInfo,
-                                errorMessage = response["message"] as String
-                            )
-                        }
-                    }
+                    dealWithResponse(
+                       response = response,
+                        buildLessStartInfo = buildLessStartInfo,
+                        dockerIp = dockerIp,
+                        retryTime = retryTime,
+                        retryMax = retryMax,
+                        unAvailableIpList = unAvailableIpList
+                    )
                 } else {
                     // 接口异常重试
                     doRetry(
@@ -285,6 +263,46 @@ class BuildLessClient @Autowired constructor(
                 errorMessage = e.message,
                 unAvailableIpList = unAvailableIpList
             )
+        }
+    }
+
+    private fun dealWithResponse(
+        response: Map<String, Any>,
+        buildLessStartInfo: BuildLessStartInfo,
+        dockerIp: String,
+        retryTime: Int,
+        retryMax: Int,
+        unAvailableIpList: Set<String>?
+    ) {
+        when {
+            response["status"] == 0 -> {
+                LOG.info("Success buildLess ${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}")
+                pipelineDockerBuildDao.updateDockerIp(
+                    dslContext = dslContext,
+                    buildId = buildLessStartInfo.buildId,
+                    vmSeqId = buildLessStartInfo.vmSeqId,
+                    dockerIp = dockerIp
+                )
+            }
+            // 母机无空闲容器资源
+            response["status"] == 2127003 -> {
+                doRetry(
+                    retryTime = retryTime,
+                    retryMax = retryMax,
+                    dockerIp = dockerIp,
+                    buildLessStartInfo = buildLessStartInfo,
+                    errorMessage = response["message"] as String,
+                    unAvailableIpList = unAvailableIpList
+                )
+            }
+            else -> {
+                // 非可重试异常码，不重试直接失败
+                doFail(
+                    dockerIp = dockerIp,
+                    event = buildLessStartInfo,
+                    errorMessage = response["message"] as String
+                )
+            }
         }
     }
 

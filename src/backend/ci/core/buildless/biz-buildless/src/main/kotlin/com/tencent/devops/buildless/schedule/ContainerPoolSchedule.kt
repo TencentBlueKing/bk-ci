@@ -29,6 +29,7 @@ package com.tencent.devops.buildless.schedule
 
 import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.service.BuildLessContainerService
+import com.tencent.devops.buildless.utils.RedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -37,16 +38,23 @@ import org.springframework.stereotype.Component
 @Component
 class ContainerPoolSchedule @Autowired constructor(
     private val buildLessConfig: BuildLessConfig,
-    private val buildlessContainerService: BuildLessContainerService
+    private val redisUtils: RedisUtils,
+    private val buildLessContainerService: BuildLessContainerService
 ) {
     @Scheduled(cron = "0 0/1 * * * ?")
     fun execute() {
-        val coreSize = buildlessContainerService.getRunningPoolCount()
+        // 校准空闲池大小
+        if (redisUtils.getBuildLessReadyTaskSize() == 0L) {
+            val idleContainerPoolSize = redisUtils.getBuildLessPoolContainerIdle()
+            redisUtils.setIdlePool(idleContainerPoolSize)
+        }
+
+        val coreSize = buildLessContainerService.getRunningPoolCount()
         logger.info("Scheduler coreSize: $coreSize")
         if (coreSize >= buildLessConfig.coreContainerPool) return
         for (i in 1 until (buildLessConfig.coreContainerPool - coreSize + 1)) {
             logger.info("Scheduler create container $i")
-            buildlessContainerService.createBuildLessPoolContainer()
+            buildLessContainerService.createBuildLessPoolContainer()
         }
     }
 

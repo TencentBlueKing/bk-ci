@@ -45,6 +45,7 @@ import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
+import okhttp3.Response
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -116,7 +117,7 @@ fun main(args: Array<String>) {
 }
 
 private fun waitBuildLessJobStart() {
-    var startFlag: Boolean = false
+    var startFlag = false
     val dockerHostIp = DockerEnv.getDockerHostIp()
     val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
@@ -130,19 +131,7 @@ private fun waitBuildLessJobStart() {
     do {
         try {
             OkhttpUtils.doHttp(request).use { resp ->
-                if (resp.isSuccessful && resp.body() != null) {
-                    val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
-                    buildLessTask.forEach { t, u ->
-                        when (t) {
-                            "agentId" -> System.setProperty(AGENT_ID, u)
-                            "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
-                            "projectId" -> System.setProperty("devops_project_id", u)
-                        }
-                    }
-                    startFlag = true
-                } else {
-                    println("No buildLessTask, resp: ${resp.body()} continue loop...")
-                }
+                startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
             println("Get buildLessTask error. continue loop... \n${e.message}")
@@ -152,4 +141,23 @@ private fun waitBuildLessJobStart() {
             Thread.sleep(1000)
         }
     } while (!startFlag)
+}
+
+private fun doResponse(
+    resp: Response
+): Boolean {
+    return if (resp.isSuccessful && resp.body() != null) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+        buildLessTask.forEach { (t, u) ->
+            when (t) {
+                "agentId" -> System.setProperty(AGENT_ID, u)
+                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                "projectId" -> System.setProperty("devops_project_id", u)
+            }
+        }
+        true
+    } else {
+        println("No buildLessTask, resp: ${resp.body()} continue loop...")
+        false
+    }
 }

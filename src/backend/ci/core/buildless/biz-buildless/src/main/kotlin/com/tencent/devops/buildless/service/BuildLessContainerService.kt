@@ -130,8 +130,6 @@ class BuildLessContainerService(
 
     @Synchronized
     fun createBuildLessPoolContainer(oversold: Boolean = false) {
-        val imageName = "mirrors.tencent.com/ci/tlinux_ci:0.5.0.4"
-
         val volumeApps = Volume(buildLessConfig.volumeApps)
         val volumeInit = Volume(buildLessConfig.volumeInit)
         val volumeSleep = Volume(buildLessConfig.volumeSleep)
@@ -155,7 +153,7 @@ class BuildLessContainerService(
         if (!oversold && runningContainerCount >= buildLessConfig.coreContainerPool) return
         if (oversold && runningContainerCount >= buildLessConfig.maxContainerPool) return
 
-        val container = httpDockerCli.createContainerCmd(imageName)
+        val container = httpDockerCli.createContainerCmd(buildLessConfig.containerPoolBaseImage)
             .withName(containerName)
             .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
@@ -251,9 +249,8 @@ class BuildLessContainerService(
                 it.id
             }
         }.toList()
-        logger.info("----> running containers: $containerIds")
         val buildLessPoolContainerList = redisUtils.getBuildLessPoolContainerList()
-        buildLessPoolContainerList.forEach { key, value ->
+        buildLessPoolContainerList.forEach { (key, _) ->
             if (!containerIds.contains(key)) {
                 redisUtils.deleteBuildLessPoolContainer(key)
             }

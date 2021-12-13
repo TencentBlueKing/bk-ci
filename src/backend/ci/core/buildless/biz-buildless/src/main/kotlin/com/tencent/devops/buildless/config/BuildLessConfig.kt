@@ -92,4 +92,7 @@ class BuildLessConfig {
 
     @Value("\${containerPool.maxSize:30}")
     var maxContainerPool: Int = 30 // 构建机最大可创建容器池大小
+
+    @Value("\${containerPool.baseImage:blueking/bk-ci}")
+    var containerPoolBaseImage: String = "blueking/bk-ci" // 容器池默认镜像
 }
