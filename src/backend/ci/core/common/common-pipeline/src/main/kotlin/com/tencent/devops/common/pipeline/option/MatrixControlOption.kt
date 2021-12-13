@@ -81,6 +81,31 @@ data class MatrixControlOption(
         return matrixConfig
     }
 
+    fun convertMatrixToYamlConfig(): Any? {
+        val result = mutableMapOf<String, Any>()
+        val matrixConfig = try {
+            // 由于yaml和json结构不同，就不放在同一函数进行解析了
+            convertStrategyYaml(emptyMap())
+        } catch (ignore: Throwable) {
+            logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
+            return strategyStr
+        }
+        result.putAll(matrixConfig.strategy)
+        with(matrixConfig.include) {
+            this.addAll(convertCase(includeCaseStr))
+            if (this.size > 0) {
+                result["include"] = this
+            }
+        }
+        with(matrixConfig.exclude) {
+            this.addAll(convertCase(excludeCaseStr))
+            if (this.size > 0) {
+                result["exclude"] = this
+            }
+        }
+        return result
+    }
+
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
