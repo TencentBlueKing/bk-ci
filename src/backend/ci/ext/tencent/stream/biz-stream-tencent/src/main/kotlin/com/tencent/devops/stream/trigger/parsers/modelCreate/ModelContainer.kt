@@ -75,7 +75,7 @@ class ModelContainer @Autowired constructor(
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
-                name = "dispatchInfo_${job.name}",
+                name = "dispatchInfo_${job.id}",
                 job = job,
                 projectCode = projectCode,
                 defaultImage = defaultImage,
