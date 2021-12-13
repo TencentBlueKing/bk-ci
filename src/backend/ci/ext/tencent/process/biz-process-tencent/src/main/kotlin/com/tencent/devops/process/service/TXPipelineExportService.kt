@@ -43,6 +43,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -58,6 +59,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
@@ -518,7 +520,7 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = null,
+                        strategy = getMatrixFromJob(job.matrixControlOption),
                         // 蓝盾这边是自定义Job ID
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
@@ -638,7 +640,7 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = null,
+                        strategy = getMatrixFromJob(job.matrixControlOption),
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
                         } else null
@@ -650,6 +652,18 @@ class TXPipelineExportService @Autowired constructor(
             }
         }
         return if (jobs.isEmpty()) null else jobs
+    }
+
+    private fun getMatrixFromJob(
+        matrixControlOption: MatrixControlOption?
+    ): Strategy? {
+        if (matrixControlOption == null)
+            return null
+        return Strategy(
+            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: "",
+            fastKill = matrixControlOption.fastKill,
+            maxParallel = matrixControlOption.maxConcurrency
+        )
     }
 
     private fun getV2StepFromJob(
