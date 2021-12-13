@@ -496,7 +496,7 @@ func (m *mysql) CreateOrUpdateProjectSetting(
 	}
 
 	if err := m.db.Model(&TableProjectSetting{}).Updates(projectSettingRaw).Error; err != nil {
-		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", projectID, err)
+		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", EngineName, projectID, err)
 		return err
 	}
 
@@ -672,7 +672,7 @@ func (m *mysql) UpdateWorker(version, scene string, worker map[string]interface{
 
 	if err := m.db.Model(&TableWorker{}).Where("worker_version = ?", version).
 		Where("scene = ?", scene).Updates(worker).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update worker(%s)(%+v) failed: %v", version, worker, err)
+		blog.Errorf("engine(%s) mysql update worker(%s)(%+v) failed: %v", EngineName, version, worker, err)
 		return err
 	}
 
@@ -732,13 +732,13 @@ func (m *mysql) GetWorkStats(id int) (*TableWorkStats, error) {
 	opts.Equal("id", id)
 	tl, _, err := m.ListWorkStats(opts)
 	if err != nil {
-		blog.Errorf("engine(%s) mysql get work stats(%s) failed: %v", EngineName, id, err)
+		blog.Errorf("engine(%s) mysql get work stats(%d) failed: %v", EngineName, id, err)
 		return nil, err
 	}
 
 	if len(tl) < 1 {
 		err = fmt.Errorf("work stats no found")
-		blog.Errorf("engine(%s) mysql get work stats(%s) failed: %v", EngineName, id, err)
+		blog.Errorf("engine(%s) mysql get work stats(%d) failed: %v", EngineName, id, err)
 		return nil, err
 	}
 
@@ -750,7 +750,7 @@ func (m *mysql) PutWorkStats(stats *TableWorkStats) error {
 	defer timeMetricRecord("put_work_stats")()
 
 	if err := m.db.Model(&TableWorkStats{}).Save(stats).Error; err != nil {
-		blog.Errorf("engine(%s) mysql put work stats(%s) failed: %v", EngineName, stats.ID, err)
+		blog.Errorf("engine(%s) mysql put work stats(%d) failed: %v", EngineName, stats.ID, err)
 		return err
 	}
 	return nil
@@ -763,7 +763,7 @@ func (m *mysql) UpdateWorkStats(id int, stats map[string]interface{}) error {
 	stats["disabled"] = false
 
 	if err := m.db.Model(&TableWorkStats{}).Where("id = ?", id).Updates(stats).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update work stats(%s)(%+v) failed: %v", EngineName, id, stats, err)
+		blog.Errorf("engine(%s) mysql update work stats(%d)(%+v) failed: %v", EngineName, id, stats, err)
 		return err
 	}
 
@@ -776,7 +776,7 @@ func (m *mysql) DeleteWorkStats(id int) error {
 
 	if err := m.db.Model(&TableWorkStats{}).Where("id = ?", id).
 		Update("disabled", true).Error; err != nil {
-		blog.Errorf("engine(%s) mysql delete work stats(%s) failed: %v", EngineName, id, err)
+		blog.Errorf("engine(%s) mysql delete work stats(%d) failed: %v", EngineName, id, err)
 		return err
 	}
 	return nil

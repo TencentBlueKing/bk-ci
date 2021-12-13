@@ -477,7 +477,7 @@ func (m *mysql) CreateOrUpdateProjectSetting(
 	}
 
 	if err := m.db.Model(&TableProjectSetting{}).Updates(projectSettingRaw).Error; err != nil {
-		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", projectID, err)
+		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", EngineName, projectID, err)
 		return err
 	}
 

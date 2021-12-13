@@ -536,7 +536,7 @@ func (m *mysql) CreateOrUpdateProjectSetting(
 	}
 
 	if err := m.db.Model(&TableProjectSetting{}).Updates(projectSettingRaw).Error; err != nil {
-		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", projectID, err)
+		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", EngineName, projectID, err)
 		return err
 	}
 
@@ -739,7 +739,7 @@ func (m *mysql) UpdateClusterSetting(clusterID string, clusterSetting map[string
 	if err := m.db.Model(&TableClusterSetting{}).Where("cluster = ?", clusterID).
 		Updates(clusterSetting).Error; err != nil {
 		blog.Errorf("engine(%s) mysql update cluster(%s) setting(%+v) failed: %v",
-			clusterID, clusterSetting, err)
+			EngineName, clusterID, clusterSetting, err)
 		return err
 	}
 

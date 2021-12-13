@@ -477,7 +477,7 @@ func (m *mysql) CreateOrUpdateProjectSetting(
 	}
 
 	if err := m.db.Model(&TableProjectSetting{}).Updates(projectSettingRaw).Error; err != nil {
-		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", projectID, err)
+		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", EngineName, projectID, err)
 		return err
 	}
 
@@ -651,7 +651,7 @@ func (m *mysql) UpdateGcc(gccVersion string, gcc map[string]interface{}) error {
 	gcc["disabled"] = false
 
 	if err := m.db.Model(&TableGcc{}).Where("gcc_version = ?", gccVersion).Updates(gcc).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update gcc(%s)(%+v) failed: %v", gccVersion, gcc, err)
+		blog.Errorf("engine(%s) mysql update gcc(%s)(%+v) failed: %v", EngineName, gccVersion, gcc, err)
 		return err
 	}
 

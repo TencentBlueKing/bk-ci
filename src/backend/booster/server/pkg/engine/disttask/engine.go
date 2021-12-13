@@ -490,7 +490,7 @@ func (de *disttaskEngine) launchDirectTask(task *distTask, tb *engine.TaskBasic,
 	resources, err := de.directMgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching direct task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 
