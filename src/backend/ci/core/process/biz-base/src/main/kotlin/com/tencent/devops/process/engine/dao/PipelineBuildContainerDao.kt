@@ -244,12 +244,16 @@ class PipelineBuildContainerDao {
     fun listByBuildId(
         dslContext: DSLContext,
         buildId: String,
-        stageId: String? = null
+        stageId: String? = null,
+        containsMatrix: Boolean? = true
     ): Collection<TPipelineBuildContainerRecord> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
+            }
+            if (containsMatrix == false) {
+                conditionStep.and(MATRIX_GROUP_ID.isNull))
             }
             conditionStep.orderBy(SEQ.asc()).fetch()
         }
