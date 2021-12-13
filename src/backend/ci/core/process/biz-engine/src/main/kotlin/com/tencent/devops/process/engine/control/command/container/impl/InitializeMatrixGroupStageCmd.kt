@@ -414,7 +414,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        this.strategy.forEach { (key, valueList) ->
+        this.strategy!!.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -422,7 +422,7 @@ class InitializeMatrixGroupStageCmd(
         }
 
         // 打印追加参数
-        if (this.include.isNotEmpty()) {
+        if (this.include!!.isNotEmpty()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -435,11 +435,11 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include!!)
         }
 
         // 打印排除参数
-        if (this.exclude.isNotEmpty()) {
+        if (this.exclude!!.isNotEmpty()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -452,7 +452,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude!!)
         }
 
         // 打印最终结果
