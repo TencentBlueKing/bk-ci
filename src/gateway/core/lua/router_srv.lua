@@ -84,3 +84,11 @@ if target == nil then
 end
 
 ngx.var.target = target
+
+-- 特殊逻辑
+if(config.artifactory.realm == "local")
+    then
+       ngx.var.url_prefix = "http://"..ngx.var.target.."/resource/bk-plugin-fe/"
+    else
+       ngx.var.url_prefix = "http://"..config.bkrepo.domain.."/generic/bk-store/static/"
+end

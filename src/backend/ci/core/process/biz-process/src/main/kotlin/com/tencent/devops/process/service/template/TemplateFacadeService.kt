@@ -443,11 +443,23 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE,
+                defaultMessage = "来自研发商店的模板无法进行更新"
+            )
+        }
         var version: Long = 0
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
+            pipelineSettingDao.updateSetting(
+                dslContext = context,
+                pipelineId = templateId,
+                name = template.name,
+                desc = template.desc ?: ""
+            )
             version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
