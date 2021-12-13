@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class ProjectTagService @Autowired constructor(
@@ -72,6 +74,10 @@ class ProjectTagService @Autowired constructor(
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
+    private val projectRouterCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(2, TimeUnit.MINUTES)
+        .build<String/*projectId*/, String>/*routerTag*/()
 
     fun updateTagByProject(
         projectTagUpdateDTO: ProjectTagUpdateDTO
@@ -278,14 +284,25 @@ class ProjectTagService @Autowired constructor(
 
     // 判断当前项目流量与当前集群匹配
     fun checkProjectTag(projectId: String): Boolean {
-        // 优先走缓存
-        if (redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId) != null) {
-            return projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
+        // 因定时任务请求量太大,为减小redis压力,优先match内存缓存。 内存数据可能与实际数据存在差异。失败继续做redis校验
+        if (projectRouterCache.getIfPresent(projectId) != null) {
+            val cacheCheck = projectClusterCheck(projectRouterCache.getIfPresent(projectId))
+            if (cacheCheck) {
+                return cacheCheck
+            }
         }
+
+        // 内存缓存校验失败, 走redis。 redis数据与db基本保持一致,仅redis击穿后再查db。 redis校验结果具备判断权,校验失败直接返回
+        if (redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId) != null) {
+            val redisCheck = projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
+            projectRouterCache.put(projectId, redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)!!)
+            return redisCheck
+        }
+        // 直接从db获取
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
         logger.info("refreshRouterByProject $projectId|${projectInfo.routerTag}| by checkProjectTag")
-        // 请求源大量来自定时任务, 刷新缓存
-        refreshRouterByProject(projectInfo.routerTag ?: "", arrayListOf(projectId), redisOperation)
+        // 刷新内存缓存。 网关根据redis的值做判断依据。 此处不额外更新redis. 减少redis自动操作。
+        projectRouterCache.put(projectId, projectInfo.routerTag ?: "")
 
         return projectClusterCheck(projectInfo.routerTag)
     }
