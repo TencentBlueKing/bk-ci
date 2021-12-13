@@ -92,8 +92,12 @@ class PipelineContainerService @Autowired constructor(
         return null
     }
 
-    fun listContainers(buildId: String, stageId: String? = null): List<PipelineBuildContainer> {
-        val list = pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
+    fun listContainers(
+        buildId: String,
+        stageId: String? = null,
+        containsMatrix: Boolean? = true
+    ): List<PipelineBuildContainer> {
+        val list = pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId, containsMatrix)
         val result = mutableListOf<PipelineBuildContainer>()
         if (list.isNotEmpty()) {
             list.forEach {

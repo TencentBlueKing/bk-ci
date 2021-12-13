@@ -112,7 +112,7 @@ class StageControl @Autowired constructor(
                 return
             }
         val variables = buildVariableService.getAllVariable(buildId)
-        val containers = pipelineContainerService.listContainers(buildId, stageId)
+        val containers = pipelineContainerService.listContainers(buildId, stageId, false)
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
