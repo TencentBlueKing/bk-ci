@@ -755,7 +755,7 @@ class PipelineContainerService @Autowired constructor(
                 status = status,
                 taskParams = atomElement.genTaskParams(),
                 additionalOptions = atomElement.additionalOptions,
-                executeCount = 1,
+                executeCount = container.executeCount,
                 starter = userId,
                 approver = null,
                 subProjectId = null,

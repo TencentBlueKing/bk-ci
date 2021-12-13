@@ -77,7 +77,7 @@ class MatrixExecuteContainerCmd(
         val groupStatus = try {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix loop(${parentContainer.containerId}) judge containers",
+                message = "Matrix status loop: ${commandContext.buildStatus}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
                 executeCount = commandContext.executeCount
@@ -86,7 +86,7 @@ class MatrixExecuteContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix loop(${parentContainer.containerId}) judge containers " +
+                message = "Matrix status loop: ${commandContext.buildStatus} with " +
                     "error: ${ignore.message}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
