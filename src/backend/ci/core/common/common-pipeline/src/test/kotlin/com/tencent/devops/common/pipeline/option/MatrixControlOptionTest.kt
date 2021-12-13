@@ -554,4 +554,125 @@ internal class MatrixControlOptionTest {
         }
         Assert.assertEquals(contextCase.size, 2)
     }
+
+    @Test
+    fun calculateValueMatrixJson2() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+                    {
+                        "exclude": [
+                            {
+                                "os": "docker",
+                                "var1": "b",
+                                "var2": 3
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "c",
+                                "var2": 2
+                            }
+                        ]
+                    }
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 1)
+    }
+
+    @Test
+    fun calculateValueMatrixJson3() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3-2= 16
+            strategyStr = """
+                    {
+                        "exclude": [
+                            {
+                                "os": "docker",
+                                "var1": "b",
+                                "var2": 3
+                            },
+                            {
+                                "os": "macos",
+                                "var1": "c",
+                                "var2": 2
+                            }
+                        ],
+                        "strategy": {
+                            "os": [
+                                "docker",
+                                "macos"
+                            ],
+                            "var1": [
+                                "a",
+                                "b",
+                                "c"
+                            ],
+                            "var2": [
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    }
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // +1
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "d",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 16)
+    }
 }
