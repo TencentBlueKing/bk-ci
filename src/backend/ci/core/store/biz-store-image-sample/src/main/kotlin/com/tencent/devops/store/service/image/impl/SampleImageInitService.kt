@@ -136,7 +136,7 @@ class SampleImageInitService @Autowired constructor(
                 summary = imageInitRequest?.summary ?: "CI basic image based on tlinux2.2",
                 description = imageInitRequest?.description ?: "Docker public build machine base image",
                 logoUrl = imageInitRequest?.logoUrl
-                    ?: "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png",
+                    ?: "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png&logo=true",
                 iconData = imageInitRequest?.iconData,
                 ticketId = ticketId,
                 imageSourceType = ImageType.THIRD,

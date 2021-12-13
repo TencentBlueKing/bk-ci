@@ -29,6 +29,7 @@ package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
@@ -143,6 +144,48 @@ class QualityRuleBuildHisDao @Autowired constructor(
             innerDslContext.update(this)
                 .set(GATE_KEEPERS, gateKeepers)
                 .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun updateIndicatorThreshold(ruleBuildId: Long, indicatorThreshold: String): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(INDICATOR_THRESHOLDS, indicatorThreshold)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun listTimeOutRuleCount(dslContext: DSLContext, dateTime: LocalDateTime): Int? {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectCount().from(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun listTimeoutRule(
+        dslContext: DSLContext,
+        dateTime: LocalDateTime,
+        limit: Int,
+        offset: Int
+    ): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
+                .and(CREATE_TIME.lt(dateTime))
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateTimeoutRuleStatus(ruleBuildIds: Collection<Long>): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, RuleInterceptResult.INTERCEPT.name)
+                .where(ID.`in`(ruleBuildIds))
                 .execute()
         }
     }

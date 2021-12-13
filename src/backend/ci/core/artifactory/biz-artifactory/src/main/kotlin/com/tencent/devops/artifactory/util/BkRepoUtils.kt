@@ -43,11 +43,14 @@ import java.time.format.DateTimeFormatter
 object BkRepoUtils {
     const val BKREPO_DEFAULT_USER = "admin"
     const val BKREPO_DEVOPS_PROJECT_ID = "devops"
+    const val BKREPO_STORE_PROJECT_ID = "bk-store"
     const val BKREPO_COMMOM_REPO = "common"
 
     const val REPO_NAME_PIPELINE = "pipeline"
     const val REPO_NAME_CUSTOM = "custom"
     const val REPO_NAME_REPORT = "report"
+    const val REPO_NAME_PLUGIN = "plugin"
+    const val REPO_NAME_STATIC = "static"
 
     fun parseArtifactoryInfo(path: String): ArtifactInfo {
         val normalizedPath = path.trim().removePrefix("/").removePrefix("./")
@@ -61,7 +64,13 @@ object BkRepoUtils {
     }
 
     private fun checkRepoName(repoName: String): String {
-        if (repoName != REPO_NAME_PIPELINE && repoName != REPO_NAME_CUSTOM && repoName != REPO_NAME_REPORT) {
+        val validateRepoName =
+            repoName == REPO_NAME_PIPELINE ||
+                repoName == REPO_NAME_CUSTOM ||
+                repoName == REPO_NAME_REPORT ||
+                repoName == REPO_NAME_PLUGIN ||
+                repoName == REPO_NAME_STATIC
+        if (!validateRepoName) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("repoName"))
         }
         return repoName
