@@ -162,7 +162,7 @@ func (pc *projectCalculator) calculate(wg *sync.WaitGroup) {
 	if suggestCPU < oldCPU {
 		// last suggestion has not been accepted
 		if project.SuggestCPU != 0 && project.RequestCPU != project.SuggestCPU {
-			blog.Infof("strategy: project(%s) current(%.0f) is suggested down: %d -> %d, " +
+			blog.Infof("strategy: project(%s) current(%.0f) is suggested down: %d -> %d, "+
 				"but last suggestion is not accepted yet, skip", pc.projectID, project.RequestCPU, oldCPU, suggestCPU)
 			return
 		}
@@ -170,7 +170,7 @@ func (pc *projectCalculator) calculate(wg *sync.WaitGroup) {
 		// still in the period under observation
 		lastAccept := time.Unix(project.AcceptedTime, 0)
 		if lastAccept.Add(types.LastSuggestionAcceptedTimeGap).After(time.Now()) {
-			blog.Infof("strategy: project(%s) current(%.0f) is suggested down: %d -> %d, " +
+			blog.Infof("strategy: project(%s) current(%.0f) is suggested down: %d -> %d, "+
 				"but it is still under observation from last accept time %s, skip",
 				pc.projectID, project.RequestCPU, oldCPU, suggestCPU, lastAccept.String())
 			return
@@ -223,13 +223,13 @@ func (pc *projectCalculator) getTaskMaxJobs(requestCPU float64) (maxJobs int64) 
 	opts.Gt(types.ListKeyCreateTime, time.Now().Unix()-lastSeconds)
 	taskList, length, err := pc.ops.ListTask(opts)
 	if err != nil {
-		blog.Errorf("strategy: list tasks of project(%s) by duration failed: %v", pc.projectID)
+		blog.Errorf("strategy: list tasks of project(%s) by duration failed: %v", pc.projectID, err)
 		return
 	}
 
 	// if the length of the tasks listed by duration is less than required, then just list tasks by required num.
 	if length < int64(limit) {
-		blog.Infof("strategy: list tasks of project(%s) by duration and it's less than required(%d < %d), " +
+		blog.Infof("strategy: list tasks of project(%s) by duration and it's less than required(%d < %d), "+
 			"will list again by times", pc.projectID, length, limit)
 		opts := store.NewListOptions()
 		opts.Select([]string{types.ListKeyMaxJobs, types.ListKeyCPUTotal})

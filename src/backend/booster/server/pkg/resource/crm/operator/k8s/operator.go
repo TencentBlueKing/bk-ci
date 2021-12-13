@@ -259,7 +259,7 @@ func (o *operator) getDeployments(clusterID, namespace, name string, info *op.Se
 	deploy, err := client.clientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metaV1.GetOptions{})
 	if err != nil {
 		blog.Errorf("k8s-operator: get deployment clusterID(%s) namespace(%s) name(%s) failed: %v",
-			namespace, name, err)
+			clusterID, namespace, name, err)
 		return err
 	}
 

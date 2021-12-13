@@ -204,7 +204,7 @@ func (t *tracker) isFinishStarting(taskID string, egn engine.Engine) bool {
 	tb.Status.Message = messageTaskRunning
 	blog.Infof("tracker: task(%s) is ready at start_time(%s)", taskID, tb.Status.StartTime.String())
 	if err = t.layer.UpdateTaskBasic(tb); err != nil {
-		blog.Errorf("tracker: set task running and update basic task failed: %v", taskID, err)
+		blog.Errorf("tracker: set task(%s) running and update basic task failed: %v", taskID, err)
 		return false
 	}
 	blog.Infof("tracker: task(%s) is running successfully", taskID)
