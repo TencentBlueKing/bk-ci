@@ -289,6 +289,9 @@ class ProjectTagService @Autowired constructor(
             val cacheCheck = projectClusterCheck(projectRouterCache.getIfPresent(projectId))
             if (cacheCheck) {
                 return cacheCheck
+            } else if (projectRouterCache.getIfPresent(projectId).isNullOrBlank()) {
+                // 如果缓存内的为"",说明项目没有配置路由信息。 缓存校验生效
+                return cacheCheck
             }
         }
 
