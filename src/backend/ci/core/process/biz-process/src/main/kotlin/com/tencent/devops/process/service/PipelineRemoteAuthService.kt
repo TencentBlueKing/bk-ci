@@ -29,11 +29,13 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
@@ -51,7 +53,8 @@ class PipelineRemoteAuthService @Autowired constructor(
     private val pipelineRemoteAuthDao: PipelineRemoteAuthDao,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineReportService: PipelineRepositoryService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
@@ -92,20 +95,29 @@ class PipelineRemoteAuthService @Autowired constructor(
         }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
-        return BuildId(
-            pipelineBuildFacadeService.buildManualStartup(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
-                startType = StartType.REMOTE,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
                 values = values,
                 channelCode = ChannelCode.BS,
-                checkPermission = true,
-                isMobile = false,
-                startByMessage = "m-$auth",
-                frequencyLimit = true
-            )
-        )
+                startType = StartType.REMOTE,
+                buildNo = null
+            ).data!!
+//        return BuildId(
+//            pipelineBuildFacadeService.buildManualStartup(
+//                userId = userId!!,
+//                startType = StartType.REMOTE,
+//                projectId = pipeline.projectId,
+//                pipelineId = pipeline.pipelineId,
+//                values = values,
+//                channelCode = ChannelCode.BS,
+//                checkPermission = true,
+//                isMobile = false,
+//                startByMessage = "m-$auth",
+//                frequencyLimit = true
+//            )
+//        )
     }
 
     companion object {
