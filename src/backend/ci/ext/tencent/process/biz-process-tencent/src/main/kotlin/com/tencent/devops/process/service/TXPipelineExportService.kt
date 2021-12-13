@@ -660,7 +660,7 @@ class TXPipelineExportService @Autowired constructor(
         if (matrixControlOption == null)
             return null
         return Strategy(
-            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: "",
+            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: return null,
             fastKill = matrixControlOption.fastKill,
             maxParallel = matrixControlOption.maxConcurrency
         )
