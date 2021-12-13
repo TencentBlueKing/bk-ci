@@ -43,4 +43,5 @@ object Versions {
     const val Jolokia = "1.6.0"
     const val InfluxDB = "2.10"
     const val Caffeine = "2.8.8"
+    const val log4jVersion = "2.15.0"
 }

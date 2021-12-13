@@ -154,6 +154,9 @@ subprojects {
             dependency("com.tencent.devops.ci-plugins:sigar:${Versions.Sigar}")
             dependency("org.influxdb:influxdb-java:${Versions.InfluxDB}")
             dependency("com.github.ben-manes.caffeine:caffeine:${Versions.Caffeine}")
+            dependency("com.github.ben-manes.caffeine:caffeine:${Versions.Caffeine}")
+            dependency("org.apache.logging.log4j:log4j-core:${Versions.log4jVersion}")
+            dependency("org.apache.logging.log4j:log4j-api:${Versions.log4jVersion}")
 
             dependencySet("org.springframework.cloud:${Versions.SpringConsul}") {
                 entry("spring-cloud-starter-consul-discovery")
