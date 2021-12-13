@@ -1,10 +1,4 @@
---- lua-resty-jwt
--- lua-resty-jwt - JWT for ngx_lua and LuaJIT
--- @module lua-resty-jwt
--- @releas 0.1.10
--- forked by https://github.com/SkyLothar/lua-resty-jwt/blob/master/lib/resty/jwt-validators.lua
-
-local _M = {_VERSION="0.1.5"}
+local _M = { _VERSION = "0.2.3" }
 
 --[[
   This file defines "validators" to be used in validating a spec.  A "validator" is simply a function with
