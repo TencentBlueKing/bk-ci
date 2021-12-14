@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
-import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -170,7 +169,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val envList = mutableListOf<BuildEnv>()
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-                            fillContainerContext(contextMap, c.customBuildEnv)
+                            fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
@@ -181,7 +180,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         is NormalContainer -> {
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-                            fillContainerContext(contextMap, c.customBuildEnv)
+                            fillContainerContext(contextMap, null, c.matrixContext)
                             Triple(mutableListOf(), contextMap, timeoutMills)
                         }
                         else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
@@ -222,15 +221,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 对[customBuildEnv]的占位符进行替换，之后再塞入加入构建机容器的上下文[context]，同时追加了构建矩阵上下文
      */
-    private fun fillContainerContext(context: MutableMap<String, String>, customBuildEnv: Map<String, String>?) {
-        context.putAll(customBuildEnv?.map { mit ->
-            val contextKey = if (mit.key.startsWith(MATRIX_CONTEXT_KEY_PREFIX)) {
-                mit.key
-            } else {
-                "$ENV_CONTEXT_KEY_PREFIX${mit.key}"
-            }
-            contextKey to EnvUtils.parseEnv(mit.value, context)
-        }?.toMap() ?: emptyMap())
+    private fun fillContainerContext(
+        context: MutableMap<String, String>,
+        customBuildEnv: Map<String, String>?,
+        matrixContext: Map<String, String>?
+    ) {
+        if (!customBuildEnv.isNullOrEmpty()) {
+            context.putAll(customBuildEnv.map { mit ->
+                "$ENV_CONTEXT_KEY_PREFIX${mit.key}" to EnvUtils.parseEnv(mit.value, context)
+            }.toMap())
+        }
+        if (!matrixContext.isNullOrEmpty()) context.putAll(matrixContext)
     }
 
     fun setStartUpVMStatus(

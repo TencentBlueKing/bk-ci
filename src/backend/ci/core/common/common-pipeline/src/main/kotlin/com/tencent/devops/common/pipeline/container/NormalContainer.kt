@@ -82,8 +82,6 @@ data class NormalContainer(
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
     override var matrixGroupFlag: Boolean? = false,
-    @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>? = null,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
     @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
