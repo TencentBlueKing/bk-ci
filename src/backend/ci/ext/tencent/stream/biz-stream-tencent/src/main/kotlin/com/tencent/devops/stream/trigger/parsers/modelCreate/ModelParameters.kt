@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -60,34 +60,37 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_CI_RUN
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @Suppress("ComplexMethod")
 object ModelParameters {
+
+    private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
 
     fun createPipelineParams(
         yaml: ScriptBuildYaml,
         gitBasicSetting: GitCIBasicSetting,
         event: GitRequestEvent,
         v2GitUrl: String?,
-        originEvent: GitEvent?
+        originEvent: GitEvent?,
+        webhookParams: Map<String, String> = mapOf()
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -147,7 +150,7 @@ object ModelParameters {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
                 }
                 // TODO 工蜂暂时未提供tag message字段，待支持后再增加
-//                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
+                //                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
                 if (!originEvent.create_from.isNullOrBlank()) {
                     startParams[PIPELINE_GIT_TAG_FROM] = originEvent.create_from!!
                 }
@@ -186,6 +189,7 @@ object ModelParameters {
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commitAuthorName ?: ""
                     TGitObjectKind.SCHEDULE.value
                 } else {
                     startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
@@ -213,8 +217,6 @@ object ModelParameters {
         startParams[PIPELINE_GIT_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
-        // startParams.putAll(yaml.variables ?: mapOf())
-        // putVariables2StartParams(yaml, gitBasicSetting, startParams)
         val buildFormProperties = if (originEvent is GitPushEvent) {
             getBuildFormPropertyFromYmlVariable(
                 // 根据 push options 参数改变variables的值
@@ -224,6 +226,7 @@ object ModelParameters {
         } else {
             getBuildFormPropertyFromYmlVariable(yaml.variables, startParams)
         }
+        startParams.putAll(webhookParams)
 
         startParams.forEach {
             result.add(
@@ -278,6 +281,7 @@ object ModelParameters {
         return buildFormProperties
     }
 
+    // git push -o ci.variable::<name>="<value>" -o ci.variable::<name>="<value>"
     private fun replaceVariablesByPushOptions(
         variables: Map<String, Variable>?,
         pushOptions: Map<String, String>?
@@ -285,11 +289,14 @@ object ModelParameters {
         if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
             return variables
         }
+        val variablesOptionsKeys = pushOptions.keys.filter { it.startsWith(PUSH_OPTIONS_PREFIX) }
+            .map { it.removePrefix(PUSH_OPTIONS_PREFIX) }
+
         val result = variables.toMutableMap()
         variables.forEach { (key, value) ->
-            if (key in pushOptions.keys) {
+            if (key in variablesOptionsKeys) {
                 result[key] = Variable(
-                    value = pushOptions[key],
+                    value = pushOptions["$PUSH_OPTIONS_PREFIX$key"],
                     readonly = value.readonly
                 )
             }

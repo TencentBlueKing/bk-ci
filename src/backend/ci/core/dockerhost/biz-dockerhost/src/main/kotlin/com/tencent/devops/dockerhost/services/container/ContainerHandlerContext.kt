@@ -27,12 +27,14 @@ data class ContainerHandlerContext(
     override val buildId: String,
     override val vmSeqId: Int,
     override val poolNo: Int,
-    override val userName: String
+    override val userName: String,
+    override val pipelineTaskId: String? = null
 ) : HandlerContext(
     projectId = projectId,
     pipelineId = pipelineId,
     buildId = buildId,
     vmSeqId = vmSeqId,
     poolNo = poolNo,
-    userName = userName
+    userName = userName,
+    pipelineTaskId = pipelineTaskId
 )

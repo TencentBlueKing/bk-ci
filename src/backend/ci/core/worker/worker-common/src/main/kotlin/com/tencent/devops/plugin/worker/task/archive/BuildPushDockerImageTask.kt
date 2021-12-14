@@ -39,7 +39,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv.isDockerEnv
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -56,7 +56,7 @@ import java.io.File
 @Suppress("ALL")
 class BuildPushDockerImageTask : ITask() {
 
-    private val api = ApiFactory.create(ArchiveSDKApi::class)
+    private val api = ArtifactApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()

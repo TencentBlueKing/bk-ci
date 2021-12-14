@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.api.ServiceP4Resource
@@ -28,6 +29,36 @@ class TencentP4Service(
         repositoryType: RepositoryType?,
         change: Int
     ): List<P4FileSpec> {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return client.getScm(ServiceP4Resource::class).getChangelistFiles(
+            p4Port = repository.url,
+            username = username,
+            password = password,
+            change = change
+        ).data!!
+    }
+
+    override fun getShelvedFiles(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): List<P4FileSpec> {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return client.getScm(ServiceP4Resource::class).getShelvedFiles(
+            p4Port = repository.url,
+            username = username,
+            password = password,
+            change = change
+        ).data!!
+    }
+
+    @SuppressWarnings("ThrowsCount")
+    private fun getRepositoryInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): Triple<Repository, String, String> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
@@ -60,11 +91,6 @@ class TencentP4Service(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
             )
         }
-        return client.getScm(ServiceP4Resource::class).getChangelistFiles(
-            p4Port = repository.url,
-            username = username,
-            password = password,
-            change = change
-        ).data!!
+        return Triple(repository, username, password)
     }
 }

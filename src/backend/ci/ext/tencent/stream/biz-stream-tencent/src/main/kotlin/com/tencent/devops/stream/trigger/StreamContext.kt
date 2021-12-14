@@ -2,7 +2,7 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 // TODO:  统一的上下文参数，除了消息队列，逐步替代stream触发中的所有参数传递对象
