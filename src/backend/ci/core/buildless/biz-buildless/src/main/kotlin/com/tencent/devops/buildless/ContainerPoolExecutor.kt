@@ -36,7 +36,8 @@ class ContainerPoolExecutor @Autowired constructor(
 
             // FOLLOW或JUMP策略下，尝试创建超载容器
             if (rejectedExecutionType == RejectedExecutionType.FOLLOW_POLICY ||
-                    rejectedExecutionType == RejectedExecutionType.JUMP_POLICY) {
+                rejectedExecutionType == RejectedExecutionType.JUMP_POLICY
+            ) {
                 addContainer(true)
             }
 
