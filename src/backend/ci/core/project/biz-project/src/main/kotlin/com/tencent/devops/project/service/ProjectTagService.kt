@@ -303,7 +303,7 @@ class ProjectTagService @Autowired constructor(
         }
         // 直接从db获取
         val projectInfo = projectService.getByEnglishName(projectId) ?: return false
-        logger.info("refreshRouterByProject $projectId|${projectInfo.routerTag}| by checkProjectTag")
+        logger.info("refresh router cache $projectId|${projectInfo.routerTag}| by checkProjectTag")
         // 刷新内存缓存。 网关根据redis的值做判断依据。 此处不额外更新redis. 减少redis自动操作。
         projectRouterCache.put(projectId, projectInfo.routerTag ?: "")
 
