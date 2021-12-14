@@ -25,45 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.utils
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import org.junit.Assert
+import org.junit.Test
 
-@ApiModel("渠道代码")
-enum class ChannelCode {
-    @ApiModelProperty("蓝鲸持续集成平台")
-    BS,
-    @ApiModelProperty("蓝鲸流水线插件市场")
-    AM,
-    @ApiModelProperty("蓝鲸代码检查平台")
-    CODECC,
-    @ApiModelProperty("GCloud")
-    GCLOUD,
-    @ApiModelProperty("工蜂")
-    GIT,
-    @ApiModelProperty("开源扫描")
-    GONGFENGSCAN,
-    @ApiModelProperty("codecc回迁")
-    CODECC_EE;
+class ChannelCodeTest {
 
-    companion object {
-        // Only BS need to check the authentication for now
-        fun isNeedAuth(channelCode: ChannelCode) =
-                channelCode == BS
+    @Test
+    fun channelCodeTest() {
+        val bs = "BS"
+        val channelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(channelCode, ChannelCode.BS)
+    }
 
-        // 页面可见channel
-        fun webChannel(channelCode: ChannelCode): Boolean {
-            return channelCode == BS || channelCode == GIT
-        }
+    @Test
+    fun webTest() {
+        val bs = "BS"
+        val bsChannelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(true, ChannelCode.webChannel(bsChannelCode!!))
 
-        fun getChannel(channel: String): ChannelCode? {
-            values().forEach {
-                if (it.name == channel) {
-                    return it
-                }
-            }
-            return null
-        }
+        val codecc = "CODECC_EE"
+        val codeccChannelCode = ChannelCode.getChannel(codecc)
+        Assert.assertEquals(false, ChannelCode.webChannel(codeccChannelCode!!))
     }
 }
