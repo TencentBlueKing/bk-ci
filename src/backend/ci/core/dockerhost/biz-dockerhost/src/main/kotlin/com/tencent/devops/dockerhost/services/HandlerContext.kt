@@ -27,11 +27,16 @@
 
 package com.tencent.devops.dockerhost.services
 
+import com.tencent.devops.process.engine.common.VMUtils
+
 open class HandlerContext(
     open val projectId: String,
     open val pipelineId: String,
     open val buildId: String,
     open val vmSeqId: Int,
     open val poolNo: Int,
-    open val userName: String
-)
+    open val userName: String,
+    open val pipelineTaskId: String? = VMUtils.genStartVMTaskId(vmSeqId.toString())
+) {
+    fun taskId(): String = pipelineTaskId?.takeIf { it.isNotBlank() } ?: VMUtils.genStartVMTaskId(vmSeqId.toString())
+}
