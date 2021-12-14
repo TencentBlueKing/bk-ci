@@ -46,15 +46,9 @@
                 type: String,
                 require: true
             },
-            name: {
-                type: String
-            },
-            currentTab: {
-                type: String
-            },
-            qualityData: {
-                type: Array
-            },
+            name: String,
+            currentTab: String,
+            qualityData: Array,
             getDataFunc: {
                 type: Function,
                 default: null

@@ -58,33 +58,8 @@
                 return {
                     atom: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
-                        {
-                            componentName: 'codeSection',
-                            label: this.$t('store.YAMLV1'),
-                            name: 'YAML',
-                            bindData: {
-                                code: this.detail.codeSection,
-                                limitHeight: false,
-                                name: 'YAML',
-                                currentTab: this.currentTab,
-                                getDataFunc: this.getAtomYaml
-                            },
-                            hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag)
-                        },
-                        {
-                            componentName: 'yamlDetail',
-                            label: this.$t('store.YAMLV2'),
-                            name: 'YAMLV2',
-                            bindData: {
-                                code: this.detail.codeSectionV2,
-                                limitHeight: false,
-                                name: 'YAMLV2',
-                                currentTab: this.currentTab,
-                                getDataFunc: this.getAtomYamlV2,
-                                qualityData: this.detail.qualityData
-                            },
-                            hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag)
-                        }
+                        { componentName: 'codeSection', label: this.$t('store.YAMLV1'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false, name: 'YAML', currentTab: this.currentTab, getDataFunc: this.getAtomYaml }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
+                        { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2, qualityData: this.detail.qualityData }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
                     ],
                     template: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' }

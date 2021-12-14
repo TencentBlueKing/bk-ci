@@ -28,12 +28,8 @@
                 type: String,
                 require: true
             },
-            name: {
-                type: String
-            },
-            currentTab: {
-                type: String
-            },
+            name: String,
+            currentTab: String,
             getDataFunc: {
                 type: Function,
                 default: null
