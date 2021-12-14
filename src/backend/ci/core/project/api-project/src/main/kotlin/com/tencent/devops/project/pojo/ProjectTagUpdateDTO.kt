@@ -26,13 +26,30 @@
  *
  */
 
-package com.tencent.devops.common.client.consul
+package com.tencent.devops.project.pojo
 
-object ConsulConstants {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
-
-    const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
-
-    const val HEAD_CONSUL_TAG = "X-HEAD-CONSUL-TAG"
-}
+@ApiModel("项目consul tag修改入参")
+data class ProjectTagUpdateDTO(
+    @JsonProperty(value = "routerTag", required = true)
+    @ApiModelProperty("项目对应的router tags", name = "routerTag")
+    val routerTag: String,
+    @JsonProperty(value = "projectCodeList", required = false)
+    @ApiModelProperty("项目编码集合", name = "projectCodeList")
+    val projectCodeList: List<String>?,
+    @JsonProperty(value = "bgId", required = false)
+    @ApiModelProperty("BgId", name = "bgId")
+    val bgId: Long?,
+    @JsonProperty(value = "centerId", required = false)
+    @ApiModelProperty("centerId", name = "centerId")
+    val centerId: Long?,
+    @JsonProperty(value = "deptId", required = false)
+    @ApiModelProperty("deptId", name = "deptId")
+    val deptId: Long?,
+    @JsonProperty(value = "channel", required = false)
+    @ApiModelProperty("channel", name = "channel")
+    val channel: String?
+)
