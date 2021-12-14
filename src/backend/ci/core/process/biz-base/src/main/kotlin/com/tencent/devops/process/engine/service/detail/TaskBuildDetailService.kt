@@ -146,11 +146,10 @@ class TaskBuildDetailService(
                             e.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
-                            e.reviewUsers.forEach { reviewUser ->
+                            e.reviewUsers?.forEach { reviewUser ->
                                 list.addAll(buildVariableService.replaceTemplate(buildId, reviewUser).split(delimiters))
                             }
-                            e.reviewUsers.clear()
-                            e.reviewUsers.addAll(list)
+                            e.reviewUsers = list
                         } else if (e is QualityGateInElement || e is QualityGateOutElement ||
                             e.getTaskAtom() == QualityGateInElement.classType ||
                             e.getTaskAtom() == QualityGateOutElement.classType) {

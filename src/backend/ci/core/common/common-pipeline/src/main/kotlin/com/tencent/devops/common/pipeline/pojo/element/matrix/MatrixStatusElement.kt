@@ -49,7 +49,7 @@ data class MatrixStatusElement(
     var originClassType: String,
     // 当状态插件为质量红线插件是需要专门保存
     @ApiModelProperty("审核人", required = true)
-    var reviewUsers: MutableList<String> = mutableListOf(),
+    var reviewUsers: MutableList<String>? = null,
     @ApiModelProperty("拦截原子", required = false)
     var interceptTask: String? = null
 ) : Element(

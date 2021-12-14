@@ -427,7 +427,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        this.strategy!!.forEach { (key, valueList) ->
+        this.strategy?.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -448,7 +448,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include!!)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
         }
 
         // 打印排除参数
@@ -465,7 +465,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude!!)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
         }
 
         // 打印最终结果
@@ -506,9 +506,9 @@ class InitializeMatrixGroupStageCmd(
         taskId: String,
         containerHashId: String?,
         executeCount: Int,
-        cases: List<Map<String, String>>
+        cases: List<Map<String, String>>?
     ) {
-        cases.forEach { case ->
+        cases?.forEach { case ->
             var index = 0
             case.forEach { (key, value) ->
                 if (index++ == 0) buildLogPrinter.addLine(
