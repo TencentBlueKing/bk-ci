@@ -57,7 +57,6 @@
             ]),
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
-                console.log(name, value, this.matrixControlOption)
                 this.updateContainerParams('matrixControlOption',
                                            Object.assign(this.matrixControlOption || {}, { [name]: value })
                 )
