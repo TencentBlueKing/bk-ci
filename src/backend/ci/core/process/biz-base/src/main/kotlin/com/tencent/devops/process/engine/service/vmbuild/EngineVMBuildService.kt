@@ -387,9 +387,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     PIPELINE_ELEMENT_ID to task.taskId
                 )
 
-                buildVariable.putAll(extMap)
                 PipelineVarUtil.fillOldVar(buildVariable)
                 buildVariable.putAll(allVariable)
+                buildVariable.putAll(extMap)
 
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
@@ -657,7 +657,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
                     when (errorType) {
-                        ErrorType.USER -> "Please check your input or service."
+                        ErrorType.USER -> "Please check your input or service.\n" + "请检查：\n" +
+                            "1. 插件输出的错误日志。\n" +
+                            "2. 此编译流程在本地是否能正常执行。如果本地也执行失败，请检查是否脚本逻辑问题或代码变更导致。"
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."

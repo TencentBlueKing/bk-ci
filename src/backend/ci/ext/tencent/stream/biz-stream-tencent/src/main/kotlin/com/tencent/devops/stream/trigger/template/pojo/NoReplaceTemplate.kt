@@ -30,7 +30,6 @@ package com.tencent.devops.stream.trigger.template.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.ci.v2.Extends
-import com.tencent.devops.common.ci.v2.GitNotices
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.Resources
 
@@ -43,6 +42,5 @@ data class NoReplaceTemplate(
     var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
     var extends: Extends?,
-    var resources: Resources?,
-    var notices: List<GitNotices>?
+    var resources: Resources?
 )

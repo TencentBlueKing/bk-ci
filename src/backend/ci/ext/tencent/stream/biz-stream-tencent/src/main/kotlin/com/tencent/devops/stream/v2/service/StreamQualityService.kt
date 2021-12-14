@@ -30,13 +30,13 @@ package com.tencent.devops.stream.v2.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.stream.utils.ElementUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
+import com.tencent.devops.stream.listener.BuildEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -57,7 +57,8 @@ class StreamQualityService {
         client: Client,
         gitProjectId: Long,
         pipelineName: String,
-        event: PipelineBuildFinishBroadCastEvent
+        event: BuildEvent,
+        ruleIds: List<String>?
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         try {
             val projectId = event.projectId
@@ -66,7 +67,13 @@ class StreamQualityService {
 
             val titleData = listOf(
                 event.status,
-                DateTimeUtil.formatMilliTime(System.currentTimeMillis() - (event.startTime ?: 0L)),
+                if (event.startTime == null) {
+                    "--"
+                } else {
+                    DateTimeUtil.formatMilliTime(
+                        System.currentTimeMillis() - (event.startTime)
+                    )
+                },
                 CodeEventType.MERGE_REQUEST.name,
                 pipelineName,
                 GitCIPipelineUtils.genGitCIV2BuildUrl(
@@ -82,7 +89,12 @@ class StreamQualityService {
             // value：指标、预期、结果、状态
             val resultMap = mutableMapOf<String, MutableList<List<String>>>()
             client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId).data?.forEach { ruleIntercept ->
+                .listRuleHistory(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    ruleIds = ruleIds
+                ).data?.forEach { ruleIntercept ->
                     ruleIntercept.resultMsg.forEach { interceptItem ->
                         val indicator = client.get(ServiceQualityIndicatorResource::class)
                             .get(projectId, interceptItem.indicatorId).data
