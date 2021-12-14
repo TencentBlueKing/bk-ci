@@ -47,6 +47,7 @@ const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
 
 const val PIPELINE_NAME = "BK_CI_PIPELINE_NAME" // "pipeline.name"
 const val PIPELINE_ID = "BK_CI_PIPELINE_ID" // "pipeline.id"
+const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
