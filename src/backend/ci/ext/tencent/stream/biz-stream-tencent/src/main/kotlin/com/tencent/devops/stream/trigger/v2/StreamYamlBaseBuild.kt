@@ -164,7 +164,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         model: Model,
         gitBuildId: Long
     ): BuildId? {
-        //【ID92537607】 stream 流水线标签不生效
+        // 【ID92537607】 stream 流水线标签不生效
         client.get(UserPipelineGroupResource::class).updatePipelineLabel(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
