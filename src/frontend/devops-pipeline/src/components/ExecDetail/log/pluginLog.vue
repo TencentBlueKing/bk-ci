@@ -108,7 +108,6 @@
         },
 
         mounted () {
-            console.log(this.postData, 'data')
             this.getLog()
         },
 

@@ -88,9 +88,6 @@
                 return ''
             }
         },
-        created () {
-            console.log(this.stageIndex, this.containerIndex, this.containerGroupIndex, this.elementIndex, 'atomPanel')
-        },
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
