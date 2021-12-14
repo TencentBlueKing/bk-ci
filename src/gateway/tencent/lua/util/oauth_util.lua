@@ -66,14 +66,14 @@ function _M:get_ticket(bk_ticket)
             ngx.exit(401)
             return
         end
-        --- 判断返回的状态码是否是200
-        if res.status ~= 200 then
-            ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
-            ngx.exit(401)
-            return
-        end
         --- 获取所有回复
         local responseBody = res:read_body()
+        --- 判断返回的状态码是否是200
+        if res.status ~= 200 then
+            ngx.log(ngx.ERR, "failed to request get_ticket, status: ", res.status, " , responseBody : ",responseBody)
+            ngx.exit(res.status)
+            return
+        end
         --- 设置HTTP保持连接
         httpc:set_keepalive(60000, 5)
         --- 转换JSON的返回数据为TABLE
@@ -87,7 +87,7 @@ function _M:get_ticket(bk_ticket)
 
         --- 判断返回码:Q!
         if result.code ~= 0 then
-            ngx.log(ngx.STDERR, "invalid get_ticket: ", result.message)
+            ngx.log(ngx.WARN, "invalid get_ticket: ", result.message, " , bk_ticket : ", bk_ticket)
             ngx.exit(401)
             return
         end
@@ -112,7 +112,7 @@ function _M:get_prebuild_ticket(bk_ticket)
         local prebuild_ticket = nil
 
         if redRes == ngx.null then
-            ngx.log(ngx.STDERR, "no user info")
+            ngx.log(ngx.ERR, "no user info")
             --- 初始化HTTP连接
             local httpc = http.new()
             --- 开始连接
@@ -158,7 +158,7 @@ function _M:get_prebuild_ticket(bk_ticket)
             end
             --- 判断返回的状态码是否是200
             if res.status ~= 200 then
-                ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
+                ngx.log(ngx.ERR, "failed to request get_ticket, status: ", res.status)
                 ngx.exit(401)
                 return
             end
@@ -177,7 +177,7 @@ function _M:get_prebuild_ticket(bk_ticket)
 
             --- 判断返回码:Q!
             if result.code ~= 0 then
-                ngx.log(ngx.STDERR, "invalid get_ticket: ", result.message)
+                ngx.log(ngx.ERR, "invalid get_ticket: ", result.message)
                 ngx.exit(401)
                 return
             end
@@ -193,7 +193,7 @@ function _M:get_prebuild_ticket(bk_ticket)
         --- 将redis连接放回pool中
         local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not ok then
-            ngx.log(ngx.STDERR, "failed to set keepalive: ", err)
+            ngx.log(ngx.ERR, "failed to set keepalive: ", err)
         end
 
         return prebuild_ticket
@@ -236,7 +236,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.STDERR, "failed to request verfiy_permis, status: ", res.status)
+        ngx.log(ngx.ERR, "failed to request verfiy_permis, status: ", res.status)
         return false
     end
     --- 获取所有回复
@@ -253,7 +253,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
 
     --- 判断返回码
     if result.code ~= 0 then
-        ngx.log(ngx.STDERR, "invalid verfiy_permis: ", result.message)
+        ngx.log(ngx.ERR, "invalid verfiy_permis: ", result.message)
         return false
     end
     return true
@@ -273,18 +273,18 @@ function _M:verify_token(access_token)
     })
     --- 判断是否出错了
     if not res then
-        ngx.log(ngx.ERR, "failed to request verify_token: ", err)
-        ngx.exit(401)
-        return
-    end
-    --- 判断返回的状态码是否是200
-    if res.status ~= 200 then
-        ngx.log(ngx.STDERR, "failed to request verify_token, status: ", res.status)
-        ngx.exit(401)
+        ngx.log(ngx.WARN, "failed to request verify_token: ", err)
+        ngx.exit(500)
         return
     end
     --- 获取所有回复
     local responseBody = res:read_body()
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.WARN, "failed to request verify_token, status: ", res.status, " , responseBody: ", responseBody)
+        ngx.exit(res.status)
+        return
+    end
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
     --- 转换JSON的返回数据为TABLE
@@ -298,7 +298,7 @@ function _M:verify_token(access_token)
 
     --- 判断返回码:Q!
     if result.code ~= 0 then
-        ngx.log(ngx.STDERR, "invalid verify_token: ", result.message)
+        ngx.log(ngx.WARN, "invalid verify_token: ", result.message, " , access_token: ", access_token)
         ngx.exit(401)
         return
     end

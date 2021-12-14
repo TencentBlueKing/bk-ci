@@ -15,27 +15,33 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-local build_type = ngx.var.http_x_devops_build_type
-local cjson = require("cjson")
-ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 500,"data": "buildEnd","result":true,"message": "构建已结束。","errorCode":2101182}'
-if build_type == "AGENT" then
-    --- 第三方构建机
-    -- if build_type == "AGENT" then 
-    -- --- agentId + secretkey 验证
+_M = {}
+-- 校验第三方构建机
+--[[
+-- {
+--  "projectId": "projectId",
+--  "pipelineId": "pipelineId",
+--  "buildId": "buildId",
+--  "agentId": "agentId",
+--  "vmSeqId": "vmSeqId",
+--  "channelCode": "channelCode"?,
+-- }
+]]
+function _M:auth_agent()
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_build_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-BUILD-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-BUILD-ID")
         ngx.exit(401)
         return
     end
@@ -54,37 +60,22 @@ if build_type == "AGENT" then
         --- 获取对应的buildId
         local redRes, err = red:get("third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId ..
                                         "_" .. reqVmSid)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
-            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
-                --[[              
-                -- {
-                --  "projectId": "projectId",
-                --  "pipelineId": "pipelineId",
-                --  "buildId": "buildId",
-                --  "agentId": "agentId",
-                --  "vmSeqId": "vmSeqId",
-                --  "channelCode": "channelCode"?,
-                -- }
-                ]]
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -100,31 +91,31 @@ if build_type == "AGENT" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.agentId == nil then
-                    ngx.log(ngx.STDERR, "agentId is null: ")
+                    ngx.log(ngx.ERR, "agentId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.agentId ~= reqAgentId then
-                    ngx.log(ngx.STDERR, "agentId not match")
+                    ngx.log(ngx.ERR, "agentId not match")
                     ngx.exit(401)
                     return
                 end
@@ -148,19 +139,26 @@ if build_type == "AGENT" then
             end
         end
     end
-
-elseif build_type == "DOCKER" then
-    -- --- Docker构建机
-    -- if build_type == "DOCKETR" then 
-    -- --- agentId + secretkey 验证
+end
+-- Docker构建机
+--[[
+-- {
+--      "projectId": "a90"
+--      "vmName": "sodamacos-vm-10-6-206-21",
+--      "vmSeqId": "1",
+--      "buildId": "983da77481c34eff982c7f1bcf993eda",
+--      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
+-- }
+]]
+function _M:auth_docker()
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -175,42 +173,28 @@ elseif build_type == "DOCKER" then
         return
     else
         local redRes, err = red:get("docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
-            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
-                --[[              
-                -- {
-                --      "projectId": "a90"
-                --      "vmName": "sodamacos-vm-10-6-206-21",
-                --      "vmSeqId": "1",
-                --      "buildId": "983da77481c34eff982c7f1bcf993eda",
-                --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
-                -- }
-                ]]
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -226,19 +210,19 @@ elseif build_type == "DOCKER" then
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -262,19 +246,27 @@ elseif build_type == "DOCKER" then
             end
         end
     end
+end
 
-elseif build_type == "PLUGIN_AGENT" then
-    -- --- Docker构建机
-    -- if build_type == "PLUGIN_AGENT" then 
-    -- --- agentId + secretkey 验证
+-- 校验插件构建机
+--[[
+-- {
+--      "projectId": "a90"
+--      "vmName": "sodamacos-vm-10-6-206-21",
+--      "vmSeqId": "1",
+--      "buildId": "983da77481c34eff982c7f1bcf993eda",
+--      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
+-- }
+]]
+function _M:auth_plugin_agent()
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.ERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -289,36 +281,22 @@ elseif build_type == "PLUGIN_AGENT" then
         return
     else
         local redRes, err = red:get("plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
-
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not redRes then
-            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "redis result is null")
+                ngx.log(ngx.ERR, "redis result is null")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
-                --[[              
-                -- {
-                --      "projectId": "a90"
-                --      "vmName": "sodamacos-vm-10-6-206-21",
-                --      "vmSeqId": "1",
-                --      "buildId": "983da77481c34eff982c7f1bcf993eda",
-                --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
-                -- }
-                ]]
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -334,25 +312,25 @@ elseif build_type == "PLUGIN_AGENT" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                     ngx.exit(401)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                     ngx.exit(401)
                     return
                 end
@@ -376,14 +354,13 @@ elseif build_type == "PLUGIN_AGENT" then
             end
         end
     end
+end
 
-elseif build_type == "MACOS" then
-    -- --- 公共构建机
-    -- if build_type == "WORKER" then 
-    --- 构建机IP验证
+-- 校验MACOS公共构建机
+function _M:auth_macos(checkVersion)
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
+        ngx.log(ngx.ERR, "failed to get client ip: ", err)
         ngx.exit(401)
         return
     end
@@ -395,28 +372,29 @@ elseif build_type == "MACOS" then
         return
     else
         --- 获取对应的buildId
-        local redRes, err = red:get("dispatcher:devops_macos_" .. client_ip)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
+        local redKey = nil
+        if checkVersion == true then
+            redKey = "dispatcher:devops_macos_" .. client_ip
+        else
+            redKey = "devops_macos_" .. client_ip
         end
+        local redRes, err = red:get(redKey)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         --- 处理获取到的buildID
         if not redRes then
-            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "client ip: ", client_ip)
-                ngx.log(ngx.STDERR, "redis result is null: ")
+                ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -430,31 +408,37 @@ elseif build_type == "MACOS" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                 end
 
                 if obj.secretKey == nil then
-                    ngx.log(ngx.STDERR, "secretKey is null: ")
+                    ngx.log(ngx.ERR, "secretKey is null: ")
                 end
 
                 if obj.id == nil then
-                    ngx.log(ngx.STDERR, "id is null: ")
+                    ngx.log(ngx.ERR, "id is null: ")
                 end
 
-                if obj.secretKey == nil then
-                    ngx.log(ngx.STDERR, "systemVersion is null: ")
-                end
+                local systemVersion = ""
+                local xcodeVersion = ""
+                if checkVersion == true then
+                    if obj.systemVersion == nil then
+                        ngx.log(ngx.ERR, "systemVersion is null: ")
+                    end
 
-                if obj.xcodeVersion == nil then
-                    ngx.log(ngx.STDERR, "xcodeVersion is null: ")
+                    if obj.xcodeVersion == nil then
+                        ngx.log(ngx.ERR, "xcodeVersion is null: ")
+                    end
+                    systemVersion = obj.systemVersion
+                    xcodeVersion = obj.xcodeVersion
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
@@ -465,24 +449,34 @@ elseif build_type == "MACOS" then
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.id
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = obj.systemVersion
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = obj.xcodeVersion
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = systemVersion
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = xcodeVersion
 
                 -- 重写project_id变量
                 ngx.var.project_id = obj.projectId
 
+                ngx.exit(200)
                 return
             end
         end
     end
+end
 
-else
-    -- --- 公共构建机
-    -- if build_type == "WORKER" then 
-    --- 构建机IP验证
+-- 校验其他构建机
+--[[
+ -- {
+ --      "projectId": "a90"
+ --      "vmName": "sodamacos-vm-10-6-206-21",
+ --      "vmSeqId": "1",
+ --      "buildId": "983da77481c34eff982c7f1bcf993eda",
+ --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
+ -- }
+ ]]
+function _M:auth_other()
+    -- 公共构建机
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
+        ngx.log(ngx.ERR, "failed to get client ip: ", err)
         ngx.exit(401)
         return
     end
@@ -495,37 +489,24 @@ else
     else
         --- 获取对应的buildId
         local redRes, err = red:get(client_ip)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.say("failed to set keepalive: ", err)
-        end
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         --- 处理获取到的buildID
         if not redRes then
-            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
-            ngx.exit(401)
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.STDERR, "client ip: ", client_ip)
-                ngx.log(ngx.STDERR, "redis result is null: ")
+                ngx.log(ngx.ERR, "client ip: ", client_ip)
+                ngx.log(ngx.ERR, "redis result is null: ")
                 ngx.exit(401)
                 return
             else
                 local obj = cjson.decode(redRes)
-                --[[              
-                -- {
-                --      "projectId": "a90"
-                --      "vmName": "sodamacos-vm-10-6-206-21",
-                --      "vmSeqId": "1",
-                --      "buildId": "983da77481c34eff982c7f1bcf993eda",
-                --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
-                -- }
-                ]]
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.STDERR, "projectId is null: ")
+                    ngx.log(ngx.ERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -539,19 +520,19 @@ else
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.STDERR, "pipelineId is null: ")
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.STDERR, "buildId is null: ")
+                    ngx.log(ngx.ERR, "buildId is null: ")
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.STDERR, "vmName is null: ")
+                    ngx.log(ngx.ERR, "vmName is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
@@ -575,3 +556,4 @@ else
     end
 end
 
+return _M

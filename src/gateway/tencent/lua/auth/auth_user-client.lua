@@ -22,7 +22,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 local bk_token, err = cookieUtil:get_cookie("bk_ticket")
 local devops_access_token =  ngx.var.http_x_devops_access_token
 if bk_token == nil and devops_access_token == nil then
-  ngx.log(ngx.STDERR, "failed to read user request bk_token or devops_access_token: ", err)
+  ngx.log(ngx.WARN, "failed to read user request bk_token or devops_access_token: ", err)
   ngx.exit(401)
   return
 end

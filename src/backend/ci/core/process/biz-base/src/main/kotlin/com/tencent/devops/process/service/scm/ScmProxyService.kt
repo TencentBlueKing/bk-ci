@@ -192,7 +192,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         RevisionInfo(
                             revision = githubBranch.commit!!.sha,
                             updatedMessage = githubBranch.commit!!.commit?.message ?: "",
-                            branchName = githubBranch.name
+                            branchName = githubBranch.name,
+                            authorName = githubBranch.commit!!.commit?.author?.name ?: ""
                         )
                     )
                 } else { // 否则查tag
@@ -207,7 +208,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                             RevisionInfo(
                                 revision = tagData.tagObject!!.sha,
                                 updatedMessage = "",
-                                branchName = branchName
+                                branchName = branchName,
+                                authorName = ""
                             )
                         )
                     } else {

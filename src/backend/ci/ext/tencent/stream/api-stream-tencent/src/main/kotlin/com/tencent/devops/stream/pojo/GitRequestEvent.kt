@@ -61,6 +61,9 @@ data class GitRequestEvent(
     val commitMsg: String?,
     @ApiModelProperty("提交时间")
     val commitTimeStamp: String?,
+    // 目前只在上下文中传递，后续看需求是否保存至数据库
+    @ApiModelProperty("提交用户")
+    val commitAuthorName: String?,
     @ApiModelProperty("用户")
     val userId: String,
     @ApiModelProperty("提交总数")
