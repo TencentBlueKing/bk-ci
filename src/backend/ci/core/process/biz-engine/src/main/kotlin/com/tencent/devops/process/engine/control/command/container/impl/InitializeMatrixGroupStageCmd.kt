@@ -200,7 +200,6 @@ class InitializeMatrixGroupStageCmd(
         val matrixConfig: MatrixConfig
         val contextCaseList: List<Map<String, String>>
         val jobControlOption: JobControlOption
-        val executeCount = modelContainer.executeCount ?: 1
 
         // 每一种上下文组合都是一个新容器
         if (modelContainer is VMBuildContainer && modelContainer.matrixControlOption != null) {
@@ -232,7 +231,7 @@ class InitializeMatrixGroupStageCmd(
                 val newContainerSeq = context.containerSeq++
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
-                val statusElements = generateSampleStatusElements(modelContainer.elements, executeCount)
+                val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
                 val newContainer = VMBuildContainer(
                     name = modelContainer.name,
                     id = newContainerSeq.toString(),
@@ -244,7 +243,7 @@ class InitializeMatrixGroupStageCmd(
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
                     jobControlOption = jobControlOption,
-                    executeCount = executeCount,
+                    executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
                     baseOS = customBaseOS ?: modelContainer.baseOS,
@@ -291,7 +290,7 @@ class InitializeMatrixGroupStageCmd(
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val newContainerSeq = context.containerSeq++
-                val statusElements = generateSampleStatusElements(modelContainer.elements, executeCount)
+                val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
                 val newContainer = NormalContainer(
                     name = modelContainer.name,
                     id = newContainerSeq.toString(),
@@ -302,7 +301,7 @@ class InitializeMatrixGroupStageCmd(
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
                     jobControlOption = jobControlOption.copy(),
-                    executeCount = executeCount,
+                    executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag
                 )
 
@@ -334,7 +333,7 @@ class InitializeMatrixGroupStageCmd(
         }
 
         // 输出结果信息到矩阵的构建日志中
-        matrixConfig.printMatrixResult(commandContext, modelContainer.name, contextCaseList, executeCount)
+        matrixConfig.printMatrixResult(commandContext, modelContainer.name, contextCaseList, context.executeCount)
 
         // 新增容器全部添加到Container表中
         buildContainerList.addAll(groupContainers)
@@ -361,7 +360,21 @@ class InitializeMatrixGroupStageCmd(
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
             jobId = parentContainer.containerHashId,
-            executeCount = executeCount
+            executeCount = context.executeCount
+        )
+        buildLogPrinter.addLine(
+            buildId = parentContainer.buildId,
+            message = "",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            jobId = parentContainer.containerHashId,
+            executeCount = context.executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = parentContainer.buildId,
+            message = "[MATRIX] Start to run...",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            jobId = parentContainer.containerHashId,
+            executeCount = context.executeCount
         )
 
         // 在详情中刷新所有分裂后的矩阵
@@ -414,7 +427,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        this.strategy!!.forEach { (key, valueList) ->
+        this.strategy?.forEach { (key, valueList) ->
             buildLogPrinter.addLine(
                 buildId = buildId, message = "$key: $valueList",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -422,7 +435,7 @@ class InitializeMatrixGroupStageCmd(
         }
 
         // 打印追加参数
-        if (this.include!!.isNotEmpty()) {
+        if (!this.include.isNullOrEmpty()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -435,11 +448,11 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include!!)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
         }
 
         // 打印排除参数
-        if (this.exclude!!.isNotEmpty()) {
+        if (!this.exclude.isNullOrEmpty()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -452,7 +465,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude!!)
+            printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
         }
 
         // 打印最终结果
@@ -493,9 +506,9 @@ class InitializeMatrixGroupStageCmd(
         taskId: String,
         containerHashId: String?,
         executeCount: Int,
-        cases: List<Map<String, String>>
+        cases: List<Map<String, String>>?
     ) {
-        cases.forEach { case ->
+        cases?.forEach { case ->
             var index = 0
             case.forEach { (key, value) ->
                 if (index++ == 0) buildLogPrinter.addLine(

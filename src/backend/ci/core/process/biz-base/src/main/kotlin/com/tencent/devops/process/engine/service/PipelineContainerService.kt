@@ -269,7 +269,8 @@ class PipelineContainerService @Autowired constructor(
                 container = container,
                 taskSeq = taskSeq,
                 atomElement = atomElement,
-                status = status
+                status = status,
+                executeCount = context.executeCount
             )
         }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
@@ -298,6 +299,7 @@ class PipelineContainerService @Autowired constructor(
             containerType = container.getClassType(),
             seq = context.containerSeq,
             status = BuildStatus.QUEUE,
+            executeCount = context.executeCount,
             controlOption = PipelineBuildContainerControlOption(
                 jobControlOption = jobControlOption,
                 inFinallyStage = stage.finally,
@@ -364,7 +366,8 @@ class PipelineContainerService @Autowired constructor(
                         container = container,
                         taskSeq = taskSeq,
                         atomElement = atomElement,
-                        status = status
+                        status = status,
+                        executeCount = context.executeCount
                     )
                 }
                 needUpdateContainer = true
@@ -737,7 +740,8 @@ class PipelineContainerService @Autowired constructor(
         container: Container,
         taskSeq: Int,
         atomElement: Element,
-        status: BuildStatus
+        status: BuildStatus,
+        executeCount: Int
     ) {
         buildTaskList.add(
             PipelineBuildTask(
@@ -759,7 +763,7 @@ class PipelineContainerService @Autowired constructor(
                 status = status,
                 taskParams = atomElement.genTaskParams(),
                 additionalOptions = atomElement.additionalOptions,
-                executeCount = container.executeCount,
+                executeCount = executeCount,
                 starter = userId,
                 approver = null,
                 subProjectId = null,
