@@ -5,7 +5,7 @@
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
+                <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="containerDisplayName">{{containerDisplayName}}</span>
             </p>
             <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
             <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="devops-icon copyJob" @click.stop="copyContainer">
@@ -16,7 +16,7 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
             <i v-if="isEditPage && container.matrixGroupFlag" class="matrix-flag-icon bk-devops-icon icon-matrix"></i>
-            <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status]" style="display:block" @click.stop="toggleShowAtom"></i>
+            <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status || 'readonly']" style="display:block" @click.stop="toggleShowAtom"></i>
         </h3>
         <atom-list
             v-show="container.isOpen !== false"
@@ -113,6 +113,17 @@
             },
             containerSerialNum () {
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
+            },
+            containerDisplayName () {
+                const { container } = this
+                let suffix = ''
+                if (container.matrixContext) {
+                    suffix = Object.values(container.matrixContext).join(', ')
+                    if (suffix) {
+                        suffix = `(${suffix})`
+                    }
+                }
+                return container.status === 'PREPARE_ENV' ? this.$t('editPage.prepareEnv') : `${container.name}${suffix}`
             },
             isOnlyOneContainer () {
                 return this.containerLength === 1

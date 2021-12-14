@@ -108,7 +108,7 @@ $appendIconRight: -$addIconLeftMargin - $addBtnSize;
 
 .connect-line {
     position: absolute;
-    width: $svgWidth;
+    // width: $svgWidth;
     top: $itemHeight / 2 - 2;
     stroke: $primaryColor;
     stroke-width: 1;

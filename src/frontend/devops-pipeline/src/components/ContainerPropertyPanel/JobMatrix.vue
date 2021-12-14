@@ -4,11 +4,10 @@
             <span>{{ $t('editPage.enableMatrix') }}</span>
             <input class="accordion-checkbox" :disabled="disabled" :checked="enableMatrix" type="checkbox" @click.stop @change="toggleMatrix" />
         </header>
-        <div slot="content" class="bk-form bk-form-vertical">
+        <div slot="content" class="bk-form bk-form-vertical" v-if="enableMatrix">
             <template v-for="(obj, key) in optionModel">
                 <form-field :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                     <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobMatrix" :value="matrixControlOption[key]" :disabled="disabled" v-bind="obj"></component>
-                    <!-- <component v-else :is="obj.component" :name="key" v-validate.initial="customRule" :handle-change="handleUpdateJobMatrix" :value="matrixControlOption[key]" :disabled="disabled" v-bind="obj"></component> -->
                 </form-field>
             </template>
         </div>
@@ -16,7 +15,6 @@
 </template>
 
 <script>
-    import Vue from 'vue'
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
@@ -47,12 +45,6 @@
             optionModel () {
                 return this.JOB_MATRIX || {}
             }
-            // // 校验不同时为空
-            // customRule () {
-            //     return {
-            //         atlestNotEmpty: { strategyStr: this.matrixControlOption.strategyStr, includeCaseStr: this.matrixControlOption.includeCaseStr }
-            //     }
-            // }
         },
         created () {
             if (!this.disabled) {
@@ -69,6 +61,9 @@
                 this.updateContainerParams('matrixControlOption',
                                            Object.assign(this.matrixControlOption || {}, { [name]: value })
                 )
+                if (name === 'strategyStr') {
+                    this.$validator.validateAll()
+                }
             },
             toggleMatrix (e) {
                 const enable = e.target.checked
@@ -78,8 +73,6 @@
             initOptionConfig () {
                 if (this.matrixControlOption === undefined || JSON.stringify(this.matrixControlOption) === '{}') {
                     this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX))
-                    Vue.set(this.matrixControlOption, 'strategyStr', '')
-                    Vue.set(this.matrixControlOption, 'includeCaseStr', '')
                 }
             }
         }

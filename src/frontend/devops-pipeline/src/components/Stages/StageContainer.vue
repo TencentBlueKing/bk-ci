@@ -4,8 +4,8 @@
         :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled, 'editing': isEditPage }"
     >
         <template v-if="containerIndex > 0">
-            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight + 2}px`" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="46" :style="`margin-top: -${cruveHeight + 2}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
         <template v-else>
             <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
@@ -155,6 +155,7 @@
 
             &.left {
             left: -$svgWidth + 4;
+            width: $svgWidth - 4;
 
         }
         &.right {

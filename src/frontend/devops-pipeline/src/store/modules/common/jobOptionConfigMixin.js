@@ -67,7 +67,7 @@ const jobOptionConfigMixin = {
             },
             JOB_MATRIX: {
                 strategyStr: {
-                    // customRule: true,
+                    required: true,
                     rule: {},
                     component: 'atom-ace-editor',
                     lang: 'yaml',
@@ -77,7 +77,6 @@ const jobOptionConfigMixin = {
                     default: ''
                 },
                 includeCaseStr: {
-                    // customRule: true,
                     rule: {},
                     component: 'atom-ace-editor',
                     lang: 'yaml',
@@ -104,12 +103,12 @@ const jobOptionConfigMixin = {
                     default: true
                 },
                 maxConcurrency: {
-                    rule: { 'numeric': true, 'max_value': 20 },
+                    rule: { 'numeric': true, 'min_value': 1, 'max_value': 20 },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.maxConcurrency'),
                     placeholder: this.$t('storeMap.maxConcurrencyDesc'),
-                    default: '20'
+                    default: '5'
                 }
             },
             normalRunConditionList: [

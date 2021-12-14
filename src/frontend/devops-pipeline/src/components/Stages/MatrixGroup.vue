@@ -65,23 +65,25 @@
                             const finishCount = option.finishCount || 0
                             desc = `${(finishCount / option.totalCount).toFixed(2) * 100}% (${finishCount}/${option.totalCount})`
                         } else {
-                            desc = this.$t(`details.statusMap.${this.container.status}`)
+                            // desc = this.$t(`details.statusMap.${this.container.status}`)
                         }
                     } else {
-                        desc = this.$t(`details.statusMap.${this.container.status}`)
+                        // desc = this.$t(`details.statusMap.${this.container.status}`)
                     }
                 }
                 return desc
             },
             computedJobs () {
-                this.container.groupContainers.map(container => {
+                this.container.groupContainers.map((container, cindex) => {
                     if (container.isOpen === undefined) {
                         Vue.set(container, 'isOpen', false)
                     }
                     container.elements.forEach((element, index) => {
                         const eleItem = this.container.elements[index] || {}
-                        Object.assign(element, eleItem, { id: element.id })
+                        const mergeEle = Object.assign({}, eleItem, element, { '@type': eleItem['@type'], classType: eleItem.classType, atomCode: eleItem.atomCode })
+                        Object.assign(element, mergeEle)
                     })
+                    console.log(container.elements, cindex)
                 })
                 return this.container.groupContainers
             },
@@ -157,6 +159,7 @@
         .matrix-container {
             border: 1px solid #B5C0D5;
             padding: 10px;
+            background: #fff;
         }
         .matrix-header {
             display: flex;
