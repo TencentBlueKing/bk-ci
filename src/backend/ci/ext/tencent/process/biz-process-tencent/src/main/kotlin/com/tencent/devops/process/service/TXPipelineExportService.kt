@@ -520,7 +520,9 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = getMatrixFromJob(job.matrixControlOption),
+                        strategy = if (job.matrixGroupFlag == true) {
+                            getMatrixFromJob(job.matrixControlOption)
+                        } else null,
                         // 蓝盾这边是自定义Job ID
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
@@ -640,7 +642,9 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = getMatrixFromJob(job.matrixControlOption),
+                        strategy = if (job.matrixGroupFlag == true) {
+                            getMatrixFromJob(job.matrixControlOption)
+                        } else null,
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
                         } else null
