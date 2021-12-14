@@ -49,22 +49,22 @@ class ServiceExperienceResourceImpl @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService
 ) : ServiceExperienceResource {
-    //test
+    
     override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
         checkParam(userId, projectId)
         experienceService.serviceCreate(userId, projectId, experience)
         return Result(true)
     }
-
+    
     override fun count(projectIds: Set<String>?, expired: Boolean?): Result<Map<String, Int>> {
         return Result(experienceService.count(projectIds ?: setOf(), expired))
     }
-
+    
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId)
         return Result(experienceService.get(userId, experienceHashId, false))
     }
-
+    
     override fun check(userId: String, experienceHashId: String, organization: String?): Result<Boolean> {
         return Result(
             experienceBaseService.userCanExperience(
@@ -74,11 +74,11 @@ class ServiceExperienceResourceImpl @Autowired constructor(
             )
         )
     }
-
+    
     override fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): Result<ExperienceJumpInfo> {
         return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
     }
-
+    
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -87,7 +87,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
-
+    
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(ServiceExperienceResourceImpl::class.java)
     }
