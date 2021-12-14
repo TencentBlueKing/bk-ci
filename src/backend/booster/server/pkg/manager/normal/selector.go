@@ -13,8 +13,8 @@ import (
 	"context"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
 // Selector pay attention to the tasks in queue, pick the top-ranking task and launch it.

@@ -5,4 +5,4 @@
 // and any other packr generated files.
 package dashboard
 
-import _ "build-booster/bk_dist/controller/pkg/dashboard/packrd"
+import _ "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/dashboard/packrd"

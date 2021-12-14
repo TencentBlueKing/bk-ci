@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -13,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/worker/pkg/cache"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/common/blog"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/cache"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 var defaultCM cache.Manager

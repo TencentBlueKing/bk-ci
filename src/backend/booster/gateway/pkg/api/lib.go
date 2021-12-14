@@ -15,9 +15,9 @@ import (
 	"net/http"
 	"time"
 
-	"build-booster/common/blog"
-	commonTypes "build-booster/common/types"
-	"build-booster/gateway/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/types"
 
 	"github.com/emicklei/go-restful"
 )

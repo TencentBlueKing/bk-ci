@@ -10,7 +10,7 @@
 package controllers
 
 import (
-	"build-booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

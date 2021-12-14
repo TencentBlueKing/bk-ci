@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package distccmac
 
 import (
@@ -5,16 +14,16 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/http/httpclient"
-	"build-booster/common/store/distcc_server"
-	"build-booster/server/config"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/distcc"
-	"build-booster/server/pkg/rd"
-	"build-booster/server/pkg/resource/direct"
-	respack "build-booster/server/pkg/resource/direct"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	ds "github.com/Tencent/bk-ci/src/booster/common/store/distcc_server"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/rd"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
+	respack "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
 
 	"github.com/jinzhu/gorm"
 )
@@ -353,7 +362,7 @@ func (de *distccMacEngine) launchTask(taskID string) error {
 	resources, err := de.mgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 

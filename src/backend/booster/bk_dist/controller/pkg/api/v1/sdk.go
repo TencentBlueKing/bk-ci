@@ -21,14 +21,14 @@ import (
 	"sync"
 	"time"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/bk_dist/controller/pkg/api"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonHTTP "build-booster/common/http"
-	"build-booster/common/http/httpclient"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonHTTP "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
 )
 
 // NewSDK get a new controller SDK with config

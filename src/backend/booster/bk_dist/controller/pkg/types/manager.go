@@ -14,11 +14,11 @@ import (
 	"os/user"
 	"time"
 
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/common/codec"
-	v2 "build-booster/server/pkg/api/v2"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
 )
 
 // WorkRegisterConfig describe the config of registering work

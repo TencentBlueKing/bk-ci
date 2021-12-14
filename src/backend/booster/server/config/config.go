@@ -12,11 +12,11 @@ package config
 import (
 	"strings"
 
-	"build-booster/common/conf"
-	"build-booster/common/encrypt"
-	"build-booster/common/net"
-	"build-booster/common/static"
-	"build-booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/encrypt"
+	"github.com/Tencent/bk-ci/src/booster/common/net"
+	"github.com/Tencent/bk-ci/src/booster/common/static"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
 // ServerConfig

@@ -15,8 +15,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"build-booster/common/blog"
-	"build-booster/common/ssl"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
 
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"

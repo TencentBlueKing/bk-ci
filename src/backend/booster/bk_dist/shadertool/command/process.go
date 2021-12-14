@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -14,12 +16,12 @@ import (
 	"syscall"
 	"time"
 
-	"build-booster/bk_dist/common/sdk"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/bk_dist/shadertool/common"
-	"build-booster/bk_dist/shadertool/pkg"
-	"build-booster/common/blog"
-	"build-booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/shadertool/common"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/shadertool/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
 
 	commandCli "github.com/urfave/cli"
 )

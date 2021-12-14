@@ -10,7 +10,6 @@
 package cc
 
 import (
-	"build-booster/bk_dist/common/syscall"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -19,10 +18,12 @@ import (
 	"strings"
 	"time"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonUtil "build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonUtil "github.com/Tencent/bk-ci/src/booster/common/util"
 
 	"github.com/google/shlex"
 )

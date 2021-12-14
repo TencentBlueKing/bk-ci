@@ -15,19 +15,19 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/compress"
-	"build-booster/common/http/httpclient"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/server/config"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/rd"
-	"build-booster/server/pkg/resource/crm"
-	op "build-booster/server/pkg/resource/crm/operator"
-	"build-booster/server/pkg/resource/direct"
-	respack "build-booster/server/pkg/resource/direct"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/compress"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/rd"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm"
+	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
+	respack "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
 
 	"github.com/jinzhu/gorm"
 )
@@ -133,7 +133,7 @@ func NewDisttaskEngine(
 		directMgr: directMgr,
 	}
 	if err = egn.initBrokers(); err != nil {
-		blog.Errorf("engine(%s) init brokers failed: %fv", EngineName, err)
+		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
 		return nil, err
 	}
 
@@ -490,7 +490,7 @@ func (de *disttaskEngine) launchDirectTask(task *distTask, tb *engine.TaskBasic,
 	resources, err := de.directMgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching direct task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 
@@ -803,7 +803,7 @@ func (de *disttaskEngine) releaseDirectTask(task *distTask) error {
 	resources, err := de.directMgr.ListResource(task.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try to release direct task(%s), list resource(%s) failed: %v",
-			EngineName, task.ID, task.ID)
+			EngineName, task.ID, task.ID, err)
 		return err
 	}
 

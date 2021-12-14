@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
-	"build-booster/server/pkg/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/metric/controllers"
 )
 
 // Tracker will track the task in status starting, and since the server is ready for serving, make the task
@@ -204,7 +204,7 @@ func (t *tracker) isFinishStarting(taskID string, egn engine.Engine) bool {
 	tb.Status.Message = messageTaskRunning
 	blog.Infof("tracker: task(%s) is ready at start_time(%s)", taskID, tb.Status.StartTime.String())
 	if err = t.layer.UpdateTaskBasic(tb); err != nil {
-		blog.Errorf("tracker: set task running and update basic task failed: %v", taskID, err)
+		blog.Errorf("tracker: set task(%s) running and update basic task failed: %v", taskID, err)
 		return false
 	}
 	blog.Infof("tracker: task(%s) is running successfully", taskID)

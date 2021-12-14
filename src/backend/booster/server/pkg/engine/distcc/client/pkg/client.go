@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
@@ -6,9 +15,9 @@ import (
 	"net"
 	"net/http"
 
-	"build-booster/common"
-	"build-booster/common/http/httpclient"
-	"build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
 )
 
 const (

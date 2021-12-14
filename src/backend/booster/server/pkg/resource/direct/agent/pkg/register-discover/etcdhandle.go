@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package registerdiscover
 
 import (
@@ -8,11 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/ssl"
-	"build-booster/server/pkg/resource/direct/agent/config"
-	"build-booster/server/pkg/resource/direct/agent/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/types"
 
 	etcdClient "github.com/coreos/etcd/clientv3"
 	etcdConcurrency "github.com/coreos/etcd/clientv3/concurrency"

@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -12,11 +14,11 @@ import (
 	"runtime/debug"
 	"time"
 
-	"build-booster/bk_dist/common/protocol"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/common/syscall"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // NewCommonRemoteWorker get a new remote worker SDK

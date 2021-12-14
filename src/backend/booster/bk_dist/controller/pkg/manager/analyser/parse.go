@@ -15,9 +15,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"build-booster/bk_dist/common/env"
-	"build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // ParseCommand 解析任务的命令, 获得命令参数相关信息

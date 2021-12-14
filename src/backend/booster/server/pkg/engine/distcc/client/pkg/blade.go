@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
@@ -8,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common/codec"
-	"build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
 
 	commandCli "github.com/urfave/cli"
 )
@@ -126,7 +135,7 @@ func bladeProcess(c *commandCli.Context) error {
 	task.GccVersion = TransformGccVersion(task.GccVersion)
 
 	if !strings.Contains(task.GccVersion, string(Compiler)) {
-		err = fmt.Errorf("settings BladeCompiler version: %s, " +
+		err = fmt.Errorf("settings BladeCompiler version: %s, "+
 			"seems like not fit for this tool which provide BladeCompiler: %s", task.GccVersion, Compiler)
 		fmt.Printf("%v\n", err)
 		clientInfo = &types.DistccClientInfo{

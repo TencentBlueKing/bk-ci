@@ -15,13 +15,13 @@ import (
 	"strconv"
 	"strings"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcType "build-booster/bk_dist/common/types"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/types"
-	"build-booster/server/pkg/engine/disttask"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 )
 
 const (

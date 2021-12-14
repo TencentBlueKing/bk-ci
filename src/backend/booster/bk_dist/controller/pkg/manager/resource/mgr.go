@@ -17,17 +17,17 @@ import (
 	"strings"
 	"time"
 
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/compress"
-	commonHTTP "build-booster/common/http"
-	"build-booster/common/http/httpclient"
-	v2 "build-booster/server/pkg/api/v2"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/disttask"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/compress"
+	commonHTTP "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
+	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 )
 
 // NewMgr get a new ResourceMgr

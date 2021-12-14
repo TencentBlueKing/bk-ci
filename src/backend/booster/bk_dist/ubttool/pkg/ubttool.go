@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -15,11 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	v1 "build-booster/bk_dist/controller/pkg/api/v1"
-	"build-booster/bk_dist/ubttool/common"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	v1 "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/ubttool/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/google/shlex"
 )

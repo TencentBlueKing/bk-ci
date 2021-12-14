@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // FileResult provide a result of ParseFile

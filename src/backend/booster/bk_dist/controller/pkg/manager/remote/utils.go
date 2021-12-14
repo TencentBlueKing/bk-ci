@@ -13,10 +13,10 @@ import (
 	"fmt"
 	"strings"
 
-	"build-booster/bk_dist/common/env"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
 )
 
 func getFileDetailsFromExecuteRequest(req *types.RemoteTaskExecuteRequest) []*types.FilesDetails {

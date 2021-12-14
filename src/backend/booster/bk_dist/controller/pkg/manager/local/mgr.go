@@ -10,14 +10,15 @@
 package local
 
 import (
-	"build-booster/bk_dist/controller/pkg/manager/recorder"
 	"context"
 	"strings"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/pkg/manager/analyser"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/recorder"
+
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/analyser"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // NewMgr get a new LocalMgr

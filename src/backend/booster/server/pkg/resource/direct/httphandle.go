@@ -1,15 +1,24 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package direct
 
 import (
 	"io/ioutil"
 	"net/http"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	http2 "build-booster/common/http"
-	"build-booster/common/http/httpserver"
-	commonTypes "build-booster/common/types"
-	"build-booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
 
 	"github.com/emicklei/go-restful"
 )

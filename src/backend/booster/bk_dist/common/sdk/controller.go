@@ -16,10 +16,10 @@ import (
 	"strings"
 	"time"
 
-	dcFile "build-booster/bk_dist/common/file"
-	v2 "build-booster/server/pkg/api/v2"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
 
-	"build-booster/bk_dist/common/env"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 )
 
 // ControllerSDK describe the controller handler SDK

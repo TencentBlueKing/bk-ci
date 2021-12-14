@@ -15,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/common/protocol"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/bk_dist/worker/pkg/client"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/client"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // NewMgr get a new Remote Mgr

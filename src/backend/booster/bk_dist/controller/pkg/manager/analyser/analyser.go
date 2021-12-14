@@ -13,10 +13,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/common/blog"
-	"build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 // New get an Analyser with new file cache and root cache

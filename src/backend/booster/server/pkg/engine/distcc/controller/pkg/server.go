@@ -1,16 +1,17 @@
 package pkg
 
 import (
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/http/httpserver"
-	"build-booster/server/pkg/engine/distcc/controller/config"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/api"
+	rd "github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/register-discover"
+
 	// 初始化api资源
-	_ "build-booster/server/pkg/engine/distcc/controller/pkg/api/v1http"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/controller"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/register-discover"
-	"build-booster/server/pkg/engine/distcc/controller/pkg/store"
+	_ "github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/api/v1http"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/controller"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg/store"
 )
 
 // DistCCController describe the controller http server

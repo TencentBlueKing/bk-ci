@@ -24,9 +24,9 @@ import (
 	"syscall"
 	"unicode/utf16"
 
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 const (

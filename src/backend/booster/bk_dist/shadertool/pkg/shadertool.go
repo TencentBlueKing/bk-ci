@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -18,18 +20,18 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/bk_dist/booster/pkg"
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/sdk"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
-	dcUtil "build-booster/bk_dist/common/util"
-	v1 "build-booster/bk_dist/controller/pkg/api/v1"
-	"build-booster/bk_dist/shadertool/common"
-	"build-booster/common/blog"
-	"build-booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/booster/pkg"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	v1 "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/shadertool/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
 
 	"github.com/google/shlex"
 	"github.com/shirou/gopsutil/process"

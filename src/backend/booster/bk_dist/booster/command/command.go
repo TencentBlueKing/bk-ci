@@ -14,9 +14,9 @@ import (
 	"os"
 	"runtime"
 
-	"build-booster/bk_dist/booster/pkg"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/version"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/booster/pkg"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/version"
 
 	commandCli "github.com/urfave/cli"
 )

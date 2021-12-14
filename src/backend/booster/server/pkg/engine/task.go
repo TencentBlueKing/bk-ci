@@ -12,7 +12,7 @@ package engine
 import (
 	"time"
 
-	selfMetric "build-booster/server/pkg/metric"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
 )
 
 // TaskExtension describe the extension part beyond task basic according to different engines

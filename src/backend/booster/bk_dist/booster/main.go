@@ -10,7 +10,7 @@
 package main
 
 import (
-	"build-booster/bk_dist/booster/command"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command"
 )
 
 func main() {

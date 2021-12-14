@@ -1,17 +1,19 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
 package common
 
 import (
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // define const vars

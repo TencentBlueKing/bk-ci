@@ -10,9 +10,9 @@
 package api
 
 import (
-	"build-booster/bk_dist/dashboard/config"
-	"build-booster/common/http/httpserver"
-	"build-booster/server/pkg/engine/disttask"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/dashboard/config"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 )
 
 // ServerAPIResource describe all the server api resources

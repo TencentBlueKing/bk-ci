@@ -12,7 +12,7 @@ package api
 import (
 	"time"
 
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/emicklei/go-restful"
 )

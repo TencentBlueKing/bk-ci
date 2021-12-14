@@ -10,23 +10,24 @@
 package pkg
 
 import (
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/encrypt"
-	"build-booster/common/http/httpserver"
-	"build-booster/gateway/config"
-	"build-booster/gateway/pkg/api"
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/encrypt"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/gateway/config"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	rd "github.com/Tencent/bk-ci/src/booster/gateway/pkg/register-discover"
+
 	// 初始化api资源
-	_ "build-booster/gateway/pkg/api/v1"
-	"build-booster/gateway/pkg/register-discover"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/apisjob"
-	"build-booster/server/pkg/engine/distcc"
-	"build-booster/server/pkg/engine/disttask"
-	"build-booster/server/pkg/engine/fastbuild"
+	_ "github.com/Tencent/bk-ci/src/booster/gateway/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/apisjob"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/fastbuild"
 )
 
 // GatewayServer describe the gateway http server

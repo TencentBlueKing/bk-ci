@@ -10,8 +10,8 @@
 package v1
 
 import (
-	"build-booster/bk_dist/dashboard/pkg/api"
-	"build-booster/server/pkg/engine/disttask"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/dashboard/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 )
 
 const (

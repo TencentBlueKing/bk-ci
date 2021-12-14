@@ -18,12 +18,12 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/ssl"
-	"build-booster/server/config"
-	selfMetric "build-booster/server/pkg/metric"
-	"build-booster/server/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 
 	etcdClient "github.com/coreos/etcd/clientv3"
 	etcdConcurrency "github.com/coreos/etcd/clientv3/concurrency"

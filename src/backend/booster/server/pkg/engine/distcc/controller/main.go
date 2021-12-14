@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"build-booster/common/blog"
-	"build-booster/server/pkg/engine/distcc/controller/config"
-	"build-booster/server/pkg/engine/distcc/controller/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/pkg"
 )
 
 func main() {

@@ -14,8 +14,8 @@ import (
 	"context"
 	"sync"
 
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 )
 
 type lockWorkerMessage struct {

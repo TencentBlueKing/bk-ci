@@ -15,11 +15,11 @@ import (
 	"path"
 	"strings"
 
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
 )
 
 // GetHandlerEnv get env by booster type

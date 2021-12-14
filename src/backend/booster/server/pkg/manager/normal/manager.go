@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/util"
-	"build-booster/server/pkg/engine"
-	mgr "build-booster/server/pkg/manager"
-	"build-booster/server/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	mgr "github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 )
 
 type manager struct {
@@ -192,7 +192,7 @@ func (m *manager) GetTaskExtension(taskID string) (engine.TaskExtension, error) 
 
 	task, err := egn.GetTaskExtension(taskID)
 	if err != nil {
-		blog.Errorf("manager: try getting task extension, get task(%s) from engine(%s)",
+		blog.Errorf("manager: try getting task extension, get task(%s) from engine(%s) failed: %v",
 			taskID, engineName, err)
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (m *manager) GetTask(taskID string) (*engine.TaskBasic, engine.TaskExtensio
 
 	task, err := egn.GetTaskExtension(taskID)
 	if err != nil {
-		blog.Errorf("manager: try getting task extension, get task(%s) from engine(%s)",
+		blog.Errorf("manager: try getting task extension, get task(%s) from engine(%s) failed: %v",
 			taskID, tb.Client.EngineName, err)
 		return nil, nil, err
 	}
@@ -372,7 +372,7 @@ func (m *manager) createTask(param *mgr.TaskCreateParam) (*engine.TaskBasic, err
 		},
 	}
 	if err = tb.Check(); err != nil {
-		blog.Errorf("manager: create task basic(%s) check failed: %v", err)
+		blog.Errorf("manager: create task basic(%s) check failed: %v", taskID, err)
 		return nil, err
 	}
 	tb.Status.Init()
@@ -489,7 +489,7 @@ func (m *manager) releaseTask(param *mgr.TaskReleaseParam) error {
 	egn, err := m.layer.GetEngineByTypeName(tb.Client.EngineName)
 	if err != nil {
 		blog.Errorf("manager: try releasing task, get engine(%s) of task(%s) failed: %v",
-			tb.Client.EngineName.String(), param.TaskID)
+			tb.Client.EngineName.String(), param.TaskID, err)
 		return err
 	}
 

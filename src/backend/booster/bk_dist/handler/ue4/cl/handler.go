@@ -18,17 +18,17 @@ import (
 	"runtime"
 	"strings"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	"build-booster/bk_dist/common/env"
-	dcEnv "build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
-	"build-booster/bk_dist/handler"
-	commonUtil "build-booster/bk_dist/handler/common"
-	"build-booster/common/blog"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcEnv "github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
+	commonUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/handler/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 const (

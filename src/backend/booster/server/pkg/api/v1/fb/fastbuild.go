@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package fb
 
 import (
@@ -6,13 +15,13 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonTypes "build-booster/common/types"
-	"build-booster/server/pkg/api"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/fastbuild"
-	"build-booster/server/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/fastbuild"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
 
 	"github.com/emicklei/go-restful"
 )

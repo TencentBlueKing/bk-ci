@@ -1,12 +1,21 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package pkg
 
 import (
-	"build-booster/common"
-	"build-booster/common/blog"
-	"build-booster/common/http/httpserver"
-	"build-booster/server/pkg/resource/direct/agent/config"
-	"build-booster/server/pkg/resource/direct/agent/pkg/api"
-	"build-booster/server/pkg/resource/direct/agent/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct/agent/pkg/types"
 )
 
 // FbAgent : fast build agent

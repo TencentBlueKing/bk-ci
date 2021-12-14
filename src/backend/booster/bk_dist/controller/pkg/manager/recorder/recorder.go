@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/go-yaml/yaml"
 )

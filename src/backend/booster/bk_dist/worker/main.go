@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -11,9 +13,9 @@ import (
 	"fmt"
 	"os"
 
-	"build-booster/bk_dist/worker/config"
-	"build-booster/bk_dist/worker/pkg"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 func main() {

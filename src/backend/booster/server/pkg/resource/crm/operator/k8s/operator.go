@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/server/config"
-	op "build-booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
 
 	"github.com/ghodss/yaml"
 	appsV1 "k8s.io/api/apps/v1"
@@ -259,7 +259,7 @@ func (o *operator) getDeployments(clusterID, namespace, name string, info *op.Se
 	deploy, err := client.clientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metaV1.GetOptions{})
 	if err != nil {
 		blog.Errorf("k8s-operator: get deployment clusterID(%s) namespace(%s) name(%s) failed: %v",
-			namespace, name, err)
+			clusterID, namespace, name, err)
 		return err
 	}
 

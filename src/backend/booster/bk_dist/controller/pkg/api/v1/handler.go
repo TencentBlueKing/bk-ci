@@ -14,12 +14,12 @@ import (
 	"os"
 	"strconv"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/controller/pkg/api"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
 
 	"github.com/emicklei/go-restful"
 )

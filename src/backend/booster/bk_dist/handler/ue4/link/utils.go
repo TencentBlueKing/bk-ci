@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 
 	"github.com/saintfish/chardet"
 	"golang.org/x/text/encoding/unicode"

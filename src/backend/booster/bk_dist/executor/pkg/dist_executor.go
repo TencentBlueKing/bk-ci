@@ -18,13 +18,13 @@ import (
 	"syscall"
 	"time"
 
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcTypes "build-booster/bk_dist/common/types"
-	dcUtil "build-booster/bk_dist/common/util"
-	v1 "build-booster/bk_dist/controller/pkg/api/v1"
-	"build-booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcTypes "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	v1 "github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api/v1"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 // DistExecutor define dist executor

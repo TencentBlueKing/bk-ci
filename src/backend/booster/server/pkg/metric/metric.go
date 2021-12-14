@@ -12,8 +12,8 @@ package metric
 import (
 	"time"
 
-	"build-booster/common/metric/controllers"
-	selfController "build-booster/server/pkg/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/common/metric/controllers"
+	selfController "github.com/Tencent/bk-ci/src/booster/server/pkg/metric/controllers"
 )
 
 type HttpRequestLabel = controllers.HttpRequestLabel

@@ -17,8 +17,8 @@ import (
 	"net/http"
 	"time"
 
-	http2 "build-booster/common/http"
-	"build-booster/common/ssl"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
 )
 
 // HttpResponse define the information of the http response

@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"build-booster/common/conf"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
 )
 
 var pidFile string

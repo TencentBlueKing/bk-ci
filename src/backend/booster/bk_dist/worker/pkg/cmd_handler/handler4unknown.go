@@ -1,7 +1,9 @@
 /*
  * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
  *
- * This source code file is licensed under the MIT License, you may obtain a copy of the License at http://opensource.org/licenses/MIT
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
  *
  */
 
@@ -10,10 +12,10 @@ package pbcmd
 import (
 	"time"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	dcProtocol "build-booster/bk_dist/common/protocol"
-	"build-booster/bk_dist/worker/pkg/protocol"
-	"build-booster/common/blog"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 var ()

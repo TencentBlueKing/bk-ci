@@ -10,24 +10,25 @@
 package crm
 
 import (
-	"build-booster/server/pkg/rd"
-	dcmac "build-booster/server/pkg/resource/crm/operator/dc_mac"
 	"context"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/server/config"
-	"build-booster/server/pkg/engine"
-	rsc "build-booster/server/pkg/resource"
-	op "build-booster/server/pkg/resource/crm/operator"
-	"build-booster/server/pkg/resource/crm/operator/k8s"
-	"build-booster/server/pkg/resource/crm/operator/mesos"
-	"build-booster/server/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/rd"
+	dcmac "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/dc_mac"
+
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	rsc "github.com/Tencent/bk-ci/src/booster/server/pkg/resource"
+	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/mesos"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 )
 
 // NewResourceManager get a new container resource manager.
@@ -871,7 +872,7 @@ func (rm *resourceManager) scale(resourceID, user string, function op.InstanceFi
 		hasBroker = true
 		if err = rm.scale(r.brokerResourceID, user, function); err != nil {
 			blog.Errorf("crm: try scaling resource(%s) broker(%s) user(%s) failed: %v",
-				resourceID, r.brokerResourceID, err)
+				resourceID, r.brokerResourceID, user, err)
 			return err
 		}
 	}

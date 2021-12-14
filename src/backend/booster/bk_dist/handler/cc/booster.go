@@ -15,14 +15,14 @@ import (
 	"os"
 	"strings"
 
-	dcConfig "build-booster/bk_dist/common/config"
-	"build-booster/bk_dist/common/env"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcType "build-booster/bk_dist/common/types"
-	dcUtil "build-booster/bk_dist/common/util"
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/server/pkg/engine/disttask"
+	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 
 	cp "github.com/otiai10/copy"
 )

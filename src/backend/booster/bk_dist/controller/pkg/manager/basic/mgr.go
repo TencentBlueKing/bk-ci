@@ -16,10 +16,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/pkg/types"
-	"build-booster/common/blog"
-	"build-booster/common/util"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 const (

@@ -19,8 +19,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"build-booster/common/codec"
-	"build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/spf13/pflag"

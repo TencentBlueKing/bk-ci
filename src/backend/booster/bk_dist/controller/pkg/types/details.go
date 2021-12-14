@@ -10,7 +10,7 @@
 package types
 
 import (
-	dcSDK "build-booster/bk_dist/common/sdk"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 )
 
 // WorkStatsDetail describe the work stats details

@@ -13,8 +13,8 @@ import (
 	"container/list"
 	"context"
 
-	dcSDK "build-booster/bk_dist/common/sdk"
-	"build-booster/bk_dist/controller/pkg/types"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
 )
 
 func newResource(maxSlots int, usageLimit map[dcSDK.JobUsage]int) *resource {

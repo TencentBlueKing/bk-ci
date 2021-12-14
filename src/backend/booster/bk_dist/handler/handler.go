@@ -10,9 +10,9 @@
 package handler
 
 import (
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	dcType "build-booster/bk_dist/common/types"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
 )
 
 // Handler describe

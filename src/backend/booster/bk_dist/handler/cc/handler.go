@@ -18,17 +18,17 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/bk_dist/common/env"
-	dcFile "build-booster/bk_dist/common/file"
-	"build-booster/bk_dist/common/protocol"
-	dcSDK "build-booster/bk_dist/common/sdk"
-	dcSyscall "build-booster/bk_dist/common/syscall"
-	"build-booster/bk_dist/controller/pkg/manager/analyser"
-	"build-booster/bk_dist/handler"
-	commonUtil "build-booster/bk_dist/handler/common"
-	"build-booster/common/blog"
-	"build-booster/common/types"
-	"build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/analyser"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
+	commonUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/handler/common"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 // TaskCC 定义了c/c++编译的描述处理对象

@@ -1,15 +1,24 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package fastbuild
 
 import (
 	"fmt"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/server/pkg/engine"
-	resource "build-booster/server/pkg/resource/direct"
-	respack "build-booster/server/pkg/resource/direct"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	resource "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
+	respack "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/direct"
 
 	"github.com/jinzhu/gorm"
 )
@@ -188,7 +197,7 @@ func (fe *fastbuildEngine) SendTaskMessage(taskID string, extra []byte) ([]byte,
 func (fe *fastbuildEngine) onSubTaskDoneMessage(msg *Message) error {
 	submsg, err := DecodeSubTaskDone(msg.Data)
 	if err != nil {
-		blog.Errorf("engine(%s) failed to DecodeSubTaskDone for [%v] with data[%+v]", err, msg)
+		blog.Errorf("engine(%s) failed to DecodeSubTaskDone for [%v] with data[%+v]", EngineName, err, msg)
 		return err
 	}
 
@@ -358,7 +367,7 @@ func (fe *fastbuildEngine) launchTask(taskID string) error {
 	resources, err := fe.mgr.ListResource(task.ResourceID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching task(%s), list resource(%s) failed: %v",
-			EngineName, taskID, task.ResourceID)
+			EngineName, taskID, task.ResourceID, err)
 		return err
 	}
 

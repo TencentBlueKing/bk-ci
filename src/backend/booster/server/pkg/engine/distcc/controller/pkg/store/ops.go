@@ -1,12 +1,11 @@
 package store
 
 import (
-	"build-booster/common/encrypt"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/common/store/distcc_server"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/distcc"
-	"build-booster/server/pkg/engine/distcc/controller/config"
+	"github.com/Tencent/bk-ci/src/booster/common/encrypt"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/controller/config"
 
 	// 启用mysql driver
 	_ "github.com/jinzhu/gorm/dialects/mysql"

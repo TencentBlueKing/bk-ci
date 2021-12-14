@@ -10,8 +10,8 @@
 package v2
 
 import (
-	"build-booster/server/pkg/api"
-	"build-booster/server/pkg/manager"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/manager"
 )
 
 var (

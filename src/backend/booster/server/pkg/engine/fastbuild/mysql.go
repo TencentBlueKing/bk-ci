@@ -1,12 +1,21 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package fastbuild
 
 import (
 	"fmt"
 
-	"build-booster/common/blog"
-	commonMySQL "build-booster/common/mysql"
-	"build-booster/server/pkg/engine"
-	selfMetric "build-booster/server/pkg/metric"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
 
 	"github.com/jinzhu/gorm"
 )
@@ -358,7 +367,7 @@ func (m *mysql) UpdateProjectInfo(projectID string, projectInfo map[string]inter
 
 	if err := m.db.Model(&TableProjectInfo{}).Where("project_id = ?", projectID).
 		Updates(projectInfo).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", projectID, projectInfo, err)
+		blog.Errorf("engine(%s) mysql update project(%s) info(%+v) failed: %v", EngineName, projectID, projectInfo, err)
 		return err
 	}
 
@@ -490,7 +499,7 @@ func (m *mysql) UpdateProjectSetting(projectID string, projectSetting map[string
 
 	if err := m.db.Model(&TableProjectSetting{}).Where("project_id = ?", projectID).
 		Updates(projectSetting).Error; err != nil {
-		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v",
+		blog.Errorf("engine(%s) mysql update project(%s) setting(%+v) failed: %v", EngineName,
 			projectID, projectSetting, err)
 		return err
 	}
@@ -527,7 +536,7 @@ func (m *mysql) CreateOrUpdateProjectSetting(
 	}
 
 	if err := m.db.Model(&TableProjectSetting{}).Updates(projectSettingRaw).Error; err != nil {
-		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", projectID, err)
+		blog.Errorf("engine(%s) mysql create or update project setting failed ID(%s): %v", EngineName, projectID, err)
 		return err
 	}
 
@@ -730,7 +739,7 @@ func (m *mysql) UpdateClusterSetting(clusterID string, clusterSetting map[string
 	if err := m.db.Model(&TableClusterSetting{}).Where("cluster = ?", clusterID).
 		Updates(clusterSetting).Error; err != nil {
 		blog.Errorf("engine(%s) mysql update cluster(%s) setting(%+v) failed: %v",
-			clusterID, clusterSetting, err)
+			EngineName, clusterID, clusterSetting, err)
 		return err
 	}
 
