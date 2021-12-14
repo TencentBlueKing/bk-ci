@@ -133,12 +133,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         retryCount: Int
     ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw NotFoundException("Fail to find build: buildId($buildId)")
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(buildId)
-        // 环境变量替换上下文
-        var context = pipelineContextService.getAllBuildContext(variables)
+
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -148,7 +148,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             if (index == 0) {
                 return@forEachIndexed
             }
-            s.containers.forEach c@{
+            s.containers.forEach nextContainer@{
                 val c = it.getContainerById(vmSeqId)
                 if (c != null) {
                     val container = pipelineContainerService.getContainer(buildId, s.id, vmSeqId)
@@ -162,45 +162,33 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
                         exception = OperationException("重复启动构建机/VM Start already: ${c.startVMStatus}")
                     )
-                    var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
-                    if (c is VMBuildContainer) {
-                        // 对customBuildEnv 的占位符进行替换 之后再塞入 variables
-                        context = context.plus(c.customBuildEnv?.map { mit ->
-                            val contextKey = if (mit.key.startsWith(MATRIX_CONTEXT_KEY_PREFIX)) {
-                                mit.key
-                            } else {
-                                "$ENV_CONTEXT_KEY_PREFIX${mit.key}"
+                    // #4518 填充构建机环境变量、构建上下文、获取超时时间
+                    val (containerEnv, context, timeoutMills) = when (c) {
+                        is VMBuildContainer -> {
+                            val envList = mutableListOf<BuildEnv>()
+                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                            fillContainerContext(contextMap, c.customBuildEnv)
+                            c.buildEnv?.forEach { env ->
+                                containerAppResource.getBuildEnv(
+                                    name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
+                                ).data?.let { self -> envList.add(self) }
                             }
-                            contextKey to EnvUtils.parseEnv(mit.value, context)
-                        }?.toMap() ?: emptyMap())
-                    }
-                    val buildEnvs = if (c is VMBuildContainer) {
-                        timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
-                        if (c.buildEnv == null) {
-                            emptyList<BuildEnv>()
-                        } else {
-                            val list = ArrayList<BuildEnv>()
-                            c.buildEnv!!.forEach { build ->
-                                val env = containerAppResource.getBuildEnv(
-                                    name = build.key, version = build.value, os = c.baseOS.name.toLowerCase()
-                                ).data
-                                if (env != null) {
-                                    list.add(env)
-                                }
-                            }
-                            list
+                            Triple(envList, contextMap, timeoutMills)
                         }
-                    } else {
-                        if (c is NormalContainer) {
-                            timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                        is NormalContainer -> {
+                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                            fillContainerContext(contextMap, c.customBuildEnv)
+                            Triple(mutableListOf(), contextMap, timeoutMills)
                         }
-                        emptyList()
+                        else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
                     }
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
-                    buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
+                    buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo, containerId = vmSeqId)
                     setStartUpVMStatus(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
@@ -216,11 +204,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         variables = context,
-                        buildEnvs = buildEnvs,
+                        buildEnvs = containerEnv,
                         containerId = c.id!!,
                         containerHashId = c.containerHashId ?: "",
                         variablesWithType = variablesWithType,
-                        timeoutMills = timeoutMills!!,
+                        timeoutMills = timeoutMills,
                         containerType = c.getClassType()
                     )
                 }
@@ -228,7 +216,21 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
-        throw NotFoundException("Fail to find the vm build container")
+        throw NotFoundException("Fail to find the vm build container: j($vmSeqId) vmName($vmName)")
+    }
+
+    /**
+     * 对[customBuildEnv]的占位符进行替换，之后再塞入加入构建机容器的上下文[context]，同时追加了构建矩阵上下文
+     */
+    private fun fillContainerContext(context: MutableMap<String, String>, customBuildEnv: Map<String, String>?) {
+        context.putAll(customBuildEnv?.map { mit ->
+            val contextKey = if (mit.key.startsWith(MATRIX_CONTEXT_KEY_PREFIX)) {
+                mit.key
+            } else {
+                "$ENV_CONTEXT_KEY_PREFIX${mit.key}"
+            }
+            contextKey to EnvUtils.parseEnv(mit.value, context)
+        }?.toMap() ?: emptyMap())
     }
 
     fun setStartUpVMStatus(
