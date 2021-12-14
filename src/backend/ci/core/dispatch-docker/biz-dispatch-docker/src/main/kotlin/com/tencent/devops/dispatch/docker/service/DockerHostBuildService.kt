@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
@@ -44,10 +45,10 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -73,13 +74,29 @@ class DockerHostBuildService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val dockerHostQpcService: DockerHostQpcService
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
+
+    fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int
+    ): List<String> {
+        return if (projectId.startsWith("git_") &&
+            dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
+        ) {
+            return listOf(projectId.removePrefix("git_"))
+        } else {
+            emptyList()
+        }
+    }
 
     fun getDockerHostLoad(userId: String): DockerHostLoad {
         try {
@@ -231,61 +248,65 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     /**
-     * 每120分钟执行一次，更新大于两天状态还是running的pool，以及大于两天状态还是running的build history，并主动关机
+     * 每天执行一次，更新大于七天状态还是running的pool，以及大于七天状态还是running的build history，并主动关机
      */
-    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 2 * 1000)
+    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 24 * 1000)
     @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
         val redisLock = RedisLock(redisOperation, "update_timeout_pool_task_nogkudla", 5L)
         try {
             if (redisLock.tryLock()) {
-                // 更新大于两天状态还是running的pool
+                // 更新大于七天状态还是running的pool
                 val timeoutPoolTask = pipelineDockerPoolDao.getTimeOutPool(dslContext)
-                if (timeoutPoolTask.isNotEmpty) {
-                    LOG.info("CLEAR_TIME_OUT_BUILD_POOL|pool_size=${timeoutPoolTask.size}|clear it.")
-                    for (i in timeoutPoolTask.indices) {
-                        LOG.info("CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
-                            "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})")
-                    }
-                    pipelineDockerPoolDao.updateTimeOutPool(dslContext)
-                    message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
+                LOG.info("CLEAR_TIME_OUT_BUILD_POOL|pool_size=${timeoutPoolTask.size}|clear it.")
+                for (i in timeoutPoolTask.indices) {
+                    LOG.info("CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
+                        "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})")
                 }
+                pipelineDockerPoolDao.updateTimeOutPool(dslContext)
+                message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
 
-                // 大于两天状态还是running的build history，并主动关机
-                val timeoutBuildList = pipelineDockerBuildDao.getTimeOutBuild(dslContext)
-                if (timeoutBuildList.isNotEmpty) {
-                    LOG.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
-                    for (i in timeoutBuildList.indices) {
-                        try {
-                            val dockerIp = timeoutBuildList[i].dockerIp
-                            if (dockerIp.isNotEmpty()) {
-                                val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp)
-                                if (dockerIpInfo != null && dockerIpInfo.enable) {
-                                    dockerHostClient.endBuild(
-                                        projectId = timeoutBuildList[i].projectId,
-                                        pipelineId = timeoutBuildList[i].pipelineId,
-                                        buildId = timeoutBuildList[i].buildId,
-                                        vmSeqId = timeoutBuildList[i].vmSeqId,
-                                        containerId = timeoutBuildList[i].containerId,
-                                        dockerIp = timeoutBuildList[i].dockerIp
-                                    )
-
-                                    pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
-                                    LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
-                                        " buildId:(${timeoutBuildList[i].buildId}), " +
-                                        "poolNo:(${timeoutBuildList[i].poolNo})")
-                                }
-                            }
-                        } catch (ignore: Exception) {
-                            LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
-                        }
-                    }
-                }
+                clearTimeoutBuildHistory()
             }
         } finally {
             redisLock.unlock()
             LOG.info("[$grayFlag]|updateTimeoutPoolTask| $message")
+        }
+    }
+
+    private fun clearTimeoutBuildHistory() {
+        // 大于七天状态还是running的build history，并主动关机
+        val timeoutBuildList = pipelineDockerBuildDao.getTimeOutBuild(dslContext)
+        LOG.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
+        for (i in timeoutBuildList.indices) {
+            try {
+                val dockerIp = timeoutBuildList[i].dockerIp
+                if (dockerIp.isNullOrBlank()) {
+                    continue
+                }
+
+                val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp)
+                if (dockerIpInfo != null && dockerIpInfo.enable) {
+                    dockerHostClient.endBuild(
+                        projectId = timeoutBuildList[i].projectId,
+                        pipelineId = timeoutBuildList[i].pipelineId,
+                        buildId = timeoutBuildList[i].buildId,
+                        vmSeqId = timeoutBuildList[i].vmSeqId,
+                        containerId = timeoutBuildList[i].containerId,
+                        dockerIp = timeoutBuildList[i].dockerIp,
+                        clusterType = DockerHostClusterType.valueOf(dockerIpInfo.clusterName)
+                    )
+
+                    LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
+                            " buildId:(${timeoutBuildList[i].buildId}), " +
+                            "poolNo:(${timeoutBuildList[i].poolNo})")
+                }
+            } catch (ignore: Exception) {
+                LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
+            } finally {
+                pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
+            }
         }
     }
 
@@ -330,10 +351,11 @@ class DockerHostBuildService @Autowired constructor(
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
+        val executeCount = DispatchLogRedisUtils.getRedisExecuteCount(buildId)
         if (red) {
-            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         } else {
-            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         }
     }
 

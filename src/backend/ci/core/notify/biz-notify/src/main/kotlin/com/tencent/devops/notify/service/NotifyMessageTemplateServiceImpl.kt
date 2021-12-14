@@ -56,6 +56,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -72,6 +73,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 ) : NotifyMessageTemplateService {
 
     private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
+
+    @Value("\${wework.domain}")
+    private val userUseDomain: Boolean? = true
 
     /**
      * 根据查找到的消息通知模板主体信息来获取具体信息
@@ -525,21 +529,21 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
                 logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.RTX}|template=${request.templateCode}")
             } else {
-                val rtxTplRecord =
+                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
+                val weworkTplRecord =
                     notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                         dslContext = dslContext,
                         commonTemplateId = commonNotifyMessageTemplateRecord.id
                     )!!
-                // 替换标题里的动态参数
-                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
-                sendRtxNotifyMessage(
+                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                logger.info("send wework msg: $body ${weworkTplRecord.sender}")
+                sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    title = title,
-                    body = body,
-                    sender = rtxTplRecord.sender
+                    body = "$title" + "\n\n" + "$body",
+                    sender = weworkTplRecord.sender
                 )
             }
         }
@@ -574,11 +578,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
                 // 替换内容里的动态参数
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    body = body,
+                    body = "$title" + "\n\n" + "$body",
                     sender = weworkTplRecord.sender
                 )
             }
@@ -714,7 +719,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     ) {
         val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
         wechatNotifyMessage.sender = sender
-        wechatNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
+        wechatNotifyMessage.addAllReceivers(findWeworkUser(sendNotifyMessageTemplateRequest.receivers))
         wechatNotifyMessage.body = body
         wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
         wechatNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
@@ -729,5 +734,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 .replace("{{$paramName}}", paramValue)
         }
         return content1
+    }
+
+    // #5318 为解决使用蓝鲸用户中心生成了带域名的用户名无法与企业微信账号对齐问题
+    private fun findWeworkUser(userSet: Set<String>): Set<String> {
+        if (userUseDomain!!) {
+            val weworkUserSet = mutableSetOf<String>()
+            userSet.forEach {
+                // 若用户名包含域,取域前的用户名.
+                if (it.contains("@")) {
+                    weworkUserSet.add(it.substringBefore("@"))
+                } else {
+                    weworkUserSet.add(it)
+                }
+            }
+            return weworkUserSet
+        }
+        return userSet
     }
 }

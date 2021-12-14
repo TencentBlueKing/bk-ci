@@ -41,6 +41,7 @@ class PipelineWebHookQueueDao {
 
     fun save(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         sourceProjectId: Long,
         sourceRepoName: String,
@@ -48,11 +49,13 @@ class PipelineWebHookQueueDao {
         targetProjectId: Long,
         targetRepoName: String,
         targetBranch: String,
-        buildId: String
+        buildId: String,
+        id: Long? = null
     ) {
         with(T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 SOURCE_PROJECT_ID,
                 SOURCE_REPO_NAME,
@@ -61,8 +64,10 @@ class PipelineWebHookQueueDao {
                 TARGET_REPO_NAME,
                 TARGET_BRANCH,
                 BUILD_ID,
-                CREATE_TIME
+                CREATE_TIME,
+                ID
             ).values(
+                projectId,
                 pipelineId,
                 sourceProjectId,
                 sourceRepoName,
@@ -71,7 +76,8 @@ class PipelineWebHookQueueDao {
                 targetRepoName,
                 targetBranch,
                 buildId,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                id
             ).execute()
         }
     }

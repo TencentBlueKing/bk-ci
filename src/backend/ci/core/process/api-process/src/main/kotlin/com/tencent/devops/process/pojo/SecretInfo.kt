@@ -27,7 +27,13 @@
 
 package com.tencent.devops.process.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("密钥信息")
 data class SecretInfo(
+    @ApiModelProperty("hash id 值", required = false)
     val hashId: String,
+    @ApiModelProperty("密钥", required = false)
     val secretKey: String
 )

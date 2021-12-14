@@ -106,7 +106,7 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .container-property-panel {
+    ::v-deep .container-property-panel {
         padding: 10px 50px;
         overflow: auto;
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {

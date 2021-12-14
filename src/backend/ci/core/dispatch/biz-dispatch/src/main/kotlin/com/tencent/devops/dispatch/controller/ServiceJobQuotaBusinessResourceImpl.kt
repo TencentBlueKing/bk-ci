@@ -30,41 +30,43 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
-import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
 class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : ServiceJobQuotaBusinessResource {
-    override fun addRunningJob(
+    override fun checkAndAddRunningJob(
         projectId: String,
         vmType: JobQuotaVmType,
         buildId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        executeCount: Int,
+        containerId: String,
+        containerHashId: String?
     ): Result<Boolean> {
-        jobQuotaBusinessService.insertRunningJob(projectId, vmType, buildId, vmSeqId)
-        return Result(true)
+        val result = jobQuotaBusinessService.checkAndAddRunningJob(
+            projectId = projectId,
+            vmType = vmType,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            executeCount = executeCount,
+            containerId = containerId,
+            containerHashId = containerHashId
+        )
+        return Result(result)
     }
 
-    override fun removeRunningJob(projectId: String, buildId: String, vmSeqId: String?): Result<Boolean> {
-        jobQuotaBusinessService.deleteRunningJob(projectId, buildId, vmSeqId)
+    override fun removeRunningJob(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): Result<Boolean> {
+        jobQuotaBusinessService.deleteRunningJob(projectId, pipelineId, buildId, vmSeqId, executeCount)
         return Result(true)
-    }
-
-    override fun addRunningAgent(projectId: String, buildId: String, vmSeqId: String): Result<Boolean> {
-        jobQuotaBusinessService.updateAgentStartTime(projectId, buildId, vmSeqId)
-        return Result(true)
-    }
-
-    override fun removeRunningAgent(projectId: String, buildId: String, vmSeqId: String): Result<Boolean> {
-        jobQuotaBusinessService.updateRunningTime(projectId, buildId, vmSeqId)
-        return Result(true)
-    }
-
-    override fun getRunningJobCount(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaStatus> {
-        return Result(jobQuotaBusinessService.getProjectRunningJobStatus(projectId, vmType))
     }
 }

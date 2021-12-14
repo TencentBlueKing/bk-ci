@@ -40,6 +40,7 @@ import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
@@ -59,6 +60,7 @@ class QualityHistoryService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val historyDao: HistoryDao,
+    private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
@@ -125,7 +127,7 @@ class QualityHistoryService @Autowired constructor(
     ): Pair<Long, List<RuleInterceptHistory>> {
         val record = ruleService.serviceGet(ruleHashId)
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
-        val count = historyDao.count(dslContext, ruleId)
+        val count = historyDao.count(dslContext, projectId, ruleId)
         val interceptHistoryList = historyDao.listByRuleId(dslContext, projectId, ruleId, offset, limit)
 
         val pipelineIdList = interceptHistoryList.map { it.pipelineId }
@@ -205,6 +207,32 @@ class QualityHistoryService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ).map {
+            QualityRuleIntercept(
+                pipelineId = it.pipelineId,
+                pipelineName = "",
+                buildId = it.buildId,
+                ruleHashId = "",
+                ruleName = "",
+                interceptTime = it.createTime.timestampmilli(),
+                result = RuleInterceptResult.valueOf(it.result),
+                checkTimes = it.checkTimes,
+                resultMsg = objectMapper.readValue(it.interceptList)
+            )
+        }
+    }
+
+    fun serviceListByRuleAndBuildId(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        ruleIds: Collection<String>?
+    ): List<QualityRuleIntercept> {
+        return historyDao.listByBuildId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
@@ -371,18 +399,22 @@ class QualityHistoryService @Autowired constructor(
         logger.info("start to list intercept history for pipeline: " +
             "$projectId, $pipelineId, $buildId, ${ruleBuildIds.firstOrNull()}")
 
-        val ruleIdToNameMap = qualityRuleBuildHisService.list(ruleBuildIds)
-            .map { it.hashId to it.name }.toMap()
+        val ruleBuildHis = qualityRuleBuildHisService.list(ruleBuildIds)
+        val ruleBuildHisOpts = qualityRuleBuildHisOperationService.listQualityRuleBuildOpt(ruleBuildIds)
+        val ruleIdToNameMap = ruleBuildHis.map { it.hashId to it.name }.toMap()
         val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
             null, null, null, null, null)
         return recordList.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
+            val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
+            val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
+            val ruleResult = if (buildHis?.status != null) buildHis.status!!.name else it.result
             RuleInterceptHistory(
                 hashId = HashUtil.encodeLongId(it.id),
                 num = it.projectNum,
                 timestamp = it.createTime.timestamp(),
-                interceptResult = RuleInterceptResult.valueOf(it.result),
+                interceptResult = RuleInterceptResult.valueOf(ruleResult),
                 ruleHashId = hisRuleHashId,
                 ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
                 pipelineId = it.pipelineId,
@@ -391,7 +423,14 @@ class QualityHistoryService @Autowired constructor(
                 buildNo = "",
                 checkTimes = it.checkTimes,
                 remark = "",
-                interceptList = interceptList
+                interceptList = interceptList,
+                qualityRuleBuildHisOpt = QualityRuleBuildHisOpt(
+                    HashUtil.encodeLongId(it.id),
+                    buildHis?.gateKeepers ?: null,
+                    ruleBuildHisOpt?.stageId ?: "",
+                    ruleBuildHisOpt?.gateOptUser ?: "",
+                    ruleBuildHisOpt?.gateOptTime ?: ""
+                )
             )
         }
     }
@@ -463,5 +502,81 @@ class QualityHistoryService @Autowired constructor(
             createTime = createTime,
             updateTime = createTime
         )
+    }
+
+    fun listQualityRuleBuildHisIntercept(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        startTime: Long?,
+        endTime: Long?,
+        offset: Int,
+        limit: Int
+    ): Pair<Long, List<RuleInterceptHistory>> {
+        val ruleId = if (ruleHashId == null) null else HashUtil.decodeIdToLong(ruleHashId)
+        val startLocalDateTime = if (startTime == null) {
+            null
+        } else {
+            val time = LocalDateTime.ofInstant(Instant.ofEpochSecond(startTime), ZoneId.systemDefault())
+            time.minusHours(time.hour.toLong()).minusMinutes(time.minute.toLong()).minusSeconds(time.second.toLong())
+        }
+        val endLocalDateTime = if (endTime == null) {
+            null
+        } else {
+            val time = LocalDateTime.ofInstant(Instant.ofEpochSecond(endTime), ZoneId.systemDefault())
+            time.plusDays(1).minusHours(time.hour.toLong())
+                .minusMinutes(time.minute.toLong()).minusSeconds(time.second.toLong())
+        }
+
+        val count = serviceCount(projectId, pipelineId, ruleId, null, startLocalDateTime, endLocalDateTime)
+        val recordList = serviceList(projectId, pipelineId, null, ruleId, null, startLocalDateTime, endLocalDateTime, offset, limit)
+
+        val ruleIdList = recordList.map { it.ruleId }
+        val ruleIdToRuleMap = qualityRuleBuildHisService.list(ruleIdList).map {
+            HashUtil.decodeIdToLong(it.hashId) to it
+        }.toMap()
+
+        val pipelineIdList = recordList.map { it.pipelineId }
+        val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
+            .map { it.pipelineId to it }.toMap()
+        val buildIdList = recordList.map { it.buildId }
+        val buildIdToNameMap = getBuildIdToNameMap(buildIdList.toSet())
+
+        recordList.filter { it.result == RuleInterceptResult.FAIL.name }.forEach { record ->
+            val buildHisRuleStatus = ruleIdToRuleMap[record.ruleId]?.status
+            if (buildHisRuleStatus != null) {
+                record.result = buildHisRuleStatus.name
+            }
+        }
+
+        val list = recordList.map {
+            val sb = StringBuilder()
+            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+            interceptList.forEach { intercept ->
+                val thresholdOperationName = ThresholdOperationUtil.getOperationName(intercept.operation)
+                sb.append("${intercept.indicatorName}当前值(${intercept.actualValue})，")
+                    .append("期望$thresholdOperationName${intercept.value}\n")
+            }
+            val remark = sb.toString()
+            val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
+            val pipeline = pipelineIdToNameMap[it.pipelineId]
+            RuleInterceptHistory(
+                hashId = HashUtil.encodeLongId(it.id),
+                num = it.projectNum,
+                timestamp = it.createTime.timestamp(),
+                interceptResult = RuleInterceptResult.valueOf(it.result),
+                ruleHashId = hisRuleHashId,
+                ruleName = ruleIdToRuleMap[it.ruleId]?.name ?: "",
+                pipelineId = it.pipelineId,
+                pipelineName = pipeline?.pipelineName ?: "",
+                buildId = it.buildId,
+                buildNo = buildIdToNameMap[it.buildId] ?: "",
+                checkTimes = it.checkTimes,
+                remark = remark,
+                pipelineIsDelete = pipeline?.isDelete ?: false
+            )
+        }
+        return Pair(count, list)
     }
 }

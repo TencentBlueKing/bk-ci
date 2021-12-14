@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwQualityResourceV3
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource as ServiceQualityRuleResourceV3
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
@@ -54,7 +55,12 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>> {
-        return client.get(ServiceQualityRuleResource::class).list(userId, projectId, page, pageSize)
+        return client.get(ServiceQualityRuleResource::class).list(
+            userId = userId,
+            projectId = projectId,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
     }
 
     override fun createRule(
@@ -101,14 +107,40 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>> {
-        return client.get(ServiceQualityInterceptResource::class).list(userId = userId,
+        return client.get(ServiceQualityInterceptResource::class).list(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             ruleHashId = ruleHashId,
             interceptResult = interceptResult,
             startTime = startTime,
             endTime = endTime,
-            page = page,
-            pageSize = pageSize)
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
+    }
+
+    override fun listBuildHisRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>> {
+        return client.get(ServiceQualityRuleResourceV3::class).listQualityRuleBuildHis(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            ruleHashId = ruleHashId,
+            startTime = startTime,
+            endTime = endTime,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
     }
 }

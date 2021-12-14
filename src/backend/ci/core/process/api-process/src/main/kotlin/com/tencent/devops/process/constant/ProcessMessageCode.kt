@@ -128,6 +128,9 @@ object ProcessMessageCode {
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER = "2101072" // Stage[{0}]的审核组[{1}]没有未配置可执行人
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
+    const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
+    const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
+    const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -144,7 +147,7 @@ object ProcessMessageCode {
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
     const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
-    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待审核
+    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
@@ -211,6 +214,7 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
     const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
     const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+    const val ERROR_CALLBACK_SAVE_FAIL = "2101185" // 创建callback失败,失败原因:{0}
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

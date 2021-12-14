@@ -41,6 +41,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
+@SuppressWarnings("TooManyFunctions")
 class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -58,7 +59,8 @@ class CodeGitlabScmImpl constructor(
         return RevisionInfo(
             revision = gitBranch.commit.id,
             updatedMessage = gitBranch.commit.message,
-            branchName = branch
+            branchName = branch,
+            authorName = gitBranch.commit.authorName
         )
     }
 

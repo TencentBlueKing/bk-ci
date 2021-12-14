@@ -27,15 +27,12 @@
 
 package com.tencent.devops.process.engine.control.command.stage
 
+import com.tencent.devops.process.command.Cmd
 import com.tencent.devops.process.command.CmdChain
 
 class StageCmdChain(private val commandList: List<StageCmd>) : CmdChain<StageContext> {
 
-    override fun doCommand(commandContext: StageContext) {
-        if (commandContext.cmdFlowSeq < 0) { // 校正
-            commandContext.cmdFlowSeq = 0
-        }
-        // 每次调用，都增1，走向下一条命令链
-        commandList.getOrNull(commandContext.cmdFlowSeq++)?.doExecute(commandContext = commandContext, chain = this)
+    override fun nextCommand(commandContext: StageContext): Cmd<StageContext>? {
+        return commandList.getOrNull(commandContext.cmdFlowSeq++)
     }
 }

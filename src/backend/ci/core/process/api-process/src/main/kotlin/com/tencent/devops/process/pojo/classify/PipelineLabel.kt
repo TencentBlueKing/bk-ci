@@ -27,12 +27,23 @@
 
 package com.tencent.devops.process.pojo.classify
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线标签")
 data class PipelineLabel(
+    @ApiModelProperty("标签id", required = false)
     val id: String,
+    @ApiModelProperty("流水线id", required = false)
     val groupId: String,
+    @ApiModelProperty("标签名称", required = false)
     val name: String,
+    @ApiModelProperty("创建时间", required = false)
     val createTime: Long,
+    @ApiModelProperty("更新时间", required = false)
     val uptimeTime: Long,
+    @ApiModelProperty("创建者", required = false)
     val createUser: String,
+    @ApiModelProperty("更新者", required = false)
     val updateUser: String
 )

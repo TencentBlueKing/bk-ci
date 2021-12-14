@@ -66,7 +66,7 @@ class CodeSvnScmImpl constructor(
             val revision = getLatestRevision(repository)
             val updatedMessage = getCommitMessage(repository, revision)
             success = true
-            return RevisionInfo(revision.toString(), updatedMessage, branch)
+            return RevisionInfo(revision.toString(), updatedMessage, branch, "")
         } catch (e: SVNAuthenticationException) {
             if ((!e.message.isNullOrBlank()) && e.message!!.contains("timeout")) {
                 svnBean.latestRevisionTimeout()

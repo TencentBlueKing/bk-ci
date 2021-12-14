@@ -86,7 +86,7 @@
                             return response.data
                         case response.data && response.data.record && typeof response.data.record === 'string':
                             return response.data.record
-                        default:
+                        default: {
                             const path = dataPath.split('.')
                             let result = response
                             let pos = 0
@@ -100,6 +100,7 @@
                             } else {
                                 throw Error(this.$t('editPage.failToGetData'))
                             }
+                        }
                     }
                 } catch (e) {
                     console.error(e)

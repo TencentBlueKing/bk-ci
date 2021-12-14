@@ -74,7 +74,7 @@
                 return desc
             },
             computedJobs () {
-                this.container.groupContainers.map((container, cindex) => {
+                this.container.groupContainers.forEach(container => {
                     if (container.isOpen === undefined) {
                         Vue.set(container, 'isOpen', false)
                     }
@@ -83,7 +83,6 @@
                         const mergeEle = Object.assign({}, eleItem, element, { '@type': eleItem['@type'], classType: eleItem.classType, atomCode: eleItem.atomCode })
                         Object.assign(element, mergeEle)
                     })
-                    console.log(container.elements, cindex)
                 })
                 return this.container.groupContainers
             },

@@ -48,6 +48,14 @@ interface StoreCommonService {
     ): String
 
     /**
+     * 根据标识获取组件公共标识
+     */
+    fun getStorePublicFlagByCode(
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean
+
+    /**
      * 获取正确的升级版本号
      */
     fun getRequireVersion(

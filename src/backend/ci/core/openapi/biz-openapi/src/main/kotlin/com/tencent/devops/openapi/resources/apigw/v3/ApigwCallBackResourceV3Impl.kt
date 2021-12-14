@@ -97,8 +97,8 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         return client.get(ServiceCallBackResource::class).list(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
         )
     }
 
@@ -143,8 +143,8 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
             } else {
                 DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
             },
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
         )
     }
 

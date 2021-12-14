@@ -42,11 +42,13 @@ class BuildDetailDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         model: String
     ) {
         create(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             startUser = "",
             startType = null,
@@ -57,6 +59,7 @@ class BuildDetailDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         startUser: String,
         startType: StartType?,
@@ -67,6 +70,7 @@ class BuildDetailDao {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 BUILD_ID,
                 TRIGGER,
                 BUILD_NUM,
@@ -75,6 +79,7 @@ class BuildDetailDao {
                 STATUS,
                 START_USER
             ).values(
+                projectId,
                 buildId,
                 startType?.name,
                 buildNum ?: 0,

@@ -36,6 +36,7 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [BkFieldValidator::class])
+@Suppress("LongParameterList")
 annotation class BkField(
     val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
     val required: Boolean = true, // 是否必须

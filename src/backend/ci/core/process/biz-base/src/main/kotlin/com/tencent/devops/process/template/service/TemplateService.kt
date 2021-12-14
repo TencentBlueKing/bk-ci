@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.pojo.template.TemplateType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,6 +58,7 @@ class TemplateService @Autowired constructor(
      */
     fun createRelationBtwTemplate(
         userId: String,
+        projectId: String,
         templateId: String,
         pipelineId: String,
         instanceType: String,
@@ -73,13 +73,6 @@ class TemplateService @Autowired constructor(
         val versionName: String
 
         when {
-            latestTemplate.type == TemplateType.CONSTRAINT.name -> { // 如果是强制模式，则查找父模板
-                logger.info("template[$templateId] is from store, srcTemplateId is ${latestTemplate.srcTemplateId}")
-                val rootTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
-                rootTemplateId = rootTemplate.id
-                templateVersion = rootTemplate.version
-                versionName = rootTemplate.versionName
-            }
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
                 versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
@@ -92,6 +85,7 @@ class TemplateService @Autowired constructor(
 
         templatePipelineDao.create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             instanceType = instanceType,
             rootTemplateId = rootTemplateId,

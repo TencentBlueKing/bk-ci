@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -98,29 +99,6 @@ interface ServiceBuildResource {
         @ApiParam("错误信息", required = false)
         @QueryParam("errorMsg")
         errorMsg: String? = null
-    ): Result<Boolean>
-
-    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
-    @ApiOperation("Notify process that the vm startup for the build")
-    @PUT
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
-    @Path("/{projectId}/{pipelineId}/{buildId}/vmStarted")
-    fun vmStarted(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("VM SEQ ID", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam("VM NAME", required = true)
-        @QueryParam("vmName")
-        vmName: String
     ): Result<Boolean>
 
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
@@ -212,7 +190,10 @@ interface ServiceBuildResource {
         skipFailedTask: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否忽略人工触发", required = false)
+        @QueryParam("checkManualStartup")
+        checkManualStartup: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
@@ -550,6 +531,29 @@ interface ServiceBuildResource {
         cancel: Boolean?,
         @ApiParam("审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
+    ): Result<Boolean>
+
+    @ApiOperation("质量红线忽略触发启动阶段")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/qualityTrigger")
+    fun qualityTriggerStage(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("阶段ID", required = true)
+        @PathParam("stageId")
+        stageId: String,
+        @ApiParam("审核请求体", required = true)
+        qualityRequest: StageQualityRequest
     ): Result<Boolean>
 
     @ApiOperation("操作暂停插件")

@@ -29,10 +29,14 @@ package com.tencent.devops.store.pojo.template
 
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("模版市场-首页")
 data class MarketTemplateMain(
+    @ApiModelProperty("key值")
     val key: String,
+    @ApiModelProperty("标签")
     val label: String,
+    @ApiModelProperty("插件列表")
     val records: List<MarketItem?>
 )

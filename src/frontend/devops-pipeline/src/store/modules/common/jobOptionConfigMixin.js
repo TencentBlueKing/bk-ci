@@ -43,7 +43,7 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 timeout: {
-                    rule: { 'numeric': true, 'max_value': 10080, 'min_value': 1 },
+                    rule: { numeric: true, max_value: 10080, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
                     placeholder: this.$t('storeMap.mutualTimeoutPlaceholder'),
@@ -54,7 +54,7 @@ const jobOptionConfigMixin = {
                     }
                 },
                 queue: {
-                    rule: { 'numeric': true, 'max_value': 10, 'min_value': 1 },
+                    rule: { numeric: true, max_value: 10, min_value: 1 },
                     component: 'vuex-input',
                     label: this.$t('storeMap.queueLabel'),
                     placeholder: this.$t('storeMap.queuePlaceholder'),
@@ -103,7 +103,7 @@ const jobOptionConfigMixin = {
                     default: true
                 },
                 maxConcurrency: {
-                    rule: { 'numeric': true, 'min_value': 1, 'max_value': 20 },
+                    rule: { numeric: true, min_value: 1, max_value: 20 },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.maxConcurrency'),
@@ -190,7 +190,7 @@ const jobOptionConfigMixin = {
                     }
                 },
                 timeout: {
-                    rule: { 'numeric': true, 'max_value': 10080 },
+                    rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),
@@ -224,7 +224,7 @@ const jobOptionConfigMixin = {
         dependOnList () {
             const list = []
             // if (!this.stage.containers || this.stage.containers.length <= 1) return list
-            this.stage.containers && this.stage.containers.map((container, index) => {
+            this.stage.containers && this.stage.containers.forEach((container, index) => {
                 if (index !== this.containerIndex) {
                     list.push(
                         {

@@ -28,41 +28,35 @@ class NotifySendCmd @Autowired constructor(
             else -> TYPE_SHUTDOWN_SUCCESS
         }
 
+        var templateCode = ""
+        var notifyType = mutableSetOf<String>()
+        var settingDetailFlag = false
+        var sendMsg = false
+
         when {
             buildStatus.isFailure() -> {
-                val settingDetailFlag = setting.failSubscription.detailFlag
-                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                sendNotifyByTemplate(
-                    templateCode = templateCode,
-                    receivers = commandContextBuild.receivers,
-                    notifyType = setting.failSubscription.types.map { it.name }.toMutableSet(),
-                    titleParams = commandContextBuild.notifyValue,
-                    bodyParams = commandContextBuild.notifyValue
-                )
-            }
-            buildStatus.isCancel() -> {
-                val settingDetailFlag = setting.failSubscription.detailFlag
-                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                sendNotifyByTemplate(
-                    templateCode = templateCode,
-                    receivers = commandContextBuild.receivers,
-                    notifyType = setting.failSubscription.types.map { it.name }.toMutableSet(),
-                    titleParams = commandContextBuild.notifyValue,
-                    bodyParams = commandContextBuild.notifyValue
-                )
+                settingDetailFlag = setting.failSubscription.detailFlag
+                templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
+                notifyType = setting.failSubscription.types.map { it.name }.toMutableSet()
+                sendMsg = true
             }
             buildStatus.isSuccess() -> {
-                val settingDetailFlag = setting.successSubscription.detailFlag
-                val templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                sendNotifyByTemplate(
-                    templateCode = templateCode,
-                    receivers = commandContextBuild.receivers,
-                    notifyType = setting.successSubscription.types.map { it.name }.toMutableSet(),
-                    titleParams = commandContextBuild.notifyValue,
-                    bodyParams = commandContextBuild.notifyValue
-                )
+                settingDetailFlag = setting.successSubscription.detailFlag
+                templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
+                notifyType = setting.successSubscription.types.map { it.name }.toMutableSet()
+                sendMsg = true
             }
             else -> Result<Any>(0)
+        }
+
+        if (sendMsg) {
+            sendNotifyByTemplate(
+                templateCode = templateCode,
+                receivers = commandContextBuild.receivers,
+                notifyType = notifyType,
+                titleParams = commandContextBuild.notifyValue,
+                bodyParams = commandContextBuild.notifyValue
+            )
         }
     }
 

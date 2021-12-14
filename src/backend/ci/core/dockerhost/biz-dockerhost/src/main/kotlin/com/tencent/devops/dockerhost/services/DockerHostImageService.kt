@@ -46,8 +46,6 @@ import java.io.IOException
 @Component
 class DockerHostImageService(
     private val dockerHostConfig: DockerHostConfig,
-/*    private val dockerHostBuildApi: DockerHostBuildResourceApi,
-    private val dockerHostImageScanService: DockerHostImageScanService,*/
     private val imageBuildHandler: ImageBuildHandler,
     private val imageScanHandler: ImageScanHandler,
     private val imagePushHandler: ImagePushHandler,
@@ -88,7 +86,8 @@ class DockerHostImageService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                vmSeqId = vmSeqId,
+                vmSeqId = vmSeqId.toInt(),
+                poolNo = dockerBuildParam.poolNo!!.toInt(),
                 userName = dockerBuildParam.userId,
                 dockerBuildParam = dockerBuildParam,
                 dockerClient = dockerClient,
@@ -103,7 +102,7 @@ class DockerHostImageService(
                 )
             ).handlerRequest(imageHandlerContext)
 
-            return Pair(true, null)
+            return Pair(true, imageHandlerContext.result)
         } catch (e: Exception) {
             logger.error("Docker build and push failed, exception: ", e)
             return Pair(false, e.message)

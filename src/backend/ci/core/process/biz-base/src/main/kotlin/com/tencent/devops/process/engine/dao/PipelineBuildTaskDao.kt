@@ -60,6 +60,7 @@ class PipelineBuildTaskDao {
             with(T_PIPELINE_BUILD_TASK) {
                 dslContext.insertInto(
                     this,
+                    PROJECT_ID,
                     PIPELINE_ID,
                     BUILD_ID,
                     STAGE_ID,
@@ -70,6 +71,7 @@ class PipelineBuildTaskDao {
                     TASK_ID,
                     TASK_TYPE,
                     TASK_ATOM,
+                    SUB_PROJECT_ID,
                     SUB_BUILD_ID,
                     STATUS,
                     STARTER,
@@ -81,6 +83,7 @@ class PipelineBuildTaskDao {
                     ATOM_CODE
                 )
                     .values(
+                        buildTask.projectId,
                         buildTask.pipelineId,
                         buildTask.buildId,
                         buildTask.stageId,
@@ -91,6 +94,7 @@ class PipelineBuildTaskDao {
                         buildTask.taskId,
                         buildTask.taskType,
                         buildTask.taskAtom,
+                        buildTask.subProjectId,
                         buildTask.subBuildId,
                         buildTask.status.ordinal,
                         buildTask.starter,
@@ -129,6 +133,7 @@ class PipelineBuildTaskDao {
                     .set(STATUS, it.status.ordinal)
                     .set(EXECUTE_COUNT, it.executeCount)
                     .set(TASK_SEQ, it.taskSeq)
+                    .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_BUILD_ID, it.subBuildId)
                     .set(CONTAINER_TYPE, it.containerType)
                     .set(
@@ -265,11 +270,12 @@ class PipelineBuildTaskDao {
                 taskType = taskType,
                 taskAtom = taskAtom,
                 status = BuildStatus.values()[status],
-                taskParams = JsonUtil.toMutableMapSkipEmpty(taskParams),
+                taskParams = JsonUtil.toMutableMap(taskParams),
                 additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
                 executeCount = executeCount ?: 1,
                 starter = starter,
                 approver = approver,
+                subProjectId = subProjectId,
                 subBuildId = subBuildId,
                 startTime = startTime,
                 endTime = endTime,
@@ -281,12 +287,20 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun updateSubBuildId(dslContext: DSLContext, buildId: String, taskId: String, subBuildId: String): Int {
+    fun updateSubBuildId(
+        dslContext: DSLContext,
+        buildId: String,
+        taskId: String,
+        subBuildId: String,
+        subProjectId: String
+    ): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.update(this)
                 .set(SUB_BUILD_ID, subBuildId)
+                .set(SUB_PROJECT_ID, subProjectId)
                 .where(BUILD_ID.eq(buildId))
-                .and(TASK_ID.eq(taskId)).execute()
+                .and(TASK_ID.eq(taskId))
+                .execute()
         }
     }
 

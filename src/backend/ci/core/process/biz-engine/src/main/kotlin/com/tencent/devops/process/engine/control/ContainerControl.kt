@@ -48,7 +48,7 @@ import com.tencent.devops.process.engine.control.command.container.impl.UpdateSt
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

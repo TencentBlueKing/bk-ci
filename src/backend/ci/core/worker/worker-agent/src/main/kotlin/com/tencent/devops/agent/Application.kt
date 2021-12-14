@@ -29,6 +29,7 @@ package com.tencent.devops.agent
 
 import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
@@ -38,10 +39,10 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import java.io.File
-import java.lang.RuntimeException
 
-@Suppress("ALL")
 fun main(args: Array<String>) {
+    // 调用 DHUtil 初始化 SecurityProvider
+    DHUtil
     EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
@@ -50,7 +51,10 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
                     val workspaceDir = if (workspace.isNullOrBlank()) {
@@ -66,7 +70,10 @@ fun main(args: Array<String>) {
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(
+                    variables: Map<String, String>,
+                    pipelineId: String
+                ): Pair<File, File> {
                     val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
