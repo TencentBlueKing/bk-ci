@@ -51,6 +51,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.utils.CommitCheckUtils
@@ -163,6 +164,14 @@ class StreamYamlBaseBuild @Autowired constructor(
         model: Model,
         gitBuildId: Long
     ): BuildId? {
+        //【ID92537607】 stream 流水线标签不生效
+        client.get(UserPipelineGroupResource::class).updatePipelineLabel(
+            userId = event.userId,
+            projectId = gitCIBasicSetting.projectCode!!,
+            pipelineId = pipeline.pipelineId,
+            labelIds = model.labels
+        )
+
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
         var buildId = ""
