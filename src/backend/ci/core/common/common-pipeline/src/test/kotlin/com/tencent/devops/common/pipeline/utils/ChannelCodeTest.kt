@@ -23,36 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectTagResource
-import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import org.junit.Assert
+import org.junit.Test
 
-@RestResource
-class OpProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService
-) : OpProjectTagResource {
-    override fun setTagByProject(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
+class ChannelCodeTest {
+
+    @Test
+    fun channelCodeTest() {
+        val bs = "BS"
+        val channelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(channelCode, ChannelCode.BS)
     }
 
-    override fun setTagByOrg(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
-    }
+    @Test
+    fun webTest() {
+        val bs = "BS"
+        val bsChannelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(true, ChannelCode.webChannel(bsChannelCode!!))
 
-    override fun setTagByChannel(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
-    }
-
-    override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
-        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
+        val codecc = "CODECC_EE"
+        val codeccChannelCode = ChannelCode.getChannel(codecc)
+        Assert.assertEquals(false, ChannelCode.webChannel(codeccChannelCode!!))
     }
 }

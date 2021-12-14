@@ -23,36 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.quality.api.v3
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectTagResource
-import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class OpProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService
-) : OpProjectTagResource {
-    override fun setTagByProject(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
-    }
+@Api(tags = ["BUILD_INDICATOR_V3"], description = "构建-质量红线指标")
+@Path("/build/indicator/v3")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildQualityIndicatorResource {
 
-    override fun setTagByOrg(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
-    }
-
-    override fun setTagByChannel(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
-    }
-
-    override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
-        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
-    }
+    @ApiOperation("创建红线指标")
+    @Path("/project/{projectId}/upsertIndicator")
+    @POST
+    fun upsertIndicator(
+        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("指标请求报文", required = true)
+        indicatorCreate: List<IndicatorCreate>
+    ): Result<Boolean>
 }

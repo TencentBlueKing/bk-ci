@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class ProjectTagService @Autowired constructor(
@@ -54,7 +56,8 @@ class ProjectTagService @Autowired constructor(
     val projectTagDao: ProjectTagDao,
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val projectService: ProjectService
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -64,6 +67,17 @@ class ProjectTagService @Autowired constructor(
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
+
+    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
+    private val tag: String? = null
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
+
+    private val projectRouterCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(2, TimeUnit.MINUTES)
+        .build<String/*projectId*/, String>/*routerTag*/()
 
     fun updateTagByProject(
         projectTagUpdateDTO: ProjectTagUpdateDTO
@@ -266,6 +280,43 @@ class ProjectTagService @Autowired constructor(
         } finally {
             logger.info("refreshRouterByChannel success")
         }
+    }
+
+    // 判断当前项目流量与当前集群匹配
+    fun checkProjectTag(projectId: String): Boolean {
+        // 因定时任务请求量太大,为减小redis压力,优先match内存缓存。 内存数据可能与实际数据存在差异。失败继续做redis校验
+        if (projectRouterCache.getIfPresent(projectId) != null) {
+            val cacheCheck = projectClusterCheck(projectRouterCache.getIfPresent(projectId))
+            if (cacheCheck) {
+                return cacheCheck
+            } else if (projectRouterCache.getIfPresent(projectId).isNullOrBlank()) {
+                // 如果缓存内的为"",说明项目没有配置路由信息。 缓存校验生效
+                return cacheCheck
+            }
+        }
+
+        // 内存缓存校验失败, 走redis。 redis数据与db基本保持一致,仅redis击穿后再查db。 redis校验结果具备判断权,校验失败直接返回
+        if (redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId) != null) {
+            val redisCheck = projectClusterCheck(redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId))
+            projectRouterCache.put(projectId, redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)!!)
+            return redisCheck
+        }
+        // 直接从db获取
+        val projectInfo = projectService.getByEnglishName(projectId) ?: return false
+        logger.info("refresh router cache $projectId|${projectInfo.routerTag}| by checkProjectTag")
+        // 刷新内存缓存。 网关根据redis的值做判断依据。 此处不额外更新redis. 减少redis自动操作。
+        projectRouterCache.put(projectId, projectInfo.routerTag ?: "")
+
+        return projectClusterCheck(projectInfo.routerTag)
+    }
+
+    private fun projectClusterCheck(routerTag: String?): Boolean {
+        // 默认集群是不会有routerTag的信息
+        if (routerTag.isNullOrBlank()) {
+            // 只有默认集群在routerTag为空的时候才返回true
+            return tag == prodTag
+        }
+        return tag == routerTag
     }
 
     private fun checkRouteTag(routerTag: String) {
