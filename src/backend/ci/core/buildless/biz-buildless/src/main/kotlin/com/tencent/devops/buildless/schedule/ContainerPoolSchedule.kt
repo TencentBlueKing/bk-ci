@@ -27,8 +27,7 @@
 
 package com.tencent.devops.buildless.schedule
 
-import com.tencent.devops.buildless.service.BuildLessContainerService
-import com.tencent.devops.buildless.utils.CORE_CONTAINER_POOL_SIZE
+import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.utils.RedisUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -36,15 +35,25 @@ import org.springframework.stereotype.Component
 
 @Component
 class ContainerPoolSchedule @Autowired constructor(
-    private val buildlessContainerService: BuildLessContainerService,
-    private val redisUtils: RedisUtils
+    private val redisUtils: RedisUtils,
+    private val containerPoolExecutor: ContainerPoolExecutor
 ) {
-    @Scheduled(cron = "* 0/2 * * * ?")
+    /**
+     * 定时补充容器池
+     */
+    @Scheduled(cron = "0 0/1 * * * ?")
     fun execute() {
-        val coreSize = buildlessContainerService.getRunningPoolCount()
-        if (coreSize >= CORE_CONTAINER_POOL_SIZE) return
-        for (i in 1 until (CORE_CONTAINER_POOL_SIZE - coreSize)) {
-            buildlessContainerService.createBuildLessPoolContainer()
+        // 校准空闲池大小
+        if (redisUtils.getBuildLessReadyTaskSize() == 0L) {
+            val idleContainerPoolSize = redisUtils.getBuildLessPoolContainerIdle()
+            redisUtils.setIdlePool(idleContainerPoolSize)
         }
+
+        containerPoolExecutor.addContainer()
+    }
+
+    @Scheduled(cron = "0 0 0/1 * * ?")
+    fun resetTimeoutContainer() {
+        containerPoolExecutor.clearTimeoutContainers()
     }
 }

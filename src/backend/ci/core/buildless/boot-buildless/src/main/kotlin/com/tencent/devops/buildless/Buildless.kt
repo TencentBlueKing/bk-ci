@@ -32,7 +32,7 @@ import org.springframework.context.annotation.ComponentScan
 
 @MicroService
 @ComponentScan(
-    "com.tencent.devops.buildless",
+    "com.tencent.devops.buildless"
 )
 class Buildless
 

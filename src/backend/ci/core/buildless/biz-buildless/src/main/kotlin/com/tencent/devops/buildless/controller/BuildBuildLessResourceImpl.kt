@@ -25,31 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.api.builds
+package com.tencent.devops.buildless.controller
 
+import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.buildless.service.BuildLessTaskService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
-@Path("/build/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildBuildLessResource {
+@RestResource
+class BuildBuildLessResourceImpl @Autowired constructor(
+    private val buildlessTaskService: BuildLessTaskService
+) : BuildBuildLessResource {
 
-    @ApiOperation("轮询任务")
-    @GET
-    @Path("/task/claim")
-    fun claimBuildLessTask(
-        @ApiParam(value = "containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): BuildLessTask?
+    override fun claimBuildLessTask(containerId: String): BuildLessTask? {
+        return buildlessTaskService.claimBuildLessTask(containerId)
+    }
 }

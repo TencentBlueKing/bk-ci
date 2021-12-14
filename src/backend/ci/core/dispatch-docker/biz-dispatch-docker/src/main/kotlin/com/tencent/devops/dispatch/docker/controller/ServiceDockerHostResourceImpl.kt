@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
-import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
@@ -45,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dispatchDockerService: DispatchDockerService,
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService,
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
 ) : ServiceDockerHostResource {
     override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
         checkParams(page, pageSize)

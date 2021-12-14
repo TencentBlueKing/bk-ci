@@ -25,31 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.api.builds
+package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.docker.common.Constants
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
-@Path("/build/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildBuildLessResource {
+@Service
+class BuildLessWhitelistService constructor(
+    private val redisOperation: RedisOperation
+) {
+    private val logger = LoggerFactory.getLogger(BuildLessWhitelistService::class.java)
 
-    @ApiOperation("轮询任务")
-    @GET
-    @Path("/task/claim")
-    fun claimBuildLessTask(
-        @ApiParam(value = "containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): BuildLessTask?
+    fun getDockerResourceWhiteList(userId: String): List<String> {
+        val whiteList = mutableListOf<String>()
+
+        val whiteSet = redisOperation.getSetMembers(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX)
+        return if (whiteSet != null) {
+            whiteSet.parallelStream().forEach {
+                whiteList.add(it)
+            }
+
+            whiteList
+        } else {
+            emptyList()
+        }
+    }
+
+    fun addBuildLessWhiteList(userId: String, projectId: String): Boolean {
+        redisOperation.addSetValue(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
+        return true
+    }
+
+    fun deleteBuildLessWhiteList(userId: String, projectId: String): Boolean {
+        redisOperation.removeSetMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
+        return true
+    }
+
+    fun checkBuildLessWhitelist(projectId: String): Boolean {
+        return redisOperation.isMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
+    }
 }

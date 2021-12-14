@@ -25,31 +25,60 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.api.builds
+package com.tencent.devops.dispatch.docker.api.op
 
-import com.tencent.devops.buildless.pojo.BuildLessTask
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
-@Path("/build/")
+@Api(tags = ["OP_BUILDLESS_RESOURCE"], description = "OP-无编译环境接口")
+@Path("/op/buildless")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildBuildLessResource {
+interface OPBuildLessWhiteListResource {
 
-    @ApiOperation("轮询任务")
     @GET
-    @Path("/task/claim")
-    fun claimBuildLessTask(
-        @ApiParam(value = "containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): BuildLessTask?
+    @Path("/buildless-whitelist/list")
+    @ApiOperation("获取无编译环境配置白名单列表")
+    fun getPipelineWhitelist(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<String>>
+
+    @POST
+    @Path("/buildless-whitelist/projects/{projectId}/add")
+    @ApiOperation("新增无编译环境配置白名单")
+    fun addPipelineWhitelist(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("服务ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/buildless-whitelist/projects/{projectId}/delete")
+    @ApiOperation("删除无编译环境配置白名单")
+    fun deletePipelineWhitelist(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("服务ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }

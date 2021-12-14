@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class DockerHostConfig {
+class BuildLessConfig {
 
     @Value("\${dockerCli.dockerConfig:/root/.docke}")
     var dockerConfig: String? = null
@@ -51,6 +51,9 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeLogs:/data/logs/}")
     var volumeLogs: String? = null
 
+    @Value("\${dockerCli.volumeWorkspace:/data/devops/workspace}")
+    var volumeWorkspace: String? = null
+
     @Value("\${dockerCli.hostPathApps:#{null}}")
     var hostPathApps: String? = null
 
@@ -62,6 +65,9 @@ class DockerHostConfig {
 
     @Value("\${dockerCli.hostPathLogs:#{null}}")
     var hostPathLogs: String? = null
+
+    @Value("\${dockerCli.hostPathWorkspace:#{null}}")
+    var hostPathWorkspace: String? = null
 
     @Value("\${dockerCli.memoryLimitBytes:34359738368}")
     var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
@@ -80,4 +86,13 @@ class DockerHostConfig {
 
     @Value("\${gateway:#{null}}")
     var gateway: String? = null
+
+    @Value("\${containerPool.coreSize:20}")
+    var coreContainerPool: Int = 20 // 构建机初始化容器池大小
+
+    @Value("\${containerPool.maxSize:30}")
+    var maxContainerPool: Int = 30 // 构建机最大可创建容器池大小
+
+    @Value("\${containerPool.baseImage:blueking/bk-ci}")
+    var containerPoolBaseImage: String = "blueking/bk-ci" // 容器池默认镜像
 }

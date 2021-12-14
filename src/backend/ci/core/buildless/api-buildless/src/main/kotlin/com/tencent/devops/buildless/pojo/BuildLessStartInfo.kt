@@ -35,5 +35,5 @@ data class BuildLessStartInfo(
     val vmSeqId: Int,
     val secretKey: String,
     val executionCount: Int,
-    val rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+    val rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY
 )

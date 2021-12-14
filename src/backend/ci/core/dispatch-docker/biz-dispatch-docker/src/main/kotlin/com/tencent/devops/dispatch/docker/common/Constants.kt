@@ -39,6 +39,11 @@ object Constants {
     const val DOCKER_RESOURCE_WHITE_LIST_KEY_PREFIX = "docker_resource_white_list_"
 
     /**
+     * 无编译环境新方案白名单Key
+     */
+    const val BUILD_LESS_WHITE_LIST_KEY_PREFIX = "dispatchdocker:buildless_whitelist"
+
+    /**
      * 拉代码优化工蜂项目ID白名单Key
      */
     const val QPC_WHITE_LIST_KEY_PREFIX = "dispatchdocker:qpc_white_list"

@@ -45,6 +45,14 @@ object CommonUtils {
     @Value("\${spring.cloud.consul.discovery.tags:prod}")
     private val consulTag: String = "prod"
 
+    fun formatContainerId(containerId: String): String {
+        return if (containerId.length > 12) {
+            containerId.substring(0, 12)
+        } else {
+            containerId
+        }
+    }
+
     fun isGary(): Boolean {
         return consulTag.contains("gray")
     }

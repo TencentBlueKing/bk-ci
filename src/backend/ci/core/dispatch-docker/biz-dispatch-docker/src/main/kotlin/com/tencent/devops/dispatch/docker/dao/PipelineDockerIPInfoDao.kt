@@ -181,6 +181,7 @@ class PipelineDockerIPInfoDao {
                     .set(DISK_IO_LOAD, dockerIpInfoVO.averageDiskIOLoad)
                     .set(ENABLE, dockerIpInfoVO.enable)
                     .set(GRAY_ENV, dockerIpInfoVO.grayEnv)
+                    .set(CLUSTER_NAME, dockerIpInfoVO.clusterType!!.name)
                     .set(GMT_MODIFIED, LocalDateTime.now())
                     .where(DOCKER_IP.eq(dockerIp))
                     .and(DOCKER_HOST_PORT.eq(dockerIpInfoVO.dockerHostPort))
@@ -337,13 +338,15 @@ class PipelineDockerIPInfoDao {
 
     fun getEnableDockerIpCount(
         dslContext: DSLContext,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
     ): Long {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
+                .and(CLUSTER_NAME.eq(clusterName.name))
                 .fetchOne(0, Long::class.java)!!
         }
     }

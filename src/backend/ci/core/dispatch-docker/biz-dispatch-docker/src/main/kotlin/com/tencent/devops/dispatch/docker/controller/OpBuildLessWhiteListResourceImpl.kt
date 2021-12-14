@@ -25,21 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.buildless.controller
+package com.tencent.devops.dispatch.docker.controller
 
-import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.op.OPBuildLessWhiteListResource
+import com.tencent.devops.dispatch.docker.service.BuildLessWhitelistService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildBuildlessResourceImpl @Autowired constructor(
-    private val buildlessTaskService: BuildLessTaskService
-) : BuildBuildLessResource {
+class OpBuildLessWhiteListResourceImpl @Autowired constructor(
+    private val buildLessWhitelistService: BuildLessWhitelistService
+) : OPBuildLessWhiteListResource {
 
-    override fun claimBuildLessTask(containerId: String): BuildLessTask? {
-        return buildlessTaskService.claimBuildLessTask(containerId)
+    override fun getPipelineWhitelist(userId: String): Result<List<String>> {
+        return Result(buildLessWhitelistService.getDockerResourceWhiteList(userId))
+    }
+
+    override fun addPipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
+        return Result(buildLessWhitelistService.addBuildLessWhiteList(userId, projectId))
+    }
+
+    override fun deletePipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
+        return Result(buildLessWhitelistService.deleteBuildLessWhiteList(userId, projectId))
     }
 }

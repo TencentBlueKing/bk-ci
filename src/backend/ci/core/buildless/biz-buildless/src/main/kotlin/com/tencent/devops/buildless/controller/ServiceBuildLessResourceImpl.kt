@@ -27,6 +27,7 @@
 
 package com.tencent.devops.buildless.controller
 
+import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.exception.BuildLessException
@@ -41,17 +42,18 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceBuildLessResourceImpl @Autowired constructor(
+    private val containerPoolExecutor: ContainerPoolExecutor,
     private val buildLessContainerService: BuildLessContainerService
 ) : ServiceBuildlessResource {
     override fun startBuild(buildLessEndInfo: BuildLessStartInfo): Result<String> {
         with(buildLessEndInfo) {
             return try {
                 logger.warn("Allocate container, dockerHostBuildInfo: $this")
-                buildLessContainerService.allocateContainer(this)
+                containerPoolExecutor.execute(this)
                 Result("")
             } catch (e: NoIdleContainerException) {
                 logger.warn("$buildId|$vmSeqId|$executionCount No idle container, reject the execution.")
-                Result(e.errorCode, "")
+                Result(e.errorCode, e.message)
             } catch (e: BuildLessException) {
                 logger.error("$buildId|$vmSeqId|$executionCount allocate container failed. ${e.message}")
                 Result(e.errorCode, ": ${e.message}", "")
@@ -65,7 +67,14 @@ class ServiceBuildLessResourceImpl @Autowired constructor(
     override fun endBuild(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
         logger.warn("${buildLessEndInfo.buildId}|${buildLessEndInfo.vmSeqId} Stop the container, " +
                 "containerId: ${buildLessEndInfo.containerId}")
-        buildLessContainerService.stopContainer(buildLessEndInfo)
+        buildLessContainerService.stopContainer(
+            buildId = buildLessEndInfo.buildId,
+            vmSeqId = buildLessEndInfo.vmSeqId.toString(),
+            containerId = buildLessEndInfo.containerId
+        )
+
+        // 容器关闭后接着创建新容器
+        containerPoolExecutor.addContainer()
 
         return Result(true)
     }

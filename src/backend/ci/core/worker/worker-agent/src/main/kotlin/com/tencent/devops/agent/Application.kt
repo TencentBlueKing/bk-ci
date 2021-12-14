@@ -45,7 +45,10 @@ import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
+import okhttp3.Response
 import java.io.File
+import java.time.LocalDate
+import java.util.Locale
 
 fun main(args: Array<String>) {
     // 调用 DHUtil 初始化 SecurityProvider
@@ -116,39 +119,47 @@ fun main(args: Array<String>) {
 }
 
 private fun waitBuildLessJobStart() {
-    var startFlag: Boolean = false
+    var startFlag = false
     val dockerHostIp = DockerEnv.getDockerHostIp()
-    val dockerHostPort = DockerEnv.getDockerHostPort()
+    val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+    println("${LocalDate.now()} BuildLess loopUrl: $loopUrl")
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
-    println("BuildLess loopUrl: $loopUrl")
     do {
         try {
             OkhttpUtils.doHttp(request).use { resp ->
-                if (resp.isSuccessful && resp.body() != null) {
-                    val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
-                    buildLessTask.forEach { t, u ->
-                        when (t) {
-                            "agentId" -> System.setProperty(AGENT_ID, u)
-                            "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
-                        }
-                    }
-                    startFlag = true
-                } else {
-                    println("No buildLessTask, resp: ${resp.body()} continue loop...")
-                }
+                startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
-            println("Get buildLessTask error. continue loop... \n${e.message}")
+            println("${LocalDate.now()} Get buildLessTask error. continue loop... \n${e.message}")
         }
 
         if (!startFlag) {
             Thread.sleep(1000)
         }
     } while (!startFlag)
+}
+
+private fun doResponse(
+    resp: Response
+): Boolean {
+    return if (resp.isSuccessful && resp.body() != null) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+        buildLessTask.forEach { (t, u) ->
+            when (t) {
+                "agentId" -> System.setProperty(AGENT_ID, u)
+                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                "projectId" -> System.setProperty("devops_project_id", u)
+            }
+        }
+        true
+    } else {
+        println("No buildLessTask, resp: ${resp.body()} continue loop...")
+        false
+    }
 }

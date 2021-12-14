@@ -132,16 +132,14 @@ class PipelineDockerBuildDao {
         }
     }
 
-    fun updateContainerIdAndDockerIp(
+    fun updateDockerIp(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: Int,
-        containerId: String,
         dockerIp: String
     ): Boolean {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             return dslContext.update(this)
-                .set(CONTAINER_ID, containerId)
                 .set(DOCKER_IP, dockerIp)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))

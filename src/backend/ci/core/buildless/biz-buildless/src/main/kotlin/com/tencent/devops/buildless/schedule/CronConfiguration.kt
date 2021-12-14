@@ -47,7 +47,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class CronConfiguration @Autowired constructor(
     private val dispatchClient: DispatchClient,
-    private val buildlessContainerService: BuildLessContainerService,
+    private val buildLessContainerService: BuildLessContainerService
 ) : SchedulingConfigurer {
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
@@ -57,7 +57,7 @@ class CronConfiguration @Autowired constructor(
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 {
-                    val containerRunningsCount = buildlessContainerService.getRunningPoolCount()
+                    val containerRunningsCount = buildLessContainerService.getRunningPoolSize()
                     dispatchClient.refreshStatus(containerRunningsCount)
                 }, 5 * random.toLong(), random.toLong()
             )
