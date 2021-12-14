@@ -529,35 +529,20 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
                 logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.RTX}|template=${request.templateCode}")
             } else {
-//                val rtxTplRecord =
-//                    notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
-//                        dslContext = dslContext,
-//                        commonTemplateId = commonNotifyMessageTemplateRecord.id
-//                    )!!
-//                // 替换标题里的动态参数
-//                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
-//                // 替换内容里的动态参数
-//                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
-//                sendRtxNotifyMessage(
-//                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-//                    sendNotifyMessageTemplateRequest = request,
-//                    title = title,
-//                    body = body,
-//                    sender = rtxTplRecord.sender
-//                )
                 logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
                 val weworkTplRecord =
                     notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                         dslContext = dslContext,
                         commonTemplateId = commonNotifyMessageTemplateRecord.id
                     )!!
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 // 替换内容里的动态参数
                 val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
                 logger.info("send wework msg: $body ${weworkTplRecord.sender}")
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    body = body,
+                    body = "$title" + "\n\n" + "$body",
                     sender = weworkTplRecord.sender
                 )
             }
@@ -593,11 +578,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
                 // 替换内容里的动态参数
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    body = body,
+                    body = "$title" + "\n\n" + "$body",
                     sender = weworkTplRecord.sender
                 )
             }

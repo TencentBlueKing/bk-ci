@@ -25,11 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.common.pipeline.utils
 
-data class RevisionInfo(
-    val revision: String,
-    val updatedMessage: String,
-    val branchName: String,
-    val authorName: String
-)
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import org.junit.Assert
+import org.junit.Test
+
+class ChannelCodeTest {
+
+    @Test
+    fun channelCodeTest() {
+        val bs = "BS"
+        val channelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(channelCode, ChannelCode.BS)
+    }
+
+    @Test
+    fun webTest() {
+        val bs = "BS"
+        val bsChannelCode = ChannelCode.getChannel(bs)
+        Assert.assertEquals(true, ChannelCode.webChannel(bsChannelCode!!))
+
+        val codecc = "CODECC_EE"
+        val codeccChannelCode = ChannelCode.getChannel(codecc)
+        Assert.assertEquals(false, ChannelCode.webChannel(codeccChannelCode!!))
+    }
+}

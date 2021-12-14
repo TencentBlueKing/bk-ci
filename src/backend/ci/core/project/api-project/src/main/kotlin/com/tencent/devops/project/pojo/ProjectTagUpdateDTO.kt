@@ -23,13 +23,33 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.project.pojo
 
-data class RevisionInfo(
-    val revision: String,
-    val updatedMessage: String,
-    val branchName: String,
-    val authorName: String
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目consul tag修改入参")
+data class ProjectTagUpdateDTO(
+    @JsonProperty(value = "routerTag", required = true)
+    @ApiModelProperty("项目对应的router tags", name = "routerTag")
+    val routerTag: String,
+    @JsonProperty(value = "projectCodeList", required = false)
+    @ApiModelProperty("项目编码集合", name = "projectCodeList")
+    val projectCodeList: List<String>?,
+    @JsonProperty(value = "bgId", required = false)
+    @ApiModelProperty("BgId", name = "bgId")
+    val bgId: Long?,
+    @JsonProperty(value = "centerId", required = false)
+    @ApiModelProperty("centerId", name = "centerId")
+    val centerId: Long?,
+    @JsonProperty(value = "deptId", required = false)
+    @ApiModelProperty("deptId", name = "deptId")
+    val deptId: Long?,
+    @JsonProperty(value = "channel", required = false)
+    @ApiModelProperty("channel", name = "channel")
+    val channel: String?
 )

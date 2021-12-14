@@ -25,11 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.project.constant
 
-data class RevisionInfo(
-    val revision: String,
-    val updatedMessage: String,
-    val branchName: String,
-    val authorName: String
-)
+object ProjectConstant {
+    const val NAME_MAX_LENGTH = 64
+    const val NAME_MIN_LENGTH = 2
+}
