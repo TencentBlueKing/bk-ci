@@ -95,6 +95,8 @@ class PipelineRemoteAuthService @Autowired constructor(
         }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
+        // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
+        // 因原ServiceBuildResource内的manualStartup接口未满足ProjectId在HEAD内的标准。故重新定义一个标准的接口
         return client.getGateway(ServiceBuildResource::class).manualStartupNew(
                 userId = userId!!,
                 projectId = pipeline.projectId,
@@ -104,20 +106,6 @@ class PipelineRemoteAuthService @Autowired constructor(
                 startType = StartType.REMOTE,
                 buildNo = null
             ).data!!
-//        return BuildId(
-//            pipelineBuildFacadeService.buildManualStartup(
-//                userId = userId!!,
-//                startType = StartType.REMOTE,
-//                projectId = pipeline.projectId,
-//                pipelineId = pipeline.pipelineId,
-//                values = values,
-//                channelCode = ChannelCode.BS,
-//                checkPermission = true,
-//                isMobile = false,
-//                startByMessage = "m-$auth",
-//                frequencyLimit = true
-//            )
-//        )
     }
 
     companion object {
