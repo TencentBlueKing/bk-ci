@@ -68,4 +68,18 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
     override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
         return Result(pipelineGroupService.updateLabel(userId, pipelineLabel))
     }
+
+    override fun updatePipelineLabel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        labelIds: List<String>
+    ): Result<Boolean> {
+        return try {
+            pipelineGroupService.updatePipelineLabel(userId, projectId, pipelineId, labelIds)
+            Result(true)
+        } catch (e: Exception) {
+            Result(data = false, message = e.message)
+        }
+    }
 }
