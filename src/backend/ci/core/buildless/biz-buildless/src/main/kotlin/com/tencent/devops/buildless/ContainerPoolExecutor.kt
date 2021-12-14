@@ -40,6 +40,7 @@ class ContainerPoolExecutor @Autowired constructor(
                 addContainer(true)
             }
 
+            logger.info("$buildId|$vmSeqId|$executionCount left push buildLessReadyTask")
             redisUtils.leftPushBuildLessReadyTask(
                 BuildLessTask(
                     projectId = projectId,
