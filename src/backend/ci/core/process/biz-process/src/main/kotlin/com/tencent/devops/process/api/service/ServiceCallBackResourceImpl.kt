@@ -53,7 +53,7 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
-        projectPipelineCallBackService.createCallBack(
+        val result = projectPipelineCallBackService.createCallBack(
             userId = userId,
             projectId = projectId,
             url = url,
@@ -61,7 +61,11 @@ class ServiceCallBackResourceImpl @Autowired constructor(
             event = event.name,
             secretToken = secretToken
         )
-        return Result(true)
+        return if (result.failureEvents.isNotEmpty()) {
+            Result(false)
+        } else {
+            Result(true)
+        }
     }
 
     override fun batchCreate(
