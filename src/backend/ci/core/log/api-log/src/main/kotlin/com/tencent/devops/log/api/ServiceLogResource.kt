@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -75,6 +76,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -105,6 +109,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
@@ -150,6 +157,9 @@ interface ServiceLogResource {
         @ApiParam("是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
+        @ApiParam("过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,

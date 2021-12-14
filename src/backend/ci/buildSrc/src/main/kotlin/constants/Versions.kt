@@ -2,6 +2,7 @@ object Versions {
     const val HashIds = "1.0.3"
     const val Jaxrs = "2.0"
     const val CommonExec = "1.3"
+    const val CommonText = "1.9"
     const val Vmware = "5.1"
     const val BouncyCastle = "1.46"
     const val Dom4j = "1.6.1"
@@ -33,4 +34,7 @@ object Versions {
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
     const val Oshi = "5.8.3"
+    const val Leaf = "1.0.1-RELEASE"
+    const val p4 = "2021.1.2163843"
+    const val log4j = "2.15.0"
 }

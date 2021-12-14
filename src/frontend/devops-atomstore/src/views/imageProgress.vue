@@ -441,7 +441,7 @@
         }
     }
 
-    /deep/ .bk-sideslider-wrapper {
+    ::v-deep .bk-sideslider-wrapper {
         top: 0;
         padding-bottom: 0;
         .bk-sideslider-content {

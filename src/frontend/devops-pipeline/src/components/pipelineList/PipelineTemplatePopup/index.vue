@@ -194,7 +194,7 @@
                 'templateCategory'
             ]),
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
 
             tplTypes () {
@@ -231,7 +231,7 @@
                         }
                     })
                 } else {
-                    Object.keys(pipelineTemplate || {}).map(item => {
+                    Object.keys(pipelineTemplate || {}).forEach(item => {
                         const curItem = pipelineTemplate[item] || {}
                         if ((type === 'custom' && ['PUBLIC', 'CUSTOMIZE'].includes(curItem.templateType)) || curItem.category.includes(type)) {
                             list.push({
@@ -265,13 +265,13 @@
         },
 
         watch: {
-            'pipelineTemplate': function (newVal, oldVal) {
+            pipelineTemplate: function (newVal, oldVal) {
                 if (newVal) {
                     this.isLoading = false
                     this.selectTemp(0)
                 }
             },
-            'isShow': function () {
+            isShow: function () {
                 if (this.isShow) {
                     this.isLoading = true
                     this.requestCategory()

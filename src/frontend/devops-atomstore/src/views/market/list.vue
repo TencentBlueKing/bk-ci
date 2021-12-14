@@ -87,7 +87,7 @@
             initData () {
                 const { sortType, pipeType } = this.$route.query
                 const defaultOrderTypeMap = {
-                    'atom': 'RECENT_EXECUTE_NUM'
+                    atom: 'RECENT_EXECUTE_NUM'
                 }
                 const orderType = sortType || defaultOrderTypeMap[pipeType] || 'DOWNLOAD_COUNT'
                 const order = this.orderList.find((order) => (order.id === orderType))
