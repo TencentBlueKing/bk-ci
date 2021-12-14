@@ -56,6 +56,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.net.ConnectException
 import java.net.NoRouteToHostException
 import java.net.SocketTimeoutException
 
@@ -255,6 +256,15 @@ class BuildLessClient @Autowired constructor(
             }
         } catch (e: NoRouteToHostException) {
             // 对Host unreachable场景重试
+            doRetry(
+                retryTime = retryTime,
+                retryMax = retryMax,
+                dockerIp = dockerIp,
+                buildLessStartInfo = buildLessStartInfo,
+                errorMessage = e.message,
+                unAvailableIpList = unAvailableIpList
+            )
+        } catch (e: ConnectException) {
             doRetry(
                 retryTime = retryTime,
                 retryMax = retryMax,
