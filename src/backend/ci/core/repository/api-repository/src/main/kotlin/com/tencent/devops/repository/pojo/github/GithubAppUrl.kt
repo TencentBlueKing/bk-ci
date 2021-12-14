@@ -25,34 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.repository.pojo.github
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserGithubResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.github.GithubAppUrl
-import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubTokenService
-import com.tencent.devops.repository.service.github.IGithubService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class UserGithubResourceImpl @Autowired constructor(
-    private val githubService: IGithubService,
-    private val githubOAuthService: GithubOAuthService,
-    private val githubTokenService: GithubTokenService
-) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
-    }
-
-    override fun deleteToken(userId: String): Result<Boolean> {
-        githubTokenService.deleteAccessToken(userId)
-        return Result(true)
-    }
-
-    override fun getGithubAppUrl(): Result<GithubAppUrl> {
-        return Result(githubOAuthService.getGithubAppUrl())
-    }
-}
+data class GithubAppUrl(
+    val url: String
+)
