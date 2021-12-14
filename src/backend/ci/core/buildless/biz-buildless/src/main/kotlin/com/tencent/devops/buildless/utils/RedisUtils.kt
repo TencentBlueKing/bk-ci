@@ -43,13 +43,13 @@ class RedisUtils @Autowired constructor(
         containerId: String,
         containerStatus: ContainerStatus
     ) {
-        logger.info("----> buildLessPoolKey hset $containerId idle.")
-        redisOperation.hset(buildLessPoolKey(), formatContainerId(containerId), containerStatus.name)
+        logger.info("----> buildLessPoolKey hset $containerId ${containerStatus.name}.")
+        redisOperation.hset(buildLessPoolKey(), CommonUtils.formatContainerId(containerId), containerStatus.name)
     }
 
     fun deleteBuildLessPoolContainer(containerId: String) {
         logger.info("----> buildLessPoolKey hdelete $containerId")
-        redisOperation.hdelete(buildLessPoolKey(), formatContainerId(containerId))
+        redisOperation.hdelete(buildLessPoolKey(), CommonUtils.formatContainerId(containerId))
     }
 
     fun getBuildLessPoolContainerList(): MutableMap<String, String> {
@@ -109,14 +109,6 @@ class RedisUtils @Autowired constructor(
 
     private fun buildLessReadyTaskKey(): String {
         return "buildless:ready_task:${CommonUtils.getHostIp()}"
-    }
-
-    private fun formatContainerId(containerId: String): String {
-        return if (containerId.length > 12) {
-            containerId.substring(0, 12)
-        } else {
-            containerId
-        }
     }
 
     companion object {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.buildless.service
 
+import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.ContainerStatus
@@ -40,13 +41,14 @@ import org.springframework.stereotype.Service
 @Service
 class BuildLessTaskService(
     private val redisUtils: RedisUtils,
-    private val dispatchClient: DispatchClient
+    private val dispatchClient: DispatchClient,
+    private val containerPoolExecutor: ContainerPoolExecutor
 ) {
 
     fun claimBuildLessTask(containerId: String): BuildLessTask? {
         // 校验当前容器状态是否正常
-        val containerStatus = redisUtils.getBuildLessPoolContainer(containerId)
-        if (containerStatus == ContainerStatus.BUSY.name) {
+        val containerStatus = containerPoolExecutor.getContainerStatus(containerId)
+        if (containerStatus != ContainerStatus.IDLE.name) {
             return null
         }
 

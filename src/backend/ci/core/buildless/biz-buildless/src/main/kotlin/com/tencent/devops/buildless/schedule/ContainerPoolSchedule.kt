@@ -27,20 +27,20 @@
 
 package com.tencent.devops.buildless.schedule
 
-import com.tencent.devops.buildless.config.BuildLessConfig
-import com.tencent.devops.buildless.service.BuildLessContainerService
+import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.utils.RedisUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
 class ContainerPoolSchedule @Autowired constructor(
-    private val buildLessConfig: BuildLessConfig,
     private val redisUtils: RedisUtils,
-    private val buildLessContainerService: BuildLessContainerService
+    private val containerPoolExecutor: ContainerPoolExecutor
 ) {
+    /**
+     * 定时补充容器池
+     */
     @Scheduled(cron = "0 0/1 * * * ?")
     fun execute() {
         // 校准空闲池大小
@@ -49,16 +49,11 @@ class ContainerPoolSchedule @Autowired constructor(
             redisUtils.setIdlePool(idleContainerPoolSize)
         }
 
-        val coreSize = buildLessContainerService.getRunningPoolCount()
-        logger.info("Scheduler coreSize: $coreSize")
-        if (coreSize >= buildLessConfig.coreContainerPool) return
-        for (i in 1 until (buildLessConfig.coreContainerPool - coreSize + 1)) {
-            logger.info("Scheduler create container $i")
-            buildLessContainerService.createBuildLessPoolContainer()
-        }
+        containerPoolExecutor.addContainer()
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ContainerPoolSchedule::class.java)
+    @Scheduled(cron = "0 0 0/1 * * ?")
+    fun resetTimeoutContainer() {
+        containerPoolExecutor.clearTimeoutContainers()
     }
 }

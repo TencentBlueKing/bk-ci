@@ -57,7 +57,7 @@ class CronConfiguration @Autowired constructor(
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 {
-                    val containerRunningsCount = buildLessContainerService.getRunningPoolCount()
+                    val containerRunningsCount = buildLessContainerService.getRunningPoolSize()
                     dispatchClient.refreshStatus(containerRunningsCount)
                 }, 5 * random.toLong(), random.toLong()
             )

@@ -32,6 +32,7 @@ import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
+import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
@@ -39,10 +40,6 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.buildless.config.BuildLessConfig
-import com.tencent.devops.buildless.pojo.BuildLessEndInfo
-import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.utils.BK_DISTCC_LOCAL_IP
 import com.tencent.devops.buildless.utils.BUILDLESS_POOL_PREFIX
 import com.tencent.devops.buildless.utils.CommonUtils
@@ -60,6 +57,8 @@ import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 import kotlin.streams.toList
 
 /**
@@ -70,8 +69,7 @@ import kotlin.streams.toList
 class BuildLessContainerService(
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
-    private val buildLessConfig: BuildLessConfig,
-    private val rejectedExecutionFactory: RejectedExecutionFactory
+    private val buildLessConfig: BuildLessConfig
 ) {
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -91,45 +89,7 @@ class BuildLessContainerService(
         .withDockerHttpClient(httpClient)
         .build()
 
-    fun allocateContainer(buildLessStartInfo: BuildLessStartInfo) {
-        val idlePoolSize = redisUtils.getIdlePoolSize()
-
-        // 无空闲容器时执行拒绝策略
-        logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
-        if (idlePoolSize <= 0L) {
-            val continueAllocate = rejectedExecutionFactory
-                .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
-                .rejectedExecution(buildLessStartInfo)
-
-            if (!continueAllocate) {
-                return
-            }
-        }
-
-        // 已经进入需求池，所以减1
-        redisUtils.increIdlePool(-1)
-
-        // FOLLOW或JUMP策略下，无空闲容器并且当前容器数小于最大容器数
-        val runningPool = getRunningPoolCount()
-        logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} runningPool: $runningPool")
-        if (idlePoolSize <= 0L &&
-            (runningPool in buildLessConfig.coreContainerPool until buildLessConfig.maxContainerPool)) {
-            createBuildLessPoolContainer(true)
-        }
-
-        redisUtils.leftPushBuildLessReadyTask(BuildLessTask(
-            projectId = buildLessStartInfo.projectId,
-            pipelineId = buildLessStartInfo.pipelineId,
-            buildId = buildLessStartInfo.buildId,
-            executionCount = buildLessStartInfo.executionCount,
-            vmSeqId = buildLessStartInfo.vmSeqId,
-            agentId = buildLessStartInfo.agentId,
-            secretKey = buildLessStartInfo.secretKey
-        ))
-    }
-
-    @Synchronized
-    fun createBuildLessPoolContainer(oversold: Boolean = false) {
+    fun createContainer() {
         val volumeApps = Volume(buildLessConfig.volumeApps)
         val volumeInit = Volume(buildLessConfig.volumeInit)
         val volumeSleep = Volume(buildLessConfig.volumeSleep)
@@ -148,58 +108,53 @@ class BuildLessContainerService(
             Bind(hostWorkspace, volumeWs)
         )
 
-        // 创建之前校验当前缓存中的空闲容器数，超卖情况下校验规则不一致
-        val runningContainerCount = getRunningPoolCount()
-        if (!oversold && runningContainerCount >= buildLessConfig.coreContainerPool) return
-        if (oversold && runningContainerCount >= buildLessConfig.maxContainerPool) return
-
-        val container = httpDockerCli.createContainerCmd(buildLessConfig.containerPoolBaseImage)
-            .withName(containerName)
-            .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
-            .withCmd("/bin/sh", ENTRY_POINT_CMD)
-            .withEnv(
-                listOf(
-                    "$ENV_KEY_GATEWAY=$gateway",
-                    "TERM=xterm-256color",
-                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-                    "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-                    "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-                    "$ENV_CONTAINER_NAME=$containerName",
-                    "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$hostWorkspace"
+        try {
+            val container = httpDockerCli.createContainerCmd(buildLessConfig.containerPoolBaseImage)
+                .withName(containerName)
+                .withLabels(mapOf(BUILDLESS_POOL_PREFIX to ""))
+                .withCmd("/bin/sh", ENTRY_POINT_CMD)
+                .withEnv(
+                    listOf(
+                        "$ENV_KEY_GATEWAY=$gateway",
+                        "TERM=xterm-256color",
+                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                        "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
+                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
+                        "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                        "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+                        "$ENV_CONTAINER_NAME=$containerName",
+                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$hostWorkspace"
+                    )
                 )
-            )
-            .withHostConfig(
-                // CPU and memory Limit
-                HostConfig()
-                    .withMemory(buildLessConfig.memory)
-                    .withCpuQuota(buildLessConfig.cpuQuota.toLong())
-                    .withCpuPeriod(buildLessConfig.cpuPeriod.toLong())
-                    .withBinds(binds)
-                    .withNetworkMode("bridge")
-            )
-            .exec()
+                .withHostConfig(
+                    // CPU and memory Limit
+                    HostConfig()
+                        .withMemory(buildLessConfig.memory)
+                        .withCpuQuota(buildLessConfig.cpuQuota.toLong())
+                        .withCpuPeriod(buildLessConfig.cpuPeriod.toLong())
+                        .withBinds(binds)
+                        .withNetworkMode("bridge")
+                )
+                .exec()
 
-        httpDockerCli.startContainerCmd(container.id).exec()
+            httpDockerCli.startContainerCmd(container.id).exec()
 
-        redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
-        redisUtils.increIdlePool(1)
-        logger.info("===> created container $container")
-    }
+            redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
+            redisUtils.increIdlePool(1)
 
-    fun stopContainer(buildLessEndInfo: BuildLessEndInfo) {
-        with(buildLessEndInfo) {
-            stopContainer(containerId, buildId)
+            logger.info("===> created container: $containerName $container")
+        } catch (e: Exception) {
+            logger.error("===> failed to created container.", e)
         }
-
-        // 容器销毁后接着拉起新的容器
-        createBuildLessPoolContainer()
     }
 
-    fun stopContainer(containerId: String, buildId: String) {
+    fun stopContainer(
+        buildId: String,
+        vmSeqId: String,
+        containerId: String
+    ) {
         if (containerId.isEmpty()) {
-            logger.error("[$buildId]| Stop the container failed, containerId is null.")
+            logger.error("$buildId|$vmSeqId Stop the container failed, containerId is null.")
             return
         }
 
@@ -210,10 +165,10 @@ class BuildLessContainerService(
                 httpDockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (e: NotModifiedException) {
-            logger.error("[$buildId]| Stop the container failed, containerId: $containerId already stopped.")
+            logger.error("$buildId|$vmSeqId Stop the container failed, containerId: $containerId already stopped.")
         } catch (ignored: Throwable) {
             logger.error(
-                "[$buildId]| Stop the container failed, containerId: $containerId, " +
+                "$buildId|$vmSeqId Stop the container failed, containerId: $containerId, " +
                         "error msg: $ignored", ignored
             )
         }
@@ -223,7 +178,7 @@ class BuildLessContainerService(
             httpDockerCli.removeContainerCmd(containerId).exec()
         } catch (ignored: Throwable) {
             logger.error(
-                "[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored",
+                "$buildId|$vmSeqId Stop the container failed, containerId: $containerId, error msg: $ignored",
                 ignored
             )
         } finally {
@@ -234,7 +189,7 @@ class BuildLessContainerService(
     /**
      * 检验容器池的大小
      */
-    fun getRunningPoolCount(): Int {
+    fun getRunningPoolSize(): Int {
         val containerInfo = httpDockerCli
             .listContainersCmd()
             .withStatusFilter(setOf("running"))
@@ -249,6 +204,7 @@ class BuildLessContainerService(
                 it.id
             }
         }.toList()
+
         val buildLessPoolContainerList = redisUtils.getBuildLessPoolContainerList()
         buildLessPoolContainerList.forEach { (key, _) ->
             if (!containerIds.contains(key)) {
@@ -257,6 +213,38 @@ class BuildLessContainerService(
         }
 
         return containerInfo.size
+    }
+
+    fun getDockerRunTimeoutContainers(): MutableList<Container> {
+        val containerInfo = httpDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        val timeoutContainerList = mutableListOf<Container>()
+        for (container in containerInfo) {
+            val startTime = httpDockerCli.inspectContainerCmd(container.id).exec().state.startedAt
+            // 是否已运行超过12小时
+            if (checkStartTime(startTime)) {
+                timeoutContainerList.add(container)
+                // logger.info("Clear 12h timeout container, containerId: ${container.id}")
+                // httpDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+            }
+        }
+
+        return timeoutContainerList
+    }
+
+    private fun checkStartTime(utcTime: String?): Boolean {
+        if (utcTime != null && utcTime.isNotEmpty()) {
+            val array = utcTime.split(".")
+            val utcTimeLocal = array[0] + "Z"
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = sdf.parse(utcTimeLocal)
+            val startTimestamp = date.time
+            val nowTimestamp = System.currentTimeMillis()
+            return (nowTimestamp - startTimestamp) > (12 * 3600 * 1000)
+        }
+
+        return false
     }
 
     companion object {
