@@ -133,6 +133,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         retryCount: Int
     ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw NotFoundException("Fail to find build: buildId($buildId)")
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
@@ -185,7 +186,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     }
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
-                    buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo!!, containerId = vmSeqId)
+                    buildingHeartBeatUtils.dispatchHeartbeatEvent(buildInfo = buildInfo, containerId = vmSeqId)
                     setStartUpVMStatus(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
@@ -213,11 +214,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
-        throw NotFoundException("Fail to find the vm build container")
+        throw NotFoundException("Fail to find the vm build container: j($vmSeqId) vmName($vmName)")
     }
 
     /**
-     * 对[customBuildEnv]的占位符进行替换，之后再塞入加入构建机容器的上下文[context]
+     * 对[customBuildEnv]的占位符进行替换，之后再塞入加入构建机容器的上下文[context]，同时追加了构建矩阵上下文
      */
     private fun fillContainerContext(context: MutableMap<String, String>, customBuildEnv: Map<String, String>?) {
         context.putAll(customBuildEnv?.map { mit ->
