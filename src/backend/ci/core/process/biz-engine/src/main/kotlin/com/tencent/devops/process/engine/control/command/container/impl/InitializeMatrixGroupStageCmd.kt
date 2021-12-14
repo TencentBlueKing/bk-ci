@@ -288,6 +288,9 @@ class InitializeMatrixGroupStageCmd(
 
             contextCaseList.forEach { contextCase ->
 
+                // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
+                val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val newContainerSeq = context.containerSeq++
                 val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
@@ -300,6 +303,7 @@ class InitializeMatrixGroupStageCmd(
                     matrixContext = contextCase,
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
+                    customBuildEnv = allContext,
                     jobControlOption = jobControlOption.copy(),
                     executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag
