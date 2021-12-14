@@ -52,7 +52,8 @@ object PathUtils {
 
     fun buildDetailLink(projectId: String, artifactoryType: String, path: String): String {
         return "${HomeHostUtil.outerServerHost()}/share/artifactoryDetail/?flag=artifactoryDetail" +
-                "&projectId=$projectId&artifactoryType=$artifactoryType&x-devops-project-id=$projectId&artifactoryPath=${
+                "&projectId=$projectId&artifactoryType=$artifactoryType" +
+                "&x-devops-project-id=$projectId&artifactoryPath=${
                     URLEncoder.encode(
                         path,
                         "utf-8"
