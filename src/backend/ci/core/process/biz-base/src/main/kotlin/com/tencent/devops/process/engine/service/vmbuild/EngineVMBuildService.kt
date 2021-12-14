@@ -138,8 +138,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(buildId)
-        // 环境变量替换上下文
-        val jobContext = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = containerBuildDetailService.getBuildModel(buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
@@ -165,22 +164,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
-                    val (containerEnv, timeoutMills) = when (c) {
+                    // #4518 填充构建机环境变量、构建上下文、获取超时时间
+                    val (containerEnv, context, timeoutMills) = when (c) {
                         is VMBuildContainer -> {
-                            val list = mutableListOf<BuildEnv>()
+                            val envList = mutableListOf<BuildEnv>()
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
-                            fillContainerContext(jobContext, c.customBuildEnv)
+                            val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                            fillContainerContext(contextMap, c.customBuildEnv)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
-                                ).data?.let { self -> list.add(self) }
+                                ).data?.let { self -> envList.add(self) }
                             }
-                            Pair(list, timeoutMills)
+                            Triple(envList, contextMap, timeoutMills)
                         }
                         is NormalContainer -> {
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
-                            fillContainerContext(jobContext, c.customBuildEnv)
-                            Pair(mutableListOf(), timeoutMills)
+                            val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                            fillContainerContext(contextMap, c.customBuildEnv)
+                            Triple(mutableListOf(), contextMap, timeoutMills)
                         }
                         else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
                     }
@@ -201,7 +203,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         vmName = vmName,
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
-                        variables = jobContext,
+                        variables = context,
                         buildEnvs = containerEnv,
                         containerId = c.id!!,
                         containerHashId = c.containerHashId ?: "",
