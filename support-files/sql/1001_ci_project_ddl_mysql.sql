@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限',
   `router_tag` varchar(32) DEFAULT NULL COMMENT '网关路由tags',
   `relation_id` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
+  `other_router_tags` varchar(128) DEFAULT NULL COMMENT '其他系统网关路由tags',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -253,5 +254,14 @@ CREATE TABLE IF NOT EXISTS `T_NOTICE` (
   KEY `inx_tn_effect_date` (`EFFECT_DATE`) USING BTREE,
   KEY `inx_tn_invalid_date` (`INVALID_DATE`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+
+CREATE TABLE IF NOT EXISTS `T_LEAF_ALLOC` (
+  `BIZ_TAG` varchar(128) NOT NULL DEFAULT '' COMMENT '业务标签',
+  `MAX_ID` bigint(20) NOT NULL DEFAULT '1' COMMENT '当前最大ID值',
+  `STEP` int(11) NOT NULL COMMENT '步长,每一次请求获取的ID个数',
+  `DESCRIPTION` varchar(256) DEFAULT NULL COMMENT '说明',
+  `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`BIZ_TAG`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ID管理数据表';
 
 SET FOREIGN_KEY_CHECKS = 1;

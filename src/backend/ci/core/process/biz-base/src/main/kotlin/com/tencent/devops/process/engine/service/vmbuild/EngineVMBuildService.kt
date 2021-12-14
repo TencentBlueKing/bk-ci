@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
+import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -410,7 +411,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             vmSeqId = vmSeqId
                         ),
                         value = task.atomCode!!,
-                        expiredInSecond = transMinuteTimeoutToMills(task.additionalOptions?.timeout?.toInt()).second
+                        expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
                 BuildTask(
@@ -656,7 +657,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
                     when (errorType) {
-                        ErrorType.USER -> "Please check your input or service."
+                        ErrorType.USER -> "Please check your input or service.\n" + "请检查：\n" +
+                            "1. 插件输出的错误日志。\n" +
+                            "2. 此编译流程在本地是否能正常执行。如果本地也执行失败，请检查是否脚本逻辑问题或代码变更导致。"
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."

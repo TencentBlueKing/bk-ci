@@ -46,12 +46,13 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -61,6 +62,15 @@ class ModelElement @Autowired constructor(
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitCISettingDao: GitCISettingDao
 ) {
+
+    @Value("\${stream.marketRun.enable:#{false}}")
+    private val marketRunTask: Boolean = false
+
+    @Value("\${stream.marketRun.atomCode:#{null}}")
+    private val runPlugInAtomCode: String? = null
+
+    @Value("\${stream.marketRun.atomVersion:#{null}}")
+    private val runPlugInVersion: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
@@ -101,29 +111,7 @@ class ModelElement @Autowired constructor(
             // bash
             val element: Element = when {
                 step.run != null -> {
-                    val linux = LinuxScriptElement(
-                        name = step.name ?: "run",
-                        id = step.id,
-                        scriptType = BuildScriptType.SHELL,
-                        script = step.run!!,
-                        continueNoneZero = false,
-                        additionalOptions = additionalOptions
-                    )
-                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
-                        linux
-                    } else {
-                        when (job.runsOn.agentSelector!!.first()) {
-                            "linux" -> linux
-                            "macos" -> linux
-                            "windows" -> WindowsScriptElement(
-                                name = step.name ?: "run",
-                                id = step.id,
-                                scriptType = BuildScriptType.BAT,
-                                script = step.run!!
-                            )
-                            else -> linux
-                        }
-                    }
+                    makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
                     makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
@@ -151,6 +139,49 @@ class ModelElement @Autowired constructor(
         }
 
         return elementList
+    }
+
+    private fun makeRunElement(
+        step: Step,
+        job: Job,
+        additionalOptions: ElementAdditionalOptions
+    ): Element {
+        return if (marketRunTask) {
+            val data = mutableMapOf<String, Any>()
+            data["input"] = mapOf("script" to step.run)
+            MarketBuildAtomElement(
+                name = step.name ?: "run",
+                id = step.id,
+                atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
+                version = runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
+                data = data,
+                additionalOptions = additionalOptions
+            )
+        } else {
+            val linux = LinuxScriptElement(
+                name = step.name ?: "run",
+                id = step.id,
+                scriptType = BuildScriptType.SHELL,
+                script = step.run!!,
+                continueNoneZero = false,
+                additionalOptions = additionalOptions
+            )
+            if (job.runsOn.agentSelector.isNullOrEmpty()) {
+                linux
+            } else {
+                when (job.runsOn.agentSelector!!.first()) {
+                    "linux" -> linux
+                    "macos" -> linux
+                    "windows" -> WindowsScriptElement(
+                        name = step.name ?: "run",
+                        id = step.id,
+                        scriptType = BuildScriptType.BAT,
+                        script = step.run!!
+                    )
+                    else -> linux
+                }
+            }
+        }
     }
 
     private fun makeCheckoutElement(

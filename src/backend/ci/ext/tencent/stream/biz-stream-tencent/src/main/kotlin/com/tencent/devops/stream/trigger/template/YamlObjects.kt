@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
+import com.tencent.devops.common.ci.v2.GitNotices
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
@@ -115,6 +116,30 @@ object YamlObjects {
             matrix = strategyMap["matrix"],
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
             maxParallel = getNullValue("max-parallel", strategyMap)
+        )
+    }
+
+    fun getNotice(fromPath: String, notice: Map<String, Any?>): GitNotices {
+        return GitNotices(
+            type = notice["type"].toString(),
+            title = notice["title"]?.toString(),
+            ifField = notice["if"]?.toString(),
+            content = notice["content"]?.toString(),
+            receivers = if (notice["receivers"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "receivers", notice["receivers"]).toSet()
+            },
+            ccs = if (notice["ccs"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "ccs", notice["ccs"]).toSet()
+            },
+            chatId = if (notice["chat-id"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "receivers", notice["chat-id"]).toSet()
+            }
         )
     }
 

@@ -41,6 +41,7 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -202,5 +203,9 @@ class ServiceGitCiResourceImpl @Autowired constructor(
                 query = search
             )
         )
+    }
+
+    override fun addMrComment(token: String, gitProjectId: String, mrId: Long, mrBody: MrCommentBody) {
+        gitCiService.addMrComment(token = token, gitProjectId = gitProjectId, mrId = mrId, mrBody = mrBody)
     }
 }

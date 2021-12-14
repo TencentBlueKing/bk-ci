@@ -31,7 +31,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
