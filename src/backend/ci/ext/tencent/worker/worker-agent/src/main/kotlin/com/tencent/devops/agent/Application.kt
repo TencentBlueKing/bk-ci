@@ -48,6 +48,10 @@ import java.io.File
 import java.lang.RuntimeException
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
+import okhttp3.OkHttpClient
+import java.time.LocalDate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.X509TrustManager
 
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
@@ -208,15 +212,24 @@ private fun waitBuildLessJobStart() {
     val dockerHostPort = DockerEnv.getDockerHostPort()
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+
+    val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(5L, TimeUnit.SECONDS)
+        .readTimeout(5L, TimeUnit.SECONDS)
+        .writeTimeout(5L, TimeUnit.SECONDS)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
-    println("BuildLess loopUrl: $loopUrl")
+
+    println("${LocalDate.now()} BuildLess loopUrl: $loopUrl")
     do {
         try {
-            OkhttpUtils.doHttp(request).use { resp ->
+            okHttpClient.newCall(request).execute().use { resp ->
                 if (resp.isSuccessful && resp.body() != null) {
                     val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
                     buildLessTask.forEach { t, u ->
@@ -227,11 +240,11 @@ private fun waitBuildLessJobStart() {
                     }
                     startFlag = true
                 } else {
-                    println("No buildLessTask, resp: ${resp.body()} continue loop...")
+                    println("${LocalDate.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
                 }
             }
         } catch (e: Exception) {
-            println("Get buildLessTask error. continue loop... \n${e.message}")
+            println("${LocalDate.now()} Get buildLessTask error. continue loop... \n${e.message}")
         }
 
         if (!startFlag) {
