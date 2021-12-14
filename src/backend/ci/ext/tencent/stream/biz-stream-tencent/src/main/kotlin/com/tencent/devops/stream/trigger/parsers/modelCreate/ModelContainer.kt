@@ -133,7 +133,7 @@ class ModelContainer @Autowired constructor(
                 json.remove("exclude")
 
                 return MatrixControlOption(
-                    strategyStr = JsonUtil.toJson(json),
+                    strategyStr = YamlUtil.toYaml(json),
                     includeCaseStr = include,
                     excludeCaseStr = exclude,
                     fastKill = fastKill,
