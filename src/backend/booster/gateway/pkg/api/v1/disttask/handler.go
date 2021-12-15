@@ -100,6 +100,23 @@ func ListProject(req *restful.Request, resp *restful.Response) {
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result, Extra: map[string]interface{}{"length": length}})
 }
 
+func GetProjectSetting(req *restful.Request, resp *restful.Response) {
+	projectID := req.QueryParameter(api.QueryProjectIDKey)
+	if projectID == "" {
+		blog.Errorf("query project info: query failed, url(%s): projectID not specified", req.Request.URL.String())
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: "project_id no specific"})
+		return
+	}
+	setting, err := defaultMySQL.GetProjectSetting(projectID)
+	if err != nil {
+		blog.Errorf("get project setting failed : (%v)", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListProjectFailed,
+			Message: err.Error()})
+	}
+	api.ReturnRest(&api.RestResponse{Resp: resp, Data: setting})
+}
+
 // UpdateProject handle the http request for updating project with some fields.
 func UpdateProject(req *restful.Request, resp *restful.Response) {
 	req.SetAttribute(api.QueryProjectIDKey, req.PathParameter(api.QueryProjectIDKey))

@@ -264,6 +264,12 @@ func initDistTaskActions() {
 		Handler: api.NoLimit(disttask.ListProject),
 	})
 	api.RegisterV1Action(api.Action{
+		Verb:    "GET",
+		Path:    "/disttask/resource/project/{project_id}",
+		Params:  nil,
+		Handler: api.NoLimit(disttask.GetProjectSetting),
+	})
+	api.RegisterV1Action(api.Action{
 		Verb:    "PUT",
 		Path:    "/disttask/resource/project/{project_id}",
 		Params:  nil,
