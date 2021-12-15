@@ -32,6 +32,8 @@ import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 @RestResource
 class BuildBuildLessResourceImpl @Autowired constructor(
@@ -39,6 +41,14 @@ class BuildBuildLessResourceImpl @Autowired constructor(
 ) : BuildBuildLessResource {
 
     override fun claimBuildLessTask(containerId: String): BuildLessTask? {
-        return buildlessTaskService.claimBuildLessTask(containerId)
+        var futureResult: Future<BuildLessTask?>? = null
+        return try {
+            futureResult = buildlessTaskService.claimBuildLessTask(containerId)
+            futureResult.get(20, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            null
+        } finally {
+            futureResult?.cancel(true)
+        }
     }
 }

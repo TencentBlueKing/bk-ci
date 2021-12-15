@@ -133,15 +133,11 @@ private fun waitBuildLessJobStart() {
         println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
 
         try {
-            OkhttpUtils.doShortHttp(request).use { resp ->
+            OkhttpUtils.doHttp(request).use { resp ->
                 startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
-            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
-        }
-
-        if (!startFlag) {
-            Thread.sleep(1000)
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.stackTrace}")
         }
     } while (!startFlag)
 }
