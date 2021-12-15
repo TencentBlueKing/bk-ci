@@ -139,6 +139,10 @@ private fun waitBuildLessJobStart() {
         } catch (e: Exception) {
             println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.stackTrace}")
         }
+
+        if (!startFlag) {
+            Thread.sleep(1000)
+        }
     } while (!startFlag)
 }
 

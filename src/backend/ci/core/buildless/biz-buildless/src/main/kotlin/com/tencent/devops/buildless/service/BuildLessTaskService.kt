@@ -53,9 +53,9 @@ class BuildLessTaskService(
         var loopCount = 0
         while (loopCount < 200) {
             // 校验当前容器状态是否正常
-            val containerStatus = containerPoolExecutor.getContainerStatus(containerId)
-            if (containerStatus != ContainerStatus.IDLE.name) {
-                return AsyncResult(null)
+            val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
+            if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
+                return AsyncResult(buildLessPoolInfo.buildLessTask)
             }
 
             val buildLessTask = redisUtils.popBuildLessReadyTask()
@@ -67,7 +67,7 @@ class BuildLessTaskService(
                 )
 
                 logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
+                redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
                 return AsyncResult(buildLessTask)
             }
