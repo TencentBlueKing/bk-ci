@@ -656,16 +656,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
                     when (errorType) {
-                        ErrorType.USER -> {
-                            val msg = "Please check your input or service."
-                            if (atomCode in NEED_ADD_USER_ERROR_MESSAGE) {
-                                msg + "\n======问题排查指引======\n" +
-                                    "当脚本退出码非0时，执行失败。可以从以下路径进行分析：\n" +
-                                    "1. 根据错误日志排查\n" +
-                                    "2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；" +
-                                    "如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）"
-                            } else msg
-                        }
+                        ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
                         ErrorType.PLUGIN -> "Please contact the plugin developer."
                         ErrorType.SYSTEM -> "Please contact platform."
@@ -706,7 +697,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     companion object {
-        private val NEED_ADD_USER_ERROR_MESSAGE = listOf("linuxScript", "windowsScript", "runDev", "runTest", "run")
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
     }
 }
