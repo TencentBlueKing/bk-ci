@@ -133,7 +133,7 @@ class BuildLessContainerService(
                         .withCpuQuota(buildLessConfig.cpuQuota.toLong())
                         .withCpuPeriod(buildLessConfig.cpuPeriod.toLong())
                         .withBinds(binds)
-                        .withNetworkMode("host")
+                        .withNetworkMode("bridge")
                 )
                 .exec()
 
