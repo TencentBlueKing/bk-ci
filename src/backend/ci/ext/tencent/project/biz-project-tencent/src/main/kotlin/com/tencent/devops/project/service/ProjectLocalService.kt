@@ -709,8 +709,8 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (!isCreate) {
-            throw OperationException((MessageCodeUtil.getCodeMessage(
-                messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER, params = arrayOf(userId, projectId)))!!)
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER, params = arrayOf(userId, projectId))))
         }
         val createUserList = userId.split(",")
         return grantInstancePermission(
@@ -742,9 +742,9 @@ class ProjectLocalService @Autowired constructor(
             // 操作人必须为项目的管理员
             if (!authProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
                 logger.error("$userId is not manager for project[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeMessage(
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.NOT_MANAGER,
-                    params = arrayOf(userId, projectId)))!!)
+                    params = arrayOf(userId, projectId))))
             }
         }
 
@@ -755,9 +755,9 @@ class ProjectLocalService @Autowired constructor(
                     projectCode = projectId,
                     userId = userId)) {
                 logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeMessage(
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(userId, projectId)))!!)
+                    params = arrayOf(userId, projectId))))
             }
         }
 

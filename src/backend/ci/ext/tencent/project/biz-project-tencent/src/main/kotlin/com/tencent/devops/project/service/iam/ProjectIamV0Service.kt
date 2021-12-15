@@ -67,9 +67,12 @@ class ProjectIamV0Service @Autowired constructor(
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
             logger.error("$createUser is not manager for project[$projectCode]")
-            throw OperationException((MessageCodeUtil.getCodeMessage(
-                messageCode = ProjectMessageCode.NOT_MANAGER,
-                params = arrayOf(createUser, projectCode)))!!)
+            throw OperationException(
+                (MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.NOT_MANAGER,
+                    params = arrayOf(createUser, projectCode)
+                ))
+            )
         }
         return createUser2ProjectImpl(
             userIds = userIds,
@@ -91,14 +94,18 @@ class ProjectIamV0Service @Autowired constructor(
         logger.info("createPipelinePermission [$createUser] [$projectId] [$userId] [$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("createPipelinePermission createUser not project manager[$createUser] [$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeMessage(ProjectMessageCode.NOT_MANAGER, arrayOf(createUser, projectId)))!!)
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.NOT_MANAGER,
+                params = arrayOf(createUser, projectId))))
         }
         val createUserList = userId.split(",")
 
         createUserList?.forEach {
             if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
                 logger.info("createPipelinePermission userId not project manager [$userId] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeMessage(ProjectMessageCode.USER_NOT_PROJECT_USER, arrayOf(it, projectId)))!!)
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                    params = arrayOf(it, projectId))))
             }
         }
 
