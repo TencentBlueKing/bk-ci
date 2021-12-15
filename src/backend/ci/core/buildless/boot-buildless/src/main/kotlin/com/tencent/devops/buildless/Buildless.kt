@@ -29,8 +29,10 @@ package com.tencent.devops.buildless
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableAsync
 
 @MicroService
+@EnableAsync
 @ComponentScan(
     "com.tencent.devops.buildless"
 )
