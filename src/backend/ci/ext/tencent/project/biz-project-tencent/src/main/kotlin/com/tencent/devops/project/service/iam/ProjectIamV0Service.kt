@@ -67,7 +67,9 @@ class ProjectIamV0Service @Autowired constructor(
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
             logger.error("$createUser is not manager for project[$projectCode]")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
+            throw OperationException((MessageCodeUtil.getCodeMessage(
+                messageCode = ProjectMessageCode.NOT_MANAGER,
+                params = arrayOf(createUser, projectCode)))!!)
         }
         return createUser2ProjectImpl(
             userIds = userIds,
@@ -89,14 +91,14 @@ class ProjectIamV0Service @Autowired constructor(
         logger.info("createPipelinePermission [$createUser] [$projectId] [$userId] [$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("createPipelinePermission createUser not project manager[$createUser] [$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
+            throw OperationException((MessageCodeUtil.getCodeMessage(ProjectMessageCode.NOT_MANAGER, arrayOf(createUser, projectId)))!!)
         }
         val createUserList = userId.split(",")
 
         createUserList?.forEach {
             if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
                 logger.info("createPipelinePermission userId not project manager [$userId] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+                throw OperationException((MessageCodeUtil.getCodeMessage(ProjectMessageCode.USER_NOT_PROJECT_USER, arrayOf(it, projectId)))!!)
             }
         }
 
@@ -182,7 +184,12 @@ class ProjectIamV0Service @Autowired constructor(
                     role = authRoleId!!
                 )
             } catch (ope: OperationException) {
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+                logger.warn("OperationException $it $projectId ${ope.message}")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                    defaultMessage = ope.message,
+                    params = arrayOf(it)
+                ))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)
                 return false
