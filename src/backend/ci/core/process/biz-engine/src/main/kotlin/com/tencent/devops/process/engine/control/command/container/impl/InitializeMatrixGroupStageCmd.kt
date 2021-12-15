@@ -355,7 +355,7 @@ class InitializeMatrixGroupStageCmd(
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
 
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
@@ -369,7 +369,7 @@ class InitializeMatrixGroupStageCmd(
             jobId = parentContainer.containerHashId,
             executeCount = context.executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Start to run...",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
@@ -419,7 +419,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = buildId, message = "[MATRIX] Job strategy:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
@@ -440,7 +440,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Include cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
@@ -457,7 +457,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Exclude cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
@@ -473,7 +473,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = buildId, message = "[MATRIX] After calculated, " +
             "${contextCaseList.size} jobs are generated:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount

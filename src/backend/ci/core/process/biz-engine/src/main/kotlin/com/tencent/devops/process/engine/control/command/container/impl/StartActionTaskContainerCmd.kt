@@ -289,7 +289,7 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
                     jobId = containerHashId
                 )
@@ -313,7 +313,7 @@ class StartActionTaskContainerCmd(
                 )
                 refreshTaskStatus(updateTaskStatusInfo, index, containerTasks)
                 // 打印构建日志
-                buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
                     jobId = containerHashId
                 )
@@ -456,7 +456,7 @@ class StartActionTaskContainerCmd(
                 buildStatus = BuildStatus.RUNNING,
                 operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = currentTask.buildId,
                 message = message,
                 tag = currentTask.taskId,

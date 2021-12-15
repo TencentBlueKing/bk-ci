@@ -7,10 +7,11 @@ import org.junit.Assert
 import org.junit.Test
 import java.util.Random
 
+@Suppress("ALL")
 internal class MatrixControlOptionTest {
 
     @Test
-    fun convertCase() {
+    fun calculateValueMatrix() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = """
@@ -20,36 +21,29 @@ internal class MatrixControlOptionTest {
                 """,
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +1
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
                         "var2" to "0"
                     ),
-                    // +1
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +0 一样的值只会加入一个
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +1 多一个变量也是一个新组合
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4",
-                        "var3" to "6"
-                    ),
-                    // +0 重复值加入无效
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
                         "var1" to "a",
-                        "var2" to "1"
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -63,7 +57,7 @@ internal class MatrixControlOptionTest {
                     )
                 )
             ),
-            totalCount = 10, // 2*3*3 + 3 -1
+            totalCount = 10, // 2*3*3 -1
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
@@ -73,7 +67,7 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(contextCase.size, 17)
     }
 
     @Test
@@ -93,7 +87,6 @@ internal class MatrixControlOptionTest {
     @Test
     fun calculateValueMatrixYaml() {
         val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
             strategyStr = """
 ---
 os:
@@ -108,24 +101,31 @@ var2:
 - 2
 - 3
                 """,
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +0 重复值不加入
-                    mapOf(
-                        "os" to "docker",
                         "var1" to "a",
-                        "var2" to "1"
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -139,7 +139,7 @@ var2:
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
+            totalCount = 10,
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
@@ -149,61 +149,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
-    }
-
-
-    @Test
-    fun calculateValueMatrix() {
-        val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
-            strategyStr = """
-                    os: [docker,macos]
-                    var1: [a,b,c]
-                    var2: [1,2,3]
-                """,
-            // +2
-            includeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "d",
-                        "var2" to "0"
-                    ),
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +0 重复值不加入
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    )
-                )
-            ),
-            // -1
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    )
-                )
-            ),
-            totalCount = 10, // 3*3 + 2 - 1
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(contextCase.size, 17)
     }
 
     @Test
@@ -257,21 +203,29 @@ var2:
             // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
-                        "var1" to "includeCaseStr",
+                        "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "includeCaseStr",
-                        "var2" to "4"
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
                     ),
-                    // +0 重复值不加入
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "includeCaseStr",
-                        "var2" to "1"
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -295,7 +249,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(contextCase.size, 17)
     }
 
     @Test
@@ -303,24 +257,31 @@ var2:
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = "\${{fromJSON(depends.job1.outputs.matrix)}}",
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
-                        "var1" to "includeCaseStr",
+                        "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "includeCaseStr",
-                        "var2" to "4"
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
                     ),
-                    // +0 重复值不加入
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "includeCaseStr",
-                        "var2" to "1"
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -334,7 +295,7 @@ var2:
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
+            totalCount = 10,
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50

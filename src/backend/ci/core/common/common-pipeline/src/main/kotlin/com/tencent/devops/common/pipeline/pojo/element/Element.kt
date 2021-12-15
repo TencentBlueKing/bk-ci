@@ -89,6 +89,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 abstract class Element(
     open val name: String,
     open var id: String? = null,
+    open var stepId: String? = null, // 专用于上下文
     open var status: String? = null,
     open var executeCount: Int = 1,
     open var canRetry: Boolean? = null,
