@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Use Node.js 14.18.2
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.18.2
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -185,6 +189,10 @@ jobs:
           build-root-directory: src/backend/codecc
           arguments: clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
 
+      - name: Use Node.js 14.18.2
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.18.2
       - name: frontend
         id: codecc-frontend
         run: |
