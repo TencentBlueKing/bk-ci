@@ -207,9 +207,9 @@ fun main(args: Array<String>) {
 }
 
 private fun waitBuildLessJobStart() {
-    var startFlag: Boolean = false
+    var startFlag = false
     val dockerHostIp = DockerEnv.getDockerHostIp()
-    val dockerHostPort = DockerEnv.getDockerHostPort()
+    val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
 
@@ -232,10 +232,11 @@ private fun waitBuildLessJobStart() {
             okHttpClient.newCall(request).execute().use { resp ->
                 if (resp.isSuccessful && resp.body() != null) {
                     val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
-                    buildLessTask.forEach { t, u ->
+                    buildLessTask.forEach { (t, u) ->
                         when (t) {
                             "agentId" -> System.setProperty(AGENT_ID, u)
                             "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                            "projectId" -> System.setProperty("devops_project_id", u)
                         }
                     }
                     startFlag = true
