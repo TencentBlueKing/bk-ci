@@ -47,7 +47,6 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
 import okhttp3.Response
 import java.io.File
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
