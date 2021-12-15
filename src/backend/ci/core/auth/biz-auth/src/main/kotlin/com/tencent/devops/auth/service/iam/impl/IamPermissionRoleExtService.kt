@@ -311,30 +311,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()
         strategyInfo.strategy.forEach { resource, list ->
-            // 如果是project相关的资源, 直接拼接action
-            if (resource == AuthResourceType.PROJECT.value) {
-                list.forEach { projectAction ->
-                    projectStrategyList.add(resource + "_" + projectAction)
-                }
-            } else {
-                var useResource = resource
-                val resourceStrategyList = mutableListOf<String>()
-                list.forEach {
-                    // 历史遗留问题, 红线和版本体验的group冲突
-//                    if (TActionUtils.extResourceTypeCheck(resource)) {
-//                        // TODO: 需要质量红线和版本体验，resource需要添加前缀，如何判断。
-//                        logger.info("group has quality or experience: $resource")
-//                    }
-                    // 如果是非project资源。 若action是create,需挂在project下,因create相关的资源都是绑定在项目下。
-                    if (it == AuthPermission.CREATE.value) {
-                        projectStrategyList.add(useResource + "_" + it)
-                    } else {
-                        resourceStrategyList.add(useResource + "_" + it)
-                    }
-                }
-                resourceStrategyMap[useResource] = resourceStrategyList
-                logger.info("$useResource $resourceStrategyList")
-            }
+            val actionData = buildAction(resource, list)
+            projectStrategyList.addAll(actionData.first)
+            resourceStrategyMap.putAll(actionData.second)
+
         }
         return Pair(projectStrategyList, resourceStrategyMap)
     }
@@ -427,6 +407,30 @@ open class IamPermissionRoleExtService @Autowired constructor(
             .actions(action)
             .resources(managerResources)
             .build()
+    }
+
+    private fun buildAction(resource: String, actionList: List<String>):Pair<List<String>, Map<String, List<String>>> {
+        val projectStrategyList = mutableListOf<String>()
+        val resourceStrategyMap = mutableMapOf<String, List<String>>()
+        val resourceStrategyList = mutableListOf<String>()
+        // 如果是project相关的资源, 直接拼接action
+        if (resource == AuthResourceType.PROJECT.value) {
+            actionList.forEach { projectAction ->
+                projectStrategyList.add(resource + "_" + projectAction)
+            }
+        } else {
+            actionList.forEach {
+                // 如果是非project资源。 若action是create,需挂在project下,因create相关的资源都是绑定在项目下。
+                if (it == AuthPermission.CREATE.value) {
+                    projectStrategyList.add(resource + "_" + it)
+                } else {
+                    resourceStrategyList.add(resource + "_" + it)
+                }
+            }
+            resourceStrategyMap[resource] = resourceStrategyList
+            logger.info("$resource $resourceStrategyList")
+        }
+        return Pair(projectStrategyList, resourceStrategyMap)
     }
 
     companion object {
