@@ -50,6 +50,7 @@ import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.OkHttpClient
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.X509TrustManager
 
@@ -226,7 +227,7 @@ private fun waitBuildLessJobStart() {
         .get()
         .build()
 
-    println("${LocalDate.now()} BuildLess loopUrl: $loopUrl")
+    println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
     do {
         try {
             okHttpClient.newCall(request).execute().use { resp ->
@@ -241,11 +242,11 @@ private fun waitBuildLessJobStart() {
                     }
                     startFlag = true
                 } else {
-                    println("${LocalDate.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+                    println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
                 }
             }
         } catch (e: Exception) {
-            println("${LocalDate.now()} Get buildLessTask error. continue loop... \n${e.message}")
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
         }
 
         if (!startFlag) {
