@@ -139,10 +139,10 @@ class BuildLessContainerService(
 
             httpDockerCli.startContainerCmd(container.id).exec()
 
+            logger.info("===> created container: $container, containerName: $containerName. ")
             redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
             redisUtils.increIdlePool(1)
-
-            logger.info("===> created container: $containerName $container")
+            logger.info("===> buildLessPoolKey hset ${container.id} ${ContainerStatus.IDLE.name}.")
         } catch (e: Exception) {
             logger.error("===> failed to created container.", e)
         }
@@ -189,26 +189,37 @@ class BuildLessContainerService(
     /**
      * 检验容器池的大小
      */
-    fun getRunningPoolSize(): Int {
+    fun getRunningPoolSize(needCalibrationContainerPool: Boolean = false): Int {
         val containerInfo = httpDockerCli
             .listContainersCmd()
             .withStatusFilter(setOf("running"))
             .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
             .exec()
 
-        // 同步缓存中的容器状态
-        val containerIds = containerInfo.stream().map {
-            if (it.id.length > 12) {
-                it.id.substring(0, 12)
-            } else {
-                it.id
-            }
-        }.toList()
+        if (needCalibrationContainerPool) {
+            // 同步缓存中的容器状态
+            val containerIds = containerInfo.stream().map {
+                if (it.id.length > 12) {
+                    it.id.substring(0, 12)
+                } else {
+                    it.id
+                }
+            }.toList()
 
-        val buildLessPoolContainerList = redisUtils.getBuildLessPoolContainerList()
-        buildLessPoolContainerList.forEach { (key, _) ->
-            if (!containerIds.contains(key)) {
-                redisUtils.deleteBuildLessPoolContainer(key)
+            // 不在containerIds列表内的同步删除缓存
+            val buildLessPoolContainerMap = redisUtils.getBuildLessPoolContainerList()
+            buildLessPoolContainerMap.forEach { (key, _) ->
+                if (!containerIds.contains(key)) {
+                    redisUtils.deleteBuildLessPoolContainer(key)
+                }
+            }
+
+            // 在containerIds但是不在缓存中的，补充缓存
+            containerIds.forEach {
+                if (!buildLessPoolContainerMap.keys.contains(it)) {
+                    logger.info("Supplemental cache buildLessPoolKey hset $it ${ContainerStatus.IDLE.name}.")
+                    redisUtils.setBuildLessPoolContainer(it, ContainerStatus.IDLE)
+                }
             }
         }
 
