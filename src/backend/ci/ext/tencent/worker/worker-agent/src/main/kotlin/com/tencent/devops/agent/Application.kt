@@ -46,6 +46,7 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
+import okhttp3.Response
 import java.io.File
 import java.time.LocalDateTime
 
@@ -220,22 +221,33 @@ private fun waitBuildLessJobStart() {
             println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
 
             OkhttpUtils.doHttp(request).use { resp ->
-                if (resp.isSuccessful && resp.body() != null) {
-                    val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
-                    buildLessTask.forEach { (t, u) ->
-                        when (t) {
-                            "agentId" -> System.setProperty(AGENT_ID, u)
-                            "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
-                            "projectId" -> System.setProperty("devops_project_id", u)
-                        }
-                    }
-                    startFlag = true
-                } else {
-                    println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
-                }
+                startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
             println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
         }
+
+        if (!startFlag) {
+            Thread.sleep(1000)
+        }
     } while (!startFlag)
+}
+
+private fun doResponse(
+    resp: Response
+): Boolean {
+    return if (resp.isSuccessful && resp.body() != null && resp.body()!!.string().isNotBlank()) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+        buildLessTask.forEach { (t, u) ->
+            when (t) {
+                "agentId" -> System.setProperty(AGENT_ID, u)
+                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                "projectId" -> System.setProperty("devops_project_id", u)
+            }
+        }
+        true
+    } else {
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        false
+    }
 }
