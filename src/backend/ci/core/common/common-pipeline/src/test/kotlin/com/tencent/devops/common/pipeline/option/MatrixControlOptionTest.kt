@@ -91,6 +91,69 @@ internal class MatrixControlOptionTest {
     }
 
     @Test
+    fun calculateValueMatrixYaml() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+---
+os:
+- "docker"
+- "macos"
+var1:
+- "a"
+- "b"
+- "c"
+var2:
+- 1
+- 2
+- 3
+                """,
+            // +2
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "d",
+                        "var2" to "0"
+                    ),
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "d",
+                        "var2" to "4"
+                    ),
+                    // +0 重复值不加入
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 20)
+    }
+
+
+    @Test
     fun calculateValueMatrix() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
