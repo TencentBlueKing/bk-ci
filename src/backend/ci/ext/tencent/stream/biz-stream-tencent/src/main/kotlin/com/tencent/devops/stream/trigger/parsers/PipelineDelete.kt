@@ -90,7 +90,7 @@ class PipelineDelete @Autowired constructor(
             pipelines.forEach {
                 // 这里需增加获取pipeline对应的yml路径，需要判断该文件是否在默认分支存在。
                 val gitPipelineResourceRecord = gitPipelineResourceDao.getPipelineById(
-                    dslContext =  dslContext,
+                    dslContext = dslContext,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     pipelineId = it
                 )
@@ -163,6 +163,7 @@ class PipelineDelete @Autowired constructor(
             val checkFileEmpty = filePath?.let { self ->
                 scmService.getFileTreeFromGitWithDefaultBranch(gitToken, gitRequestEvent.gitProjectId, self).isEmpty()
             }
+
             if (checkFileEmpty == true && !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
