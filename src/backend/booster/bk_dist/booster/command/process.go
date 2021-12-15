@@ -458,6 +458,10 @@ func getSpecificDomainAndHost(c *commandCli.Context) (string, string, error) {
 	return ServerDomain, ServerHost, nil
 }
 
+func GetServerFromConfig(c *commandCli.Context) (string, error) {
+	return getServerFromConfig(c)
+}
+
 func getServerFromConfig(c *commandCli.Context) (string, error) {
 	if c.IsSet(FlagServer) {
 		s := c.String(FlagServer)
