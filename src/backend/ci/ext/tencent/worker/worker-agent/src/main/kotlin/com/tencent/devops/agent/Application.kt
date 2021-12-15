@@ -31,28 +31,23 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
-import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
-import com.tencent.devops.worker.common.BUILD_TYPE
-import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.AGENT_ID
 import com.tencent.devops.worker.common.AGENT_SECRET_KEY
-import okhttp3.Request
+import com.tencent.devops.worker.common.BUILD_TYPE
+import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
-import java.io.File
-import java.lang.RuntimeException
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
-import okhttp3.OkHttpClient
-import java.time.LocalDate
+import okhttp3.Request
+import java.io.File
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.X509TrustManager
 
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
@@ -214,13 +209,6 @@ private fun waitBuildLessJobStart() {
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
 
-    val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(5L, TimeUnit.SECONDS)
-        .readTimeout(5L, TimeUnit.SECONDS)
-        .writeTimeout(5L, TimeUnit.SECONDS)
-        .hostnameVerifier { _, _ -> true }
-        .build()
-
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
@@ -230,7 +218,7 @@ private fun waitBuildLessJobStart() {
     println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
     do {
         try {
-            okHttpClient.newCall(request).execute().use { resp ->
+            OkhttpUtils.doShortHttp(request).use { resp ->
                 if (resp.isSuccessful && resp.body() != null) {
                     val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
                     buildLessTask.forEach { (t, u) ->
