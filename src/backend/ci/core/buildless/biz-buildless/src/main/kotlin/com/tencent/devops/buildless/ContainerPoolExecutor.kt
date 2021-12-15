@@ -4,6 +4,7 @@ import com.google.common.collect.Interners
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.exception.BuildLessException
+import com.tencent.devops.buildless.pojo.BuildLessPoolInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.pojo.RejectedExecutionType
@@ -83,7 +84,7 @@ class ContainerPoolExecutor @Autowired constructor(
         }
     }
 
-    fun getContainerStatus(containerId: String): String? {
+    fun getContainerStatus(containerId: String): BuildLessPoolInfo? {
         synchronized(stringPool.intern(containerId)) {
             return redisUtils.getBuildLessPoolContainer(containerId)
         }

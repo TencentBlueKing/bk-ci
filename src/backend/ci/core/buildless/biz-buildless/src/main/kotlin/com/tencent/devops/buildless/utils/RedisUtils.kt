@@ -27,6 +27,7 @@
 package com.tencent.devops.buildless.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.buildless.pojo.BuildLessPoolInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,9 +42,16 @@ class RedisUtils @Autowired constructor(
 ) {
     fun setBuildLessPoolContainer(
         containerId: String,
-        containerStatus: ContainerStatus
+        containerStatus: ContainerStatus,
+        buildLessTask: BuildLessTask? = null
     ) {
-        redisOperation.hset(buildLessPoolKey(), CommonUtils.formatContainerId(containerId), containerStatus.name)
+        val buildLessPoolInfo = BuildLessPoolInfo(
+            status = containerStatus
+        )
+        redisOperation.hset(
+            key = buildLessPoolKey(),
+            hashKey = CommonUtils.formatContainerId(containerId),
+            values = JsonUtil.toJson(buildLessPoolInfo))
     }
 
     fun deleteBuildLessPoolContainer(containerId: String) {
@@ -55,8 +63,13 @@ class RedisUtils @Autowired constructor(
         return redisOperation.hentries(buildLessPoolKey()) ?: mutableMapOf()
     }
 
-    fun getBuildLessPoolContainer(containerId: String): String {
-        return redisOperation.hget(buildLessPoolKey(), containerId) ?: ContainerStatus.BUSY.name
+    fun getBuildLessPoolContainer(containerId: String): BuildLessPoolInfo? {
+        val result = redisOperation.hget(buildLessPoolKey(), containerId)
+        return if (result != null) {
+            return objectMapper.readValue(result, BuildLessPoolInfo::class.java)
+        } else {
+            null
+        }
     }
 
     fun getBuildLessPoolContainerIdle(): Int {
