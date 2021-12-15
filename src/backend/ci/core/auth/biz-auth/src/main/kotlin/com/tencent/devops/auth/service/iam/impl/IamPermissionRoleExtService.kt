@@ -314,7 +314,6 @@ open class IamPermissionRoleExtService @Autowired constructor(
             val actionData = buildAction(resource, list)
             projectStrategyList.addAll(actionData.first)
             resourceStrategyMap.putAll(actionData.second)
-
         }
         return Pair(projectStrategyList, resourceStrategyMap)
     }
@@ -409,7 +408,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
             .build()
     }
 
-    private fun buildAction(resource: String, actionList: List<String>):Pair<List<String>, Map<String, List<String>>> {
+    private fun buildAction(resource: String, actionList: List<String>): Pair<List<String>, Map<String, List<String>>> {
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()
         val resourceStrategyList = mutableListOf<String>()
