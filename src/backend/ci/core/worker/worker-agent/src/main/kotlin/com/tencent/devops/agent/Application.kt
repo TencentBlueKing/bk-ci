@@ -123,15 +123,17 @@ private fun waitBuildLessJobStart() {
     val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
-    println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
     do {
+        println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+
         try {
-            OkhttpUtils.doHttp(request).use { resp ->
+            OkhttpUtils.doShortHttp(request).use { resp ->
                 startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
