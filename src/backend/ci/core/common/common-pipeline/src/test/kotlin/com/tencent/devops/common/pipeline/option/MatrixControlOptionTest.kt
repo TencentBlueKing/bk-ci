@@ -3,6 +3,7 @@ package com.tencent.devops.common.pipeline.option
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
+import io.micrometer.core.annotation.TimedSet
 import org.junit.Assert
 import org.junit.Test
 import java.util.Random
@@ -88,6 +89,68 @@ internal class MatrixControlOptionTest {
         println("loopCartesianProduct cost:${timeAEnd - timeAStart}ms")
         println("recursiveCartesianProduct cost:${timeBEnd - timeBStart}ms")
         Assert.assertEquals(JsonUtil.toJson(a), JsonUtil.toJson(b))
+    }
+
+    @Test
+    fun calculateValueMatrixYaml() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+---
+os:
+- "docker"
+- "macos"
+var1:
+- "a"
+- "b"
+- "c"
+var2:
+- 1
+- 2
+- 3
+                """,
+            // +2
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "d",
+                        "var2" to "0"
+                    ),
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "d",
+                        "var2" to "4"
+                    ),
+                    // +0 重复值不加入
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase.size, 20)
     }
 
     @Test
