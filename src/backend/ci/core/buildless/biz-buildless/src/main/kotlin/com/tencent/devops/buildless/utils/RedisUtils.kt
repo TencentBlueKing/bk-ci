@@ -43,7 +43,6 @@ class RedisUtils @Autowired constructor(
         containerId: String,
         containerStatus: ContainerStatus
     ) {
-        logger.info("----> buildLessPoolKey hset $containerId ${containerStatus.name}.")
         redisOperation.hset(buildLessPoolKey(), CommonUtils.formatContainerId(containerId), containerStatus.name)
     }
 

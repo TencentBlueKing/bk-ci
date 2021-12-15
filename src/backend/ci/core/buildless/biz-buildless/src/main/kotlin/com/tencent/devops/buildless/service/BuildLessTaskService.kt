@@ -60,6 +60,7 @@ class BuildLessTaskService(
                 containerId = containerId
             )
 
+            logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
             redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY)
         }
 

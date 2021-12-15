@@ -63,7 +63,7 @@ class ContainerPoolExecutor @Autowired constructor(
         val lock = mainLock
         if (lock.tryLock(60, TimeUnit.SECONDS)) {
             try {
-                val runningContainerCount = buildLessContainerService.getRunningPoolSize()
+                val runningContainerCount = buildLessContainerService.getRunningPoolSize(true)
                 logger.info("Container pool add container, running containers: $runningContainerCount")
 
                 // 非超载模式下，把容器池填满
