@@ -69,6 +69,7 @@ open class BkRepoDownloadService @Autowired constructor(
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -76,10 +77,11 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
+        logger.info("serviceGetExternalDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
             "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val url = bkRepoService.externalDownloadUrl(
+            creatorId = creatorId,
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -325,6 +327,7 @@ open class BkRepoDownloadService @Autowired constructor(
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
+                creatorId = accessUserId,
                 userId = accessUserId,
                 projectId = targetProjectId,
                 repoName = repoName,

@@ -100,6 +100,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
+        creatorId: String,
         userId: String,
         path: String,
         ttl: Int,
@@ -110,7 +111,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(userId, projectId, artifactoryType, path,
+        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(creatorId, userId,
+            projectId, artifactoryType, path,
             ttl, isDirected))
     }
 
@@ -202,7 +204,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>> {
-        logger.info("searchFileAndPropertyByOr, projectId: $projectId, page: $page, pageSize: $pageSize, searchProps: $searchProps")
+        logger.info("searchFileAndPropertyByOr, projectId: $projectId, " +
+                "page: $page, pageSize: $pageSize, searchProps: $searchProps")
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
@@ -299,7 +302,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         taskId: String
     ): Result<String> {
         val url =
-            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId"
+            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/" +
+                    "$projectId/$pipelineId/$buildId/$taskId"
         return Result(url)
     }
 

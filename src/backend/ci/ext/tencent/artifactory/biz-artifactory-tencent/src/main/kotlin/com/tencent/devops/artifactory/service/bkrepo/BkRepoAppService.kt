@@ -75,6 +75,7 @@ class BkRepoAppService @Autowired constructor(
         val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
             userId,
+            userId,
             projectId,
             artifactoryType,
             normalizedPath,

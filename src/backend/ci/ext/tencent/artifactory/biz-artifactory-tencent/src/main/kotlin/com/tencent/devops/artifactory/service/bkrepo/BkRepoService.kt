@@ -638,14 +638,16 @@ class BkRepoService @Autowired constructor(
     }
 
     fun externalDownloadUrl(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
+            creatorId = creatorId,
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
@@ -657,7 +659,7 @@ class BkRepoService @Autowired constructor(
         return StringUtil.chineseUrlEncode(
             "${
                 HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-            }/bkrepo/api/external/repository$shareUri&download=true"
+            }/bkrepo/api/external/repository$shareUri&download=true&userId=$userId"
         )
     }
 
@@ -670,6 +672,7 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
+            creatorId = userId,
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),

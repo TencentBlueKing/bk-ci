@@ -188,6 +188,7 @@ class ExperienceDownloadService @Autowired constructor(
                     projectId,
                     artifactoryType,
                     experienceRecord.creator,
+                    userId,
                     path,
                     ttl ?: (24 * 3600),
                     false
