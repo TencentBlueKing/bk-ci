@@ -215,10 +215,11 @@ private fun waitBuildLessJobStart() {
         .get()
         .build()
 
-    println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
     do {
         try {
-            OkhttpUtils.doShortHttp(request).use { resp ->
+            println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+
+            OkhttpUtils.doHttp(request).use { resp ->
                 if (resp.isSuccessful && resp.body() != null) {
                     val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
                     buildLessTask.forEach { (t, u) ->
@@ -235,10 +236,6 @@ private fun waitBuildLessJobStart() {
             }
         } catch (e: Exception) {
             println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
-        }
-
-        if (!startFlag) {
-            Thread.sleep(1000)
         }
     } while (!startFlag)
 }
