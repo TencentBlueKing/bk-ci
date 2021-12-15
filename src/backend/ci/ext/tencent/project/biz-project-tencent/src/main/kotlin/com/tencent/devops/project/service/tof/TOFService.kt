@@ -262,7 +262,8 @@ class TOFService @Autowired constructor(
                         messageCode = QUERY_USER_INFO_FAIL,
                         defaultMessage = "获取用户$userId 信息失败",
                         params = arrayOf(userId)
-                    ))                }
+                    ))
+                }
                 uploadTofStatus(
                     requestTime = startTime,
                     statusCode = response.code,
