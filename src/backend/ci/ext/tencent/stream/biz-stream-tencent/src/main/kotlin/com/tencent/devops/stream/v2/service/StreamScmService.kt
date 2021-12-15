@@ -500,7 +500,7 @@ class StreamScmService @Autowired constructor(
     fun getFileTreeFromGitWithDefaultBranch(
         gitToken: String,
         gitProjectId: Long,
-        filePath: String,
+        filePath: String
     ): List<GitFileInfo> {
         return retryFun(
             log = "$gitProjectId get $filePath file tree error",
