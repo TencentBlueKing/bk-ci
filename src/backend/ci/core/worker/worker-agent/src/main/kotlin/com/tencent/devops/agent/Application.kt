@@ -47,8 +47,7 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import okhttp3.Request
 import okhttp3.Response
 import java.io.File
-import java.time.LocalDate
-import java.util.Locale
+import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
     // 调用 DHUtil 初始化 SecurityProvider
@@ -124,19 +123,21 @@ private fun waitBuildLessJobStart() {
     val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
     val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
-    println("${LocalDate.now()} BuildLess loopUrl: $loopUrl")
+
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
     do {
+        println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+
         try {
-            OkhttpUtils.doHttp(request).use { resp ->
+            OkhttpUtils.doShortHttp(request).use { resp ->
                 startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
-            println("${LocalDate.now()} Get buildLessTask error. continue loop... \n${e.message}")
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
         }
 
         if (!startFlag) {
@@ -159,7 +160,7 @@ private fun doResponse(
         }
         true
     } else {
-        println("No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
         false
     }
 }
