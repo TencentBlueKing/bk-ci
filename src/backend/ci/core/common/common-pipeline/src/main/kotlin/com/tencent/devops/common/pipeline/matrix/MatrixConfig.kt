@@ -41,7 +41,7 @@ data class MatrixConfig(
                 if (keyValueMatch(case, includeCase, matchKey)) {
                     // 将全匹配的额外参数直接追加到匹配的组合
                     case.putAll(includeCase)
-                } else if (keyMatch(includeCase, matchKey)) {
+                } else {
                     // 不能全匹配的额外参数作为一个新组合加入
                     caseToAdd.add(includeCase.toMutableMap())
                 }
@@ -87,20 +87,6 @@ data class MatrixConfig(
     ): Boolean {
         matchKey.forEach { key ->
             if (case[key] != includeCase[key]) return false
-        }
-        return true
-    }
-
-    /**
-     * 对比[includeCase]中所有匹配key[matchKey]的值是否相同
-     * 出现任意不同的情况则不是全匹配
-     */
-    private fun keyMatch(
-        includeCase: Map<String, String>,
-        matchKey: List<String>
-    ): Boolean {
-        includeCase.forEach { it ->
-            if (it.key !in matchKey) return false
         }
         return true
     }

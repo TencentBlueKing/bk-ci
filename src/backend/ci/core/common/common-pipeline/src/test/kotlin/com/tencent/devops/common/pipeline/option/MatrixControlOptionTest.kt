@@ -44,6 +44,12 @@ internal class MatrixControlOptionTest {
                     mapOf(
                         "var1" to "c",
                         "var3" to "zzz"
+                    ),
+                    // +1 符合 os = macos, var1 = b 的增加 var3 = kkk
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "d",
+                        "var3" to "kkk"
                     )
                 )
             ),
