@@ -27,6 +27,7 @@
 
 package com.tencent.devops.buildless.service
 
+import com.google.common.collect.Interners
 import com.tencent.devops.buildless.ContainerPoolExecutor
 import com.tencent.devops.buildless.client.DispatchClient
 import com.tencent.devops.buildless.pojo.BuildLessTask
@@ -48,35 +49,39 @@ class BuildLessTaskService(
     private val containerPoolExecutor: ContainerPoolExecutor
 ) {
 
+    private val stringPool = Interners.newWeakInterner<String>()
+
     @Async
     fun claimBuildLessTask(containerId: String): Future<BuildLessTask?> {
-        var loopCount = 0
-        while (loopCount < 100) {
-            // 校验当前容器状态是否正常
-            val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
-            if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
-                return AsyncResult(buildLessPoolInfo.buildLessTask)
+        synchronized(stringPool.intern(containerId)) {
+            var loopCount = 0
+            while (loopCount < 100) {
+                // 校验当前容器状态是否正常
+                val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
+                if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
+                    return AsyncResult(buildLessPoolInfo.buildLessTask)
+                }
+
+                val buildLessTask = redisUtils.popBuildLessReadyTask()
+                if (buildLessTask != null) {
+                    logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
+                    dispatchClient.updateContainerId(
+                        buildLessTask = buildLessTask,
+                        containerId = containerId
+                    )
+
+                    logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+
+                    return AsyncResult(buildLessTask)
+                }
+
+                loopCount++
+                Thread.sleep(200)
             }
 
-            val buildLessTask = redisUtils.popBuildLessReadyTask()
-            if (buildLessTask != null) {
-                logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
-                dispatchClient.updateContainerId(
-                    buildLessTask = buildLessTask,
-                    containerId = containerId
-                )
-
-                logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
-
-                return AsyncResult(buildLessTask)
-            }
-
-            loopCount++
-            Thread.sleep(200)
+            return AsyncResult(null)
         }
-
-        return AsyncResult(null)
     }
 
     companion object {
