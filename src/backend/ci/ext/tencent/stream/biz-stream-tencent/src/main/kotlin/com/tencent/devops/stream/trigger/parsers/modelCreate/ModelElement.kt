@@ -48,6 +48,7 @@ import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -81,6 +82,7 @@ class ModelElement @Autowired constructor(
     fun makeElementList(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
+        changeSet: Set<String>? = null,
         event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
@@ -108,6 +110,7 @@ class ModelElement @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
+            additionalOptions.enable = PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
             val element: Element = when {
                 step.run != null -> {

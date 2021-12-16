@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,6 +86,7 @@ class ModelContainer @Autowired constructor(
         jobIndex: Int,
         projectCode: String,
         finalStage: Boolean = false,
+        changeSet: Set<String>? = null,
         resources: Resources? = null
     ) {
         val vmContainer = VMBuildContainer(
@@ -110,7 +112,7 @@ class ModelContainer @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            jobControlOption = getJobControlOption(job, finalStage),
+            jobControlOption = getJobControlOption(job = job, changeSet = changeSet, finalStage = finalStage),
             dispatchType = getDispatchType(job, projectCode, resources)
         )
         containerList.add(vmContainer)
@@ -121,6 +123,7 @@ class ModelContainer @Autowired constructor(
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int,
+        changeSet: Set<String>? = null,
         finalStage: Boolean = false
     ) {
 
@@ -138,7 +141,11 @@ class ModelContainer @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job, finalStage),
+                jobControlOption = getJobControlOption(
+                    job = job,
+                    changeSet = changeSet,
+                    finalStage = finalStage
+                ),
                 mutexGroup = null
             )
         )
@@ -146,6 +153,7 @@ class ModelContainer @Autowired constructor(
 
     private fun getJobControlOption(
         job: Job,
+        changeSet: Set<String>? = null,
         finalStage: Boolean = false
     ): JobControlOption {
         return if (!job.ifField.isNullOrBlank()) {
@@ -165,6 +173,7 @@ class ModelContainer @Autowired constructor(
                 )
             } else {
                 JobControlOption(
+                    enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
                     timeout = job.timeoutMinutes,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = job.ifField.toString(),
@@ -176,6 +185,7 @@ class ModelContainer @Autowired constructor(
             }
         } else {
             JobControlOption(
+                enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
