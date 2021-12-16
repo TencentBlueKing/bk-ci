@@ -25,39 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.ApproveReq
+import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 
-object PropertyUtil {
-
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+interface OpAtomService {
 
     /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
+     * op系统获取插件信息
      */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
-    }
+    fun getOpPipelineAtoms(
+        atomName: String?,
+        atomType: AtomTypeEnum?,
+        serviceScope: String?,
+        os: String?,
+        category: String?,
+        classifyId: String?,
+        atomStatus: AtomStatusEnum?,
+        sortType: OpSortTypeEnum?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<AtomResp<Atom>?>
+
+    /**
+     * 根据id获取插件信息
+     */
+    fun getPipelineAtom(id: String): Result<Atom?>
+
+    /**
+     * 根据插件代码和版本号获取插件信息
+     */
+    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
+
+    /**
+     * 审核插件
+     */
+    fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
 }

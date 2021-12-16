@@ -25,39 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.template
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.template.ApproveReq
+import com.tencent.devops.store.pojo.template.OpTemplateResp
+import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
 
-object PropertyUtil {
+interface OpTemplateService {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    fun list(
+        userId: String,
+        templateName: String?,
+        templateStatus: TemplateStatusEnum?,
+        templateType: TemplateTypeEnum?,
+        classifyCode: String?,
+        category: String?,
+        labelCode: String?,
+        latestFlag: Boolean?,
+        sortType: OpTemplateSortTypeEnum?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<OpTemplateResp>
 
     /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
+     * 审核模版
      */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
-    }
+    fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean>
 }
