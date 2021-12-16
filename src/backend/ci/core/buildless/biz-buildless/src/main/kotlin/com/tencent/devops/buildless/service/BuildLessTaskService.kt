@@ -51,7 +51,7 @@ class BuildLessTaskService(
     @Async
     fun claimBuildLessTask(containerId: String): Future<BuildLessTask?> {
         var loopCount = 0
-        while (loopCount < 200) {
+        while (loopCount < 100) {
             // 校验当前容器状态是否正常
             val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
             if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
