@@ -21,7 +21,6 @@ import com.tencent.devops.stream.listener.buildFinish.StreamFinishContextV2
 import com.tencent.devops.stream.listener.buildFinish.getGitCommitCheckState
 import com.tencent.devops.stream.listener.buildFinish.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
-import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.slf4j.LoggerFactory
