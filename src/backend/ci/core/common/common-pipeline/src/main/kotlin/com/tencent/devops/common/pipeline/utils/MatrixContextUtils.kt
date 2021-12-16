@@ -105,8 +105,8 @@ object MatrixContextUtils {
      * 使用循环遍历笛卡尔乘积算法
      */
     fun loopCartesianProduct(input: List<List<Any>>): List<List<Any>> =
-        input.fold(listOf(listOf<Any>())) { acc, set ->
-            acc.flatMap { list -> set.map { element -> list + element } }
+        input.fold(listOf(listOf<Any>())) { acc, nextList ->
+            acc.flatMap { list -> nextList.map { element -> list + element } }
         }.toList()
 
     /**
