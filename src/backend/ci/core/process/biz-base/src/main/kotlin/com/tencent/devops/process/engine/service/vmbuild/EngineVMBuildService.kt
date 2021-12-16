@@ -206,6 +206,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         buildEnvs = containerEnv,
                         containerId = c.id!!,
                         containerHashId = c.containerHashId ?: "",
+                        jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType()

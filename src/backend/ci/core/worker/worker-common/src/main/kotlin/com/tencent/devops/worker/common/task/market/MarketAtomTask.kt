@@ -647,10 +647,10 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了插件上下文标识ID才做outputs输出
-                buildTask.stepId?.let {
-                    env["jobs.${buildVariables.containerId}.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: "" }
-
+                // 如果定义了Task和Job的上下文标识ID，才做outputs输出
+                if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
+                    env["jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                }
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
@@ -668,8 +668,9 @@ open class MarketAtomTask : ITask() {
 
             LoggerService.addFoldEndLine("-----")
 
-            // TODO #4529 第三方构建机选择支持不指定操作系统引入的，暂时保留
-            env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
+            buildVariables.jobId?.let {
+                env["jobs.${buildVariables.jobId}.os"] = AgentEnv.getOS().name
+            }
 
             if (atomResult.type == "default") {
                 if (env.isNotEmpty()) {
@@ -723,7 +724,7 @@ open class MarketAtomTask : ITask() {
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
         buildTask: BuildTask,
-        varKey: String,c
+        varKey: String,
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables
@@ -914,8 +915,8 @@ open class MarketAtomTask : ITask() {
         val stepId = buildTask.stepId ?: return mapOf()
         return mapOf(
             "steps.$stepId.name" to (buildTask.elementName ?: ""),
-            "steps.$stepId.id" to stepId),
-        "steps.$stepId.status" to BuildStatus.RUNNING.name
+            "steps.$stepId.id" to stepId,
+            "steps.$stepId.status" to BuildStatus.RUNNING.name
         )
     }
 

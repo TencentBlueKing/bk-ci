@@ -44,6 +44,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.util.regex.Pattern
 
+@Suppress("LongParameterList")
 object CommandLineUtils {
 
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
@@ -68,11 +69,7 @@ object CommandLineUtils {
         if (workspace != null) {
             executor.workingDirectory = workspace
         }
-        val contextLogFile = if (!buildId.isNullOrBlank()) {
-            ScriptEnvUtils.getContextFile(buildId)
-        } else {
-            null
-        }
+        val contextLogFile = buildId?.let { ScriptEnvUtils.getContextFile(buildId) }
 
         val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
             CharsetType.UTF_8 -> "UTF-8"
@@ -189,16 +186,14 @@ object CommandLineUtils {
         tmpLine: String,
         workspace: File?,
         resultLogFile: String,
-        elementId: String?
+        stepId: String?
     ) {
         val pattenOutput = "::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
             val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
-            val keyPrefix = if (!elementId.isNullOrBlank()) {
-                "steps.$elementId.outputs."
-            } else ""
+            val keyPrefix = stepId?.let { "steps.$stepId.outputs." }
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"

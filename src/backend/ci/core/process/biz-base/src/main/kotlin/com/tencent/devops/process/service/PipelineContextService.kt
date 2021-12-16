@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -52,7 +53,11 @@ class PipelineContextService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
-    fun buildContext(buildId: String, containerId: String?, buildVar: Map<String, String>): Map<String, String> {
+    fun buildContext(
+        buildId: String,
+        containerId: String?,
+        buildVar: Map<String, String>,
+    ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
         val varMap = mutableMapOf<String, String>()
         try {
@@ -115,15 +120,17 @@ class PipelineContextService @Autowired constructor(
         buildVar: Map<String, String>
     ) {
         c.elements.forEach { e ->
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.name"] = e.name
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.id"] = e.id ?: ""
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.status"] = getStepStatus(e)
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.outcome"] = e.status ?: ""
-            varMap["steps.${e.id}.name"] = e.name
-            varMap["steps.${e.id}.id"] = e.id ?: ""
-            varMap["steps.${e.id}.status"] = getStepStatus(e)
-            varMap["steps.${e.id}.outcome"] = e.status ?: ""
-            varMap.putAll(getStepOutput(c, e, buildVar))
+            val stepId = e.stepId ?: return@forEach
+            varMap["steps.$stepId.name"] = e.name
+            varMap["steps.$stepId.id"] = e.id ?: ""
+            varMap["steps.$stepId.status"] = getStepStatus(e)
+            varMap["steps.$stepId.outcome"] = e.status ?: ""
+            val jobId = c.jobId ?: return@forEach
+            varMap.putAll(getStepOutput(jobId, stepId, buildVar))
+            varMap["jobs.$jobId.steps.$stepId.name"] = e.name
+            varMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
+            varMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
+            varMap["jobs.$jobId.steps.$stepId.outcome"] = e.status ?: ""
         }
     }
 
@@ -134,33 +141,38 @@ class PipelineContextService @Autowired constructor(
         stage: Stage
     ) {
         // current job
-        if (c.id != null && c.id!! == containerId) {
+        if (c.id?.let { it == containerId } == true) {
             varMap["job.id"] = c.jobId ?: ""
             varMap["job.name"] = c.name
             varMap["job.status"] = getJobStatus(c)
             varMap["job.outcome"] = c.status ?: ""
-            varMap["job.container.network"] = getNetWork(c)
+            varMap["job.container.network"] = getNetWork(c) ?: ""
             varMap["job.stage_id"] = stage.id ?: ""
             varMap["job.stage_name"] = stage.name ?: ""
         }
 
         // other job
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.id"] = c.jobId ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.name"] = c.name
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.status"] = getJobStatus(c)
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.outcome"] = c.status ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.container.network"] = getNetWork(c)
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_id"] = stage.id ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_name"] = stage.name ?: ""
+        val jobId = c.jobId ?: return
+        varMap["jobs.$jobId.id"] = jobId
+        varMap["jobs.$jobId.name"] = c.name
+        varMap["jobs.$jobId.status"] = getJobStatus(c)
+        varMap["jobs.$jobId.outcome"] = c.status ?: ""
+        varMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
+        varMap["jobs.$jobId.stage_id"] = stage.id ?: ""
+        varMap["jobs.$jobId.stage_name"] = stage.name ?: ""
     }
 
-    private fun getStepOutput(c: Container, e: Element, buildVar: Map<String, String>): Map<out String, String> {
+    private fun getStepOutput(
+        jobId: String,
+        stepId: String,
+        buildVar: Map<String, String>,
+    ): Map<out String, String> {
         val outputMap = mutableMapOf<String, String>()
-        buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
-            outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
+        buildVar.filterKeys { it.contains("steps.$stepId.outputs.") }.forEach { (key, value) ->
+            outputMap["jobs.$jobId.$key"] = value
         }
-        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (_, u) ->
-            outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
+        buildVar.filterKeys { it.startsWith("jobs.$jobId.os") }.forEach { (_, value) ->
+            outputMap["jobs.$jobId.os"] = value
         }
         return outputMap
     }
@@ -170,17 +182,15 @@ class PipelineContextService @Autowired constructor(
             if (c.dispatchType?.buildType() != BuildType.THIRD_PARTY_AGENT_ID &&
                 c.dispatchType?.buildType() != BuildType.THIRD_PARTY_AGENT_ENV
             ) {
-                "DEVNET"
+                GatewayType.DEVNET.name
             } else {
-                "IDC"
+                GatewayType.IDC.name
             }
         }
         is NormalContainer -> {
-            "IDC"
+            GatewayType.IDC.name
         }
-        else -> {
-            ""
-        }
+        else -> null
     }
 
     private fun getJobStatus(c: Container): String {
