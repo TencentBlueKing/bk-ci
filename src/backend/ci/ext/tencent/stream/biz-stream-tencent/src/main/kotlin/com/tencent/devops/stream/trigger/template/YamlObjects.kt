@@ -54,6 +54,7 @@ object YamlObjects {
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
             ifFiled = step["if"]?.toString(),
+            ifModify = transValue(fromPath, TemplateType.STEP.text, step["if-modify"]),
             uses = step["uses"]?.toString(),
             with = if (step["with"] == null) {
                 null

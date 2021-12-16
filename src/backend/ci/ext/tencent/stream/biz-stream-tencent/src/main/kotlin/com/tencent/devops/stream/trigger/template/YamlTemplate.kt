@@ -134,7 +134,7 @@ class YamlTemplate(
         const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
         const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
         const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
-                "The %s template can only contain parameters, resources and %s keywords"
+            "The %s template can only contain parameters, resources and %s keywords"
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
@@ -832,6 +832,7 @@ class YamlTemplate(
                 YamlObjects.getService(fromPath, job["services"]!!)
             },
             ifField = job["if"]?.toString(),
+            ifModify = transValue(fromPath, TemplateType.JOB.text, job["if-modify"]),
             steps = if (job["steps"] == null) {
                 null
             } else {
@@ -868,6 +869,7 @@ class YamlTemplate(
             id = stage["id"]?.toString(),
             label = stage["label"],
             ifField = stage["if"]?.toString(),
+            ifModify = transValue(fromPath, TemplateType.STAGE.text, stage["if-modify"]),
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
                 null
