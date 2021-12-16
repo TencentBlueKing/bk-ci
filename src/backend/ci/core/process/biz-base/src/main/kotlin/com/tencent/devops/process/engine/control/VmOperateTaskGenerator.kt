@@ -119,7 +119,8 @@ class VmOperateTaskGenerator {
             subProjectId = null,
             subBuildId = null,
             additionalOptions = additionalOptions,
-            atomCode = atomCode
+            atomCode = atomCode,
+            stepId = null
         )
     }
 
@@ -180,7 +181,8 @@ class VmOperateTaskGenerator {
                 subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
-                atomCode = "$SHUTDOWN_VM_TASK_ATOM-END"
+                atomCode = "$SHUTDOWN_VM_TASK_ATOM-END",
+                stepId = null
             )
         )
 
@@ -213,7 +215,8 @@ class VmOperateTaskGenerator {
                 subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
-                atomCode = "$SHUTDOWN_VM_TASK_ATOM-FINISH"
+                atomCode = "$SHUTDOWN_VM_TASK_ATOM-FINISH",
+                stepId = null
             )
         )
 

@@ -98,6 +98,7 @@ abstract class Element(
     open var version: String = "1.*",
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
     open var additionalOptions: ElementAdditionalOptions? = null,
+    open var stepId: String? = null, // 用于上下文键值设置
     open var errorType: String? = null,
     open var errorCode: Int? = null,
     open var errorMsg: String? = null

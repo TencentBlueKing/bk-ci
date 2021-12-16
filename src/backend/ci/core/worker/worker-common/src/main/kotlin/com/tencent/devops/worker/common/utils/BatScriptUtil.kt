@@ -74,7 +74,7 @@ object BatScriptUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        elementId: String? = null,
+        stepId: String? = null,
         charsetType: String? = null
     ): String {
         var fileLock: FileLock? = null
@@ -96,7 +96,7 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                elementId = elementId,
+                elementId = stepId,
                 charsetType = charsetType
             )
         } catch (ignore: Throwable) {

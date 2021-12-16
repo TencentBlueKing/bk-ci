@@ -7,10 +7,11 @@ import org.junit.Assert
 import org.junit.Test
 import java.util.Random
 
+@Suppress("ALL")
 internal class MatrixControlOptionTest {
 
     @Test
-    fun convertCase() {
+    fun calculateValueMatrix() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = """
@@ -20,36 +21,35 @@ internal class MatrixControlOptionTest {
                 """,
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +1
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
                         "var2" to "0"
                     ),
-                    // +1
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +0 一样的值只会加入一个
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +1 多一个变量也是一个新组合
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4",
-                        "var3" to "6"
-                    ),
-                    // +0 重复值加入无效
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
                         "var1" to "a",
-                        "var2" to "1"
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
+                    ),
+                    // +1 符合 os = macos, var1 = b 的增加 var3 = kkk
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "d",
+                        "var3" to "kkk"
                     )
                 )
             ),
@@ -63,17 +63,36 @@ internal class MatrixControlOptionTest {
                     )
                 )
             ),
-            totalCount = 10, // 2*3*3 + 3 -1
+            totalCount = 10, // 2*3*3 -1
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
+                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
+                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
+                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -91,32 +110,47 @@ internal class MatrixControlOptionTest {
     }
 
     @Test
-    fun calculateValueMatrix() {
+    fun calculateValueMatrixYaml() {
         val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
             strategyStr = """
-                    os: [docker,macos]
-                    var1: [a,b,c]
-                    var2: [1,2,3]
+---
+os:
+- "docker"
+- "macos"
+var1:
+- "a"
+- "b"
+- "c"
+var2:
+- 1
+- 2
+- 3
                 """,
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "d",
-                        "var2" to "4"
-                    ),
-                    // +0 重复值不加入
-                    mapOf(
-                        "os" to "docker",
                         "var1" to "a",
-                        "var2" to "1"
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -130,17 +164,112 @@ internal class MatrixControlOptionTest {
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
+            totalCount = 10,
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
+                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
+                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
+                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
+    }
+
+    @Test
+    fun calculateValueMatrixYaml2() {
+        val matrixControlOption = MatrixControlOption(
+            strategyStr = """
+---
+os:
+- "docker"
+- "macos"
+var1:
+- "a"
+- "b"
+- "c"
+var2:
+- 1
+- 2
+- 3
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "d",
+                        "var2" to "0"
+                    ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "os" to "docker",
+                        "var2" to "222"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 19
+        )
     }
 
     @Test
@@ -152,12 +281,12 @@ internal class MatrixControlOptionTest {
                         "include": [
                             {
                                 "os": "docker",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 2
                             },
                             {
                                 "os": "macos",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 1
                             }
                         ],
@@ -194,21 +323,29 @@ internal class MatrixControlOptionTest {
             // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
-                        "var1" to "includeCaseStr",
+                        "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "includeCaseStr",
-                        "var2" to "4"
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
                     ),
-                    // +0 重复值不加入
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "includeCaseStr",
-                        "var2" to "1"
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -227,12 +364,30 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -240,24 +395,31 @@ internal class MatrixControlOptionTest {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = "\${{fromJSON(depends.job1.outputs.matrix)}}",
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
                     mapOf(
                         "os" to "docker",
-                        "var1" to "includeCaseStr",
+                        "var1" to "d",
                         "var2" to "0"
                     ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
                     mapOf(
                         "os" to "macos",
-                        "var1" to "includeCaseStr",
-                        "var2" to "4"
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
                     ),
-                    // +0 重复值不加入
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "includeCaseStr",
-                        "var2" to "1"
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
                     )
                 )
             ),
@@ -271,7 +433,7 @@ internal class MatrixControlOptionTest {
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
+            totalCount = 10,
             finishCount = 1,
             fastKill = true,
             maxConcurrency = 50
@@ -282,12 +444,12 @@ internal class MatrixControlOptionTest {
                         "include": [
                             {
                                 "os": "docker",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 2
                             },
                             {
                                 "os": "macos",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 1
                             }
                         ],
@@ -322,12 +484,30 @@ internal class MatrixControlOptionTest {
                     }
         """
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -345,16 +525,8 @@ internal class MatrixControlOptionTest {
                 listOf(
                     // +1 额外的情况
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
+                        "var4" to "a",
                         "var2" to "1"
-                    ),
-                    // +0 重复值不加入
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1",
-                        "var3" to "Q"
                     )
                 )
             ),
@@ -373,12 +545,12 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 257)
+        Assert.assertEquals(contextCase.size, 256)
     }
 
     @Test
@@ -394,6 +566,10 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
+                    ),
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "b"
                     )
                 )
             ),
@@ -416,12 +592,12 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 1)
+        Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -432,9 +608,13 @@ internal class MatrixControlOptionTest {
                 """,
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +1 额外的情况
                     mapOf(
-                        "os" to "docker"
+                        "var1" to "b",
+                        "var2" to "1"
+                    ),
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "b"
                     )
                 )
             ),
@@ -445,10 +625,6 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
-                    ),
-                    // -1
-                    mapOf(
-                        "os" to "docker"
                     )
                 )
             ),
@@ -457,21 +633,31 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 1)
+        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"))
     }
 
     @Test
     fun calculateValueMatrixMinSizeTest3() {
         val matrixControlOption = MatrixControlOption(
             strategyStr = """
-                    os: [docker]
+---
+os:
+- a
                 """,
-            includeCaseStr = "",
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
             excludeCaseStr = YamlUtil.toYaml(
                 listOf(
                     // -0 先exclude再include
@@ -479,10 +665,6 @@ internal class MatrixControlOptionTest {
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
-                    ),
-                    // -1
-                    mapOf(
-                        "os" to "docker"
                     )
                 )
             ),
@@ -491,12 +673,12 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 0)
+        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"a\"}]"))
     }
 
     @Test
@@ -547,12 +729,12 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 2)
+        Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -599,12 +781,12 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 1)
+        Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -648,7 +830,7 @@ internal class MatrixControlOptionTest {
                     // +1
                     mapOf(
                         "os" to "docker",
-                        "var1" to "d",
+                        "var4" to "d",
                         "var2" to "1"
                     )
                 )
@@ -668,11 +850,27 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 16)
+        // println(JsonUtil.toJson(contextCase, false))
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}," +
+                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"}," +
+                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}]\n"
+            )
+        )
     }
 }

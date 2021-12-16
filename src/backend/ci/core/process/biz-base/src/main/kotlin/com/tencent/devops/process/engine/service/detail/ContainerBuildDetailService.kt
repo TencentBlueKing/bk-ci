@@ -185,8 +185,7 @@ class ContainerBuildDetailService(
         matrixGroupId: String,
         matrixOption: MatrixControlOption
     ) {
-        logger.info("[$buildId]|matrix group update|matrixGroupId=$matrixGroupId|" +
-            "matrixOption=$matrixOption")
+        logger.info("[$buildId]|matrix group update|matrixGroupId=$matrixGroupId|")
         update(buildId, object : ModelInterface {
 
             var update = false

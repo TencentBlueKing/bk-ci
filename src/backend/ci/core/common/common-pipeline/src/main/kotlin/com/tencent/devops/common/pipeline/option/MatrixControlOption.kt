@@ -158,11 +158,9 @@ data class MatrixControlOption(
         if (str.isNullOrBlank()) {
             return emptyList()
         }
-        val includeCaseList = try {
-            YamlUtil.to<List<Map<String, String>>>(str)
-        } catch (ignore: Throwable) {
-            emptyList()
+        val includeCaseList = YamlUtil.to<List<Map<String, Any>>>(str)
+        return includeCaseList.map { map -> map.map {
+            it.key to it.value.toString() }.toMap()
         }
-        return includeCaseList
     }
 }

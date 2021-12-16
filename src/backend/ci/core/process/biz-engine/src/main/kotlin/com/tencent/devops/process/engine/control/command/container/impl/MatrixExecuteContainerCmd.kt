@@ -149,7 +149,7 @@ class MatrixExecuteContainerCmd(
                 buildId = buildId, message = "", tag = taskId,
                 jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Matrix(${parentContainer.containerId}) " +
                 "failed containers count($failedCount), start to kill containers",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
@@ -195,7 +195,7 @@ class MatrixExecuteContainerCmd(
                 buildId = buildId, message = "", tag = taskId,
                 jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Job execution completed",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
@@ -255,7 +255,7 @@ class MatrixExecuteContainerCmd(
                     userId = event.userId,
                     reason = "from_matrix(${parentContainer.containerId})_fastKill"
                 )
-                buildLogPrinter.addYellowLine(
+                buildLogPrinter.addLine(
                     buildId = event.buildId,
                     message = "[MATRIX] Matrix(${parentContainer.containerId}) try to stop " +
                         "container(${container.containerId})",

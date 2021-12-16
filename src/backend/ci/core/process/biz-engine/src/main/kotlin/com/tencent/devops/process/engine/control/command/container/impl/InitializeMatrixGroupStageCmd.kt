@@ -29,13 +29,10 @@ package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -57,12 +54,6 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
-import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import java.lang.StringBuilder
 import kotlin.math.min
 import org.jooq.DSLContext
@@ -171,23 +162,8 @@ class InitializeMatrixGroupStageCmd(
         val groupContainers = mutableListOf<PipelineBuildContainer>()
         val matrixGroupId = parentContainer.containerId
         val context = MatrixBuildContext(
-            actionType = ActionType.START,
-            executeCount = commandContext.executeCount,
-            firstTaskId = "",
-            stageRetry = false,
-            retryStartTaskId = null,
             userId = event.userId,
-            triggerUser = event.userId,
-            startType = StartType.valueOf(variables[PIPELINE_START_TYPE] as String),
-            parentBuildId = variables[PIPELINE_START_PARENT_BUILD_ID],
-            parentTaskId = variables[PIPELINE_START_PARENT_BUILD_TASK_ID],
-            channelCode = if (variables[PIPELINE_START_CHANNEL] != null) {
-                ChannelCode.valueOf(variables[PIPELINE_START_CHANNEL].toString())
-            } else {
-                ChannelCode.BS
-            },
-            retryFailedContainer = variables[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
-            skipFailedTask = variables[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
+            executeCount = commandContext.executeCount,
             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
             containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 1)
         )
@@ -206,8 +182,8 @@ class InitializeMatrixGroupStageCmd(
 
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
-            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            contextCaseList = matrixConfig.getAllContextCase()
+            matrixConfig = matrixOption.convertMatrixConfig(variables)
+            contextCaseList = matrixConfig.getAllCombinations()
 
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
@@ -228,15 +204,17 @@ class InitializeMatrixGroupStageCmd(
                 val customBaseOS = parsedInfo?.baseOS
                 val customBuildEnv = parsedInfo?.buildEnv
 
-                val newContainerSeq = context.containerSeq++
+                val newSeq = context.containerSeq++
+                val innerSeq = context.innerSeq++
 
                 // 刷新所有插件的ID，并生成对应的纯状态插件
                 val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
                 val newContainer = VMBuildContainer(
                     name = modelContainer.name,
-                    id = newContainerSeq.toString(),
-                    containerId = newContainerSeq.toString(),
+                    id = newSeq.toString(),
+                    containerId = newSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
+                    jobId = modelContainer.jobId?.let { "$it[$innerSeq]" },
                     matrixGroupId = matrixGroupId,
                     matrixContext = contextCase,
                     elements = modelContainer.elements,
@@ -283,27 +261,25 @@ class InitializeMatrixGroupStageCmd(
 
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
-            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            contextCaseList = matrixConfig.getAllContextCase()
+            matrixConfig = matrixOption.convertMatrixConfig(variables)
+            contextCaseList = matrixConfig.getAllCombinations()
 
             contextCaseList.forEach { contextCase ->
 
-                // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
-                val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
-
                 // 刷新所有插件的ID，并生成对应的纯状态插件
-                val newContainerSeq = context.containerSeq++
+                val newSeq = context.containerSeq++
+                val innerSeq = context.innerSeq++
                 val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
                 val newContainer = NormalContainer(
                     name = modelContainer.name,
-                    id = newContainerSeq.toString(),
-                    containerId = newContainerSeq.toString(),
+                    id = newSeq.toString(),
+                    containerId = newSeq.toString(),
                     containerHashId = modelContainerIdGenerator.getNextId(),
+                    jobId = modelContainer.jobId?.let { "$it[$innerSeq]" },
                     matrixGroupId = matrixGroupId,
                     matrixContext = contextCase,
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
-                    customBuildEnv = allContext,
                     jobControlOption = jobControlOption.copy(),
                     executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag
@@ -359,7 +335,7 @@ class InitializeMatrixGroupStageCmd(
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
 
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Successfully saved count: ${buildContainerList.size}",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
@@ -373,7 +349,7 @@ class InitializeMatrixGroupStageCmd(
             jobId = parentContainer.containerHashId,
             executeCount = context.executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = parentContainer.buildId,
             message = "[MATRIX] Start to run...",
             tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
@@ -423,7 +399,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = buildId, message = "[MATRIX] Job strategy:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
@@ -444,7 +420,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Include cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
@@ -461,7 +437,7 @@ class InitializeMatrixGroupStageCmd(
                 buildId = buildId, message = "",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Exclude cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
@@ -477,7 +453,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        buildLogPrinter.addYellowLine(
+        buildLogPrinter.addLine(
             buildId = buildId, message = "[MATRIX] After calculated, " +
             "${contextCaseList.size} jobs are generated:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
