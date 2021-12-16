@@ -82,6 +82,8 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 @Suppress("ComplexMethod")
 object ModelParameters {
 
+    private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
+
     fun createPipelineParams(
         yaml: ScriptBuildYaml,
         gitBasicSetting: GitCIBasicSetting,
@@ -148,7 +150,7 @@ object ModelParameters {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
                 }
                 // TODO 工蜂暂时未提供tag message字段，待支持后再增加
-//                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
+                //                startParams[PIPELINE_GIT_TAG_MESSAGE] = originEvent.
                 if (!originEvent.create_from.isNullOrBlank()) {
                     startParams[PIPELINE_GIT_TAG_FROM] = originEvent.create_from!!
                 }
@@ -187,6 +189,7 @@ object ModelParameters {
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commitAuthorName ?: ""
                     TGitObjectKind.SCHEDULE.value
                 } else {
                     startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
@@ -214,8 +217,6 @@ object ModelParameters {
         startParams[PIPELINE_GIT_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
-        // startParams.putAll(yaml.variables ?: mapOf())
-        // putVariables2StartParams(yaml, gitBasicSetting, startParams)
         val buildFormProperties = if (originEvent is GitPushEvent) {
             getBuildFormPropertyFromYmlVariable(
                 // 根据 push options 参数改变variables的值
@@ -280,6 +281,7 @@ object ModelParameters {
         return buildFormProperties
     }
 
+    // git push -o ci.variable::<name>="<value>" -o ci.variable::<name>="<value>"
     private fun replaceVariablesByPushOptions(
         variables: Map<String, Variable>?,
         pushOptions: Map<String, String>?
@@ -287,11 +289,14 @@ object ModelParameters {
         if (variables.isNullOrEmpty() || pushOptions.isNullOrEmpty()) {
             return variables
         }
+        val variablesOptionsKeys = pushOptions.keys.filter { it.startsWith(PUSH_OPTIONS_PREFIX) }
+            .map { it.removePrefix(PUSH_OPTIONS_PREFIX) }
+
         val result = variables.toMutableMap()
         variables.forEach { (key, value) ->
-            if (key in pushOptions.keys) {
+            if (key in variablesOptionsKeys) {
                 result[key] = Variable(
-                    value = pushOptions[key],
+                    value = pushOptions["$PUSH_OPTIONS_PREFIX$key"],
                     readonly = value.readonly
                 )
             }

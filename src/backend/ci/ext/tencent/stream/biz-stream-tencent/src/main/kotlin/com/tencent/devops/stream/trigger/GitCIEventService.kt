@@ -127,7 +127,7 @@ class GitCIEventService @Autowired constructor(
                 context = "$filePath@${event.objectKind.toUpperCase()}",
                 description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                 gitCIBasicSetting = gitBasicSetting,
-                jumpRequest = true
+                jumpNotification = true
             )
         }
         return saveNotBuildEvent(

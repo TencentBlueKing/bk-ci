@@ -57,7 +57,7 @@ const customeRules = {
     },
     mutualGroup: {
         validate: function (value, args) {
-            return /^[A-Za-z0-9]+$/g.test(value) || value.isBkVar()
+            return /^[A-Za-z0-9]+$/g.test(value) || (typeof value === 'string' && value.isBkVar())
         }
     },
     nonVarRule: {
