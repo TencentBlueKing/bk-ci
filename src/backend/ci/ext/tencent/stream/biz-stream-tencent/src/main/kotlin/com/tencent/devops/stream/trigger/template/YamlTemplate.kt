@@ -832,7 +832,10 @@ class YamlTemplate(
                 YamlObjects.getService(fromPath, job["services"]!!)
             },
             ifField = job["if"]?.toString(),
-            ifModify = transValue(fromPath, TemplateType.JOB.text, job["if-modify"]),
+            ifModify = if (job["if-modify"] is List<*>) {
+                val ifModifyList = job["if-modify"] as List<*>
+                ifModifyList.map { it.toString() }.toList()
+            } else null,
             steps = if (job["steps"] == null) {
                 null
             } else {
@@ -869,7 +872,10 @@ class YamlTemplate(
             id = stage["id"]?.toString(),
             label = stage["label"],
             ifField = stage["if"]?.toString(),
-            ifModify = transValue(fromPath, TemplateType.STAGE.text, stage["if-modify"]),
+            ifModify = if (stage["if-modify"] is List<*>) {
+                val ifModifyList = stage["if-modify"] as List<*>
+                ifModifyList.map { it.toString() }.toList()
+            } else null,
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
                 null
