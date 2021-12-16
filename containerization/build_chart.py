@@ -36,7 +36,8 @@ default_value_dict = {
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
     'bkCiInfluxdbDb': 'agentMetrix',
     'bkCiEnvironmentAgentCollectorOn': 'true',
-    'bkCiDocsUrl': 'https://docs.bkci.net/'
+    'bkCiDocsUrl': 'https://docs.bkci.net/',
+    'bkCiArtifactoryRealm': 'local'
 }
 
 if os.path.isfile('./values.json'):
@@ -63,7 +64,7 @@ include_dict = {
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
-    '__BK_CI_VERSION__':'{{ .Chart.AppVersion }}'
+    '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}'
 }
 
 # 读取变量映射
