@@ -46,7 +46,8 @@ class RedisUtils @Autowired constructor(
         buildLessTask: BuildLessTask? = null
     ) {
         val buildLessPoolInfo = BuildLessPoolInfo(
-            status = containerStatus
+            status = containerStatus,
+            buildLessTask = buildLessTask
         )
         redisOperation.hset(
             key = buildLessPoolKey(),
@@ -75,7 +76,10 @@ class RedisUtils @Autowired constructor(
     fun getBuildLessPoolContainerIdle(): Int {
         val values = redisOperation.hvalues(buildLessPoolKey())
 
-        return values?.stream()?.filter { it == ContainerStatus.IDLE.name }?.count()?.toInt() ?: 0
+        return values?.stream()?.filter {
+            val buildLessPoolInfo = objectMapper.readValue(it, BuildLessPoolInfo::class.java)
+            buildLessPoolInfo.status == ContainerStatus.IDLE
+        }?.count()?.toInt() ?: 0
     }
 
     fun increIdlePool(incr: Long) {

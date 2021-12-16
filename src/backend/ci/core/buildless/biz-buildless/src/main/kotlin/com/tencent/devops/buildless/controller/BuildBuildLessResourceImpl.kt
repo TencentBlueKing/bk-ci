@@ -31,6 +31,7 @@ import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -44,11 +45,18 @@ class BuildBuildLessResourceImpl @Autowired constructor(
         var futureResult: Future<BuildLessTask?>? = null
         return try {
             futureResult = buildlessTaskService.claimBuildLessTask(containerId)
-            futureResult.get(20, TimeUnit.SECONDS)
+            val result = futureResult.get(20, TimeUnit.SECONDS)
+            logger.info("****> container: $containerId claim task asyncResult: $result")
+            result
         } catch (e: Exception) {
+            logger.error("****> container: $containerId claim task error.", e)
             null
         } finally {
             futureResult?.cancel(true)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildBuildLessResourceImpl::class.java)
     }
 }

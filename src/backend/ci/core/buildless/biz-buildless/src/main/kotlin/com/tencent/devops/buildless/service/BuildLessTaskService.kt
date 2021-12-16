@@ -73,7 +73,7 @@ class BuildLessTaskService(
             }
 
             loopCount++
-            Thread.sleep(100)
+            Thread.sleep(200)
         }
 
         return AsyncResult(null)

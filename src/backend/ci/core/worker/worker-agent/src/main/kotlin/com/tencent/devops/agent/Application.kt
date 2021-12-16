@@ -149,8 +149,9 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    return if (resp.isSuccessful && resp.body() != null) {
-        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+    val responseStr = resp.body()?.string() ?: ""
+    return if (resp.isSuccessful && responseStr.isNotBlank()) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
         buildLessTask.forEach { (t, u) ->
             when (t) {
                 "agentId" -> System.setProperty(AGENT_ID, u)
