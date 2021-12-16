@@ -56,7 +56,7 @@ class CommandShellImpl : ICommand {
             runtimeVariables = runtimeVariables,
             continueNoneZero = continueNoneZero,
             errorMessage = errorMessage,
-            elementId = elementId
+            stepId = elementId
         )
     }
 }

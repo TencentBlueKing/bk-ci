@@ -107,7 +107,8 @@ object TestTool {
                 approver = null,
                 subProjectId = null,
                 subBuildId = null,
-                additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions()
+                additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions(),
+                stepId = null
             )
         }
     }

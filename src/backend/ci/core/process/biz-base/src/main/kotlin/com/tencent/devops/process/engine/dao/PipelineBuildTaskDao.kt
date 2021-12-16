@@ -284,6 +284,7 @@ class PipelineBuildTaskDao {
                 containerType = containerType,
                 taskSeq = taskSeq,
                 taskId = taskId,
+                stepId = stepId,
                 taskName = taskName,
                 taskType = taskType,
                 taskAtom = taskAtom,

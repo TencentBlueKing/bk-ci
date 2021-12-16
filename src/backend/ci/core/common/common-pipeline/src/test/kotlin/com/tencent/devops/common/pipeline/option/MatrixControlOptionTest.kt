@@ -62,7 +62,7 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -163,7 +163,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -282,7 +282,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -402,7 +402,7 @@ var2:
                     }
         """
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -463,7 +463,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -510,7 +510,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -551,7 +551,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -591,7 +591,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -647,7 +647,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -699,7 +699,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -768,7 +768,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")

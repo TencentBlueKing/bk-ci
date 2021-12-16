@@ -207,7 +207,7 @@ class InitializeMatrixGroupStageCmd(
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            contextCaseList = matrixConfig.getAllContextCase()
+            contextCaseList = matrixConfig.getAllCombinations()
 
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                 throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
@@ -284,7 +284,7 @@ class InitializeMatrixGroupStageCmd(
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
-            contextCaseList = matrixConfig.getAllContextCase()
+            contextCaseList = matrixConfig.getAllCombinations()
 
             contextCaseList.forEach { contextCase ->
 

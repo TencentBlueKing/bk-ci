@@ -351,7 +351,7 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
-                            elementId = buildTask.elementId
+                            stepId = buildTask.stepId
                         )
                     }
                     OSType.LINUX, OSType.MAC_OS -> {
@@ -364,7 +364,7 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = environment,
                             systemEnvVariables = systemEnvVariables,
                             errorMessage = errorMessage,
-                            elementId = buildTask.elementId
+                            stepId = buildTask.stepId
                         )
                     }
                     else -> {
@@ -423,7 +423,7 @@ open class MarketAtomTask : ITask() {
                         dir = atomTmpSpace,
                         workspace = workspace,
                         errorMessage = preCmdErrorMessage,
-                        elementId = buildTask.elementId
+                        stepId = buildTask.stepId
                     )
                 }
             }
@@ -439,7 +439,7 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables,
                         errorMessage = preCmdErrorMessage,
-                        elementId = buildTask.elementId
+                        stepId = buildTask.stepId
                     )
                 }
             }
@@ -647,8 +647,10 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
-                env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
+                // 如果定义了插件上下文标识ID才做outputs输出
+                buildTask.stepId?.let {
+                    env["jobs.${buildVariables.containerId}.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: "" }
+
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
@@ -663,7 +665,11 @@ open class MarketAtomTask : ITask() {
                     LoggerService.addWarnLine("output(except): $key=${env[key]}")
                 }
             }
+
             LoggerService.addFoldEndLine("-----")
+
+            // TODO #4529 第三方构建机选择支持不指定操作系统引入的，暂时保留
+            env["jobs.${buildVariables.containerId}.os"] = AgentEnv.getOS().name
 
             if (atomResult.type == "default") {
                 if (env.isNotEmpty()) {
@@ -717,7 +723,7 @@ open class MarketAtomTask : ITask() {
     @Suppress("UNCHECKED_CAST")
     private fun archiveArtifact(
         buildTask: BuildTask,
-        varKey: String,
+        varKey: String,c
         output: Map<String, Any>,
         atomWorkspace: File,
         buildVariables: BuildVariables

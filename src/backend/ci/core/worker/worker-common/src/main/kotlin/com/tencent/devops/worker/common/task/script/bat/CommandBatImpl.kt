@@ -54,7 +54,7 @@ class CommandBatImpl : ICommand {
             runtimeVariables = runtimeVariables,
             dir = dir,
             errorMessage = errorMessage,
-            elementId = elementId,
+            stepId = elementId,
             charsetType = charsetType
         )
     }

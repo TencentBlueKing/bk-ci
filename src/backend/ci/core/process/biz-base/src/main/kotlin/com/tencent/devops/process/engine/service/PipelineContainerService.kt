@@ -768,7 +768,8 @@ class PipelineContainerService @Autowired constructor(
                 approver = null,
                 subProjectId = null,
                 subBuildId = null,
-                atomCode = atomElement.getAtomCode()
+                atomCode = atomElement.getAtomCode(),
+                stepId = atomElement.stepId
             )
         )
     }
