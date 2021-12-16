@@ -56,32 +56,32 @@ class PipelineContextService @Autowired constructor(
     fun buildContext(
         buildId: String,
         containerId: String?,
-        buildVar: Map<String, String>
+        variables: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
-        val varMap = mutableMapOf<String, String>()
+        val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
                 stage.containers.forEach { container ->
                     // containers
-                    buildJobContext(container, containerId, varMap, stage)
+                    buildJobContext(stage, container, containerId, contextMap, variables)
                     // steps
-                    buildStepContext(container, varMap)
+                    buildStepContext(container, contextMap)
                     // groupContainer
                     container.fetchGroupContainers()?.forEach { c ->
                         // containers
-                        buildJobContext(c, containerId, varMap, stage)
+                        buildJobContext(stage, c, containerId, contextMap, variables)
                         // steps
-                        buildStepContext(c, varMap)
+                        buildStepContext(c, contextMap)
                     }
                 }
             }
-            buildCiContext(varMap, buildVar)
+            buildCiContext(contextMap, variables)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
 
-        return varMap
+        return contextMap
     }
 
     fun getAllBuildContext(buildVar: Map<String, String>): Map<String, String> {
@@ -125,8 +125,6 @@ class PipelineContextService @Autowired constructor(
             varMap["steps.$stepId.status"] = getStepStatus(e)
             varMap["steps.$stepId.outcome"] = e.status ?: ""
             val jobId = c.jobId ?: return@forEach
-            // 已经在生成output时追加了jobs前缀，此处不需要处理
-//            varMap.putAll(getStepOutput(jobId, stepId, buildVar))
             varMap["jobs.$jobId.steps.$stepId.name"] = e.name
             varMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
             varMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
@@ -135,37 +133,46 @@ class PipelineContextService @Autowired constructor(
     }
 
     private fun buildJobContext(
+        stage: Stage,
         c: Container,
         containerId: String?,
-        varMap: MutableMap<String, String>,
-        stage: Stage
+        contextMap: MutableMap<String, String>,
+        variables: Map<String, String>
     ) {
         // current job
         if (c.id?.let { it == containerId } == true) {
-            varMap["job.id"] = c.jobId ?: ""
-            varMap["job.name"] = c.name
-            varMap["job.status"] = getJobStatus(c)
-            varMap["job.outcome"] = c.status ?: ""
-            varMap["job.container.network"] = getNetWork(c) ?: ""
-            varMap["job.stage_id"] = stage.id ?: ""
-            varMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.id"] = c.jobId ?: ""
+            contextMap["job.name"] = c.name
+            contextMap["job.status"] = getJobStatus(c)
+            contextMap["job.outcome"] = c.status ?: ""
+            contextMap["job.container.network"] = getNetWork(c) ?: ""
+            contextMap["job.stage_id"] = stage.id ?: ""
+            contextMap["job.stage_name"] = stage.name ?: ""
+
+            // 所有本Job下的变量提供无需前缀的访问方式，去掉output时的jobs前缀
+            variables.forEach { (key, value) ->
+                val jobPrefix = "jobs.${c.jobId ?: containerId}"
+                if (key.startsWith(jobPrefix)) {
+                    contextMap[key.removePrefix(jobPrefix)] = value
+                }
+            }
         }
 
         // other job
         val jobId = c.jobId ?: return
-        varMap["jobs.$jobId.id"] = jobId
-        varMap["jobs.$jobId.name"] = c.name
-        varMap["jobs.$jobId.status"] = getJobStatus(c)
-        varMap["jobs.$jobId.outcome"] = c.status ?: ""
-        varMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
-        varMap["jobs.$jobId.stage_id"] = stage.id ?: ""
-        varMap["jobs.$jobId.stage_name"] = stage.name ?: ""
+        contextMap["jobs.$jobId.id"] = jobId
+        contextMap["jobs.$jobId.name"] = c.name
+        contextMap["jobs.$jobId.status"] = getJobStatus(c)
+        contextMap["jobs.$jobId.outcome"] = c.status ?: ""
+        contextMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
+        contextMap["jobs.$jobId.stage_id"] = stage.id ?: ""
+        contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
     }
 
     private fun getStepOutput(
         jobId: String,
         stepId: String,
-        buildVar: Map<String, String>,
+        buildVar: Map<String, String>
     ): Map<out String, String> {
         val outputMap = mutableMapOf<String, String>()
         buildVar.filterKeys { it.contains("steps.$stepId.outputs.") }.forEach { (key, value) ->

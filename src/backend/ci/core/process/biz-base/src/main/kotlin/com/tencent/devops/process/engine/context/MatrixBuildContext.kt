@@ -31,6 +31,7 @@ package com.tencent.devops.process.engine.context
  * 生成矩阵的上下文类，属于非线程安全类
  */
 data class MatrixBuildContext(
+    val userId: String,
     val executeCount: Int = 1,
     var containerSeq: Int = 0, // 全局的seq
     var innerSeq: Int = 0,

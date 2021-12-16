@@ -162,6 +162,7 @@ class InitializeMatrixGroupStageCmd(
         val groupContainers = mutableListOf<PipelineBuildContainer>()
         val matrixGroupId = parentContainer.containerId
         val context = MatrixBuildContext(
+            userId = event.userId,
             executeCount = commandContext.executeCount,
             // #4518 裂变的容器的seq id需要以父容器的seq id作为前缀
             containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 1)
@@ -181,7 +182,7 @@ class InitializeMatrixGroupStageCmd(
 
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
-            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
+            matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
 
             if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
@@ -260,7 +261,7 @@ class InitializeMatrixGroupStageCmd(
 
             jobControlOption = modelContainer.jobControlOption!!
             matrixOption = modelContainer.matrixControlOption!!
-            matrixConfig = matrixOption.convertMatrixConfig(commandContext.variables)
+            matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
 
             contextCaseList.forEach { contextCase ->
