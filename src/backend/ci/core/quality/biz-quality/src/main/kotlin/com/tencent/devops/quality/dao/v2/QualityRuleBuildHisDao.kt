@@ -134,7 +134,16 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun updateStatus(ruleBuildIds: Collection<Long>, ruleResult: String?): Int {
+    fun updateStatus(ruleBuildId: Long, ruleResult: String?): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, ruleResult)
+                .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun batchUpdateStatus(ruleBuildIds: Collection<Long>, ruleResult: String?): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)
                 .set(STATUS, ruleResult)

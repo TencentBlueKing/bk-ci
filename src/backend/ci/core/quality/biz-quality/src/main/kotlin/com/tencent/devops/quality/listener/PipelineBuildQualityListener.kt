@@ -76,7 +76,7 @@ class PipelineBuildQualityListener @Autowired constructor(
             ).filter { it.status == RuleInterceptResult.WAIT.name }.map { it.id }
             logger.info("QUALITY|wait_rule_size: ${ruleIdList.size}")
             if (ruleIdList.isNotEmpty()) {
-                qualityRuleBuildHisDao.updateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
+                qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
             }
         } catch (e: Exception) {
             logger.warn("QUALITY|pipelineFinishListener error: ${e.message}")
@@ -107,7 +107,7 @@ class PipelineBuildQualityListener @Autowired constructor(
                 logger.info("QUALITY|retry_rule_size: ${ruleIdList.size}")
                 if (ruleIdList.isNotEmpty()) {
                     qualityRuleBuildHisDao.updateBuildId(ruleIdList, null)
-                    qualityRuleBuildHisDao.updateStatus(ruleIdList, null)
+                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, null)
                 }
             }
         } catch (e: Exception) {
@@ -138,7 +138,7 @@ class PipelineBuildQualityListener @Autowired constructor(
                 ).map { it.id }
                 logger.info("QUALITY|timeout_rule_size: ${ruleIdList.size}")
                 if (ruleIdList.isNotEmpty()) {
-                    qualityRuleBuildHisDao.updateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
+                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
                 }
             }
         } catch (e: Exception) {
