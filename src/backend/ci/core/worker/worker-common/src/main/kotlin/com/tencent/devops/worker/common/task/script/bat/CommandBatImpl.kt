@@ -44,7 +44,7 @@ class CommandBatImpl : ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean,
         errorMessage: String?,
-        elementId: String?,
+        stepId: String?,
         charsetType: String?
     ) {
         val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
@@ -54,7 +54,7 @@ class CommandBatImpl : ICommand {
             runtimeVariables = runtimeVariables,
             dir = dir,
             errorMessage = errorMessage,
-            stepId = elementId,
+            stepId = stepId,
             charsetType = charsetType
         )
     }

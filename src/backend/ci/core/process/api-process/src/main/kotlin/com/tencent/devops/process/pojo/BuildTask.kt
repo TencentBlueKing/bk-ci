@@ -63,5 +63,5 @@ data class BuildTask(
      * 2、防止敏感信息打印到日志
      */
     override fun toString() = "buildId=$buildId|vmSeqId=$vmSeqId|status=$status|taskId=$taskId|name=$elementName" +
-        "elementId=$elementId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
+        "stepId=$stepId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
 }

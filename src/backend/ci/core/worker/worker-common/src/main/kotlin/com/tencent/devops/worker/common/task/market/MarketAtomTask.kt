@@ -828,22 +828,10 @@ open class MarketAtomTask : ITask() {
             params["emailReceivers"] = JsonUtil.toJson(emailReceivers)
             params["emailTitle"] = emailTitle
         }
-        val reportArchTask = BuildTask(
-            buildId = buildTask.buildId,
-            vmSeqId = buildTask.vmSeqId,
-            status = buildTask.status,
-            taskId = buildTask.taskId,
-            elementId = buildTask.elementId,
-            elementName = buildTask.elementName,
-            type = buildTask.type,
-            params = params,
-            buildVariable = buildTask.buildVariable,
-            containerType = buildTask.containerType
-        )
         logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 
         TaskFactory.create(ReportArchiveElement.classType).run(
-            buildTask = reportArchTask,
+            buildTask = buildTask.copy(params = params),
             buildVariables = buildVariables, workspace = atomWorkspace
         )
 
@@ -923,10 +911,11 @@ open class MarketAtomTask : ITask() {
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
     private fun contextMap(buildTask: BuildTask): Map<String, String> {
+        val stepId = buildTask.stepId ?: return mapOf()
         return mapOf(
-            "steps.${buildTask.elementId}.name" to (buildTask.elementName ?: ""),
-            "steps.${buildTask.elementId}.id" to (buildTask.elementId ?: ""),
-            "steps.${buildTask.elementId}.status" to BuildStatus.RUNNING.name
+            "steps.$stepId.name" to (buildTask.elementName ?: ""),
+            "steps.$stepId.id" to stepId),
+        "steps.$stepId.status" to BuildStatus.RUNNING.name
         )
     }
 

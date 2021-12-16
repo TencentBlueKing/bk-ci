@@ -97,7 +97,7 @@ open class ScriptTask : ITask() {
         try {
             command.execute(
                 buildId = buildId,
-                elementId = buildTask.elementId,
+                stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
                 runtimeVariables = variables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
