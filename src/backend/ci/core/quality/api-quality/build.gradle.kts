@@ -32,6 +32,8 @@ dependencies {
     api(project(":core:common:common-notify"))
     api(project(":core:common:common-quality"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:process:api-process"))
+    api(project(":core:plugin:codecc-plugin:api-codecc"))
 }
 
 plugins {

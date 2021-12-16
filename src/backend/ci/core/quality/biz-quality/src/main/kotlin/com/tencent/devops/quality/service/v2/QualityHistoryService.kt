@@ -235,6 +235,18 @@ class QualityHistoryService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.map {
+            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+            interceptList.forEach { record ->
+                if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+                    record.logPrompt = QualityUrlUtils.getCodeCCUrl(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        detail = record.detail,
+                        client = client
+                    )
+                }
+            }
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
@@ -244,7 +256,7 @@ class QualityHistoryService @Autowired constructor(
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
                 checkTimes = it.checkTimes,
-                resultMsg = objectMapper.readValue(it.interceptList)
+                resultMsg = interceptList
             )
         }
     }
