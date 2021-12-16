@@ -292,7 +292,6 @@ class ModelElement @Autowired constructor(
                 )
                 val servicesElement = MarketBuildAtomElement(
                     name = "创建${it.image}服务",
-                    stepId = null,
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,
                     version = "1.*",
