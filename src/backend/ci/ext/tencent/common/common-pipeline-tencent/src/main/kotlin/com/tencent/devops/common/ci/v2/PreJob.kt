@@ -44,6 +44,9 @@ data class PreJob(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     val steps: List<Step>?,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")

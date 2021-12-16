@@ -41,6 +41,9 @@ data class PreStage(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
