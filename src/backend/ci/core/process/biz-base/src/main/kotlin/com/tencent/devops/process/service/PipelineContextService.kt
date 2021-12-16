@@ -56,7 +56,7 @@ class PipelineContextService @Autowired constructor(
     fun buildContext(
         buildId: String,
         containerId: String?,
-        buildVar: Map<String, String>,
+        buildVar: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
         val varMap = mutableMapOf<String, String>()
@@ -66,13 +66,13 @@ class PipelineContextService @Autowired constructor(
                     // containers
                     buildJobContext(container, containerId, varMap, stage)
                     // steps
-                    buildStepContext(container, varMap, buildVar)
+                    buildStepContext(container, varMap)
                     // groupContainer
                     container.fetchGroupContainers()?.forEach { c ->
                         // containers
                         buildJobContext(c, containerId, varMap, stage)
                         // steps
-                        buildStepContext(c, varMap, buildVar)
+                        buildStepContext(c, varMap)
                     }
                 }
             }
@@ -116,8 +116,7 @@ class PipelineContextService @Autowired constructor(
 
     private fun buildStepContext(
         c: Container,
-        varMap: MutableMap<String, String>,
-        buildVar: Map<String, String>
+        varMap: MutableMap<String, String>
     ) {
         c.elements.forEach { e ->
             val stepId = e.stepId ?: return@forEach
@@ -126,7 +125,8 @@ class PipelineContextService @Autowired constructor(
             varMap["steps.$stepId.status"] = getStepStatus(e)
             varMap["steps.$stepId.outcome"] = e.status ?: ""
             val jobId = c.jobId ?: return@forEach
-            varMap.putAll(getStepOutput(jobId, stepId, buildVar))
+            // 已经在生成output时追加了jobs前缀，此处不需要处理
+//            varMap.putAll(getStepOutput(jobId, stepId, buildVar))
             varMap["jobs.$jobId.steps.$stepId.name"] = e.name
             varMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
             varMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)

@@ -443,6 +443,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     taskId = task.taskId,
                     elementId = task.taskId,
                     elementName = task.taskName,
+                    stepId = task.stepId,
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
