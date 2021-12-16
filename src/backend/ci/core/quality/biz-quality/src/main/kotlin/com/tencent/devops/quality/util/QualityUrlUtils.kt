@@ -29,7 +29,6 @@ package com.tencent.devops.quality.util
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
@@ -49,9 +48,6 @@ object QualityUrlUtils {
             varName = CodeccUtils.BK_CI_CODECC_TASK_ID
         ).data
         var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
-        if (taskId.isNullOrBlank()) {
-            taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
-        }
 
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
             "${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
