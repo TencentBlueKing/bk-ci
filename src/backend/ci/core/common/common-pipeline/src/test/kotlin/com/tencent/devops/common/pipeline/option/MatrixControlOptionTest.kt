@@ -67,7 +67,26 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 17)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
+                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
+                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
+                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -149,7 +168,26 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 17)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
+                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
+                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
+                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
+                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
+                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -161,12 +199,12 @@ var2:
                         "include": [
                             {
                                 "os": "docker",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 2
                             },
                             {
                                 "os": "macos",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 1
                             }
                         ],
@@ -249,7 +287,25 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 17)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -306,12 +362,12 @@ var2:
                         "include": [
                             {
                                 "os": "docker",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 2
                             },
                             {
                                 "os": "macos",
-                                "var1": "form_json",
+                                "var3": "form_json",
                                 "var2": 1
                             }
                         ],
@@ -351,7 +407,25 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 20)
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"zzz\"}]\n"
+            )
+        )
     }
 
     @Test
@@ -369,16 +443,8 @@ var2:
                 listOf(
                     // +1 额外的情况
                     mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
+                        "var4" to "a",
                         "var2" to "1"
-                    ),
-                    // +0 重复值不加入
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1",
-                        "var3" to "Q"
                     )
                 )
             ),
@@ -402,7 +468,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 257)
+        Assert.assertEquals(contextCase.size, 256)
     }
 
     @Test
@@ -418,84 +484,13 @@ var2:
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
-                    )
-                )
-            ),
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // -0 先exclude再include
+                    ),
                     mapOf(
                         "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    ),
-                    // -1
-                    mapOf(
-                        "os" to "docker"
+                        "var1" to "b"
                     )
                 )
             ),
-            totalCount = 10, // 3*3 + 2 - 1
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-//        Assert.assertEquals(contextCase.size, 1)
-    }
-
-    @Test
-    fun calculateValueMatrixMinSizeTest2() {
-        val matrixControlOption = MatrixControlOption(
-            strategyStr = """
-                    os: [docker]
-                """,
-            includeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // +1 额外的情况
-                    mapOf(
-                        "os" to "docker"
-                    )
-                )
-            ),
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // -0 先exclude再include
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    ),
-                    // -1
-                    mapOf(
-                        "os" to "docker"
-                    )
-                )
-            ),
-            totalCount = 10, // 3*3 + 2 - 1
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-//        Assert.assertEquals(contextCase.size, 1)
-    }
-
-    @Test
-    fun calculateValueMatrixMinSizeTest3() {
-        val matrixControlOption = MatrixControlOption(
-            strategyStr = """
-                    os: [docker]
-                """,
-            includeCaseStr = "",
             excludeCaseStr = YamlUtil.toYaml(
                 listOf(
                     // -0 先exclude再include
@@ -521,6 +516,87 @@ var2:
             println("$index: $map")
         }
         Assert.assertEquals(contextCase.size, 0)
+    }
+
+    @Test
+    fun calculateValueMatrixMinSizeTest2() {
+        val matrixControlOption = MatrixControlOption(
+            strategyStr = """
+                    os: [docker]
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "var1" to "b",
+                        "var2" to "1"
+                    ),
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "b"
+                    )
+                )
+            ),
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // -0 先exclude再include
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"))
+    }
+
+    @Test
+    fun calculateValueMatrixMinSizeTest3() {
+        val matrixControlOption = MatrixControlOption(
+            strategyStr = """
+---
+os:
+- a
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // -0 先exclude再include
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllContextCase()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"a\"}]"))
     }
 
     @Test
@@ -576,7 +652,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 2)
+       Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -628,7 +704,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 1)
+       Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -672,7 +748,7 @@ var2:
                     // +1
                     mapOf(
                         "os" to "docker",
-                        "var1" to "d",
+                        "var4" to "d",
                         "var2" to "1"
                     )
                 )
@@ -697,6 +773,18 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-//        Assert.assertEquals(contextCase.size, 16)
+        // println(JsonUtil.toJson(contextCase, false))
+       Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+           ":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
+           ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\"," +
+           "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+           "\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+           "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}," +
+           "{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\"," +
+           "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+           "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"}," +
+           "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\"," +
+           "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\"," +
+           "\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}]\n"))
     }
 }
