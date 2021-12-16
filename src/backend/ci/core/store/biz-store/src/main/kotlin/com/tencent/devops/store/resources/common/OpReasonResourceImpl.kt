@@ -25,39 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpReasonResource
+import com.tencent.devops.store.pojo.common.Reason
+import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
+import com.tencent.devops.store.service.common.ReasonService
+import org.springframework.beans.factory.annotation.Autowired
 
-object PropertyUtil {
+@RestResource
+class OpReasonResourceImpl @Autowired constructor(
+    private val reasonService: ReasonService
+) : OpReasonResource {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun add(userId: String, type: ReasonTypeEnum, reasonReq: ReasonReq): Result<Boolean> {
+        return reasonService.add(userId, type, reasonReq)
+    }
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun update(userId: String, id: String, type: ReasonTypeEnum, reasonReq: ReasonReq): Result<Boolean> {
+        return reasonService.update(userId, id, reasonReq)
+    }
+
+    override fun enableReason(userId: String, id: String, type: ReasonTypeEnum, enable: Boolean): Result<Boolean> {
+        return reasonService.enable(userId, id, enable)
+    }
+
+    override fun list(type: ReasonTypeEnum, enable: Boolean?): Result<List<Reason>> {
+        return reasonService.list(type, enable)
+    }
+
+    override fun delete(userId: String, id: String): Result<Boolean> {
+        return reasonService.delete(userId, id)
     }
 }
