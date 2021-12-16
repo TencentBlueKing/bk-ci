@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory
 /**
  * 构建脚本任务
  */
+@Suppress("LongMethod")
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
@@ -144,12 +145,11 @@ open class ScriptTask : ITask() {
             // 成功失败都写入全局变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
             // 上下文返回给全局时追加jobs前缀
-            buildVariables.jobId?.let {
-                addEnv(mapOf("jobs.${buildVariables.jobId}.os" to AgentEnv.getOS().name))
-                addEnv(ScriptEnvUtils.getContext(buildId, workspace).map { context ->
-                    "jobs.${buildVariables.jobId}.${context.key}" to context.value
-                }.toMap())
-            }
+            val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
+            addEnv(mapOf("$jobPrefix.os" to AgentEnv.getOS().name))
+            addEnv(ScriptEnvUtils.getContext(buildId, workspace).map { context ->
+                "$jobPrefix.${context.key}" to context.value
+            }.toMap())
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
             // 设置质量红线指标信息

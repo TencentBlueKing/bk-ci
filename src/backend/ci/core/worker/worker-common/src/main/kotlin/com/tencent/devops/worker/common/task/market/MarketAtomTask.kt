@@ -647,9 +647,10 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了Task和Job的上下文标识ID，才做outputs输出
-                if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
-                    env["jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                // 如果定义了插件上下文标识ID，才做outputs输出，即使没有jobId也以containerId前缀输出
+                buildTask.stepId?.let {
+                    val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
+                    env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
                 }
 
                 TaskUtil.removeTaskId()
