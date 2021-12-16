@@ -191,6 +191,82 @@ var2:
     }
 
     @Test
+    fun calculateValueMatrixYaml2() {
+        val matrixControlOption = MatrixControlOption(
+            strategyStr = """
+---
+os:
+- "docker"
+- "macos"
+var1:
+- "a"
+- "b"
+- "c"
+var2:
+- 1
+- 2
+- 3
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "d",
+                        "var2" to "0"
+                    ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "a",
+                        "var2" to "1",
+                        "var3" to "xxx"
+                    ),
+                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
+                    mapOf(
+                        "os" to "macos",
+                        "var1" to "b",
+                        "var3" to "yyy"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "var3" to "zzz"
+                    ),
+                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    mapOf(
+                        "var1" to "c",
+                        "os" to "docker",
+                        "var2" to "222"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    mapOf(
+                        "os" to "docker",
+                        "var1" to "a",
+                        "var2" to "1"
+                    )
+                )
+            ),
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 19
+        )
+    }
+
+    @Test
     fun calculateValueMatrix2() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
@@ -652,7 +728,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-       Assert.assertEquals(contextCase.size, 0)
+        Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -704,7 +780,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-       Assert.assertEquals(contextCase.size, 0)
+        Assert.assertEquals(contextCase.size, 0)
     }
 
     @Test
@@ -774,17 +850,21 @@ os:
             println("$index: $map")
         }
         // println(JsonUtil.toJson(contextCase, false))
-       Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-           ":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
-           ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\"," +
-           "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
-           "\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
-           "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}," +
-           "{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\"," +
-           "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
-           "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"}," +
-           "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\"," +
-           "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\"," +
-           "\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}]\n"))
+        Assert.assertEquals(
+            contextCase, JsonUtil.to(
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
+                    ":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}," +
+                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"}," +
+                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\"," +
+                    "\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}]\n"
+            )
+        )
     }
 }
