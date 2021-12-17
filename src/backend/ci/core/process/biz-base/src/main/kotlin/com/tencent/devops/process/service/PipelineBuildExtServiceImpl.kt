@@ -38,7 +38,7 @@ class PipelineBuildExtServiceImpl@Autowired constructor(
 
     override fun buildExt(
         task: PipelineBuildTask,
-        variables: Map<String, String>,
+        variables: Map<String, String>
     ): Map<String, String> {
         return pipelineContextService.buildContext(
             buildId = task.buildId,
