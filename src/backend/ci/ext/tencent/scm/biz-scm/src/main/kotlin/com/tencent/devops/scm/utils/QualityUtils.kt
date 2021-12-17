@@ -61,7 +61,7 @@ object QualityUtils {
                 if (list[4].isNullOrBlank()) {
                     body.append("<td>${list[1]}</td>")
                 } else {
-                    body.append("<a target='_blank' href='${list[4]}'>${list[1]}</a>")
+                    body.append("<td><a target='_blank' href='${list[4]}'>${list[1]}</a></td>")
                 }
                 body.append("<td>${list[2]}</td>")
                 if (list[3] == "true") {
