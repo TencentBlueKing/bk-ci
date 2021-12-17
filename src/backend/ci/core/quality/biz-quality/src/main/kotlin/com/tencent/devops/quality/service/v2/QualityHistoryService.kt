@@ -64,7 +64,8 @@ class QualityHistoryService @Autowired constructor(
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val qualityUrlUtils: QualityUrlUtils
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
@@ -238,7 +239,7 @@ class QualityHistoryService @Autowired constructor(
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { record ->
                 if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
-                    record.logPrompt = QualityUrlUtils.getCodeCCUrl(
+                    record.logPrompt = qualityUrlUtils.getCodeCCUrl(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
@@ -422,7 +423,7 @@ class QualityHistoryService @Autowired constructor(
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { record ->
                 if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
-                    record.logPrompt = QualityUrlUtils.getCodeCCUrl(
+                    record.logPrompt = qualityUrlUtils.getCodeCCUrl(
                         projectId = projectId,
                         pipelineId = pipelineId ?: "",
                         buildId = buildId ?: "",
