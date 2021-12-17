@@ -41,7 +41,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextM
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.stream.config.RtxCustomConfig
-import com.tencent.devops.stream.listener.RtxCustomApi
+import com.tencent.devops.stream.listener.notify.RtxCustomApi
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

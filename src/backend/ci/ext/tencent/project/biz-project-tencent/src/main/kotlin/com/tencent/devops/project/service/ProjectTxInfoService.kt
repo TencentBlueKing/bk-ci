@@ -29,11 +29,13 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,6 +45,12 @@ class ProjectTxInfoService @Autowired constructor(
     val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
+        private const val MAX_PROJECT_NAME_LENGTH = 64
+    }
+
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: return null
         return ProjectOrganization(
@@ -64,7 +72,8 @@ class ProjectTxInfoService @Autowired constructor(
         projectCode: String,
         projectName: String
     ): Boolean {
-        if (projectName.isEmpty() || projectName.length > 32) {
+        // projectName表字段长度调整到64位限制
+        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -82,5 +91,24 @@ class ProjectTxInfoService @Autowired constructor(
             englishName = projectCode,
             projectName = projectName
         ) > 0
+    }
+
+    fun getProjectInfoByProjectName(
+        userId: String,
+        projectName: String
+    ): TProjectRecord? {
+        logger.info("PROJECT|userId|$userId|projectName|$projectName")
+        if (projectName.isEmpty()) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                errorCode = ProjectMessageCode.NAME_EMPTY
+            )
+        }
+
+        return projectFreshDao.getProjectInfoByProjectName(
+            dslContext = dslContext,
+            userId = userId,
+            projectName = projectName
+        )
     }
 }

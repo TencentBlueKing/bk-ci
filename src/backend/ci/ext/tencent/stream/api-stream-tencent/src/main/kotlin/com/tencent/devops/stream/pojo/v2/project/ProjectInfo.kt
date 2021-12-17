@@ -51,6 +51,8 @@ data class ProjectCIInfo(
     val avatarUrl: String?,
     @ApiModelProperty("项目描述")
     val description: String?,
+    @ApiModelProperty("是否开启CI功能")
+    val enableCI: Boolean?,
     @ApiModelProperty("Build pushed branches")
     val buildPushedBranches: Boolean?,
     @ApiModelProperty("Build pushed pull request")

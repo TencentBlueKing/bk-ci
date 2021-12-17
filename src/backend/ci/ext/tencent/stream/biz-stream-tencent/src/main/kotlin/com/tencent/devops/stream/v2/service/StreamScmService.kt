@@ -54,6 +54,7 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -553,6 +554,21 @@ class StreamScmService @Autowired constructor(
                     userName = userName
                 ).data
             }
+        )
+    }
+
+    fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: MrCommentBody
+    ) {
+        logger.info("addMrComment: [$gitProjectId|$mrId]")
+        client.getScm(ServiceGitCiResource::class).addMrComment(
+            token = token,
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = mrBody
         )
     }
 

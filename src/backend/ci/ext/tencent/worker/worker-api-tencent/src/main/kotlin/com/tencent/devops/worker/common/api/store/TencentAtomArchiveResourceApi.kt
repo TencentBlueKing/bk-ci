@@ -38,10 +38,8 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -285,27 +283,12 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         file: File,
         isVmBuildEnv: Boolean
     ) {
-        val path = "/jfrog/storage/build/atom/$atomFilePath"
-        var request = buildGet(path)
-        val releaseStage = PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME)
-        if (releaseStage == "prod") {
-            // 判断当前插件版本的创建时间是否在迁移逻辑正式上线后(如果晚于则从新仓库下包，否则还是从jfrog下包
-            val atomMigrateTimeStr = PropertyUtil.getPropertyValue("atom.migrate.time", AGENT_PROPERTIES_FILE_NAME)
-            val atomMigrateTime = DateTimeUtil.stringToLocalDateTime(atomMigrateTimeStr).timestampmilli()
-            if (atomCreateTime > atomMigrateTime) {
-                val envType = AgentEnv.getEnv().name.toLowerCase()
-                val bkrepoHost = if (isVmBuildEnv) {
-                    PropertyUtil.getPropertyValue("bkrepo.file.devnet.gateway.$envType", AGENT_PROPERTIES_FILE_NAME)
-                } else {
-                    PropertyUtil.getPropertyValue("bkrepo.file.idc.gateway.$envType", AGENT_PROPERTIES_FILE_NAME)
-                }
-                val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
-                val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
-                val bkrepoUrl = "${HomeHostUtil.getHost(bkrepoHost)}/generic/ext/bkstore/atom/$bkrepoProjectName/" +
-                    "bk-plugin/$atomFilePath"
-                request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
-            }
-        }
+        val envType = AgentEnv.getEnv().name.toLowerCase()
+        val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
+        val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
+        val bkrepoUrl = "${HomeHostUtil.getHost(AgentEnv.getGateway())}/repo/storge/build/atom/$bkrepoProjectName/" +
+            "bk-plugin/$atomFilePath"
+        val request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
         download(request, file)
     }
 }

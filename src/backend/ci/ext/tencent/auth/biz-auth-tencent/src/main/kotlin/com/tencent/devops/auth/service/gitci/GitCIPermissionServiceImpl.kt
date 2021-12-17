@@ -47,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class GitCIPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
-    val projectInfoService: GitCiProjectInfoService
+    val projectInfoService: GitCiProjectInfoService,
+    val projectServiceImpl: GitCIPermissionProjectServiceImpl
 ) : PermissionService {
 
     // GitCI权限场景不会出现次调用, 故做默认实现
@@ -76,7 +77,20 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             return webCheckAction(projectCode, userId)
         }
 
+        // 查看,下载只需要校验是否为项目成员, 不做developer, oauth相关的校验
+        if (isProjectActionList(action)) {
+            return if (action == AuthPermission.DOWNLOAD.value) {
+                // download需要是项目成员
+                val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+                projectServiceImpl.checkProjectUser(userId, gitProjectId, projectCode)
+            } else {
+                // list, view项目成员或者开源项目都校验通过
+                projectServiceImpl.isProjectUser(userId, projectCode, null)
+            }
+        }
+
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+
         // 操作类action需要校验用户oauth, 查看类的无需oauth校验
         if (!checkListOrViewAction(action)) {
             val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
@@ -148,6 +162,17 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         passAction.add(AuthPermission.DOWNLOAD.value)
         passAction.add(AuthPermission.USE.value)
         if (passAction.contains(action)) {
+            return true
+        }
+        return false
+    }
+
+    private fun isProjectActionList(action: String): Boolean {
+        val actionList = mutableListOf<String>()
+        actionList.add(AuthPermission.LIST.value)
+        actionList.add(AuthPermission.VIEW.value)
+        actionList.add(AuthPermission.DOWNLOAD.value)
+        if (actionList.contains(action)) {
             return true
         }
         return false
