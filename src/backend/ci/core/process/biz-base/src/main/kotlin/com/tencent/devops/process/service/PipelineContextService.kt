@@ -115,6 +115,7 @@ class PipelineContextService @Autowired constructor(
         variables: Map<String, String>
     ) {
         // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
+        // 后续需要改为只有本job才去掉前缀
         variables.forEach { (key, value) ->
             val prefix = "jobs.${c.jobId ?: containerId}."
             if (key.startsWith(prefix)) {
