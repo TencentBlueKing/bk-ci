@@ -28,14 +28,11 @@
 package com.tencent.devops.artifactory.api.builds
 
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
@@ -49,9 +46,5 @@ interface BuildFileGatewayResource {
     @ApiOperation("获取项目文件网关配置")
     @Path("/get")
     @GET
-    fun getFileGateway(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String
-    ): Result<FileGatewayInfo>
+    fun getFileGateway(): Result<FileGatewayInfo>
 }
