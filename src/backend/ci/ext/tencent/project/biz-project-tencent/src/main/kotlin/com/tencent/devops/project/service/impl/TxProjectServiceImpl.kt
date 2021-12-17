@@ -62,11 +62,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
@@ -93,7 +91,6 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val projectDataSourceAssignService: ProjectDataSourceAssignService,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
@@ -105,20 +102,18 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val projectExtPermissionService: ProjectExtPermissionService,
-    private val projectTagService: ProjectTagService
+    private val projectExtPermissionService: ProjectExtPermissionService
 ) : AbsProjectServiceImpl(
-    projectPermissionService,
-    dslContext,
-    projectDao,
-    projectJmxApi,
-    redisOperation,
-    gray,
-    client,
-    projectDispatcher,
-    authPermissionApi,
-    projectAuthServiceCode,
-    projectDataSourceAssignService
+    projectPermissionService = projectPermissionService,
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectJmxApi = projectJmxApi,
+    redisOperation = redisOperation,
+    gray = gray,
+    client = client,
+    projectDispatcher = projectDispatcher,
+    authPermissionApi = authPermissionApi,
+    projectAuthServiceCode = projectAuthServiceCode
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -126,12 +121,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
-
-    @Value("\${tag.pcg:#{null}}")
-    private var pcgTag: String = ""
-
-    @Value("\${dept.pcg:#{null}}")
-    private var deptPcg: String = ""
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
@@ -153,7 +142,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
 
         val englishNames = getProjectFromAuth(userId, accessToken)
-        if (englishNames == null || englishNames.isEmpty()) {
+        if (englishNames.isEmpty()) {
             return null
         }
         if (!englishNames.contains(projectVO!!.englishName)) {
@@ -168,7 +157,7 @@ class TxProjectServiceImpl @Autowired constructor(
         try {
 
             val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames == null || englishNames.isEmpty()) {
+            if (englishNames.isEmpty()) {
                 return emptyList()
             }
             logger.info("项目列表：$englishNames")
@@ -223,12 +212,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 accessToken = newAccessToken!!,
                 projectCreateInfo = projectCreateInfo
             )
-        }
-
-        try {
-            routerTagCheckout(projectCreateInfo)
-        } catch (e: Exception) {
-            logger.warn("checkout routerTag fail:$e")
         }
 
         // 工蜂CI项目不会添加paas项目，但也需要广播
@@ -289,7 +272,8 @@ class TxProjectServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()}, " +
+                    "message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -327,7 +311,9 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
         val bgId = if (projectCreateInfo.bgId == 0L) userDeptDetail.bgId.toLong() else projectCreateInfo.bgId
         val deptId = if (projectCreateInfo.deptId == 0L) userDeptDetail.deptId.toLong() else projectCreateInfo.deptId
-        val centerId = if (projectCreateInfo.centerId == 0L) userDeptDetail.centerId.toLong() else projectCreateInfo.centerId
+        val centerId = if (projectCreateInfo.centerId == 0L) {
+            userDeptDetail.centerId.toLong()
+        } else projectCreateInfo.centerId
         val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
         val deptName = if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
         val centerName = if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
@@ -409,17 +395,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    // pcg项目直接将流量切换到pcg集群
-    private fun routerTagCheckout(projectCreateInfo: ProjectCreateInfo) {
-        if (!deptPcg.isNullOrEmpty() && projectCreateInfo.bgId == deptPcg.toLong()) {
-            logger.info("project create by pcg, checkout router to pcg ${projectCreateInfo.englishName}")
-            projectTagService.updateTagByProject(projectCreateInfo.englishName, pcgTag)
-        }
-    }
-
     companion object {
-        private const val Width = 128
-        private const val Height = 128
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
     }
 }

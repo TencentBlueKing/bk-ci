@@ -189,6 +189,7 @@ object ModelParameters {
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commitAuthorName ?: ""
                     TGitObjectKind.SCHEDULE.value
                 } else {
                     startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId

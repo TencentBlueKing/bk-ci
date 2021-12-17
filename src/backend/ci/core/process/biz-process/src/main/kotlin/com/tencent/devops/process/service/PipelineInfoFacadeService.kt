@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -77,6 +78,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -103,6 +105,12 @@ class PipelineInfoFacadeService @Autowired constructor(
 
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
+
+    // pipeline对应的channel为静态数据, 基本不会变
+    private val pipelineChannelCache = CacheBuilder.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*pipelineId*/, ChannelCode>()
 
     fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         pipelinePermissionService.validPipelinePermission(
@@ -831,6 +839,18 @@ class PipelineInfoFacadeService @Autowired constructor(
                 logger.info("$userId batchUpdatePipelineNamePinYin finished")
             }
         }
+    }
+
+    fun getPipelineChannel(projectId: String, pipelineId: String): ChannelCode? {
+        if (pipelineChannelCache.getIfPresent(pipelineId) != null) {
+            return pipelineChannelCache.getIfPresent(pipelineId)
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId) ?: return null
+        val channelCode = ChannelCode.getChannel(pipelineInfo.channel)
+        if (channelCode != null) {
+            pipelineChannelCache.put(pipelineId, channelCode)
+        }
+        return channelCode
     }
 
     companion object {

@@ -54,7 +54,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         pass = "__REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
         database = __REDIS_DB__, -- 默认选择db0
         max_idle_time = 600000, -- 保留在连接池的时间
-        pool_size = 10 -- 连接池的大小
+        pool_size = 40, -- 连接池的大小
+        backlog = 10 -- 池外连接最大值
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__IAM_IP0__",

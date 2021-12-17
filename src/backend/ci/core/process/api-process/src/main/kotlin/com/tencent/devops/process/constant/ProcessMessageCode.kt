@@ -214,6 +214,7 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
     const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
     const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+    const val ERROR_CALLBACK_SAVE_FAIL = "2101185" // 创建callback失败,失败原因:{0}
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

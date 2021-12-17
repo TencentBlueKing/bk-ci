@@ -37,6 +37,5 @@ object Versions {
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
-    const val ShardingSphere = "5.0.0"
-    const val log4j = "2.15.0"
+    const val log4j = "2.16.0"
 }
