@@ -224,7 +224,7 @@ private fun waitBuildLessJobStart() {
                 startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
-            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.message}")
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n$e")
         }
 
         if (!startFlag) {
@@ -236,8 +236,9 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    return if (resp.isSuccessful && resp.body() != null && resp.body()!!.string().isNotBlank()) {
-        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(resp.body()!!.string())
+    val responseBody = resp.body()?.string() ?: ""
+    return if (resp.isSuccessful && responseBody.isNotBlank()) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
         buildLessTask.forEach { (t, u) ->
             when (t) {
                 "agentId" -> System.setProperty(AGENT_ID, u)
