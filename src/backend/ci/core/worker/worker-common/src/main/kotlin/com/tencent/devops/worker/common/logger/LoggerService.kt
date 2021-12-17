@@ -262,14 +262,23 @@ object LoggerService {
         }
     }
 
-    fun addWarnLine(message: String) =
-        addNormalLine("$LOG_WARN_FLAG$message")
+    fun addWarnLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_WARN_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_WARN_FLAG"))
+    }
 
-    fun addErrorLine(message: String) =
-        addNormalLine("$LOG_ERROR_FLAG$message")
+    fun addErrorLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_ERROR_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_ERROR_FLAG"))
+    }
 
-    fun addDebugLine(message: String) =
-        addNormalLine("$LOG_DEBUG_FLAG$message")
+    fun addDebugLine(message: String) {
+        // 修复换行后无法通过前缀渲染颜色的问题
+        val msg = "$LOG_DEBUG_FLAG$message"
+        addNormalLine(msg.replace("\n", "\n$LOG_DEBUG_FLAG"))
+    }
 
     fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(
