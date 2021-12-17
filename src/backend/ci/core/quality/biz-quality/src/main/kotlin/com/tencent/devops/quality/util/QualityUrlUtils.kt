@@ -28,13 +28,16 @@
 package com.tencent.devops.quality.util
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
+import org.springframework.beans.factory.annotation.Value
 
 object QualityUrlUtils {
+
+    @Value("\${quality.codecc.host:}")
+    private val codeccHost: String = ""
 
     fun getCodeCCUrl(
         projectId: String,
@@ -50,14 +53,14 @@ object QualityUrlUtils {
         var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
 
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
-            "${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
+            "http://$codeccHost/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
         } else {
             val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
                 .replace("##detail##", detail)
-            "${HomeHostUtil.innerServerHost()}$fillDetailUrl"
+            "http://$codeccHost$fillDetailUrl"
         }
         return ""
     }
