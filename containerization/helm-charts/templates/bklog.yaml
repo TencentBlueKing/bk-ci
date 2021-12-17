@@ -1,18 +1,17 @@
-{{- if .Values.bklog.file.collectEnabled }}
-# Container Log
+{{- if .Values.bklogConfig.enabled }}
+# Service Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
-  name: {{ include "common.names.fullname" . }}-bklog-file
+  name: {{ include "common.names.fullname" . }}-bklog-service
 spec:
-  dataId: {{ .Values.bklog.file.dataId }}
-
+  dataId: {{ .Values.bklogConfig.service.dataId }}
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
-    matchLabels: {{- include "common.labels.standard" . | nindent 4 }}
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
       {{- if .Values.commonLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
       app.kubernetes.io/component: microservice
   path:
@@ -24,24 +23,45 @@ spec:
     timeout: '2s'
   ext_meta:
     logSourceType: "file"
-{{- end }}
-{{- if .Values.bklog.std.collectEnabled }}
 ---
-# Stdout
+# Gateway Access Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
-  name: {{ include "common.names.fullname" . }}-bklog-std
+  name: {{ include "common.names.fullname" . }}-bklog-gateway-access
 spec:
-  dataId: {{ .Values.bklog.std.dataId }}
-  logConfigType: std_log_config
+  dataId: {{ .Values.bklogConfig.gatewayAccess.dataId }}
+  logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
-    matchLabels: {{- include "common.labels.standard" . | nindent 4 }}
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
       {{- if .Values.commonLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
-      app.kubernetes.io/component: microservice
+      app.kubernetes.io/component: gateway
+  path:
+    - /data/logs/nginx/devops.access.*.log
+  encoding: 'utf-8'
   ext_meta:
-    logSourceType: "std"
+    logSourceType: "file"
+# Gateway Error Log
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: {{ include "common.names.fullname" . }}-bklog-gateway-error
+spec:
+  dataId: {{ .Values.bklogConfig.gatewayError.dataId }}
+  logConfigType: container_log_config
+  namespace: {{ .Release.Namespace }}
+  labelSelector:
+    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+      {{- if .Values.commonLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
+      {{- end }}
+      app.kubernetes.io/component: gateway
+  path:
+    - /data/logs/nginx/devops.error.log
+  encoding: 'utf-8'
+  ext_meta:
+    logSourceType: "file"
 {{- end }}
