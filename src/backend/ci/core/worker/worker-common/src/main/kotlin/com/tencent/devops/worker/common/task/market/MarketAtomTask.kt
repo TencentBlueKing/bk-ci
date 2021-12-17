@@ -64,6 +64,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
@@ -511,7 +512,7 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType)
                 )
             }
             BuildType.WORKER -> {
@@ -523,12 +524,17 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType)
                 )
             }
         }
         logger.info("sdkEnv is:$sdkEnv")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
+    }
+
+    private fun getFileGateway(containerType: String?): String {
+        val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
+        return (if (vmBuildEnvFlag) CommonEnv.fileDevnetGateway else CommonEnv.fileIdcGateway) ?: ""
     }
 
     private fun writeParamEnv(
@@ -564,7 +570,7 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val vmBuildEnv: Boolean
+        val fileGateway: String
     )
 
     private fun writeInputFile(
