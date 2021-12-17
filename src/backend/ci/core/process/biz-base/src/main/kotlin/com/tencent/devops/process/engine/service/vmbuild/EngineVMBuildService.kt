@@ -220,19 +220,21 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     /**
-     * 对[customBuildEnv]的占位符进行替换，之后再塞入加入构建机容器的上下文[context]，同时追加了构建矩阵上下文
+     * 对[customBuildEnv]的占位符进行替换，
+     * 再追加env.前缀的构建机容器的上下文[context]，
+     * 同时追加构[matrixContext]建矩阵上下文
      */
     private fun fillContainerContext(
         context: MutableMap<String, String>,
         customBuildEnv: Map<String, String>?,
         matrixContext: Map<String, String>?
     ) {
-        if (!customBuildEnv.isNullOrEmpty()) {
-            context.putAll(customBuildEnv.map { mit ->
-                "$ENV_CONTEXT_KEY_PREFIX${mit.key}" to EnvUtils.parseEnv(mit.value, context)
+        customBuildEnv?.let {
+            context.putAll(customBuildEnv.map {
+                "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
             }.toMap())
         }
-        if (!matrixContext.isNullOrEmpty()) context.putAll(matrixContext)
+        if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
     }
 
     fun setStartUpVMStatus(

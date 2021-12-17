@@ -91,7 +91,7 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                elementId = stepId,
+                stepId = stepId,
                 charsetType = charsetType
             )
         } catch (ignore: Throwable) {

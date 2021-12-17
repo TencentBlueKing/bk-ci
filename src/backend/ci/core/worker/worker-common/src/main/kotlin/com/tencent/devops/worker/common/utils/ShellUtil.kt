@@ -110,7 +110,7 @@ object ShellUtil {
             print2Logger = print2Logger,
             executeErrorMessage = "",
             buildId = buildId,
-            step = stepId
+            stepId = stepId
         )
     }
 
@@ -208,7 +208,7 @@ object ShellUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String? = null,
-        step: String? = null
+        stepId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -218,7 +218,7 @@ object ShellUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                elementId = step
+                stepId = stepId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
