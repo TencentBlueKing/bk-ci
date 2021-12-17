@@ -36,6 +36,6 @@ object Versions {
     const val Oshi = "5.8.3"
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
-    const val log4j = "2.16.0"
     const val YamlSchema = "1.0.49"
+    const val log4j = "2.16.0"
 }
