@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -667,12 +668,13 @@ abstract class ImageReleaseService {
             if (null != password) {
                 startParams["registryPwd"] = password
             }
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
+            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,
                 pipelineId = imagePipelineRelRecord.pipelineId,
                 values = startParams,
-                channelCode = ChannelCode.AM
+                channelCode = ChannelCode.AM,
+                startType = StartType.SERVICE
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {

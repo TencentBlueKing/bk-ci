@@ -35,11 +35,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
 import com.tencent.devops.common.api.constant.NO_LABEL
 import com.tencent.devops.common.api.constant.OPTIONS
 import com.tencent.devops.common.api.constant.OR
+import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
 import com.tencent.devops.common.api.constant.TIMETOSELECT
@@ -289,6 +289,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
                 var logoUrl = it["LOGO_URL"] as? String
+                logoUrl = if (logoUrl?.contains("?") == true) {
+                    logoUrl.plus("&logo=true")
+                } else {
+                    logoUrl?.plus("?logo=true")
+                }
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
                     logoUrl = RegexUtils.trimProtocol(logoUrl)
                 }

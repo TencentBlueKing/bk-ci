@@ -55,6 +55,20 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 
 object PipelineVarUtil {
 
@@ -132,6 +146,7 @@ object PipelineVarUtil {
      * CI预置上下文转换映射关系
      */
     private val contextVarMappingBuildVar = mapOf(
+        "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
         "ci.actor" to PIPELINE_START_USER_ID,
@@ -168,13 +183,22 @@ object PipelineVarUtil {
         "ci.mr_action" to PIPELINE_GIT_MR_ACTION
     )
 
+    /**
+     * CI预置上下文转换映射关系
+     */
+    private val contextVarMappingBuildVarRevert = mapOf(
+        PIPELINE_START_USER_NAME to "ci.actor"
+    )
+
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
 
     private val reverseContextVarMappingBuildVar =
         contextVarMappingBuildVar.values.zip(contextVarMappingBuildVar.keys).toMap()
 
     fun fetchReverseVarName(contextKey: String): String? {
-        return reverseContextVarMappingBuildVar[contextKey]
+        val varMap = reverseContextVarMappingBuildVar.toMutableMap()
+        varMap.putAll(contextVarMappingBuildVarRevert)
+        return varMap[contextKey]
     }
 
     /**

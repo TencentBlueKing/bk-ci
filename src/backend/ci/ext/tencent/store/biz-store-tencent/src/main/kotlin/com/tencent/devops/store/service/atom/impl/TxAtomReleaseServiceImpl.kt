@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
@@ -99,7 +100,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.Date
+import java.util.*
 import java.util.concurrent.Executors
 
 @Service
@@ -379,11 +380,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
         val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val tagName = "prod-v${atomReleaseRequest.version}-$date"
+        val branch = if (atomReleaseRequest.branch.isNullOrBlank()) MASTER else atomReleaseRequest.branch
         val createGitTagResult = client.get(ServiceGitRepositoryResource::class).createGitTag(
             userId = userId,
             repoId = atomReleaseRequest.repositoryHashId!!,
             tagName = tagName,
-            ref = atomReleaseRequest.branch ?: "master",
+            ref = branch!!,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
         logger.info("createGitTagResult is :$createGitTagResult")
@@ -415,6 +417,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
         val repoId = atomRecord.repositoryHashId
+        val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val atomPackageSourceType =
             if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
         val getAtomConfResult = getAtomConfig(
@@ -424,7 +427,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomVersion = atomVersion,
             repositoryHashId = repoId,
             userId = userId,
-            branch = atomRecord.branch
+            branch = branch
         )
         logger.info("rebuild, getAtomConfResult: $getAtomConfResult")
         if (getAtomConfResult.errorCode != "0") {
@@ -456,7 +459,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomVersion = atomVersion,
             repositoryHashId = atomRecord.repositoryHashId,
             userId = userId,
-            branch = atomRecord.branch
+            branch = branch
         )
         logger.info("rebuild, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
@@ -523,12 +526,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
         val repositoryHashId = atomRecord.repositoryHashId
+        val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val commitId = handleCodeccTask(
             userId = userId,
             repositoryHashId = repositoryHashId,
             atomCode = atomCode,
             atomId = atomId,
-            branch = atomRecord.branch
+            branch = branch
         )
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
@@ -559,7 +563,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "script" to StringEscapeUtils.escapeJava(script),
                 "repositoryHashId" to atomRecord.repositoryHashId,
                 "repositoryPath" to (buildInfo.value2() ?: ""),
-                "branch" to atomRecord.branch
+                "branch" to branch
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
@@ -620,7 +624,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams["language"] = language
             startParams["script"] = script
             startParams["commitId"] = commitId
-            startParams["branch"] = atomRecord.branch
+            startParams["branch"] = branch
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
@@ -661,7 +665,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
             repoId = repositoryHashId,
-            sha = branch ?: "master",
+            sha = branch ?: MASTER,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
         logger.info("handleCodeccTask  atomId:$atomId,getRepoRecentCommitInfoResult: $getRepoRecentCommitInfoResult")

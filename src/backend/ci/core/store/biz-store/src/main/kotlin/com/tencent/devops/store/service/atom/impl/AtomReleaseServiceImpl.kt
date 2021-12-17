@@ -315,6 +315,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             arrayOf(marketAtomUpdateRequest.name)
         )
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank()) MASTER else marketAtomUpdateRequest.branch
         val getAtomConfResult = getAtomConfig(
             atomPackageSourceType = atomPackageSourceType,
             projectCode = projectCode,
@@ -322,7 +323,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomVersion = version,
             userId = userId,
             repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch
+            branch = branch
         )
         if (getAtomConfResult.errorCode != "0") {
             return MessageCodeUtil.generateResponseDataObject(
@@ -369,7 +370,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomVersion = version,
             userId = userId,
             repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch
+            branch = branch
         )
         logger.info("update market atom, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {

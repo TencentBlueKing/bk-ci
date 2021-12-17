@@ -40,12 +40,14 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 )
 abstract class GitEvent : CodeWebhookEvent
 
-@Suppress("ALL")
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommitRepository(
     val name: String,
+    val url: String,
     val git_http_url: String,
-    val git_ssh_url: String
+    val git_ssh_url: String,
+    val homepage: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -71,7 +73,7 @@ data class GitUser(
     val username: String
 )
 
-@Suppress("ALL")
+@Suppress("ConstructorParameterNaming")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProject(
     val name: String,

@@ -10,9 +10,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.ActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class BkPermissionService @Autowired constructor(
     private val authHelper: AuthHelper,
     private val policyService: PolicyService,

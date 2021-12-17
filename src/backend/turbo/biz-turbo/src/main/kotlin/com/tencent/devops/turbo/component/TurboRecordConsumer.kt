@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.constants.codeccAdmin
 import com.tencent.devops.turbo.dto.TurboRecordCreateDto
+import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
 import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
@@ -39,6 +40,9 @@ class TurboRecordConsumer @Autowired constructor(
             )
         }
 
+    /**
+     * 创建记录消费逻辑
+     */
     fun createSingleTurboRecord(turboRecordCreateDto: TurboRecordCreateDto) {
         val turboPlanId = (turboRecordCreateDto.dataMap["project_id"] as String?)?.substringBefore("_")
         try {
@@ -57,6 +61,9 @@ class TurboRecordConsumer @Autowired constructor(
         }
     }
 
+    /**
+     * 更新记录消费逻辑
+     */
     fun updateSingleTurboRecord(turboRecordUpdateDto: TurboRecordUpdateDto) {
         try {
             logger.info("[update turbo job|${turboRecordUpdateDto.engineCode}|${turboRecordUpdateDto.turboPlanId}] update single turbo record!")
@@ -100,6 +107,9 @@ class TurboRecordConsumer @Autowired constructor(
         }
     }
 
+    /**
+     * 刷新数据逻辑
+     */
     fun updateTurboDateForRefresh(turboPlanId: String) {
         val turboPlanEntity = turboPlanService.findTurboPlanById(turboPlanId)
         if (null == turboPlanEntity || turboPlanEntity.id.isNullOrBlank()) {
@@ -111,5 +121,17 @@ class TurboRecordConsumer @Autowired constructor(
             logger.info("no engine info found with code ${turboPlanEntity.engineCode}")
         }
         turboDataSyncService.refreshTurboRecord(turboPlanId, turboEngineConfig!!)
+    }
+
+    /**
+     * 更新插件输出记录状态
+     */
+    fun updateSingleRecordForPlugin(turboRecordPluginUpdateDto: TurboRecordPluginUpdateDto) {
+        logger.info("update single record for plugin, build id: ${turboRecordPluginUpdateDto.buildId}")
+        turboRecordService.updateRecordStatusForPlugin(
+            buildId = turboRecordPluginUpdateDto.buildId,
+            status = EnumDistccTaskStatus.FAILED.getTBSStatus(),
+            user = turboRecordPluginUpdateDto.user
+        )
     }
 }
