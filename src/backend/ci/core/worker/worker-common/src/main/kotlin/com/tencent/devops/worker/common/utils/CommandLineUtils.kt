@@ -58,7 +58,7 @@ object CommandLineUtils {
         prefix: String = "",
         executeErrorMessage: String? = null,
         buildId: String? = null,
-        elementId: String? = null,
+        stepId: String? = null,
         charsetType: String? = null
     ): String {
 
@@ -98,7 +98,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
                     appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
                     LoggerService.addNormalLine(tmpLine)
                 } else {
@@ -119,7 +119,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, elementId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
                     LoggerService.addErrorLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -155,13 +155,13 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String?,
         tmpLine: String,
-        elementId: String?
+        stepId: String?
     ) {
         if (resultLogFile == null) {
             return
         }
         appendVariableToFile(tmpLine, workspace, resultLogFile)
-        appendOutputToFile(tmpLine, workspace, resultLogFile, elementId)
+        appendOutputToFile(tmpLine, workspace, resultLogFile, stepId)
     }
 
     private fun appendVariableToFile(
