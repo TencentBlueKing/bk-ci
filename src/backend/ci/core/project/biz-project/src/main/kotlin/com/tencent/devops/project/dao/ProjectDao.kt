@@ -41,7 +41,6 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
-import org.jooq.UpdateConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
@@ -245,25 +244,6 @@ class ProjectDao {
                 conditions.add(CENTER_NAME.like("%${URLDecoder.decode(centerName, "UTF-8")}%"))
             }
             return dslContext.selectFrom(this).where(conditions).fetch()
-        }
-    }
-
-    fun updateAppName(dslContext: DSLContext, projectId: String, appName: String): Int {
-        with(TProject.T_PROJECT) {
-            return dslContext.update(this).set(CC_APP_NAME, appName).where(PROJECT_ID.eq(projectId)).execute()
-        }
-    }
-
-    fun batchUpdateAppName(dslContext: DSLContext, projects: Map<String, String>): Int {
-        with(TProject.T_PROJECT) {
-            val sets = ArrayList<UpdateConditionStep<TProjectRecord>>()
-            projects.forEach { (projectId, ccAppName) ->
-                sets.add(dslContext.update(this).set(CC_APP_NAME, ccAppName).where(PROJECT_ID.eq(projectId)))
-            }
-            if (sets.isNotEmpty()) {
-                return dslContext.batch(sets).execute().size
-            }
-            return 0
         }
     }
 
