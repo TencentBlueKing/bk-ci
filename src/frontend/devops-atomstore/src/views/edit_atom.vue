@@ -355,7 +355,8 @@
                     frontendType: 'NORMAL',
                     version: '1.0.0',
                     releaseType: 'NEW',
-                    versionContent: ''
+                    versionContent: '',
+                    branch: ''
                 },
                 formErrors: {
                     categoryError: false,
