@@ -538,6 +538,7 @@ open class MarketAtomTask : ITask() {
 
     private fun getFileGateway(containerType: String?): String {
         val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
+        logger.info("fileGateway: ${CommonEnv.fileDevnetGateway}, ${CommonEnv.fileIdcGateway}")
         return (if (vmBuildEnvFlag) CommonEnv.fileDevnetGateway else CommonEnv.fileIdcGateway) ?: ""
     }
 
