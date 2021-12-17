@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -43,7 +42,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
