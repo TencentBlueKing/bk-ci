@@ -264,7 +264,11 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
+        val contextMap = pipelineContextService.buildContext(
+            buildId = buildId,
+            containerId = containerId,
+            variables = containerContext.variables
+        )
         if (containerContext.event.actionType == ActionType.END) {
             containerContext.buildStatus = BuildStatus.CANCELED
         }
