@@ -75,4 +75,6 @@ interface Container {
     fun retryFreshMatrixOption()
 
     fun fetchGroupContainers(): List<Container>?
+
+    fun getContextJobId() = jobId ?: containerId ?: ""
 }
