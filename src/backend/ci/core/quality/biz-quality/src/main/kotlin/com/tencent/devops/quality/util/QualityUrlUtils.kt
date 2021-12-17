@@ -33,8 +33,10 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-object QualityUrlUtils {
+@Component
+class QualityUrlUtils {
 
     @Value("\${quality.codecc.host:}")
     private val codeccHost: String = ""
