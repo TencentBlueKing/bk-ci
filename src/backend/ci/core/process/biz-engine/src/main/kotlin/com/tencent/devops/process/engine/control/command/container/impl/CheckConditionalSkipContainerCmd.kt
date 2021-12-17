@@ -92,9 +92,9 @@ class CheckConditionalSkipContainerCmd constructor(
                 skipFinallyStageJob(container, jobControlOption, containerContext.event.previousStageStatus)
             } else {
                 val contextMap = pipelineContextService.buildContext(
-                    container.buildId,
-                    container.containerId,
-                    containerContext.variables
+                    buildId = container.buildId,
+                    containerId = container.containerId,
+                    variables = containerContext.variables
                 )
                 ControlUtils.checkJobSkipCondition(
                     conditions = conditions,
