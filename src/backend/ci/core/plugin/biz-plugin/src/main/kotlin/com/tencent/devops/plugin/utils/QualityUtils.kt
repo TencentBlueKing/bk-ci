@@ -88,7 +88,7 @@ object QualityUtils {
                         interceptItem.indicatorName,
                         actualValue,
                         QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
-                        interceptItem.pass.toString()
+                        interceptItem.pass.toString(), ""
                 ))
                 resultMap[elementCnName] = resultList
             }
