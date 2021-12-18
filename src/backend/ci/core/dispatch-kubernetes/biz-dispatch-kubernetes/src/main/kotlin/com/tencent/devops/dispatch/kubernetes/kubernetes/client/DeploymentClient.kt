@@ -42,7 +42,6 @@ import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesDataUtils
 import io.kubernetes.client.custom.V1Patch
-import io.kubernetes.client.openapi.apis.AppsV1Api
 import io.kubernetes.client.openapi.models.V1Deployment
 import io.kubernetes.client.openapi.models.V1DeploymentList
 import io.kubernetes.client.openapi.models.V1Status
@@ -56,7 +55,8 @@ class DeploymentClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
     private val kubernetesDataUtils: KubernetesDataUtils,
-    private val dispatchBuildConfiguration: DispatchBuildConfiguration
+    private val dispatchBuildConfiguration: DispatchBuildConfiguration,
+    private val v1ApiSet: V1ApiSet
 ) {
 
     companion object {
@@ -105,7 +105,7 @@ class DeploymentClient @Autowired constructor(
         }
 
         return KubernetesClientUtil.apiHandle {
-            AppsV1Api().createNamespacedDeploymentWithHttpInfo(
+            v1ApiSet.appsV1Api.createNamespacedDeploymentWithHttpInfo(
                 k8sConfig.nameSpace, deployment, null, null, null
             )
         }
@@ -118,7 +118,7 @@ class DeploymentClient @Autowired constructor(
         containerName: String
     ): Result<V1Status> {
         return KubernetesClientUtil.apiHandle {
-            AppsV1Api().deleteNamespacedDeploymentWithHttpInfo(
+            v1ApiSet.appsV1Api.deleteNamespacedDeploymentWithHttpInfo(
                 containerName,
                 k8sConfig.nameSpace,
                 null, null, null, null, null, null
@@ -165,7 +165,7 @@ class DeploymentClient @Autowired constructor(
                 )
             )
         )
-        val appsApi = AppsV1Api()
+        val appsApi = v1ApiSet.appsV1Api
         return PatchUtils.patch(
             V1Deployment::class.java,
             {
@@ -201,7 +201,7 @@ class DeploymentClient @Autowired constructor(
             )
         )
         return KubernetesClientUtil.apiHandle {
-            AppsV1Api().patchNamespacedDeploymentWithHttpInfo(
+            v1ApiSet.appsV1Api.patchNamespacedDeploymentWithHttpInfo(
                 containerName,
                 k8sConfig.nameSpace,
                 V1Patch(stopJson),
@@ -217,7 +217,7 @@ class DeploymentClient @Autowired constructor(
         containerName: String
     ): Result<V1DeploymentList> {
         return KubernetesClientUtil.apiHandle {
-            AppsV1Api().listNamespacedDeploymentWithHttpInfo(
+            v1ApiSet.appsV1Api.listNamespacedDeploymentWithHttpInfo(
                 k8sConfig.nameSpace,
                 "true",
                 null,

@@ -32,7 +32,6 @@ import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
-import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
 import org.slf4j.LoggerFactory
@@ -43,7 +42,7 @@ import org.springframework.stereotype.Component
 class PodsClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
-    private val coreV1Api: CoreV1Api
+    private val v1ApiSet: V1ApiSet
 ) {
 
     companion object {
@@ -57,7 +56,7 @@ class PodsClient @Autowired constructor(
         workloadOnlyLabel: String
     ): Result<V1PodList> {
         return KubernetesClientUtil.apiHandle {
-            coreV1Api.listNamespacedPodWithHttpInfo(
+            v1ApiSet.coreV1Api.listNamespacedPodWithHttpInfo(
                 k8sConfig.nameSpace,
                 "true",
                 null,
@@ -96,7 +95,7 @@ class PodsClient @Autowired constructor(
     ): V1Pod? {
         return try {
             val resp = KubernetesClientUtil.apiHandle {
-                coreV1Api.readNamespacedPodWithHttpInfo(
+                v1ApiSet.coreV1Api.readNamespacedPodWithHttpInfo(
                     podName,
                     k8sConfig.nameSpace,
                     "true",
@@ -125,7 +124,7 @@ class PodsClient @Autowired constructor(
     ): String? {
         return try {
             val resp = KubernetesClientUtil.apiHandle {
-                coreV1Api.readNamespacedPodLogWithHttpInfo(
+                v1ApiSet.coreV1Api.readNamespacedPodLogWithHttpInfo(
                     podName,
                     k8sConfig.nameSpace,
                     containerName,
