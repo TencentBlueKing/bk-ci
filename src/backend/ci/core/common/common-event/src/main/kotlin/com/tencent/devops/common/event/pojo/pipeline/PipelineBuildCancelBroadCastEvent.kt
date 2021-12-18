@@ -25,16 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.constant
+package com.tencent.devops.common.event.pojo.pipeline
 
-object MQ {
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-    // 流水线结束广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_CANCEL_QUALITY = "q.engine.pipeline.build.cancel.quality"
-
-    // 流水线重试广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_RETRY_QUALITY = "q.engine.pipeline.build.retry.quality"
-
-    // 流水线超时广播队列-红线
-    const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
-}
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT)
+data class PipelineBuildCancelBroadCastEvent (
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    override var actionType: ActionType = ActionType.END,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
