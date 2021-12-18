@@ -32,7 +32,6 @@ import com.tencent.devops.dispatch.kubernetes.config.DispatchBuildConfig
 import com.tencent.devops.dispatch.kubernetes.config.KubernetesClientConfig
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.toLabelSelector
-import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.kubernetes.client.openapi.models.V1Pod
 import io.kubernetes.client.openapi.models.V1PodList
 import org.slf4j.LoggerFactory
@@ -42,18 +41,22 @@ import org.springframework.stereotype.Component
 @Component
 class PodsClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
-    private val dispatchBuildConfig: DispatchBuildConfig
+    private val dispatchBuildConfig: DispatchBuildConfig,
+    private val v1ApiSet: V1ApiSet
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PodsClient::class.java)
     }
 
+    /**
+     * 列出Pod(http标准格式)
+     */
     fun listWithHttpInfo(
         workloadOnlyLabel: String
     ): Result<V1PodList> {
         return KubernetesClientUtil.apiHandle {
-            CoreV1Api().listNamespacedPodWithHttpInfo(
+            v1ApiSet.coreV1Api.listNamespacedPodWithHttpInfo(
                 k8sConfig.nameSpace,
                 "true",
                 null,
@@ -65,21 +68,14 @@ class PodsClient @Autowired constructor(
         }
     }
 
+    /**
+     * 列出pod(只有data数据)
+     */
     fun list(
         workloadOnlyLabel: String
     ): V1PodList? {
         return try {
-            val resp = KubernetesClientUtil.apiHandle {
-                CoreV1Api().listNamespacedPodWithHttpInfo(
-                    k8sConfig.nameSpace,
-                    "true",
-                    null,
-                    null,
-                    null,
-                    mapOf(dispatchBuildConfig.workloadLabel!! to workloadOnlyLabel).toLabelSelector(),
-                    null, null, null, null, null
-                )
-            }
+            val resp = listWithHttpInfo(workloadOnlyLabel)
             if (resp.isNotOk()) {
                 logger.warn("PodsClient list: |$workloadOnlyLabel| error: ${resp.message}")
                 return null
@@ -91,12 +87,15 @@ class PodsClient @Autowired constructor(
         }
     }
 
+    /**
+     * 读取pod信息
+     */
     fun read(
         podName: String
     ): V1Pod? {
         return try {
             val resp = KubernetesClientUtil.apiHandle {
-                CoreV1Api().readNamespacedPodWithHttpInfo(
+                v1ApiSet.coreV1Api.readNamespacedPodWithHttpInfo(
                     podName,
                     k8sConfig.nameSpace,
                     "true",
@@ -115,6 +114,9 @@ class PodsClient @Autowired constructor(
         }
     }
 
+    /**
+     * 打印log日志
+     */
     fun logs(
         podName: String,
         containerName: String,
@@ -122,7 +124,7 @@ class PodsClient @Autowired constructor(
     ): String? {
         return try {
             val resp = KubernetesClientUtil.apiHandle {
-                CoreV1Api().readNamespacedPodLogWithHttpInfo(
+                v1ApiSet.coreV1Api.readNamespacedPodLogWithHttpInfo(
                     podName,
                     k8sConfig.nameSpace,
                     containerName,

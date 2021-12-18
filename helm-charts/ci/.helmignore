@@ -22,3 +22,5 @@
 *.tmproj
 .vscode/
 bk*.tgz
+build/
+build_chart.py

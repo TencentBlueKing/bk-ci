@@ -29,7 +29,7 @@ enum class PodStatus(val value: String) {
     RUNNING("running"),
 
     // 成功
-    SUCCESSED("successed"),
+    SUCCEEDED("succeeded"),
 
     // 失败
     FAILED("failed");
@@ -41,7 +41,7 @@ enum class PodStatus(val value: String) {
             }
             return when (status) {
                 "Failed" -> FAILED
-                "Succeeded" -> SUCCESSED
+                "Succeeded" -> SUCCEEDED
                 "Running" -> RUNNING
                 "Pending" -> PENDING
                 else -> FAILED

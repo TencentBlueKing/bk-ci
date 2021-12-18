@@ -9,35 +9,3 @@ spring:
 
 server:
   port: 21951
-
-# kubernetes-dispatch集群配置
-kubernetes:
-  nameSpace: default
-  configMap:
-    name: dispatch-kubernetes-init
-
-dispatch:
-  build:
-    deployment:
-      cpu: 1
-      memory: 1024M
-      disk: 1G
-    container:
-      registry:
-        host: xx.artifactory.xxx
-        userName: xxxx
-        password: xxxx
-    label: bkci-dispatch-kubenetes
-    volumeMount:
-      path: /etc/config
-    volume:
-      configMap:
-        key: initsh.properties
-        path: dispatch_kubernetes_init.sh
-      hostPath:
-        hostdir: /data/volume/bkci/dispatch-kubernetes
-
-pipeline:
-  build:
-    pool:
-      size: 100000

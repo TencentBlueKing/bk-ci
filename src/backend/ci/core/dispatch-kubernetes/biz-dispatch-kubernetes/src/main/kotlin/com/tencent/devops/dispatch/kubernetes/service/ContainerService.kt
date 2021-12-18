@@ -96,42 +96,17 @@ class ContainerService @Autowired constructor(
                 logger.info("poolNo is $i")
                 val containerInfo = buildDao.get(dslContext, dispatchMessage.pipelineId, dispatchMessage.vmSeqId, i)
                 if (null == containerInfo) {
-                    buildDao.createOrUpdate(
-                        dslContext = dslContext,
-                        pipelineId = dispatchMessage.pipelineId,
-                        vmSeqId = dispatchMessage.vmSeqId,
-                        poolNo = i,
-                        projectId = dispatchMessage.projectId,
-                        containerName = "",
-                        image = dispatchMessage.dispatchMessage,
-                        status = ContainerStatus.BUSY.status,
-                        userId = dispatchMessage.userId,
-                        cpu = cpu.get(),
-                        memory = memory.get(),
-                        disk = disk.get()
-                    )
-                    return IdleContainerInfo(null, i, true)
+                    logger.info("null containerInfo , ${dispatchMessage.pipelineId}, ${dispatchMessage.vmSeqId} , $i")
+                    return newIdleContainerInfo(dispatchMessage, i, cpu, memory, disk)
                 } else {
                     if (containerInfo.status == ContainerStatus.BUSY.status) {
+                        logger.info("container busy , ${dispatchMessage.pipelineId}, ${dispatchMessage.vmSeqId} , $i")
                         continue
                     }
 
                     if (containerInfo.containerName.isEmpty()) {
-                        buildDao.createOrUpdate(
-                            dslContext = dslContext,
-                            pipelineId = dispatchMessage.pipelineId,
-                            vmSeqId = dispatchMessage.vmSeqId,
-                            poolNo = i,
-                            projectId = dispatchMessage.projectId,
-                            containerName = "",
-                            image = dispatchMessage.dispatchMessage,
-                            status = ContainerStatus.BUSY.status,
-                            userId = dispatchMessage.userId,
-                            cpu = cpu.get(),
-                            memory = memory.get(),
-                            disk = disk.get()
-                        )
-                        return IdleContainerInfo(null, i, true)
+                        logger.info("containerName empty , ${dispatchMessage.pipelineId}, ${dispatchMessage.vmSeqId} , $i")
+                        return newIdleContainerInfo(dispatchMessage, i, cpu, memory, disk)
                     }
 
                     val statusResponse = containerClient.getContainerStatus(
@@ -180,6 +155,30 @@ class ContainerService @Autowired constructor(
         }
     }
 
+    private fun newIdleContainerInfo(
+        dispatchMessage: DispatchMessage,
+        i: Int,
+        cpu: ThreadLocal<Int>,
+        memory: ThreadLocal<String>,
+        disk: ThreadLocal<String>
+    ): IdleContainerInfo {
+        buildDao.createOrUpdate(
+            dslContext = dslContext,
+            pipelineId = dispatchMessage.pipelineId,
+            vmSeqId = dispatchMessage.vmSeqId,
+            poolNo = i,
+            projectId = dispatchMessage.projectId,
+            containerName = "",
+            image = dispatchMessage.dispatchMessage,
+            status = ContainerStatus.BUSY.status,
+            userId = dispatchMessage.userId,
+            cpu = cpu.get(),
+            memory = memory.get(),
+            disk = disk.get()
+        )
+        return IdleContainerInfo(null, i, true)
+    }
+
     fun createNewContainer(
         dispatchMessage: DispatchMessage,
         containerPool: Pool,
@@ -205,25 +204,12 @@ class ContainerService @Autowired constructor(
                     disk = disk.get(),
                     replica = 1,
                     ports = emptyList(),
-                    params = Params(
-                        env = mapOf(
-                            ENV_KEY_PROJECT_ID to projectId,
-                            ENV_KEY_AGENT_ID to id,
-                            ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                            ENV_KEY_GATEWAY to gateway,
-                            "TERM" to "xterm-256color",
-                            BUILD_NODE_ENVIRONMENT to "Kubernetes",
-                            ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
-                        ),
-                        command = listOf(
-                            "/bin/sh",
-                            "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
-                        )
-                    )
+                    params = newContainerParams()
                 )
             )
             logger.info(
-                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createContainer $containerName"
+                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount," +
+                        "poolNo: $poolNo createContainer $containerName"
             )
             printLogs(this, "下发创建构建机请求成功，containerName: $containerName 等待机器启动...")
 
@@ -241,7 +227,7 @@ class ContainerService @Autowired constructor(
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                        "start deployment success, wait for agent startup..."
+                            "start deployment success, wait for agent startup..."
                 )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
@@ -285,6 +271,22 @@ class ContainerService @Autowired constructor(
         }
     }
 
+    private fun DispatchMessage.newContainerParams() = Params(
+        env = mapOf(
+            ENV_KEY_PROJECT_ID to projectId,
+            ENV_KEY_AGENT_ID to id,
+            ENV_KEY_AGENT_SECRET_KEY to secretKey,
+            ENV_KEY_GATEWAY to gateway,
+            "TERM" to "xterm-256color",
+            BUILD_NODE_ENVIRONMENT to "Kubernetes",
+            ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+        ),
+        command = listOf(
+            "/bin/sh",
+            "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
+        )
+    )
+
     fun startContainer(
         containerName: String,
         dispatchMessage: DispatchMessage,
@@ -294,26 +296,15 @@ class ContainerService @Autowired constructor(
         disk: ThreadLocal<String>
     ): OperateContainerResult {
         with(dispatchMessage) {
-            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start container")
+            logger.info(
+                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount," +
+                        "poolNo: $poolNo start container"
+            )
 
             containerClient.operateContainer(
                 containerName = containerName,
                 action = Action.START,
-                param = Params(
-                    env = mapOf(
-                        ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
-                        "TERM" to "xterm-256color",
-                        BUILD_NODE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
-                    ),
-                    command = listOf(
-                        "/bin/sh",
-                        "${dispatchBuildConfig.volumeMountPath!!}/${dispatchBuildConfig.volumeConfigMapPath!!}"
-                    )
-                )
+                param = newContainerParams()
             )
 
             printLogs(this, "下发启动构建机请求成功，containerName: $containerName 等待机器启动...")
@@ -332,7 +323,10 @@ class ContainerService @Autowired constructor(
 
             if (startResult.result) {
                 // 启动成功
-                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
+                logger.info(
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount," +
+                            "poolNo: $poolNo start dev cloud vm success, wait for agent startup..."
+                )
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
                 buildDao.createOrUpdate(
@@ -383,8 +377,8 @@ class ContainerService @Autowired constructor(
             // 下发删除，不管成功失败
             logger.info(
                 "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
-                    "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
-                    dispatchMessage.buildId
+                        "userId: ${dispatchMessage.userId}, containerName: $containerName deploymentName: " +
+                        dispatchMessage.buildId
             )
             containerClient.operateContainer(containerName, Action.DELETE, null).let {
                 if (!it.result) {
@@ -406,9 +400,9 @@ class ContainerService @Autowired constructor(
         if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
             logger.info(
                 "buildId: ${dispatchMessage.buildId}, " +
-                    "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
-                    "old image: $images, " +
-                    "new image: ${dispatchMessage.dispatchMessage}"
+                        "vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                        "old image: $images, " +
+                        "new image: ${dispatchMessage.dispatchMessage}"
             )
             return true
         }

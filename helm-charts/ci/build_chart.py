@@ -8,8 +8,12 @@ import sys
 files = os.listdir('.')
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
 replace_dict = {}
-config_parent = '../support-files/templates/'
-template_parent = './helm-charts/templates/configmap/tpl/'
+config_parent = '../../support-files/templates/'
+template_parent = './templates/configmap/tpl/'
+env_properties_file = '../../scripts/bkenv.properties'
+output_value_yaml = './values.yaml'
+default_value_json = './build/values.json'
+default_value_yaml = './build/values.yaml'
 
 # 创建目录
 os.system("mkdir -p "+template_parent)
@@ -40,8 +44,8 @@ default_value_dict = {
     'bkCiArtifactoryRealm': 'local'
 }
 
-if os.path.isfile('./values.json'):
-    default_value_dict.update(json.load(open('./values.json')))
+if os.path.isfile(default_value_json):
+    default_value_dict.update(json.load(open(default_value_json)))
 
 # include 模板
 include_dict = {
@@ -68,7 +72,7 @@ include_dict = {
 }
 
 # 读取变量映射
-env_file = open('../scripts/bkenv.properties', 'r')
+env_file = open(env_properties_file, 'r')
 value_re = re.compile(r'')
 for line in env_file:
     if line.startswith('BK_'):
@@ -80,8 +84,8 @@ env_file.close()
 # 生成value.yaml
 image_gateway_tag = sys.argv[1]
 image_backend_tag = sys.argv[2]
-value_file = open('./helm-charts/values.yaml', 'w')
-for line in open('./values.yaml', 'r'):
+value_file = open(output_value_yaml, 'w')
+for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
     value_file.write(line)
@@ -147,6 +151,6 @@ if len(sys.argv) < 5:
     exit(0)
 charts_version = sys.argv[3]
 app_version = sys.argv[4]
-os.system("helm package helm-charts --version " + charts_version + " --app-version "+app_version)
+os.system("helm package . --version " + charts_version + " --app-version "+app_version)
 os.system('curl -F "chart=@bk-ci-' + charts_version +
-          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url} -H X-BKREPO-OVERWRITE:true')
+          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url}')

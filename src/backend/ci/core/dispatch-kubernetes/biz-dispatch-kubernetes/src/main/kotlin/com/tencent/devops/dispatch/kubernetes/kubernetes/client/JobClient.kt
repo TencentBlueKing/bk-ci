@@ -15,7 +15,6 @@ import com.tencent.devops.dispatch.kubernetes.kubernetes.model.pod.VolumeMount
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesJobReq
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesDataUtils
-import io.kubernetes.client.openapi.apis.BatchV1Api
 import io.kubernetes.client.openapi.models.V1Job
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,7 +25,8 @@ class JobClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
     private val kubernetesDataUtils: KubernetesDataUtils,
-    private val dispatchBuildConfiguration: DispatchBuildConfiguration
+    private val dispatchBuildConfiguration: DispatchBuildConfiguration,
+    private val v1ApiSet: V1ApiSet
 ) {
 
     companion object {
@@ -105,7 +105,7 @@ class JobClient @Autowired constructor(
             )
         }
         return KubernetesClientUtil.apiHandle {
-            BatchV1Api().createNamespacedJobWithHttpInfo(
+            v1ApiSet.batchV1Api.createNamespacedJobWithHttpInfo(
                 k8sConfig.nameSpace,
                 job,
                 null, null, null

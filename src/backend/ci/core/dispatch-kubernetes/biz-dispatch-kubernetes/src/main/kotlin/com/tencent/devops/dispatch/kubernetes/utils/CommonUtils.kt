@@ -40,6 +40,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@SuppressWarnings("NestedBlockDepth")
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
@@ -49,18 +50,18 @@ object CommonUtils {
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-        val arry = imageNameStr.split(":")
-        if (arry.size == 1) {
+        val imageNames = imageNameStr.split(":")
+        if (imageNames.size == 1) {
             val str = imageNameStr.split("/")
             return if (str.size == 1) {
                 Triple(dockerHubUrl, imageNameStr, "latest")
             } else {
                 Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
             }
-        } else if (arry.size == 2) {
+        } else if (imageNames.size == 2) {
             val str = imageNameStr.split("/")
             when {
-                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
+                str.size == 1 -> return Triple(dockerHubUrl, imageNames[0], imageNames[1])
                 str.size >= 2 -> return if (str[0].contains(":")) {
                     Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
                 } else {
@@ -80,7 +81,7 @@ object CommonUtils {
                     throw Exception("image name invalid.")
                 }
             }
-        } else if (arry.size == 3) {
+        } else if (imageNames.size == 3) {
             val str = imageNameStr.split("/")
             if (str.size >= 2) {
                 val tail = imageNameStr.removePrefix(str[0] + "/")
