@@ -1,4 +1,4 @@
-{{- if .Values.bkmonitor.collectEnabled }}
+{{- if .Values.bkmonitorConfig.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -11,9 +11,11 @@ spec:
   namespaceSelector:
     any: true
   selector: # 过滤出需要采集的service
-    matchLabels: {{- include "common.labels.standard" . | nindent 4 }}
+    matchLabels:
       {{- if .Values.commonLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
       app.kubernetes.io/component: microservice
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: Helm
 {{- end }}

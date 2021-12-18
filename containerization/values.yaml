@@ -34,17 +34,18 @@ backendImage:
   pullSecrets: []
 
 # 日志采集配置
-bklog:
-  file:
-    collectEnabled: false
+bklogConfig:
+  enabled: false
+  service:
     dataId: 1
-  std:
-    collectEnabled: false
+  gatewayAccess:
+    dataId: 1
+  gatewayError:
     dataId: 1
 
 # 监控
-bkmonitor:
-  collectEnabled: false
+bkmonitorConfig:
+  enabled: false
 
 # 内部数据源配置
 mysql:

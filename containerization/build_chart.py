@@ -36,7 +36,8 @@ default_value_dict = {
     'bkCiNotifyWeworkSendChannel': 'weworkAgent',
     'bkCiInfluxdbDb': 'agentMetrix',
     'bkCiEnvironmentAgentCollectorOn': 'true',
-    'bkCiDocsUrl': 'https://docs.bkci.net/'
+    'bkCiDocsUrl': 'https://docs.bkci.net/',
+    'bkCiArtifactoryRealm': 'local'
 }
 
 if os.path.isfile('./values.json'):
@@ -63,7 +64,7 @@ include_dict = {
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
-    '__BK_CI_VERSION__':'{{ .Chart.AppVersion }}'
+    '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}'
 }
 
 # 读取变量映射
@@ -147,6 +148,5 @@ if len(sys.argv) < 5:
 charts_version = sys.argv[3]
 app_version = sys.argv[4]
 os.system("helm package helm-charts --version " + charts_version + " --app-version "+app_version)
-os.system(
-    'curl -F "chart=@bk-ci-' + charts_version +
-    '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} http://bkrepo.woa.com/helm/api/bkee/helm-local/charts -H X-BKREPO-OVERWRITE:true')
+os.system('curl -F "chart=@bk-ci-' + charts_version +
+          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url} -H X-BKREPO-OVERWRITE:true')

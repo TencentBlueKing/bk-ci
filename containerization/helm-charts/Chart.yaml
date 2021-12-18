@@ -19,7 +19,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   condition: redis.enabled
 - name: elasticsearch
-  version: 15.10.3
+  version: 17.5.2
   repository: https://charts.bitnami.com/bitnami
   condition: elasticsearch.enabled
 - name: rabbitmq

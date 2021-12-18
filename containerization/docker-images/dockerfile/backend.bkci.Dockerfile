@@ -1,4 +1,3 @@
-#TODO : 后续可以维护统一个openresty
 FROM blueking/jdk:0.0.1
 
 LABEL maintainer="Tencent BlueKing Devops"

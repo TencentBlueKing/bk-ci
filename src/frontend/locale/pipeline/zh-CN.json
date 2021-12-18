@@ -240,6 +240,7 @@
         "recycleBin": "回收站",
         "restore": "恢复",
         "title": "可恢复流水线列表",
+        "deleter": "删除人",
         "deleteTime": "删除时间",
         "createTime": "创建时间",
         "restoreSuc": "恢复成功",

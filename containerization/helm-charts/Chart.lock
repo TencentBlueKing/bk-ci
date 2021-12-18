@@ -10,7 +10,7 @@ dependencies:
   version: 14.8.8
 - name: elasticsearch
   repository: https://charts.bitnami.com/bitnami
-  version: 15.10.3
+  version: 17.5.2
 - name: rabbitmq
   repository: https://charts.bitnami.com/bitnami
   version: 8.20.1
@@ -20,5 +20,5 @@ dependencies:
 - name: nginx-ingress-controller
   repository: https://charts.bitnami.com/bitnami
   version: 7.6.21
-digest: sha256:c4b61abe755bbbcb6d56927fae6f3db267b52e422af10bfb693f27d74ed2cbe2
-generated: "2021-09-07T10:35:49.363456636+08:00"
+digest: sha256:f498d0b18b15345a248e8f5f24bde41c02d930d8c1f4dcc4ac8875cb605ff474
+generated: "2021-12-15T15:51:32.561113178+08:00"
