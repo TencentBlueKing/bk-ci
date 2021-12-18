@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean
 
 @org.springframework.context.annotation.Configuration
 class AutoDispatchKubernetesConfiguration : ApplicationContextAware {
+    @Bean
     fun v1ApiSet(): V1ApiSet {
         val client = Config.defaultClient() // TODO("需要可配置化")
         return V1ApiSet(
