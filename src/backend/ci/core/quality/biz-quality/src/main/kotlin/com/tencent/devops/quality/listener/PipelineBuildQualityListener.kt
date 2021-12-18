@@ -28,8 +28,8 @@
 package com.tencent.devops.quality.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.quality.constant.MQ as QualityMQ
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
@@ -56,30 +56,30 @@ class PipelineBuildQualityListener @Autowired constructor(
 
     @RabbitListener(
         bindings = [(QueueBinding(
-            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_FINISH_QUALITY, durable = "true"),
+            value = Queue(value = QualityMQ.QUEUE_PIPELINE_BUILD_CANCEL_QUALITY, durable = "true"),
             exchange = Exchange(
-                value = MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT,
+                value = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT,
                 durable = "true",
                 delayed = "true",
                 type = ExchangeTypes.FANOUT
             )
         ))]
     )
-    fun listenPipelineFinishQualityListener(pipelineFinishEvent: PipelineBuildFinishBroadCastEvent) {
+    fun listenPipelineCancelQualityListener(pipelineCancelEvent: PipelineBuildCancelBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineFinishListener finishEvent: $pipelineFinishEvent")
+            logger.info("QUALITY|pipelineCancelListener cancelEvent: $pipelineCancelEvent")
             val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                 dslContext = dslContext,
-                projectId = pipelineFinishEvent.projectId,
-                pipelineId = pipelineFinishEvent.pipelineId,
-                ruleBuildId = pipelineFinishEvent.buildId
+                projectId = pipelineCancelEvent.projectId,
+                pipelineId = pipelineCancelEvent.pipelineId,
+                ruleBuildId = pipelineCancelEvent.buildId
             ).filter { it.status == RuleInterceptResult.WAIT.name }.map { it.id }
             logger.info("QUALITY|wait_rule_size: ${ruleIdList.size}")
             if (ruleIdList.isNotEmpty()) {
                 qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.FAIL.name)
             }
         } catch (e: Exception) {
-            logger.warn("QUALITY|pipelineFinishListener error: ${e.message}")
+            logger.warn("QUALITY|pipelineCancelListener error: ${e.message}")
         }
     }
 
