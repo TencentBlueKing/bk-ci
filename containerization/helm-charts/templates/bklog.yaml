@@ -9,11 +9,12 @@ spec:
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
-    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
       {{- if .Values.commonLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
       app.kubernetes.io/component: microservice
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: Helm
   path:
     - /data/logs/*-.log
   encoding: 'utf-8'
@@ -34,11 +35,12 @@ spec:
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
-    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
       {{- if .Values.commonLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
       app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: Helm
   path:
     - /data/logs/nginx/devops.access.*.log
   encoding: 'utf-8'
@@ -54,11 +56,13 @@ spec:
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
-    matchLabels: {{- include "common.labels.standard" . | nindent 6 }}
+    matchLabels:
       {{- if .Values.commonLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
       app.kubernetes.io/component: gateway
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: Helm
   path:
     - /data/logs/nginx/devops.error.log
   encoding: 'utf-8'
