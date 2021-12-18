@@ -34,13 +34,16 @@ out
 .codecc
 build.yml
 *.ipa
-containerization/helm-charts/values.yaml
-containerization/helm-charts/templates/configmap/tpl/
-containerization/docker-images/ci
-containerization/docker-images/*.gz
-containerization/values.json
-containerization/helm-charts/bk-ci*.tgz
+bkci-slim.tar.gz
+
+# 容器化忽略文件
+helm-charts/ci/bk-ci*.tgz
+helm-charts/ci/build/values.json
+helm-charts/ci/values.yaml
+helm-charts/ci/templates/configmap/tpl/
+docker-images/ci/ci
+docker-images/ci/*.gz
+
+#turbo 忽略文件
 src/backend/turbo/**/build/
 src/backend/turbo/release/
-src/backend/turbo/containerization/
-containerization/bk-ci*.tgz

@@ -6,6 +6,15 @@
 - Kubernetes 1.12+
 - Helm 3+
 
+## 生成Chart
+- 执行命令 : `./build_chart.py ${GATEWAY_DOCKER_IMAGE_VERSION} ${BACKEND_DOCKER_IMAGE_VERSION} ${CHART_VERSION} ${APP_VERSION}`
+- 可选项:
+  - 在`./build/values.json`中配置默认项 (配置项参考[服务配置](#服务配置))
+  - 设置环境变量来设置chart上传的地址:
+    - `bkrepo_helm_bkce` : 仓库账号
+    - `bkrepo_helm_pass` : 仓库密码
+    - `bkrepo_helm_url` : 上传链接
+
 ## 安装Chart
 使用以下命令安装名称为`bkci`的release, 其中`<bkci helm repo url>`代表helm仓库地址:
 
@@ -206,6 +215,8 @@ $ helm uninstall bkci
 
 > 如果开启数据持久化，并且没有配置`existingClaim`，将使用[动态卷供应](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/)提供存储，使用`storageClass`定义的存储类。**在删除该声明后，这个卷也会被销毁(用于单节点环境，生产环境不推荐)。**。
 
+<div id="服务配置"></div>
+
 ### 服务配置
 *以下host如果使用k8s的service name , 请使用全限定名称 , 如 bkssm-web.default.svc.cluster.local*
 
@@ -318,8 +329,6 @@ $ helm uninstall bkci
 | `turbo.config.tbs.urltemplate`  | 编译加速的调用url | `"api/v1/{engine}/resource/{resource_type}"` |
 | `turbo.config.tbs.dashboard`  | 编译加速管理地址 | `""` |
 | `turbo.config.devops.rootpath`  | 蓝盾url | `""` |
-
-### 代码检查配置
 
 **以下为除Kubernetes组件通用配置之外的配置列表**
 
