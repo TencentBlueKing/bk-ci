@@ -148,6 +148,5 @@ if len(sys.argv) < 5:
 charts_version = sys.argv[3]
 app_version = sys.argv[4]
 os.system("helm package helm-charts --version " + charts_version + " --app-version "+app_version)
-os.system(
-    'curl -F "chart=@bk-ci-' + charts_version +
-    '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} http://bkrepo.woa.com/helm/api/bkee/helm-local/charts -H X-BKREPO-OVERWRITE:true')
+os.system('curl -F "chart=@bk-ci-' + charts_version +
+          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url} -H X-BKREPO-OVERWRITE:true')

@@ -60,15 +60,15 @@ $ helm uninstall bkci
 ### 蓝鲸日志采集配置
 |参数|描述|默认值|
 |---|---|---|
-| `bklog.file.collectEnabled` | 是否开启文件日志采集 | `false` |
-| `bklog.file.dataId` | 文件采集项的ID | `1` |
-| `bklog.std.collectEnabled` | 是否开启标准输出日志采集 | `false` |
-| `bklog.std.dataId` | 标准输出日志采集项的ID | `1` |
+| `bklogConfig.enabled` | 是否开启日志采集 | `false` |
+| `bklogConfig.service.dataId` | 服务日志采集ID | `1` |
+| `bklogConfig.gatewayAccess.dataId` | 网关访问日志采集ID | `1` |
+| `bklogConfig.gatewayError.dataId` | 网关异常日志采集ID | `1` |
 
 ### 蓝鲸监控配置
 |参数|描述|默认值|
 |---|---|---|
-| `bkmonitor.collectEnabled` | 是否开启蓝鲸监控 | `false` |
+| `bkmonitorConfig.enabled` | 是否开启蓝鲸监控 | `false` |
 
 ### ingress 配置
 
@@ -213,6 +213,7 @@ $ helm uninstall bkci
 |---|---|---|
 | `bkCiAppCode`  | 应用Code | `"bk_ci"` |
 | `bkCiAppToken`  | 应用Token | `""` |
+| `bkCiArtifactoryRealm`  | 仓库使用类型 | `local` |
 | `bkCiAuthProvider`  | 鉴权方式 | `sample` |
 | `bkCiBkrepoAuthorization`  | 制品库鉴权标识 | `""` |
 | `bkCiDataDir`  | 数据目录 | `/data/dir/` |
@@ -221,7 +222,7 @@ $ helm uninstall bkci
 | `bkCiDockerRegistryUrl`  | Docker仓库地址 | `""` |
 | `bkCiDockerRegistryUser`  | Docker仓库用户 | `""` |
 | `bkCiDockerUrl`  | Docker的web入口 | `""` |
-| `bkCiDocsUrl`  | 文档地址 | `""` |
+| `bkCiDocsUrl`  | 文档地址 | `https://docs.bkci.net/` |
 | `bkCiEnvironmentAgentCollectorOn`  | 第三方构建机状态上报 | `true` |
 | `bkCiEsClusterName`  | ES的集群名 | `devops` |
 | `bkCiEsPassword`  | ES的密码 | `""` |
