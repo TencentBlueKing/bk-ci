@@ -46,7 +46,7 @@ object KubernetesClientUtil {
         }.joinToString()
     }
 
-    fun <T> ApiResponse<T>.isSuccessful(): Boolean = statusCode in 200..299
+    private fun <T> ApiResponse<T>.isSuccessful(): Boolean = statusCode in 200..299
 
     fun getClientFailInfo(message: String) = "Dispatch-kubernetes 异常信息 - $message"
 

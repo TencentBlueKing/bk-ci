@@ -63,6 +63,9 @@ class DeploymentClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DeploymentClient::class.java)
     }
 
+    /**
+     * 创建Deployment
+     */
     fun create(
         buildContainer: BuildContainer,
         containerName: String
@@ -108,6 +111,9 @@ class DeploymentClient @Autowired constructor(
         }
     }
 
+    /**
+     * 删除Deployment
+     */
     fun delete(
         containerName: String
     ): Result<V1Status> {
@@ -120,7 +126,11 @@ class DeploymentClient @Autowired constructor(
         }
     }
 
-    // 目前启动，和停止通过扩，缩容deployment的pod数量实现
+    /**
+     * 启动Deployment
+     *
+     * 目前启动，和停止通过扩，缩容deployment的pod数量实现
+     */
     fun start(
         containerName: String,
         params: Params?
@@ -175,6 +185,9 @@ class DeploymentClient @Autowired constructor(
         )
     }
 
+    /**
+     * 停止Deployment
+     */
     fun stop(
         containerName: String
     ): Result<V1Deployment> {
@@ -197,6 +210,9 @@ class DeploymentClient @Autowired constructor(
         }
     }
 
+    /**
+     * 获取 Deployment 列表
+     */
     fun list(
         containerName: String
     ): Result<V1DeploymentList> {

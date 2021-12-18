@@ -25,17 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.resource
+package com.tencent.devops.dispatch.kubernetes.resource.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.TestResource
+import com.tencent.devops.dispatch.kubernetes.api.user.TestResource
 import io.kubernetes.client.openapi.apis.CoreV1Api
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TestResourceImpl() : TestResource {
+class TestResourceImpl @Autowired constructor(
+    private val coreV1Api: CoreV1Api
+) : TestResource {
     override fun getAllPods(): Result<List<String>>? {
-        val podList = CoreV1Api().listPodForAllNamespaces(
+        val podList = coreV1Api.listPodForAllNamespaces(
             null,
             null,
             null,

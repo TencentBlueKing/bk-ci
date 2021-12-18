@@ -41,6 +41,4 @@ class DispatchKubernetesApplication
 
 fun main(args: Array<String>) {
     MicroServiceApplication.run(DispatchKubernetesApplication::class, args)
-    // 设置k8s的配置
-    Configuration.setDefaultApiClient(Config.defaultClient())
 }

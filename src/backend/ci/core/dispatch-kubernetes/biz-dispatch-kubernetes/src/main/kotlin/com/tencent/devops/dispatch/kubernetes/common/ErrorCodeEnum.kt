@@ -46,7 +46,11 @@ enum class ErrorCodeEnum(
     CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129010, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口异常"),
     CREATE_IMAGE_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129011, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口返回失败"),
     CREATE_IMAGE_VERSION_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129012, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口异常"),
-    CREATE_IMAGE_VERSION_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129013, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败"),
+    CREATE_IMAGE_VERSION_INTERFACE_FAIL(
+        ErrorType.THIRD_PARTY,
+        2129013,
+        "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败"
+    ),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129014, "Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常"),
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129015, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常"),
     WEBSOCKET_URL_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129016, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口返回失败"),

@@ -26,13 +26,17 @@ class JobClient @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig,
     private val kubernetesDataUtils: KubernetesDataUtils,
-    private val dispatchBuildConfiguration: DispatchBuildConfiguration
+    private val dispatchBuildConfiguration: DispatchBuildConfiguration,
+    private val batchV1Api: BatchV1Api
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(JobClient::class.java)
     }
 
+    /**
+     * 创建Job
+     */
     fun create(
         jobName: String,
         jobReq: KubernetesJobReq,
@@ -105,7 +109,7 @@ class JobClient @Autowired constructor(
             )
         }
         return KubernetesClientUtil.apiHandle {
-            BatchV1Api().createNamespacedJobWithHttpInfo(
+            batchV1Api.createNamespacedJobWithHttpInfo(
                 k8sConfig.nameSpace,
                 job,
                 null, null, null

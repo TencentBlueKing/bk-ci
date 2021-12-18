@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.api
+package com.tencent.devops.dispatch.kubernetes.api.user
 
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api

@@ -28,7 +28,6 @@
 dependencies {
     api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
     api(project(":core:dispatch-kubernetes:model-dispatch-kubernetes"))
-//    api(project(":core:dispatch-kubernetes:api-dispatch-docker"))
 
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
