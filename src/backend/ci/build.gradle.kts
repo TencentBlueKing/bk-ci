@@ -1,7 +1,7 @@
 import com.tencent.devops.utils.findPropertyOrNull
 
 plugins {
-    id("com.tencent.devops.boot")
+    id("com.tencent.devops.boot") version "0.0.4"
     detektCheck
 }
 
@@ -75,6 +75,10 @@ allprojects {
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
+            }
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+                entry("log4j-api")
+                entry("log4j-core")
             }
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
