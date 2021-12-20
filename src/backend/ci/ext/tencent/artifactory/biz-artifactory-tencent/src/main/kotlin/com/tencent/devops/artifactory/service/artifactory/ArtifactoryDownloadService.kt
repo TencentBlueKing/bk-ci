@@ -180,11 +180,11 @@ class ArtifactoryDownloadService @Autowired constructor(
             }
             ArtifactoryType.PIPELINE -> {
                 pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.DOWNLOAD,
+                    message = "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
                 )
             }
         }
@@ -213,11 +213,11 @@ class ArtifactoryDownloadService @Autowired constructor(
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
                 pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId,
-                    AuthPermission.SHARE,
-                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限"
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.SHARE,
+                    message = "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限"
                 )
             }
             ArtifactoryType.CUSTOM_DIR -> {

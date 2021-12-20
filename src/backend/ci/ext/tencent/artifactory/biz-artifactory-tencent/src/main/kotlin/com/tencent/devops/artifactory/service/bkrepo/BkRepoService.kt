@@ -273,7 +273,8 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info("getBuildFileList, userId: $userId, projectId: $projectId," +
+                " pipelineId: $pipelineId, buildId: $buildId")
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -645,7 +646,8 @@ class BkRepoService @Autowired constructor(
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
+                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             creatorId = creatorId,
             projectId = projectId,

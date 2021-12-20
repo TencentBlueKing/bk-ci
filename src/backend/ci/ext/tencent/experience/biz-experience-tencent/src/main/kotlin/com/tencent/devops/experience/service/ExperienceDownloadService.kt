@@ -185,13 +185,13 @@ class ExperienceDownloadService @Autowired constructor(
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(
-                    projectId,
-                    artifactoryType,
-                    experienceRecord.creator,
-                    userId,
-                    path,
-                    ttl ?: (24 * 3600),
-                    false
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    creatorId = experienceRecord.creator,
+                    userId = userId,
+                    path = path,
+                    ttl = ttl ?: (24 * 3600),
+                    directed = false
                 ).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class)
