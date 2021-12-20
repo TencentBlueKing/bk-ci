@@ -1,0 +1,112 @@
+{{- if .Values.npm.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-npm
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: npm
+    {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: npm
+  replicas: {{ default 1 .Values.npm.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: npm
+        {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+        {{- if .Values.npm.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.npm.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ template "bkrepo.serviceAccountName" . }}
+      {{- include "bkrepo.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.npm.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.npm.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.npm.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.npm.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        {{- if eq .Values.persistence.accessMode "ReadWriteOnce" }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" "hard" "component" "repository" "context" $) | nindent 10 }}
+        {{- else }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.repository.podAffinityPreset "component" "npm" "context" $) | nindent 10 }}
+        {{- end }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.npm.podAntiAffinityPreset "component" "npm" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.npm.nodeAffinityPreset.type "key" .Values.npm.nodeAffinityPreset.key "values" .Values.npm.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.npm.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.npm.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.npm.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.npm.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.npm.priorityClassName }}
+      priorityClassName: {{ .Values.npm.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.npm.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.npm.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: npm
+          image: {{ include "bkrepo.images.image" ( dict "imageRoot" .Values.npm.image "global" .Values.global "bkrepo" .Values.common) }}
+          imagePullPolicy: {{ .Values.npm.image.pullPolicy }}
+          {{- if .Values.npm.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.npm.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.npm.resources }}
+          resources: {{- toYaml .Values.npm.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: BK_REPO_JVM_OPTION
+              value: {{ .Values.common.jvmOption }}
+            - name: BK_REPO_PROFILE
+              value: {{ .Values.common.springProfile }}
+            - name: BK_REPO_SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}-
+          ports:
+            - name: http
+              containerPort: 25804
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/livenessState
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.common.mountPath }}
+      volumes:
+        - name: storage
+          {{- if .Values.common.config.storage.nfs.enabled }}
+          nfs:
+            path: {{ .Values.common.config.storage.nfs.path }}
+            server: {{ .Values.common.config.storage.nfs.server }}
+          {{- else if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

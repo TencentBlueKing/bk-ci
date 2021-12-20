@@ -1,0 +1,23 @@
+{{- if .Values.docker.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-docker
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: docker
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    docker:
+      domain: docker.{{ .Values.gateway.host }}
+      auth:
+        url: http://docker.{{ .Values.gateway.host }}/v2/auth
+      {{- if keys $.Values.docker.config }}
+        {{- toYaml .Values.docker.config | nindent 6 }}
+      {{- end}}
+{{- end }}

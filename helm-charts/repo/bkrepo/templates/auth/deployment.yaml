@@ -1,0 +1,107 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-auth
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: auth
+    {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: auth
+  replicas: {{ default 1 .Values.auth.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: auth
+        {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.backend" . }}
+        {{- if .Values.auth.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.auth.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ template "bkrepo.serviceAccountName" . }}
+      {{- include "bkrepo.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.auth.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.auth.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.auth.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.auth.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAffinityPreset "component" "auth" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAntiAffinityPreset "component" "auth" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.auth.nodeAffinityPreset.type "key" .Values.auth.nodeAffinityPreset.key "values" .Values.auth.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.auth.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.auth.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.auth.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.auth.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.auth.priorityClassName }}
+      priorityClassName: {{ .Values.auth.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.auth.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.auth.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.mongodb.enabled }}
+      initContainers:
+        - name: wait-for-mongodb
+          image: {{ include "bkrepo.images.image" ( dict "imageRoot" .Values.init.mongodb.image "global" .Values.global "bkrepo" .Values.common) }}
+          imagePullPolicy: {{ .Values.init.mongodb.image.pullPolicy }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              until getent hosts {{ include "bkrepo.mongodb.fullname" . }}
+              do 
+                echo waiting for {{ include "bkrepo.mongodb.fullname" . }};
+                sleep 2;
+              done
+              echo "Mongodb is available";
+      {{- end }}
+      containers:
+        - name: auth
+          image: {{ include "bkrepo.images.image" ( dict "imageRoot" .Values.auth.image "global" .Values.global "bkrepo" .Values.common) }}
+          imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
+          {{- if .Values.auth.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.auth.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.auth.resources }}
+          resources: {{- toYaml .Values.auth.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: BK_REPO_JVM_OPTION
+              value: {{ .Values.common.jvmOption }}
+            - name: BK_REPO_PROFILE
+              value: {{ .Values.common.springProfile }}
+            - name: BK_REPO_SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}-
+          ports:
+            - name: http
+              containerPort: 25902
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/livenessState
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1

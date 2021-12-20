@@ -1,0 +1,12 @@
+dependencies:
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 1.4.1
+- name: nginx-ingress-controller
+  repository: https://charts.bitnami.com/bitnami
+  version: 7.4.8
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.10.2
+digest: sha256:e869a478871055f2945be0298ea1577d2bcaa91442d6a6749b8d4fe605e1797d
+generated: "2021-03-18T17:11:06.342424+08:00"

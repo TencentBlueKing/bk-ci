@@ -1,0 +1,29 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-common
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: repository
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    logging:
+      config: classpath:logback-config.xml
+      path: /data/workspace/logs
+    spring:
+      data:
+        mongodb:
+          uri: {{ include "bkrepo.mongodbUri" . }}
+          transaction:
+            enabled: false
+    service.prefix: {{ include "common.names.fullname" . }}-
+    cluster:
+      region: {{ .Values.common.region }}
+      self:
+        url: {{ .Values.gateway.host }}
+    {{- toYaml .Values.common.config | nindent 4 }}

@@ -1,0 +1,194 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "common": {
+            "type": "object",
+            "title": "初始用户信息",
+            "description": "配置bkrepo初始用户名/密码",
+            "form": true,
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "title": "bkrepo初始用户名",
+                    "form": true
+                },
+                "password": {
+                    "type": "string",
+                    "title": "bkrepo初始密码",
+                    "form": true
+                }
+            }
+        },
+        "mongodb": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署mongodb",
+                    "form": true
+                }
+            }
+        },
+        "externalMongodb": {
+            "type": "object",
+            "title": "外部mongodb服务配置",
+            "form": true,
+            "hidden": "mongodb/enabled",
+            "properties": {
+                "uri": {
+                    "type": "string",
+                    "title": "连接字符串",
+                    "form": true
+                }
+            }
+        },
+        "init": {
+            "type": "object",
+            "properties": {
+                "mongodb": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "title": "是否初始化数据库，支持幂等执行",
+                            "form": true
+                        }
+                    }
+                }
+            }
+        },
+        "ingress": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否创建ingress",
+                    "form": true
+                }
+            }
+        },
+        "nginx-ingress-controller": {
+            "type": "object",
+            "title": "nginx-ingress-controller配置",
+            "form": true,
+            "hidden": {
+                "value": false,
+                "path": "ingress/enabled"
+            },
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署nginx-ingress-controller",
+                    "form": true
+                }
+            }
+        },
+        "persistence": {
+            "type": "object",
+            "title": "数据持久化设置",
+            "form": true,
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "form": true,
+                    "title": "开启数据持久化",
+                    "description": "请提前创建可用的pv，否则默认创建的pv在应用删除后会被清理"
+                },
+                "size": {
+                    "type": "string",
+                    "title": "Volume大小",
+                    "form": true,
+                    "render": "slider",
+                    "sliderMin": 10,
+                    "sliderUnit": "Gi",
+                    "hidden": {
+                        "value": false,
+                        "path": "persistence/enabled"
+                    }
+                }
+            }
+        },
+        "gateway": {
+            "type": "object",
+            "title": "gateway配置",
+            "description": "gateway是bkrepo的服务入口",
+            "form": true,
+            "properties": {
+                "host": {
+                    "type": "string",
+                    "title": "域名",
+                    "description": "gateway必须通过域名访问",
+                    "form": true
+                },
+                "service": {
+                    "type": "object",
+                    "title": "Service配置",
+                    "form": true,
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "title": "Service类型",
+                            "enum": [
+                                "ClusterIP",
+                                "NodePort",
+                                "LoadBalancer"
+                            ],
+                            "form": true
+                        }
+                    }
+                }
+            }
+        },
+        "generic": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署generic registry",
+                    "form": true
+                }
+            }
+        },
+        "docker": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署docker registry",
+                    "form": true
+                }
+            }
+        },
+        "npm": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署npm registry",
+                    "form": true
+                }
+            }
+        },
+        "pypi": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署pypi registry",
+                    "form": true
+                }
+            }
+        },
+        "helm": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "title": "是否部署helm registry",
+                    "form": true
+                }
+            }
+        }
+    }
+}
