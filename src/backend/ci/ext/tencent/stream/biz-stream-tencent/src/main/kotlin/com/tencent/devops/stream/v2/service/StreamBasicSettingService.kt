@@ -38,6 +38,7 @@ import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
@@ -115,16 +116,28 @@ class StreamBasicSettingService @Autowired constructor(
                 logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
                 // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
                 val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
-                if (userInfo != null) {
+                if (null != userInfo) {
                     setting.creatorBgName = userInfo.bgName
                     setting.creatorDeptName = userInfo.deptName
                     setting.creatorCenterName = userInfo.centerName
+
+                    updateProjectInfo(
+                        userId = userId,
+                        projectId = gitProjectId,
+                        userDeptDetail = userInfo
+                    )
                 }
             } else {
                 val userInfo = userResult.data!!
                 setting.creatorBgName = userInfo.bgName
                 setting.creatorDeptName = userInfo.deptName
                 setting.creatorCenterName = userInfo.centerName
+
+                updateProjectInfo(
+                    userId = userId,
+                    projectId = gitProjectId,
+                    userDeptDetail = userInfo
+                )
             }
         }
         streamBasicSettingDao.updateProjectSetting(
@@ -145,25 +158,27 @@ class StreamBasicSettingService @Autowired constructor(
             enableMrComment = enableMrComment
         )
 
-       // 增加修改project信息
-       if (!userId.isNullOrBlank()){
-           client.get(ServiceTxProjectResource::class).bindProjectOrganization(
-               userId = userId,
-               projectId = gitProjectId.toString(),
-               projectUpdateInfo = ProjectDeptInfo(
-                   bgId = ,
-                   bgName = ,
-                   deptId = ,
-                   deptName = ,
-                   centerId = ,
-                   centerName =
-               )
-           )
-       }
+
 
         return true
     }
 
+    // 更新项目信息
+    fun updateProjectInfo(userId: String, projectId: Long, userDeptDetail: UserDeptDetail ) {
+        client.get(ServiceTxProjectResource::class).bindProjectOrganization(
+            userId = userId,
+            projectId = projectId,
+            projectUpdateInfo = ProjectDeptInfo(
+                bgId = userDeptDetail.bgId,
+                bgName = userDeptDetail.bgName,
+                deptId = userDeptDetail.deptId,
+                deptName = userDeptDetail.deptName,
+                centerId = userDeptDetail.centerId,
+                centerName = userDeptDetail.centerName
+            )
+        )
+
+    }
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
         streamBasicSettingDao.updateOauthSetting(
             dslContext = dslContext,
