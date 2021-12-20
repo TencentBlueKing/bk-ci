@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.quality.pojo.enum.RunElementType
 
 data class QualityIndicator(
     val hashId: String,
@@ -48,7 +49,9 @@ data class QualityIndicator(
     val tag: String?,
     val metadataList: List<Metadata>,
     val desc: String?,
-    val logPrompt: String
+    val logPrompt: String,
+    val enable: Boolean?,
+    val range: String?
 ) {
     data class Metadata(
         val hashId: String,
@@ -57,7 +60,11 @@ data class QualityIndicator(
     )
 
     companion object {
-        val SCRIPT_ELEMENT = setOf(LinuxScriptElement.classType, WindowsScriptElement.classType)
+        val SCRIPT_ELEMENT = setOf(
+            LinuxScriptElement.classType,
+            WindowsScriptElement.classType,
+            RunElementType.RUN.elementType
+        )
     }
 
     fun isScriptElementIndicator(): Boolean {
@@ -81,7 +88,9 @@ data class QualityIndicator(
             tag = this.tag,
             metadataList = this.metadataList,
             desc = this.desc,
-            logPrompt = this.logPrompt
+            logPrompt = this.logPrompt,
+            enable = this.enable,
+            range = this.range
         )
     }
 }

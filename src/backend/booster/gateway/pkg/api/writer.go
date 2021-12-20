@@ -1,11 +1,20 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package api
 
 import (
 	"net/http"
 
-	"build-booster/common/blog"
-	http2 "build-booster/common/http"
-	commonTypes "build-booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
 
 	"github.com/emicklei/go-restful"
 )

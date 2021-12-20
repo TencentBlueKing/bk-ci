@@ -24,12 +24,16 @@
     export default class DevopsOption extends Vue {
         @Prop({ required: true })
         id: string | number
+
         @Prop({ required: true })
         name: string | number
+
         @Prop()
         multiple: boolean
+
         @Prop()
         isSelected: boolean
+
         @Prop()
         disabled: boolean
     }

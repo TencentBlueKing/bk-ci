@@ -117,9 +117,11 @@ open class MarketAtomTask : ITask() {
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
-        val map = JsonUtil.toMutableMapSkipEmpty(data)
-        logger.info("${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-            "|workspace=${workspace.absolutePath}")
+        val map = JsonUtil.toMutableMap(data)
+        logger.info(
+            "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
+                "|workspace=${workspace.absolutePath}"
+        )
 
         // 获取插件基本信息
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
@@ -152,7 +154,7 @@ open class MarketAtomTask : ITask() {
         }
 
         // 解析输出字段模板
-        val props = JsonUtil.toMutableMapSkipEmpty(atomData.props!!)
+        val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
 
@@ -175,23 +177,23 @@ open class MarketAtomTask : ITask() {
                         return CredentialUtils.getCredentialContextValue(key)
                     }
                 })
-
-                // 只有构建环境下运行的插件才有workspace变量
-                if (buildTask.containerType == VMBuildContainer.classType) {
-                    atomParams[name] = EnvUtils.parseEnv(
-                        command = valueStr,
-                        data = systemVariables,
-                        contextMap = contextMap(buildTask).plus(
+                // 修复插件input环境变量替换问题 #5682
+                atomParams[name] = EnvUtils.parseEnv(
+                    command = valueStr,
+                    data = buildVariables.variables,
+                    contextMap = if (buildTask.containerType == VMBuildContainer.classType) {
+                        // 只有构建环境下运行的插件才有workspace变量
+                        contextMap(buildTask).plus(
                             mapOf(
                                 WORKSPACE_CONTEXT to workspace.absolutePath,
                                 CI_TOKEN_CONTEXT to (buildVariables.variables[CI_TOKEN_CONTEXT] ?: ""),
                                 JOB_OS_CONTEXT to AgentEnv.getOS().name
                             )
-                        )
-                    )
-                } else {
-                    atomParams[name] = valueStr
-                }
+                        ).plus(systemVariables)
+                    } else {
+                        emptyMap()
+                    }
+                )
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
@@ -289,7 +291,8 @@ open class MarketAtomTask : ITask() {
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
             val atomLanguage = atomData.language!!
             val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
-                atomLanguage, buildHostType.name, AgentEnv.getOS().name)
+                atomLanguage, buildHostType.name, AgentEnv.getOS().name
+            )
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
             val systemEnvVariables = TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
@@ -323,7 +326,7 @@ open class MarketAtomTask : ITask() {
             // 获取插件post操作入口参数
             var postEntryParam: String? = null
             if (additionalOptions != null) {
-                val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
+                val additionalOptionMap = JsonUtil.toMutableMap(additionalOptions)
                 val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }
@@ -460,7 +463,8 @@ open class MarketAtomTask : ITask() {
         LoggerService.addNormalLine("Author         : ${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
             LoggerService.addNormalLine(
-                "Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
+                "Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>"
+            )
         }
         LoggerService.addNormalLine("=====================================================================")
 
@@ -506,7 +510,8 @@ open class MarketAtomTask : ITask() {
                     secretKey = AgentEnv.getAgentSecretKey(),
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway()
+                    gateway = AgentEnv.getGateway(),
+                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
                 )
             }
             BuildType.WORKER -> {
@@ -517,7 +522,8 @@ open class MarketAtomTask : ITask() {
                     secretKey = "",
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway()
+                    gateway = AgentEnv.getGateway(),
+                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
                 )
             }
         }
@@ -557,7 +563,8 @@ open class MarketAtomTask : ITask() {
         val secretKey: String,
         val gateway: String,
         val buildId: String,
-        val vmSeqId: String
+        val vmSeqId: String,
+        val vmBuildEnv: Boolean
     )
 
     private fun writeInputFile(

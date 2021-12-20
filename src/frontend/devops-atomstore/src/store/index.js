@@ -115,7 +115,7 @@ const commonModules = {
         },
 
         requestProjectList ({ commit }, params = {}) {
-            return vue.$ajax.get(`/project/api/user/projects/`, { params })
+            return vue.$ajax.get('/project/api/user/projects/', { params })
         }
     },
     getters: {

@@ -35,16 +35,13 @@ import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import java.text.MessageFormat
 
-/**
- * code信息工具类
- * @since: 2018-11-10
- */
 object MessageCodeUtil {
     private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)
 
     /**
      * 生成请求响应对象
      * @param messageCode 状态码
+     * @return Result响应结果对象
      */
     fun <T> generateResponseDataObject(
         messageCode: String
@@ -54,6 +51,7 @@ object MessageCodeUtil {
      * 生成请求响应对象
      * @param messageCode 状态码
      * @param data 数据对象
+     * @return Result响应结果对象
      */
     fun <T> generateResponseDataObject(
         messageCode: String,
@@ -64,6 +62,7 @@ object MessageCodeUtil {
      * 生成请求响应对象
      * @param messageCode 状态码
      * @param params 替换状态码描述信息占位符的参数数组
+     * @return Result响应结果对象
      */
     fun <T> generateResponseDataObject(
         messageCode: String,
@@ -75,6 +74,7 @@ object MessageCodeUtil {
      * @param messageCode 状态码
      * @param params 替换状态码描述信息占位符的参数数组
      * @param data 数据对象
+     * @return Result响应结果对象
      */
     @Suppress("UNCHECKED_CAST")
     fun <T> generateResponseDataObject(
@@ -84,13 +84,14 @@ object MessageCodeUtil {
         defaultMessage: String? = null
     ): Result<T> {
         val message = getCodeMessage(messageCode, params) ?: "[$messageCode]$defaultMessage"
-        ?: "[$messageCode] System service busy, please try again later"
-        return Result(messageCode.toInt(), message, data) // 生成Result对象`
+        // 生成Result对象
+        return Result(messageCode.toInt(), message, data)
     }
 
     /**
      * 获取code对应的中英文信息
      * @param messageCode code
+     * @return Result响应结果对象
      */
     fun getCodeLanMessage(messageCode: String, defaultMessage: String? = null, params: Array<String>? = null): String {
         return getCodeMessage(messageCode, params = params) ?: defaultMessage ?: messageCode
@@ -100,6 +101,7 @@ object MessageCodeUtil {
      * 获取code对应的中英文信息
      * @param messageCode code
      * @param params 替换描述信息占位符的参数数组
+     * @return Result响应结果对象
      */
     fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
         var message: String? = null
@@ -110,10 +112,12 @@ object MessageCodeUtil {
                 ?: return message
             val messageCodeDetail =
                 JsonUtil.getObjectMapper().readValue(messageCodeDetailStr, MessageCodeDetail::class.java)
-            message = getMessageByLocale(messageCodeDetail) // 根据字符集取出对应的状态码描述信息
+            // 根据字符集取出对应的状态码描述信息
+            message = getMessageByLocale(messageCodeDetail)
             if (null != params) {
                 val mf = MessageFormat(message)
-                message = mf.format(params) // 根据参数动态替换状态码描述里的占位符
+                // 根据参数动态替换状态码描述里的占位符
+                message = mf.format(params)
             }
         } catch (ignored: Exception) {
             logger.error("$messageCode get message error is :$ignored", ignored)
@@ -121,18 +125,29 @@ object MessageCodeUtil {
         return message
     }
 
+    /**
+     * 根据locale信息获取对应的语言描述信息
+     * @param messageCodeDetail 返回码详情
+     * @return 语言描述信息
+     */
     private fun getMessageByLocale(messageCodeDetail: MessageCodeDetail): String {
         return when (CommonUtils.getBkLocale()) {
-            "ZH_CN" -> messageCodeDetail.messageDetailZhCn // 简体中文描述
-            "ZH_TW" -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
+            CommonUtils.ZH_CN -> messageCodeDetail.messageDetailZhCn // 简体中文描述
+            CommonUtils.ZH_TW -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
             else -> messageCodeDetail.messageDetailEn ?: "" // 英文描述
         }
     }
 
+    /**
+     * 根据locale信息获取对应的语言描述信息
+     * @param chinese 中文描述信息
+     * @param english 英文描述信息
+     * @return 语言描述信息
+     */
     fun getMessageByLocale(chinese: String, english: String?): String {
         return when (CommonUtils.getBkLocale()) {
-            "ZH_CN" -> chinese // 简体中文描述
-            "ZH_TW" -> chinese // 繁体中文描述
+            CommonUtils.ZH_CN -> chinese // 简体中文描述
+            CommonUtils.ZH_TW -> chinese // 繁体中文描述
             else -> english ?: "" // 英文描述
         }
     }

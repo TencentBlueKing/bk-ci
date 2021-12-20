@@ -22,7 +22,7 @@ import request from '@/utils/request'
 
 const actions = {
     getGithubAppUrl: async ({ commit }) => {
-        return request.get(`repository/api/user/github/githubAppUrl`).then(response => {
+        return request.get('repository/api/user/github/githubAppUrl').then(response => {
             return response.data
         })
     },

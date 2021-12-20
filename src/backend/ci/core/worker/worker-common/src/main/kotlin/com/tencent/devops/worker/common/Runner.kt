@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -65,13 +66,12 @@ object Runner {
     private val logger = LoggerFactory.getLogger(Runner::class.java)
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
+        logger.info("Start the worker ...")
         var workspacePathFile: File? = null
+        // 启动成功, 报告process我已经启动了, #1613 如果这都失败了，则也无法向后台上报信息了。将由devopsAgent监控传递
+        val buildVariables = EngineService.setStarted()
         var failed = false
         try {
-            logger.info("Start the worker ...")
-            // 启动成功, 报告process我已经启动了
-            val buildVariables = EngineService.setStarted()
-
             // 上报agent启动给quota
             QuotaService.addRunningAgent(buildVariables)
 
@@ -82,10 +82,10 @@ object Runner {
             try {
                 // 开始轮询
                 failed = loopPickup(workspacePathFile, buildVariables)
-            } catch (ignore: Exception) {
+            } catch (ignore: Throwable) {
                 failed = true
-                logger.error("Other unknown error has occurred:", ignore)
-                LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
+                logger.error("Other ignore error has occurred:", ignore)
+                LoggerService.addErrorLine("Other ignore error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
                 LoggerService.archiveLogFiles()
@@ -96,6 +96,20 @@ object Runner {
         } catch (ignore: Exception) {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
+            // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
+            EngineService.submitError(
+                ErrorInfo(
+                    taskId = "",
+                    taskName = "",
+                    atomCode = "",
+                    errorMsg = "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
+                        "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +
+                        "devops.slave.user配置的指定构建帐号（此选项非必须，是由用户设置),如果有可删除或者修改为正确的帐号",
+                    errorType = ErrorType.USER.num,
+                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
+                )
+            )
+            EngineService.endBuild(buildVariables)
             throw ignore
         } finally {
             finally(workspacePathFile, failed)
@@ -162,7 +176,7 @@ object Runner {
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
                         // 开始Task执行
-                        taskDaemon.run()
+                        taskDaemon.runWithTimeout()
 
                         // 上报Task执行结果
                         logger.info("Complete the task (${buildTask.elementName})")
@@ -255,8 +269,6 @@ object Runner {
             errorType = ErrorType.SYSTEM.name
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
-
-        LoggerService.addErrorLine(message)
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,

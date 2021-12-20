@@ -35,6 +35,7 @@
     "gitUrlPlaceholder": "请输入SSH方式的Git代码库地址",
     "tgitUrlPlaceholder": "请输入SSH方式的TGit代码库地址",
     "gitlabUrlPlaceholder": "请输入相应类型的Gitlab代码库地址",
+    "p4UrlPlaceholder": "请输入HTTP方式的P4代码库地址",
     "httpUrlPlaceholder": "请输入HTTP方式的Git代码库地址",
     "httpsUrlPlaceholder": "请输入HTTPS方式的TGit代码库地址",
     "svnCredPlaceholder": "请选择相应类型的凭据",
@@ -56,6 +57,8 @@
     "Github": "Github",
     "Gitlab": "Gitlab",
     "TGit": "工蜂外网",
+    "P4": "P4",
     "authType": "授权方式",
-    "authIdentity": "授权身份"
+    "authIdentity": "授权身份",
+    "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port"
 }

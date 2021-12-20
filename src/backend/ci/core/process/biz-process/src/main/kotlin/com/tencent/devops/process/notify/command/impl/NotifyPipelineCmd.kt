@@ -5,9 +5,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.ExecutionVariables
+import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -33,7 +33,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
 
     override fun execute(commandContextBuild: BuildNotifyContext) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(commandContextBuild.pipelineId) ?: return
-        var pipelineName = pipelineInfo.pipelineName
+        val pipelineName = pipelineInfo.pipelineName
         val executionVar = getExecutionVariables(
             pipelineId = commandContextBuild.pipelineId,
             vars = commandContextBuild.variables as MutableMap<String, String>)
