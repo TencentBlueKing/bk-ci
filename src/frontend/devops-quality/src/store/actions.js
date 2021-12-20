@@ -288,7 +288,7 @@ const actions = {
      * 获取流水线控制点
      */
     getControlPoint ({ commit }, { element, projectId }) {
-        return vue.$ajax.get(`${prefix}/user/controlPoints/v2/${projectId}/elementType/${element}/get`)
+        return vue.$ajax.get(`${prefix}/user/controlPoints/v2/project/${projectId}/elementType/${element}/get`)
     },
 
     /**
