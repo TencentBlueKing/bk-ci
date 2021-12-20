@@ -92,7 +92,7 @@ while (( $# > 0 )); do
     shift
 done
 
-helm package bkrepo --version $VERSION --app-version $APP_VERSION
+helm package . --version $VERSION --app-version $APP_VERSION
 if [[ $PUSH -eq 1 ]] ; then
     helm push bkrepo-$VERSION.tgz $REGISTRY -f --username $USERNAME --password $PASSWORD
 fi
