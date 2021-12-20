@@ -40,7 +40,13 @@ import java.time.LocalDateTime
 @Repository
 class MarketAtomVersionLogDao {
 
-    fun addMarketAtomVersion(dslContext: DSLContext, userId: String, atomId: String, releaseType: Byte, versionContent: String) {
+    fun addMarketAtomVersion(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        releaseType: Byte,
+        versionContent: String
+    ) {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
             dslContext.insertInto(this,
                 ID,

@@ -25,23 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.pojo.common
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件基本信息")
-data class AtomBaseInfo(
-    @ApiModelProperty("插件Id", required = true)
-    val atomId: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+@ApiModel("回显版本信息")
+data class StoreShowVersionItem(
+    @ApiModelProperty("版本号", required = true)
     val version: String,
-    @ApiModelProperty("插件状态", required = true)
-    val atomStatus: String,
-    @ApiModelProperty("插件开发语言", required = false)
-    val language: String? = null,
-    @ApiModelProperty("代码提交ID", required = false)
-    val commitId: String? = null
+    @ApiModelProperty("发布类型", required = true)
+    val releaseType: String,
+    @ApiModelProperty("是否默认选中", required = true)
+    val defaultFlag: Boolean = false
 )
