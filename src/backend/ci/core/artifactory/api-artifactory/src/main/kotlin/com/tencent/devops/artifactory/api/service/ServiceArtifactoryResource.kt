@@ -154,9 +154,9 @@ interface ServiceArtifactoryResource {
         @ApiParam("版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @ApiParam("创建用户", required = true)
+        @ApiParam("创建用户", required = false)
         @QueryParam("creatorId")
-        creatorId: String,
+        creatorId: String?,
         @ApiParam("下载用户", required = true)
         @QueryParam("userId")
         userId: String,

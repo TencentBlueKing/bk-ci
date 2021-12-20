@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 interface RepoDownloadService {
 
     fun serviceGetExternalDownloadUrl(
-        creatorId: String,
+        creatorId: String?,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
