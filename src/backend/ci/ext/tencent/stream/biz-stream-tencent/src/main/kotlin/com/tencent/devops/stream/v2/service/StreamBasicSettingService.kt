@@ -157,9 +157,6 @@ class StreamBasicSettingService @Autowired constructor(
             nameWithNamespace = setting.nameWithNamespace,
             enableMrComment = enableMrComment
         )
-
-
-
         return true
     }
 
