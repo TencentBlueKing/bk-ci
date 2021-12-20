@@ -27,11 +27,12 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.slf4j.LoggerFactory
 
 object TriggerParameter {
@@ -69,6 +70,7 @@ object TriggerParameter {
         return null
     }
 
+    @SuppressWarnings("ReturnCount")
     private fun pushEventFilter(event: GitPushEvent): Boolean {
         // 去掉创建分支的触发
         if (event.isCreateBranch()) {
@@ -81,6 +83,10 @@ object TriggerParameter {
         }
         if (event.total_commits_count <= 0) {
             logger.info("${event.checkout_sha} Git push web hook no commit(${event.total_commits_count})")
+            return false
+        }
+        if (GitUtils.isPrePushBranch(event.ref)) {
+            logger.info("Git web hook is pre-push event|branchName=${event.ref}")
             return false
         }
         return true
