@@ -25,10 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.project.pojo
 
-data class ProjectOrgInfo(
+data class ProjectDeptInfo (
     val bgId: String,
-    val deptId: String?,
-    val centerId: String?
+    val bgName: String?,
+    val deptId: String? = "0",
+    val deptName: String? = "",
+    val centerId: String? = "0",
+    val centerName: String? = ""
 )

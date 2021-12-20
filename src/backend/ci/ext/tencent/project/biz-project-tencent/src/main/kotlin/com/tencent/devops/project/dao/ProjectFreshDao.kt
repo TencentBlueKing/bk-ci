@@ -31,6 +31,7 @@ import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.model.project.tables.records.TUserRecord
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -67,6 +68,26 @@ class ProjectFreshDao {
                 .set(DEPT_NAME, "")
                 .set(CENTER_ID, 0)
                 .set(CENTER_NAME, "")
+                .execute()
+        }
+    }
+
+    fun bindProjectDept(
+        dslContext: DSLContext,
+        projectDeptInfo: ProjectDeptInfo,
+        projectId: String,
+        updateUser: String
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(BG_ID, projectDeptInfo.bgId.toLong())
+                .set(BG_NAME, projectDeptInfo.bgName)
+                .set(DEPT_ID, projectDeptInfo.deptId?.toLong())
+                .set(DEPT_NAME, projectDeptInfo.deptName)
+                .set(CENTER_ID, projectDeptInfo.centerId?.toLong())
+                .set(CENTER_NAME, projectDeptInfo.centerName)
+                .set(UPDATOR, updateUser)
+                .where(ENGLISH_NAME.eq(PROJECT_ID))
                 .execute()
         }
     }
