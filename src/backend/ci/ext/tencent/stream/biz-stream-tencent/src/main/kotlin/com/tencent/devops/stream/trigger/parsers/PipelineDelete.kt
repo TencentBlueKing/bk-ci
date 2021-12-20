@@ -159,11 +159,17 @@ class PipelineDelete @Autowired constructor(
                 pipelineId,
                 gitRequestEvent.branch
             )
-            val checkFileEmpty = filePath?.let { self ->
-                scmService.getFileTreeFromGitWithDefaultBranch(gitToken, gitRequestEvent.gitProjectId, self).isEmpty()
-            }
 
-            if (checkFileEmpty == true &&
+            val isFileEmpty = if (null != filePath) {
+                checkFileEmpty(
+                    gitToken = gitToken,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    filePath = filePath
+                    )
+            } else {
+                true
+            }
+            if (isFileEmpty &&
                 !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
@@ -177,6 +183,25 @@ class PipelineDelete @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    private fun checkFileEmpty(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ): Boolean {
+        val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
+            gitToken = gitToken,
+            gitProjectId = gitProjectId,
+            filePath = filePath
+        )
+
+        fileList.forEach {
+            if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {
+                return false
+            }
+        }
+        return true
     }
 
     private fun isCiFile(name: String): Boolean {
