@@ -646,12 +646,6 @@ class ProjectLocalService @Autowired constructor(
                 userIds = arrayListOf(userId),
                 checkManager = false
             )
-//            return projectIamV0Service.createUser2ProjectImpl(
-//                userIds = arrayListOf(userId),
-//                projectId = projectCode,
-//                roleId = roleId,
-//                roleName = roleName
-//            )
         } else {
             logger.error("organizationInfo|$organizationType|$organizationId] not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
