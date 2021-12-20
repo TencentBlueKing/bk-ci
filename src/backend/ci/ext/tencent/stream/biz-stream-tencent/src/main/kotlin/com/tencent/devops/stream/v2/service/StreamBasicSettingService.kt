@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectDeptInfo
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
@@ -110,6 +111,17 @@ class StreamBasicSettingService @Autowired constructor(
             return false
         }
         if (!userId.isNullOrBlank()) {
+            var userUpdateInfo = UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                deptId = "0",
+                deptName = "",
+                centerId = "0",
+                centerName = "",
+                groupId = "0",
+                groupName = ""
+            )
+
             val userResult =
                 client.get(ServiceTxUserResource::class).get(userId)
             if (userResult.isNotOk()) {
@@ -121,11 +133,7 @@ class StreamBasicSettingService @Autowired constructor(
                     setting.creatorDeptName = userInfo.deptName
                     setting.creatorCenterName = userInfo.centerName
 
-                    updateProjectInfo(
-                        userId = userId,
-                        projectId = gitProjectId,
-                        userDeptDetail = userInfo
-                    )
+                    userUpdateInfo = userInfo
                 }
             } else {
                 val userInfo = userResult.data!!
@@ -133,12 +141,15 @@ class StreamBasicSettingService @Autowired constructor(
                 setting.creatorDeptName = userInfo.deptName
                 setting.creatorCenterName = userInfo.centerName
 
-                updateProjectInfo(
-                    userId = userId,
-                    projectId = gitProjectId,
-                    userDeptDetail = userInfo
-                )
+                userUpdateInfo = userInfo
+
             }
+            // 更新项目的组织架构信息
+            updateProjectInfo(
+                userId = userId,
+                projectId = gitProjectId,
+                userDeptDetail = userUpdateInfo
+            )
         }
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
