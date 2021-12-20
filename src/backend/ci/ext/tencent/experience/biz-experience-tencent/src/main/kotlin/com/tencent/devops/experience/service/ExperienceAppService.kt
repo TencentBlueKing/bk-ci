@@ -49,7 +49,6 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.job.ExperienceHotJob
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -61,7 +60,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
