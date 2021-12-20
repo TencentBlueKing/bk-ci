@@ -37,11 +37,13 @@ import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
+import com.tencent.devops.quality.util.QualityUrlUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -62,7 +64,8 @@ class QualityHistoryService @Autowired constructor(
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val qualityUrlUtils: QualityUrlUtils
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
@@ -233,6 +236,18 @@ class QualityHistoryService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.map {
+            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+            interceptList.forEach { record ->
+                if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+                    record.logPrompt = qualityUrlUtils.getCodeCCUrl(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        detail = record.detail,
+                        client = client
+                    )
+                }
+            }
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
@@ -242,7 +257,7 @@ class QualityHistoryService @Autowired constructor(
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
                 checkTimes = it.checkTimes,
-                resultMsg = objectMapper.readValue(it.interceptList)
+                resultMsg = interceptList
             )
         }
     }
@@ -439,6 +454,17 @@ class QualityHistoryService @Autowired constructor(
         } else {
             return recordList.map {
                 val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+                interceptList.forEach { record ->
+                    if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+                        record.logPrompt = qualityUrlUtils.getCodeCCUrl(
+                            projectId = projectId,
+                            pipelineId = pipelineId ?: "",
+                            buildId = buildId ?: "",
+                            detail = record.detail,
+                            client = client
+                        )
+                    }
+                }
                 val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
                 val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
                 val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
