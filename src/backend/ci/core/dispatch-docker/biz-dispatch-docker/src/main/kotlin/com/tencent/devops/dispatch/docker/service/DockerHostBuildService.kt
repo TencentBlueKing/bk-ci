@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
@@ -44,10 +45,10 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -250,7 +251,6 @@ class DockerHostBuildService @Autowired constructor(
      * 每天执行一次，更新大于七天状态还是running的pool，以及大于七天状态还是running的build history，并主动关机
      */
     @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 24 * 1000)
-    @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
         val redisLock = RedisLock(redisOperation, "update_timeout_pool_task_nogkudla", 5L)
@@ -350,10 +350,11 @@ class DockerHostBuildService @Autowired constructor(
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
+        val executeCount = DispatchLogRedisUtils.getRedisExecuteCount(buildId)
         if (red) {
-            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         } else {
-            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
         }
     }
 

@@ -56,7 +56,8 @@ class ProjectPipelineCallbackHistoryDao {
         responseCode: Int?,
         responseBody: String?,
         startTime: Long,
-        endTime: Long
+        endTime: Long,
+        id: Long? = null
     ) {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             val now = LocalDateTime.now()
@@ -73,7 +74,8 @@ class ProjectPipelineCallbackHistoryDao {
                 RESPONSE_BODY,
                 START_TIME,
                 END_TIME,
-                CREATED_TIME
+                CREATED_TIME,
+                ID
             ).values(
                 projectId,
                 events,
@@ -86,7 +88,8 @@ class ProjectPipelineCallbackHistoryDao {
                 responseBody,
                 Timestamp(startTime).toLocalDateTime(),
                 Timestamp(endTime).toLocalDateTime(),
-                now
+                now,
+                id
             ).execute()
         }
     }
