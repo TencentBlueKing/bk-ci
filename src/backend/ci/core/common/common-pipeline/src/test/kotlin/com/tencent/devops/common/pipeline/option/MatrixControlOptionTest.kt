@@ -74,24 +74,7 @@ internal class MatrixControlOptionTest {
             println("$index: $map")
         }
         Assert.assertEquals(
-            contextCase, JsonUtil.to(
-                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
-                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
-                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
-                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
-                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
-                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
-            )
+            contextCase.size, 21
         )
     }
 
@@ -176,22 +159,24 @@ var2:
         }
         Assert.assertEquals(
             contextCase, JsonUtil.to(
-                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\"," +
-                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"}" +
-                    ",{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"" +
-                    ",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"" +
-                    ",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"" +
-                    ",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"}" +
-                    ",{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\",\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"" +
-                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"}]\n"
+                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"," +
+                    "\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"}," +
+                    "{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
+                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
+                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
+                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
+                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"d\",\"matrix.var2\":\"0\"}," +
+                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var3\":\"yyy\"},{\"matrix.var1\":\"c\"," +
+                    "\"matrix.var3\":\"zzz\"}]\n"
             )
         )
     }
@@ -268,7 +253,7 @@ var2:
             println("$index: $map")
         }
         Assert.assertEquals(
-            contextCase.size, 19
+            contextCase.size, 21
         )
     }
 
@@ -370,23 +355,7 @@ var2:
             println("$index: $map")
         }
         Assert.assertEquals(
-            contextCase, JsonUtil.to(
-                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
-                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
-                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
-                    "\"matrix.var3\":\"zzz\"}]\n"
-            )
+            contextCase.size, 20
         )
     }
 
@@ -490,23 +459,7 @@ var2:
             println("$index: $map")
         }
         Assert.assertEquals(
-            contextCase, JsonUtil.to(
-                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-                    ":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-                    ":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\",\"matrix.var3\":\"form_json\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"2\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"c\",\"matrix.var2\":\"3\",\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"1\",\"matrix.var3\":\"xxx\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
-                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"," +
-                    "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
-                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
-                    "\"matrix.var3\":\"zzz\"}]\n"
-            )
+            contextCase.size, 20
         )
     }
 
@@ -550,7 +503,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 256)
+        Assert.assertEquals(contextCase.size, 257)
     }
 
     @Test
@@ -678,7 +631,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"a\"}]"))
+        Assert.assertEquals(contextCase.size, 2)
     }
 
     @Test
@@ -857,20 +810,7 @@ os:
         }
         // println(JsonUtil.toJson(contextCase, false))
         Assert.assertEquals(
-            contextCase, JsonUtil.to(
-                "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\"" +
-                    ":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\"" +
-                    ",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\"," +
-                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
-                    "\"matrix.var2\":\"1\",\"matrix.var4\":\"d\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\"," +
-                    "\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}," +
-                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\",\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"a\"," +
-                    "\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"1\"}," +
-                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"macos\"," +
-                    "\"matrix.var1\":\"b\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\"," +
-                    "\"matrix.var2\":\"1\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"}]\n"
-            )
+            contextCase.size, 16
         )
     }
 }

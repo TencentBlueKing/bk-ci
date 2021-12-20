@@ -235,7 +235,8 @@ class PipelineContainerService @Autowired constructor(
         context: MatrixBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
         matrixGroupId: String,
-        jobControlOption: JobControlOption
+        jobControlOption: JobControlOption,
+        postElementToParent: MutableMap<String, String>
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
@@ -251,6 +252,10 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
 
+            // 如果存在post-action则刷新插件依赖的实际父插件
+            atomElement.additionalOptions?.elementPostInfo?.let { self ->
+                self.parentElementId = postElementToParent[atomElement.id] ?: ""
+            }
             val status = atomElement.initStatus()
 
             context.taskCount++

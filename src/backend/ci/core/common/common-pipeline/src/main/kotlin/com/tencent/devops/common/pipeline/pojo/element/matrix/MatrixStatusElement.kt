@@ -51,7 +51,11 @@ data class MatrixStatusElement(
     @ApiModelProperty("审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
     @ApiModelProperty("拦截原子", required = false)
-    var interceptTask: String? = null
+    var interceptTask: String? = null,
+    @ApiModelProperty("拦截原子名称", required = false)
+    var interceptTaskName: String? = null,
+    @ApiModelProperty("POST-ACTION的父插件ID", required = false)
+    var postParentElementId: String? = null
 ) : Element(
     name = name,
     status = status,

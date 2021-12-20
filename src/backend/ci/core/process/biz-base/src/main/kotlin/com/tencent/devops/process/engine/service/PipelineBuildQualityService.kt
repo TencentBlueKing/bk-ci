@@ -187,11 +187,12 @@ class PipelineBuildQualityService(
     }
 
     fun addQualityGateReviewUsers(projectId: String, pipelineId: String, buildId: String, model: Model) {
+        // TODO 逻辑过于复杂，下一版优化
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
-                // TODO 构建矩阵支持质量红线相关
-                container.elements.forEach { element ->
-                    if (element is QualityGateInElement && element.status == BuildStatus.REVIEWING.name) {
+                container.elements.forEach nextElement@{ element ->
+                    if (element.status != BuildStatus.REVIEWING.name) return@nextElement
+                    if (element is QualityGateInElement) {
                         element.reviewUsers = getAuditUserList(
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -199,13 +200,36 @@ class PipelineBuildQualityService(
                             taskId = element.interceptTask ?: ""
                         )
                     }
-                    if (element is QualityGateOutElement && element.status == BuildStatus.REVIEWING.name) {
+                    if (element is QualityGateOutElement) {
                         element.reviewUsers = getAuditUserList(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             taskId = element.interceptTask ?: ""
                         )
+                    }
+                }
+                if (container.matrixGroupFlag == true) {
+                    container.fetchGroupContainers()?.forEach {
+                        it.elements.forEach nextElement@{ element ->
+                            if (element.status != BuildStatus.REVIEWING.name) return@nextElement
+                            if (element is MatrixStatusElement && element.originClassType == QualityGateInElement.classType) {
+                                element.reviewUsers = getAuditUserList(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    taskId = element.interceptTask ?: ""
+                                ).toMutableList()
+                            }
+                            if (element is MatrixStatusElement && element.originClassType == QualityGateOutElement.classType) {
+                                element.reviewUsers = getAuditUserList(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    taskId = element.interceptTask ?: ""
+                                ).toMutableList()
+                            }
+                        }
                     }
                 }
             }
