@@ -180,7 +180,12 @@ class InitializeMatrixGroupStageCmd(
         // 每一种上下文组合都是一个新容器
         if (modelContainer is VMBuildContainer && modelContainer.matrixControlOption != null) {
 
-            jobControlOption = modelContainer.jobControlOption!!
+            jobControlOption = modelContainer.jobControlOption!!.copy(
+                dependOnType = null,
+                dependOnId = null,
+                dependOnName = null,
+                dependOnContainerId2JobIds = null
+            )
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
@@ -221,6 +226,7 @@ class InitializeMatrixGroupStageCmd(
                     canRetry = modelContainer.canRetry,
                     enableExternal = modelContainer.enableExternal,
                     jobControlOption = jobControlOption,
+                    mutexGroup = modelContainer.mutexGroup,
                     executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag,
                     customBuildEnv = allContext,
@@ -259,7 +265,12 @@ class InitializeMatrixGroupStageCmd(
             }
         } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
 
-            jobControlOption = modelContainer.jobControlOption!!
+            jobControlOption = modelContainer.jobControlOption!!.copy(
+                dependOnType = null,
+                dependOnId = null,
+                dependOnName = null,
+                dependOnContainerId2JobIds = null
+            )
             matrixOption = modelContainer.matrixControlOption!!
             matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
@@ -280,7 +291,8 @@ class InitializeMatrixGroupStageCmd(
                     matrixContext = contextCase,
                     elements = modelContainer.elements,
                     canRetry = modelContainer.canRetry,
-                    jobControlOption = jobControlOption.copy(),
+                    jobControlOption = jobControlOption,
+                    mutexGroup = modelContainer.mutexGroup,
                     executeCount = context.executeCount,
                     containPostTaskFlag = modelContainer.containPostTaskFlag
                 )
