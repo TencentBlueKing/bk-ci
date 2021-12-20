@@ -162,10 +162,10 @@ class PipelineDelete @Autowired constructor(
 
             val isFileEmpty = if (null != filePath) {
                 checkFileEmpty(
-                     gitToken = gitToken,
-                     gitProjectId = gitRequestEvent.gitProjectId,
-                     filePath = filePath
-                 )
+                    gitToken = gitToken,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    filePath = filePath
+                    )
             } else {
                 true
             }
@@ -189,7 +189,7 @@ class PipelineDelete @Autowired constructor(
         gitToken: String,
         gitProjectId: Long,
         filePath: String
-    ):Boolean {
+    ): Boolean {
         val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
             gitToken = gitToken,
             gitProjectId = gitProjectId,
