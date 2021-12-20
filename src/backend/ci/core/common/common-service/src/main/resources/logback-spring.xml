@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="false">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty name="app_name" source="spring.application.name"/>
+
+    <include resource="logback/appender.xml"/>
+    <logger name="AccessLogger" level="INFO" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+    <root level="INFO">
+        <appender-ref ref="console"/>
+        <appender-ref ref="app-log"/>
+    </root>
+</configuration>

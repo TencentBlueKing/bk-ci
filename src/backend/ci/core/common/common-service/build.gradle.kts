@@ -29,7 +29,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-redis"))
     api("org.springframework.boot:spring-boot-starter-actuator")
-    api("org.springframework.boot:spring-boot-starter-log4j2")
+    api("org.springframework.boot:spring-boot-starter-logging")
     api("org.springframework.cloud:spring-cloud-consul-discovery")
     api("io.github.openfeign:feign-okhttp")
     api("org.jolokia:jolokia-core")
