@@ -71,6 +71,7 @@ import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
@@ -538,7 +539,15 @@ open class MarketAtomTask : ITask() {
 
     private fun getFileGateway(containerType: String?): String {
         val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
-        logger.info("fileGateway: ${CommonEnv.fileDevnetGateway}, ${CommonEnv.fileIdcGateway}")
+        var fileDevnetGateway = CommonEnv.fileDevnetGateway
+        var fileIdcGateway = CommonEnv.fileIdcGateway
+        if (fileDevnetGateway == null && fileIdcGateway == null) {
+            val fileGatewayInfo = ArtifactoryBuildResourceApi().getFileGatewayInfo()
+            fileDevnetGateway = fileGatewayInfo?.fileDevnetGateway
+            CommonEnv.fileDevnetGateway = fileDevnetGateway
+            fileIdcGateway = fileGatewayInfo?.fileIdcGateway
+            CommonEnv.fileIdcGateway = fileIdcGateway
+        }
         return (if (vmBuildEnvFlag) CommonEnv.fileDevnetGateway else CommonEnv.fileIdcGateway) ?: ""
     }
 
