@@ -87,7 +87,7 @@ class ProjectFreshDao {
                 .set(CENTER_ID, projectDeptInfo.centerId?.toLong())
                 .set(CENTER_NAME, projectDeptInfo.centerName)
                 .set(UPDATOR, updateUser)
-                .where(ENGLISH_NAME.eq(PROJECT_ID))
+                .where(ENGLISH_NAME.eq(projectId))
                 .execute()
         }
     }
