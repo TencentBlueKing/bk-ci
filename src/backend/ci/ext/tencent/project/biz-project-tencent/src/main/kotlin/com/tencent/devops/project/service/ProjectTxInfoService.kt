@@ -34,6 +34,7 @@ import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -110,5 +111,19 @@ class ProjectTxInfoService @Autowired constructor(
             userId = userId,
             projectName = projectName
         )
+    }
+
+    fun bindProjectDept(
+        userId: String,
+        projectCode: String,
+        projectDeptInfo: ProjectDeptInfo
+    ): Boolean {
+        projectFreshDao.bindProjectDept(
+            dslContext = dslContext,
+            projectId = projectCode,
+            projectDeptInfo = projectDeptInfo,
+            updateUser = userId
+        )
+        return true
     }
 }
