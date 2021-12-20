@@ -217,21 +217,21 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            pipelineBuildStageDao.deletePipelineBuildStages(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineBuildContainerDao.deletePipelineBuildContainers(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineBuildTaskDao.deletePipelineBuildTasks(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
+//            pipelineBuildStageDao.deletePipelineBuildStages(
+//                dslContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineBuildContainerDao.deletePipelineBuildContainers(
+//                dslContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineBuildTaskDao.deletePipelineBuildTasks(
+//                dslContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
         }
 //        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
     }
