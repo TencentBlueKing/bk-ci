@@ -235,7 +235,7 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.map {
+        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.distinctBy { it.ruleId }.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { record ->
                 if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
