@@ -48,6 +48,7 @@ spec:
   encoding: 'utf-8'
   extMeta:
     logSourceType: "file"
+---
 # Gateway Error Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
