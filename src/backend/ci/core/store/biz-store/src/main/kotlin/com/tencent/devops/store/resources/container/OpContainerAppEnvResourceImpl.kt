@@ -25,39 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.resources.container
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerAppEnvResource
+import com.tencent.devops.store.pojo.app.ContainerAppEnv
+import com.tencent.devops.store.pojo.app.ContainerAppEnvCreate
+import com.tencent.devops.store.service.container.ContainerAppEnvService
+import org.springframework.beans.factory.annotation.Autowired
 
-object PropertyUtil {
+@RestResource
+class OpContainerAppEnvResourceImpl @Autowired constructor(
+    private val containerAppEnvService: ContainerAppEnvService
+) : OpContainerAppEnvResource {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun addContainerAppEnv(containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
+        return containerAppEnvService.saveContainerAppEnv(containerAppEnvRequest)
+    }
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun deleteContainerAppEnvById(id: Int): Result<Boolean> {
+        return containerAppEnvService.deleteContainerAppEnv(id)
+    }
+
+    override fun updateContainerAppEnv(id: Int, containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
+        return containerAppEnvService.updateContainerAppEnv(id, containerAppEnvRequest)
+    }
+
+    override fun listContainerAppEnvsByAppId(appId: Int): Result<List<ContainerAppEnv>> {
+        return containerAppEnvService.listByAppId(appId)
+    }
+
+    override fun getContainerAppEnvById(id: Int): Result<ContainerAppEnv?> {
+        return containerAppEnvService.getContainerAppEnv(id)
     }
 }

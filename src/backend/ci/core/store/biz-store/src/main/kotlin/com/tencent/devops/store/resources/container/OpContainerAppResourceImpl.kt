@@ -25,39 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.resources.container
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerAppResource
+import com.tencent.devops.store.pojo.app.ContainerApp
+import com.tencent.devops.store.pojo.app.ContainerAppInfo
+import com.tencent.devops.store.pojo.app.ContainerAppRequest
+import com.tencent.devops.store.service.container.ContainerAppService
+import org.springframework.beans.factory.annotation.Autowired
 
-object PropertyUtil {
+@RestResource
+class OpContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService)
+    : OpContainerAppResource {
+    override fun deleteContainerAppById(id: Int): Result<Boolean> {
+        return containerAppService.deleteContainerAppInfo(id)
+    }
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun updateContainerApp(id: Int, containerAppRequest: ContainerAppRequest): Result<Boolean> {
+        return containerAppService.updateContainerAppInfo(id, containerAppRequest)
+    }
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun getContainerAppById(id: Int): Result<ContainerAppInfo?> {
+        return containerAppService.getContainerAppInfo(id)
+    }
+
+    override fun listContainerApps(): Result<List<ContainerApp>> {
+        return containerAppService.getAllContainerAppInfos()
+    }
+
+    override fun addContainerApp(containerAppRequest: ContainerAppRequest): Result<Boolean> {
+        return containerAppService.addContainerAppInfo(containerAppRequest)
     }
 }
