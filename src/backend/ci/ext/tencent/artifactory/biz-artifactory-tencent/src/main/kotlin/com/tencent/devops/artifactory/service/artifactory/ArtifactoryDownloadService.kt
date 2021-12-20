@@ -74,7 +74,7 @@ class ArtifactoryDownloadService @Autowired constructor(
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
-        creatorId: String,
+        creatorId: String?,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -85,7 +85,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         logger.info("serviceGetExternalDownloadUrl, creatorId: $creatorId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
-        val url = jFrogApiService.externalDownloadUrl(realPath, creatorId, ttl, directed)
+        val url = jFrogApiService.externalDownloadUrl(realPath, creatorId?:userId, ttl, directed)
         return Url(StringUtil.chineseUrlEncode(url))
     }
 
