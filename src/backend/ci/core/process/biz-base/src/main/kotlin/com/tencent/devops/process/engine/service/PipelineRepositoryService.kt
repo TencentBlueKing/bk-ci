@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -75,6 +76,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -425,16 +427,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    private fun matrixYamlCheck(matrixControlOption: MatrixControlOption?) {
-        if (matrixControlOption?.strategyStr.isNullOrBlank() == true) {
+    private fun matrixYamlCheck(option: MatrixControlOption?) {
+        if (option == null) throw DependNotFoundException("matrix option not found")
+        if (option.strategyStr.isNullOrBlank()) {
             throw DependNotFoundException("Matrix Yaml is blank")
+        }
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+            throw InvalidParamException("matrix maxConcurrency(${option.maxConcurrency}) " +
+                "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX")
         }
         MatrixContextUtils.schemaCheck(
             JsonUtil.toJson(
                 MatrixPipelineInfo(
-                    include = matrixControlOption?.includeCaseStr,
-                    exclude = matrixControlOption?.excludeCaseStr,
-                    strategy = matrixControlOption?.strategyStr
+                    include = option.includeCaseStr,
+                    exclude = option.excludeCaseStr,
+                    strategy = option.strategyStr
                 ).toMatrixConvert()
             )
         )

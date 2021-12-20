@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -178,7 +179,7 @@ class InitializeMatrixGroupStageCmd(
         val jobControlOption: JobControlOption
 
         // 每一种上下文组合都是一个新容器
-        if (modelContainer is VMBuildContainer && modelContainer.matrixControlOption != null) {
+        if (modelContainer is VMBuildContainer) {
 
             jobControlOption = modelContainer.jobControlOption!!.copy(
                 dependOnType = null,
@@ -186,7 +187,7 @@ class InitializeMatrixGroupStageCmd(
                 dependOnName = null,
                 dependOnContainerId2JobIds = null
             )
-            matrixOption = modelContainer.matrixControlOption!!
+            matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
             matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
 
@@ -263,7 +264,7 @@ class InitializeMatrixGroupStageCmd(
                     ))
                 }
             }
-        } else if (modelContainer is NormalContainer && modelContainer.matrixControlOption != null) {
+        } else if (modelContainer is NormalContainer) {
 
             jobControlOption = modelContainer.jobControlOption!!.copy(
                 dependOnType = null,
@@ -271,7 +272,7 @@ class InitializeMatrixGroupStageCmd(
                 dependOnName = null,
                 dependOnContainerId2JobIds = null
             )
-            matrixOption = modelContainer.matrixControlOption!!
+            matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
             matrixConfig = matrixOption.convertMatrixConfig(variables)
             contextCaseList = matrixConfig.getAllCombinations()
 
@@ -321,7 +322,8 @@ class InitializeMatrixGroupStageCmd(
                 }
             }
         } else {
-            throw DependNotFoundException("matrix(${parentContainer.containerId}) option not found")
+            throw InvalidParamException("matrix(${parentContainer.containerId}) with " +
+                "type(${modelContainer.getClassType()}) is invalid")
         }
 
         // 输出结果信息到矩阵的构建日志中
@@ -411,8 +413,8 @@ class InitializeMatrixGroupStageCmd(
             buildId = buildId, message = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "[MATRIX] Job strategy:",
+        buildLogPrinter.addFoldStartLine(
+            buildId = buildId, groupName = "[MATRIX] Job strategy:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         buildLogPrinter.addLine(
@@ -425,15 +427,15 @@ class InitializeMatrixGroupStageCmd(
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
         }
+        buildLogPrinter.addFoldEndLine(
+            buildId = buildId, groupName = "",
+            tag = taskId, jobId = containerHashId, executeCount = executeCount
+        )
 
         // 打印追加参数
         if (!this.include.isNullOrEmpty()) {
-            buildLogPrinter.addLine(
-                buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
-            )
-            buildLogPrinter.addLine(
-                buildId = buildId, message = "[MATRIX] Include cases:",
+            buildLogPrinter.addFoldStartLine(
+                buildId = buildId, groupName = "[MATRIX] Include cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             buildLogPrinter.addLine(
@@ -441,16 +443,16 @@ class InitializeMatrixGroupStageCmd(
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.include)
+            buildLogPrinter.addFoldEndLine(
+                buildId = buildId, groupName = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
         }
 
         // 打印排除参数
         if (!this.exclude.isNullOrEmpty()) {
-            buildLogPrinter.addLine(
-                buildId = buildId, message = "",
-                tag = taskId, jobId = containerHashId, executeCount = executeCount
-            )
-            buildLogPrinter.addLine(
-                buildId = buildId, message = "[MATRIX] Exclude cases:",
+            buildLogPrinter.addFoldStartLine(
+                buildId = buildId, groupName = "[MATRIX] Exclude cases:",
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             buildLogPrinter.addLine(
@@ -458,15 +460,15 @@ class InitializeMatrixGroupStageCmd(
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
             printMatrixCases(buildId, taskId, containerHashId, executeCount, this.exclude)
+            buildLogPrinter.addFoldEndLine(
+                buildId = buildId, groupName = "",
+                tag = taskId, jobId = containerHashId, executeCount = executeCount
+            )
         }
 
         // 打印最终结果
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
-        )
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "[MATRIX] After calculated, " +
+        buildLogPrinter.addFoldStartLine(
+            buildId = buildId, groupName = "[MATRIX] After calculated, " +
             "${contextCaseList.size} jobs are generated:",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
@@ -487,8 +489,8 @@ class InitializeMatrixGroupStageCmd(
                 tag = taskId, jobId = containerHashId, executeCount = executeCount
             )
         }
-        buildLogPrinter.addLine(
-            buildId = buildId, message = "",
+        buildLogPrinter.addFoldEndLine(
+            buildId = buildId, groupName = "",
             tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
     }
@@ -512,5 +514,14 @@ class InitializeMatrixGroupStageCmd(
                 )
             }
         }
+    }
+
+    private fun checkAndFetchOption(option: MatrixControlOption?): MatrixControlOption {
+        if (option == null) throw DependNotFoundException("matrix option not found")
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+            throw InvalidParamException("matrix maxConcurrency(${option.maxConcurrency}) " +
+                "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX")
+        }
+        return option
     }
 }
