@@ -315,7 +315,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             arrayOf(marketAtomUpdateRequest.name)
         )
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
-        val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank()) MASTER else marketAtomUpdateRequest.branch
+        val releaseType = marketAtomUpdateRequest.releaseType
+        // 历史大版本下的小版本更新发布类型支持用户自定义分支，其他发布类型只支持master分支发布
+        val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank() || releaseType != ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+            MASTER
+        } else {
+            marketAtomUpdateRequest.branch
+        }
         val getAtomConfResult = getAtomConfig(
             atomPackageSourceType = atomPackageSourceType,
             projectCode = projectCode,
@@ -333,7 +339,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val taskDataMap = getAtomConfResult.taskDataMap
         // 校验前端传的版本号是否正确
-        val releaseType = marketAtomUpdateRequest.releaseType
         val osList = marketAtomUpdateRequest.os
         val validateAtomVersionResult =
             marketAtomCommonService.validateAtomVersion(
