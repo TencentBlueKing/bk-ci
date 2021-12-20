@@ -142,7 +142,6 @@ class StreamBasicSettingService @Autowired constructor(
                 setting.creatorCenterName = userInfo.centerName
 
                 userUpdateInfo = userInfo
-
             }
             // 更新项目的组织架构信息
             updateProjectInfo(
