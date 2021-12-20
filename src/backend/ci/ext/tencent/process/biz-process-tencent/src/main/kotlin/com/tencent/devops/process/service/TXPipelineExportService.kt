@@ -82,6 +82,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.JobPipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
@@ -465,9 +466,10 @@ class TXPipelineExportService @Autowired constructor(
                 "unknown_job"
             }
             pipelineExportV2YamlConflictMapItem.job =
-                PipelineExportV2YamlConflictMapBaseItem(
+                JobPipelineExportV2YamlConflictMapBaseItem(
                     id = it.id,
-                    name = it.name
+                    name = it.name,
+                    jobId = it.jobId
                 )
             when (it.getClassType()) {
                 NormalContainer.classType -> {
@@ -1087,9 +1089,11 @@ class TXPipelineExportService @Autowired constructor(
                     exportFile = exportFile
                 )
                 if (namespace.isNullOrBlank()) {
-                    "\${{ steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                    "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
                 } else {
-                    "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
+                    "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "$namespace.outputs.$originKeyWithNamespace }}"
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
@@ -1549,10 +1553,12 @@ class TXPipelineExportService @Autowired constructor(
                 if (stepID.isNullOrBlank()) {
                     originKeyWithNamespace
                 } else {
-                    "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                    "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
                 }
             } else {
-                "steps.$namespace.outputs.$originKeyWithNamespace"
+                "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                    "$namespace.outputs.$originKeyWithNamespace"
             }
         } else if (!ciName.isNullOrBlank()) {
             ciName
