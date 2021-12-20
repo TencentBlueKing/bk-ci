@@ -58,19 +58,30 @@ enum class TGitPushOperationKind(val value: String) {
  * cherry-pick：在工蜂Web上使用cherry pick功能
  * revert：在工蜂Web上使用revert功能
  */
-enum class TGitPushActionKind(val value: String) {
-    CLIENT_PUSH("client push"),
-    CREATE_BRANCH("create branch"),
-    DELETE_BRANCH("delete branch"),
-    CREATE_TAG("create tag"),
-    DELETE_TAG("delete tag"),
-    CREATE_FILE("create file"),
-    MODIFY_FILE("modify file"),
-    DELETE_FILE("delete file"),
-    REPLACE_FILE("replace file"),
-    CREATE_A_MERGE_COMMIT("create a merge commit"),
-    SQUASH_AND_MERGE("squash and merge"),
-    REBASE_AND_MERGE("rebase and merge"),
-    CHERRY_PICK("cherry-pick"),
-    REVERT("revert")
+enum class TGitPushActionKind(val value: String, val alias: String) {
+    CLIENT_PUSH("client push", "client-push"),
+    CREATE_BRANCH("create branch", "create-branch"),
+    DELETE_BRANCH("delete branch", "delete-branch"),
+    CREATE_TAG("create tag", "create-tag"),
+    DELETE_TAG("delete tag", "delete-tag"),
+    CREATE_FILE("create file", "create-file"),
+    MODIFY_FILE("modify file", "modify-file"),
+    DELETE_FILE("delete file", "delete-file"),
+    REPLACE_FILE("replace file", "replace-file"),
+    CREATE_A_MERGE_COMMIT("create a merge commit", "create-a-merge-commit"),
+    SQUASH_AND_MERGE("squash and merge", "squash-and-merge"),
+    REBASE_AND_MERGE("rebase and merge", "rebase-and-merge"),
+    CHERRY_PICK("cherry-pick", "cherry-pick"),
+    REVERT("revert", "revert");
+
+    companion object {
+        fun getAlias(value: String): String? {
+            values().forEach {
+                if (it.value == value) {
+                    return it.alias
+                }
+            }
+            return null
+        }
+    }
 }
