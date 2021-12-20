@@ -114,7 +114,11 @@ object TriggerBuilder {
             excludeUsers = triggerOn.mr?.usersIgnore,
             excludeSourceBranchName = triggerOn.mr?.sourceBranchesIgnore?.joinToString(JOIN_SEPARATOR),
             block = false,
-            eventType = CodeEventType.MERGE_REQUEST
+            eventType = if (gitMergeRequestEvent.object_attributes.action == "merge") {
+                CodeEventType.MERGE_REQUEST_ACCEPT
+            } else {
+                CodeEventType.MERGE_REQUEST
+            }
         )
     }
 }

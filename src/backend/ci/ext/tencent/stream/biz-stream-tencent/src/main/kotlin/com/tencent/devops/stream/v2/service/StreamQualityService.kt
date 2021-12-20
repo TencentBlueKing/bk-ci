@@ -107,7 +107,8 @@ class StreamQualityService {
                                 interceptItem.indicatorName,
                                 actualValue,
                                 QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
-                                interceptItem.pass.toString()
+                                interceptItem.pass.toString(),
+                                interceptItem.logPrompt ?: ""
                             )
                         )
                         resultMap[elementCnName] = resultList
