@@ -27,8 +27,6 @@
 
 package com.tencent.devops.scm.utils
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-
 @Suppress("MaxLineLength")
 object QualityUtils {
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
@@ -40,28 +38,11 @@ object QualityUtils {
         }
 
         // 生成报表
-        val statusLine = when (status) {
-            "SUCCEED" -> {
-                "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
-            }
-            BuildStatus.QUALITY_CHECK_WAIT.name,
-            BuildStatus.QUALITY_CHECK_FAIL.name,
-            BuildStatus.QUALITY_CHECK_PASS.name -> {
-                "<td style=\"color:orange;border:none;font-weight: bold;padding-left:0;\">执行中</td>"
-            }
-            else -> {
-                "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
-            }
-        }
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
                 "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
-                "<td style=\"border:none;padding-right: 0;\">状态：</td>" +
-                statusLine +
                 "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
-                "<td style=\"border:none;padding-right: 0\">任务耗时：</td>" +
-                "<td style=\"border:none;padding-left:0;\">$timeCost</td>" +
                 "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")
@@ -77,7 +58,11 @@ object QualityUtils {
                 body.append("<tr>")
                 if (index == 0) body.append("<td>$elementName</td>") else body.append("<td></td>")
                 body.append("<td>${list[0]}</td>")
-                body.append("<td>${list[1]}</td>")
+                if (list[4].isNullOrBlank()) {
+                    body.append("<td>${list[1]}</td>")
+                } else {
+                    body.append("<td><a target='_blank' href='${list[4]}'>${list[1]}</a></td>")
+                }
                 body.append("<td>${list[2]}</td>")
                 if (list[3] == "true") {
                     body.append("<td style=\"color: #4CAF50; font-weight: bold;\">&nbsp; &radic; &nbsp;</td>")
