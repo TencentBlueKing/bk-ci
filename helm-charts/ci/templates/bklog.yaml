@@ -9,6 +9,7 @@ spec:
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
+    matchLabels:
       {{- if .Values.commonLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
@@ -35,6 +36,7 @@ spec:
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
+    matchLabels:
       {{- if .Values.commonLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 6 }}
       {{- end }}
