@@ -25,39 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.resources.container
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.container.OpContainerResource
+import com.tencent.devops.store.pojo.container.Container
+import com.tencent.devops.store.pojo.container.ContainerRequest
+import com.tencent.devops.store.service.container.ContainerService
+import org.springframework.beans.factory.annotation.Autowired
 
-object PropertyUtil {
+@RestResource
+class OpContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
+    OpContainerResource {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun update(id: String, pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.updatePipelineContainer(id, pipelineContainerRequest)
+    }
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun listAllContainers(): Result<List<Container>> {
+        return containerService.getAllPipelineContainer()
+    }
+
+    override fun getContainerById(id: String): Result<Container?> {
+        return containerService.getPipelineContainer(id)
+    }
+
+    override fun deleteContainerById(id: String): Result<Boolean> {
+        return containerService.deletePipelineContainer(id)
+    }
+
+    override fun add(pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.savePipelineContainer(pipelineContainerRequest)
     }
 }

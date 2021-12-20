@@ -25,39 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-object PropertyUtil {
-
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+interface OpStoreAuditConfService {
 
     /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
+     * 查询给定条件的审核范围记录
+     * @param storeName 审核组件名称
+     * @param storeType 审核组件类型（0：插件 1：模板）
+     * @param status 审核状态
+     * @param page 分页页数
+     * @param pageSize 分页每页记录条数
      */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
-    }
+    fun getAllAuditConf(
+        storeName: String?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<VisibleAuditInfo>>
+
+    /**
+     * 审核可见范围，根据记录ID修改相应的审核状态
+     * @param userId 审核人ID
+     * @param id 审核记录ID
+     * @param storeApproveRequest 审核信息对象，半酣审核状态和驳回原因
+     */
+    fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean>
+
+    /**
+     * 根据审核记录的ID删除一条审核记录
+     * @param id 审核记录的ID
+     */
+    fun deleteAuditConf(id: String): Result<Boolean>
 }

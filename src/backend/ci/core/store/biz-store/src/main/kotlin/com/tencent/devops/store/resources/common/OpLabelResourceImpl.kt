@@ -25,39 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpLabelResource
+import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.LabelRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.LabelService
+import org.springframework.beans.factory.annotation.Autowired
 
-object PropertyUtil {
+@RestResource
+class OpLabelResourceImpl @Autowired constructor(private val labelService: LabelService) :
+    OpLabelResource {
 
-    private val propertiesMap = ConcurrentHashMap<String, Properties>()
+    override fun add(labelType: StoreTypeEnum, labelRequest: LabelRequest): Result<Boolean> {
+        return labelService.saveLabel(labelRequest, labelType.type.toByte())
+    }
 
-    /**
-     * 获取配置项的值
-     * @param propertyKey 配置项KEY
-     * @param propertyFileName 配置文件名
-     * @return 配置项的值
-     */
-    fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
-        // 从缓存中获取配置项的值
-        var properties = propertiesMap[propertyFileName]
-        if (properties == null) {
-            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
-            val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
-            properties = Properties()
-            properties.load(fileInputStream)
-            // 将该配置文件的properties信息存入缓存
-            propertiesMap[propertyFileName] = properties
-        }
-        val propertyValue = properties[propertyKey]
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(propertyKey)
-            )
-        return propertyValue.toString()
+    override fun update(labelType: StoreTypeEnum, id: String, labelRequest: LabelRequest): Result<Boolean> {
+        return labelService.updateLabel(id, labelRequest, labelType.type.toByte())
+    }
+
+    override fun listAllLabels(labelType: StoreTypeEnum): Result<List<Label>?> {
+        return labelService.getAllLabel(labelType.type.toByte())
+    }
+
+    override fun getLabelById(id: String): Result<Label?> {
+        return labelService.getLabel(id)
+    }
+
+    override fun deleteLabelById(id: String): Result<Boolean> {
+        return labelService.deleteLabel(id)
     }
 }
