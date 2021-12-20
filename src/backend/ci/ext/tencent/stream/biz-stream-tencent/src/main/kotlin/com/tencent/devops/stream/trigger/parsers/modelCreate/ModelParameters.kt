@@ -294,6 +294,10 @@ object ModelParameters {
 
         val result = variables.toMutableMap()
         variables.forEach { (key, value) ->
+            // 不替换只读变量
+            if (value.readonly != null && value.readonly == true) {
+                return@forEach
+            }
             if (key in variablesOptionsKeys) {
                 result[key] = Variable(
                     value = pushOptions["$PUSH_OPTIONS_PREFIX$key"],
