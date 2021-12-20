@@ -35,6 +35,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -108,12 +109,19 @@ class StreamBasicSettingService @Autowired constructor(
             return false
         }
         if (!userId.isNullOrBlank()) {
-            val projectResult =
+            val userResult =
                 client.get(ServiceTxUserResource::class).get(userId)
-            if (projectResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+            if (userResult.isNotOk()) {
+                logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
+                // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
+                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+                if (userInfo != null) {
+                    setting.creatorBgName = userInfo.bgName
+                    setting.creatorDeptName = userInfo.deptName
+                    setting.creatorCenterName = userInfo.centerName
+                }
             } else {
-                val userInfo = projectResult.data!!
+                val userInfo = userResult.data!!
                 setting.creatorBgName = userInfo.bgName
                 setting.creatorDeptName = userInfo.deptName
                 setting.creatorCenterName = userInfo.centerName
@@ -136,6 +144,23 @@ class StreamBasicSettingService @Autowired constructor(
             nameWithNamespace = setting.nameWithNamespace,
             enableMrComment = enableMrComment
         )
+
+       // 增加修改project信息
+       if (!userId.isNullOrBlank()){
+           client.get(ServiceTxProjectResource::class).bindProjectOrganization(
+               userId = userId,
+               projectId = gitProjectId.toString(),
+               projectUpdateInfo = ProjectDeptInfo(
+                   bgId = ,
+                   bgName = ,
+                   deptId = ,
+                   deptName = ,
+                   centerId = ,
+                   centerName =
+               )
+           )
+       }
+
         return true
     }
 
