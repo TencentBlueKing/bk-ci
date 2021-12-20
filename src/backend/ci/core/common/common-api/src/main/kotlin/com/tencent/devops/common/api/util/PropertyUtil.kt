@@ -40,16 +40,18 @@ object PropertyUtil {
      * 获取配置项的值
      * @param propertyKey 配置项KEY
      * @param propertyFileName 配置文件名
+     * @return 配置项的值
      */
     fun getPropertyValue(propertyKey: String, propertyFileName: String): String {
+        // 从缓存中获取配置项的值
         var properties = propertiesMap[propertyFileName]
         if (properties == null) {
-            // 缓存中没有该配置文件则实时去加载
+            // 缓存中如果没有该配置文件的值则实时去加载配置文件去获取
             val fileInputStream = PropertyUtil::class.java.getResourceAsStream(propertyFileName)
             properties = Properties()
             properties.load(fileInputStream)
+            // 将该配置文件的properties信息存入缓存
             propertiesMap[propertyFileName] = properties
-            properties[propertyKey] as String
         }
         val propertyValue = properties[propertyKey]
             ?: throw ErrorCodeException(
