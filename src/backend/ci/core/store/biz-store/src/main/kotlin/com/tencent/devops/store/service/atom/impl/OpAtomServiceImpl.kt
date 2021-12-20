@@ -68,11 +68,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-/**
- * 插件OP业务逻辑类
- *
- * since: 2019-10-29
- */
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount")
 class OpAtomServiceImpl @Autowired constructor(
@@ -152,9 +147,7 @@ class OpAtomServiceImpl @Autowired constructor(
      * 根据id获取插件信息
      */
     override fun getPipelineAtom(id: String): Result<Atom?> {
-        logger.info("the id is :{}", id)
         val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, id)
-        logger.info("the pipelineAtomRecord is :{}", pipelineAtomRecord)
         return Result(
             if (pipelineAtomRecord == null) {
                 null
@@ -168,7 +161,7 @@ class OpAtomServiceImpl @Autowired constructor(
      * 根据插件代码和版本号获取插件信息
      */
     override fun getPipelineAtom(atomCode: String, version: String): Result<Atom?> {
-        logger.info("the atomCode is: $atomCode,version is:$version")
+        logger.info("getPipelineAtom atomCode: $atomCode,version:$version")
         val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return Result(
             if (pipelineAtomRecord == null) {

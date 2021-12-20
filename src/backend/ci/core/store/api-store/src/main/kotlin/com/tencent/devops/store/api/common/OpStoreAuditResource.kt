@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStoreAuditResource {
+
     @ApiOperation("获取所有审核记录")
     @GET
     @Path("/conf")

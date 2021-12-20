@@ -58,18 +58,18 @@ class OpTemplateResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<OpTemplateResp> {
         return opTemplateService.list(
-            userId,
-            templateName,
-            templateStatus,
-            templateType,
-            classifyCode,
-            category,
-            labelCode,
-            latestFlag,
-            sortType,
-            desc,
-            page,
-            pageSize
+            userId = userId,
+            templateName = templateName,
+            templateStatus = templateStatus,
+            templateType = templateType,
+            classifyCode = classifyCode,
+            category = category,
+            labelCode = labelCode,
+            latestFlag = latestFlag,
+            sortType = sortType,
+            desc = desc,
+            page = page,
+            pageSize = pageSize
         )
     }
 

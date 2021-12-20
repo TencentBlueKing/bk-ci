@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpMediaResource {
+
     @ApiOperation("提交媒体信息")
     @Path("/storeCodes/{storeCode}/types/{storeType}/media")
     @POST

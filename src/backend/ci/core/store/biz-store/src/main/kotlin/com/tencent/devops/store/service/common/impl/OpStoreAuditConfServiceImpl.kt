@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
@@ -41,7 +41,7 @@ import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.OpStoreAuditConfService
+import com.tencent.devops.store.service.common.OpStoreAuditConfService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,6 +51,7 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
     private val storeAuditConfDao: StoreAuditConfDao,
     private val dslContext: DSLContext
 ) : OpStoreAuditConfService {
+
     /**
      * 查询给定条件的审核范围记录
      * @param storeName 审核组件名称
@@ -128,11 +129,19 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
      * @param id 审核记录ID
      * @param storeApproveRequest 审核信息对象，半酣审核状态和驳回原因
      */
-    override fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean> {
+    override fun approveVisibleDept(
+        userId: String,
+        id: String,
+        storeApproveRequest: StoreApproveRequest
+    ): Result<Boolean> {
         val isExists = storeAuditConfDao.countDeptRel(dslContext, id)
-        if (isExists == 0)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id), false)
-
+        if (isExists == 0) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                data = false
+            )
+        }
         storeAuditConfDao.approveVisibleDept(dslContext, userId, id, storeApproveRequest)
         return Result(true)
     }

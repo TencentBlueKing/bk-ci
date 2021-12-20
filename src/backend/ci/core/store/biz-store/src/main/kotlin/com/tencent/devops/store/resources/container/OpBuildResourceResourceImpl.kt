@@ -27,34 +27,44 @@
 
 package com.tencent.devops.store.resources.container
 
+import com.tencent.devops.store.api.container.OpBuildResourceResource
+import com.tencent.devops.store.pojo.container.BuildResource
+import com.tencent.devops.store.pojo.container.BuildResourceRequest
+import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpContainerAppVersionResource
-import com.tencent.devops.store.pojo.app.ContainerAppVersion
-import com.tencent.devops.store.pojo.app.ContainerAppVersionCreate
-import com.tencent.devops.store.service.container.ContainerAppVersionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpContainerAppVersionResourceImpl @Autowired constructor(private val containerAppVersionService: ContainerAppVersionService)
-    : OpContainerAppVersionResource {
-    override fun addContainerAppVersion(containerAppVersionRequest: ContainerAppVersionCreate): Result<Boolean> {
-        return containerAppVersionService.saveContainerAppVersion(containerAppVersionRequest)
+class OpBuildResourceResourceImpl @Autowired constructor(private val buildResourceService: BuildResourceService) :
+    OpBuildResourceResource {
+
+    override fun add(buildResourceRequest: BuildResourceRequest): Result<Boolean> {
+        return buildResourceService.savePipelineBuildResource(
+            defaultFlag = buildResourceRequest.defaultFlag,
+            buildResourceCode = buildResourceRequest.buildResourceCode,
+            buildResourceName = buildResourceRequest.buildResourceName
+        )
     }
 
-    override fun deleteContainerAppVersionById(id: Int): Result<Boolean> {
-        return containerAppVersionService.deleteContainerAppVersion(id)
+    override fun update(id: String, buildResourceRequest: BuildResourceRequest): Result<Boolean> {
+        return buildResourceService.updatePipelineBuildResource(
+            id = id,
+            defaultFlag = buildResourceRequest.defaultFlag,
+            buildResourceCode = buildResourceRequest.buildResourceCode,
+            buildResourceName = buildResourceRequest.buildResourceName
+        )
     }
 
-    override fun updateContainerAppVersion(id: Int, containerAppVersionRequest: ContainerAppVersionCreate): Result<Boolean> {
-        return containerAppVersionService.updateContainerAppVersion(id, containerAppVersionRequest)
+    override fun listAllPipelineBuildResources(): Result<List<BuildResource>> {
+        return buildResourceService.getAllPipelineBuildResource()
     }
 
-    override fun listContainerAppVersionsByAppId(appId: Int): Result<List<ContainerAppVersion>> {
-        return containerAppVersionService.listByAppId(appId)
+    override fun getPipelineBuildResourceById(id: String): Result<BuildResource?> {
+        return buildResourceService.getPipelineBuildResource(id)
     }
 
-    override fun getContainerAppVersionById(id: Int): Result<ContainerAppVersion?> {
-        return containerAppVersionService.getContainerAppVersion(id)
+    override fun deletePipelineBuildResourceById(id: String): Result<Boolean> {
+        return buildResourceService.deletePipelineBuildResource(id)
     }
 }

@@ -58,6 +58,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
+@Suppress("LongParameterList", "ComplexMethod")
 class OpTemplateServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeTemplateDao: StoreTemplateDao,
@@ -85,8 +86,8 @@ class OpTemplateServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<OpTemplateResp> {
-        val categoryList = if (category.isNullOrEmpty()) listOf() else category?.split(",")
-        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+        val categoryList = if (category.isNullOrEmpty()) listOf() else category.split(",")
+        val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
         val count = storeTemplateDao.count(dslContext, templateName, templateStatus?.status?.toByte(),
             templateType?.type?.toByte(), classifyCode, categoryList, labelCodeList, latestFlag)
         val templates = storeTemplateDao.list(
@@ -104,6 +105,8 @@ class OpTemplateServiceImpl @Autowired constructor(
             val type = it["TEMPLATE_TYPE"] as Byte
             val templateId = it["ID"] as String
             val classifyId = it["CLASSIFY_ID"] as String
+            val createTime = it["CREATE_TIME"] as? LocalDateTime
+            val updateTime = it["UPDATE_TIME"] as? LocalDateTime
             ret.add(OpTemplateItem(
                 templateId = templateId,
                 templateName = it["TEMPLATE_NAME"] as String,
@@ -124,8 +127,8 @@ class OpTemplateServiceImpl @Autowired constructor(
                 pubDescription = if (it["PUB_DESCRIPTION"] != null) it["PUB_DESCRIPTION"] as String else "",
                 creator = if (it["CREATOR"] != null) it["CREATOR"] as String else "",
                 modifier = if (it["MODIFIER"] != null) it["MODIFIER"] as String else "",
-                createTime = if (it["CREATE_TIME"] != null) DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime) else "",
-                updateTime = if (it["UPDATE_TIME"] != null) DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime) else ""
+                createTime = if (createTime != null) DateTimeUtil.toDateTime(createTime) else "",
+                updateTime = if (updateTime != null) DateTimeUtil.toDateTime(updateTime) else ""
             ))
         }
 
@@ -144,14 +147,23 @@ class OpTemplateServiceImpl @Autowired constructor(
         logger.info("approveTemplate userId is :$userId,templateId is :$templateId,approveReq is :$approveReq")
         // 判断模版是否存在
         val template = marketTemplateDao.getTemplate(dslContext, templateId)
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateId))
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateId)
+            )
         val oldStatus = template.templateStatus
         if (oldStatus != TemplateStatusEnum.AUDITING.status.toByte()) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateId))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateId)
+            )
         }
         val approveResult = approveReq.result
         if (approveResult != PASS && approveResult != REJECT) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(approveResult))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(approveResult)
+            )
         }
         val templateStatus =
             if (approveResult == PASS) {
@@ -163,7 +175,14 @@ class OpTemplateServiceImpl @Autowired constructor(
         val templateStatusMsg = approveReq.message
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            templateReleaseService.handleTemplateRelease(context, userId, approveResult, template, templateStatus, templateStatusMsg)
+            templateReleaseService.handleTemplateRelease(
+                context = context,
+                userId = userId,
+                approveResult = approveResult,
+                template = template,
+                templateStatus = templateStatus,
+                templateStatusMsg = templateStatusMsg
+            )
         }
 
         // 发送通知消息

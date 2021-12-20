@@ -24,37 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.resources.common
 
-package com.tencent.devops.store.resources.container
-
-import com.tencent.devops.store.api.container.OpBuildResourceResource
-import com.tencent.devops.store.pojo.container.BuildResource
-import com.tencent.devops.store.pojo.container.BuildResourceRequest
-import com.tencent.devops.store.service.container.BuildResourceService
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreAuditResource
+import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.OpStoreAuditConfService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpBuildResourceResourceImpl @Autowired constructor(private val buildResourceService: BuildResourceService) :
-    OpBuildResourceResource {
-    override fun add(buildResourceRequest: BuildResourceRequest): Result<Boolean> {
-        return buildResourceService.savePipelineBuildResource(buildResourceRequest.defaultFlag, buildResourceRequest.buildResourceCode, buildResourceRequest.buildResourceName)
+class OpStoreAuditResourceImpl @Autowired constructor(
+    private val opStoreAuditConfService: OpStoreAuditConfService
+) : OpStoreAuditResource {
+
+    override fun approveVisibleDept(
+        userId: String,
+        id: String,
+        storeApproveRequest: StoreApproveRequest
+    ): Result<Boolean> {
+        return opStoreAuditConfService.approveVisibleDept(userId, id, storeApproveRequest)
     }
 
-    override fun update(id: String, buildResourceRequest: BuildResourceRequest): Result<Boolean> {
-        return buildResourceService.updatePipelineBuildResource(id, buildResourceRequest.defaultFlag, buildResourceRequest.buildResourceCode, buildResourceRequest.buildResourceName)
+    override fun getAllAuditConf(
+        userId: String,
+        storeName: String?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<VisibleAuditInfo>> {
+        return opStoreAuditConfService.getAllAuditConf(storeName, storeType, status, page, pageSize)
     }
 
-    override fun listAllPipelineBuildResources(): Result<List<BuildResource>> {
-        return buildResourceService.getAllPipelineBuildResource()
-    }
-
-    override fun getPipelineBuildResourceById(id: String): Result<BuildResource?> {
-        return buildResourceService.getPipelineBuildResource(id)
-    }
-
-    override fun deletePipelineBuildResourceById(id: String): Result<Boolean> {
-        return buildResourceService.deletePipelineBuildResource(id)
+    override fun deleteAuditConf(userId: String, id: String): Result<Boolean> {
+        return opStoreAuditConfService.deleteAuditConf(id)
     }
 }

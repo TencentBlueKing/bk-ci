@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpMediaResourceImpl @Autowired constructor(
     val storeMediaService: StoreMediaService
 ) : OpMediaResource {
+
     override fun createStoreMedia(
         userId: String,
         storeCode: String,

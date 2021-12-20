@@ -603,7 +603,7 @@ class QualityRuleCheckService @Autowired constructor(
                     .replace("##taskId##", taskId.toString())
                     .replace("##buildId##", buildId)
                     .replace("##detail##", record.detail!!)
-                "<a target='_blank' href='$fillDetailUrl'>查看详情</a>"
+                "<a target='_blank' href='/console$fillDetailUrl'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

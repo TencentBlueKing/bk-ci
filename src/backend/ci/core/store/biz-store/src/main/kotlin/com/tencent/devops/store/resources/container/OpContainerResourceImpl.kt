@@ -24,40 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.pojo.Page
+package com.tencent.devops.store.resources.container
+
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.OpStoreAuditResource
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.VisibleAuditInfo
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.OpStoreAuditConfService
+import com.tencent.devops.store.api.container.OpContainerResource
+import com.tencent.devops.store.pojo.container.Container
+import com.tencent.devops.store.pojo.container.ContainerRequest
+import com.tencent.devops.store.service.container.ContainerService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpStoreAuditResourceImpl @Autowired constructor(
-    private val opStoreAuditConfService: OpStoreAuditConfService
-) : OpStoreAuditResource {
+class OpContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
+    OpContainerResource {
 
-    override fun approveVisibleDept(userId: String, id: String, storeApproveRequest: StoreApproveRequest): Result<Boolean> {
-        return opStoreAuditConfService.approveVisibleDept(userId, id, storeApproveRequest)
+    override fun update(id: String, pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.updatePipelineContainer(id, pipelineContainerRequest)
     }
 
-    override fun getAllAuditConf(
-        userId: String,
-        storeName: String?,
-        storeType: StoreTypeEnum?,
-        status: DeptStatusEnum?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<VisibleAuditInfo>> {
-        return opStoreAuditConfService.getAllAuditConf(storeName, storeType, status, page, pageSize)
+    override fun listAllContainers(): Result<List<Container>> {
+        return containerService.getAllPipelineContainer()
     }
 
-    override fun deleteAuditConf(userId: String, id: String): Result<Boolean> {
-        return opStoreAuditConfService.deleteAuditConf(id)
+    override fun getContainerById(id: String): Result<Container?> {
+        return containerService.getPipelineContainer(id)
+    }
+
+    override fun deleteContainerById(id: String): Result<Boolean> {
+        return containerService.deletePipelineContainer(id)
+    }
+
+    override fun add(pipelineContainerRequest: ContainerRequest): Result<Boolean> {
+        return containerService.savePipelineContainer(pipelineContainerRequest)
     }
 }

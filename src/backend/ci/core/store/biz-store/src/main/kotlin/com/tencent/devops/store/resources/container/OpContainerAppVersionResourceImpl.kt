@@ -29,32 +29,37 @@ package com.tencent.devops.store.resources.container
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.container.OpContainerResource
-import com.tencent.devops.store.pojo.container.Container
-import com.tencent.devops.store.pojo.container.ContainerRequest
-import com.tencent.devops.store.service.container.ContainerService
+import com.tencent.devops.store.api.container.OpContainerAppVersionResource
+import com.tencent.devops.store.pojo.app.ContainerAppVersion
+import com.tencent.devops.store.pojo.app.ContainerAppVersionCreate
+import com.tencent.devops.store.service.container.ContainerAppVersionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpContainerResourceImpl @Autowired constructor(private val containerService: ContainerService) :
-    OpContainerResource {
-    override fun update(id: String, pipelineContainerRequest: ContainerRequest): Result<Boolean> {
-        return containerService.updatePipelineContainer(id, pipelineContainerRequest)
+class OpContainerAppVersionResourceImpl @Autowired constructor(
+    private val containerAppVersionService: ContainerAppVersionService
+) : OpContainerAppVersionResource {
+
+    override fun addContainerAppVersion(containerAppVersionRequest: ContainerAppVersionCreate): Result<Boolean> {
+        return containerAppVersionService.saveContainerAppVersion(containerAppVersionRequest)
     }
 
-    override fun listAllContainers(): Result<List<Container>> {
-        return containerService.getAllPipelineContainer()
+    override fun deleteContainerAppVersionById(id: Int): Result<Boolean> {
+        return containerAppVersionService.deleteContainerAppVersion(id)
     }
 
-    override fun getContainerById(id: String): Result<Container?> {
-        return containerService.getPipelineContainer(id)
+    override fun updateContainerAppVersion(
+        id: Int,
+        containerAppVersionRequest: ContainerAppVersionCreate
+    ): Result<Boolean> {
+        return containerAppVersionService.updateContainerAppVersion(id, containerAppVersionRequest)
     }
 
-    override fun deleteContainerById(id: String): Result<Boolean> {
-        return containerService.deletePipelineContainer(id)
+    override fun listContainerAppVersionsByAppId(appId: Int): Result<List<ContainerAppVersion>> {
+        return containerAppVersionService.listByAppId(appId)
     }
 
-    override fun add(pipelineContainerRequest: ContainerRequest): Result<Boolean> {
-        return containerService.savePipelineContainer(pipelineContainerRequest)
+    override fun getContainerAppVersionById(id: Int): Result<ContainerAppVersion?> {
+        return containerAppVersionService.getContainerAppVersion(id)
     }
 }

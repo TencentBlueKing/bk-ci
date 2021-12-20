@@ -74,7 +74,19 @@ class OpAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<Atom>?> {
-        return opAtomService.getOpPipelineAtoms(atomName, atomType, serviceScope, os, category, classifyId, atomStatus, sortType, desc, page, pageSize)
+        return opAtomService.getOpPipelineAtoms(
+            atomName = atomName,
+            atomType = atomType,
+            serviceScope = serviceScope,
+            os = os,
+            category = category,
+            classifyId = classifyId,
+            atomStatus = atomStatus,
+            sortType = sortType,
+            desc = desc,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getPipelineAtomById(id: String): Result<Atom?> {

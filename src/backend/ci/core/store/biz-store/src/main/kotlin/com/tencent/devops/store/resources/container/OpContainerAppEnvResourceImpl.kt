@@ -36,8 +36,9 @@ import com.tencent.devops.store.service.container.ContainerAppEnvService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpContainerAppEnvResourceImpl @Autowired constructor(private val containerAppEnvService: ContainerAppEnvService)
-    : OpContainerAppEnvResource {
+class OpContainerAppEnvResourceImpl @Autowired constructor(
+    private val containerAppEnvService: ContainerAppEnvService
+) : OpContainerAppEnvResource {
 
     override fun addContainerAppEnv(containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
         return containerAppEnvService.saveContainerAppEnv(containerAppEnvRequest)
