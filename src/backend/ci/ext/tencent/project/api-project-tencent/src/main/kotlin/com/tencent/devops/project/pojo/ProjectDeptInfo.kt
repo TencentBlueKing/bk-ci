@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.pojo
 
-data class ProjectDeptInfo (
+data class ProjectDeptInfo(
     val bgId: String,
     val bgName: String?,
     val deptId: String? = "0",
