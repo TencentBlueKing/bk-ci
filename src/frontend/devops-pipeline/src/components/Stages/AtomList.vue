@@ -5,7 +5,6 @@
                                                                            [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
-                                                                           'arrival-atom': atom.status,
                                                                            'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
                 @click.stop="showPropertyPanel(index)"
@@ -814,9 +813,15 @@
                 &.SKIP,
                 &.REVIEWING {
                     border-color: $warningColor;
-                    
                     .atom-icon {
                         color: $warningColor;
+                    }
+                    &:before {
+                        background: $warningColor;
+                    }
+                    &:after {
+                        border: 2px solid $warningColor;
+                        background: white;
                     }
                 }
                 &.FAILED,
@@ -828,13 +833,26 @@
                     .atom-icon {
                         color: $dangerColor;
                     }
+                    &:before {
+                        background: $dangerColor;
+                    }
+                    &:after {
+                        border: 2px solid $dangerColor;
+                        background: white;
+                    }
                 }
                 &.SUCCEED,
                 &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    
                     .atom-icon {
                         color: $successColor;
+                    }
+                    &:before {
+                        background: $successColor;
+                    }
+                    &:after {
+                        border: 2px solid $successColor;
+                        background: white;
                     }
                 }
                 &.PAUSE {
@@ -843,15 +861,13 @@
                     .atom-icon {
                         color: $pauseColor;
                     }
-                }
-            }
-            .arrival-atom {
-                &:before {
-                    background: $successColor;
-                }
-                &:after {
-                    border: 2px solid $successColor;
-                    background: white;
+                    &:before {
+                        background: $pauseColor;
+                    }
+                    &:after {
+                        border: 2px solid $pauseColor;
+                        background: white;
+                    }
                 }
             }
             .qualitt-next-atom {
