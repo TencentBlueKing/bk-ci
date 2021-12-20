@@ -108,7 +108,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
-        const val ENV_CONTEXT_KEY_PREFIX = "env."
+        const val ENV_CONTEXT_KEY_PREFIX = "envs."
     }
 
     /**
