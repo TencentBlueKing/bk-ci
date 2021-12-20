@@ -229,9 +229,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String,
         event: String? = null,
-        hookUrl: String? = null,
-        includePaths: String?,
-        excludePaths: String?
+        hookUrl: String? = null
     ) {
         logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
