@@ -25,23 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件基本信息")
-data class AtomBaseInfo(
-    @ApiModelProperty("插件Id", required = true)
+@ApiModel("插件发布请求报文")
+data class AtomReleaseRequest(
+    @ApiModelProperty("插件ID")
     val atomId: String,
-    @ApiModelProperty("插件代码", required = true)
+    @ApiModelProperty("插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+    @ApiModelProperty("插件版本号")
     val version: String,
-    @ApiModelProperty("插件状态", required = true)
-    val atomStatus: String,
-    @ApiModelProperty("插件开发语言", required = false)
-    val language: String? = null,
-    @ApiModelProperty("代码提交ID", required = false)
-    val commitId: String? = null
+    @ApiModelProperty("插件状态")
+    val atomStatus: Byte,
+    @ApiModelProperty("发布类型")
+    val releaseType: ReleaseTypeEnum,
+    @ApiModelProperty("代码库哈希ID")
+    val repositoryHashId: String? = null,
+    @ApiModelProperty("代码库分支")
+    val branch: String? = null
 )
