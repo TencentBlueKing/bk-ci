@@ -126,7 +126,7 @@ $ helm uninstall bkci
 
 |参数|描述|默认值 |
 |---|---|---|
-| `replicas`                       | Number of pod 1                                                                      | `2`                                                     |
+| `replicas`                       | Number of pod 1                                                                      | `1`                                                     |
 | `resources.limits`                   | The resources limits for containers                                                          | `{cpu:500m ,memory:1500Mi}`                                                    |
 | `resources.requests`                 | The requested resources for containers                                                       | `{cpu:100m ,memory:1000Mi}`                                                    |
 | `affinity`                           | Affinity for pod assignment (evaluated as a template)                                                                   | `{}`                           |

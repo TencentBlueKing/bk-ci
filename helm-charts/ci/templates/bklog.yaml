@@ -22,7 +22,7 @@ spec:
     pattern: '^[0-2][0-9][0-9][0-9].[0-1][0-9].[0-3][0-9]'
     maxLines: 200
     timeout: '2s'
-  ext_meta:
+  extMeta:
     logSourceType: "file"
 ---
 # Gateway Access Log
@@ -44,7 +44,7 @@ spec:
   path:
     - /data/logs/nginx/devops.access.*.log
   encoding: 'utf-8'
-  ext_meta:
+  extMeta:
     logSourceType: "file"
 # Gateway Error Log
 apiVersion: bk.tencent.com/v1alpha1
@@ -66,6 +66,6 @@ spec:
   path:
     - /data/logs/nginx/devops.error.log
   encoding: 'utf-8'
-  ext_meta:
+  extMeta:
     logSourceType: "file"
 {{- end }}
