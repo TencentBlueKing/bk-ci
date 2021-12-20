@@ -730,7 +730,13 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?
     ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(serviceScope, a, os, category, classifyId)
+        val conditions = setQueryAtomBaseCondition(
+            serviceScope = serviceScope,
+            a = a,
+            os = os,
+            category = category,
+            classifyId = classifyId
+        )
         conditions.add(
             a.ATOM_STATUS.`in`(
                 listOf(

@@ -1621,4 +1621,45 @@ class GitService @Autowired constructor(
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
         }
     }
+
+    fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tags")
+        setToken(tokenType, url, token)
+        val params = mutableMapOf<String, Any?>()
+        params["id"] = repoName
+        params["tag_name"] = tagName
+        params["ref"] = ref
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(params)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("createGitTag response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val message = dataMap["message"]
+            if (!StringUtils.isEmpty(message)) {
+                val validateResult: Result<String?> =
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
+                    )
+                logger.info("createGitTag validateResult>> $validateResult")
+
+                return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+            }
+            return Result(true)
+        }
+    }
 }
