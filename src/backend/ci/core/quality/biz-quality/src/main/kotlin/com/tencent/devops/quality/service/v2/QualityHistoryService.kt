@@ -232,7 +232,7 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.associateBy { it.ruleId }?.values.map {
+        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.distinctBy { it.ruleId }.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
