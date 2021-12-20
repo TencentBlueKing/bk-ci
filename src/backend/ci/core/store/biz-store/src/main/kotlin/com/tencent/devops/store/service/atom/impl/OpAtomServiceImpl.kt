@@ -40,10 +40,11 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -51,18 +52,17 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
-import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -76,10 +76,10 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomFeatureDao: MarketAtomFeatureDao,
-    private val storeReleaseDao: StoreReleaseDao,
+    private val marketAtomVersionLogDao: MarketAtomVersionLogDao,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
-    private val marketAtomCommonService: MarketAtomCommonService,
+    private val atomReleaseService: AtomReleaseService,
     private val storeWebsocketService: StoreWebsocketService,
     private val redisOperation: RedisOperation
 ) : OpAtomService {
@@ -250,69 +250,60 @@ class OpAtomServiceImpl @Autowired constructor(
                 arrayOf(approveReq.result)
             )
         }
-        val creator = atom.creator
         val atomCode = atom.atomCode
+        val passFlag = approveReq.result == PASS
         val atomStatus =
-            if (approveReq.result == PASS) {
+            if (passFlag) {
                 AtomStatusEnum.RELEASED.status.toByte()
             } else {
                 AtomStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val type = if (approveReq.result == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
-
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            val latestFlag = approveReq.result == PASS
-            var pubTime: LocalDateTime? = null
-            if (latestFlag) {
-                pubTime = LocalDateTime.now()
-                // 清空旧版本LATEST_FLAG
-                marketAtomDao.cleanLatestFlag(context, approveReq.atomCode)
-                // 记录发布信息
-                storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
-                    userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM,
-                        latestUpgrader = creator,
-                        latestUpgradeTime = pubTime
-                    )
-                )
-                // 处理插件缓存
-                marketAtomCommonService.handleAtomCache(
+        val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
+        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+            // 历史大版本下的小版本更新不把latestFlag置为true
+            null
+        } else {
+            approveReq.result == PASS
+        }
+        if (passFlag) {
+            atomReleaseService.handleAtomRelease(
+                userId = userId,
+                releaseFlag = true,
+                atomReleaseRequest = AtomReleaseRequest(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    releaseFlag = true
+                    atomStatus = atom.atomStatus,
+                    releaseType = releaseType,
+                    repositoryHashId = atom.repositoryHashId,
+                    branch = atom.branch
                 )
-            }
-
-            // 入库信息，并设置当前版本的LATEST_FLAG
-            marketAtomDao.approveAtomFromOp(
-                dslContext = context,
-                userId = userId,
-                atomId = atomId,
-                atomStatus = atomStatus,
-                approveReq = approveReq,
-                latestFlag = latestFlag,
-                pubTime = pubTime
             )
-
-            // 更新默认插件缓存
-            if (approveReq.defaultFlag) {
-                redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
-            } else {
-                redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
-            }
-
+        } else {
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
+            // 发送通知消息
+            atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_REJECT)
+        }
+        // 入库信息，并设置当前版本的LATEST_FLAG
+        marketAtomDao.approveAtomFromOp(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomStatus = atomStatus,
+            approveReq = approveReq,
+            latestFlag = latestFlag,
+            pubTime = LocalDateTime.now()
+        )
+        // 更新默认插件缓存
+        if (approveReq.defaultFlag) {
+            redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+        } else {
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
         }
         // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
         storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
-        // 发送通知消息
-        atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, type)
         return Result(true)
     }
 }
