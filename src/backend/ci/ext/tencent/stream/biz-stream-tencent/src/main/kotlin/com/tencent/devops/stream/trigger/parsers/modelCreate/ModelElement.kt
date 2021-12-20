@@ -218,6 +218,10 @@ class ModelElement @Autowired constructor(
                     inputMap["pullType"] = "TAG"
                     inputMap["refName"] = event.branch
                 }
+                TGitObjectKind.PUSH.value -> {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
                 TGitObjectKind.MANUAL.value -> {
                     if (event.commitId.isNotBlank()) {
                         inputMap["pullType"] = "COMMIT_ID"
