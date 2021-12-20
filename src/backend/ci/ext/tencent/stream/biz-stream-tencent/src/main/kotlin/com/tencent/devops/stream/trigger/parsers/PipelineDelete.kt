@@ -161,8 +161,8 @@ class PipelineDelete @Autowired constructor(
             )
 
             var checkFileEmpty = true
-            if (null != filePath){
-                val  fileList =  scmService.getFileTreeFromGitWithDefaultBranch(
+            if (null != filePath) {
+                val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
                     gitToken = gitToken,
                     gitProjectId = gitRequestEvent.gitProjectId,
                     filePath = filePath
@@ -173,11 +173,10 @@ class PipelineDelete @Autowired constructor(
                         checkFileEmpty = false
                         return@forEach
                     }
-
                 }
             }
-
-            if (checkFileEmpty && !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
+            if (checkFileEmpty &&
+                !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 processClient.delete(
