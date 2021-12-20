@@ -161,11 +161,11 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     // 更新项目信息
-    fun updateProjectInfo(userId: String, projectId: Long, userDeptDetail: UserDeptDetail ) {
+    fun updateProjectInfo(userId: String, projectId: Long, userDeptDetail: UserDeptDetail) {
         client.get(ServiceTxProjectResource::class).bindProjectOrganization(
             userId = userId,
-            projectId = projectId,
-            projectUpdateInfo = ProjectDeptInfo(
+            projectCode = projectId.toString(),
+            projectDeptInfo = ProjectDeptInfo(
                 bgId = userDeptDetail.bgId,
                 bgName = userDeptDetail.bgName,
                 deptId = userDeptDetail.deptId,
@@ -174,8 +174,8 @@ class StreamBasicSettingService @Autowired constructor(
                 centerName = userDeptDetail.centerName
             )
         )
-
     }
+
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
         streamBasicSettingDao.updateOauthSetting(
             dslContext = dslContext,
