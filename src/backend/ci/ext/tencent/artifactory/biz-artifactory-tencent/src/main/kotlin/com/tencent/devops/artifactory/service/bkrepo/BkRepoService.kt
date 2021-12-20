@@ -648,7 +648,6 @@ class BkRepoService @Autowired constructor(
         logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             creatorId = creatorId,
-            userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = fullPath,
@@ -673,7 +672,6 @@ class BkRepoService @Autowired constructor(
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             creatorId = userId,
-            userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = path,

@@ -328,7 +328,6 @@ open class BkRepoDownloadService @Autowired constructor(
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
                 creatorId = accessUserId,
-                userId = accessUserId,
                 projectId = targetProjectId,
                 repoName = repoName,
                 fullPath = it.fullPath,

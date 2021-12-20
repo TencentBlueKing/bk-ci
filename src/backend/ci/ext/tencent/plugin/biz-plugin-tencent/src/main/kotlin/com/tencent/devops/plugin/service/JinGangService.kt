@@ -237,7 +237,6 @@ class JinGangService @Autowired constructor(
             .data?.get(pipelineId) ?: throw RuntimeException("no pipeline name found for $pipelineId")
         val shareUri = bkRepoClient.createShareUri(
             userId,
-            userId,
             projectId,
             if (isCustom) "custom" else "pipeline",
             jfrogFile.fullPath,

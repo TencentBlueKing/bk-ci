@@ -830,7 +830,6 @@ class BkRepoClient constructor(
 
     fun createShareUri(
         creatorId: String,
-        userId: String,
         projectId: String,
         repoName: String,
         fullPath: String,
@@ -839,7 +838,7 @@ class BkRepoClient constructor(
         timeoutInSeconds: Long
     ): String {
         logger.info(
-            "createShareUri, creatorId: $creatorId,userId:$userId, projectId: $projectId, repoName: $repoName, " +
+            "createShareUri, creatorId: $creatorId, projectId: $projectId, repoName: $repoName, " +
                     "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
                     "timeoutInSeconds: $timeoutInSeconds"
         )
