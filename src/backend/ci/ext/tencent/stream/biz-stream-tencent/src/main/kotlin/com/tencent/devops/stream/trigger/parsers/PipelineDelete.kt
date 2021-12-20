@@ -160,22 +160,16 @@ class PipelineDelete @Autowired constructor(
                 gitRequestEvent.branch
             )
 
-            var checkFileEmpty = true
-            if (null != filePath) {
-                val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
-                    gitToken = gitToken,
-                    gitProjectId = gitRequestEvent.gitProjectId,
-                    filePath = filePath
-                )
-
-                fileList.forEach {
-                    if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {
-                        checkFileEmpty = false
-                        return@forEach
-                    }
-                }
+            val isFileEmpty = if (null != filePath) {
+                checkFileEmpty(
+                     gitToken = gitToken,
+                     gitProjectId = gitRequestEvent.gitProjectId,
+                     filePath = filePath
+                 )
+            } else {
+                true
             }
-            if (checkFileEmpty &&
+            if (isFileEmpty &&
                 !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
@@ -189,6 +183,25 @@ class PipelineDelete @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    private fun checkFileEmpty(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ):Boolean {
+        val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
+            gitToken = gitToken,
+            gitProjectId = gitProjectId,
+            filePath = filePath
+        )
+
+        fileList.forEach {
+            if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {
+                return false
+            }
+        }
+        return true
     }
 
     private fun isCiFile(name: String): Boolean {
