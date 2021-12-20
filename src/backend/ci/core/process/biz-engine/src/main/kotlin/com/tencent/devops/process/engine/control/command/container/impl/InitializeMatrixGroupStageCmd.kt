@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -40,6 +41,8 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -178,152 +181,164 @@ class InitializeMatrixGroupStageCmd(
         val contextCaseList: List<Map<String, String>>
         val jobControlOption: JobControlOption
 
-        // 每一种上下文组合都是一个新容器
-        if (modelContainer is VMBuildContainer) {
+            // 每一种上下文组合都是一个新容器
+        when (modelContainer) {
+            is VMBuildContainer -> {
 
-            jobControlOption = modelContainer.jobControlOption!!.copy(
-                dependOnType = null,
-                dependOnId = null,
-                dependOnName = null,
-                dependOnContainerId2JobIds = null
-            )
-            matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-            matrixConfig = matrixOption.convertMatrixConfig(variables)
-            contextCaseList = matrixConfig.getAllCombinations()
-
-            if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
-                throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
-                    "the limit($MATRIX_CASE_MAX_COUNT)")
-            }
-
-            contextCaseList.forEach { contextCase ->
-
-                // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
-                val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
-
-                // 对自定义构建环境的做特殊解析
-                // customDispatchType决定customBaseOS是否计算，请勿填充默认值
-                val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
-                    dispatchTypeParser.parseInfo(self, allContext)
-                }
-                val customDispatchType = parsedInfo?.dispatchType
-                val customBaseOS = parsedInfo?.baseOS
-                val customBuildEnv = parsedInfo?.buildEnv
-
-                val newSeq = context.containerSeq++
-                val innerSeq = context.innerSeq++
-
-                // 刷新所有插件的ID，并生成对应的纯状态插件
-                val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
-                val newContainer = VMBuildContainer(
-                    name = modelContainer.name,
-                    id = newSeq.toString(),
-                    containerId = newSeq.toString(),
-                    containerHashId = modelContainerIdGenerator.getNextId(),
-                    jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
-                    matrixGroupId = matrixGroupId,
-                    matrixContext = contextCase,
-                    elements = modelContainer.elements,
-                    canRetry = modelContainer.canRetry,
-                    enableExternal = modelContainer.enableExternal,
-                    jobControlOption = jobControlOption,
-                    mutexGroup = modelContainer.mutexGroup,
-                    executeCount = context.executeCount,
-                    containPostTaskFlag = modelContainer.containPostTaskFlag,
-                    customBuildEnv = allContext,
-                    baseOS = customBaseOS ?: modelContainer.baseOS,
-                    vmNames = modelContainer.vmNames,
-                    dockerBuildVersion = modelContainer.dockerBuildVersion,
-                    dispatchType = customDispatchType ?: modelContainer.dispatchType,
-                    buildEnv = customBuildEnv ?: modelContainer.buildEnv,
-                    thirdPartyAgentId = modelContainer.thirdPartyAgentId,
-                    thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId,
-                    thirdPartyWorkspace = modelContainer.thirdPartyWorkspace
+                jobControlOption = modelContainer.jobControlOption!!.copy(
+                    dependOnType = null,
+                    dependOnId = null,
+                    dependOnName = null,
+                    dependOnContainerId2JobIds = null
                 )
+                matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
+                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                contextCaseList = matrixConfig.getAllCombinations()
 
-                groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    container = newContainer,
-                    stage = modelStage,
-                    context = context,
-                    buildTaskList = buildTaskList,
-                    jobControlOption = jobControlOption,
-                    matrixGroupId = matrixGroupId
-                ))
+                if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
+                    throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
+                        "the limit($MATRIX_CASE_MAX_COUNT)")
+                }
 
-                // 如为空就初始化，如有元素就直接追加
-                if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
-                        elements = statusElements
+                contextCaseList.forEach { contextCase ->
+
+                    // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
+                    val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+
+                    // 对自定义构建环境的做特殊解析
+                    // customDispatchType决定customBaseOS是否计算，请勿填充默认值
+                    val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
+                        dispatchTypeParser.parseInfo(self, allContext)
+                    }
+                    val customDispatchType = parsedInfo?.dispatchType
+                    val customBaseOS = parsedInfo?.baseOS
+                    val customBuildEnv = parsedInfo?.buildEnv
+
+                    val newSeq = context.containerSeq++
+                    val innerSeq = context.innerSeq++
+
+                    // 刷新所有插件的ID，并生成对应的纯状态插件
+                    val postElementToParent = mutableMapOf<String/*子插件ID*/, String/*父插件ID*/>()
+                    val statusElements = generateSampleStatusElements(
+                        modelContainer.elements, context.executeCount, postElementToParent
+                    )
+                    val newContainer = VMBuildContainer(
+                        name = EnvUtils.parseEnv(modelContainer.name, allContext),
+                        id = newSeq.toString(),
+                        containerId = newSeq.toString(),
+                        containerHashId = modelContainerIdGenerator.getNextId(),
+                        jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
+                        matrixGroupId = matrixGroupId,
+                        matrixContext = contextCase,
+                        elements = modelContainer.elements,
+                        canRetry = modelContainer.canRetry,
+                        enableExternal = modelContainer.enableExternal,
+                        jobControlOption = jobControlOption,
+                        mutexGroup = modelContainer.mutexGroup,
+                        executeCount = context.executeCount,
+                        containPostTaskFlag = modelContainer.containPostTaskFlag,
+                        customBuildEnv = allContext,
+                        baseOS = customBaseOS ?: modelContainer.baseOS,
+                        vmNames = modelContainer.vmNames,
+                        dockerBuildVersion = modelContainer.dockerBuildVersion,
+                        dispatchType = customDispatchType ?: modelContainer.dispatchType,
+                        buildEnv = customBuildEnv ?: modelContainer.buildEnv,
+                        thirdPartyAgentId = modelContainer.thirdPartyAgentId,
+                        thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId,
+                        thirdPartyWorkspace = modelContainer.thirdPartyWorkspace
+                    )
+
+                    groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        container = newContainer,
+                        stage = modelStage,
+                        context = context,
+                        buildTaskList = buildTaskList,
+                        jobControlOption = jobControlOption,
+                        matrixGroupId = matrixGroupId,
+                        postElementToParent = postElementToParent
                     ))
-                } else {
-                    modelContainer.groupContainers!!.add(newContainer.copy(
-                        elements = statusElements
-                    ))
+
+                    // 如为空就初始化，如有元素就直接追加
+                    if (modelContainer.groupContainers.isNullOrEmpty()) {
+                        modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                            elements = statusElements
+                        ))
+                    } else {
+                        modelContainer.groupContainers!!.add(newContainer.copy(
+                            elements = statusElements
+                        ))
+                    }
                 }
             }
-        } else if (modelContainer is NormalContainer) {
+            is NormalContainer -> {
 
-            jobControlOption = modelContainer.jobControlOption!!.copy(
-                dependOnType = null,
-                dependOnId = null,
-                dependOnName = null,
-                dependOnContainerId2JobIds = null
-            )
-            matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-            matrixConfig = matrixOption.convertMatrixConfig(variables)
-            contextCaseList = matrixConfig.getAllCombinations()
-
-            contextCaseList.forEach { contextCase ->
-
-                // 刷新所有插件的ID，并生成对应的纯状态插件
-                val newSeq = context.containerSeq++
-                val innerSeq = context.innerSeq++
-                val statusElements = generateSampleStatusElements(modelContainer.elements, context.executeCount)
-                val newContainer = NormalContainer(
-                    name = modelContainer.name,
-                    id = newSeq.toString(),
-                    containerId = newSeq.toString(),
-                    containerHashId = modelContainerIdGenerator.getNextId(),
-                    jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
-                    matrixGroupId = matrixGroupId,
-                    matrixContext = contextCase,
-                    elements = modelContainer.elements,
-                    canRetry = modelContainer.canRetry,
-                    jobControlOption = jobControlOption,
-                    mutexGroup = modelContainer.mutexGroup,
-                    executeCount = context.executeCount,
-                    containPostTaskFlag = modelContainer.containPostTaskFlag
+                jobControlOption = modelContainer.jobControlOption!!.copy(
+                    dependOnType = null,
+                    dependOnId = null,
+                    dependOnName = null,
+                    dependOnContainerId2JobIds = null
                 )
+                matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
+                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                contextCaseList = matrixConfig.getAllCombinations()
 
-                groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    container = newContainer,
-                    stage = modelStage,
-                    context = context,
-                    buildTaskList = buildTaskList,
-                    jobControlOption = jobControlOption,
-                    matrixGroupId = matrixGroupId
-                ))
+                contextCaseList.forEach { contextCase ->
 
-                // 如为空就初始化，如有元素就直接追加
-                if (modelContainer.groupContainers.isNullOrEmpty()) {
-                    modelContainer.groupContainers = mutableListOf(newContainer.copy(
-                        elements = statusElements
+                    // 刷新所有插件的ID，并生成对应的纯状态插件
+                    val newSeq = context.containerSeq++
+                    val innerSeq = context.innerSeq++
+                    val postElementToParent = mutableMapOf<String/*子插件ID*/, String/*父插件ID*/>()
+                    val statusElements = generateSampleStatusElements(
+                        modelContainer.elements, context.executeCount, postElementToParent
+                    )
+                    val newContainer = NormalContainer(
+                        name = EnvUtils.parseEnv(modelContainer.name, contextCase),
+                        id = newSeq.toString(),
+                        containerId = newSeq.toString(),
+                        containerHashId = modelContainerIdGenerator.getNextId(),
+                        jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
+                        matrixGroupId = matrixGroupId,
+                        matrixContext = contextCase,
+                        elements = modelContainer.elements,
+                        canRetry = modelContainer.canRetry,
+                        jobControlOption = jobControlOption,
+                        mutexGroup = modelContainer.mutexGroup,
+                        executeCount = context.executeCount,
+                        containPostTaskFlag = modelContainer.containPostTaskFlag
+                    )
+
+                    groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        container = newContainer,
+                        stage = modelStage,
+                        context = context,
+                        buildTaskList = buildTaskList,
+                        jobControlOption = jobControlOption,
+                        matrixGroupId = matrixGroupId,
+                        postElementToParent = postElementToParent
                     ))
-                } else {
-                    modelContainer.groupContainers!!.add(newContainer.copy(
-                        elements = statusElements
-                    ))
+
+                    // 如为空就初始化，如有元素就直接追加
+                    if (modelContainer.groupContainers.isNullOrEmpty()) {
+                        modelContainer.groupContainers = mutableListOf(newContainer.copy(
+                            elements = statusElements
+                        ))
+                    } else {
+                        modelContainer.groupContainers!!.add(newContainer.copy(
+                            elements = statusElements
+                        ))
+                    }
                 }
             }
-        } else {
-            throw InvalidParamException("matrix(${parentContainer.containerId}) with " +
-                "type(${modelContainer.getClassType()}) is invalid")
+            else -> {
+                throw InvalidParamException("matrix(${parentContainer.containerId}) with " +
+                    "type(${modelContainer.getClassType()}) is invalid")
+            }
         }
 
         // 输出结果信息到矩阵的构建日志中
@@ -384,16 +399,35 @@ class InitializeMatrixGroupStageCmd(
         return buildContainerList.size
     }
 
-    private fun generateSampleStatusElements(elements: List<Element>, executeCount: Int): List<MatrixStatusElement> {
-        return elements.map {
+    private fun generateSampleStatusElements(
+        elements: List<Element>,
+        executeCount: Int,
+        postElementToParent: MutableMap<String, String>
+    ): List<MatrixStatusElement> {
+        return elements.map { e ->
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
-            it.id = modelTaskIdGenerator.getNextId()
-            it.canRetry = false
+            val newTaskId = modelTaskIdGenerator.getNextId()
+            e.id = newTaskId
+            e.canRetry = false
+            // 将该插件对应的父插件关系存入map
+            e.additionalOptions?.elementPostInfo?.let { info ->
+                postElementToParent[newTaskId] = info.parentElementId
+            }
+            val (interceptTask, interceptTaskName) = if (e is QualityGateInElement) {
+                Pair(e.interceptTask, e.interceptTaskName)
+            } else if (e is QualityGateOutElement) {
+                Pair(e.interceptTask, e.interceptTaskName)
+            } else {
+                Pair(null, null)
+            }
+
             MatrixStatusElement(
-                name = it.name,
-                id = it.id,
+                name = e.name,
+                id = e.id,
                 executeCount = executeCount,
-                originClassType = it.getClassType()
+                originClassType = e.getClassType(),
+                interceptTask = interceptTask,
+                interceptTaskName = interceptTaskName
             )
         }
     }
