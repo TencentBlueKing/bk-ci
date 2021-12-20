@@ -543,11 +543,13 @@ open class MarketAtomTask : ITask() {
         var fileIdcGateway = CommonEnv.fileIdcGateway
         if (fileDevnetGateway == null && fileIdcGateway == null) {
             val fileGatewayInfo = ArtifactoryBuildResourceApi().getFileGatewayInfo()
+            logger.info("fileGatewayInfo: $fileGatewayInfo")
             fileDevnetGateway = fileGatewayInfo?.fileDevnetGateway
             CommonEnv.fileDevnetGateway = fileDevnetGateway
             fileIdcGateway = fileGatewayInfo?.fileIdcGateway
             CommonEnv.fileIdcGateway = fileIdcGateway
         }
+        logger.info("fileGateway: ${CommonEnv.fileDevnetGateway}, ${CommonEnv.fileIdcGateway}")
         return (if (vmBuildEnvFlag) CommonEnv.fileDevnetGateway else CommonEnv.fileIdcGateway) ?: ""
     }
 
