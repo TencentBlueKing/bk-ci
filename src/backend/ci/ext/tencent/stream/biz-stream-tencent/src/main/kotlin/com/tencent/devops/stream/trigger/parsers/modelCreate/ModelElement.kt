@@ -207,36 +207,7 @@ class ModelElement @Autowired constructor(
 
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
-                gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
-            }
-
-            when (event.objectKind) {
-                TGitObjectKind.MERGE_REQUEST.value ->
-                    inputMap["pullType"] = "BRANCH"
-                TGitObjectKind.TAG_PUSH.value -> {
-                    inputMap["pullType"] = "TAG"
-                    inputMap["refName"] = event.branch
-                }
-                TGitObjectKind.MANUAL.value -> {
-                    if (event.commitId.isNotBlank()) {
-                        inputMap["pullType"] = "COMMIT_ID"
-                        inputMap["refName"] = event.commitId
-                    } else {
-                        inputMap["pullType"] = "BRANCH"
-                        inputMap["refName"] = event.branch
-                    }
-                }
-                // 定时触发根据传入的分支参数触发
-                TGitObjectKind.SCHEDULE.value -> {
-                    inputMap["pullType"] = "BRANCH"
-                    inputMap["refName"] = event.branch
-                }
-                else -> {
-                    inputMap["pullType"] = "COMMIT_ID"
-                    inputMap["refName"] = event.commitId
-                }
-            }
+            makeCheckoutSelf(inputMap, gitBasicSetting, event)
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
         }
@@ -260,6 +231,47 @@ class ModelElement @Autowired constructor(
             version = "1.*",
             data = data
         )
+    }
+
+    private fun makeCheckoutSelf(
+        inputMap: MutableMap<String, Any?>,
+        gitBasicSetting: GitCIBasicSetting,
+        event: GitRequestEvent
+    ) {
+        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
+            gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
+        }
+
+        when (event.objectKind) {
+            TGitObjectKind.MERGE_REQUEST.value ->
+                inputMap["pullType"] = "BRANCH"
+            TGitObjectKind.TAG_PUSH.value -> {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.PUSH.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.MANUAL.value -> {
+                if (event.commitId.isNotBlank()) {
+                    inputMap["pullType"] = "COMMIT_ID"
+                    inputMap["refName"] = event.commitId
+                } else {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
+            }
+            // 定时触发根据传入的分支参数触发
+            TGitObjectKind.SCHEDULE.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            else -> {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
+        }
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {

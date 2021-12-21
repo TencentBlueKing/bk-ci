@@ -25,10 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
-
-data class ProjectOrgInfo(
-    val bgId: String,
-    val deptId: String?,
-    val centerId: String?
-)
+dependencies {
+    api(project(":core:buildless:biz-buildless"))
+}

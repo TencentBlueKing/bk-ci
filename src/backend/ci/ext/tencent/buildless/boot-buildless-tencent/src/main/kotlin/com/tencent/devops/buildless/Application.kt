@@ -25,10 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.buildless
 
-data class ProjectOrgInfo(
-    val bgId: String,
-    val deptId: String?,
-    val centerId: String?
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@ComponentScan(
+    "com.tencent.devops.buildless"
 )
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
+}

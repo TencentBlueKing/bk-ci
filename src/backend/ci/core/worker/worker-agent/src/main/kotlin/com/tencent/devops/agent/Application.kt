@@ -137,7 +137,7 @@ private fun waitBuildLessJobStart() {
                 startFlag = doResponse(resp)
             }
         } catch (e: Exception) {
-            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n${e.stackTrace}")
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n$e")
         }
 
         if (!startFlag) {
