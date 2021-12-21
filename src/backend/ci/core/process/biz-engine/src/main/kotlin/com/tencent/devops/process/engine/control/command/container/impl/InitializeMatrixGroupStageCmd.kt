@@ -113,6 +113,7 @@ class InitializeMatrixGroupStageCmd(
                 jobId = parentContainer.containerHashId,
                 executeCount = commandContext.executeCount
             )
+            commandContext.buildStatus = BuildStatus.RUNNING
             generateMatrixGroup(commandContext, parentContainer)
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
@@ -132,8 +133,6 @@ class InitializeMatrixGroupStageCmd(
             "matrix(${parentContainer.containerId})|newContainerCount=$count")
 
         if (count > 0) {
-            commandContext.buildStatus = BuildStatus.RUNNING
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
             commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
         } else {
             commandContext.buildStatus = BuildStatus.FAILED
