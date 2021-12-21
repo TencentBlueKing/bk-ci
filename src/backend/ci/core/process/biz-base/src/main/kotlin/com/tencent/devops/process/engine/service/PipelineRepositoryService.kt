@@ -261,9 +261,7 @@ class PipelineRepositoryService constructor(
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
-        if (c.containerId.isNullOrBlank()) {
-            c.containerId = c.id
-        }
+        c.containerId = c.id
         if (c.containerHashId.isNullOrBlank()) {
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
@@ -374,9 +372,7 @@ class PipelineRepositoryService constructor(
 
             // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
             c.id = containerSeqId.get().toString()
-            if (c.containerId.isNullOrBlank()) {
-                c.containerId = c.id
-            }
+            c.containerId = c.id
             if (c.containerHashId.isNullOrBlank()) {
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
