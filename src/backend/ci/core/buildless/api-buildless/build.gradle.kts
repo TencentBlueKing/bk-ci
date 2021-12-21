@@ -25,8 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:dispatch-docker:api-dispatch-docker"))
+}
 
-data class DockerHostInfo(
-    val routeKey: String
-)
+plugins {
+    `task-deploy-to-maven`
+}

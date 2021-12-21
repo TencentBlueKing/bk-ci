@@ -257,6 +257,10 @@ class BuildCancelControl @Autowired constructor(
                     buildStatus = switchedStatus,
                     executeCount = executeCount
                 )
+                // 释放互斥锁
+                unlockMutexGroup(variables = variables, container = container,
+                    buildId = event.buildId, projectId = event.projectId, stageId = stageId
+                )
                 // 构建机关机
                 if (container is VMBuildContainer) {
                     container.shutdown(event = event, executeCount = executeCount)
