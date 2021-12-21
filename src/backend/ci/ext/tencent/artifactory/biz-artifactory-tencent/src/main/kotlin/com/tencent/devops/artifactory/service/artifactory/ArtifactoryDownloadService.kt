@@ -85,23 +85,30 @@ class ArtifactoryDownloadService @Autowired constructor(
         logger.info("serviceGetExternalDownloadUrl, creatorId: $creatorId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
-        val url = jFrogApiService.externalDownloadUrl(realPath, creatorId?:userId, ttl, directed)
+        val url = jFrogApiService.externalDownloadUrl(realPath, creatorId ?: userId, ttl, directed)
         return Url(StringUtil.chineseUrlEncode(url))
     }
-
-    override fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean): Url {
+    
+    override fun serviceGetInnerDownloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        directed: Boolean
+    ): Url {
         logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-
+        
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val url = jFrogApiService.internalDownloadUrl(realPath, ttl, userId)
         return Url(url)
     }
-
+    
     override fun getDownloadUrl(
         userId: String,
         projectId: String,
@@ -110,14 +117,16 @@ class ArtifactoryDownloadService @Autowired constructor(
         channelCode: ChannelCode?,
         fullUrl: Boolean
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath, channelCode: $channelCode")
+        logger.info(
+            "getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, channelCode: $channelCode"
+        )
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-
+        
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -141,15 +150,20 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = RegionUtil.replaceRegionServer(jFrogApiService.downloadUrl(realPath), RegionUtil.IDC)
         return Url(url, url)
     }
-
-    override fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
+    
+    override fun getExternalUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): Url {
         logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-
+        
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val properties = jFrogPropertiesApi.getProperties(realPath)
         if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
@@ -165,51 +179,77 @@ class ArtifactoryDownloadService @Autowired constructor(
                 pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
             }
             ArtifactoryType.PIPELINE -> {
-                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
+                )
             }
         }
-
-        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+        
+        val url =
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
         return Url(shortUrlService.createShortUrl(url, 24 * 3600 * 30))
     }
-
-    override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String) {
+    
+    override fun shareUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        downloadUsers: String
+    ) {
         logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-
+        
         when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限")
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.SHARE,
+                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限"
+                )
             }
             ArtifactoryType.CUSTOM_DIR -> {
                 pipelineService.validatePermission(userId, projectId)
             }
         }
-
+        
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val downloadUrl = jFrogApiService.internalDownloadUrl(realPath, ttl, downloadUsers)
         val jFrogDetail = jFrogService.file(realPath)
         val fileName = JFrogUtil.getFileName(path)
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-
+        
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
-        val body = EmailUtil.getShareEmailBody(projectName, title, userId, days, listOf(FileShareInfo(fileName, jFrogDetail.checksums?.md5
-            ?: "", projectName, downloadUrl)))
+        val body = EmailUtil.getShareEmailBody(
+            projectName, title, userId, days, listOf(
+                FileShareInfo(
+                    fileName, jFrogDetail.checksums?.md5
+                        ?: "", projectName, downloadUrl
+                )
+            )
+        )
         val receivers = downloadUsers.split(",").toSet()
         receivers.forEach {
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
-
+        
         val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
-
+    
     override fun getThirdPartyDownloadUrl(
         projectId: String,
         pipelineId: String,
@@ -223,9 +263,11 @@ class ArtifactoryDownloadService @Autowired constructor(
         region: String?,
         userId: String?
     ): List<String> {
-        logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-            ", artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, crossProjectId: $crossProjectId" +
-            ", crossPipelineId: $crossPipelineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
+        logger.info(
+            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
+                    ", artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, crossProjectId: $crossProjectId" +
+                    ", crossPipelineId: $crossPipelineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId"
+        )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
@@ -242,56 +284,73 @@ class ArtifactoryDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-
+        
         var accessUserId = when {
             !userId.isNullOrBlank() -> {
                 userId!!
             }
             !crossProjectId.isNullOrBlank() -> {
-                client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+                client.get(ServicePipelineResource::class)
+                    .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             }
             else -> {
                 null
             }
         }
         logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
-
+        
         // 校验用户权限
         if (accessUserId != null) {
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(accessUserId, targetProjectId)) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                    accessUserId,
+                    targetProjectId
+                )
+            ) {
                 throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                pipelineService.validatePermission(accessUserId, targetProjectId, targetPipelineId, AuthPermission.DOWNLOAD, "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限")
+                pipelineService.validatePermission(
+                    accessUserId,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+                )
             }
         }
-
+        
         val pathArray = regex.split(argPath)
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val jFrogFileInfoList = mutableListOf<JFrogAQLFileInfo>()
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath"
-
+            
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
-                "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(realPath).removePrefix("/")
+                "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId)
+                    .removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
+                    realPath
+                ).removePrefix("/")
             } else {
-                "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(realPath).removePrefix("/")
+                "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId)
+                    .removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(realPath).removePrefix("/")
             }
             val fileName = JFrogUtil.getFileName(path)
-
-            val jFrogAQLFileInfoList = jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
+            
+            val jFrogAQLFileInfoList =
+                jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
             logger.info("match file list[$path]: $jFrogFileInfoList")
             jFrogFileInfoList.addAll(jFrogAQLFileInfoList)
         }
-
-        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
+        
+        val fileInfoList =
+            artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
         val filePathList = fileInfoList.map { JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath) }
         return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map {
             RegionUtil.replaceRegionServer(it.value, region)
         }
     }
-
+    
     companion object {
         private val logger = LoggerFactory.getLogger(ArtifactoryDownloadService::class.java)
         private val regex = Pattern.compile(",|;")
