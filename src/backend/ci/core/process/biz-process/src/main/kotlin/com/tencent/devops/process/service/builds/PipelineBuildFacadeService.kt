@@ -910,7 +910,6 @@ class PipelineBuildFacadeService(
         buildId: String,
         elementId: String
     ): ReviewParam {
-
         pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -918,7 +917,6 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
-
 
         val model = buildDetailService.get(pipelineId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
