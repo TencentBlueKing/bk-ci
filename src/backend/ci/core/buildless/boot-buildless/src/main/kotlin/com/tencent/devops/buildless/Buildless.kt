@@ -24,36 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.buildless
 
-package com.tencent.devops.dispatch.docker.api.service
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableAsync
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+@MicroService
+@EnableAsync
+@ComponentScan(
+    "com.tencent.devops.buildless"
+)
+class Buildless
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
-@Path("/service/dockerhost")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDispatchDockerHostResource {
-
-    @ApiOperation("获取dockerhost列表")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Page<DockerHostZone>
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Buildless::class, args)
 }
