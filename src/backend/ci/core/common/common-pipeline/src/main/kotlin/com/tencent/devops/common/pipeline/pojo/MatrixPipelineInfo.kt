@@ -50,7 +50,7 @@ data class MatrixPipelineInfo(
                 YamlUtil.to<Any>(this.exclude)
             } else null,
             "strategy" to if (!this.strategy.isNullOrBlank()) {
-                val pattern = Pattern.compile("^(\\\$\\{\\{fromJSON\\()([^(^)]+)(\\)\\}\\})\$")
+                val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")
                 val matcher = pattern.matcher(this.strategy!!)
                 if (!matcher.find()) {
                     YamlUtil.to<Any>(this.strategy!!)
