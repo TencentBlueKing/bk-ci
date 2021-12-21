@@ -256,7 +256,8 @@ class InitializeMatrixGroupStageCmd(
                         context = context,
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId
+                        matrixGroupId = matrixGroupId,
+                        mutexGroup = modelContainer.mutexGroup
                     ))
 
                     // 如为空就初始化，如有元素就直接追加
@@ -316,7 +317,8 @@ class InitializeMatrixGroupStageCmd(
                         context = context,
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId
+                        matrixGroupId = matrixGroupId,
+                        mutexGroup = modelContainer.mutexGroup
                     ))
 
                     // 如为空就初始化，如有元素就直接追加
@@ -403,10 +405,12 @@ class InitializeMatrixGroupStageCmd(
         return elements.map { e ->
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
             val newTaskId = modelTaskIdGenerator.getNextId()
+            // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
-            e.additionalOptions?.elementPostInfo?.parentElementId?.let {
-                e.additionalOptions?.elementPostInfo?.parentElementId = originToNewId[it] ?: ""
+            e.additionalOptions?.elementPostInfo?.parentElementId?.let { self ->
+                e.additionalOptions?.elementPostInfo?.parentElementId = originToNewId[self] ?: ""
             }
+            // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
             val (interceptTask, interceptTaskName) = when (e) {
