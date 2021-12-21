@@ -62,7 +62,8 @@
                 </section>
 
                 <section class="atom-section quality-atom"
-                    :class="{ 'is-review': atom.isReviewing,
+                    :class="{ 'is-in-group': containerGroupIndex !== undefined,
+                              'is-review': atom.isReviewing,
                               'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
                               'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
@@ -695,6 +696,13 @@
                 &:after {
                     left: 138px;
                     width: 100px;
+                }
+            }
+            &.is-in-group {
+               .atom-title {
+                    &:after {
+                        width: 76px;
+                    }
                 }
             }
             &.is-success {
