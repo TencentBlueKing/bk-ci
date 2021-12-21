@@ -66,7 +66,7 @@ class TXPipelineExportServiceTest {
                 mutableListOf(
                     MarketBuildAtomElementWithLocation(
                         stageLocation = null,
-                        jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1",id = null,name = null),
+                        jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1", id = null, name = null),
                         stepAtom = MarketBuildAtomElement(
                             name = "名称",
                             id = "stepId"
@@ -109,7 +109,7 @@ class TXPipelineExportServiceTest {
             "aaaa" to mutableListOf(
                 MarketBuildAtomElementWithLocation(
                     stageLocation = null,
-                    jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1",id = null,name = null),
+                    jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1", id = null, name = null),
                     stepAtom = MarketBuildAtomElement(
                         name = "名称",
                         id = "stepId"
