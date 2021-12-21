@@ -57,8 +57,6 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.isDeleteBranch
-import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -304,7 +302,7 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { filePath ->
 
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-            var displayName = filePath
+            val displayName = filePath
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {

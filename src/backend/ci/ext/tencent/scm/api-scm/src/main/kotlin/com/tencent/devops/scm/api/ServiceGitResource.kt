@@ -707,4 +707,25 @@ interface ServiceGitResource {
         @QueryParam("mrId")
         mrId: Long
     ): Result<Boolean>
+
+    @ApiOperation("创建tag")
+    @POST
+    @Path("/createGitTag")
+    fun createGitTag(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "tag名称", required = true)
+        @QueryParam("tagName")
+        tagName: String,
+        @ApiParam(value = "关联项", required = true)
+        @QueryParam("ref")
+        ref: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }

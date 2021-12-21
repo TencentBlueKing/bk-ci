@@ -27,15 +27,17 @@
 
 rootProject.name = "bk-ci-backend"
 
+// 适用于project的plugins
 pluginManagement {
-    val devopsBootVersion: String by settings
-    plugins {
-        id("com.tencent.devops.boot") version devopsBootVersion
-    }
     repositories {
         mavenLocal()
-        mavenCentral()
-        gradlePluginPortal()
+        if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
+            maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
+            maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+        } else { // GitHub Action 环境
+            mavenCentral()
+            gradlePluginPortal()
+        }
     }
 }
 
@@ -101,6 +103,11 @@ include(":core:quality:biz-quality")
 include(":core:quality:biz-quality-sample")
 include(":core:quality:boot-quality")
 include(":core:quality:model-quality")
+
+include(":core:buildless")
+include(":core:buildless:api-buildless")
+include(":core:buildless:biz-buildless")
+include(":core:buildless:boot-buildless")
 
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
@@ -436,6 +443,9 @@ include(":ext:tencent:auth:api-auth-tencent")
 include(":ext:tencent:auth:biz-auth-tencent")
 include(":ext:tencent:auth:sdk-auth-tencent")
 include(":ext:tencent:auth:boot-auth-tencent")
+
+include(":ext:tencent:buildless")
+include(":ext:tencent:buildless:boot-buildless-tencent")
 
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
