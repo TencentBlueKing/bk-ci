@@ -234,6 +234,7 @@ class PipelineContainerService @Autowired constructor(
         buildTaskList: MutableList<PipelineBuildTask>,
         matrixGroupId: String,
         jobControlOption: JobControlOption,
+        elementOptionsMap: Map<String, ElementAdditionalOptions>,
         mutexGroup: MutexGroup?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
@@ -262,7 +263,8 @@ class PipelineContainerService @Autowired constructor(
                 taskSeq = taskSeq,
                 atomElement = atomElement,
                 status = status,
-                executeCount = context.executeCount
+                executeCount = context.executeCount,
+                elementOptionsMap = elementOptionsMap
             )
         }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
@@ -360,7 +362,8 @@ class PipelineContainerService @Autowired constructor(
                         taskSeq = taskSeq,
                         atomElement = atomElement,
                         status = status,
-                        executeCount = context.executeCount
+                        executeCount = context.executeCount,
+                        elementOptionsMap = emptyMap()
                     )
                 }
                 needUpdateContainer = true
@@ -734,7 +737,8 @@ class PipelineContainerService @Autowired constructor(
         taskSeq: Int,
         atomElement: Element,
         status: BuildStatus,
-        executeCount: Int
+        executeCount: Int,
+        elementOptionsMap: Map<String, ElementAdditionalOptions>
     ) {
         buildTaskList.add(
             PipelineBuildTask(
@@ -756,7 +760,7 @@ class PipelineContainerService @Autowired constructor(
                 status = status,
                 taskParams = atomElement.genTaskParams(),
                 // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
-                additionalOptions = atomElement.additionalOptions?.copy(),
+                additionalOptions = elementOptionsMap[atomElement.id] ?: atomElement.additionalOptions,
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,

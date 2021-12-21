@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -219,7 +220,10 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val statusElements = generateMatrixElements(modelContainer.elements, context.executeCount)
+                    val elementOptionsMap = mutableMapOf<String, ElementAdditionalOptions>()
+                    val statusElements = generateMatrixElements(
+                        modelContainer.elements, context.executeCount, elementOptionsMap
+                    )
                     val newContainer = VMBuildContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, allContext),
                         id = newSeq.toString(),
@@ -256,6 +260,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
+                        elementOptionsMap = elementOptionsMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -288,7 +293,12 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val newSeq = context.containerSeq++
                     val innerSeq = context.innerSeq++
-                    val statusElements = generateMatrixElements(modelContainer.elements, context.executeCount)
+
+                    // 刷新所有插件的ID，并生成对应的纯状态插件
+                    val elementOptionsMap = mutableMapOf<String, ElementAdditionalOptions>()
+                    val statusElements = generateMatrixElements(
+                        modelContainer.elements, context.executeCount, elementOptionsMap
+                    )
                     val newContainer = NormalContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, contextCase),
                         id = newSeq.toString(),
@@ -315,6 +325,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
+                        elementOptionsMap = elementOptionsMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -397,7 +408,8 @@ class InitializeMatrixGroupStageCmd(
 
     private fun generateMatrixElements(
         elements: List<Element>,
-        executeCount: Int
+        executeCount: Int,
+        elementOptionsMap: MutableMap<String, ElementAdditionalOptions>
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
@@ -407,7 +419,9 @@ class InitializeMatrixGroupStageCmd(
             originToNewId[e.id!!] = newTaskId
             e.additionalOptions?.elementPostInfo?.parentElementId?.let { self ->
                 e.additionalOptions?.elementPostInfo?.parentElementId = originToNewId[self] ?: ""
+                elementOptionsMap[newTaskId] = e.additionalOptions!!.copy()
             }
+
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
