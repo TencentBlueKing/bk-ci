@@ -177,6 +177,7 @@ class MatrixExecuteContainerCmd(
 
         // 实时刷新数据库状态
         matrixOption.finishCount = finishCount
+        matrixOption.totalCount = groupContainers.size
 
         pipelineContainerService.updateMatrixGroupStatus(
             projectId = parentContainer.projectId,
