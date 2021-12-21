@@ -31,20 +31,24 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.common.AGENT_ID
+import com.tencent.devops.worker.common.AGENT_SECRET_KEY
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.Request
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
-import java.io.File
-import java.lang.RuntimeException
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
+import okhttp3.Request
+import okhttp3.Response
+import java.io.File
+import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
@@ -53,7 +57,15 @@ fun main(args: Array<String>) {
     TaskFactory.init()
     val buildType = System.getProperty(BUILD_TYPE)
     when (buildType) {
-        BuildType.DOCKER.name ->
+        BuildType.DOCKER.name -> {
+            val jobPoolType = DockerEnv.getJobPool()
+            // 无编译构建，轮询等待任务
+            if (jobPoolType != null &&
+                jobPoolType == "BUILD_LESS"
+            ) {
+                waitBuildLessJobStart()
+            }
+
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
                     variables: Map<String, String>,
@@ -71,6 +83,7 @@ fun main(args: Array<String>) {
                     return Pair(workspaceDir, logPathDir)
                 }
             })
+        }
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
@@ -187,5 +200,55 @@ fun main(args: Array<String>) {
             }
             throw RuntimeException("Unknown build type - $buildType")
         }
+    }
+}
+
+private fun waitBuildLessJobStart() {
+    var startFlag = false
+    val dockerHostIp = DockerEnv.getDockerHostIp()
+    val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
+    val hostname = DockerEnv.getHostname()
+    val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+
+    val request = Request.Builder()
+        .url(loopUrl)
+        .header("Accept", "application/json")
+        .get()
+        .build()
+
+    do {
+        try {
+            println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+
+            OkhttpUtils.doHttp(request).use { resp ->
+                startFlag = doResponse(resp)
+            }
+        } catch (e: Exception) {
+            println("${LocalDateTime.now()} Get buildLessTask error. continue loop... \n$e")
+        }
+
+        if (!startFlag) {
+            Thread.sleep(1000)
+        }
+    } while (!startFlag)
+}
+
+private fun doResponse(
+    resp: Response
+): Boolean {
+    val responseBody = resp.body()?.string() ?: ""
+    return if (resp.isSuccessful && responseBody.isNotBlank()) {
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
+        buildLessTask.forEach { (t, u) ->
+            when (t) {
+                "agentId" -> System.setProperty(AGENT_ID, u)
+                "secretKey" -> System.setProperty(AGENT_SECRET_KEY, u)
+                "projectId" -> System.setProperty("devops_project_id", u)
+            }
+        }
+        true
+    } else {
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        false
     }
 }

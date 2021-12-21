@@ -444,6 +444,9 @@ include(":ext:tencent:auth:biz-auth-tencent")
 include(":ext:tencent:auth:sdk-auth-tencent")
 include(":ext:tencent:auth:boot-auth-tencent")
 
+include(":ext:tencent:buildless")
+include(":ext:tencent:buildless:boot-buildless-tencent")
+
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
