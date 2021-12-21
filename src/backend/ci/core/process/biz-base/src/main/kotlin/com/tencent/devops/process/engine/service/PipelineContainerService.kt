@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -235,7 +236,8 @@ class PipelineContainerService @Autowired constructor(
         context: MatrixBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
         matrixGroupId: String,
-        jobControlOption: JobControlOption
+        jobControlOption: JobControlOption,
+        mutexGroup: MutexGroup?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
@@ -296,6 +298,7 @@ class PipelineContainerService @Autowired constructor(
             controlOption = PipelineBuildContainerControlOption(
                 jobControlOption = jobControlOption,
                 inFinallyStage = stage.finally,
+                mutexGroup = mutexGroup,
                 containPostTaskFlag = container.containPostTaskFlag
             ),
             matrixGroupFlag = false,
