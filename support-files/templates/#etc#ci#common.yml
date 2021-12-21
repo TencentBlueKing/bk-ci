@@ -100,6 +100,7 @@ auth:
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
   # 用户组权限申请前端跳转页面HOST
   webHost: __BK_CI_IAM_WEB_URL__
+  token: __BK_CI_APP_TOKEN__
 
 #bk esb config for cd plugin in pipeline
 esb:
