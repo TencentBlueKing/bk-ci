@@ -55,7 +55,6 @@ class MatrixExecuteContainerCmd(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(MatrixExecuteContainerCmd::class.java)
-        private const val MATRIX_LOOP_TIME_MILLS = 5000
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -77,7 +76,7 @@ class MatrixExecuteContainerCmd(
         val groupStatus = try {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix status loop: ${commandContext.buildStatus}",
+                message = "Matrix status refresh: ${commandContext.buildStatus}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
                 executeCount = commandContext.executeCount
@@ -86,7 +85,7 @@ class MatrixExecuteContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addDebugLine(
                 buildId = parentContainer.buildId,
-                message = "Matrix status loop: ${commandContext.buildStatus} with " +
+                message = "Matrix status refresh: ${commandContext.buildStatus} with " +
                     "error: ${ignore.message}",
                 tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
                 jobId = parentContainer.containerHashId,
@@ -101,12 +100,11 @@ class MatrixExecuteContainerCmd(
         if (groupStatus.isFinish()) {
             commandContext.buildStatus = groupStatus
             commandContext.cmdFlowState = CmdFlowState.FINALLY
-            commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_loop_finish"
+            commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_refresh_finish"
         } else {
             // 矩阵事件每5秒轮询一次
             commandContext.cmdFlowState = CmdFlowState.LOOP
-            commandContext.delayMills = MATRIX_LOOP_TIME_MILLS
-            commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_loop_continue"
+            commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_refresh_continue"
         }
     }
 

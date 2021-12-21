@@ -55,7 +55,7 @@ class ContainerCmdLoop(
         }
         pipelineEventDispatcher.dispatch(
             commandContext.event.copy(
-                delayMills = commandContext.delayMills ?: DEFAULT_LOOP_TIME_MILLS,
+                delayMills = DEFAULT_LOOP_TIME_MILLS,
                 source = commandContext.latestSummary
             )
         )

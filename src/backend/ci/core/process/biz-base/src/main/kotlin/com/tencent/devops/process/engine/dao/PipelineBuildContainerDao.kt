@@ -157,23 +157,6 @@ class PipelineBuildContainerDao {
         dslContext.batch(records).execute()
     }
 
-    fun getBySeqId(
-        dslContext: DSLContext,
-        buildId: String,
-        stageId: String?,
-        containerSeqId: Int
-    ): TPipelineBuildContainerRecord? {
-
-        return with(T_PIPELINE_BUILD_CONTAINER) {
-            val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
-            if (stageId.isNullOrBlank()) {
-                query.and(SEQ.eq(containerSeqId)).fetchAny()
-            } else {
-                query.and(STAGE_ID.eq(stageId)).and(SEQ.eq(containerSeqId)).fetchAny()
-            }
-        }
-    }
-
     fun getByContainerId(
         dslContext: DSLContext,
         buildId: String,
