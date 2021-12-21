@@ -219,9 +219,9 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val elementPostInfoMap = mutableMapOf<String, ElementPostInfo>()
+                    val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, elementPostInfoMap
+                        modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, allContext),
@@ -259,7 +259,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = elementPostInfoMap,
+                        elementPostInfoMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -294,9 +294,9 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val elementPostInfoMap = mutableMapOf<String, ElementPostInfo>()
+                    val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, elementPostInfoMap
+                        modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = NormalContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, contextCase),
@@ -324,7 +324,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = elementPostInfoMap,
+                        elementPostInfoMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -408,7 +408,7 @@ class InitializeMatrixGroupStageCmd(
     private fun generateMatrixElements(
         elements: List<Element>,
         executeCount: Int,
-        elementPostInfoMap: MutableMap<String, ElementPostInfo>
+        postParentIdMap: MutableMap<String, String>
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
@@ -417,8 +417,7 @@ class InitializeMatrixGroupStageCmd(
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
             e.additionalOptions?.elementPostInfo?.parentElementId?.let { self ->
-                elementPostInfoMap[newTaskId] = e.additionalOptions!!.elementPostInfo!!
-                    .copy(parentElementId = originToNewId[self] ?: "")
+                postParentIdMap[newTaskId] = originToNewId[self] ?: ""
             }
 
             // 刷新ID为新的唯一值，强制设为无法重试
