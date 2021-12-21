@@ -68,11 +68,11 @@ object StreamDispatchUtils {
             return VMBaseOS.MACOS
         }
 
-        // agentSelector 不支持占位符
+        // agentSelector 也要支持占位符
         if (job.runsOn.agentSelector.isNullOrEmpty()) {
             return VMBaseOS.ALL
         }
-        return when (job.runsOn.agentSelector!![0]) {
+        return when (EnvUtils.parseEnv(job.runsOn.agentSelector!![0], context ?: mapOf())) {
             "linux" -> VMBaseOS.LINUX
             "macos" -> VMBaseOS.MACOS
             "windows" -> VMBaseOS.WINDOWS
