@@ -36,7 +36,7 @@ class TXPipelineExportServiceTest {
 
     @Test
     fun testReplaceMapWithDoubleCurlybraces1() {
-        val inputMap: MutableMap<String, Any>? = mutableMapOf()
+        val inputMap: MutableMap<String, Any> = mutableMapOf()
 
         val resultMap = txPipelineExportService.replaceMapWithDoubleCurlyBraces(
             inputMap = inputMap,
@@ -66,7 +66,11 @@ class TXPipelineExportServiceTest {
                 mutableListOf(
                     MarketBuildAtomElementWithLocation(
                         stageLocation = null,
-                        jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1", id = null, name = null),
+                        jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(
+                            jobId = "job_1",
+                            id = null,
+                            name = null
+                        ),
                         stepAtom = MarketBuildAtomElement(
                             name = "名称",
                             id = "stepId"
