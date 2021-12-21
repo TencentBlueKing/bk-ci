@@ -42,6 +42,7 @@ import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -357,7 +358,11 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             resourceTypeCode = createInfo.resourceTypeCode
         ))
     }
-    override fun getProjectRoles(projectCode: String, organizationType: String, organizationId: Long): Result<List<BKAuthProjectRolesResources>> {
+    override fun getProjectRoles(
+        projectCode: String,
+        organizationType: String,
+        organizationId: Long
+    ): Result<List<BKAuthProjectRolesResources>> {
         return Result(projectLocalService.getProjectRole(
             organizationType = organizationType,
             organizationId = organizationId,
@@ -382,6 +387,18 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         ) ?: return null
 
         return Result(ProjectUtils.packagingBean(tProjectRecord, setOf()))
+    }
+
+    override fun bindProjectOrganization(
+        userId: String,
+        projectCode: String,
+        projectDeptInfo: ProjectDeptInfo
+    ): Result<Boolean> {
+        return Result(projectTxService.bindProjectDept(
+            userId = userId,
+            projectCode = projectCode,
+            projectDeptInfo = projectDeptInfo
+        ))
     }
 
     companion object {
