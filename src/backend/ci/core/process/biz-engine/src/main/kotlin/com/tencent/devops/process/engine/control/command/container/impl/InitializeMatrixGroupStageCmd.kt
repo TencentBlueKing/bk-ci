@@ -387,6 +387,7 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             stageId = parentContainer.stageId,
             matrixGroupId = matrixGroupId,
+            buildStatus = commandContext.buildStatus,
             controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
             modelContainer = modelContainer
         )

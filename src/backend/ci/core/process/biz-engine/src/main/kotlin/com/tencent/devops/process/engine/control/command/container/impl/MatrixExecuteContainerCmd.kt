@@ -185,6 +185,7 @@ class MatrixExecuteContainerCmd(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId,
             stageId = parentContainer.stageId,
+            buildStatus = commandContext.buildStatus,
             matrixGroupId = parentContainer.containerId,
             controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
             modelContainer = null
