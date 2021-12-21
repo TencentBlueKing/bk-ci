@@ -314,7 +314,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(marketAtomUpdateRequest.name)
         )
-        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val releaseType = marketAtomUpdateRequest.releaseType
         // 历史大版本下的小版本更新发布类型支持用户自定义分支，其他发布类型只支持master分支发布
         val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank() || releaseType != ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
