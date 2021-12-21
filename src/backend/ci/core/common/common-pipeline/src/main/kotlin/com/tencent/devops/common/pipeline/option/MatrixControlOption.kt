@@ -155,7 +155,7 @@ data class MatrixControlOption(
             include = JsonUtil.anyTo(matrixMap["include"],
                 object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
             exclude = JsonUtil.anyTo(matrixMap["exclude"],
-                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
+                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
         )
     }
 

@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -763,7 +762,7 @@ class PipelineContainerService @Autowired constructor(
                 // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
                 additionalOptions = postParentIdMap[atomElement.id]?.let { self ->
                     atomElement.additionalOptions?.copy(
-                        elementPostInfo =  atomElement.additionalOptions?.elementPostInfo?.copy(
+                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.copy(
                             parentElementId = self
                         )
                     )

@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -259,7 +258,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = postParentIdMap,
+                        postParentIdMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -324,7 +323,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = postParentIdMap,
+                        postParentIdMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
