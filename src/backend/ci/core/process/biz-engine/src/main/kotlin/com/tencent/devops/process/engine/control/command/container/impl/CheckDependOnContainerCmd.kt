@@ -80,7 +80,6 @@ class CheckDependOnContainerCmd(
             }
             BuildStatus.SUCCEED -> {
                 // 所有依赖都成功运行,则继续执行
-                commandContext.buildStatus = BuildStatus.QUEUE
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
             }
             else -> {

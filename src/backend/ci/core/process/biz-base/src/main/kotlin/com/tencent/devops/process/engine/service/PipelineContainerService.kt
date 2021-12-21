@@ -758,7 +758,8 @@ class PipelineContainerService @Autowired constructor(
                 taskAtom = atomElement.getTaskAtom(),
                 status = status,
                 taskParams = atomElement.genTaskParams(),
-                additionalOptions = atomElement.additionalOptions,
+                // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
+                additionalOptions = atomElement.additionalOptions?.copy(),
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
