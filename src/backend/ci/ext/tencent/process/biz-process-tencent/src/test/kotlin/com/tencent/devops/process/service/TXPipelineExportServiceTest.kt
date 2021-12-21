@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.JobPipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -65,7 +66,7 @@ class TXPipelineExportServiceTest {
                 mutableListOf(
                     MarketBuildAtomElementWithLocation(
                         stageLocation = null,
-                        jobLocation = null,
+                        jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1",id = null,name = null),
                         stepAtom = MarketBuildAtomElement(
                             name = "名称",
                             id = "stepId"
@@ -84,12 +85,11 @@ class TXPipelineExportServiceTest {
         val result = jacksonObjectMapper().writeValueAsString(resultMap)
         println(result)
         Assert.assertEquals(
-            result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\"," +
-                "\"key3\":\"abcedf\${{ variables.haha }}hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn" +
-                "\${{ steps.stepId.outputs.aaaa }}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
-                "\${{ steps.stepId.outputs.aaaa }}\",\"\${{key}}\":\"\${{ 123456 }}aaaaaa\$" +
-                "{{ variables.haha }}hijklmn" +
-                "\${{ steps.stepId.outputs.aaaa }}\"}"
+            result, "{\"key1\":\"value\",\"key2\":\"\${{ variables.haha }}\",\"key3\":\"abcedf\${{ variables.haha }}" +
+                "hijklmn\",\"key4\":\"aaaaaa\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId.outputs.aaaa " +
+                "}}\",\"key5\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId." +
+                "outputs.aaaa }}\",\"\${{key}}\":\"\${{ 123456 }}aaaaaa\${{ variables.haha }}hijklmn" +
+                "\${{ jobs.job_1.steps.stepId.outputs.aaaa }}\"}"
         )
     }
 
@@ -109,7 +109,7 @@ class TXPipelineExportServiceTest {
             "aaaa" to mutableListOf(
                 MarketBuildAtomElementWithLocation(
                     stageLocation = null,
-                    jobLocation = null,
+                    jobLocation = JobPipelineExportV2YamlConflictMapBaseItem(jobId = "job_1",id = null,name = null),
                     stepAtom = MarketBuildAtomElement(
                         name = "名称",
                         id = "stepId"
@@ -130,7 +130,7 @@ class TXPipelineExportServiceTest {
         Assert.assertEquals(
             result, "{\"key1\":\"value\",\"key2\":[\"\${{ variables.haha }}\"," +
                 "\"abcedf\${{ variables.haha }}hijklmn\",\"\${{ 123456 }}aaaaaa" +
-                "\${{ variables.haha }}hijklmn\${{ steps.stepId.outputs.aaaa }}\",123]}"
+                "\${{ variables.haha }}hijklmn\${{ jobs.job_1.steps.stepId.outputs.aaaa }}\",123]}"
         )
     }
 
