@@ -95,8 +95,9 @@ class InitializeMatrixGroupStageCmd(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次准备并发执行Stage下Container是执行
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.status.isReadyToRun() &&
-            commandContext.container.matrixGroupFlag == true
+            commandContext.container.matrixGroupFlag == true &&
+            (commandContext.container.status.isReadyToRun() ||
+                commandContext.container.status == BuildStatus.DEPENDENT_WAITING)
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -218,9 +219,7 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount
-                    )
+                    val statusElements = generateMatrixElements(modelContainer.elements, context.executeCount)
                     val newContainer = VMBuildContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, allContext),
                         id = newSeq.toString(),
@@ -289,9 +288,7 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val newSeq = context.containerSeq++
                     val innerSeq = context.innerSeq++
-                    val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount
-                    )
+                    val statusElements = generateMatrixElements(modelContainer.elements, context.executeCount)
                     val newContainer = NormalContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, contextCase),
                         id = newSeq.toString(),
