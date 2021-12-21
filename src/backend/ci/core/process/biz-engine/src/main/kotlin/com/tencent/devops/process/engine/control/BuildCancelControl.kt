@@ -196,9 +196,6 @@ class BuildCancelControl @Autowired constructor(
                 val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
                 try {
                     containerIdLock.lock()
-                    unlockMutexGroup(variables = variables, container = container,
-                        buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
-                    )
                     // 调整Container状态位
                     val containerBuildStatus = BuildStatus.parse(container.status)
                     // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
@@ -220,6 +217,10 @@ class BuildCancelControl @Autowired constructor(
                             buildId = event.buildId,
                             containerId = containerId,
                             buildStatus = switchedStatus
+                        )
+                        // 释放互斥锁
+                        unlockMutexGroup(variables = variables, container = container,
+                            buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                         )
                         // 构建机关机
                         if (container is VMBuildContainer) {
