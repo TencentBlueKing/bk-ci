@@ -53,9 +53,7 @@ data class MatrixStatusElement(
     @ApiModelProperty("拦截原子", required = false)
     var interceptTask: String? = null,
     @ApiModelProperty("拦截原子名称", required = false)
-    var interceptTaskName: String? = null,
-    @ApiModelProperty("POST-ACTION的父插件ID", required = false)
-    var postParentElementId: String? = null
+    var interceptTaskName: String? = null
 ) : Element(
     name = name,
     status = status,

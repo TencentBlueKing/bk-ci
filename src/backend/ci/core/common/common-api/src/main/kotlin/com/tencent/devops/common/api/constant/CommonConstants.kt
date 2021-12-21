@@ -103,6 +103,7 @@ const val DANG = "dang" // 当
 const val AND = "and" // 和
 const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
+const val MASTER = "master" // 主干
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
