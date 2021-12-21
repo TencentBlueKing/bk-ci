@@ -25,45 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.service.ServiceDispatchDockerHostResource
-import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
-import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.store.api.common.OpReasonResource
+import com.tencent.devops.store.pojo.common.Reason
+import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
+import com.tencent.devops.store.service.common.ReasonService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
-class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService
-) : ServiceDispatchDockerHostResource {
-    override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
-        checkParams(page, pageSize)
-        val realPage = page ?: 1
-        val realPageSize = pageSize ?: 20
-        val dockerHostList = dockerHostZoneTaskService.list(realPage, realPageSize)
-        val count = dockerHostZoneTaskService.count()
-        return Page(
-            page = realPage,
-            pageSize = realPageSize,
-            count = count.toLong(),
-            records = dockerHostList
-        )
+@RestResource
+class OpReasonResourceImpl @Autowired constructor(
+    private val reasonService: ReasonService
+) : OpReasonResource {
+
+    override fun add(userId: String, type: ReasonTypeEnum, reasonReq: ReasonReq): Result<Boolean> {
+        return reasonService.add(userId, type, reasonReq)
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceDispatchDockerHostResourceImpl::class.java)
+    override fun update(userId: String, id: String, type: ReasonTypeEnum, reasonReq: ReasonReq): Result<Boolean> {
+        return reasonService.update(userId, id, reasonReq)
     }
 
-    fun checkParams(page: Int?, pageSize: Int?) {
-        if (page != null && page < 1) {
-            throw ParamBlankException("Invalid page")
-        }
-        if (pageSize != null && pageSize < 1) {
-            throw ParamBlankException("Invalid pageSize")
-        }
+    override fun enableReason(userId: String, id: String, type: ReasonTypeEnum, enable: Boolean): Result<Boolean> {
+        return reasonService.enable(userId, id, enable)
+    }
+
+    override fun list(type: ReasonTypeEnum, enable: Boolean?): Result<List<Reason>> {
+        return reasonService.list(type, enable)
+    }
+
+    override fun delete(userId: String, id: String): Result<Boolean> {
+        return reasonService.delete(userId, id)
     }
 }

@@ -157,6 +157,10 @@ class UserQualityRuleResourceImpl @Autowired constructor(
         return Result(templateService.userList(projectId))
     }
 
+    override fun listProjectTemplates(projectId: String): Result<List<RuleTemplate>> {
+        return Result(templateService.userList(projectId))
+    }
+
     override fun listPipelineRangeDetail(request: PipelineRangeDetailRequest): Result<List<RulePipelineRange>> {
         return Result(
             pipelineService.userListPipelineRangeDetail(request)
