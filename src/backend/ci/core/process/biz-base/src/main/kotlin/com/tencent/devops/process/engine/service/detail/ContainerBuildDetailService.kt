@@ -167,10 +167,14 @@ class ContainerBuildDetailService(
                     update = true
                     if (container is VMBuildContainer) {
                         container.matrixControlOption = matrixOption
-                        if (modelContainer is VMBuildContainer) container.groupContainers = modelContainer.groupContainers
+                        if (modelContainer is VMBuildContainer) {
+                            container.groupContainers = modelContainer.groupContainers
+                        }
                     } else if (container is NormalContainer) {
                         container.matrixControlOption = matrixOption
-                        if (modelContainer is NormalContainer) container.groupContainers = modelContainer.groupContainers
+                        if (modelContainer is NormalContainer) {
+                            container.groupContainers = modelContainer.groupContainers
+                        }
                     }
                     return Traverse.BREAK
                 }
