@@ -339,4 +339,20 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             mrId = mrId
         ).data!!
     }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).createGitTag(
+            repoName = repoName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType
+        )
+    }
 }

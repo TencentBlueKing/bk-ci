@@ -270,8 +270,6 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addErrorLine(message)
-
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
             errorMessage = CommonUtils.interceptStringInLength(

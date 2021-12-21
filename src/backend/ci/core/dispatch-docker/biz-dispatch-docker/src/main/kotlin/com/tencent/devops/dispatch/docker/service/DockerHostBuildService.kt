@@ -251,7 +251,6 @@ class DockerHostBuildService @Autowired constructor(
      * 每天执行一次，更新大于七天状态还是running的pool，以及大于七天状态还是running的build history，并主动关机
      */
     @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 24 * 1000)
-    @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
         val redisLock = RedisLock(redisOperation, "update_timeout_pool_task_nogkudla", 5L)

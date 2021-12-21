@@ -78,5 +78,4 @@ dependencies {
     api("com.networknt:json-schema-validator")
 
     testImplementation(project(":core:common:common-test"))
-
 }

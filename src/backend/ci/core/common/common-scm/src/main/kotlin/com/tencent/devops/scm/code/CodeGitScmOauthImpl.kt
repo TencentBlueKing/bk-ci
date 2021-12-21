@@ -69,7 +69,8 @@ class CodeGitScmOauthImpl constructor(
         return RevisionInfo(
             revision = gitBranch.commit.id,
             updatedMessage = gitBranch.commit.message,
-            branchName = branch
+            branchName = branch,
+            authorName = gitBranch.commit.authorName
         )
     }
 

@@ -125,7 +125,8 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null
+                    gitEvent = null,
+                    commitAuthorName = null
                 )
             }
         }
@@ -168,7 +169,8 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null
+                    gitEvent = null,
+                    commitAuthorName = null
                 )
             }
         }
@@ -211,7 +213,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }
@@ -257,7 +260,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }
@@ -343,7 +347,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }
