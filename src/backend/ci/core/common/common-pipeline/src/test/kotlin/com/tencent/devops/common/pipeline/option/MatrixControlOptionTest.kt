@@ -363,7 +363,7 @@ var2:
     fun calculateValueMatrix3() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
-            strategyStr = "\${{fromJSON(depends.job1.outputs.matrix)}}",
+            strategyStr = "\${{ fromJSON(depends.job1.outputs.matrix) }}",
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
                     // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
