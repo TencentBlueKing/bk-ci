@@ -157,14 +157,13 @@ class ContainerBuildDetailService(
         modelContainer: Container?
     ) {
         logger.info("[$buildId]|matrix group fresh|matrixGroupId=$matrixGroupId|" +
-            "modelContainer=$modelContainer")
+            "buildStatus=$buildStatus|modelContainer=$modelContainer")
         update(buildId, object : ModelInterface {
-
             var update = false
-
             override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
                     update = true
+                    container.status = buildStatus.name
                     if (container is VMBuildContainer) {
                         container.matrixControlOption = matrixOption
                         if (modelContainer is VMBuildContainer) {
