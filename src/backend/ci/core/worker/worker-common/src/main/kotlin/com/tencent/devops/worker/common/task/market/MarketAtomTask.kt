@@ -57,6 +57,7 @@ import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_STEP_ID
 import com.tencent.devops.process.utils.PIPELINE_TASK_NAME
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -219,6 +220,7 @@ open class MarketAtomTask : ITask() {
             "N"
         }
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        buildTask.stepId?.let { runtimeVariables = runtimeVariables.plus(Pair(PIPELINE_STEP_ID, it)) }
         // 设置插件名称和任务名称变量
         runtimeVariables = runtimeVariables.plus(
             mapOf(

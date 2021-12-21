@@ -166,6 +166,7 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         stageId: String,
         matrixGroupId: String,
+        buildStatus: BuildStatus,
         modelContainer: Container?,
         controlOption: PipelineBuildContainerControlOption
     ) {
@@ -179,16 +180,12 @@ class PipelineContainerService @Autowired constructor(
             containerId = matrixGroupId,
             controlOption = controlOption
         )
-        containerBuildDetailService.updateMatrixGroupStatus(
+        containerBuildDetailService.updateMatrixGroupContainer(
             buildId = buildId,
             stageId = stageId,
             matrixGroupId = matrixGroupId,
-            matrixOption = controlOption.matrixControlOption!!
-        )
-        if (modelContainer != null) containerBuildDetailService.updateMatrixGroupContainer(
-            buildId = buildId,
-            stageId = stageId,
-            matrixGroupId = matrixGroupId,
+            buildStatus = buildStatus,
+            matrixOption = controlOption.matrixControlOption!!,
             modelContainer = modelContainer
         )
     }

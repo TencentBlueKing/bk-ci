@@ -152,7 +152,9 @@ class ContainerBuildDetailService(
         buildId: String,
         stageId: String,
         matrixGroupId: String,
-        modelContainer: Container
+        buildStatus: BuildStatus,
+        matrixOption: MatrixControlOption,
+        modelContainer: Container?
     ) {
         logger.info("[$buildId]|matrix group fresh|matrixGroupId=$matrixGroupId|" +
             "modelContainer=$modelContainer")
@@ -163,40 +165,12 @@ class ContainerBuildDetailService(
             override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
                     update = true
-                    if (container is VMBuildContainer && modelContainer is VMBuildContainer) {
-                        container.groupContainers = modelContainer.groupContainers
-                    } else if (container is NormalContainer && modelContainer is NormalContainer) {
-                        container.groupContainers = modelContainer.groupContainers
-                    }
-                    return Traverse.BREAK
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        }, BuildStatus.RUNNING)
-    }
-
-    fun updateMatrixGroupStatus(
-        buildId: String,
-        stageId: String,
-        matrixGroupId: String,
-        matrixOption: MatrixControlOption
-    ) {
-        logger.info("[$buildId]|matrix group update|matrixGroupId=$matrixGroupId|")
-        update(buildId, object : ModelInterface {
-
-            var update = false
-
-            override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
-                    update = true
                     if (container is VMBuildContainer) {
                         container.matrixControlOption = matrixOption
+                        if (modelContainer is VMBuildContainer) container.groupContainers = modelContainer.groupContainers
                     } else if (container is NormalContainer) {
                         container.matrixControlOption = matrixOption
+                        if (modelContainer is NormalContainer) container.groupContainers = modelContainer.groupContainers
                     }
                     return Traverse.BREAK
                 }
