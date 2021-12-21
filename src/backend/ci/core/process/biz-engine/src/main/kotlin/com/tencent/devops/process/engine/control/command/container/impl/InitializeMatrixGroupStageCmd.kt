@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -219,9 +220,9 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val elementOptionsMap = mutableMapOf<String, ElementAdditionalOptions>()
+                    val elementPostInfoMap = mutableMapOf<String, ElementPostInfo>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, elementOptionsMap
+                        modelContainer.elements, context.executeCount, elementPostInfoMap
                     )
                     val newContainer = VMBuildContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, allContext),
@@ -259,7 +260,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementOptionsMap = elementOptionsMap,
+                        elementPostInfoMap = elementPostInfoMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -294,9 +295,9 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val elementOptionsMap = mutableMapOf<String, ElementAdditionalOptions>()
+                    val elementPostInfoMap = mutableMapOf<String, ElementPostInfo>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, elementOptionsMap
+                        modelContainer.elements, context.executeCount, elementPostInfoMap
                     )
                     val newContainer = NormalContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, contextCase),
@@ -324,7 +325,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementOptionsMap = elementOptionsMap,
+                        elementPostInfoMap = elementPostInfoMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -408,7 +409,7 @@ class InitializeMatrixGroupStageCmd(
     private fun generateMatrixElements(
         elements: List<Element>,
         executeCount: Int,
-        elementOptionsMap: MutableMap<String, ElementAdditionalOptions>
+        elementPostInfoMap: MutableMap<String, ElementPostInfo>
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
@@ -417,8 +418,8 @@ class InitializeMatrixGroupStageCmd(
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
             e.additionalOptions?.elementPostInfo?.parentElementId?.let { self ->
-                e.additionalOptions?.elementPostInfo?.parentElementId = originToNewId[self] ?: ""
-                elementOptionsMap[newTaskId] = e.additionalOptions!!.copy()
+                elementPostInfoMap[newTaskId] = e.additionalOptions!!.elementPostInfo!!
+                    .copy(parentElementId = originToNewId[self] ?: "")
             }
 
             // 刷新ID为新的唯一值，强制设为无法重试

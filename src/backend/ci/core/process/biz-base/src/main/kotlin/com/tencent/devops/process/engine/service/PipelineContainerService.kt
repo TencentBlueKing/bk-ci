@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -234,7 +235,7 @@ class PipelineContainerService @Autowired constructor(
         buildTaskList: MutableList<PipelineBuildTask>,
         matrixGroupId: String,
         jobControlOption: JobControlOption,
-        elementOptionsMap: Map<String, ElementAdditionalOptions>,
+        elementPostInfoMap: Map<String, ElementPostInfo>,
         mutexGroup: MutexGroup?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
@@ -264,7 +265,7 @@ class PipelineContainerService @Autowired constructor(
                 atomElement = atomElement,
                 status = status,
                 executeCount = context.executeCount,
-                elementOptionsMap = elementOptionsMap
+                elementPostInfoMap = elementPostInfoMap
             )
         }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
@@ -363,7 +364,7 @@ class PipelineContainerService @Autowired constructor(
                         atomElement = atomElement,
                         status = status,
                         executeCount = context.executeCount,
-                        elementOptionsMap = emptyMap()
+                        elementPostInfoMap = emptyMap()
                     )
                 }
                 needUpdateContainer = true
@@ -738,7 +739,7 @@ class PipelineContainerService @Autowired constructor(
         atomElement: Element,
         status: BuildStatus,
         executeCount: Int,
-        elementOptionsMap: Map<String, ElementAdditionalOptions>
+        elementPostInfoMap: Map<String, ElementPostInfo>
     ) {
         buildTaskList.add(
             PipelineBuildTask(
@@ -760,7 +761,9 @@ class PipelineContainerService @Autowired constructor(
                 status = status,
                 taskParams = atomElement.genTaskParams(),
                 // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
-                additionalOptions = elementOptionsMap[atomElement.id] ?: atomElement.additionalOptions,
+                additionalOptions = elementPostInfoMap[atomElement.id]?.let { self ->
+                    atomElement.additionalOptions?.copy(elementPostInfo = self)
+                } ?: atomElement.additionalOptions,
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
