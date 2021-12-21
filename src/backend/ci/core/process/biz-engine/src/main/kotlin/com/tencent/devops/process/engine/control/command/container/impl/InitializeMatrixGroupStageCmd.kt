@@ -218,16 +218,15 @@ class InitializeMatrixGroupStageCmd(
                     val innerSeq = context.innerSeq++
 
                     // 刷新所有插件的ID，并生成对应的纯状态插件
-                    val postElementToParent = mutableMapOf<String/*子插件ID*/, String/*父插件ID*/>()
-                    val statusElements = generateSampleStatusElements(
-                        modelContainer.elements, context.executeCount, postElementToParent
+                    val statusElements = generateMatrixElements(
+                        modelContainer.elements, context.executeCount
                     )
                     val newContainer = VMBuildContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, allContext),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
-                        jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
+                        jobId = modelContainer.jobId?.let { self -> VMUtils.genMatrixJobId(self, innerSeq) },
                         matrixGroupId = matrixGroupId,
                         matrixContext = contextCase,
                         elements = modelContainer.elements,
@@ -257,8 +256,7 @@ class InitializeMatrixGroupStageCmd(
                         context = context,
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId,
-                        postElementToParent = postElementToParent
+                        matrixGroupId = matrixGroupId
                     ))
 
                     // 如为空就初始化，如有元素就直接追加
@@ -290,16 +288,15 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val newSeq = context.containerSeq++
                     val innerSeq = context.innerSeq++
-                    val postElementToParent = mutableMapOf<String/*子插件ID*/, String/*父插件ID*/>()
-                    val statusElements = generateSampleStatusElements(
-                        modelContainer.elements, context.executeCount, postElementToParent
+                    val statusElements = generateMatrixElements(
+                        modelContainer.elements, context.executeCount
                     )
                     val newContainer = NormalContainer(
                         name = EnvUtils.parseEnv(modelContainer.name, contextCase),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
-                        jobId = modelContainer.jobId?.let { self -> "$self.$innerSeq" },
+                        jobId = modelContainer.jobId?.let { self -> VMUtils.genMatrixJobId(self, innerSeq) },
                         matrixGroupId = matrixGroupId,
                         matrixContext = contextCase,
                         elements = modelContainer.elements,
@@ -319,8 +316,7 @@ class InitializeMatrixGroupStageCmd(
                         context = context,
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId,
-                        postElementToParent = postElementToParent
+                        matrixGroupId = matrixGroupId
                     ))
 
                     // 如为空就初始化，如有元素就直接追加
@@ -399,28 +395,31 @@ class InitializeMatrixGroupStageCmd(
         return buildContainerList.size
     }
 
-    private fun generateSampleStatusElements(
+    private fun generateMatrixElements(
         elements: List<Element>,
-        executeCount: Int,
-        postElementToParent: MutableMap<String, String>
+        executeCount: Int
     ): List<MatrixStatusElement> {
+        val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
             val newTaskId = modelTaskIdGenerator.getNextId()
+            originToNewId[e.id!!] = newTaskId
+            e.additionalOptions?.elementPostInfo?.parentElementId?.let {
+                e.additionalOptions?.elementPostInfo?.parentElementId = originToNewId[it] ?: ""
+            }
             e.id = newTaskId
             e.canRetry = false
-            // 将该插件对应的父插件关系存入map
-            e.additionalOptions?.elementPostInfo?.let { info ->
-                postElementToParent[newTaskId] = info.parentElementId
+            val (interceptTask, interceptTaskName) = when (e) {
+                is QualityGateInElement -> {
+                    Pair(e.interceptTask, e.interceptTaskName)
+                }
+                is QualityGateOutElement -> {
+                    Pair(e.interceptTask, e.interceptTaskName)
+                }
+                else -> {
+                    Pair(null, null)
+                }
             }
-            val (interceptTask, interceptTaskName) = if (e is QualityGateInElement) {
-                Pair(e.interceptTask, e.interceptTaskName)
-            } else if (e is QualityGateOutElement) {
-                Pair(e.interceptTask, e.interceptTaskName)
-            } else {
-                Pair(null, null)
-            }
-
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
