@@ -99,13 +99,12 @@ class MatrixExecuteContainerCmd(
 
         if (groupStatus.isFinish()) {
             commandContext.buildStatus = groupStatus
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
             commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_refresh_finish"
         } else {
-            // 矩阵事件每5秒轮询一次
-            commandContext.cmdFlowState = CmdFlowState.LOOP
+            commandContext.buildStatus = BuildStatus.RUNNING
             commandContext.latestSummary = "Matrix(${commandContext.container.containerId})_refresh_continue"
         }
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     private fun judgeGroupContainers(
