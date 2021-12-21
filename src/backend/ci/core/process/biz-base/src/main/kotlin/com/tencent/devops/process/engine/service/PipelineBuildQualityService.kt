@@ -152,7 +152,8 @@ class PipelineBuildQualityService(
                         if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
                         logger.info("${element.id}, ${element.name}")
                         if (element.originClassType == QualityGateInElement.classType ||
-                            element.originClassType == QualityGateOutElement.classType) {
+                            element.originClassType == QualityGateOutElement.classType
+                        ) {
                             find = true
                             taskType = element.interceptTask!!
                         }
@@ -213,7 +214,8 @@ class PipelineBuildQualityService(
                     container.fetchGroupContainers()?.forEach {
                         it.elements.forEach nextElement@{ element ->
                             if (element.status != BuildStatus.REVIEWING.name) return@nextElement
-                            if (element is MatrixStatusElement && element.originClassType == QualityGateInElement.classType) {
+                            if (element is MatrixStatusElement && element.originClassType ==
+                                QualityGateInElement.classType) {
                                 element.reviewUsers = getAuditUserList(
                                     projectId = projectId,
                                     pipelineId = pipelineId,
@@ -221,7 +223,8 @@ class PipelineBuildQualityService(
                                     taskId = element.interceptTask ?: ""
                                 ).toMutableList()
                             }
-                            if (element is MatrixStatusElement && element.originClassType == QualityGateOutElement.classType) {
+                            if (element is MatrixStatusElement && element.originClassType ==
+                                QualityGateOutElement.classType) {
                                 element.reviewUsers = getAuditUserList(
                                     projectId = projectId,
                                     pipelineId = pipelineId,
@@ -470,7 +473,8 @@ class PipelineBuildQualityService(
             runtimeVariable = runVariables
         )
         val result = if (position == ControlPointPosition.AFTER_POSITION &&
-            QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
+            QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)
+        ) {
             run loop@{
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = hasCodeccHisMetadata(buildId)
