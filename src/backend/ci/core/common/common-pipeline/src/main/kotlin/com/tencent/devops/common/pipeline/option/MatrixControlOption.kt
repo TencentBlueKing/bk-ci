@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.option
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
@@ -148,7 +149,15 @@ data class MatrixControlOption(
                 }
             }
         )
-        return JsonUtil.to(contextStr, MatrixConfig::class.java)
+        val matrixMap = JsonUtil.to<Map<String, Any>>(contextStr)
+        return MatrixConfig(
+            strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
+                object : TypeReference<Map<String, List<String>>?>() {}),
+            include = JsonUtil.anyTo(matrixMap["include"],
+                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
+            exclude = JsonUtil.anyTo(matrixMap["exclude"],
+                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+        )
     }
 
     /**
@@ -159,8 +168,10 @@ data class MatrixControlOption(
             return emptyList()
         }
         val includeCaseList = YamlUtil.to<List<Map<String, Any>>>(str)
-        return includeCaseList.map { map -> map.map {
-            it.key to it.value.toString() }.toMap()
+        return includeCaseList.map { map ->
+            map.map {
+                it.key to it.value.toString()
+            }.toMap()
         }
     }
 }
