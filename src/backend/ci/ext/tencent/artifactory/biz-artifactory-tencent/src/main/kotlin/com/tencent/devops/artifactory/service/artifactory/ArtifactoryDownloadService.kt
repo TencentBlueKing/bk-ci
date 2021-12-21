@@ -88,7 +88,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = jFrogApiService.externalDownloadUrl(realPath, creatorId ?: userId, ttl, directed)
         return Url(StringUtil.chineseUrlEncode(url))
     }
-    
+
     override fun serviceGetInnerDownloadUrl(
         userId: String,
         projectId: String,
@@ -103,12 +103,12 @@ class ArtifactoryDownloadService @Autowired constructor(
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-        
+
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val url = jFrogApiService.internalDownloadUrl(realPath, ttl, userId)
         return Url(url)
     }
-    
+
     override fun getDownloadUrl(
         userId: String,
         projectId: String,
@@ -126,7 +126,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-        
+
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -150,7 +150,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = RegionUtil.replaceRegionServer(jFrogApiService.downloadUrl(realPath), RegionUtil.IDC)
         return Url(url, url)
     }
-    
+
     override fun getExternalUrl(
         userId: String,
         projectId: String,
@@ -163,7 +163,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-        
+
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val properties = jFrogPropertiesApi.getProperties(realPath)
         if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
@@ -188,12 +188,12 @@ class ArtifactoryDownloadService @Autowired constructor(
                 )
             }
         }
-        
+
         val url =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
         return Url(shortUrlService.createShortUrl(url, 24 * 3600 * 30))
     }
-    
+
     override fun shareUrl(
         userId: String,
         projectId: String,
@@ -208,7 +208,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
-        
+
         when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
@@ -224,13 +224,13 @@ class ArtifactoryDownloadService @Autowired constructor(
                 pipelineService.validatePermission(userId, projectId)
             }
         }
-        
+
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
         val downloadUrl = jFrogApiService.internalDownloadUrl(realPath, ttl, downloadUsers)
         val jFrogDetail = jFrogService.file(realPath)
         val fileName = JFrogUtil.getFileName(path)
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-        
+
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
         val body = EmailUtil.getShareEmailBody(
@@ -245,11 +245,11 @@ class ArtifactoryDownloadService @Autowired constructor(
         receivers.forEach {
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
-        
+
         val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
-    
+
     override fun getThirdPartyDownloadUrl(
         projectId: String,
         pipelineId: String,
@@ -284,7 +284,7 @@ class ArtifactoryDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        
+
         var accessUserId = when {
             !userId.isNullOrBlank() -> {
                 userId!!
@@ -298,7 +298,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             }
         }
         logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
-        
+
         // 校验用户权限
         if (accessUserId != null) {
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
@@ -318,14 +318,14 @@ class ArtifactoryDownloadService @Autowired constructor(
                 )
             }
         }
-        
+
         val pathArray = regex.split(argPath)
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val jFrogFileInfoList = mutableListOf<JFrogAQLFileInfo>()
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath"
-            
+
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
                 "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId)
                     .removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
@@ -336,13 +336,13 @@ class ArtifactoryDownloadService @Autowired constructor(
                     .removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(realPath).removePrefix("/")
             }
             val fileName = JFrogUtil.getFileName(path)
-            
+
             val jFrogAQLFileInfoList =
                 jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
             logger.info("match file list[$path]: $jFrogFileInfoList")
             jFrogFileInfoList.addAll(jFrogAQLFileInfoList)
         }
-        
+
         val fileInfoList =
             artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
         val filePathList = fileInfoList.map { JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath) }
@@ -350,7 +350,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             RegionUtil.replaceRegionServer(it.value, region)
         }
     }
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(ArtifactoryDownloadService::class.java)
         private val regex = Pattern.compile(",|;")

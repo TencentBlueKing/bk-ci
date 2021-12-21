@@ -92,7 +92,7 @@ open class BkRepoDownloadService @Autowired constructor(
         )
         return Url(StringUtil.chineseUrlEncode(url))
     }
-    
+
     override fun serviceGetInnerDownloadUrl(
         userId: String,
         projectId: String,
@@ -109,7 +109,7 @@ open class BkRepoDownloadService @Autowired constructor(
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
     }
-    
+
     // 创建临时分享的下载链接，目前仅为bkRepo有，所以并未抽象
     fun serviceGetInternalTemporaryAccessDownloadUrls(
         userId: String,
@@ -137,7 +137,7 @@ open class BkRepoDownloadService @Autowired constructor(
         )
         return urls.map { Url(it) }
     }
-    
+
     override fun getDownloadUrl(
         userId: String,
         projectId: String,
@@ -157,7 +157,7 @@ open class BkRepoDownloadService @Autowired constructor(
         val url = urlBuilder.append("/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true").toString()
         return Url(url, url)
     }
-    
+
     override fun getExternalUrl(
         userId: String,
         projectId: String,
@@ -182,7 +182,7 @@ open class BkRepoDownloadService @Autowired constructor(
         )
         return Url(shortUrl)
     }
-    
+
     override fun shareUrl(
         userId: String,
         projectId: String,
@@ -196,7 +196,7 @@ open class BkRepoDownloadService @Autowired constructor(
                     "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
         )
         val path = PathUtils.checkAndNormalizeAbsPath(argPath)
-        
+
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
                 pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
@@ -221,7 +221,7 @@ open class BkRepoDownloadService @Autowired constructor(
         ) ?: throw BadRequestException("文件（$path) 不存在")
         val fileName = fileDetail.nodeInfo.name
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-        
+
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
         val body = EmailUtil.getShareEmailBody(
@@ -235,11 +235,11 @@ open class BkRepoDownloadService @Autowired constructor(
         receivers.forEach {
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
-        
+
         val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
-    
+
     override fun getThirdPartyDownloadUrl(
         projectId: String,
         pipelineId: String,
@@ -275,7 +275,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        
+
         val accessUserId = if (!userId.isNullOrBlank()) {
             userId
         } else {
@@ -286,7 +286,7 @@ open class BkRepoDownloadService @Autowired constructor(
             "accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
                     "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId"
         )
-        
+
         // 校验用户权限, auth权限优化实施后可以去掉
         if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
                 accessUserId,
@@ -304,7 +304,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
             )
         }
-        
+
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
         val fileList = mutableListOf<FileDetail>()
@@ -318,7 +318,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
             }
             val fileName = JFrogUtil.getFileName(path) // *.txt
-            
+
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
                 userId = accessUserId,
                 projectId = targetProjectId,
@@ -332,7 +332,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 fileList.add(RepoUtils.toFileDetail(it))
             }
         }
-        
+
         val resultList = mutableListOf<String>()
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
@@ -349,7 +349,7 @@ open class BkRepoDownloadService @Autowired constructor(
         }
         return resultList
     }
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoDownloadService::class.java)
     }
