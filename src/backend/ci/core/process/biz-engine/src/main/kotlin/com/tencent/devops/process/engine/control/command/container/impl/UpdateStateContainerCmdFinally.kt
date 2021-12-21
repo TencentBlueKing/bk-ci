@@ -76,17 +76,20 @@ class UpdateStateContainerCmdFinally(
             val matrixGroupId = commandContext.container.matrixGroupId
             LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
                 "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}")
-            // #4518 如果该容器不属于某个矩阵时上报stage处理
-            if (matrixGroupId.isNullOrBlank()) sendBackStage(commandContext = commandContext)
-        } else if (commandContext.container.matrixGroupFlag == true) {
-            // 如果是构建矩阵的刷新状态且未完成则重放一个事件保证轮询
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(
-                    actionType = ActionType.REFRESH,
-                    source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
+            // #4518 如果该容器不属于某个矩阵时上报stage处理，否则上报发出一个矩阵组事件
+            if (matrixGroupId.isNullOrBlank()) {
+                sendBackStage(commandContext = commandContext)
+            } else {
+                pipelineEventDispatcher.dispatch(
+                    commandContext.event.copy(
+                        actionType = ActionType.REFRESH,
+                        containerId = matrixGroupId,
+                        containerHashId = null,
+                        source = commandContext.latestSummary,
+                        reason = "Matrix(${commandContext.container.containerId}) inner container finished"
+                    )
                 )
-            )
+            }
         }
     }
 
