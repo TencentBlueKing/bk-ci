@@ -118,7 +118,7 @@ class QualityRuleBuildHisService constructor(
                     val requestIndicator = (indicatorMap[it.enName])!!
 
                     // 使用上下文变量表示阈值时不检查类型
-                    if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) ||
+                    if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
                             requestIndicator.atomCode != RunElementType.RUN.elementType) {
                         checkThresholdType(requestIndicator, it)
                     }
