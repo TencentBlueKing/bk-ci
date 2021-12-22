@@ -246,9 +246,7 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService {
                                 Set<String> filterPathSet,
                                 Set<String> pathSet,
                                 long currTime) {
-        String path = StringUtils.isBlank(defectEntity.getRelPath())
-                ? defectEntity.getFilePathname()
-                : defectEntity.getRelPath();
+        String path = defectEntity.getFilePathname();
         // 当前未被屏蔽但是命中屏蔽路径的，需要把告警屏蔽掉
         if ((status & ComConstants.DefectStatus.PATH_MASK.value()) == 0
                 && (PathUtils.checkIfMaskByPath(path, filterPathSet)
