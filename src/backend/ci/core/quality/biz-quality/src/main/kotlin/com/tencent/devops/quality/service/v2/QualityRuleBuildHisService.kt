@@ -305,7 +305,7 @@ class QualityRuleBuildHisService constructor(
                 )
                 val realThresholdType = checkThresholdType(realThreshold)
 
-                if (indicator.isScriptElementIndicator() && indicator.thresholdType != realThresholdType) {
+                if (indicator.isScriptElementIndicator()) {
                     val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
                     val indicatorUpdate = IndicatorUpdate(
                         threshold = realThreshold,
@@ -466,12 +466,12 @@ class QualityRuleBuildHisService constructor(
     }
 
     private fun checkThresholdType(threshold: String): QualityDataType {
-        return if (NumberUtils.isCreatable(threshold)) {
-            QualityDataType.FLOAT
+        return if (NumberUtils.isDigits(threshold)) {
+            QualityDataType.INT
         } else if (threshold == "true" || threshold == "false") {
             QualityDataType.BOOLEAN
         } else {
-            QualityDataType.INT
+            QualityDataType.FLOAT
         }
     }
 }
