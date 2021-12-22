@@ -85,6 +85,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
+        creatorId: String?,
         userId: String,
         path: String,
         ttl: Int,
