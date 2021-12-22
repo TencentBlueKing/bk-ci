@@ -322,6 +322,7 @@ class QualityRuleBuildHisService constructor(
                     logger.info("QUALITY|update indicator type count is: $indicatorUpdateCount")
                 }
                 indicator.threshold = realThreshold
+                indicator.thresholdType = realThresholdType
             }
             val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
                 it.indicators.map { indicator -> indicator.threshold }.joinToString(","))
