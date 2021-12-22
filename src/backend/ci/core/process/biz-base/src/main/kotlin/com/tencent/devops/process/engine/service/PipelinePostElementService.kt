@@ -54,18 +54,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
- * 流水线element相关的服务
+ * 流水线添加post-action回调插件的专用服务
  * @version 1.0
  */
 @Suppress("ALL")
 @Service
-class PipelineElementService @Autowired constructor(
+class PipelinePostElementService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineElementService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelinePostElementService::class.java)
     }
 
     @Value("\${pipeline.atom.postPrompt:POST：}")

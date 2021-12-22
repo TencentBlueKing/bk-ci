@@ -61,7 +61,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TxPipelineEngineConfiguration {
+class TxPipelineProcessConfiguration {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)

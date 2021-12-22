@@ -27,12 +27,16 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -40,7 +44,8 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.process.util.CommonCredentialUtils
+import com.tencent.devops.process.util.StreamDispatchUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,6 +62,7 @@ import org.springframework.stereotype.Component
 @Primary
 class DispatchTypeParserTxImpl @Autowired constructor(
     private val client: Client,
+    private val objectMapper: ObjectMapper,
     @Qualifier(value = "commonDispatchTypeParser")
     private val commonDispatchTypeParser: DispatchTypeParser,
     private val buildVariableService: BuildVariableService
@@ -132,6 +138,28 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
+    override fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): SampleDispatchInfo? {
+        // 此处可以支持多种解析
+        return when (customInfo) {
+            is StreamDispatchInfo -> SampleDispatchInfo(
+                name = customInfo.name,
+                dispatchType = StreamDispatchUtils.getDispatchType(
+                    client = client,
+                    objectMapper = objectMapper,
+                    job = customInfo.job,
+                    projectCode = customInfo.projectCode,
+                    defaultImage = customInfo.defaultImage,
+                    resources = customInfo.resources,
+                    context = context,
+                    containsMatrix = true
+                ),
+                baseOS = StreamDispatchUtils.getBaseOs(customInfo.job, context),
+                buildEnv = StreamDispatchUtils.getBuildEnv(customInfo.job, context)
+            )
+            else -> null
+        }
+    }
+
     private fun genThirdDevCloudDispatchMessage(
         dispatchType: PublicDevCloudDispathcType,
         projectId: String,
@@ -149,7 +177,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 command = dispatchType.credentialId!!,
                 data = buildVariableService.getAllVariable(buildId))
             if (realCredentialId.isNotEmpty()) {
-                val ticketsMap = CommonUtils.getCredential(
+                val ticketsMap = CommonCredentialUtils.getCredential(
                     client = client,
                     projectId = credentialProject,
                     credentialId = realCredentialId,

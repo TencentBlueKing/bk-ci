@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
@@ -56,6 +57,7 @@ import java.time.LocalDateTime
 class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
@@ -280,7 +282,7 @@ class UpdateStateForStageCmdFinally(
         }
         commandContext.containers.forEach { c ->
             if (!c.status.isFinish()) { // #4315 未结束的，都需要刷新
-                pipelineRuntimeService.updateContainerStatus(
+                pipelineContainerService.updateContainerStatus(
                     buildId = c.buildId,
                     stageId = c.stageId,
                     containerId = c.containerId,
@@ -292,7 +294,7 @@ class UpdateStateForStageCmdFinally(
                     buildLogPrinter.addYellowLine(
                         buildId = c.buildId,
                         tag = VMUtils.genStartVMTaskId(c.containerId),
-                        jobId = c.containerId,
+                        jobId = c.containerHashId,
                         executeCount = c.executeCount,
                         message = "job(${c.containerId}) stop by fast kill"
                     )
