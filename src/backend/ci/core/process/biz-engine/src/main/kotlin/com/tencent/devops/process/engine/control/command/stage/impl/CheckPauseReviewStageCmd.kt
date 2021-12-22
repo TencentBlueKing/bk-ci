@@ -110,17 +110,16 @@ class CheckPauseReviewStageCmd(
 
         // #4732 如果是手动触发stage的事件或未配置审核则直接略过
         if (stage.checkIn?.ruleIds?.isNotEmpty() != true ||
-            event.source == BS_MANUAL_START_STAGE ||
-            event.actionType.isEnd()) {
+            event.source == BS_MANUAL_START_STAGE) {
             return false
         }
 
         var needBreak = false
-        when (event.source) {
-            BS_QUALITY_PASS_STAGE -> {
+        when {
+            event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckInPass(commandContext)
             }
-            BS_QUALITY_ABORT_STAGE -> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd()-> {
                 qualityCheckInFailed(commandContext)
                 needBreak = true
             }
