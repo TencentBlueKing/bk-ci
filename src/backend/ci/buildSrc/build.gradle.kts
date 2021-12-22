@@ -31,5 +31,5 @@ dependencies {
     implementation("io.spring.gradle:dependency-management-plugin:1.0.10.RELEASE")
     implementation("com.github.jengelman.gradle.plugins:shadow:5.2.0")
     implementation("org.ajoberstar:grgit:1.1.0")
-    implementation("org.apache.logging.log4j:log4j-core:2.16.0")
+    implementation("org.apache.logging.log4j:log4j-core:2.17.0")
 }
