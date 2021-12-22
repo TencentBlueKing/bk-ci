@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
@@ -57,9 +58,13 @@ class BuildVarResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
-        contextName: String
+        contextName: String,
+        check: Boolean
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
+        if (check){
+            checkVariable(variableName = contextName)
+        }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
@@ -83,6 +88,12 @@ class BuildVarResourceImpl @Autowired constructor(
         }
         if (StringUtils.isBlank(pipelineId)) {
             throw ParamBlankException("pipeline Id is null or blank")
+        }
+    }
+
+    fun checkVariable(variableName: String){
+        if(!VariableType.validate(variableName)){
+            throw ParamBlankException("This variable is currently not supported")
         }
     }
 }
