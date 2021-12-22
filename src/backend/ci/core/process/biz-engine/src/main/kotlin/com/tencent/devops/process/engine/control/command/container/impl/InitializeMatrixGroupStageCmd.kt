@@ -259,7 +259,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = postParentIdMap,
+                        postParentIdMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -324,7 +324,7 @@ class InitializeMatrixGroupStageCmd(
                         buildTaskList = buildTaskList,
                         jobControlOption = jobControlOption,
                         matrixGroupId = matrixGroupId,
-                        elementPostInfoMap = postParentIdMap,
+                        postParentIdMap = postParentIdMap,
                         mutexGroup = modelContainer.mutexGroup
                     ))
 
@@ -416,8 +416,11 @@ class InitializeMatrixGroupStageCmd(
             val newTaskId = modelTaskIdGenerator.getNextId()
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
-            e.additionalOptions?.elementPostInfo?.parentElementId?.let { self ->
-                postParentIdMap[newTaskId] = originToNewId[self] ?: ""
+            e.additionalOptions?.elementPostInfo?.parentElementId?.let { originId ->
+                originToNewId[originId]
+            }?.let { newId ->
+                postParentIdMap[newTaskId] = newId
+                e.additionalOptions?.elementPostInfo?.parentElementId = newId
             }
 
             // 刷新ID为新的唯一值，强制设为无法重试
