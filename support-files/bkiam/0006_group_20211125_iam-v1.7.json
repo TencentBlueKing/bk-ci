@@ -184,6 +184,12 @@
             },
             {
               "id": "rule_delete"
+            },
+            {
+              "id": "rule_create"
+            },
+            {
+              "id": "rule_enable"
             }
           ]
         }
