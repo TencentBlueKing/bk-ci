@@ -163,17 +163,16 @@ class UpdateStateForStageCmdFinally(
         // #5246 只在stage运行成功（不包括被跳过）并配置了红线规则时做准出判断
         if (stage.checkOut?.ruleIds?.isNotEmpty() != true ||
             !commandContext.buildStatus.isSuccess() ||
-            commandContext.buildStatus == BuildStatus.SKIP ||
-            event.actionType.isEnd()) {
+            commandContext.buildStatus == BuildStatus.SKIP) {
             return false
         }
 
         var needBreak = false
-        when (event.source) {
-            BS_QUALITY_PASS_STAGE -> {
+        when {
+            event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
-            BS_QUALITY_ABORT_STAGE -> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
             else -> {
