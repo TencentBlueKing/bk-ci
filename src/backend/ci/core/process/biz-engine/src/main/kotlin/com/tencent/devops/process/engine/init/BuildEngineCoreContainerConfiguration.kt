@@ -67,6 +67,21 @@ class BuildEngineCoreContainerConfiguration {
             .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_BUILD_CONTAINER)
     }
 
+    /**
+     * Job构建矩阵队列---- 并发一般
+     */
+    @Bean
+    fun pipelineBuildMatrixGroupQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_MATRIX_GROUP)
+
+    @Bean
+    fun pipelineBuildMatrixGroupQueueBind(
+        @Autowired pipelineBuildContainerQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildContainerQueue)
+            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_BUILD_MATRIX_GROUP)
+    }
+
     @Bean
     fun pipelineContainerBuildListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,

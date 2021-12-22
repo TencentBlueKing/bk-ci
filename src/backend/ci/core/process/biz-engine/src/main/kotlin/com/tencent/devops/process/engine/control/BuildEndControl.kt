@@ -60,6 +60,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEv
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
@@ -75,6 +76,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter
@@ -228,14 +230,14 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
-        val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
+        val allBuildTask = pipelineTaskService.getAllBuildTask(buildId)
         val errorInfos = mutableListOf<ErrorInfo>()
         allBuildTask.forEach {
             // 将所有还在运行中的任务全部结束掉
             if (it.status.isRunning()) {
                 // 构建机直接结束
                 if (it.containerType == VMBuildContainer.classType) {
-                    pipelineRuntimeService.updateTaskStatus(
+                    pipelineTaskService.updateTaskStatus(
                         task = it, userId = userId, buildStatus = BuildStatus.TERMINATE,
                         errorType = errorType, errorCode = errorCode, errorMsg = errorMsg
                     )
@@ -245,8 +247,8 @@ class BuildEndControl @Autowired constructor(
                             source = javaClass.simpleName,
                             projectId = projectId, pipelineId = pipelineId, userId = it.starter,
                             stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
-                            containerType = it.containerType, taskId = it.taskId,
-                            taskParam = it.taskParams, actionType = ActionType.TERMINATE
+                            containerHashId = it.containerHashId, containerType = it.containerType,
+                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE
                         )
                     )
                 }
