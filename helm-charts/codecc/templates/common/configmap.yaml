@@ -70,6 +70,8 @@ data:
       undertow:
         worker-threads: 100
     management:
+      server:
+        context-path: /management
       endpoints:
         web:
           exposure:
@@ -82,7 +84,6 @@ data:
                   requests: 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s,5s
       security:
         enabled: false
-      context-path: /management
     bkci:
       public:
         url: {{ .Values.config.bkCiPublicUrl }}
