@@ -115,9 +115,10 @@ object DockerEnv {
         if (jobPool.isNullOrBlank()) {
             synchronized(this) {
                 if (jobPool.isNullOrBlank()) {
-                    jobPool = getProperty(JOB_POOL)
-                    if (jobPool.isNullOrBlank()) {
-                        throw PropertyNotExistException(JOB_POOL, "Empty jobPool")
+                    jobPool = try {
+                        getProperty(JOB_POOL)
+                    } catch (e: Exception) {
+                        null
                     }
                     logger.info("Get the jobPool($jobPool)")
                 }
