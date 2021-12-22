@@ -29,7 +29,7 @@ class ExperienceRenewJob @Autowired constructor(
             val recordIds = experiencePublicDao.listAllRecordId(dslContext)?.map { it.get(0, Long::class.java) }
             ListUtils.partition(recordIds, 100).forEach { rids ->
                 experienceDao.list(dslContext, rids).forEach { record ->
-                    if (record.artifactoryType.toUpperCase() == "PIPELINE" && //流水线构件
+                    if (record.artifactoryType.toUpperCase() == "PIPELINE" && // 流水线构件
                         record.updateTime.plusDays(30).isBefore(LocalDateTime.now()) // 30天前更新
                     ) {
                         try {
