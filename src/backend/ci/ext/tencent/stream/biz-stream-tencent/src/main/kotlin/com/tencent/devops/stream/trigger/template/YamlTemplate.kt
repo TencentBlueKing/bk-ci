@@ -852,7 +852,7 @@ class YamlTemplate(
             strategy = if (job["strategy"] == null) {
                 null
             } else {
-                YamlObjects.getStrategy(fromPath, job["strategy"]!!)
+                YamlObjects.getStrategy(fromPath, job["strategy"])
             },
             dependOn = if (job["depend-on"] == null) {
                 null

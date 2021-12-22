@@ -509,7 +509,11 @@ class StreamScmService @Autowired constructor(
             action = {
                 client.getScm(ServiceGitResource::class).getGitCIFileTree(
                     gitProjectId = gitProjectId,
-                    path = filePath,
+                    path = if (filePath.contains("/")) {
+                        filePath.substring(0, filePath.lastIndexOf("/"))
+                    } else {
+                        filePath
+                        },
                     token = gitToken,
                     ref = ""
                 ).data ?: emptyList()

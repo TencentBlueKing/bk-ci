@@ -80,4 +80,11 @@ data class Stage(
         stageControlOption?.reviewParams = null
         stageControlOption?.reviewDesc = null
     }
+
+    fun getContainer(vmSeqId: String): Container? {
+        containers.forEach { container ->
+            return container.getContainerById(vmSeqId) ?: return@forEach
+        }
+        return null
+    }
 }

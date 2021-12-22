@@ -104,6 +104,11 @@ include(":core:quality:biz-quality-sample")
 include(":core:quality:boot-quality")
 include(":core:quality:model-quality")
 
+include(":core:buildless")
+include(":core:buildless:api-buildless")
+include(":core:buildless:biz-buildless")
+include(":core:buildless:boot-buildless")
+
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
@@ -438,6 +443,9 @@ include(":ext:tencent:auth:api-auth-tencent")
 include(":ext:tencent:auth:biz-auth-tencent")
 include(":ext:tencent:auth:sdk-auth-tencent")
 include(":ext:tencent:auth:boot-auth-tencent")
+
+include(":ext:tencent:buildless")
+include(":ext:tencent:buildless:boot-buildless-tencent")
 
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")

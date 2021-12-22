@@ -201,6 +201,7 @@ class StartContainerStageCmd(
                 previousStageStatus = commandContext.previousStageStatus,
                 containerType = container.containerType,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 actionType = actionType,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,

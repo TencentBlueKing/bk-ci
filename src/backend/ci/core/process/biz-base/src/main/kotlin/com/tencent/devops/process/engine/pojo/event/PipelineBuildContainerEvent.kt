@@ -46,7 +46,8 @@ data class PipelineBuildContainerEvent(
     override val userId: String,
     val buildId: String,
     val stageId: String,
-    val containerId: String,
+    val containerId: String, // model中的container.id，CONTAINER表中的seq id，TASK表中的containerId
+    val containerHashId: String?,
     val containerType: String,
     val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
     override var actionType: ActionType,

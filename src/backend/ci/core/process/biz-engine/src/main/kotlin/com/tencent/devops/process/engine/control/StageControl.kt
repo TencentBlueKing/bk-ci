@@ -44,9 +44,11 @@ import com.tencent.devops.process.engine.control.command.stage.impl.StartContain
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -59,7 +61,9 @@ import org.springframework.stereotype.Service
 class StageControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     private val pipelineStageService: PipelineStageService
 ) {
 
@@ -108,7 +112,7 @@ class StageControl @Autowired constructor(
                 return
             }
         val variables = buildVariableService.getAllVariable(buildId)
-        val containers = pipelineRuntimeService.listContainers(buildId, stageId)
+        val containers = pipelineContainerService.listContainers(buildId, stageId, false)
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
@@ -117,7 +121,7 @@ class StageControl @Autowired constructor(
             containers = containers,
             latestSummary = "init",
             watcher = watcher,
-            variables = variables,
+            variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
             executeCount = executeCount
         )
         watcher.stop()
