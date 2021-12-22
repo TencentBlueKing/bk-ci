@@ -37,7 +37,6 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))
-    api(project(":ext:tencent:plugin:api-plugin-tencent"))
     api("com.github.docker-java:docker-java")
     api("org.apache.httpcomponents:httpclient")
     api("org.glassfish.jersey.core:jersey-client")
