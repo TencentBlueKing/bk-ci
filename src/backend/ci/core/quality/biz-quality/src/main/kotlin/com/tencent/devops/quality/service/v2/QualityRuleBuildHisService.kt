@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
+import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
@@ -308,7 +309,8 @@ class QualityRuleBuildHisService constructor(
                     val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
                     val indicatorUpdate = IndicatorUpdate(
                         threshold = realThreshold,
-                        thresholdType = realThresholdType.name
+                        thresholdType = realThresholdType.name,
+                        type = IndicatorType.CUSTOM
                     )
                     if (userId.isNullOrBlank()) {
                         throw QualityOpConfigException("userId is empty for start ci")
