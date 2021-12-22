@@ -165,7 +165,8 @@ class UpdateStateForStageCmdFinally(
         // #5246 只在stage运行成功（不包括被跳过）并配置了红线规则时做准出判断
         if (stage.checkOut?.ruleIds?.isNotEmpty() != true ||
             !commandContext.buildStatus.isSuccess() ||
-            commandContext.buildStatus == BuildStatus.SKIP) {
+            commandContext.buildStatus == BuildStatus.SKIP ||
+            event.actionType.isEnd()) {
             return false
         }
 
