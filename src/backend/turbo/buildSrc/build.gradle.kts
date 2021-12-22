@@ -1,5 +1,3 @@
-import java.net.URI
-
 @Suppress("NewLineAtEndOfFile")
 plugins {
     `kotlin-dsl`
