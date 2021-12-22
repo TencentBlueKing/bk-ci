@@ -171,7 +171,7 @@ object StreamDispatchUtils {
                             client = client,
                             projectId = projectCode,
                             credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                            type = CredentialType.PASSWORD
+                            type = CredentialType.USERNAME_PASSWORD
                         )
                         user = ticketsMap["v1"] as String
                         password = ticketsMap["v2"] as String
