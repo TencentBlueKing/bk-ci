@@ -1064,6 +1064,31 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "rule_create",
+        "name": "创建红线规则",
+        "name_en": "Rule Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "rule_edit",
         "name": "编辑红线规则",
         "name_en": "Rule Edit",
@@ -1101,6 +1126,31 @@
               }
             ]
           }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_enable",
+        "name": "停用/启用红线规则",
+        "name_en": "Rule Enable",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
         ],
         "version": 1
       }
