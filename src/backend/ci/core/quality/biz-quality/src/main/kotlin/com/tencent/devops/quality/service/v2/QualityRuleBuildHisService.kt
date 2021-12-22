@@ -303,7 +303,7 @@ class QualityRuleBuildHisService constructor(
                     indicator.threshold,
                     buildCheckParamsV3.runtimeVariable ?: mapOf()
                 )
-                val realThresholdType = checkThresholdType(indicator.threshold)
+                val realThresholdType = checkThresholdType(realThreshold)
 
                 if (indicator.isScriptElementIndicator() && indicator.thresholdType != realThresholdType) {
                     val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
