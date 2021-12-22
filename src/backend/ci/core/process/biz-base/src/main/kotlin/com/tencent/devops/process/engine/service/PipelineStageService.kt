@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -132,6 +133,26 @@ class PipelineStageService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun listByBuildId(buildId: String): Collection<TPipelineBuildStageRecord> {
+        return pipelineBuildStageDao.listByBuildId(dslContext, buildId)
+    }
+
+    fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
+        return pipelineBuildStageDao.batchSave(transactionContext ?: dslContext, stageList)
+    }
+
+    fun batchUpdate(transactionContext: DSLContext?, stageList: List<TPipelineBuildStageRecord>) {
+        return pipelineBuildStageDao.batchUpdate(transactionContext ?: dslContext, stageList)
+    }
+
+    fun deletePipelineBuildStages(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
+        pipelineBuildStageDao.deletePipelineBuildStages(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {

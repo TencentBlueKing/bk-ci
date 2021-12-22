@@ -58,6 +58,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_CONTAINER = "r.engine.pipeline.build.container"
     const val QUEUE_PIPELINE_BUILD_CONTAINER = "q.engine.pipeline.build.container"
 
+    const val ROUTE_PIPELINE_BUILD_MATRIX_GROUP = "r.engine.pipeline.matrix.group"
+    const val QUEUE_PIPELINE_BUILD_MATRIX_GROUP = "q.engine.pipeline.matrix.group"
+
     const val ROUTE_PIPELINE_BUILD_CANCEL = "r.engine.pipeline.build.cancel"
     const val QUEUE_PIPELINE_BUILD_CANCEL = "q.engine.pipeline.build.cancel"
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"

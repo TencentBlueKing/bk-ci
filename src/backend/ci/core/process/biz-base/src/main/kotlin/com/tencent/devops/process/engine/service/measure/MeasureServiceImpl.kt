@@ -48,7 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL", "UNUSED")
 class MeasureServiceImpl constructor(
     private val projectCacheService: ProjectCacheService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val templateService: TemplateService,
     private val redisOperation: RedisOperation,
@@ -133,7 +133,7 @@ class MeasureServiceImpl constructor(
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
-            val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
+            val tasks = pipelineTaskService.getAllBuildTask(buildId)
             if (tasks.isEmpty()) {
                 return
             }
