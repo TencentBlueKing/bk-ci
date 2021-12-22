@@ -76,6 +76,11 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
+        val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
+            weworkNotifyTextMessage.message.replace("\\n", "\n")
+        } else {
+            weworkNotifyTextMessage.message.substring(0, WEWORK_MAX_SIZE).replace("\\n", "\n")
+        }
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
                 return
@@ -87,7 +92,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotSingleTextMessage(
                                 chatid = it,
                                 text = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    content = content,
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
@@ -100,7 +105,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotMarkdownMessage(
                                 chatid = it,
                                 markdown = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    content = content,
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
@@ -171,7 +176,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
         )
     }
 
+    private fun checkMessageSize(message: String): Boolean {
+        if (message.length < WEWORK_MAX_SIZE ) {
+            return true
+        }
+        return false
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
+        const val WEWORK_MAX_SIZE = 5120
     }
 }
