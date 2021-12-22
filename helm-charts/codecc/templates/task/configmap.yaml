@@ -1,0 +1,62 @@
+{{- if .Values.task.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-task
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: task
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        name: task
+        desc: Task Service
+        packageName: com.tencent.bk.codecc.task
+      data:
+        mongodb:
+          uri: {{ include "codecc.task.mongodbUri" . }}
+    time:
+      analysis:
+        maxhour: {{ .Values.config.bkCodeccTaskAnalysisMaxHour }}
+    devops:
+      imageName: {{ .Values.config.bkCodeccPipelineImageName }}
+      retry:
+        attempt: 7
+        interval: 1000
+      dispatch:
+        imageName: {{ .Values.config.bkCodeccPipelineImageName }}
+        buildType: {{ .Values.config.bkCodeccPipelineBuildType }}
+        imageVersion: {{ .Values.config.bkCodeccPipelineImageTag }}
+    aes:
+      encryptor:
+        password: {{ .Values.config.bkCodeccTaskEncryptorKey }}
+    pipeline:
+      atomCode:
+        codecc: {{ .Values.config.bkCodeccPipelineAtomCode }}
+        codeccVersion: {{ .Values.config.bkCodeccPipelineAtomVersion }}
+        git: {{ .Values.config.bkGitPipelineAtomCode }}
+        gitVersion: {{ .Values.config.bkGitPipelineAtomVersion }}
+        github: {{ .Values.config.bkGithubPipelineAtomCode }}
+        githubVersion: {{ .Values.config.bkGithubPipelineAtomVersion }}
+        svn: {{ .Values.config.bkSvnPipelineAtomCode }}
+        svnVersion: {{ .Values.config.bkSvnPipelineAtomVersion }}
+      imageType: {{ .Values.config.bkCodeccPipelineImageType }}
+      scmType:
+        svn:
+          old: {{ .Values.config.bkCodeccPipelineScmIsOldSvn }}
+        github:
+          old: {{ .Values.config.bkCodeccPipelineScmIsOldGithub }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-task    
+    {{- if keys $.Values.task.config }}
+      {{- toYaml .Values.task.config | nindent 4 }}
+    {{- end}}
+{{- end }}

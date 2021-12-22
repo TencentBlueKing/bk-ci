@@ -1,0 +1,40 @@
+{{- if .Values.schedule.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-schedule
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: schedule
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        name: schedule
+        desc: schedule Service
+        packageName: com.tencent.bk.codecc.defect
+      data:
+        mongodb:
+          uri: {{ include "codecc.defect.mongodbUri" . }}
+    codecc:
+      gateway:
+        host: {{ .Values.config.bkCodeccPublicUrl }}
+      file:
+        data:
+          path: {{ .Values.config.bkCodeccFileDataPath }}
+    result:
+      log:
+        path: /data/woskspace/logs
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-schedule
+    {{- if keys $.Values.schedule.config }}
+      {{- toYaml .Values.schedule.config | nindent 4 }}
+    {{- end}}
+{{- end }}

@@ -1,0 +1,16 @@
+dependencies:
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 1.4.1
+- name: nginx-ingress-controller
+  repository: https://charts.bitnami.com/bitnami
+  version: 7.4.8
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.10.2
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.19.2
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.8.8
