@@ -304,7 +304,7 @@ class QualityRuleBuildHisService constructor(
                 )
                 val realThresholdType = checkThresholdType(realThreshold)
 
-                if (indicator.isScriptElementIndicator() && indicator.threshold != realThreshold) {
+                if (indicator.isScriptElementIndicator() && indicator.thresholdType != realThresholdType) {
                     val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
                     val indicatorUpdate = IndicatorUpdate(
                         threshold = realThreshold,
@@ -313,12 +313,13 @@ class QualityRuleBuildHisService constructor(
                     if (userId.isNullOrBlank()) {
                         throw QualityOpConfigException("userId is empty for start ci")
                     }
-                    qualityIndicatorDao.update(
+                    val indicatorUpdateCount = qualityIndicatorDao.update(
                         userId = userId,
                         id = HashUtil.decodeIdToLong(indicator.hashId),
                         indicatorUpdate = indicatorUpdate,
                         dslContext = dslContext
                     )
+                    logger.info("QUALITY|update indicator type count is: $indicatorUpdateCount")
                 }
                 indicator.threshold = realThreshold
             }
