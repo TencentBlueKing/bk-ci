@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -108,7 +109,9 @@ class CheckPauseReviewStageCmd(
     ): Boolean {
 
         // #4732 如果是手动触发stage的事件或未配置审核则直接略过
-        if (stage.checkIn?.ruleIds?.isNotEmpty() != true || event.source == BS_MANUAL_START_STAGE) {
+        if (stage.checkIn?.ruleIds?.isNotEmpty() != true ||
+            event.source == BS_MANUAL_START_STAGE ||
+            event.actionType.isEnd()) {
             return false
         }
 
