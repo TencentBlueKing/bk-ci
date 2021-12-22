@@ -117,7 +117,7 @@ class PreBuildV2Service @Autowired constructor(
             client.get(ServiceBuildResource::class).manualStartup(userId, projectId, pipelineId, mapOf(), channelCode)
 
         if (startupResp.isNotOk() || startupResp.data == null) {
-            logger.error("Failed to start pipeline: ${pipelineId}, remote message: ${startupResp.message}")
+            logger.error("Failed to start pipeline: $pipelineId, remote message: ${startupResp.message}")
             throw RemoteServiceException("Failed to start pipeline")
         }
 
