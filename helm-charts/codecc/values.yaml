@@ -168,7 +168,7 @@ init:
     image:
       registry: mirrors.tencent.com
       repository: bkce/codecc/codecc-mongo-init
-      tag: 1.1.40
+      tag: 1.1.41
       pullPolicy: IfNotPresent
       pullSecrets: []
   entrance:
@@ -176,7 +176,7 @@ init:
     image:
       registry: mirrors.tencent.com
       repository: bkce/codecc/codecc-entrance-init
-      tag: 1.1.40
+      tag: 1.1.41
       pullPolicy: IfNotPresent
       pullSecrets: []    
   storage:
@@ -184,7 +184,7 @@ init:
     image:
       registry: mirrors.tencent.com
       repository: bkce/codecc/codecc-storage-init
-      tag: 1.1.40
+      tag: 1.1.41
       pullPolicy: IfNotPresent
       pullSecrets: [] 
 common:
@@ -283,7 +283,7 @@ gateway:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-gateway
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
@@ -324,7 +324,7 @@ task:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-task
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -368,7 +368,7 @@ defect:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-defect
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -413,7 +413,7 @@ report:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-report
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -458,7 +458,7 @@ asyncreport:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-asyncreport
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -502,7 +502,7 @@ codeccjob:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-codeccjob
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -546,7 +546,7 @@ quartz:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-quartz
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
@@ -591,7 +591,7 @@ schedule:
   image:
     registry: mirrors.tencent.com
     repository: bkce/codecc/codecc-schedule
-    tag: 1.1.40
+    tag: 1.1.41
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1
