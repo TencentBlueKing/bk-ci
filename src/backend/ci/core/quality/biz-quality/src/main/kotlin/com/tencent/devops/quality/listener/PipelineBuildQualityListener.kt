@@ -107,7 +107,7 @@ class PipelineBuildQualityListener @Autowired constructor(
                 logger.info("QUALITY|retry_rule_size: ${ruleIdList.size}")
                 if (ruleIdList.isNotEmpty()) {
                     qualityRuleBuildHisDao.updateBuildId(ruleIdList, null)
-                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, null)
+                    qualityRuleBuildHisDao.batchUpdateStatus(ruleIdList, RuleInterceptResult.UNCHECK.name)
                 }
             }
         } catch (e: Exception) {
