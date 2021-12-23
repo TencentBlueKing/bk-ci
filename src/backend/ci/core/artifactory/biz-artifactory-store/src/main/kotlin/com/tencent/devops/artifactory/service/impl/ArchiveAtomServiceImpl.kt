@@ -221,7 +221,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             inputStream.copyTo(it)
         }
         // 解压到指定目录
-        val atomArchivePath = "${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR/$projectCode/$atomCode/$version"
+        val atomArchivePath = buildAtomArchivePath(projectCode, atomCode, version)
         try {
             ZipUtil.unZipFile(file, atomArchivePath, false)
             // 判断解压目录下面是否有自定义UI前端文件
@@ -230,7 +230,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                 // 把前端文件拷贝到指定目录
                 FileUtils.copyDirectory(
                     frontendFileDir,
-                    File("${getAtomArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR/$atomCode/$version")
+                    File(buildAtomFrontendPath(atomCode, version))
                 )
                 FileSystemUtils.deleteRecursively(frontendFileDir)
             }
@@ -238,6 +238,12 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             file.delete() // 删除临时文件
         }
     }
+
+    protected fun buildAtomFrontendPath(atomCode: String, version: String) =
+        "${getAtomArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR/$atomCode/$version"
+
+    protected fun buildAtomArchivePath(projectCode: String, atomCode: String, version: String) =
+        "${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR/$projectCode/$atomCode/$version"
 
     abstract fun clearServerTmpFile(
         projectCode: String,

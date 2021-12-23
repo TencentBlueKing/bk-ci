@@ -29,9 +29,11 @@ package com.tencent.devops.process.websocket.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -40,10 +42,17 @@ import org.springframework.stereotype.Component
 class PipelineWebSocketListener @Autowired constructor(
     private val pipelineWebsocketService: PipelineWebsocketService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) : BaseListener<PipelineBuildWebSocketPushEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildWebSocketPushEvent) {
+
+        val channelCode = pipelineInfoFacadeService.getPipelineChannel(event.projectId, event.pipelineId)
+        // 非页面类的流水线,直接返回。 不占用redis资源
+        if (channelCode != null && !ChannelCode.webChannel(channelCode)) {
+            return
+        }
 
         if (event.refreshTypes and RefreshType.HISTORY.binary == RefreshType.HISTORY.binary) {
             webSocketDispatcher.dispatch(

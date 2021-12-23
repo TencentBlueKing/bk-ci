@@ -109,7 +109,7 @@ class BkRepoAppService @Autowired constructor(
         val url =
             StringUtil.chineseUrlEncode(
                 "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
-                        "$artifactoryType/filePlist?path=$normalizedPath"
+                        "$artifactoryType/filePlist?path=$normalizedPath&x-devops-project-id=$projectId"
             )
         return Url(url)
     }

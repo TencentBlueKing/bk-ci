@@ -156,4 +156,20 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
             tokenType = tokenType
         )
     }
+
+    override fun createGitTag(
+        userId: String,
+        repoId: String,
+        tagName: String,
+        ref: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return repositoryService.createGitTag(
+            userId = userId,
+            tagName = tagName,
+            ref = ref,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoId, null),
+            tokenType = tokenType
+        )
+    }
 }

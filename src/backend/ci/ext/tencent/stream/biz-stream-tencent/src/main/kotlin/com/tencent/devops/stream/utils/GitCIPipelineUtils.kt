@@ -33,8 +33,23 @@ object GitCIPipelineUtils {
 
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
 
-    fun genGitCIV2BuildUrl(homePage: String, gitProjectId: Long, pipelineId: String, buildId: String) =
-        "$homePage/pipeline/$pipelineId/detail/$buildId/#$gitProjectId"
+    fun genGitCIV2BuildUrl(
+        homePage: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String,
+        openCheckInId: String? = null,
+        openCheckOutId: String? = null
+    ): String {
+        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
+        if (!openCheckInId.isNullOrBlank()) {
+            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
+        }
+        if (!openCheckOutId.isNullOrBlank()) {
+            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
+        }
+        return "$url/#$gitProjectId"
+    }
 
-    fun genGitCIV1RequestUrl(homePage: String) = "$homePage/ci/pipelines#/request"
+    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
 }

@@ -37,6 +37,10 @@ import java.io.File
 interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
+     * 获取Api对应的Realm
+     */
+    fun getRealm(): String
+    /**
      * 归档构件到仓库中自定义路径
      * @param file 构件
      * @param destPath 要上传的文件而指定的自定义路径

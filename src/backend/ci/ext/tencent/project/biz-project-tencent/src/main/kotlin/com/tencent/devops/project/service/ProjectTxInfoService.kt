@@ -34,6 +34,7 @@ import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectFreshDao
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +49,7 @@ class ProjectTxInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
+        private const val MAX_PROJECT_NAME_LENGTH = 64
     }
 
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
@@ -71,7 +73,8 @@ class ProjectTxInfoService @Autowired constructor(
         projectCode: String,
         projectName: String
     ): Boolean {
-        if (projectName.isEmpty() || projectName.length > 32) {
+        // projectName表字段长度调整到64位限制
+        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -108,5 +111,19 @@ class ProjectTxInfoService @Autowired constructor(
             userId = userId,
             projectName = projectName
         )
+    }
+
+    fun bindProjectDept(
+        userId: String,
+        projectCode: String,
+        projectDeptInfo: ProjectDeptInfo
+    ): Boolean {
+        projectFreshDao.bindProjectDept(
+            dslContext = dslContext,
+            projectId = projectCode,
+            projectDeptInfo = projectDeptInfo,
+            updateUser = userId
+        )
+        return true
     }
 }

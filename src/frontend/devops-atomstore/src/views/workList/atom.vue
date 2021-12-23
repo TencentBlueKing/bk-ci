@@ -30,46 +30,36 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
                 <bk-table-column :label="$t('store.开发语言')" prop="language"></bk-table-column>
-                <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')">
+                <bk-table-column :label="$t('store.版本')" prop="version">
                     <template slot-scope="props">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary" v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL' || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING' || props.row.atomStatus === 'UNDERCARRIAGING'">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
-                        </div>
-                        <span class="atom-status-icon success" v-if="props.row.atomStatus === 'RELEASED'"></span>
-                        <span class="atom-status-icon fail" v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION'"></span>
-                        <span class="atom-status-icon obtained" v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'UNDERCARRIAGED'"></span>
-                        <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.atomStatus === 'INIT'"></span>
-                        <span>{{ $t(atomStatusList[props.row.atomStatus]) }}</span>
+                        <span
+                            v-for="(prop, index) in [props.row, ...(props.row.processingVersionInfos || [])]"
+                            :key="index"
+                            class="mr15"
+                            @click="handleVersionClick(prop)"
+                        >
+                            <status :status="calcStatus(prop.atomStatus)"></status>
+                            <span
+                                :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }"
+                            >{{ prop.version }}</span>
+                        </span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
                 <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150"></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="240" class-name="handler-btn">
                     <template slot-scope="props">
-                        <span class="upgrade-btn"
-                            v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION' || props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED'"
+                        <span class="upgrade-btn" v-if="['GROUNDING_SUSPENSION', 'AUDIT_REJECT', 'RELEASED'].includes(props.row.atomStatus) && (!props.row.processingVersionInfos || props.row.processingVersionInfos.length <= 0)"
                             @click="editHandle('upgradeAtom', props.row.atomId)"> {{ $t('store.升级') }} </span>
                         <span class="install-btn"
                             v-if="props.row.atomStatus === 'RELEASED'"
                             @click="installAHandle(props.row.atomCode)"> {{ $t('store.安装') }} </span>
                         <span class="shelf-btn"
-                            v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
+                            v-if="['INIT', 'UNDERCARRIAGED'].includes(props.row.atomStatus) && (!props.row.processingVersionInfos || props.row.processingVersionInfos.length <= 0)"
                             @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="obtained-btn"
                             v-if="['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'].includes(props.row.atomStatus) && props.row.releaseFlag"
                             @click="offline(props.row)"> {{ $t('store.下架') }} </span>
-                        <span class="schedule-btn"
-                            v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
-                                || props.row.atomStatus === 'TESTING' || props.row.atomStatus === 'AUDITING'"
-                            @click="routerProgress(props.row)"> {{ $t('store.进度') }} </span>
                         <span class="delete-btn" v-if="!props.row.releaseFlag" @click="deleteAtom(props.row)"> {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
@@ -327,11 +317,13 @@
 <script>
     import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
+    import status from './status'
     import { atomStatusMap } from '@/store/constants'
 
     export default {
         components: {
-            formTips
+            formTips,
+            status
         },
 
         data () {
@@ -433,6 +425,40 @@
         },
 
         methods: {
+            handleVersionClick (prop) {
+                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus)) {
+                    this.routerProgress(prop)
+                }
+            },
+            calcStatus (status) {
+                let icon = ''
+                switch (status) {
+                    case 'COMMITTING':
+                    case 'BUILDING':
+                    case 'BUILD_FAIL':
+                    case 'TESTING':
+                    case 'AUDITING':
+                    case 'UNDERCARRIAGING':
+                    case 'CODECCING':
+                        icon = 'doing'
+                        break
+                    case 'RELEASED':
+                        icon = 'success'
+                        break
+                    case 'GROUNDING_SUSPENSION':
+                    case 'CODECC_FAIL':
+                        icon = 'fail'
+                        break
+                    case 'AUDIT_REJECT':
+                    case 'UNDERCARRIAGED':
+                        icon = 'info'
+                        break
+                    case 'INIT':
+                        icon = 'init'
+                        break
+                }
+                return icon
+            },
             openConvention () {
                 this.showConvention = true
                 this.agreeWithConvention = false

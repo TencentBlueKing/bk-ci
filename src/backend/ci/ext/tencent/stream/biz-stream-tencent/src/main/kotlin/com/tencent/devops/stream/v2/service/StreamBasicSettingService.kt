@@ -99,7 +99,8 @@ class StreamBasicSettingService @Autowired constructor(
         enableMrBlock: Boolean? = null,
         enableCi: Boolean? = null,
         authUserId: String? = null,
-        enableCommitCheck: Boolean? = null
+        enableCommitCheck: Boolean? = null,
+        enableMrComment: Boolean? = null
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
@@ -132,7 +133,8 @@ class StreamBasicSettingService @Autowired constructor(
             creatorCenterName = setting.creatorCenterName,
             enableCommitCheck = enableCommitCheck,
             pathWithNamespace = setting.pathWithNamespace,
-            nameWithNamespace = setting.nameWithNamespace
+            nameWithNamespace = setting.nameWithNamespace,
+            enableMrComment = enableMrComment
         )
         return true
     }
@@ -208,7 +210,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
 
@@ -429,10 +431,17 @@ class StreamBasicSettingService @Autowired constructor(
             // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
             try {
                 val timeStamp = System.currentTimeMillis().toString()
+                var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                    deletedProjectName = deletedProjectName.substring(
+                        deletedProjectName.length -
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                    )
+                }
                 client.get(ServiceTxProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                    projectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                    projectName = deletedProjectName
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")

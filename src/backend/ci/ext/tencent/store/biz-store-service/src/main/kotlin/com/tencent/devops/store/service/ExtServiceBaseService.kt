@@ -122,6 +122,7 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -329,16 +330,31 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val dbVersion = serviceRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = serviceRecord.serviceStatus == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType!!
-            )
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                listOf(dbVersion)
+            } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    extServiceDao.getExtService(
+                        dslContext = dslContext,
+                        serviceCode = serviceCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
+                }
+                storeCommonService.getRequireVersion(
+                    reqVersion = reqVersion,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType!!
+                )
+            }
 
-        if (version != requireVersion) {
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                arrayOf(version, requireVersionList.toString())
             )
         }
 
