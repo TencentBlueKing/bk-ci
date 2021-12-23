@@ -170,11 +170,11 @@ class UpdateStateForStageCmdFinally(
         }
 
         var needBreak = false
-        when (event.source) {
-            BS_QUALITY_PASS_STAGE -> {
+        when {
+            event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
-            BS_QUALITY_ABORT_STAGE -> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
             else -> {
