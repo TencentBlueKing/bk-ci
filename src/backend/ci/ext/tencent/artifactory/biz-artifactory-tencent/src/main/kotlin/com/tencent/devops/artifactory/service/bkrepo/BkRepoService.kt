@@ -273,7 +273,8 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info("getBuildFileList, userId: $userId, projectId: $projectId," +
+                " pipelineId: $pipelineId, buildId: $buildId")
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -638,15 +639,17 @@ class BkRepoService @Autowired constructor(
     }
 
     fun externalDownloadUrl(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
+                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
-            userId = userId,
+            creatorId = creatorId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = fullPath,
@@ -657,7 +660,7 @@ class BkRepoService @Autowired constructor(
         return StringUtil.chineseUrlEncode(
             "${
                 HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-            }/bkrepo/api/external/repository$shareUri&download=true"
+            }/bkrepo/api/external/repository$shareUri&download=true&userId=$userId"
         )
     }
 
@@ -670,7 +673,7 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
-            userId = userId,
+            creatorId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = path,
