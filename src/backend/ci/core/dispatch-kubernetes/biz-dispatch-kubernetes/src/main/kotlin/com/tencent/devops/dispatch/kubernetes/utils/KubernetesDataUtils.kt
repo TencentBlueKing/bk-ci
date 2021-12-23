@@ -19,6 +19,9 @@ class KubernetesDataUtils @Autowired constructor(
     private val k8sConfig: KubernetesClientConfig,
     private val dispatchBuildConfig: DispatchBuildConfig
 ) {
+    /**
+     * 获取pod的目录
+     */
     fun getPodVolume(): List<Volume> {
         return listOf(
             ConfigMapVolume(
@@ -38,6 +41,9 @@ class KubernetesDataUtils @Autowired constructor(
         )
     }
 
+    /**
+     * 获取挂载目录
+     */
     fun getPodVolumeMount(): List<VolumeMount> {
         return listOf(
             VolumeMount(

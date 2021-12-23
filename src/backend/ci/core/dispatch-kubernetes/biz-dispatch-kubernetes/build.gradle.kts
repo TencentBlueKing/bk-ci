@@ -28,7 +28,6 @@
 dependencies {
     api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
     api(project(":core:dispatch-kubernetes:model-dispatch-kubernetes"))
-
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
@@ -37,6 +36,6 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:log:api-log"))
-
     api("io.kubernetes:client-java")
+    testImplementation(project(":core:common:common-test"))
 }

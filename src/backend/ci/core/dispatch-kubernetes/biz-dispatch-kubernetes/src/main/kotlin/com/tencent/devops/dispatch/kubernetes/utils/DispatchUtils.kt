@@ -22,6 +22,9 @@ class DispatchUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DispatchUtils::class.java)
     }
 
+    /**
+     * 获取容器池
+     */
     fun getPool(dispatchMessage: DispatchMessage): Pool {
         val dispatchType = dispatchMessage.dispatchType as KubernetesDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
@@ -41,9 +44,9 @@ class DispatchUtils @Autowired constructor(
         }
         logger.info(
             "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage|${dispatchType.imageType}" +
-                "|${dispatchType.dockerBuildVersion}|${dispatchType.imageCode}|${dispatchType.imageVersion}" +
-                "|${dispatchType.credentialId}" +
-                "|${dispatchType.credentialProject}"
+                    "|${dispatchType.dockerBuildVersion}|${dispatchType.imageCode}|${dispatchType.imageVersion}" +
+                    "|${dispatchType.credentialId}" +
+                    "|${dispatchType.credentialProject}"
         )
         var userName: String? = null
         var password: String? = null

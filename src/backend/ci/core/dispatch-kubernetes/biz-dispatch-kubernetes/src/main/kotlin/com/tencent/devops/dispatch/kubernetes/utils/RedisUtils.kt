@@ -116,6 +116,7 @@ class RedisUtils @Autowired constructor(
     private fun concatUserAndContainerName(userId: String, containerName: String): String {
         return "$userId#$containerName"
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RedisUtils::class.java)
     }
