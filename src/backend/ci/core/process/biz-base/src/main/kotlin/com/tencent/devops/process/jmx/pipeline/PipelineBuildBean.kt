@@ -29,7 +29,7 @@ package com.tencent.devops.process.jmx.pipeline
 
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import io.micrometer.core.instrument.Gauge
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger
 )
 class PipelineBuildBean @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val meterRegistry: CompositeMeterRegistry
+    private val meterRegistry: PrometheusMeterRegistry
 ) : InitializingBean {
 
     override fun afterPropertiesSet() {

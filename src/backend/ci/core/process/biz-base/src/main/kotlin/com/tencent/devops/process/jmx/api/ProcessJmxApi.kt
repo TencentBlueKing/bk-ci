@@ -28,7 +28,7 @@
 package com.tencent.devops.process.jmx.api
 
 import io.micrometer.core.instrument.Counter
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.MBeanExporter
@@ -39,7 +39,7 @@ import javax.management.ObjectName
 @Component
 class ProcessJmxApi @Autowired constructor(
     private val mBeanExporter: MBeanExporter,
-    private val meterRegistry: CompositeMeterRegistry
+    private val meterRegistry: PrometheusMeterRegistry
 ) {
 
     private val apis = HashMap<String, APIPerformanceBean>()
@@ -59,7 +59,7 @@ class ProcessJmxApi @Autowired constructor(
             synchronized(this) {
                 bean = apis[api]
                 if (bean == null) {
-                    bean = APIPerformanceBean(meterRegistry, api)
+                    bean = APIPerformanceBean(meterRegistry)
                     val name = "com.tencent.devops.process:type=apiPerformance,name=$api"
                     logger.info("Register $api api performance mbean")
                     mBeanExporter.registerManagedResource(bean!!, ObjectName(name))

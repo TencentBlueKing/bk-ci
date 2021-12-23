@@ -29,7 +29,7 @@ package com.tencent.devops.process.jmx.api
 
 import com.google.common.util.concurrent.AtomicDouble
 import io.micrometer.core.instrument.Gauge
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,7 +42,7 @@ class APIPerformanceBean() {
     private val calculateCount = AtomicInteger(0)
     private val executePerformance = AtomicDouble(0.0)
 
-    constructor(meterRegistry: CompositeMeterRegistry, api: String) : this() {
+    constructor(meterRegistry: PrometheusMeterRegistry) : this() {
         Gauge.builder("jvm_process_api_performance") {
             executePerformance
         }.tags("ExecutePerformance").register(meterRegistry)
