@@ -1,4 +1,4 @@
-{{- if .Values.bklogConfig.enabled }}
+{{- if .Values.bkLogConfig.enabled }}
 # Service Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
