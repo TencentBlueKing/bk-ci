@@ -4,6 +4,7 @@ metadata:
   name: {{ include "common.names.fullname" . }}-store
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: store
+    app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
