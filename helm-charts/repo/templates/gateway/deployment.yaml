@@ -1,0 +1,112 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-gateway
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+    {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.gateway" . }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  replicas: {{ default 1 .Values.gateway.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+        {{ include "bkrepo.labelValues.scope" . }}: {{ include "bkrepo.labelValues.scope.gateway" . }}
+        {{- if .Values.gateway.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.gateway.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ template "bkrepo.serviceAccountName" . }}
+      {{- include "bkrepo.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.gateway.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAntiAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.gateway.nodeAffinityPreset.type "key" .Values.gateway.nodeAffinityPreset.key "values" .Values.gateway.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.gateway.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.priorityClassName }}
+      priorityClassName: {{ .Values.gateway.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.gateway.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: gateway
+          image: {{ include "bkrepo.images.image" ( dict "imageRoot" .Values.gateway.image "global" .Values.global "bkrepo" .Values.common) }}
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          {{- if .Values.gateway.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.gateway.resources }}
+          resources: {{- toYaml .Values.gateway.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: BK_REPO_SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}-
+            - name: BK_REPO_HOST
+              value: {{ .Values.gateway.host }}
+            - name: BK_REPO_HTTP_PORT
+              value: "80"
+            - name: BK_REPO_GATEWAY_DNS_ADDR
+              value: {{ .Values.gateway.dnsServer }}
+            - name: BK_REPO_AUTHORIZATION
+              value: {{ .Values.gateway.authorization }}
+            - name: BK_REPO_DEPLOY_MODE
+              value: {{ .Values.gateway.deployMode }}
+            - name: BK_REPO_DOCKER_HTTP_PORT
+              value: "80"
+            - name: BK_REPO_HELM_HTTP_PORT
+              value: "80"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: gateway
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ui/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ .Values.gateway.host }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /ui/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ .Values.gateway.host }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1

@@ -9,7 +9,14 @@
 ## 生成Chart
 - 执行命令 : `./build_chart.py ${GATEWAY_DOCKER_IMAGE_VERSION} ${BACKEND_DOCKER_IMAGE_VERSION} ${CHART_VERSION} ${APP_VERSION}`
 - 可选项:
-  - 在`./build/values.json`中配置默认项 (配置项参考[服务配置](#服务配置))
+  - 在`./build/values.json`中配置默认项 (配置项参考[服务配置](#服务配置)) , 如:
+    ```
+    {
+      "bkCiHost": "devops.example.com",
+      "bkCiPublicUrl": "devops.example.com",
+      "bkCiPublicHostIp": "127.0.0.1"
+    }
+    ```
   - 设置环境变量来设置chart上传的地址:
     - `bkrepo_helm_bkce` : 仓库账号
     - `bkrepo_helm_pass` : 仓库密码
@@ -119,7 +126,7 @@ $ helm uninstall bkci
 
 |参数|描述|默认值 |
 |---|---|---|
-| `replicas`                       | Number of pod 1                                                                      | `2`                                                     |
+| `replicas`                       | Number of pod 1                                                                      | `1`                                                     |
 | `resources.limits`                   | The resources limits for containers                                                          | `{cpu:500m ,memory:1500Mi}`                                                    |
 | `resources.requests`                 | The requested resources for containers                                                       | `{cpu:100m ,memory:1000Mi}`                                                    |
 | `affinity`                           | Affinity for pod assignment (evaluated as a template)                                                                   | `{}`                           |

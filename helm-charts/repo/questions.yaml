@@ -1,0 +1,103 @@
+questions:
+  - variable: common.username
+    label: "初始用户名"
+    type: string
+    default: "admin"
+    description: "bkrepo初始用户名称，默认admin"
+    group: "bkrepo初始用户信息配置"
+  - variable: common.password
+    label: "初始密码"
+    type: password
+    default: "blueking"
+    description: "bkrepo初始用户密码，默认blueking"
+    group: "bkrepo初始用户信息配置"
+  - variable: mongodb.enabled
+    label: "是否部署mongodb"
+    type: boolean
+    default: true
+    description: "通过Sub Charts方式部署mongodb服务"
+    group: "mongodb配置"
+  - variable: externalMongodb.uri
+    label: "外部mongodb服务连接字符串"
+    type: string
+    default: "mongodb://bkrepo:bkrepo@localhost:27017/bkrepo"
+    description: "仅当mongodb.enabled=false时，该配置有效"
+    group: "mongodb配置"
+  - variable: init.mongodb.enabled
+    label: "是否初始化数据库，支持幂等执行"
+    type: boolean
+    default: true
+    description: "通过Kubernetes Job方式，在部署时Hook执行初始化mongodb数据库"
+    group: "初始化job配置"
+  - variable: ingress.enabled
+    label: "是否创建ingress"
+    type: boolean
+    default: true
+    description: "配置bkrepo Ingress，外部通过hostname方式访问"
+    group: "Ingress配置"
+    show_subquestion_if: true
+    subquestions:
+    - variable: nginx-ingress-controller.enabled
+      label: "是否部署nginx-ingress-controller"
+      type: boolean
+      default: true
+      description: "通过Sub Charts方式部署nginx-ingress-controller"
+  - variable: persistence.enabled
+    label: "是否开启"
+    type: boolean
+    default: true
+    description: "是否开启bkrepo数据持久化(不包含mongodb的持久化配置)"
+    group: "数据持久化配置"
+    show_subquestion_if: true
+    subquestions:
+    - variable: persistence.size
+      label: "Volume大小"
+      type: string
+      default: "100Gi"
+      description: "bkrepo Persistenct Volume大小"
+    - variable: persistence.storageClass
+      label: "StorageClass"
+      type: string
+      default: ""
+      description: "bkrepo StorageClass"
+  - variable: gateway.host
+    label: "bkrepo hostname"
+    type: string
+    default: "bkrepo.example.com"
+    description: "bkrepo必须通过hostname访问"
+    group: "gateway配置"
+  - variable: gateway.service.type
+    label: "Service类型"
+    type: enum
+    options:
+    - "ClusterIP"
+    - "NodePort"
+    - "LoadBalancer"
+    default: "ClusterIP"
+    description: "gateway是bkrepo的服务入口, bkrepo通过暴露gateway来提供访问"
+    group: "gateway配置"
+  - variable: generic.enabled
+    label: "是否部署generic registry"
+    type: boolean
+    default: true
+    group: "registry服务部署选择"
+  - variable: docker.enabled
+    label: "是否部署docker registry"
+    type: boolean
+    default: false
+    group: "registry服务部署选择"
+  - variable: npm.enabled
+    label: "是否部署npm registry"
+    type: boolean
+    default: false
+    group: "registry服务部署选择"
+  - variable: pypi.enabled
+    label: "是否部署pypi registry"
+    type: boolean
+    default: false
+    group: "registry服务部署选择"
+  - variable: helm.enabled
+    label: "是否部署helm registry"
+    type: boolean
+    default: false
+    group: "registry服务部署选择"

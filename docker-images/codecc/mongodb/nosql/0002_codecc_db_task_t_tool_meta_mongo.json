@@ -1,0 +1,1249 @@
+
+{
+  "_id" : {"$oid": "5ed4bcd0f7a4324a014a2187"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "BKCHECK-CPP",
+  "pattern" : "LINT",
+  "display_name" : "bkcheck-cpp",
+  "type" : "STANDARD",
+  "lang" : 2,
+  "brief_introduction" : "基于AST的C++静态代码检查工具",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/bkcheck-cpp",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-6456504fa11546329d5b1f26b118d8f3",
+  "tool_image_revision" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/bkcheck-cpp",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/bkcheck-cpp",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /usr/codecc/tool_scan/bkcheck/cpp && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/bkcheck-cpp",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:f0ef0364abe5facd0772fc0b6005a3f2f7c3f2c3440f1590a92b5c535ba8adc9",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1591000272202,
+  "created_by" : "admin",
+  "updated_date" : 1591603087190,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea6c875215e9c4924a5"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "CCN",
+  "pattern" : "CCN",
+  "display_name" : "圈复杂度",
+  "type" : "CCN",
+  "lang" : 65535,
+  "brief_introduction" : "通过计算函数的节点个数来衡量代码复杂性。复杂度越高代码存在缺陷的风险越大",
+  "description" : "通过计算函数的节点个数来衡量代码复杂性。复杂度越高代码存在缺陷的风险越大",
+  "params" : "[{\"key\":1562675570267,\"varType\":\"NUMBER\",\"labelName\":\"圈复杂度阈值\",\"varName\":\"ccn_threshold\",\"varDefault\":\"20\",\"varTips\":\"圈复杂度大于等于该阈值的函数将被检查出，在风险函数列表中展示。建议设置为20，不能小于10。\",\"varRequired\":true}]",
+  "logo" : "x¥Ç\u000e«PE?È©[5 ç\f\u0006LN__¼W*Õ¸ÔXÆpíË9{¯-Q|¶Ïÿ¶Ã§.Ái¬ÿ/û¬%ýO\u001b²{BTÿw1½ \u0011ú}§üùÈ½ä}åy{õ?ß0±é¹Â,+\u0013Î»\u001b\"ª® \u0006%#oU¼­S^À(>¤$¹\u001dÔ¡Ñ\u0015wÇñðíg\u001aÃf/êÛö×ÄËÈ:âÁÚ¸*_rzÎW´eêàCëà\u0016ca&rõ|\u00195¿Bí\u0010üÝÒ(ãJVövU\u0014\u0007IFàmNUdq£\u0018¸?ñrÇ\u0007nFE\u00028(&Ðá9`Þ\u0000ÔaC\u0012`§7C¸ÚÖ\u0010ÛÖÈ÷=IkÊv¡²bLó\u0013\fæúJFýwu~%¡>!Nªäþ×s\u0012ç\u001dåÃòñ÷ð¿++$/¬\u000fTttaôG'Æ`·\f*c\u0019jõ\u0010QD}Xu\u0005¹ð)ÓÏ\u0005EC\u000fË÷ï)\nJôÐÙ<ÏsÁ1Ð<± Q\u0012\u0019´üÒè½LÀî®\u000f­3W÷G(ð`]í1HHl0@z¥^\u0015`à\u0010±\"\u0019·3«·0¦[jóZÛ\u0015ü¢Ó5´.M&Z®D¬' ìòIôåÀ#}!oÃ=¼+\u0012\u0017w´B\u0018GÅ²¬ )RX\u0014+é<\\m¸\u0005\u0014\n0h £æ\b@´W¬ºÁóÜÿÉiHxíh\nmÉQ\u0002¥Óý-\r2¡\u0004ÛûhÑ4\u0010à-\u0003Ç<~UõùH2p;AB¡\u0011A­ä \u000fgRÙL¶g\u0016Òó\u0000¼}.Ì,·\u0010c¡8Já;ÙºýLÂG\u0012»ÍKOå'HÇmCm½Íµ\u0001\u0012Öh\u000f= ½O÷Ï\u001fä\u0017´«Á°P>e¸,\u0006û±ÐæÆ\u0004\u0011ðºÌ6\u0015\u0019*z\"1÷÷é5jÚöªøKb\u0012\r^&6q^#ñ+Óú«¾LªÀ\u0010\u001b?ù\u0001\b°u¿*°çovjI\u0007sª&C÷å¿\u0002×*\u0019Ö\\rRm=,I96ÍÌ°*\u0013®}räùC¹igø07°\b4A$Ùè?\u0014$ dM\u0010\u001e£['Æ©KÙ\u0007\t\u001dî=\u0000yK¼[rÓn\u0005Ö\u00142viU'pÃ)\u0001ëIN53[â2Qâ*\b\u0000w¶\t\u001e4I`Þ'®æ£N}§\u001alÔE\u0018QX\nOWêÈç¯±!AnÅø¨ô*.íÄ·µæ¢±~\u0018ð0¦©q¥Ñ d.§\u001bä­\u00050\u0016¶\u0017¾X¸vMj­Y?h\tÜlLEî>ÑÞ\u0003máX³¬­\u0005ÃGf>³<÷Ñõ\b»JAGëR\u000b\u001fBw,ûHoÃ@A?|\u0010¥áõZ\u000fÙ;ñ·@\u001cè\t\u0016ý<\u001eîm\"«\u0007VR=é(³ù½w7Í\u0012\fm\u001e?;\u001cáæÙ'Ð<dPçþu\u001b¨ÈØ!Åº+.!Êþ÷\u001bJ\u0016ß->°ê=*=È\u001aÎ\u0018Þà\fºé\t×~A.bÁé]®:O98t#Ò¬ñ¿\u001fgQÈêd?ìØDÜ÷\t¸üÁý 4Ý]9åïòi$\u0004¸µÀ~\u001e6ÖM*õ)Ää2¢²3Ìîj\u001d¿ÿÌÈ`\nÊAN?T(µ=ô·\u001f,Õ´ÂvQ\u00161è;Û8Ã8[Õ8¤úòÚ Ë´fva\\H÷\u001bâepÂ\u001e\" \u0014åæ<ITº\u0006amò8SO;|& ¹Ð(uwDu\u001eNù>\\ÚPÙ\u0000#\b[@\u0011ÆMó¡Q~\u0017|Z+\u0006BF­Î BÚÏ;ç¬û\u0017÷OÄÞêÊ§?B÷\u0001¿63ãA°óa¾À'l¿®&L\u000eßl8=\bîoç0\u0005ø`~\\.(ß³fÓg1s`IÑ¶Ù\u0012Õ+öS·õæÞ)âCÑ\u0000{T_EI Ixp\n÷p$µ\u0002L\u0017ê)`ó\u0011lEc¾òRÊ\bØç\u0007®Ï-15Ú#Ò;W¸Íª:Á_­j3*êJòØß\u001fÓVLW©¤º\u000b8oµñà&f!¹¼\u0017\u0016\u001bã¢\u000fà\u0019@|g\u001cVMWDf&å)ÖH-DÊ²Óæû¿\u00018Íuk<\u001a8j\r\u0014X)qMÇØö2c\u001býgÝ\u001f½iá£3k·,i³\u0016ê­\u0013Äs%¨J×U}xª\u001b\u0007~7Þå4Â\u0017Â³|üÓN\u000fx>ÃÚÍºÍÈÌâ:N\u0005¶\b¬º¯ù3Úq\u0010Ì\bâi\u000eÂ<2ÖÌ·+î\u0017ÙLh±ifmT.<w\b\u0016Ï¶¸*VGÅ´\u0017ãíSñS|ì\u000e6cñë~ð\u0016Ã+ßÜ\n¯eP\b\u0016oèBg\fÙáÒ}¥¢±e\u001bFeF\u0007/¹ÜÁrQ\u0000Ï`èâï\u0000ÅØ}\u0007-[×z '\u0016z1\u001aÎ\u0001|ó\n»\u0001F3\"7&\u001fÿ\u000bb¦\\&ºßsæGCËýÐBIhcâÁFî|x2$`Ød2õr­À¬qn>s~å.7cÍ\bcúx.ÒìðZÃ·'VÅs\u0006\u0018Y\u0015R¨Ë°\rø\u0001©n\u0001.~ßo¾X=·Ù£ÙÕBï|ÞÍ\u001f\rfhó\u0018GU\u0013!2y\\ùð)rÏS\u001aåSL½§?\u001cýH)`¤õ!Y¤#É\ntõ\u0012â\\(hÐ:³B\u001dÜÖâ\u0018ã\"Éã\u0018ðìð\u000fã\u0013ßÉê8­!è9(³\u0001AöIi4ìÁ·¿5^¬\\òjdû0êB\nðýé3m/E\u000b q\u001a7Ã$ñÉç\u0004yí\u00001\u0013áçîúã\u0006¹Ü1Ó·Ø·\u0010\u00114\u0006ÏRô{[\tåïÌÃX[`à\u0002\tÇ%\u0016³S6\u0000+¡ÑªA\u0018SÃÖ\u0012§$wÐ\u0013]½&¸­ÅL';Eæø\u0003gÜ\u000eæí6+~)×åîìÒÕ»ZÁMS¶C~sî\u0003I¶r\u0002\u000bâ«{ÇnOzûðÀC$S}cb\u000bq`÷6~H=zÈÚ³}iZØÛ:êÅy¡R¸£,wZ¦TF¦ª´l\u0010QoÙh½^\tMÒ\bä8·cÀH¨%HY\u0005Éª\bä5 ª-ê6]DÏ4Ù\u0011kÁKõ\u0004c\u0011¾(ÊdäÊ\u0011ÙñèAñc3kN+öÍ4>çËî¨RêãA¦ôGSL¿ª:¨rìØï=#(5É¼Ë§,¸µ#pg\tÝÆ\u0003¬½%lXÃÑõ\u0012\u0010wubwã\u0004ßÑ\r\"³%Í7&¤S¬\u0016\tNØ\nR\u001eµyH<Ýh\u0014ä_G`/aì\u001eWWÆJÂýkdæ/÷æ£ÊÔâ\u0010?\u0015àj0EOº\bjrKîØ¾4@|\u0017ÓÄó\u0018ö<$Ý^æÙêñziRPf®+\u001dÕü8ò{)Tâv Ë@È\b£«ÄqøQÿ3\u0001Ý6Òv¤ù\f/¹£\tjïü\u0003\u001f´!ûûß'%r+R5éü<ó\u0016a\r\u0013;¬-óÊû²òÐ¨e\u0016ºÀÍ[Ô\u0001°ö\f\u0012ãÓ¶ü\u0007\u0005ÐåôòÇ\u000e(1ÏÖ]éYÔÕÐWdÃ¸Øóû\u0012\u001bkØ0ó«ü*¾ÔôPa¿zô÷Ý®RÓµ*Q;£Îê\u001bí\u001a:Ôd\u0012'îv\"\u0000\tÝ(cM|ÓÞê\u0018@üJflùìÄ+Sw,ü¾\u0002Þ0£È°KHzÔ$ð\u0015\u0004¬|Áq\f&êùmªK\u0000\u0003\rt:|OG\u0019\u001eäÌÈD\u0005Aâë¨ûõ\u001dvÕd_t±DçkVð¾ì\u0017IaVkJ¬T)­í¨ä|\u0000âliçÎÛt\u0004Tjùk\r\nü¿ç£*a%Ã+PÒc£uý©_¾ÂýÜØ¬¤²\u000b\u0013gb0ÙP`T\u0018\u001c<!hÀã$¤ªÝ°b\u000f«3ÀzG(\u001bEû\u0017v\u00182\u0018TUO\rëçË\"ç\u001f\u001e$]FM\u0002x¶ÍW\u0007Vpþ#5\u0012ÑÙ~»,WZ\u0013Ãÿ¨håm\b(äãÚ¢È½¶\u0000Rbé©dï3NÒã3Uh«\u0014g,ì<+Àú©?yÕÌ\u0018Ý\bÜ\u000e r`:p>\u0013úãní\u0017\u0010RPÜR\u001dú\u0001é\u0011}NEñ*yVòªê3±`SQv#2Åì$¡Itø:1x;}n¿\u0019¥\u000b»~ç\nFt3s-Ù=÷ùÚpí]©A¨ªld¯Rñå­zFù`)\u0005M¨f\u0018\u0004X\u0018üÃ>è\u0007sòòíYM,îcé¡îîìº\\ûÓ>zÎoF\t\u0016d\"0¶Tª\u0017à(feÖ'\u0010ý2éÖ\u00128Pååüñ¢Pu¤È\u000b£½\u0013>cÝ\u0000ÐDïidàxrÙ4«8­m\u0005ÞõW)ã¡Rµ\u0017äD,\u000e\\ ;ô°dH,2¢b¹Ý³FîsÔW![CpX`ÉrLº\b]üÄFNQ¹záçð74~Ï©é?$¼i\u001e\u0016±ZÞY³\u001fÀÆ<úx\u0016¶WèZ*ïp\u001f¥(ØÎÍ8³%ã%<Å_)¿ºÃýÜ¨Æ\u0018Ï<\u001a\u0011¼w\u001bf6rÿJ{lÓcÆqm-\u0017\u000b:kå|¬&2´dX÷X\u0000H[BÈtä\u0014ñ¸ÚµÂÅ\u001eS\u0011\u0012ä°0§ÇaÆð*ÈòxîïÙq|Î\u00050\u001dä0½»ý\u0014ª 4@=¡¶ºPã\u0012)SA H~7Â0}ÜEm\rk±c8^cJ\u0016\u0017?!\u0017Õ¹'Î(ür\\aD¥$Ö+\u0001äTFY\u0016.ñÉ\u0018N¤tdàµ¥ÝÑiè\u0013\u0004a~T±=O´]*u=Ý«Ô\fÐëCå.ã\u0019\u0012Â9\rûú\\\u0005Iô\u000eGRÒ0\u001f\fJ^U\u0018ÄQc\u000bª\u00119I\u0010cº´È¤ç\ru¾±e\u0011p±ÃÒ\u001a3\u0000QbÅUÇ\u0016^­;\r¢\u001fÒÍQ!'*BÞRÍ\u001dé\u0013.|\nÍ4Òµ/\u0016Fè áoô\u0006Â­g\u0017Ã\u0010!Hi)'8\u0001PèKd÷¬®Á\u001cï\r%Ó\u000e¦Î£\"\u001bbpj«ã°pî®\u0011\u0012|¨Ò\rNö\u0017O\r\\¡7ê\u0014on:ÓÌpÑIu­Î. \u0005:\u0015ü¶Õ*Cº#\u001b\u0002i=MAì\u0003$îQnIlÚ\u001bNÁîA60Èßpbí´ãGÒqg2Á\t²d­h\t\u0013%ÊcN¾¨¢]\rá@xÖ\u0007KZÁì\u0012ÐJ\u0004 a\u001cß\fÚ)Z=¶;\fó »s]¯v\t\\j³¿iMæô/*¹&Ñ\u0018ÉVPÏ^PÊË§ßªniÍË¦FÉ\u001e\u0012Hå\u000e\u0012Ó:2æ\u001f\u0013}Ñ\bõöª\n^U fï2Ýô\u0006}ÃÈ«\u0004wUþæ'M§6'#^,KÒØüÒ\u0001ä\u000b©bD4óRMÚúaèÏ1>Ý*yTNµuu5¤dop×Q§\u0017\u0006vÖåpHÓûË/þ}Bj\u001fúÏPÛ¹ËA¥9*\u001dWU\u0015WÂ'æB{5hw\u0006Íh\u0003s\bt¢{¡¿$³6E×Ã\u001f[ÏýaÞë)npDÞÓÝhh\rlÅ\faó´Ù6ðéO¯Ð\u0007ÎD6£éeJÊ_\u0000O½5ÙJfææáõ]dÈzCö99µûÁ«þX´=qö³û\n_mÎ¹Õö\u000fÊ4ëÂÔI\u0012;ÿf\u0011·OSÔ/\u0018¶5À\nXK½ÐWG\u001d¥õ\u0019Qû+ê<\bü\u001c·\trDGá2µÚ8qBIù\u0006aõöc=DÈ\u0015\u000e\u0016)/óÆÚaæÙVò®èÇì&Â\u000eÞë\u0017\böÉ~*\\·%\u0016\u0019¥ËøAý«f½i5Ü6VÏdm§=Áz\u0001fÄë´%_U\u0005cã3Õ\u001clÌò\u0007ß£\u0016Í÷ÌX¼§ÿb×\u0015ß+ß¥Ðvnç\r\u000f\u001a¬ÅávôF\u0005ìtæ]\u0019hï©®ZâWVÃ>\u0004Áûj\u001b\u0018ÎüN82öxvýMW§ÒÐA2gÈX\nX,t\u0010Âå,ÀR\u0007î;ðÍ¿Ód#\"í¢\u0015÷XÎm^+üAFVÒ!W\u0005sNªÖ/m(Kñ5¾\u0018âÚVú(?ÚÊê)Ç¨«\u0018\t©>Pí\u0001\u0015ÄbÙ¤³ÈÀftÑL2\f7QÆá\u0018Ne;bÇyC.±ÄFQÅ·ûjTµ}§*ÑÉéåÉ÷§ø5Õ0Ô6û\u0019}Hú0!2ÐÝA\u0010xûñ\u0016\u001d\u0005±çßY%pÙ³ÜXw\u0000iùBé\u001fÖ\rÿ Ìo4*$\tk¡,?]êû[ö{&Y±¶¶i5¨³\u0010c)°Lg{'øÚ\u001a&¸êzÿj¼¾a\u0000nL\u0017õÍ\u0001m\"\u0013ù2 d\u001cHnaÝÊ×Ë´n]@fðî1ð.9{ÜÎV\u0000§\u0006\\«¡\u000e×]#5^qå.`\u000fóèËgO±âqx\\\"ÞV\u0018<¨aFíîÛ74S+ù1\u001dÁRqÆõk¿l´Õ8K\u0011b\u000eè9ÆR\t\u0006xJátU!4 o¶ó®ð$hX%ô6És\u001d\r¦4\u001eØõ\u001b*´ü°VB\u0011Ô,xñ÷ê£f<iÁ±ÏyÜ¶có\u0017hñò§x\u0015ÏzÙÔ\"1ð\u001e\u001d[Í^FVí2îUÅê&yë1Ê\u0004\u0011tÈ+¼±Å}\u001d\u000f\u0010ËiOµ¥/þ³Ã¹Ñ¢ß\u0001.\u000e¶ð2¯øj\b\u0011J\u0018?ÊwR\u000bjÚµWBl«\u0000T¨õ\tgù\u0011õ\u0017\u0001d\u001f×ºd øþð#\u001dVQÖÏî7ªªj±ÕÆv'ó}ü4=Ð4r({ÚZEÏÏóÄ:.«ÇÝÙ6FFê÷±é\u0007ÆXvg?¹v{!\u0013fÍ1U%èÁ[?ÿØº'\nÎoió\u0017åJ'¹\u000e-ü¥¥\n\u0001~Â£{\u0002\u0004²±¬²\u001bWà<\u001dhÙ§Åö\u0010\u0018í%¥\u0007 ¾\u000fV²=º»vñ\\þç\nK;­Þÿ(ØG¾\u0003F¤6½Ïw½SgHJ#\u000e\u0002X-_e²½)á¥'¶A¤n;îTØîàúâÁ/ÁËR\u0019Y\u0010Fò#Ð¥v7\tù\u0011\u001aúDu\u0000ÅøÂR0Ì@õH\u0011x\u001e\u0007z\u0015%¿û\u0019\n\u001c\"Õã4`µ¹Ô·9-\u0004pÃ\nñ/\"\u000b±¦^\u001bnâë\fÑ½\u001bÿÛãqâ\u001b­ê«e\u0015\u000f%~Õåµù%!æË@X=¯ëÙÿD-yE\u000e¦\bÅº30ÄÜìñÙ3l%xMÀÄÖP²Ýuõ.êM%\u0016\u001c&dÅoÊ`ÍÞãg¾Ím$.[Ù\u001fU£@\u000e²cr\n\u001f<Vìà9É\tWÊ!ýïË³üï\t\f/%bô\u001dh\";zgpá#?ÌÍ)\n\tàÙ2@\n¹Ï%ê7°\u0012û@¹&çÓ·c°,Dä¶Ç¹*4àÍxÿ±µçi¦\u0000\u001eÈ\f\u001floW\u0002 ¹ù[ÈÄ\u0017ªX¿ãñ3ç²ð|{_Ê\u000f´Ò`:\u0000sË@5=£7à£\u0003¤¾'`z±Ô<\u0018Ôvã×è±B`Eòk\u0010Ñ/@¨\u0006ëê¸³±CÒâm=ßl\u001d6o3­=°Z¾\u0001Gåól\u0002\u001fÏnÄ_hÃVMÌmå£ÄWV¸¿¸õ{^©aÎ\næû\n\u0013sq«ôK#¼ø\u0006·ÇÖ³\u0000@i¦¯Ð'hc.MoFU8yñ\u0014ÖäÖ¾§ \u0004D¯ô°ÿú¯yIêÒnÂÊ÷T7p1!w\u0019uð¨ã¯_\u0013'\u0000\u000fÑy_2.§xÑ½c±,B-@+\f\u0015\u0006îéû@W\u000f³Ç@U\u001e\u0002`­Z3p\u0007k1\u001e\u001d_¡¦\u001a£ºÓ¨\u000eV\u00102üÒ+Á\u0003)Eg#í]¼ØÐÖVí\rlÖVHt\u0001¸ósím£æ\u0018\u0006qÍè´uó­¢\rgi\u00154¨u¨æyÏÂ{\u0000è|IØð½·JÅ+KÿVJÕÆ>ÍÚ@µÁ\u000eÝElã\"Àë\"©¾|»¤í]\u001bå©\u000e{I»ÿ)pÜÑÇsÙébâ\\æ4ð`\u0000åW;\":©Û$¼Ç¥õ&EVíêD\u0000IX¡\rWÆq ð\u001eÒ\u0005\u0002d}ÍÎ2=\t°®ß0\u001d¦\u0010@\u001a¡\u00007\u0018Â -gË{|6ÈÀ4±\u0016X8@Åo\u000fCÃÕ2{|~QH-eïîO\u0017È\u001a\u0014M4\u001bÛ»dX\u0013¶\u0013Ú+\rãö)­\fz\u0003óÍ#îÖY=Ïáî¯ü]êÅò3Õ\tôÇí}µã5J´ô×nGCß\u0001Ïr\u001fË&Ç¸5]\u000e\u000eD¯v-øJrRw¬¼¢ ¶4ÂBkHÐ%_\u0003a2P\u0000é{ÎGu¶§\u0003¸Íò:K\u0017£ÀüÜ!\u000e»\nï\u001ac\u0015v:Û~ñ¡×4#ÜÃ%¿­)\fò¯çÁlD\u001e}ê[j¢\t¬%íwØ}¯¾K@72ÖQ ì÷Æ1^\u000fu\u0014\u001cï'õå1\u000b\\>X¤eM,ùä}Õ_#)'^£ù2\u0000\\=}äéäí//½Ti¢!½x\u0019lYTHÉ$;çg\u0017\u001b&}\u0005½©dº¾d¤¢J î\u0013«\u0010,.H*Ô<|¢VlÉ§èõëwz>î¯\u0012É\u0007Es'Fö%î6`\u0016È¶±\f\u0015Xaò1ÖD\u000e8ºD©&\fgîS§¢=R£4_ÞSV®od\"Èñ& \u0006hý\\ÁÚ(knùÞÛ=#pêôüqA\u0019\nw\u000f\u001aqèüzî7é\niQÊ\u0010®ÅÀm>Ül)ßz1BÊ¦\u0000Ð \u0000\u0013#ÌGOS²¨Ùó4l3\u001e¥gáCmÕ]K¨,¡8ÕÐØõ=ïIP\u0011Ç\u001a\t9=ÁJ%w\u001b]É8ÁhÒ5o0<Ãê#ó\u0003ÿ2\tp\u001cKXãe\u000e.jDK\fqYje%µÑ\nù[%ÍólI3ë¿t\u0011²7ëwÀ°=ú0-l>ë­Ô\u001c>;nr\u0019ÖoHSÇ4\u001få]\u001f°AÒkù\u0010Î\u000f\u0004\t,¢î\u0018ý\u0010$P'ã\u0005Úä°¨x\u001b9cLÊl,Â\u000b+ÖéF\f¿C\u001a:JcêMíøz\u0011ÄÊï¶)kêc\u001dâÈ\u001aã¶)öé\u0011õ\u0014\u0019<©\u0013¾ú9n/È\\?ÖÐ´°\u000bN\t3\u001bñû\u0019ç(ùzàLI¾KA¬,w\u0019:+ég\u0007`Hû\u0006^¡4Óö»V*Gæ\rµ_;üò\u00057\u001eÕ¢°â®FFöI°\fÝöÍ+RE\u001d\t-uÇõL\u0013z«º÷\u0018çæ¨j.j.)(ý\u0004åS\u0017AÆÄY]®æë0BÝõéý\u0004ö;;¾¶0È9®'©ª\u0013>gµ\u000b÷´tIiµþA1¸¢Î½4é`Ãø;ûÂ51róùñå·b\u0001aIÎBá-8\fà+CqÍ\\êZ8Þ2³d«ëE\u0006rÕEH¯¨ìJ£È¿Ü\rÆð®_\fW+~Þ^:²C­ÝBV~3ñ-e\u000b»\nö6ï[|^¬üZÚ¬>\u0015þEL»3êYSKèN\u001dÁXI\u0006ÎÝ\u0003!á\u000e®K.[¬ª\n!NC_<Xì¸Q\u0014ª¥\"¼ù\b_±¸`öy\réìl¬A\u0003üFèoÌu\u0000jy|jÐÊ[öø7X\u001açÀä>¢õ4UÚ×Öl\u0019!\u000f:|'Wî\u0017ºó\u0011&îÔ¥ùU;ou\tjt+s@Ù_VÊj\u0014\u00073Wå?¨G}êÚü\u001cÚñ|\u0003yAjë¹å\"QÌõ¦Ûä`ÒO\u0017\u0016´@-ÕV\"ÞbÛ!>¨Ouú\rÿN\u001e¯\u0002â`w\u001cûèò÷W?õ¥\u0013§òÇøSCrvÕLIq\u0002áÅÁD¦ý\u0010\u001e\u001aSðÊXO2~!:Ü;¥\u0011(\bEUMM\u0003ó²<.¿ÿÜÿààò=;&\u0019ÑìÐ\u0004\u001cÿD×,û$»Ú\u000e\u0000;\u0003o\\¦\tü¶µp\u0003<2ç]x\flt3K¡\u0004\u0018¿Í=BúvkOð6\u000e®9ÙdÒáéç¢²&l¬§.ö©\u000fÇøçmdÝ¶ÁK0ºËbXÕ\u000bÀ¹<@×Üí\u0013ê7^­Zî52&µ=òh\u0006Fx\u0013J\n¨ð)3[q\rO\rrUäNÿE\"X·ÄÖ~Ó\u0003Ë\u0015grÊ]õ²\u000eé¸J`Ö5\u001dñü%Ø£\"ëÚû¤~¯wàuP*DÎJ/\u001d\u0004i'Û£ÁiH\nÀ\u001e¬þ\u0012OJæ§º\\ZÊ¶\u001bCÈ\u0016Ë\u001dËUF¢-Åû»*ÿÈ6xÔSe¸Ãøó±\u0007\u0012©\u001dõÝ#¾¡[\u0010Î\tNA\u001eÂQB\u0019qáyAõ\u0019`m¢\u0013\u0010ç\u001c£yËðÛ\u0019ÖÂWøÊ\u0018ÏáßM1\u0005ºVÆ7h&îÜ;*ü÷Ã\u0018TlùË Ma£¹ ¯ÝH3ä¶øCgöu\u0011èÜÌ¬\np³\n2÷NË¨~N\u001dE-ÇÏ>¢ÝßÜ\u0012]\u001e§I\u000bBst¾ÛöÒÄ:\u00007ÛËÜ\u000e&\u001fÿþÜîwèÁ(ÈXda\nLâñ¨c.5\râ¥á+JßÀÁ1æ¦©º\\µá¿ÇcÊ?8çÓüì¢öPcô¸á½DÉ\u0002e\u0006_ÃÜs/£ïp<Ä@âE¦-¿Î\t_å÷¯=ëê·â¦©@|¶E¸8øn£.Àè$td.Ð\\@¨tPÍ2®o\"ò\\,ÃÜ,KÎÎIhV³V<vÍðè!Y7þJNÅ¸dÍ©¼À/Ö¦§Ñä!ØéÑ+áw Ý÷´=\rl!Z\u001d¢(^êÓÙì(8}(#\u0018³è,\u001aú×ã´«l\u001dÌX3ý`'rÄ]\u0003~\\\u0017p\u000bÌ\u0010_yê«\u0010:BWìI#4\u0011(5È\u001eM\u0014ÊYmï#?{Ðfx§-ääåßã|Á*ØAÕ2/rý|vÆß*XûTë<\n;ùºõ³1$SSQQ\u0011ãAÓ\u0010\u0002_yLù4J\u0004YÐ12sP\u0013Ç®¿ÉÒ\u001b\"YåÎ`\r&ú(äáNTìÉ3±kÅw3â@|Ñ\u001f÷?¥\u001fÈ\"È\u001fÙóW®^t¾e@±õçõ\u001fâGl/û9ýsJê8«Ú°\\®DÀ5æ/ëÇ96Ã\u001f\u0018\u0004cJí%zrzf\t¤k\u00005\u0002\u0018´¦áöFr¸]vÉsuäÃ/!úþæmeì8\fO¾kÂB3ìp2FòÒ@»»r\\\u0018<²Çxó$%D`Â\u001co\u0004\u001eÐ{êõN9§ó\u001d¨oJpoãèC¡ô³\f½:K\u0012Ù^_8\u0006#Ð\u0016¿$9/n«Ó'.ñ\u0003ïðwL\u0012Ûùv\u0019ÞTÒõgáÇ\u0019\u001e2H{¡§ ´ù\u0011{.®®4=\r\u001cçUeØ.¹f¯æL\u0001,¤\tôcÂÌýfþSnÏ}JshPreÚ3\u0000\bÓSxIè\u0007ìæIÞh«ÜZ\fË\u0016\u001fÞ¯]\u0003hßäpºà`êÜ|\r\u0013\u001d°ßXxß1ý5#´ÄT¢Ç+'>MÀø\u0004\u0017ú\nXÔÿÖZXÊ°®÷\u0004¿þµ¬<IÔ c+$ \u0001`ÔZàh;´B¤É\u0018©4=\u0012Îµ8}¬­-åpÿ\byJø§:\u001d\u0013¾¾\u000eÌzE\u00112]\u0011CÌ\u0019ó\r¢\u0012É×_Ê4¹ÂÃHô'\fX.§ºuF\u0004\u0018Ìÿ²âf\u0019k,Ïôõù¦5\u001bëÕ­\u0016ë\u0003t¶\u001bjJÎ\u0019à\\º¬vîjÉ»/[SCÎôk8à\u0007e³+Cíy{\u0011\u0004Åé_~\u0003\u0013ã Ð2ðÕ\u0003§ép\u001b\u000f©P\u001eú5\tkÇágß\u001c£~JL\u0019{ÂÜ´­\fÌÝ«ô6MàÒ+ú©£Nì~­è\nÇºôL\u001fd¾I:iÑ-jÈ\\øÈ\u0001LOîà)\u0007\u001e\u0019d·aêó\u0017ª{\u0003\\ZÖ£e\u001a I¾~ñ;Dæs°Ç\fFOÝ \n1\u001dÏûÜ`[,pÅ\rPXLï\u0018s]ã¹äMù?æ¹P\u0007\b\u0013´ëãõÐ`Ç /M pP5üÕ\u0017¤ÕwE¤2\u00178D~c­5aÒ3m¹b²þç;ÆÌ\b«>1=OP%!xWýñ¾õ\u000e¸ýÂAúì©öì·.\u0014µ:§©ôiªÁÓ\u0001ùá¦XÝÅ¡ü$1\u000e¿ÞPüñÈV¶¼d¾ìyêÈ¼ÒìæÁ\u001aQd?<\f«-\u0011Î e'\u000eú§³1Ê÷\u0012pCÕ\u0000Dõ\u000fìïÉ^*+*l±Ç\u0005~q»5\u0016><ËÜãW«\u0004@1L¥ý\u0014²úLfd½\u0006¬æ{úK¨\u0002\u000e\u001a\u0010%D9Ûþ1ã²ÞrU\u001cÄp}:Êný¥\rsD\u000eéÛ¿õe*\u0004/\u0011QkÕå¡è·YJÐÌ±'|(¨uh¹ëfÚ;F)ó\u0001ØãÃ*\t6\u000bÅ×D^0\u0005Ôâ\u0011$Ë$O\u0015Aj\u0011õH\u0014\u0006\u0014§´7ÎbS³¶Ë0\fZñæ\u0012rÈ*0jæPiù7­W¬%9WtQðXXÔ½\u0015Ìö\u001c\tÝÓIQµb93óU×xuÿ9úJÀ üÙL¥Ïj¶5Ù¤£ð\u0015#z\u0018vÍHcÐO±´ð](N\u0010g¬+#UÄTç22\r\"èá.-\u0000O!\u001eê\u0004kÁ;\u0011ÆÁ\u000f\u0000u¨þRÎ}6ïøºc\u0001;ö\u001ff©]åë\u0019«1'¨ó¸>))È«,Õ\u000f$8\u001d'|=ð\u0016­â\u001c(4¶í\bP\u001b°(_0[7fk¨w¦c\u00101Ï\u001fÎ\u000fæí{T\u0011\u0000÷æ8\u000e.µ\u001fn\u0002-hF\u001fÛ\u0016¹É¥ôÖy~\b\u001bE~ONUj\u0019sß&&\u0006G¢áÏ3\u0013¬BÜÏrËÎGXóR%×\u001bÇ®dNÓnJx(?¼Nâ~\"{o\"whyáÍÌ\u0005ýD{Ê.U×\"¸r$ÞY­¬ýRÊ\u0010BAnaúñlÔæÿÀ}`Ã\u001dêíÆ¦Iká~äp\u000bÏXäG\f$¥\u0002¼Í\"lãìÍg\u0000L}^§hØ%cÔç¢Ì¤£¬\u0006\u0004|÷\u001a\u0001ãIÔõÿyß÷qï8¢´,xVg\u0010öQ¬/úç\u001e{UÝ\u0000\u0017¯Z×õ?þñOp\u001cÇ",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/ccn_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:80ff15af918aa74e39605564ff5fac2ae6fdd161ba851bfdafd842108e7a315a",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ccn_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ccn_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ccn_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:be4dd7dcaa6e90ec18acf784c403f9f04fd61073887262f735550d25fbf883b7",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    }
+  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
+  "updated_date" : 1556610717,
+  "updated_by" : "system_admin"
+}
+
+
+{
+  "_id" : {"$oid": "5d26ff1529cb4b3b58e84e58"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "CHECKSTYLE",
+  "pattern" : "LINT",
+  "display_name" : "Checkstyle",
+  "type" : "STANDARD",
+  "lang" : 4,
+  "brief_introduction" : "用于检查Java源代码是否符合编码规范。它可以找到类和方法设计问题，还能够检查代码布局和格式问题",
+  "description" : "用于检查Java源代码是否符合编码规范。它可以找到类和方法设计问题，还能够检查代码布局和格式问题",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/checkstyle_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-d766c18509094d0a81863c3446551b7a",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:613fe2022c041bf382200fb63f6547dae21d0913d3179e7a79f3865b1de63a8d",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/checkstyle_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
+      "create_date" : 1617110749250,
+      "created_by" : "admin",
+      "updated_date" : 1617115109935,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/checkstyle_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
+      "create_date" : 1617110749250,
+      "created_by" : "admin",
+      "updated_date" : 1617110749250,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/checkstyle_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:1976106d360830c0a3ac44fb1f14306fb143c5e20ddd7b4bda403024e3cf26fb",
+      "create_date" : 1617110749250,
+      "created_by" : "admin",
+      "updated_date" : 1617111377125,
+      "updated_by" : "admin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/checkstyle_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bf2399829de9bb452503b73120a078185274d1ea0abb79d4a8b4e714809b72bf",
+      "create_date" : 1615538151957,
+      "created_by" : "admin",
+      "updated_date" : 1617115109935,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/checkstyle_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e2fa006c0c4f30f753e8a08553d1fc295ca1c88b624fb67773c0736c52ca59d5",
+      "create_date" : 1617106517873,
+      "created_by" : "admin",
+      "updated_date" : 1617111377125,
+      "updated_by" : "admin"
+    }
+  ],
+  "updated_date" : 1617110749243,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "5d945b5815200635c8fabeb6"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "CLOC",
+  "pattern" : "CLOC",
+  "display_name" : "代码统计",
+  "type" : "CLOC",
+  "lang" : 0,
+  "brief_introduction" : "没有简介",
+  "description" : "没有简介",
+  "logo" : "x}TÉ\u000e6\u0014ü *\u0001\t¤U\u000f¶\u00035\u001dna5;\u0004B¾¾¤½×¬y£y¶Æò8{¼\u001eVÝ£Ìé±/ÿJ\u001es.pT>¼Û+£Éå\u0000öa:\u001e\u0011½rGò¯\u0011\u0002Ñ\u000fhs¡s?\u0000BÓ±\u0019\u0005<g.\u0015ð°{ì±\u0010\u0000ô©×å\u001caïGª©Hât\u0005à:\u001b{yº4[&ù×`ÚgCÿFòSü´«·\nD1<Ò§)ÞV\f\rDì\u0003LÐ§\u001dYtcí\u000bù4\u001fCb([gô\u0011å[|\u001f\u0017\u00035/Å7í\r`\u001b*`Ó\u001b\u0010K\u00022\u0010{¡S×`´? 8 ûiyUÞ\u00186á ¬ºgDfÞÅò¾°ÉkV¾\u000e&ó,C\u0003ê,iIsÏÂ!AïH*\u0000Ýs\u0007cÇûRÖ:\u001däYØ¼À\u0012·#åÜ,þd¨è\u0011ê\u0015Ì Æª5ÛJ}ôY\u0016KS¹Þ\u000bKu_\u001f<U(UmãKñº\\¬^ØEÚ\u0007°¦±6;,p¼öz\t¢avü\u001d/1æùg+<ë\r¬\u000e¸©U\u0018TÜéh\u0004Cq*}Îô\u0018¦T¯1\u001dØY_-zÍ\u000f+ÿht¤\u0000­ß4\u0017\u0007\u0016\t>§T\u0016È}@£1õ2i|¨ñ¶¢¶ò=É¾µ\u0000gëütÌq¸ø(óv_1m\u0014-R÷8\u0018\"$íZÑ1ýª\u0004ë¼¥´ß9\nâÁÜË±Ý)ýEø\u001ep.äB]lð¾of5a\u0007[ÔooÈümU\u001aÉÀâÞÏÁ¶\u000biQW°q³\u000bÂ³c\u0003·¹!ç\u0006ó\u0000k]\u001eÑÕ|µ\u000eÀçöÓ(£î[#ÐëôxÌ7/¤Û¦Ë¨¸|n»j¿5oiÆB8ü\u0018\u0007;~¥9Vn\u0003nGw­VØç_\u0007\u0019y|{º3ÑJÔ¨*V¸ÛEÅG½ã-\u001b3fc\u001f\u0000*E$p/¨õtÎ\u000etFª\u0012áf\u0001®àÓäxi±çä{³¡.Lªõ>nVBMµÜ¥YS ®w]øÓÉ0£7ßõÏR°\r\u0004E¤\u0012½ÕÌu\"¡=\u0007â\nXk\fóåP\t\u001a\u0000ªìU6<SýôK^¤\u00055uµ\u0011nQ(B\u000f)d\u0005~ð¶ \u0016%þÙ\"\u0010ºÍÒJM \u0003\u0007¢Íí\u000fN( 0ÑàÑ\n:¶Ð!\u0001»\u0017t¨\u0000ÊànkÁ¢\u0007\u0015\\5,ã¦¹ªsÒ\u0004Û}A\u0007õõÔ o \b\u0011RçÁ5À2²0=uÿ¼\u0007±¬êÀ»2\u0016\u000bÏ¨+HNÃ4OÑ0¨ËW}Ö}&1¸éksWvPþËæÝ@íMÛ³\u0004±¿\u0001£âlçe\r^øSz\u0003·þOî\u001fÕ&\u0014\u001c\u001a¾\u001fÏoÛ(ÿ~_çïNx\u0014)Êßÿ\u0000¾:©\r",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/cloc_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cloc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cloc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cloc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:36107522b9f5c12ee4f8e1fdcd02e87c0f3293d94a466ccbf10b8ea61f43066e",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    }
+  ],
+  "create_date" : 1570003800241,
+  "created_by" : "system_admin",
+  "updated_date" : 1570003800241,
+  "updated_by" : "system_admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea5c875215e9c49249d"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "CPPLINT",
+  "pattern" : "LINT",
+  "display_name" : "CppLint",
+  "type" : "STANDARD",
+  "lang" : 2,
+  "brief_introduction" : "谷歌开源的C++代码风格检查工具，可确保C++代码符合谷歌编码规范，并能检查语法错误",
+  "description" : "谷歌开源的C++代码风格检查工具，可确保C++代码符合谷歌编码规范，并能检查语法错误",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/cpplint_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:d34b6abc1e2c235b9120da717b8152d4eea59c905e8e614d43b51ccfd0422716",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cpplint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:46a90acacb0d64bd2bbf3a8046c27881d56f99ec76fc867ec544e08195fbcb00",
+      "create_date" : 1618314067041,
+      "created_by" : "admin",
+      "updated_date" : 1618317005750,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cpplint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e2e839816f76788f5d9f5bb4395ce02f56aec1824faca347dfc76a4a59ce493e",
+      "create_date" : 1618389059910,
+      "created_by" : "",
+      "updated_date" : 1618389059910,
+      "updated_by" : ""
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cpplint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e2e839816f76788f5d9f5bb4395ce02f56aec1824faca347dfc76a4a59ce493e",
+      "create_date" : 1618389059910,
+      "created_by" : "",
+      "updated_date" : 1618405650850,
+      "updated_by" : ""
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cpplint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:d34b6abc1e2c235b9120da717b8152d4eea59c905e8e614d43b51ccfd0422716",
+      "create_date" : 1615876131041,
+      "created_by" : "",
+      "updated_date" : 1618317005749,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/cpplint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:46a90acacb0d64bd2bbf3a8046c27881d56f99ec76fc867ec544e08195fbcb00",
+      "create_date" : 1618314067041,
+      "created_by" : "admin",
+      "updated_date" : 1618405650849,
+      "updated_by" : ""
+    }
+  ],
+  "create_date" : 1556610725,
+  "created_by" : "system_admin",
+  "updated_date" : 1618389059902,
+  "updated_by" : ""
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea6c875215e9c4924a2"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "DETEKT",
+  "pattern" : "LINT",
+  "display_name" : "detekt",
+  "type" : "STANDARD",
+  "lang" : 4096,
+  "brief_introduction" : "Kotlin语言代码分析工具，除了能扫出编码的风格规范问题之外，还能检查出代码的复杂度、某些潜在逻辑错误以及性能问题，告警类型多达152种",
+  "description" : "Kotlin语言代码分析工具，除了能扫出编码的风格规范问题之外，还能检查出代码的复杂度、某些潜在逻辑错误以及性能问题，告警类型多达152种",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/detekt_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:db71a3815d254e02d2314bbcd19d9b0c2ccf61cf19f12330e390c5582e33ecd2",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/detekt_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
+      "create_date" : 1616137245605,
+      "created_by" : "admin",
+      "updated_date" : 1616139494403,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/detekt_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
+      "create_date" : 1616137245605,
+      "created_by" : "admin",
+      "updated_date" : 1616137245605,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/detekt_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e044a8f927cb4bf6ea43522695324aa88f9231fbfb864efd6d51e69a98494245",
+      "create_date" : 1616137245605,
+      "created_by" : "admin",
+      "updated_date" : 1616138349412,
+      "updated_by" : "admin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/detekt_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:db68e5799ce52124dd44d927ce5135a178bc36c744c2d02b09072b0f86845a10",
+      "create_date" : 1616080029995,
+      "created_by" : "admin",
+      "updated_date" : 1616139494403,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/detekt_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:db68e5799ce52124dd44d927ce5135a178bc36c744c2d02b09072b0f86845a10",
+      "create_date" : 1616080029995,
+      "created_by" : "admin",
+      "updated_date" : 1616138349412,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
+  "updated_date" : 1616137245598,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea6c875215e9c4924a6"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "DUPC",
+  "pattern" : "DUPC",
+  "display_name" : "重复率",
+  "type" : "DUPC",
+  "lang" : 65535,
+  "brief_introduction" : "可以检测项目中复制粘贴和重复开发相同功能等问题，帮助开发者发现冗余代码，以便代码抽象和重构",
+  "description" : "可以检测项目中复制粘贴和重复开发相同功能等问题，帮助开发者发现冗余代码，以便代码抽象和重构",
+  "params" : "[]",
+  "logo" : "x$ÇrZ\u0016E?®\"§î\u00119\f\"ÍÈAä\f_ÿðk{d.»÷Z.çÉü·éª\u0000§¡ú_¬\u0005ý§ñYÓ9¡TÌûe¸ßZøVï#åï)÷~Gïç­^Öþ~Âë@\n³¬XFØ\fc±ê\bâ·`äm\b»5Ö;\u001a%À7ÃXqÖ¶è2Ä=½¨\u0001\fÍÌnA´ö\\,î¨S\tß]y5\u001f ê\t®¢¿§t\u0014¬)i%\u0015¶+â8ôZ»-?Êv[\u0013\u001b\u0013Ü`Ó\u0000\u001d\u000e¤W\u000f¾wåØ²&Ì\u0007Âg)ÈÞ6ã©\u0001\u0011ûÔÈ\rj\u0001Ð'À9§£\\è\u0012ÌæhH\u0015¾z\u0017B\nlÅïÁhØÁ¼áþ=pæõ®<{\u000f|TeÉÊQµþ\u001dìvµ%FfÞ\u0003¢ÈÌû&¢1ÿ¾\u0017h BeA$ÀrXr\u0005K]ãHú.¯i³íQ6E\bÚOÕß~÷ûü\"!\u001aí\u001cí\t¦¯\u0019*{\bÇ¨©Æ¹»kÎCx×óÍ±;.\u0005¦qjOJîgrÀ\u000fÄZV\u0013}{ï{ÖBk;G¯ý`°+\u0019Õù\u0019ÓÖ£ï\fzÏ[\bw\u0004ß¶tÙ5wN\"r\u0019ö#M\u001aÉ\bV<¼+ô§Pª'C\u0012E:\t\boª»IHÀBº»ö?3 êE+ PÖ(w\u0013\u001c1¡b¨óa2\n\u0003²UûidÒ\u0014Ú^u%xsÌ=*íØ¢`ÿÐRÂ=Ä;i \u000e1{\u00000Wà\n\ncÏÒ¡5C\u0000ºÖÂ\u0011ÃRÜ98\u0007ç§PÁ\u00120ñrÑíS;Yi\"xÜÈQ\u000f\u0014+ËEÝ{<[Ðxû·3Óäba<|4ZýQe&N¿\u0015ÇbRê1c>/¸ÂÃ\n\u000e*8ÅâQLé\u0019\u000br^uò\u0018ê5\u001e\u00186Û¬ôú\bQuõw÷M F+G°üQ\u0015\u0017ÜaõFYâ¾\u0017ÂYÏñ \u0007éV~ZG(\u0000ð\u0013z¾êr­a>6K#0\f\u001d\u0004U.\u000e$\"\t\u0016+\u0007Ù½®tz\u001b\u0006MÐ;ýÙ{öxR0á~cv¥íè°%ª7]<Þz¿\u0011ôÌ¡]O\u00017G¶.ººø=\u0019Ür{{ùF½[Ë[UP0wÚC\u0000QÑêÈíZIP=MÊe¢\u001eÁà5ÛÃôýÙ½ØÿNRÓÖb\u001fåè¢£FÄ÷JðRoGÞb\u00049\u001fíÌM»àr(\u001d\\cD6\u000e}0#¿øÉ\u0000Ñ{IeçÝ\n\u0018\u0013®h÷¸Â½[LÂÜºAö.¥_d uÿëg6XM89§:Kõ¼ç#8õaÈ[O$kù|~\nP!Y\u001a\u0007VÒ0ri\u001eÖÖöùÁ¥Ks\\\u0016Î*\u0018~h?GÈâ)\u0002û^\u000ej6\u0013S6\u0000ÚÔ®¾PÃD£FGé_´\u0003×\\É1î\u0012:V(&¬su`x\u0017¥\u0011dàÝû*8NI\u0017þ\u0000¶Un7é\u0002§¸­\u0014PàIÒc$cÇ%\u0010P\r\u001fÍ\u0018ü\u0007Aa5UBH§âC vâMõ\u0005Éós Ã8\u0007þ<\nîöýlUAF\u0017{±\u001b\u0012Æ ´ñ\u00113#Qå'D\u000euº\u000b1<ë\n¦Ð»ý²¶n ü@S\u0006Ü\u001b{²Æ\u000eîµ­´PqR­îgùÀÑ¬z«£6õ\u0003¯`§üñ'X4\u0004£,úÍ\u0017y÷VH\blO\r\u000e¤õ§ñk.aÆ\n\u0000GuV\u001b\u0012\u000e\u001bD]#!.ÛàñFæùR$$ÚÓ]{¼wÌöÇ|¹Ûe§³ß`±¶ã*å\u001bh,°Õ\u0005 ÊÖÖ\u0013µç{Y/2N¿A¢¿1²pdIW\u00014ï±~Ö)äº4+¿'>\u000bXn\u001eËQÈõú^iS\u0016\u000fõÍûå\fªq+fPo\u0002¬\t§!×Ûn0Éªè_-óN¦3@¥§C\u000fàjY±_ì{<\u0004Ô³OíúUØÚ£ë\u000fF_Ìý\u001a\"²Þ\nJ/2\t+{ûù°\u0010z¦G\u0011#ÓÐî}ð»b\u001aÄ ;¤ÐÂÙöÚ=\u0001½\u001fX\u000bNR²Ï\u0002ë\u0004%/öuá\r}ª\bWæS)ÞhKØ¸á\u0011^9\\Åëº\u0019W.In=Ç-\u0010Z÷È\u0019NðWN)ô<íÜøt¸ïà\b\u001dý2âc.w[þ5Ò¦GC\u0016êL8\"=AÕ4îØ'(a·ÏJ^Pygh÷£\u0013\u0006ÈQÌx¼À½ù\rîÒy\fVETøDàµ9 \u001e_QfôR2XÓÛ¬ÒMj\u0012¡-Íe´ÐÎ~R;x\"©sð@ú\u0000C-\u001f\u001ciÙ¶ð·/m<c\u001eê7ý\u00009+·zýÍ{¯ÀdïqLbg`Êh åâ0È¿Æ\fÜ¤êâôÄÎm\u0007ö¯_\bædôË\\v\u0006J}Ì#Ùi~\u0018b®ÛcÞ¡vC\u001e\u0005DâûBØÛñî»äë\n ?»³tÄR\u000b<>Diz+ãöò^ ²´é\u001cpÁnÏÍ§åºÒtáÕÙ ìð\u000b!Uz\u0016\u0014\u0004\u0018$÷gÇ0\u001d\u001d¤8÷¼\u0018= f|Ôª'<ô¹[¸Åß À-h>\fktý\"Ðº5,irÛAá°É±_Hó\\oñåÐý\f\u0002n¢\u0005ÄA\u0012oI°!BÉ%Þ÷âJ#ÿ°<\u001c5\u0019\u0017)kL·Ñw\u001bYQ¸_¢\bPm\u0007®ÒÀÂ[¨T\u0019e7AtøÎß\u0006r«¿÷£ÎÑjoû\u0019¦M®i\nfC½ÓE@¦à*Èw\u0019áA¥úþ7äµ\rì\u001axÅ½ÅUbâÝ¢õ½Ð¹\u0000°pÇµAÇ¡=ÈÂ(m¡rò1\u0013y\u0018ÛC\u0012Zué\t'¾·©æjB\u001doV²ãk\u001fÇA\n/ïßÜ@kÉX&Rê*z_{Ã,\u0005Eµc÷#\u0014\f\u001b±\fmñÒ¦v£]dÔÈb;L\u0018\rC\u0017,¥Ãî\u0014¬ëÒb\föÓ²ÁBÌÀCf}/ËôtY<CÒ§ÇA«Í+\u0014[%NõëñEJÙ1\u0011\u0011{E*òáx$Êµ}µ\u00019Ñ\u0004§\u0010z\u001bË\"\u001d%\u0002Eªã'µÜ8]qÂ\u001duèósnø´\u001b.Ò¦îÄ9ÊÊû/\b\u0002\"ðÖ4Z\u0013¬íýâybkQI7\u0018>Y÷¢z8\u0014\u0016@¾oä²s\u000b(ì\u0016¯p¹ð\u0002¤2\u0006¡\u001eÆ\tpï½É\\W¢±:ÛJ\rù~|\u0017-\u0013þµ\u0015hÈûRÈ_\u001b n\u0005.\u0000ê\u0019GfÀ£á`w2¡_±³^e\u0012Èêù\\aK®ìr\u001b\u000eØ\"$J6y\u0003\u0018GïFJùKW)ßÒã^NlX½Z\u0019ÿbb¦\u0004X¿»¯ÿR÷@gzÿ´L\"á\u0012ª\"\u0011\u0012Öê°unýè¢O=\u001a\u000b÷g>º^cOûü$\u0000'©ÓkuËÛ²2j÷u¥Õ9ÊI¹oZJ]Ç\u0005\u001eIVFé{7Kq\u0019_\u001e\"é+-ûuú9\u0012M 75þ`¢Ë'û¯Û\u001ck)Cý¤r\u0014ìºÌûÚe,r\u001f¶í¦PÉ\b\u001d¦.ã×Cç8¥º;hN\b\b/S,ä\u001f¶\rüIG5ss8yþ>\u001f\u0018«ÛÂÆg\u0015¸pªª«àñ\\^µ\u0001d\tCý²È#å\u0014Á°Ñ&0 Rn\u0004\u0017ÖílªÞÕ\u0016·B~«©&\u0018É\u0014h·`\u001ej%=¬øË\bÐ#J^(Ayz\u0006wÔåa\u0007\u001e¾ñÀ\u0001To¼¯°\"ª'ß4$æR¼æ9\u0007w¶ø[¾Nå:oàà×¥®%½  \u001e\u0013Ã\u0017±\u0013ýåínïhjç\u0005`M÷óe~ÀFÞ¦·_å\u0018M\u0013ëF\u0012Ëë\u00148HåLê^~R\u0018ÇáÝ³\u0005 @Û¯%µì^~{\"²\u001d,. Í9w>p-^!\u001bGFVÕ\u000fÐ\fÕì×QW¬\u0017`ëÈ&;\u0010?Ôéùe c÷£\u000e\u0016ëGäzCóOì\u0007Ù=ÛÇ!$î[Â\f²ÉtZ)Hï1þh§vÅ\u0010´\t¤\f\u000bp\u001fúØ?\u0010ìjÐÐ\u001aë©ÀßÔ2\\¾¯²¨ë¥ä7`ì/\u0006ftÙð¯\u0011R\u000e\u0014ÙÒê;^J±¤Âå\têy?§õú]Qal_SºÂ©Ö)ÚÀýu[@àÂ&\u0004Ê&\u0001O\u0004QBún\u0005~Ev¢r«ùrãðJ\u000føü\u001b·mú?uú\u0019EPÑkU\u0018Þ($N,G\u001e#¯÷å÷í×\u00001r ¹üÄÀ\u000eF³pG»&A3onÄ+ËZH÷\u0007J\u000b\b/\u001e%6\u0012=öªO\u000f?\u001fÕôs\nNÉO@=ö8ý,\u0017Y÷\u0010ñAÓF\u001eÕ\u0017³Ñ³Ô#­/ÍÊ7°Ð\\c3ËÏ\u0003C«!ñêR&v¦L@\u0015Í,ðÑæîâ§)DÎtûfçªYw¢ø\\4úb)±¨ MÐ\u0007Z\u001cíDhXXUâaÆØ\u00170o9î²¾b7<LÿÅ¡ÎÌUùÙ.ÔÆð(DKþé:\u001d6Ê/`|¯¡\u0012m°ynv$ªPÆØÕÝòZl@\t¢@Ðp`âÑïØÁêïþ\u000b»®Ö\u001dO¤ÙX,Î«\u0013²°¦]ñDÆ\u0017\u000f J\u001dL£Z5è\u001dÄ¬-\u001eçÁÁÞ§3wë0Þ0jWôó»À\nw¦5<\n=Çýá*çÍ^ðAü\fÜL¨½ëÞe\\S¯+\u001doô²ékÆÄÊ¡p¶_ÇsJÎ¬6\u001c\u0003ö/eî`»7^Dßd\u001fs\u0010¤=\u0016¼ \u000e\u0014\u0002eOÑPQä\u001cõ¤º¯EyfÔ7\u000e÷H?®YÔró Ö\u001cóÃ¶4=&_ÞoóÛ\u00158NoÇ;2sTxR\u0014k´`¹À·Átü\u000fóÃ\u001eò\u001cÕñWÛÓÝåa>B\u0011ð]vËÃ\u0007\u0013ötKÍ<Û¡;0jîÞ©8ª²ÌÔ$æÆeáG{*\u001a.r8åMéÉ&¼}¯RdöµàC\u000e\u0005ÅO\u0015<`Ë`h¡¦aÃ[Ev!Xæ`\u001dqZÆ^Îï}\nç\u001bÅ«ÍD¶éRc7â0\fXß\u00100oïp3Ñ\u0007 ó×Ï²<ô\u0002(JC1*ã\u0014²º~a,{¤ÿ#\u0001Áëz;S\u0002-ÿ{wíGRü%Å¤q6&ÙbÇäÅ\u0010NtMo¤×Ãù*è5#PÓG\u0001Þ\u0004Î·\u0017>ú\u0014ÆY´S\u000bâ4Å\u0011ù©µù\u0004&¨\u0010ÝêåS\\\u0005¿¹w¸¯ÉQ}W\u0001ówÜ\u0000M·ðÅ§åQmî+Í®6K¾@òü®\u0003Ô^\u0015g\u0006\u000eëÂ­\u0005\u0014@ÌÐPzø\u00008}/Íw0Þ]Þ¤#[]WcêRH²\u000eÚ\u001c+Qùè¿Â2|_~æ(}¬î±\u0003\u000f\bÿ\tãî\u000bÈ=ôF\u0012W]NQ^Ô0\"Î¸ á\u0019\u0003fî7Hù â©2âß¹©Üô«\u0014\u000fÎ]`Ô@\r¹IU?\u000ffËk0ý\u0012Yw°Þe%.\u0012Ö¹hY:õ!¬ON\u001cm­²í<.ÌLÉ\u0001\nl_Fç3vzì\u0017uuÃ-íwutÊr$,*\u0006à\u000f;L|J<õ/;¡ÃøNª§Ä?U\u001c\u0017ûÝhOX2G\t\u001eñ'·Þ\u0018øâ\u001eÇ#B°wqÃ´\u001dR8hûôû~ÑîdÍþÃN\u0012bLPDÈÇª(2z¢g¢\u0012\u0001\u0016ÒGLÆÑ#Éi¾\u0016è¡1¸Ä6Yn\u0004áªÐéë÷IÖ\u0015y?V¬Yê×\u000e\u0016~ÐÒ\u0002ãúvzEDv#*¦9jnT\u0011çó_[Ï(4®å´fñÜÁi8C%Åi4\tÏ?7¬0û8Û ÇDçS«.¬Üã\u001füefCÿ°U\u0010õm(CR1¿¾ÌP\u000f±Ø\u0007¿\u0001\u0014z)¾«\u0018´4\u0010Ïx¾¦§\u0007,±\u0016\u000fÚdø\u0002·ÜýÖ\b÷\u0002v7óÁBe¼ÍÂ&àæî3Ò\n\u0012æ1Úò\u0017×q\u0000¤­©,OÍ©ò^ãóÂ» 5LfÝãZüt§xÐ$^\u000eL Eïú°pl§á¿k8\u001dÑ¸^ :Ý\t3Û\u001a \u0003°ÚÂ\u000b8gq\u000e\u0013´Êãò¾T/I\u0011RÑÍÙ>°×¯\u0000ý©à½'e`\f\u0006F1±[xW|êTæÂ¹\u0004èóûðå$êÒc\bºj\u001bóÉ¿L¬\u001d ù§5«\u0010\u000eÏLµtñ\"\u0001Å\u001f\u0015v¯Ù7\u001aÞnUMÈ$â\\¸ý²$rGÏ\u0013\u001eÖ \u0002ñd¯p\u000f»^mkäpRv\u0005\nTn]\u0015¹Ò¿^ù=h#ÿ¨± \u001eõ3bÐQýzZ\u0013½&'u\u0017ö\fääÄÑ\fÚ\\ÜYI÷Ë)êYÏY{æõØf\u0011\fù\u0015\u0013<ô\u0005\u0000¦6S>ý.\u0002\u0019Þ$¾ÓÉ®EÒhGv>\u0010Ñ\u001bfo\u0017¶.¶P\\x¤fÉ#° ÂÒ\\x{4\u0017Ùë«,Ó\u0007õVjËI\u0010½S¤¯ã¼\u001a¬p#¾¾ÿ8Ç\f·3\u001b.TÚ]Q,\u0019GzMÎó\u0013\rË|\u000bnNÖ+_l~fú\u0003b\u0000\n¤@,eÏG«Ë\bùÆ¢ÁÎvÈQ6Õ\u0004Mø£Úû«pkq~Ïª/Ö¨¥²Ø½öÑI\u001aáÁÝ,èà¾°N[X>\u001c%\u0012þÙ> ÑÑ\nTøNÆ«úeU\u0000Ñ/ü\u0011UªS(\u00049\u0000&V¾|r\u0017¾Îçn'\u0018d¶gO­ëòEº\u0017h#bõZï+?À\fßa>á\u0010Ëp¡'f\u001e\u000eß\u001aÂ¤\u001c\u0016ª®\u0013\b¦WÂ)ø\u0015Câ\u0010½i=ÂÄ\u0002-Ôüðú\u0017ß/ÏJ{cÏ\u000b¦\u0012ªoMópßûÌÈ¹jñj¨\u001fj\u0007³ªÚãp**I1.~\u0015×¦PDøÕ\u0002cÃWbØ~f6 ø\u001f\u001fx'>%ôÄÇ\u001a Qç®RQ«lrJ\u001c\u000b9:øm¥\u001cÃ¢&¦ë¹#\u0016\u001cÖ\u0012Ð+%¢)±\u0007WA\u001dþ/ã\u0004LûÛ\b\tªí±Ð\u0018HE¹#,Í¼¶ÁêIÆeÌ\u000eT7)Ý\u001d``,N~:ýØÃE®Ù\rm¹ÝQ0³\u0013áÓ«PÞÒ\f@eúÙ¯<\u0010Ed@Ñ\u0000Õq=äßªÂ<øá_qµ§¥fK\u0003\u0018§ÿè\bV\u0002E8;Ù9\u00183Bô\u0015m?õ%\u001a©ePPÝ\u0007óÜè\u0005v~iÄTw\u001b\tÖ\u001cîÖ&¾z'pìD÷$\u000fO\u001djÿä]^¹\u0011jKOâ7åK(ÍY\u0003ôAfióQ\u001fÚ¯tÀã6z¯I/ÿ}ð\u0017°\u0004Y0[·\u001a\u0004ÑÔLÏ\u0015-M8Ä\nõ¾Å\u0010ëjC\noôdÆùR_\u000eÜÂ¤èArÒþ6%ÿ|\u0019¯úKTþÀão\u0011C\u001d\u0019ëÛ1kã\u00183Ö\u0001­\u0004Ïí|}O(Xß£ã\u000f%<sM\u0010Ð9Èñ»c³«P\u000e÷IÌk%\\ç,\u0015g\u0011Y3ËoEøqn½°C½x(\b¯$ÌåpeYò.K?nÚ\u0011-Ç@²²÷Àx¥\u0017SIÉß_\u0001rÖhE¬$\u001e¨>AØÕ²é¢\u0005Q&\u0005\u0002ñ6lÔÉd\\G× ð \u0011îí')f#\u001d\u0007 ÖýY*\u000fZ\u0019!æ\u0010\u0006¬`_î\u001aóý\u001fB£Ñ\u001fh[~\u0016Å§ôÀ*¶í·srl4Oh\u0001¹Ì}>J¯ó_¬\\îo\u001fQÙÇSÊ\rH÷`\r´ âG1ýQQW0d#4®:uñnÈ¸¼SS°õÑòä6\u0015óðTP uñÜ´ñÂÏdÉ\u001d¦e\u0001.\u000fÎsnB(©tf¼iF\u000b¿YKïH\u001e$\u0012È\u001eòMT³{\u0001L\u001c¡z³b\nLV\u0015âV\\\"2vß¡ éô\u001b­¢vdkÍRI1öCxaxLy\u0003?C \u0018ù¥K0øàY¬¡úÇR?Ò°î\u001cúÇä\u0000æe.¦ìæ:X\f\u001d5!vÇ&¹\t\f\u0002\u0018c©¶üU!}ï«O\u0012£\u001eÖ7sì\u001cø/q(\u0007vÝÂ\u001dæ%:\u0005ù%@ã½QÄOzK\u001e\u001e¸/\u001d«n»¶\u001e\nwÐ]h&M³\u000f+j/0sBó5µ®zxxÄ>l#ê§äGMI77:2ÒÆyò\tÈ¯¯Jlh±C_¦t(Ë°\u001f=:ú\u0011ÝooC{&¼«öT\u001a `\ns¹\tÞØÁ}3-\u0016òÎÞ\u001bÿÄm\u0005õÀS¢~mÆô{Xà(é\u001a_\u0000NæÔßä©¯x[ÔpAñy}\u0017Ôf\tfÔÑ$K}3ú=ÏlU,×¿%2®\u000b\u001f2\u0004CiKK,Q\u001b\u0012çµø_÷ó5àÊ\u0013jÒ±ïìÛLõNÍO\u0010\u000b\u0002ìèx¾\t½CJäÄ<hj¸PyLÛiL^Æ\u0010ÇÞ¡2fÏ½\u0001;Ú°ÍÊêMýn9äï[I\u0013\u0007üTXùY\u0017\tìW`EÃõ´¸TýÂù>XÅ\u000fÎý\\KcD³¯oâ\"Í]P·ñÖ(²é(é0ÅÒÔv«Tü©\t»t¿\tjÃ~iëËb_\u001b,67bI±ñ4\u001bÆ\u001aÏ_¥Ru\u0005ñC´ÔÅ1s²)Ãùö¦W\u0014gtV\\¹9¾e©íÅl1ÇGupV\u0006\"ªñôB¬lÂ<0J1/·í\"ÿIM3Ìê\u00043L\u0015ü¹¡¯Ã~)1¥J\u0004×ë³\u001a1gç2[äËuæhbÍ°_\f!=[ÄÇ$U·pÅ\"J´;àA\u0007>XÌûG.}«´d¢#Üà]Ôkù\u000f~/ýÜ¨×+À/Ìm¯ËÈ K£\u0010Ù¼Ðª¼\u000f\u001b÷æfúÍ]\u000füäã\u0014ìë£eò½;Ç¼]Û¬\u00140kÖÀr~>ñó\u0005ø*È\t\fÄÁ\u0015$\u0001\u0000ÞJ1Ù¤ývJ^i \u001f-ûkQew/eHÐ\u0002ó\u001b^÷\f}òfZ#Á×$Ù<PàÆe\f*-1¢Ê>Î§,ÀZ!ºSÃÑ=e\tÞ½v_zXÑgñð|BSçtøòÅ8-üÁÞ3(fô\u0003ð\u0010×/¹;FMgËZw \u0012Ó#r¥h\u001194â\u0016\u0012ñ¶´&>yÀ¿\u0019Àß¬²«Ì<Eù\nÃK6Lß8¿O\u001dßéi¥\u0000ÞH~\tHüÉÎü6 YÛ{©¥9O¨; ûiN,&CÜ'»Ó\u0002Hl9^\u000f^]·\"Oñ\u001a{`~>V\r\u0014æ·¾÷á\u0010COÖ_R\r^ßãç>\u001d$\u0017©i2©òò+Á`jzt°´±ß®Ø\\N¦ÅÏv4u\u0004«\u0010Ó¸R^÷õó\u0001àj\n¤¯n{ASìØYÔªo\u0013'&öS=V<½ôröxKøÐ<ì\u001f7H3ÿÛ±\u001bñÜ\u0019óh4\u000bõ¶Ï:´Ë\u0007\t\"UÇ\u000fá%ß\f\\5+ÐÔ\u0017\u0003¢\b\u0013ß\u001fÌYÍù¡´ºÑ\u0013\"ãÉ7çµxv-\u0000`Ýó[ÒÆÝqÙ\u000eÐÍ\n{¨sëÏV@Û¶«æâ`©\ti»±¡o-èÂÙ4f\by+ä\u001aæ[9\u001c¶E×ÔVºÅü2N&|@¯f#ñÝø£¦ÊïYèMFõ\u0015¸úl\u0015=Ð·¶çCA-W«t2sIØ\u0005HÊ¨®¬ÁãpbSc]È\u0016\u0018Äd\u0003\u0006ëq:z%Áw}RÇ$EäÅÈeà\u0013¹ZÆ´\u0019\f)\u0016)\u000e`%Ô¢bÍ\u001aNÄ 2+È%Ý>ëP3aÀ`ZÒú5égÙxB8¨¦±Á¡¾·¶òz;@¥\fÚ2\"\u001dXÏóñ\u0003Ö\u000e\u001f·\tÎ6Ý¥}ÓL¥\u000fúÜ\u0015¶\u000ed|T=v¿=ÛÉÌ\u001diýÃé ¾Õñt´µÆÒ\u0007ïA$2ÃÑØÃ­#ÕÑ¹mejS\u0002´\"FÓ¢\u001fîi#\u0004y\u0002È%þè¤\\j¥z\u0006mÑ\u0016È¿n¼í\u001aeÐB.AìÄÏöà\u0017Ö\u001bÃo²¨=\u001e±w\u0003\u0013lù\u0000´ó°/ÌËCÙ£¶\u001dPÂfQè»TX\"ì·}¿íCI$½)¢º=^rèÂ¥ðìbªd\u001d_¶¾ÈÏF\u0004È Ü©øUI{\u0014\u0001ËkZ^!ùFyåÈüùý(^Ê\u0005±3J°<\u0007\u001fæ \\{Öý,ðÉ8_\u00057Î¸éwôidó\r´LÎ\u0001\u0010â8\u0018yþµ`\u000e\u0016Ø\u000b>M÷k²^±($Á÷\u0004¹\u001a .)}|S³÷Æ³Ï\u0006|D[\u0005%Vn²LÚñ\u001fE\taßþ°\u0015$¦4¿®$¶\u0017ýÁ\u0002)¼¥_L~Ý}»±²¹\u001d½®K½ÊmO<\u0014Ã©UÊ2\u0012m'%£X}Ý&ÉGE\u000b¬[/¯\u0013ÄPkBbø«X¢\bëk\u0012\nñ\u0006F]î \u0012°ó4+:ïÜ'çj\u0002êfã¦ugÆ\u0011Á\u001c!\u0003ø\tHxYi\u0000ñlFÏo4*\u000e\u001e±\"sx¼¬\u001fÆMfd,@×4gU\u0004EÉêñi@ð\u0013\u0011 D\u000f\u0019t²\u001cýAÐ¨¥MÚ,§JÌµSÄÑ/ÕÄ\u0006EcYæuËÛö÷¥îk\fïC\foV\u0019AÁ\u0007SÆ\u0001»k&ÉìTõ3Ö#ûvßð<g\u0006vÍî\u0017]êy¼~\f-\f\rFyÉNà\fpgÊØ-ï8\u000f÷ù\t<ßùÃ·ÕÕ¨{\u000b¨}¼\u0015ìwüE1îkâ¹=ÈCÍf$SðbÂâçÌ\u0003én\u000f\"T±Ú[O\u001d\u001a3é\u0013ÝH&ªîé3N©)Plþ\f\bÇ`\u001dª\u0016?\u001c¨x ´K]õ\u001c\u0013(Ü/\u0002PFþý8²=Ójeú}Ð\u0003@ßL Óq/2ÒX¼8Ô°¬ô+ÏñdÖ4=aªiKÞõ\u0016Ê÷¤¤fÛn²!\u00033?ø[9e´Æ>\u0004ËýQ\nÿN¿tÁýD9&pß¼Ýe»ûZîªÉ\u0013¯Ù±n¼®ÈCÚ®_Ä=.}~ZsÞ×3´\u0012\u0013µÅ2²Í¿Üã`rºùÈ'z@,ÅuÐ1Uw5$×\u0018?C \u0019ìhNÏ\u0014ÁS`xÖ*\u0003Ãíúp/çò°t&Î\u000fç\u0007yP÷#ïó°FX\u0019&[¶ØêÏ¬æ^r2Ïû\u000b\u0012X\u0014þÖ«4ÏÀu#ÿÚ\u0012@+\u00115XdîzRucöú¦Þv=£ôÉEÄ\u0005\u001cÓ&õ·¶Ï¥.[Ë\u00182­ýÙ`Û\t\u000eî#ËY\u000fì\u0019ÄmÜ_7s¹.!\u0019ÅâÎ6¬\u001b\\Ýû\rüNgÉäÁM\tÁó,ptK^\u0019K\u0004,cé·ää\b5LØ\bò\u0018ü\fïé¿ÙÀÎ³\u0016,¡¤-OÛ»§Û\u00003\u000eÇ¤,Íy0\u0000½3\u0015/fr3Å´ëH~Õ@§¶n 4u³\t*.»*ì2[\u0017@\u001e#Î¦lº\u0011Î{{-Ð^Ð1ËvI¾7\u001a4\bð+Eâ·üY\u001e(ô¤'<]á2z['w¶Þ¹NÖÑ¹^OåÞ{%»ZÔo\u0001>ìP\u0002{ÁóÏç\f\u000bjÑ»\u0018Fîdða\u0000ò\n@V&Ó±ñÈ8\u000eW3\u0000'2\u0007kèWe¼z+-ó\u0007\u001d\u0010\u0014·2ey\rc^¨!±ì\u0002^|80pì\u0013ñ*ìØ1ôË\u0014ÛØpßTý72:ËðwÉ<\\ÏªÀk\bï³\u0011,+\u0002äE\nÐò[Òú ]]\u0000\u001e»ç´Ó\u0018tKW\u001cÔå\u0004C\u001aX&N *H\u0013\u001a\u0007mô­\u0002¥Æ\u0003èPÂaÈ3¿ý©W&\u001a8a\u0018*,L5\rÐÙ5§×\u0000%úæ±©!£HL^àEæ¯µ\u0006úgYTLq\u0006zó±xïe'\r_j8d\u0002·s\u0000ò~ü2Z]¾¤xP±RÔEÚ#í?ÐayDfýfaIÝ\u0002è5\rK\n£$¼\u0001{;^\u0012æ\u0016\u000e÷äZB\u000e­\u001b\u0001±\u001b?\u0004\tøY~\u000e\u0012p°0_&tëRRº\u0000ýB¯}%í3X÷ý\u0014V³píV§0t§æ\u0019Ü¼´Ð\u001dI~ ¬·CÅâ)\u0013Y\u0001)iCÂU$4-NFG-FrVI 5\u0019\u0010À f½ÃÕmb)'t«®û\u0015)¦_î¡é\u0000wÐØÊô\u0010fø*\u0013\u00108U²íSÚJwM&o~Äxï~t:é\u001fF9(^\u0019Ãà;TÏÌ %YTX®÷?\u000fÛjÿëÚÑV\u0014\u000e\r£ñýdJRjjç½\u0003ÇE]icn¹\u001dºö½[:ålÕSÖ\u001d-\u0002r¦ddË`[ÃÜóv£Úà¢½\u0019Îª\u0015#±ÅâÂãP\u0001ÿk\u0004\u0007~àä\u0019¾Û7Õ²u\u0010±÷)ÏHgiç~xôhüitQ4\u0019p]±È8\u0016T¥ÌNNÚì÷È,\"2yvÿàcbÿXÖ.\u001bR4öùÊ\u001búð\u0014æÜ÷ñ-Áà¾£\b¬Ï±¾ÕÂ:õÊvï}MbHÖ\u000bÿ¥éE`ÊOnë\b- ¿ÓGûë5µÎÝ¸ÞÕ;Ì2\r¾&­êK&SØ²`Î£h`Û÷)Þ:s¤?§³Iþ¸ßveBê1_>¤K6²\fè©0eüG²,1¥4ÑXwDX\u0004>\u0015C}÷\u0012îM÷ ^(ù9)Ïö\u0015Æ&[~V÷u\tÒ.}Ä@Chµ\u000f\rd¥Ïé\u001dnàÝev@¡B\u001dÌ¥):ÕöuùU\f­uÁ}÷õ\"·»r÷ñMíë&1Ä}7Ûfý\u0015Ü\u0007wßtúL¨~QÑ\u0004Ï{&R\u0018AÐô9\u001eÿ\u0016²¨¾d.üt\n3&í;VP~¿¬\u0011¹,QÔÇ\u00151û°\u0019;Dî#U+v[¢hêè[ÿu8¦þ¶TiOÏ+é2«].»\u0005õ·ÞCÊO6HÝÔ³´M_+&ð,ÞÄ¾áñ\u0013\u0002\u0017\u000f*à»g\u0014_/\bÃ\u001bx\u0013êE\u0014e¨\u0006û'mdY·©BÌ¼¶·\\f\u0012hêë(8¸©\u001açgòrZñxfYù±£ð×<èäÂuCWÇvú\u0010i\u001d¢&Â­ÝW·~j¦\u0016µÆ<\u0010>Õ¶ªc\u0000`£it¥\u0017'óÉÜn\u001a°;¡âUÖ£Ï7y\u0000-õ\u0018-ó\u001d\fà\\´\u0003\u0003ÛÜüî9îåZqÍ5\u000f2;Øx;Õ79íå¼{\u001eN¶ 0ª¼­C\u0019ið½\u0003WàZrïMÒÍH¥ý¼Îk«\u0017ÖG¤ºæ¦\u0012\rBÙqó\\~ÑBTkÄ\r¼u+Kæ\"\u0004Â/SYÇ¯I«xOðqY\u001cûÓ\u0011®MF0Ø<·Ât^<\b»K6Ù\u001aRPÛ¸Îµ\u001c¯qöÙ\u0012Mý¤q¤Æ\"ï\u001cÁ¶å÷cæ\u0005Ôd®_\u001c1b.ÜsÃN£ìM²æì³P¶³ñi©\u0014lq¯mÝgêC33£ÙðÔ\u0007úÍ\u0011­_qÝ¸\t]_èÁN×hzkÀ\u0014R\u0015±Aô\u0006\u000bÎ7K\bø\föZÅoË¤ëW~\u0004tX\u001fóÕñ0êº)h\u001fí\u0000½ÉK)ÜÀÀßù\u001dÐÈXR-J\u0006n!S\"¾Ø½á-kú±\u000bß\r\u0004[`Í·\u0010Ë¥ØXx3Üm§¶u\u0004æºß&Ë-\u0018ì6\u001f\u001d1^Ã ï\r¾\u0015¤þ\u0000t\u001eÌÓT`+È\u0010i\u0005ä:¿Ìüñ5âó*òÐùõ»Dº4<`×\nàHJá)\u0004(ç@C\rÏó\"\u0000ê(\u0018Þ®qPmêRgoº\u0002±\u0001]\b\u0017ÑÙZù-ã856ãVµ>(\u000b©s¿\u0005~soxßôëÌOâg`/p¿¸Ómá\tQ¸#Ûñ¬Lk³@ôá\u000bR?Ñà~¬ç¥SR\u000fF/ðþB¥çö:)2?&FDâ\u0001(fp(U\u0018Mø;Ò_\u0005~|*X/ý=\"p\u0004¹U\nã1Ö\u001dGöô]ù\u0015â;ªöÕÔÂ8R\u001c_]ÂI­­º¯°Á¸âá\u001b¯dÊàAO!8\u001a2ó#t÷R À0\u000e|dÉü\u0006³D\u0007ÝÁüzÃJëHd?=)üO\u0007·¤}ÜüÁg\u0001\u0017©É±öø\f\u0000\u0019ÍG<BLó¨\u0014«3t¥8ÓN{\u0014\nëqÈ\u0004=Ã¤\u001f;|~A÷Û\u0013ìÿùÄoSù§~¤z'ï\u0010éÓ´ÿ¡@u@9\u001bÞZÿhúyK1t*lQ¾çF«\u000fX\u001cÊìÐ\u0011­î|Z\u001dØìP/yÚ<~|xMégë£ý\u0010úÄFæóí«ÁÕC_ºÑtp­ÈY®Zò\u0010Ø\u0004¼L8»Íùz#\u0006áõÍà\u0005Wö\u00116¬^\nÇ\u000eÆñÆ5\u0018Øê`Rýj9A\u0011q\u0001Yù)Xõì)Ñù'7Tìªäß%Ð¬Ñï\u0015\u0018¥f@\u001cï\u0011/b?Ì\b\u00030²\u0011Z©¹ãè\u0019ÞêÿÄæ[+a\\\u001b\"Ì\u0016\u001arO^OyØùCw¿BêÌª;6æ7&g \u0015Nc¿(-ðkÂøØÑÞDU¥ÊÈúÂC\u0019£Á9j\u0003$s³¥¤?À!ä!ÕÏõ5I: Dh²¨\u0017GlÛ@ÏÍëì\u001b\u0005ÀßàÉéwYÆ\u0006\u001aÖ\taë\u0015·Ç·Õ`!º%1\u0013¿«þ]\u0002Û\u000b\u0016¦«c{äl¯ù÷#E\u0019Ýd¸\t'\u0007wt§ i v×äs\u0016ö}ò-Yk\u0017·ÆÍ±\u0012¢ /[$èú¹àzÞ\r\u0012`\rç®\t\n·Í9n=³*[ºA.´¸\u001eÍAx\u0019OA¥µ µJY<ÃëÎ³\"G$NÝþ\u0007d\u001fEQW\u000bwBÌ7\u001dzÔì8ºR3\nÇ\u0001¼\u0015&ãp\u0013öÐáo¢\u001b_¿ÄgÍD¨DÓaí!\u00110'_Ü^íâ¬Ö4Ä_ÄiA\"Î¼oLÒ,½j+0/\u001f0Kïï|çG×/×\u001cG¼ÏîNtÃÈ¼¶ÝWL&Bd\u0015ßmà\u0015þr5Üt5dDÜ\f\u0016½e¡8e8ñÃB#\u000f\nËÒÉÂB\u0013Xïz#\u00042&ÈâZ¤¿f\u0005~o\u001fïµ-­}/.ISzE,\u0002P°GØR\u0004@ A\u0017U^\u001b°µÍßOÉq7*©ï{Û­ÒâRûC9Ö®£\u0012Ì­_\u001e8|'ÍþÛ'x¨Q,Nî]\u000b2rR>9_|ÁQçÏ÷õFc}Ã\u0006âÀ\u000emÝ­e\u0010ýÆ\u0006Iï\u001e}ê¿ÿ9LMïdÈùcÏæ°Æ\"\u0006\bïa\u000eDHÃs¥Æ\u0007z<D\u001dä\u0010Ãßé¦~\bm0ºg\u000b\t©Ç\u001aÎ_+\f;?WNfe[Æ\u0003¡\u001c\rÏ\u001cû\t5Z>fémíþ>Ã\u0016an E\u0018ýJçÁgjGÑÐ\u0007uô»Ù©\bfÑû\u0000ã%<î+}Ü\u0002w,çÓç+À92{«KãÌgn¸\u0001ÂÖ\u0007où¤×õ±q\rL¹Ý`jgi\u0002N<e^;Ï½ðÏ¹Jf5k\u0018\r§4~F3Jõ@9D+µ{dÞ\u0017õ×âØú,8òÂ¥\u0005*|\u0001SôSt`À»Ë`ýV@\u001b\u001bÇ\n½7Z:\nÔ·\u001eÈXÚ\u001cyh%\u001c¿\u0002gðÀ\u0014\u001fqü¼,ÏHÀ8*«`p-Õ.È{¿9\u000b\u000bKª#h+\u0007Ï\u0014þÏÇI=ûÐëýDI´r¥öw\u001eea\u0005ö9\"¡;/áð`Ùæ_#R±XR1q+¹nQçðÖÓü¶Ó\u0004>¡Z&årÀ¿fW\u001c]Wã,¦vèÄs°|Ì¥\\º ¦ë+\"tS·VVà\u0014ýÍTãG¥ê\u0016¢ï\u001féÛ\u0015áì¿û\u001aÑÂ\bCï}\bà¦ì¼÷\u001foÏã*´\u001d:NÖS^yg6\u001a3Jù´ýò;P<æ5ÔU ñ.÷u¦*åÉ\u0011FïOhÝü¢\u0004®ØàYÖ¦£QÖØbý#\u0013BêC¼KScLßWÚ?Ù\u0012°Âæ8Aþû7á¨9f;=\u0012ë¥ÃÉ\u0017U\u0011íw6u·ówf60à®¸_ØRqú~PzRë_E/MÓìqZ[ß-éçûÙÖPÌ5!ÑãÊu?ô°´\u000fÈßÕÉ&\u0016Ûâé×¥¤è^7v\u0016æßLù3}pÂuö¯\u00015Ü·¸°_b°îHÂSú\u0011ëµ\u001e\u001eö«1¿áC2ëÀb¼[\u001ainjÑuY]\u0016õ:\u001aÂÉäY\u0001bdâ÷eãã~m8KèrTÿ\u0006VSf$Ú0zÛ%YÏoë\u000eÍ_'ÞC\u000b-ô|1Ð¼¾8êë\u0015D\u0012'{+\u0013ú\u0015&ì­\u0018Úd´¦sÑÙcß}ù9Ë¦Ëâð\u0004ñ­5ãä0ºì\u001c±%|\u0001<x¢¶B;-aø\u001e\u0004@øª¹DP»j7Pfý£Y\u000fªC\u0010§b·¦ËQßs\rY\u001e¸*ñcåX6{z(H¬hà&\u000bYÞÎ¡/bï¨¯\bÅ¨õ³çëþHÇ\u0016Ãgëvî\u0000iÙ\u0003æù%\u0000\u00108\u0004@t¯òûÅn+»ØÃ\u0003ÖÔd\u0019WâM=\u0007¿0\u0005dg?,ú[ÆõI\u000fNþ@Ó>ï1\u001eêó£\"ø\u0006Ü\\r.À¶hÃ\r\u001d\u001b­i\u0015ä\u0011ãîñ5L]ËØUktò>\u000fÏ)T }\tFì_%\u0010²oÃz#@ìlvù}øÕoþ\u0000!ä\\Gø8jV\u000fÙ\u0013u$êï\u0015x\f_ûuÞ\u000fX\"Ë+Ýè\u001cøû¦;~L\u001a(Føq3Q\u0010X\n!Èh\u00170QÂ^\\Ïý¨ë(\ríðåÀZ\u0006l\u001bhßApQ\bÜ¦4^r>\u000e'rÇ*o¼ÑÁû\u000e|ºá÷;\u0012\u0019à[\u001eËÉÉ´õ\u000f9Ï¸$\u0018µ\u0012\u0013\u0004%\u0017ráZ®ÊãÐ¨pz\u0012w/4ocòéê«ªÈS¶/U{\u001f\u000f{6©asM5\u001dGÛÏ\u0004%Ch­äªh\u00022\u0006§*q1[6<®ÁÃTÓ÷õ\u001a/²\u001f]wÊY*Ú\u0005×}doMv5;ª×´\u0004\u001f0\bi«ñ]\tÌ¤!áÑ·Ï]×\r<UÉì`Á9¦Õçøü!¥{Ó#È¨Yg\u0007­\u0006­ÖåÏÛË24.\u0017x\u0010@°\u000f\u0013>\u0006ÁÒ¼µ\u0004Ö,K pOE4»®WÙwÈ¨xI¿\u000f¤22\u0011öÒá~\u0013¡ÄØ0Ü\u001cì\u0017¡(+\u000f\u001dãêÎÕ¼îd.MÐNWl¼c¬\u0000x÷¬\u001dA\f»\u001fSÅ¬ª2¬B|ºÏV²¦&ÖÒìîfu\u001cé¹Fä GC<¶\u0011û\u001a#Æz¨@0Ð¡µ8\u0013¶ÍÊD÷¸Ø:£#>?©\u000e6ÿâð\u0002\u000eÚòa9= Õú®WÎuy\u0013õtk¶¥®Þ¤g~çõ\u0001û\u0002)PÜã\u0004®¿õÂÚ©\u0000\u0005¥\u0015Ì·Ö\u001c\"s>KñÉù;[É\u0003å)«:3½!äQmÈOÇGx\u001fu\u0011FÒ1L\n7ÐË\b.1¾dJNdë\u0012\u000fRRï~¦Å4ÃÓ\u0006±Ì®\u001fïäýá\u0004éúq^Ç£k®\u0004Ã¾ö<5vÜYiý¦q:ÿ\u0003ua\u0004â³ªâ(KÖw\u0004\u000fô\u0016-È¹0k\\\u000e\u0004@\u001fB!r\u0003³ÎÛ\u0019ºõÆ3ê\bô©È®\u001bc§IO\n¸\r°Fb\u0006v0õ\u000bÞr\u0018~6ó~á\u001e÷w-`íôd~k(¥>óåesó\u00103\u0017a\u0012úæ¯a^Í0à¥9Ts:5Wô5?\u001fUQZ\u0010á\n¢U\u0011ÚÆÜeV§²lý@ôô\bªä XÃ¦-±¡wôû<ÃMÆìÉ\u0015ÙòJzÓ ß\u0005&RòN(%¸\u001eþµ/k­ë7÷\u0013m¨òúß5þ9zâ[|÷æíÚd·ÃP[jjëËh\u0018\u000f÷çà\u0019,c~\u0014%ÙnCEpÎ\u001c\rÙþ«Mo±\u000fUÑÔ\u001cS¦ÅFZV{¤èGR éR6@Ëe¿fÓbJ\u001eò±ßz.Ñ÷r Ë\u0005é£(Id\u0005\r7¨ôÏoËµ÷l :\u0016|Br²ãjü®*Ué'Ý¯õ¯¬1©­ö]ãJYû¢ûbÛæ¯Qc\"x\\N\u0016æ©\u000e±\u0010t\u0000ê¹MÍ²æ3*3à!öãËG6)èQêø+F#Êµô­á\\|(\u0015fcøûÎmºOIõ\u001bÁ uöT}\u0002'Yñ:Ü4y\u0017ÿiä<%´\u0001 z \u00160\fqIÎ9³#ç0d8½ùö\u0005|\u0000PIªV¿.PÚ[ô7[\u0017\u000bÚdA\u001bg\u0003yî\u001e>> `7a¸\u0002ÈóAÆ\u0013]|<2~lº»*j\u0003sdÝûæä¢S\b~åòJ®'¥%\u0012\u00068FíK\u000ejlpyt\\?\u0002(W\u0010~²Â\u0015z\u001fx\f³\u0005ÎÆ\b]\u0004\u0007x\u0007&MÖ0Ü,µLÏ\u001eþ+Ýáuß-D7ç\u0010\u001eSØÌp\u0010QaÎ!õ\u0005ð8XA«fj\u0000¢c¡m\u0000\u0001toGFUXïo\u00052Ùí\u0010\u0005ñßD\u0004éÞ\u0003\u0016<duvlüÝÍNf9w\u001aª\u0007ÇwZ÷íUË¨^I&\u0002\u001dá\u0011ecé3@ªÎl_q8Ê3úº\u0011ùP\u00126åÁ÷³\u0007\u0018Y¥¦{\\Í/´8n>.\u00013ÅøÃ{¯ÂÊzÐàK¹Çåt\u0015\u001aª\u0006ª«¯ä¸óI©#fþú\u0017\u0000ÒË\u0005@¹\u001f\u000eL\u0006&õrKªg\u0003aâ#õzEõCÃs\u0012Ò®ªc\u0019.û\t\u0015g®ûü!ïÄ,º»\u0017üâ\u0019gý<Í¥3ÖÇvtÒÃm$Æ0*ýÆá\u001blXK~#¨q+N\u0013Åazw¬|·ë\u001d¨pÂ[ø¸'ã/¥ç\u000bì'>\u001czûÝmCð3ëÐ&;þÓÕ'×¶\\ q*7b\u0000;t\u0004b\n*?orw©\u0012Æ\u001cFÀkâõ\nª7§O5¤\u0005\u0019\u001e\u001fª5~Ùy\u0003³ö dº9iF\u000b?¬«û¾¼Ñ[\"+Ü¶ÆÓ\u0003ÏÇ\u0019gXvQýþú¾°39\u0019M\u0017x7\u0002kÃ)c[\u0015×2¤ÕÌë:Ç¾ìuÛ8.[à\tI6mf|YôájRo\u0005ËéÝ°2y½L!p`ï\u0015\nÁQÅ\u0001ëVÌþP2~ÀP\u000f°;K°Ûú|:8ðqHcAëRðS¶õTùýÐã\u0000\u0010?vÁ=á\"\u0013Ð\u0012'G.\"ºñ®­BÂ\u0001ªðª5¤ür\u0019Ùµâ\"2È:\u0000X\u0017\u000bz¸í\u0013Ò\u0006\u0007ÞóÄ!Ô5\u0006WBmXò:Eów$\tò^fÿ2ÊÊ×Ê\u0017_ãGL\u001d¼GÐÆ¶Ï:\u0016\u0019íÇPûçøÑu\u0010Ø²Ô9[8Oú:pú§VüïÎ¤ñ\u0004öy¬Pc·ñ\u0000\u0007}ÍÒ\u0012¤å1\u0007-ÑÝ%\bËö\u0000å¸ø\u001dÁé)_³7\u001b?&¬ÜÑ»@Q\u0014÷^4@\u001e£\u0002FMjæ{\u001aé|¿Õ~§>Ëì1Ú\n¥ù\u0017é¥ñ\nö=\u0019úÒ$í§øØ\u001eÔ¯s©V\u001bRÓØÙò<Å<ü¦*âÈ\nÕÑ5JR\u000eQ¯Ô2\u000bâOb³jcøíÕ\u0010>;:i\u000b-6\u0013«C¸3ÝÜ7ñê*iùÌM°a\u0015*\fÑo±»û|±Ã¢Ë\u0018PÂ<\u001b\u0014@OEâ\t\u0012Þ.cv¡ß]Azé\b\u001bO­&vm\u000f\u0007\u000eht\u0002\tà\u0010Åö¯sOíÞ\u0014ÌÙ@ûSãè\u0016\u001büQ\u0010DV\u0001@5é´h¢!öXÉØ\u0012¡\u0017xûÀÞ}O¼¢cF\u000eY;ÍÆ\u0017lõ^mR_ã9D!Q\u0000Ä²íÊ¤Z~ a\u0015æ²!5a\u0016ö)î\u0012B\"Kæ\u0006$hæò®F»áÊÝ(\u0015:Zrs\u0017E¾\bó%ã¨ÃÃkªbUþO)jÇæöpÀ-äÁLf~|Mà_50_]<B4\u000f\tû\u0004ª.nñx1¾\u0002ÇTýØèCì5ifX\u0019|Å9ýB¯&±\u0016»=n{\r\u0019õØ<c5r/Y½»\u0002T 6á2¬ ¸WºÔÍÀGõò2\u0015­\u0015ar\u001f­Ä\u001a\u000bÎ\u0003ì©kxNÝãÁ¾v+ªñµæ\u0013\u0015½ó(¡±\bëµúÕæj6\u0004\u0018Ûé&ç}.ñêTp{?sù~\u0019¾\"\u0016>Þ\u0002ª\u0019Ï&çá¬\u0019ÛjÄPl6W²ÿ\u001d3nCfÛ;Ð¶ä\u0012ú.QÌNy1±!bº|vÖÏ«\u001b\\2äì\u0019£Õµ\u001cOßbSÔ Y\u0000Ú`A\u000eý\t\\Ù)\u0014à§\u0012¸;ÍöIPs\u0007Xx\u001ctàÌ¶nÔþÍw\";AY&ù1@\u0019<º^æfI2\u001cô/+×Ë×E¶¶ïDôüNb:êÐ\u000b}öÿÉ¿ä×F%\u0007ù!áË+Í^ôSnçº=ÌäñIÔ®z2\u0019v\u0017Ã\u001fÜ8ëñ£6ec\"æ¶-8ín74pij9Û\u0002áOþÎE[¾Æ\u001c%\u0007§vÙ6SÒ2\u000fDå\u001e\u0004ÿh\rÒEµ²î¤¦L\tzts\u0006\u001d\u000e\u0002\u0002g¾þ\u001cémêG\u0007óìî=ÙßZ-nÀ»E1DXàf<é¡ÐYÄ\u0004Mqm\u001cQK\u0000\u0014\r)Þ\u0007ò\bÞ|­ñª6\u000f,-jVäï»eÄë£8-|è53d¬Vû@ÕÃ5%Þ&@CØ\u0001\u0004\u001f¾/}²\u0012ÇÅAÌiZz\u001céë$u(u\u001e«x¨}8·ÑfÄ¼K\u0006\nÖ\u0001ñ©gÊVt\u001e\u0003å8j´\u001dåG,vQ\u0018C\u001dàLãÂ\u00025QÄ\u000b¡»#ø²Ä\u0019­o³u/:ôà\u001dWØùÊ¶F;0~õ£³ïtXâ\u0005æ\u0013\u001ap»Ë\b÷²Eã¬\\Sü÷ÐN¤ÙY<®\u0000{ùÀ}Í\u0016¡\u0004û\u0000%.\rÇá¤\n]WKþñÅâ\u001f5ïÆß\u0002wIÜ\u001c÷ä+»\n\u0011£}V\u00107.A[µëZR\u0012®-ó3Ïué»é\u0015[Ö\\ð'ßÇóï6fÿ%x!<L>{±üsËâÈªj©tUýãôàÄÐåu­GuDbc¾ÑÞ¶\f<¡Æh%5Æ\u0018]Y\u0013!ºÖ°$(NÆÂn²\u001d,d\u0007ÞCÕ¬\u0003à9,\rá}ÌqÁæ~à©ºï²]êW¹kdÓí·''8\u001e¡F\r©Ð2¯¸1>ëÏW\"\u0000f\b¥Ó#\u0005\nøËíÑnL»Ð?¸ðSú£ÂO¡@gº\u000b\u001e¤ã¨ôàØ-\u0006\"\u001arÀ|Ä³Ê\u000bR#ÅsØgâï?Ø\u0001öNñ¯ùuÁF«\bc°¶ýÚßö¿ßýóJ_\u0003ûé¯u\u0007g}fE\u000bñùRådÃ\u000fäC+±L¾{zæ¼ñ-\u0001o\u001cwzàß;.Z\u00010Æj¥z\u0002d\bî£ª%\bÉ(~t£@ôÊ7¾\u00049kÏ\u0004L»'\u001aä¯\u000fi\u0007^\u001c$°xÈCb%3\u0018ä\u0017ü\u0015°µ4â©ã\u0017?V`)g\u0010\u0012Ó£Ë\u001b.Û)M+ª¿\"XÕÄ\u0018ì©\u0018uG\u001fl-4\u00013{ !Ê8{9_\u0000a;E·}lösãOÚ\u001b\u0002¤\bÿ=´'@69U·/ð!Tâ³gv 9\u001c¼$ÙÈ¸»\u0005l7qÉÕÔê~ít ØöQ¢Sr\u001c\u0016ÎÍdÕ©?Ó²GÃhfò.\u0007)(Z4YèU\u0019ù4X>1®ÄâÃ\t&)|È®F\b\u0017êú\u0003ôícIxÖí\u0011IÙ@ èóü¹¥!¼\u0006'ösáî:äÎ\bPXô\u00025\fm¶ÓÊ¿\nU£Y½±\u0015ÈÌ\u000e÷`\u0004.¦ bBFþZ%ú-½$À¯7\u0012¡È­\u000e0Ó\"¹çÕ&9:^qæÀe¯íÎqÊwcc[AQ¤¾mB§ªÞ»_\\ûnNÕ¶¾îf×Wê²o\u001b»iÅýLªÀü¹à\u0016æ¤ÔG\u0017ÀIB²º9 b\u0018£LX@esrn\u00041?¹ý^çÓà\u0018¡HZê7~?+\\x¬\u0014?u\u0002Å¶\u0001\u0014rëWUû`f%ziü\u0011\u0005¶F®Ò¡m©¹¾RÈ>Ý\u001ehm\u0018 å­~\tçDs\u0011`øH.Q\"6læGª$\u0004¸^Z\u00141mÉ\"åeììd#V\u0005Ò~ñK²o>bê Æ¢Uü¤û²gp\u00106ø\u001b¦Eþh(¬f}}ys¡P\u001fJÃ\f\u0016ãXV1Sê´º\tùo/\u0004­wí\u0000\bý,Õ¿Ú\u0001þhÄ³6©1Gã\"ÚÖ\u0016ÀO\u001e£Ü¬Mû\b,}a4áqq\u0014èU\u0018á\u001dÓ\u0000ÿÎ^=ÈSG\u000f[øSºGÿÌ\u0012\u0005º\u001f\u000b×\u000b#8|\u0002´v0$5\u0002Æ_9¦Ñ\u0010µ\rÀiUþôfÃJn{\u0014á9\u001d¤£úï©\u000e°«µt¾\u0002úÐ§ëÖæ¾u<»?\u001a¦q¨a¯·ê\u0000Ü@mq=MêG1\u0019VÑt^\u0014°VÕè\n\u001eb\\µ\u001aý¹jr¨Jr©Òcªxå,ÛÜ\u001cg 3«¼oG¯Þ:ìòv7âÞ;¦õCFxOÆg\u0019è$8gþ\t\u0014¡M¯ØXä¥½ðí\u000f(?XÓÀïS(ÀmçZ;q»ÚçWU\u0004¨\u001bJ0<\u0015í§\u0002\rMÍ®\u000f5)\rªx\u000e´0\u001f\u0017½×o.ðv°ë¥=gÌuåV¨3m¨¢ßÓQKæZ­@=º×3\n¾qIÉL_ôÓÃ¶'\rôì.\u000bµ\fú{Ú0àwËØæ­ð~6ÊÐHüAY<\u0019~\tb³> i\u0010}À%øÅÀ?§¬é-|kTîs<©g/PÎ¯\u0002qbH®ÁýÁþáXéS 1\u0001©¤ìÄÖ7¡=¨,jþä¡Úó!·$ \u001c7úÈ=Û)CÌY¦W´\"}FQ\u000eð\t\u0012Øª²K'ÿ\u0005#ê*5nÃ\u001cñ/¨<ß-\u001dÕ0ÝBÅ¾ìkód\u000bñ}õahíÛç@\r(h³\u0014ÅÐt=~»Z\u001bÍ\u0005²Eo»1ó\u000fê#¸IL¹RLMú;pe\u0014J¶öh|\u0005\\\u0005¬\tÑ\u0010ª\u001f~~×)\u001cRMûã2ÈlC\u0016¥t¡XÓÿ¼7N¢¬\\êtg\u0012F¸\u0016ý\u001d,5*bàõ0}÷ða£ù\rò\u001fçdÈ§ý\"¶\u000f>\u0004¿`*ä\u001f­\rñ¹°ìÕ?M­rTóöDBï~\u001e»¾Ý\u0004*{Æ\r®<Æ&>¶ÆRHp¾\u001b½Æ1¥v\u001c,E8V=µ\u0002#c³Ú-¿tÅUgÅ\t\u0000o\t;ÏJíg\u0012CÍ4ÁÇ<úQüë°d)3&\u0003Þ\u0000\u001fàÔ¯@\bò#Kây8tµ'\"~É\u0017BÒ\u001b/\u000fÝÜ¯å\u0015õø@éO®ð5Y=×\u000bÆ+¬È\u0016èi\u0004çìÿövþï\u000eP\u0013)¬\u0005)ì\\Þ$\"<\rþÛÊõ¼Û9»50Ì?<Tt)",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/dupc_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/dupc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/dupc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/dupc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c36445301dcaa2914ab44051d79367d68877bfbdce6e1b0dea9b29d544223b5c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    }
+  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
+  "updated_date" : 1556610717,
+  "updated_by" : "system_admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea5c875215e9c49249f"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "ESLINT",
+  "pattern" : "LINT",
+  "display_name" : "ESLint",
+  "type" : "STANDARD",
+  "lang" : 2112,
+  "brief_introduction" : "开源的JavaScript代码检查工具，可以在开发阶段发现代码问题，支持最新的ES6语法标准，支持前端框架Vue和React等",
+  "description" : "开源的JavaScript代码检查工具，可以在开发阶段发现代码问题，支持最新的ES6语法标准，支持前端框架Vue和React等",
+  "params" : "[{\"varName\":\"eslint_rc\",\"varType\":\"RADIO\",\"labelName\":\"项目框架\",\"varDefault\":\"standard\",\"varRequired\":false,\"varOptionList\":[{\"name\":\"React\",\"id\":\"react\"},{\"name\":\"Vue\",\"id\":\"vue\"},{\"name\":\"其他\",\"id\":\"standard\"}]}]",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/eslint_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-b5e71c6512ff4107a691a24071fa23fd",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:55169ffaf54df1f0bae182595128d4a7601eea1afd4ef77b7467411b9fa57e8f",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/eslint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
+      "create_date" : 1617103927339,
+      "created_by" : "brooklin",
+      "updated_date" : 1617112569028,
+      "updated_by" : "brooklin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/eslint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
+      "create_date" : 1617103927339,
+      "created_by" : "brooklin",
+      "updated_date" : 1617103927339,
+      "updated_by" : "brooklin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/eslint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:d1cbf631894da3f321d6df951152e4355d93d2270712588f3f2a107993ff53e1",
+      "create_date" : 1617103927339,
+      "created_by" : "brooklin",
+      "updated_date" : 1617106121226,
+      "updated_by" : "brooklin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/eslint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:7c3a25db885a488e90d533cb8cebfac2354d7303ab0d3ab4891625b87d279948",
+      "create_date" : 1615549350232,
+      "created_by" : "brooklin",
+      "updated_date" : 1617112569028,
+      "updated_by" : "brooklin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan;  python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/eslint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c64887fec3e153e381b5a854e1974e42502c3763be545dd718b503d5e382c6bd",
+      "create_date" : 1616676043848,
+      "created_by" : "brooklin",
+      "updated_date" : 1617106121226,
+      "updated_by" : "brooklin"
+    }
+  ],
+  "create_date" : 1556610725,
+  "created_by" : "system_admin",
+  "updated_date" : 1617103927327,
+  "updated_by" : "brooklin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea5c875215e9c4924a1"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "GOML",
+  "pattern" : "LINT",
+  "display_name" : "Gometalinter",
+  "type" : "STANDARD",
+  "lang" : 512,
+  "brief_introduction" : "一款开源的Golang代码检查工具，支持检查代码规范、死代码、语法错误和安全漏洞等问题",
+  "description" : "一款开源的Golang代码检查工具，支持检查代码规范、死代码、语法错误和安全漏洞等问题",
+  "params" : "[{\"varName\":\"go_path\",\"varType\":\"STRING\",\"labelName\":\"GOPATH\",\"varTips\":\"帮助Gometalinter查找代码依赖库，更好地扫描告警。支持输入多条，请用英文分号分隔。默认为$workspace。\",\"varRequired\":false,\"varOptionList\":[]},{\"varName\":\"rel_path\",\"varType\":\"STRING\",\"labelName\":\"代码存放路径\",\"varTips\":\"若正确配置GOPATH要求代码拉取到指定目录下，请填写。\",\"varRequired\":false,\"varOptionList\":[]}]",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/goml_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-a221ae5d29604ccc9ac0de7dac1b5c9e",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:086d6e540fc95c641f1cd7ad064da298f5ac374843031964ad2f91d158a35108",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/goml_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
+      "create_date" : 1616725423850,
+      "created_by" : "chuckchwang",
+      "updated_date" : 1617784178744,
+      "updated_by" : "chuckchwang"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/goml_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
+      "create_date" : 1616725423850,
+      "created_by" : "chuckchwang",
+      "updated_date" : 1616725423850,
+      "updated_by" : "chuckchwang"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/goml_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:2086cfc63b2901ec53253ea83a87b5cc2ac4df540f8338717e1a6b96e0606a18",
+      "create_date" : 1616725423850,
+      "created_by" : "chuckchwang",
+      "updated_date" : 1616985078691,
+      "updated_by" : "chuckchwang"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/goml_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:083c06763217036c279d5359a243a723cd57896445af87671105043b7ef4500c",
+      "create_date" : 1615895617182,
+      "created_by" : "admin",
+      "updated_date" : 1617784178744,
+      "updated_by" : "chuckchwang"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/goml_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:083c06763217036c279d5359a243a723cd57896445af87671105043b7ef4500c",
+      "create_date" : 1615895617182,
+      "created_by" : "admin",
+      "updated_date" : 1616985078691,
+      "updated_by" : "chuckchwang"
+    }
+  ],
+  "create_date" : 1556610725,
+  "created_by" : "system_admin",
+  "updated_date" : 1616725423837,
+  "updated_by" : "chuckchwang"
+}
+
+
+{
+  "_id" : {"$oid": "5f197e34b1370678cd1186c3"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "KTLINT",
+  "pattern" : "LINT",
+  "display_name" : "ktlint",
+  "type" : "STANDARD",
+  "lang" : 4096,
+  "brief_introduction" : "ktlint",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/ktlint_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-24cb929d48404a32af8e83f0ad1471e3",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_run_type" : "docker",
+  "tool_image_revision" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ktlint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ktlint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/ktlint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bd6593e97b53a2ad3c3d0f078012120b2490166f1f26cdc4487199028fb133d0",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1595506228619,
+  "created_by" : "",
+  "updated_date" : 1595510340262,
+  "updated_by" : "admin"
+}
+
+{
+  "_id" : {"$oid": "5cc7fea6c875215e9c4924a3"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "PHPCS",
+  "pattern" : "LINT",
+  "display_name" : "PHPCS",
+  "type" : "STANDARD",
+  "lang" : 8,
+  "brief_introduction" : "PHP_CodeSniffer用于检查PHP的编码规范。PHPCS支持包括PEAR、PSR-1、PSR-2、PSR-12等5类代码规范标准，涵盖257种告警类型",
+  "description" : "PHP_CodeSniffer用于检查PHP的编码规范。PHPCS支持包括PEAR、PSR-1、PSR-2、PSR-12等5类代码规范标准，涵盖257种告警类型",
+  "params" : "[{\"key\":1553135395718,\"varType\":\"RADIO\",\"labelName\":\"PHP规范\",\"varName\":\"phpcs_standard\",\"varOptions\":\"PEAR|PEAR\\nPSR1|PSR-1\\nPSR2|PSR-2\\nPSR12|PSR-12\\nSquiz|Squiz\\nMySource|MySource\\nZend|Zend\\nGeneric|Generic\",\"varOptionList\":[{\"id\":\"PEAR\",\"name\":\"PEAR\"},{\"id\":\"PSR1\",\"name\":\"PSR-1\"},{\"id\":\"PSR2\",\"name\":\"PSR-2\"},{\"id\":\"PSR12\",\"name\":\"PSR-12\"},{\"id\":\"Squiz\",\"name\":\"Squiz\"},{\"id\":\"MySource\",\"name\":\"MySource\"},{\"id\":\"Zend\",\"name\":\"Zend\"},{\"id\":\"Generic\",\"name\":\"Generic\"}],\"varDefault\":\"PSR2\"}]",
+  "logo" : "x¬Wn\n\u001a\u0017ÄHôvï\u0013½ÞßèÕôbXý\u0010Í\u0016Æ¶\u0014'R\füåó%vîé?í7­Kp\u001eë³t+\tì?mÀÎ\u0005iR=1ïÍpýFðë÷ò÷-÷Þã÷+Ï[_Yÿû\t\u0013\u0019®\u0003)Ìºa9a¿¿°ÿTG\u0010ý÷1ú~OA£ÀQT9ÐýqÃun5Gø¤ñÌJçê\u0010úûSYÕþ¥µª0\rãÉmu)²3)µ\u0006¸[ 'Ô\f\u0011S9Ûzò¬z:\u0017\u0006à{Ùÿ¼suP¥\fË\u001c¸s+B\u0000\u0005§Ï3\"yt\u001fË¨Ä\u0007xl]¨Ò/ÁªÎu\u0000ée[âÜù¹ÙíI\u0002Ûü_\bfç\u0016\u001aeã\u0013#ÙÏÚD¢±ìÆd\u000bî\u0015þpÕÝ¾\u00075ÝÁÁOäI3õ{¤\u0001f´sÅMTmJ'Æ\u0006ötûïãGHô¿±§½B% Ãª¹ñ¡0¿äã®\u0003F%ÀmÈ¨°n=ì8BNalNÁøv;i±VF5{\\8ûh\u0003\"a\u0007ÐèÑ\\+ø¼«æX'5Ó7\u000bZF@Á0gVz`M\u0006s\u001dmÌ\u001c¦:âïÃ\"Ô©{ÉÂþCºíÕËî(â]¾ØPÇßv/>\u000bà&¸9ÞgÛì@³LPÌz·+¿µÍP\u001d@$evË\u0017êìJÃ¼èÞºHÑS¬\u0000iÍÅÈºy î\u00120¦da\u001cµ]×R0Ò?d²mÏ`gº\bö\rÕ(÷l0Û¾«KâÊ;c|ÔC\nVGwTZÉFÞT8²:z#ßä8fîë]bër2ããØÕ­\u0018;~Êçw\u001fß¸>\u0004Ë§1Æ`îF\u0001à)/T\u001cââª¸#ã­brmì\u000fNá\u0005\u0013\u0014´ä·É¦£cK÷©öìG- V\u0002àûòm\u0018Úît\u001cî\u0006}üÑKÈ¡¢}ôòµÈý\u0015ÌCf¦¤?ß³t\u000e»0a\u0003i\f:*LÙsi\bô11o.\u001ft§\u0016øö8À>b´Èñ]ÀÒâ²\u0004× .Ä%°ÈD!Éj4Ø^ÜJr4T\u0003m¾î\u0000ä¬5SU\u0015\u0014\u000et\u0019§_ð\u0011Úk\u0018rTµ2×[Q\u001fçqÕü\nèJéärã|ª|À®ó¤E\u001dBÂ\u001d_\u001bâÝº.ÐS\u001a«\u0015\fHZô\u0016\u001d{@2#/ÖaÑ¾0({:Ó­\u0018tý­Øñ©·é/L4(ýÝd\u0010\u0011|kÊ¿\u0003Äû\bBD69[~\u0003úqÿÜÇ+\u0004«\\-³XÊ2êÛ[R,1¬bãP(a%pC\u0016¬\u0011>ýVX\u0006ÉçmªÉV-!\u000e$$¸ír^.\bbÚùlE¨ÖVSõ\u001bÊlÕ¾¼¥\u0003wÑ¤P&W\u001fcºË¬\u0019jôÎ\u0019ÐMä~ì¨û\bÊ»º¼\"iNN~ým\n×»¦Ê2s\u0006îTº>5[´ËùX\tRW\u0001¤éjª¦Ó46]Xß»·Îc\u0004\u001f¦¥ÄÑ\u0003\u0006¥É\u0019<\u0004ìW\u000f+\u0016<\u001dgë ü\u00033IWUV\u0014iUéEç e\u0019¾¤)<£f<ª\u001cå4&&ï«<ÑçóÇÖÞàÖ\u0019ÌÇ\u0016ÆéT¬+ÙB¼éZ®\u0003¾q\u0002¢È\r\u0003$\u0000Û·Â'á{ï{Ì®øÓ¥åDnªY1aTÈàöãk\u0005\u001f®µ}££òûÈ,½ø4ÊÞ92ÄìBO wO\u0001êNë¹uq\u00062¸RDï¡\u0005Å0Uµª\u0005\u000f=Ï\u0005æ)\b­\u0015j\u0010\u0018j\u0012q´zÊ¾Ô\bY:åµåoÖüê4äÎÍ&7étzÙ£÷5HÑC\u0001\nØ8ëÑ¬\"Ã\u0004?¹ô\u0010ôÏ\n=è·çäµµ\b#ñ<_Y\u0006É\u0003ÈÒ4'Þ®@á×æDuø!\u0013\u0005§_\u0002UÜÆ:\u0017£B\u001c\rA3g{Ã\u0004Î]ËÛ1\u0014â§S9Éê§U2\u000bÐ¿_\fÒMo±\r\u001bëNG~¤SO!.GO\u0013smôØku«pÇÚ°Ë¤Èü\u0016%ðU`ï§\u0006´µ|-B#M\u0014æÛnËJ{$«2¶p\bðãASò!(þg\u000fÄ$lÅ§sf8ü1H¹ln\u000ex\u001bò~\u0018À§Ó}\u000b\u0010ñ­¢2sÒí-\u0016ïõ®]´a°ås»½³¨ZãÜÜ½F.Pè+Ä«Ý²ý·\"øÑX[H<\rwUGNeY!'%é,¹\u0011æA¸µ©\u0007{´´MÐ<°:È\u0003:ü\u0011¶\u0013[§¿µQèã{9Ø+gµ\u0014)KXÌØ\tvÞ]nmr'&\u0017ºUMÓnj\u0004[+¨js\b\u000büô\u001a¬\\;Zó~\u0015$ìk¦Z­2\u001ec\\\u0018°\u0000:\u0011\u000e\u001b0'÷£Ü_¸«?\u0003j\r®ÿ©\u0001\u0002=Á\\ÉÃm\u001aË,Ñz8W\u0019Aå­«Ø\u0005Åê\u0001à]ïE2\u001a` +\\¶\nyÄwz°TÛÒý®2Ê\u000exHè\u0017e46þ¼´«5ºÀx*þG>|sÂ¿£I§\u00141h08-ÐÙóÝ7ø+¼\u001dôÖ$ßP±\u000b\u001cðÎ>\ntéÊGÄ`\u001c$­®g\u001drÚ}\u001d7+Ê!ø$6]ÓÊ©(B/¤Q)Ç\u000b}üzªÄû\u0004\u0002Õ}$Ê-î$ðþò¹è¥½\u0016óñÁ,9¹NÉ,Pn$.Ê\b¹0»3¶_Éâ@&Û!=ÇÁ¢ð}éëSe¬v\u00175'Xe»[eºï\u001cÉÐRÔ3T¥øXÛ_Jß9ç:°{?÷RÍµÎ&E¡ßTu?p\u001fuì\u0013\u0007¬æcÃHåêµ\rÃq\u001aû>*i\\Þ§fz%á|\u001eÏûÕ%Ô¦ÛäC,`Y\u0019þ­\u001fE\u0000õ\u0002ç¸A\u0004Ü<²v\u0001m±\u0011a¹é·\u001c¬\u00009&6ÛqàüBÉ\u0004ê\u0003=!!+:;\u000f\u0016õì?\u001aêä\u0005×\u001eÒ&&¡z[WÑë\u0015@.ô5ªÔQÏgø¦Qí¡L=iK[®^¦Ot&ÖìÇt}YÍ@½7HÝúEÑU\u001aÕ_ó\u001aÏ=Þ\u00131ÔLï'6\u001cßryûL\\¼£°Ð^|\u0018Öõî\u0003~&Zì9\u000f£\u0013¨0ï¸úÄ`äÓs@\nAÛ×¸/÷¢5O|væ\u000eK'©æw\b)!Á*<öñÈÙõél\u0006Àl¨Ä\u00011\u001aÙf½#Vî\u0017\u0006æ¿êó\u0005££Î»þw½i£b¯,¤±|å\u0016\u001c\u0013\u001eõ\u0006¹çÁ\u0007,ÿÔÜ.îK\u0011ÚZk]¢\"þaÎòH?[}@óÂ«Ä|âjê\u0002Jz\u0006S/¾©ª\u0004 Uå\u0004-_!\u0003om~ý4¿¥r¸Þ&F\t»ß¹\u0018¼ûÎÍY\"`ëÐ§¯åûV~AðÉ\u0011%o¿1vo»\u0014ûS\u0005ëKaiRäÓ\u0014\u0006Ró+\\[<\u0006\u0019@¤\u0007u1H.k­\u000fpy_.æ÷Rl`ü\u0003ôi§i©ùíªiB|57uÌ~y81Ã\u0003ÕÌ°CP\tG\tÍå\u0010?@\u001c\u001dVOÕ@¢êãýhøq\n¿¯¨¯\u000b½ÏP²eETq÷|*OU|C\bEÜ\u0004¦À\r^ùÁðÇG\u001f(ûæÝ\u0007Foõ\u00152¡{H¡%\u0014[Jæ+@\u0004Äøn±\u0006\u0001ë±&\u001crY}äãµ¬ïÍÃ\u0015Æ%\u000fMêISdïüâ&Xtk\u0019\u0007'¯µÑW|MÞÅ3¯+sh¬cE*Á(rÎ¢S8¯å/(×¤GÍuF\tÕRÓ\u0007Û\u0019\u000e|TÍÉ\nß3©¿_Y\u0007´þÁ¬Ë×*ð+`_;9Y(U¸\u0005;SìJâ¿»9vawªúé\u0019¡\u000e.¿¦\u0002Ó-{ÌôFUFÄ[1È$s©X`1Ü`a¡7)hË\u000bl}.nâ¦¬*ãÙÊéa5\u001dÈÝ+P¿ª¾¤U|¬zl)©t°nü/ÝF\u00110Uíê<Bãä3Æ]UFA¥{>Ìçáw:S¥j»x1Uì¡¡\u0000a¾-}\u001fä½ù\u0016ÇÎÏ¶\u000ea\u0015'´gøÂ'|ÉÆþcî=¦\rÌÂc°\u001bpOÚ¸Øf\u000em\u001e¹X5<±ëÅì³ö¾\u0016Ú\u000fÚ¾ \u000f\u0005 \u0018Fg8\u0016Ów\u0016¯H3rD\u0005ýÆå7ùÔ¹ó\u001eAÓ¢\fôØ@\u0019+Q¸«¨Uz>jNF\n3CØ:G\u00053\u0018Y6àU£¦\u0011U£\u0017\u0015ÐV{\u0013+HyÇYª\u001d\tD®-òã\u0005N§ùÎR©+Y&È¤ggt£1\u0014^8+M÷zîÍBjV\u0003\u001bU$Y!U'BKèÝ«{-Ð\u000fdï\"4ÔBñ\r¥H\u000e¸ó-ªàU\u0018\u0014\u0018°*¤áØÝfEqp¢Óx=7[JçPtxýêÌt\u0005NCÅ@I³<Úýy\fD\u001bMiÒëRtõÐÁ^7W}?àÒ&Ñ¼o\u000e>²¡»pçò¶o®t©Æ[Ö\u0005ek1Ã&ý,7¾L´\u0013ro}ü\u000eý\u0018:í¾§[±P\\\u001d}â)\u0000õR%$\u0004ÙÿðÁâíi<×ä\tiß¤O|hpo0º¶8F¾oH³Îõ{«îÜcoî9lßHê'¿|`T\u001fûë6º¸¨[â½fîI_\u0016XbbYe\u0003ÃXê=ýûûy»á\u0011ÛÎ¯ã|^\u0005cÙZ\r&-¹<ææ\u0004/Ó\u000f@#Ó}D6j¤¹\u001d[jD¬xP2_ýhvDX\u0012Ù­¸\u001a\u001aÚ'\u0007:RT÷£ÀL)#cTµÓ\u001cí8üd»1íÌ´Å\\½L\n-\u0007^ôk4OÒ\u001d&£ÀúpÂ\u0012´#ûvJ£\u0016po>Ðp5>Ä`ÕçÛÁ\u0000î­¬\u000buñâ\u00074?Y?\bsÓ±@öRQÉ½ÛÏ\n½íú´\rÂ°DÆ¼.@²æ]W\u0006S\u0004Ì¾[Ó\u0006w\rôú$Z°ÙF\u0018\u0010XX\u0019è¸pÆ\b\u0005ª?é\u000b2ÕÒl\u0013\u0006'`:Yé\u000eq\tÎ\u0015DT¹aeË|tEÔÙ/\u0001ÔZ¬^ú7¥RPëOÒ<m'¤÷qQíhc3_£\u0002üUS¦Ú\u0005¢>x£x ÞÌ­ÀR³ÓÔ­VxP{'®ÇÓ\u000b\u0000^+\u000bD>]\u001d-U_\u0000\u0016¢úðÏò\u0016EK?\u0011PM¦£»\u000e2*¯|A#\u0010\tWÛ,\u0007¿Æëß\u001e8º±\\nÄr´¡\u001eÎÜt+Í\r@ýùXp\u000e?\u001c\u0003P'R|þ¹ôðÏ ½Z.^räR_¶¡h\u001dÐaå*' ¸ô~àú ª#[Ål4DÕ\u000eÑÓ¸x\bÀ¾¬ï¯LÈ\ta\u0017¡\u001dÉ\u0005;-,$×Ó]cßM¿¶çórKÈi×Ôi\f\u001dZ4£ÐñÍ=\u0019\u001dåÉ\u000b,DhäH)M\\\u0011BG©)c[Z\u0003y\u0014±Ãy\u001fÆü\u000e¬÷A\u001frþ¢yUl0ÙuÖÉ\\ã\u0015ô\u000eÀ\u000fBÒ<áçr¿ÊÄ´\u0007|òsÕ\f3´JÁ\u001búJH\u001bRà\\ëPiÄ[VI¯È©¿-»×¯7*=OÕ`#ð\u0017\u0011¿\n¤ê²ëÛ\u0005¶\bq z¬\"y\t_Ïtæà\u0017ÒÞkÊ qý\u0004ø^D÷¸)ûJ¢èJ!ëûÓ#&\u001d¼¡JÒ\u0000ðL¼ùÌ+.P!È]DÙ\u0015¤p«µc§ê×rmÿ\u0018äG§ÓÎd×&Ú1é)Rä-?ÖÇE\u0005\u0011D³¹\u0017\u00176Ã¶eâ_Å`\td\n¥çô\u0013Ã«^p\u000f$Ä¥\u001dÆrNWÐdÛ*\u0006_\b ´F/1Ùê:\u001dò§¿\u0001ÉÍÄB©\u0011ùÇEÛÈcìQ Èn¿ûB;qä:>\u0010\u0012ÄÂ+ZÝ\u001d7Íäl?¹:=/,~\"{ÛúIÛ#±ùB¨è¨eÝl,1²¦ó´\u0016Þõ·àw\u001d1ÿªÐ§SýúDy3\u001buËÙ\u0011H(c\n[=â¥ØX^Me'Q<Ù)º£>QZ\u0005wr¡$÷\u0017ÕÑ\u0003<~&7õWò\fó*EÂèãGQ\u0015BJ¤ßÆHç3ÕôÉ,ËZQÇQã|íº\u0011vÊ9»§0ö²N\u0018~\u0005\r¸yÏ\u000b\u0002KDËÓÔØV\u001fF8x\u0000:~Òâµ$}iÓNXQ\u0003/Vzäo³´/æTâÞv's¼zÎª¸^Í\u000e\u0006>irà;®\\\u0014çLÀ\u001fêY¡\nÔì7}ÌÆrî¦s\t=\u0000\t¿¸Xþd7Þ%ÃXmÑM\u0010~Qe|wÕ¹¢Ùw\f6\"Æìg è\u000fÒæ\u0011\bOÛZÒ­´jA¸óûÒØ\t¥¯x>\u0012@\u001e,¨OàOc|\u0006û\u0000+ë kû\u000eôZ^:J/Uè9æ%¼î\b`>&«^Ìà0#»ôa\u001cO¼=\u000emY[·ÜPJSëð¤ãôºór\u000b(¼:þ\"Æ_ùR\u001cÖ\"FVÿ\u000eBÂÔÍËdº&¸t²»5\u0010Ä\u0013e</{4Ú '\tØö\u0005\u001eÖ×÷LD`õq\u001bÙr9\u0011£Øc¡Å3pd`ÄWÁQà>Ñ¿ÿÐg}M®\u0017l~\u001c\u0001T%¸ëñ\u0018ÀDD-l#¦\u0012Ce¬Ú\u001a¹ß\tÜuA OVß¦6§¾Úg¤¼2Ãzã§;1fÐþ\u001aø5V'\u0003?\u0012t)ú«úl:CaP×\u0012\u00139\\kg±µ\u0013ÁÊîPMy`æ\u0007G÷V9Õ\u000eéèËY¼»EÌqñÍê°dPFýý,ð¢\u0012=­È·g\u00108¨*é\u000bÌ¢ÌÆVO\u0014É­\"qmrd\u001d{\u0003,ü¹Ì\t\t\nÈiÜFÃÚ2ò\u0014×XvÕ\u0012Áª5\r\u001e\u0016jDÁÃQ[ÂF\b 1ÇÆ¸ÌÏûå\u000bæ3M×J¬h±AÇ+\u0013=~á¥Î<ø\u000enÆyß7ý£\u001c\u000b|$\u0001ðpF¸\bÇ\u001d¤Äm~}\u000fJÑ\u0015\t\t±¬¬²¨Ç\u0014\bpÙv0ÀaG\u00109bT¤ÕZV\u0016¼TA1RÔ6\u0012çZ$ÑSÍ¯®p\\\n\u0017¶M\u001a¨;SÇ0Li\u0011Íå\u0019((dAÁQÆ^ò\"Ôþ ¥Öj&ÊÀ \u001a}ìÒ\u000b³Z5µ\u0002uöêÇ¶~x­\u0014\u001b.É¨ÈuÏÊY»Ë\u0017CÀL«¶ÙT²×\u0013\u0016v¢Gô?\u0005Ëc¯lHWF1\u0012m]Å\b\u0006Gà\u0011oö\u0004?â¿ëù\u000eåÄ\u001fY\n»fÌm9}°êöÅdx\u0004`\u0005)<\u0007\u0000«³dÐð9áù\u0005|/æ±ef\b\u001e¹2(±\u0002euû8\u000ej)åÞi@ÃÁ¼Jv*ä¿\u0002ÃÀîèpÍa¾WÈCè¢kb,álMû£ã{ö62Hs¯$O\rc©æ Eý¤0Ça\u001c-aËVËQÜdùîÄj¼È\u0006²#*k`PKÇ2¾V2¼2A\u0001C/÷@\u0006÷\nÚá_r[l3nK\u000fi]òÔÑ ¥8U·@zhz\u000es<CIãÌ\u0019«\u001fGg9\f¥«Í\rÚ¹MURÅI.:ãiÿñÈ\u0005jí³¯sÌÔHy³\tãË½%\u001c0V\nN¼-UÜÍ6då³Ü9Nþ®GsÛ\u0012êi5ûT@öGí\u00048'Ø\u001aV2Q\u0013/²Ö<£V\u001fòùüÐý\u001aE®¹Üg¶¡yÒ\u000b\u0001Æ\u001c¶qIK\u0010FY/[5#ì¢½ÇTÕ]6aé<±g©*ÃGÇHãßýhp7F^KÚWïO\u0012\u0018ªÓ`êTR¤on=Å@_&.Fî90\u001dô\f½°|nùc\u000b®û(å¨¶¦ºÂç\u001a0\u001fê {0Ë ïM¬]\ttJÖËWé\u0019Vs¤ùs3­m<ººÈ\t£&<@ÁÔmg±¨\u0005\u0019\fW­gQö\u00010,°ã@ \u0005MYÐõ\u0005\u0012V&æ«µÅcè×ªì­9BÍ¾»M'¶ih%-Gä{cIÑ*ªnÖâ4O×ù7\f.ýd³Í~¨Ê\u001eD$e¡Ô9_ýA¥\u0016\u0005'«j]\u000bò©·ÅD¶2\u0003iX©@\u0013´(\u001dpÅÌX\u0013¼4t\u0011QÃÅ,fÁÓÍWÛ\u0004m¢\u0004Ü]G°4\u0014±jFÅ#²w~ØÎ\u0013Ìª-S&vôð £\"\u0012¶\b¤ôbû\u00011uÀÌ\u0001­äÐ\u000b¾ß\u001bº°ä´^>1bY×gÔ[#:£N\u0010vÄ@éIÉ\u0001\f\u001fJöÐ\u001an$7¼å\r?\u0013\u0014rñ\u001b?H\u0014aävVjÁ¢=,.\u0002±á\u0002AhTCý`Q|Øk`\u0017Å¥BO\u001f{0<d¼\u0018S ~£ø­\råv\u0019Lq÷\u0004[±7Å&\u000bSD?\u0007«´¿Õ&Äeq¹¦^øchíÑ\u0017n\u000fTÎË\nóIºôüÐ§ïeFñyÿ\"(ddW?ä\u0001ÓÐ\rñ.¤ÕMùÿQ«ýÞé;\u000e\f×°ª¨ðw\u000e\u0004hh9ï\u001fM±.CÅ×²©KY\u0018iBN ÞáÑ¿Ç/ý\u00074\u0002gGéÁ) àrø\u0012·Mè§á\f(\u00058¦n\u0002MçýV;\u0010¼\u001b\u001aûuó6Äµèµ³kIwæö¬MLãñá°\u0012Áu&ÜicÅD¬k'\u001c¾?\u0014æ\u0011æ'\"üFí\u0018Ñxþþ_ã¿\u001bÂAIÚÇÂ\u0003K\u001fb+áªÀÏ&3'§Ñ_éøáÀoj}ê«3GòÐKÆº{´úß\u0005©DV¿ *\u001cM\"Þ µ(\"Ü\u0002wàâ17°«Âjý\t\u0002ttC(â\u0005¯¯§¡î)s¶`^Ø\u0007\u001d\u0016çq!\r®Ìn\u0014Wv¡Ç¨N\u001c[\u0017hñOàÝm£W¨ê?Ó\u0016ï\"6\u001fFÐ}Mï\r¼qºKÇ2Cº\u0007Üw*¶õ\u0002qÝCªÀ=(TÁ9U÷xõ³Èö¾\"êóì>sôµ»×\u0017Ôµö9nè\u000büäe!»\u0019V?\"\u000fh&\u0017I©ûçæíXC¶è\u000b\u0012Ý¤º¹\u0002%N©'Y\r\u0019¤\u0000 Ü\u0004áÇìx.:8)1oÿp9·äÅ{©?Þý9\u0005\t¯\u001b£ v^\u001fYP\f\u0005YÔ\r£3Èød0[ãï(g\tC{ªfâ$J]£S%l\u000b{3´z¹½ó\u0010\u0019ñ©oQhêwP~[í\u0018nÐ\u001c³0|\u0018[g\\¯ßmÿ£LC²\u0013S1$ôxDÊÎóÝ¨}¯/áUDÞhJ¶6\u0002\u0007%EÉ\rS´)Vj¶«l\u000f¿Â\u0000j<Ç=Êe\u0010¬ñwìôqÒ©êÎkX¡Ýä\u001c\u0016dôZb\"\tsÃ¬ñwºøÇÿ4þ\u001d5^\u0010èH®°Ø\u001e\"\u0004\"\u001fúO¨`PXûtwÇù°â¶MT_)Â\u00162ç7Õm0\u0001\u0003+Öù\u0001Ì[\u000b½\u0010óQ\u0002[Vp='%w\u0010¹9\u0000\u0018 &B,dø}é\u0005:!ff\u0013áÄ9\u0014b%%·Î|g§}Á%\u0000%°éóMéwrÅî+¨Ìèw¡9^çRÂ\u001cIgQ´\u0010\u000e\u0003!\u001fr\u0014rÃ(?5\u0001ÀÑO\u0006\n¿PàfRé¦î\u001d\u001b\u001csKñ²ÕëúÚò¯ô´7ÒúÆ\u0007m=f(>¸}È\u0001\"\u0006E@¬gg;\u0004^~ÐÅþ`µ\u001bÉÈ=¨í{¨aY©¯èÄo]¢\u0004ú¥¹\u001a*ò$ÊzQ±®6Áëî\u0004,Xß¿µ±Å\u001añVs_°!em#èÄ1«¯yW\\u¤xOQ¹Mßã¢<í ¿\u001cÒ>öÿ¾v`´R Å\u001e\nÄá%(g\u0014\u001b.Ûø7`6Ë3\u0018ò­Æýº/EaË\t¸/ÄÑ^p¿q>1iY»ùÃ\u00066Q\tÅcýÞñ¬0\u0001V¿±\bÅ\u0015=PÃ£(é}\u000eãWSúx°Ê°lAï\u0000\rÃ0(]Xàßà«)ò¼\u000eT®]BwRäÀJCTtÌ ÖÌÉß@ñ\t\u001b?ô\fÙ²V©¶í\u0017Ë\rJY'±d ¸B\u000fÜUî\u0015« û\u001aÐ\n\u0006\u0011´\u001aÉÛõsÂ\"BÛ:\u0012$\u0002wç¸ßó)\u001aa_7c}î§ ácqµ\\o\u001biN\u0007Õ¨?ÑJ¯J@ã\\iÃ$6n)ÆIãíLíkîÜ_á3Ô\u0001¢T$3TöXJ\u0006jsvþrÄ¿­2X[Åb¨_\u0006Â=ª»a\u001b@û>CÔ6åyL'fS4Åè86·÷\u0005\f96¡â¤;\u00161ÅBòôM;â°\u001cã}f3T«Le?\u0018ªÑÛ<åª6AuÞ@eVòdLmõÓ×_äCZÈòÔ´2DN ë\\\u0013#dâõ\u0007ãØíæÎ_NRÄÏé[w}\u000bõÓ¶A§£µµ*\u001eð¨6$\u0007éóÆC\u0012?t\u0005>\u0004!æ\fqXw3q5²W¸¤·ß×ç9¦_Pê,\r2\u001cPB ÄáYuxD½ÒàÛ÷>Ý°±;Q\u0013\n4d4>Ë\u0000ê× \u000eQQ8@´\u0004ÕX3~aZÅÿÈé5ÿ,výý|\fÞ\u0001\u0011 6\r¥Ñ_f±å¾:ç¯äßß\u0004æµÃü8~-J\u00011zr;·Ü¬²x\\R\r\u0017(@\u0010§5<,Êî\u001f`\u001bv\u001a\u0016\u0005Î>ím\u0016}N\u0006\b¶NÝÂ:ß²¿éÔ QX°y¤:µà2\u0018\u000fGÏÚÊ\u001boY(x\u001e¸:YÖ+ÕYõànÌ¶c=*ZëÇ_Çé*c½g\u0019ÝNêLgDáðFó\u0010ô\n:°\u001b)ÍÓüy\u001d\u0018pOÛ7rì÷n\u00044k\u0003Ï\u0017q\u0003¦p'(<\u0018;\u0018ËzR®½j¡Í¬×ê?Ço\u0006nZÉ\u0006úr\u0002BªÈË|\u0004EË$´WDðîPû­?S\u0018Ð^\u001dHR,ù§kúÍÛ±½äÉjxYIÈ=@¸a24ß¯Ù6QÔ» \u0015¾õUó|1MÉTá?¡àèÄ^c,ýL¬gjaØ/±×àÚR\u0016\u001cÎ°\u0014#}¨p¶aèRý^-)Üd@\u0010=\t*Ù X¤®cÿQ\u001cWÖX|D¶¡§\r1këø\fìZ~q cW]+o¬?&Ç)xdF]j´Î³pé\u001e|\nÉ5ÚÈhe\u000fK´*?Ã`dwo¾y>\u000eèëP³ÊÂ£]P³:rß\u0014ão{¤Â$«»UMºrÅI\u0000*ÃRð®\u0013@\"\u000b\u001f Õu\u0003úÊx\f;¤\u001c°sÊ\u0006\u0017à£wCJÍÁÎ¢\r¯øqÓÐüE\u0014îExSåz¸Òô\tÊÜ|e.'z[hª{CÃeIð×ê\b³øÐ!:aìWÈY\u0002ßB\u0006Jñkg;Ë½¦Ægh\rû>\u0005ÒüÍI\u001eÍ(_V2F_Ðg\\[Ý¸65á;p#Ñ¥¿\u000e·bzi:%ð\u0018òn)Óùò\u0018ÐÅï-Ýn{»L¥&\fVl\u0001¾1f~èõk\u0019%ìÚÔØ®^91\u0003ã8Vî\u0007Ý)«{µ\u0003ÀWÎ\u0016\u0010ZÎüN³\u000eÊÇ|\u0003è¥ßq\u001fx\u001a|À×¾gU.?ÂÏÊ\\\u0015øè+Ò+\u0014c_6¼\u001eCj¦Á&³Aý^¿\u001eâÅ0$jYùß»¤_¬$X-è¢ \"]v\u0012BÙ\nSÖÿÜH\u000f9¹µèó¬\b9ì_Eûò\t\u001bJ$!Ðä·g]+RFÞ\u0015;éìÜé,­]dXþ¤½}¸\rT´y\u000bÿNÈH\u0018#*^o `\nL.m\u0016IfªyÕY\"h\u001cI\u001eÓ\u0011XCSLSx\u0015\u001eâp(!V\u0017¯©5*ý¤\u0004ÒúÖ÷Ì\u0005\u0016\u000eH\u0012o\u001f'Q*\fü\u001c÷ß¡VÔþÒ·qW\rWPfùÖ\u000b\\ëb­ãN%X\\\u001bj\u000b\u0007³ZD\u001a\u0018-/HÔ~8,\u0001\u0001\u0019Ú-åûú\u0014m.ÞçÊ\fNckhî%ËçDù]\u0007öí¸\u0019<7$<Ö°î2tREÃ\bÇì<õÆÞãÖë'¥_nHö\u0017Ú^6\rX\u0003\u0012²Rå5µ7~ì\u0000Ç !@tu&B²ó\u0000_NÍ\u0013%\u000e}·Ãø±Íü1w#éöz\u0013g¹)p#ÅÕ6\u0017\u0005Âg^ÞÙ{ëà\nydCÐ[\u0013¾¯>\u0010cñ}â=<Ñ8-h±yÃsW\u0000\u001cyÛü\u0018L\u0006-\u001cçy\\)\u0006íVÍ\u0016\u001dB«O_\u001dþ Þ[UQ\u0005jÚÔX\u0015uF\t\u001d#¾¨k%c\f$´È<\u0016àÈ½[û~¸ïêÁ\u0011å«Us?îp¦»¯ÓávøãZZ¯9M\n¢ÚùDGÖö 9â«eÇ\u0018£t\tì¼Ý}Thµð¸Ý)nërÆfsXé!=u»+d ìâú´\bâËký@\u0010ËþK*\u0011\u0002G¤\"Ö¾ËùeY¶~5·^^ /·7øÔ>A=OÎG&eöÖ¸\u0000tøkwz½\u000f\u0000\u001eïWµ\u0013V¥¡©é©.DW·rw¡¹ofy[±\u001c?o&ÂQ-0°[P\u0014Ä²ôjJB¥Hì×È±õlßµ¸\u0012¶n÷}\"\u0007Y7w5ê\"\u000fn«x0Õøµ?ò´\u0004Æ\"½\u0000=\u001bd>9mzÆ&U\u0011¼#eöÄrä*ß¶Aí\r\rÔw\u000b°Ã\f¯\b%Å\u001b(5#W³Os\rÍt6c\u001b\u0006ºójcuÊ*2AÌ½ñ{Uàkd:U\nT&)\u001bVÆä2w\u0010jû\u000f\u0013ö\"¨S>ä)¤Äº=]Uä\u0006ÆÀ&²(ãIQzZø*·ø$«úò~ab³9&G§/·×Wn;³úÆ \b¦µ¹]<\ràæù}ÃMë0gL¸±É:t·é3q\"fCDT\u0007ûÓáöêÀÆíô´ëº½\u001b3\u0010U×±A\u0005ìùÅÃGØu¥öüpS\u0013\u001fF»G»­\fÐ^\u000e\u0010è¼ÀÇ\u0011ÛÀ\u0014]aÿÜô¸Pß(Þ0!¾ÕLØ¤Ö!Õúð\u0015\u001bû\u0011ðW¸\u0015ðpå6T_ûêyÖHyk\u001f94+¤6â|r Ö\u001e\u0012ì{Øv\u0010\fônÚê\u0005äuý(jêß½¶¯H.<k\u0019\u001fÞë4¬¯¸ÇuÎ÷£ÌÝ¸^ð#×=+Z\u0010G\u0013\n\u0014¯1å«\u001bæ\u0017ë5ç\u001cgÔ³÷½st!CøÂ'\rZ#ÎÍ\u0012WQ2Á\f:×:1õ/3Ýx&\u0013»\u001fïoj\"$Ñûº¯»_Z°Ó²P7\rt¶Ë\"B}Ï´p\u0016:êúÊe\u0010\t+°­\u0015sqK\u001d\u0005oËÌM þz7pÐq\u000ftàÍ¶LH\u0003Ú#D>L§l®é(ý÷2\n}v$È7±¢Q Ü1Û\u0014ºì)ó\u00186UÒ,n8ó¥_sèJçö¶'Ì»¨/³{zi\u0010ùbpTËc$^1ë\u0002WJK>=Håà\u0007õÞ(r{LN¾qñu×$\u001barÿÍ¦Ü\u0018¯!6ÜÀ\u0016êzè\u0016ûä\u000b~\u001d¤ì|õñòâ¤\u0014s\u0000í:ì\u0017­¼ÕU=v\nqP;\u0019^Êk3£@xøm\u0005Ä­»¤¶,xdÙÄ\nãÃJ÷³û¸Øå\u0018~ÙÓ\u0015aZÜVø|WPºqþ×dú\u0002Ûã©9k*þºwúW¨ÍúÎneLDqAÜ7ÅùoÍ7mù\u001a¯â½NuèèñË\u00108\u0005[êÑ\u0007dBiâ?ð[3ÀÛ¬c~._¿\\'\u001aÜ9ò8/FÈCKx³²6\u0011\u0006~ãásFà\u001eºúFP&P½Ðsdä¡°£¯ÐúÍ¼åYbÅã\u0014&7!\u0016\\Éü)\u0006ôÄ\u001eí%x#z\ráöL,¼=\f8\u000b\tÈûÕ\u001c|÷sÄ~yÏ+¯>$\u0000S·Õ\u000f\u001d¸=-2ùÍ³1Åò3\u0019\\\u0002¾¼õêß«¤`ó\u0005\u0006®'Pb\u0005\u0010µ#×¸\u001f¦­N4¿\\û±C%\u0006dq¾j®\u001d)m;Q¿\u0002Î¸§,I\u0006sÐÊ?À^f\f\u0014{C\u0002ü4\u001801¹\b!ö6ç\n¶ûUÉp'\"#¬\u001ah,ÏHIT%hp\u000eó ´7§ªpYGà#ÚÙ-\u00001\u001fØ\"?Ì¢g»×è6vâ¾¨C º\u0000w`zûãëo\u0018¢e)¯=\u0011\r~\t]F3qþ\u0007j3\u0007±½¸Q?H}hé\u0000.wO¾HßLK¦1q²À/\\~Ê,·ÁÞH9<¼K\u0014bò¦À¼îeWb\u000bUÕ¦¡KXy¡~\u0001Bìü\u0013&oV2àn\u001a.ÞÓ¸n1øco?×F§Ðâ@ä¢ü\u001b&\u001c4p\u0010ï½£ó±bÝÎP¸\u0019\u001d+>-q\u0001¬¶\u001b ;÷vÁch<ðu øM\\1Ïã÷´e,ù± ;ã\u0012Íò|\u001fø¼.ðø-\u0013\u001aÎÒMé1i^ íP§âõ\fbàÕÇm<\u000b\b£Èö\u00015\u0004qDJ\b©ÉU-ß9\tÍó7Q;-\u00161u8uY\u0011·\u0002!¹H\u001d\u0015e?k\u0012)[\u0018[4G\u0012¢')F5_pÝD>årkO¢.JÈ¨Ô\u001c¦'\u0000W\u0007\u0011LHHêVSºÔÇWspø)>2³®0µzë;õ\u001dÈàñ%\u0019\r\u000fî\u001dÔ\u000f\fÆiÍÇ2¬úH\u001a\u0007\u0018\u0004¢\u0001;\u000b÷Ý÷ï¥©\u0001¼z¦A¤úÚ*\u001d,XÑúì¼&-UFz.Å:¾ËýøÃk{Ø¾.eÁø<\u0001\u001fWÁ.A ùütz\u0005\u0017Ã«5[ª®*VõóMb©øj\u0019\u001f{yQD\bß\"\fÓº×ì7®¨ñ¤·¾\\í·ìø6\u0001«[\"[ñJ¯\u0019Ý¨\u0012\u001e]Á]6ê§¡¼¿4G£Ò®\u0015µö@Ý«D*\u0016#ÜMÇ«\u0000º\u0014Âýé8~ÛâLGµ#m\b'=§ñ1`\u0007&\u000b¶\u0001Y9ÉÅâÊ{ª$nÚ`X`d«<¥ßIcN]Ç\u0019ÃK\u0000éy/w\u0001±®O\u000eÕ¹E\t\u00140\u000b/ì\u0012>*4ú*x¥<Òõ¤j­}l8v\u001fgÕW£6o\"\u0007h{&çYM±sH\u0011îÈÖ-Á\r\u0012jå²ÕÖÒÝÖ \u00128\u0015KÉ\u0002pn7L\u000fPD®j%¹ð[ÙqWI[·¦\t2ñaß<àmÎ\u000f>¿c¤Ì.\u0001ç}þDz\u000fâ\u0000bªqZÝÃ\u0018ðÁ]§Ug¶T½ÜLï\u0004°­¶s\u000bRØ¿Y&xàä|Ña½)F6IjâIL½Påd4§U{æ8²Ð%X0dáà¥§¯ñA°\u0006I\u0003]B^¦kt¿ótÝ|/áºD\u0012ý`Y\u0017¦ÒµÌ¿ãrõ\u0013ð\u001f\u0011\".éÈÈÐi\u0017dX9\u0001Ëw? 9Zï\u0004 GK\u0015Ñ*®\u00185À1o\u0012h8i\u0005\u0016\u000fâÏÎIE\u0004ª ¿}ú\u0013,yÒ*~æúîÐí\"+à\nÕfJLm\u0016#-`\u0003¿\blóós[µ%q5á\u0013ÀDó¦\u000b.î­3fÌÀKË?X3=Û\u00177¦r¨QàiÔÕPìÅ­]Á:SÓ]\u0018ÞzÆ¬±¤^\u0005¥À\\¡j\u0014¾\u001dö\u001d:\b +`;\u001dÿ`\u0010^¦\u001fz!¥n*g¨F­8\u0012+eLº²HÌ\u0012ÖÇp\u0018²y5o ~Ó> ®èSG`\u0011+ç1·Ö8\u000bXß²\u0002ã\u001cÉ$A nk£\u0015\u00003sáXû\u0011 s|*²óC±ãJ\u001aÙ¯Y%íM÷ÈýrzæÔª¥5M'\u0010/ç´¢©3(è\\±\u0014Ðú\u0000Å;Ñl\u0012$ê\b$¾úV.Ý\u0001\u0013Ê~\u0010@fþ\u0002Ü©/qfbÒº1\u0003\u000bò¹T`7§>X\f> E<±\u0019\u001bN°wÓåÂ«\u0014¿\u001eè×Ê~.5Ï°à¯h´ÚÂfr~q\tn×æïÄapÆ'\u001cA¦@¡³-\\ùÙñí\u0015`?a!­¨ì,'üþ\u0010\u001c÷Y:\u0010@/\u0002¡\n(\bÑÂv?Ø·/ºRØ²YLòÜµyÅ\u0013saÊ!3&\u001eÚh%²[½\u0002Ô£yoBä\t\u00188\bâiØrP®7nXÐ\u0005Aç%x(ìÐL§Æ~ªx¼y.ù+6\u0012áôÑ73!\u0001Jö®.óhg{éÐ&ÂÇæÝ\u001fËàÅ\u0017SYìåÔ7T\bÖ#:Q0nUÌ[j\u001d TØwDìeýÙÉ\u0011¬õ3tWþ\u0018êñZuCÐ9çlT+çØ½Xè6ÌQ1~L~³¬}7­ NÏRøÏPìtÕìI)\u000f\u0006õëi~Ø/ôä\u0017§Öfá\u000bg\u0015Fy_ÃÝÇÐ[$!¾×&³°qLäÛ§¾\tl\bÑ2ý,°änp´ç¦\u0007PT±pÎ`Ø?+B\b¸[~\f*®Tg\u0010=p¶@\u0013\u00023ø©þ\r0\u0005N'[Ê\u0007ØmP~Küvq\u001böy\u0007Ä\u0000¡\u0018¸ú­ÈÍ(72¶x0\tp\\\u0012±,ø\u001ckø¤¾jËÇ5´QEÐùµrøÖ@×é9\u001aëÉ¨{+)ª\u001c0õ\u001d\u001dV\tÇmjÂg:\u0017\n(Ã%\u001fÎ\u00124|`òúé\u0000\u0004):n\u001d´\b?Ø`KÞ¯JÌêõsJ±,;\t*mO\u001e¸QTìýì\u0013»Ã¨eB@òâIÍçé9! \u001d\u0015gAY_\u001a\t\u0018\u001dq\u0011Æ'ËòÉðSw¿IZíR=Mñ3ðatÜ¯5Æï\u000b²b¸fkö\u0019îè-|V\u0004âùÙS\"óË2\u001bÌf@éÚÖ¹Ã^Ø\u0013¦ð³WØ|Þ8z-_\tÝ':*K\u001dsb|\u0003Ð\u001a\u001b¶Ò\u0013¨GnëHßÕ\\\u0018|/ù@ÁàMØá¨Bè\u0005Ù'iISz¨ì§\u001c!\u0019\t°PE#9t\u001c\u001bÝÛlR\u0004/IQjOx&ù.?5 ç\u000e\u0018çN\u0007\f\u001e¤¦.\u000ej/ø\u001e\u0007ýh×¹»lVÌÎÙj!Yõ Û\u0006&AH£Õ»G\raíùí\u000büª¡P®x ÑâÖ\tGë«¹zßI!\u000bÑzô(\u0017òNâ¼RâB#@,ÆðO\u0018Cáèë\u0016ÙõEPº[\r?;üØ«kw\n«b±á($ä÷è\nOÃÕt¯JÈõ+ÍWÚY'\u001c?®t!¡\u000e7w\u0015íxz\u001c\u0003\u0006!9Ó+×½ý\u001a8~\u0002Þhy\u0000BaÚæÄÆ3{0ù§ÈUV\"\u0016hµâMî]»\u001cò+\u0016ÒãqYc\u0015½|,X¾tñøM%º\u0012íÔGGTòbÖ\twÅVl¨s¸äö_²oa¨\"ú[\u001d9ÄFcMòì\u0010ã=1÷·î\u0000§¨\u001a/³ôÂ§ZQ^q4\\²hòÉÜ#\u0012\u0004%¿ÕBL\u0019\u0013)í KL«NhJNk¬²\u001bO½×ÏÑDØ+æq©õ)¿ê¹ÕA\u0011y©+VøQÝ{ë\u0001²ò÷-Â\u0013i\u0000(3z2\u0010¨f;ßn²\u001bâÔUmDHý2Fq\ts]Ê\u0010kÖmÓ[¶½i\bXGø¹Ü­0ºMu\u0016¦´üIO±f#\u0006¸OuÆõ<ÿä¬ë\u0017?Å\u0000òØ.\\5mFzÝjvÈzÓ\u001bÁ¯\u0000èYJÙb¥Yû*¯cXþµý\bÔrL¯p°×:!ûQ4éÌ$\u0016$T}þ>Ë´]vqKOUvå\u00012õ5@¿ëJÍ|CÅ×k$zQ\u0003Yu­ÑíbNü\u0010¾üù2¾ís»)© s¥H\u001fLFNØ·h`\u0013u\u0016¨w$¡\u0013\u0014,që_Ò\u001e\nÃrµ\u000b±±ùZ¥ß\u00013f\u0012,ûzíÎ\u0004'´CÐ\"*SA(æ{ç\u0001~\u0016®ãÎúãvüª\u0004µÛ°NT\u001eXVÊÐcXÉtëJn>xì\u0006NyÅ_£5«µ\u0013èË\u0001mÔ\u0019@6q3[·\u0005ÅD}®J#$dôû¨\u0001þØëD-n\fUîôseeùPÏÌwâ>\u0001Íý\u0002Âåõ¯#åñ5:Û8Ý½pBÇÎ67p¦$MGïø3Và\u001aÖ3~°_Ñ,ÓÀ²Ï\u0007\u000bf¦&I\u000fBA\u0001Øï¼iQ@0;+?¯e£§ì=àÂ¾j\u0003±)çëþ§õH\u0003¥6Õ3Ëóý°K\u0005ñÓ¤»\u0004pkúÞEK\u0011?îB°/%:ÿ­å¼ E¢ z \f(dc¬\u00014Zká5ºÑ4Ó\u000f³ÆÞ`½:@ÆËÿ\"*ò¨Ç?9\\êÕpéO[3Ë\u0006º\r¹\u000fÖj\u0013!Û·ÞlQØYá\u0017U55QíÆ½+Í`¦Y\rêÜÍÆW´ý5\u001a})P6ò=LðUs3t\t\"´Ânðßß2ïmÒeT´ï¥\u001fÄC\u0019y,­\u0010Ýa\u001c«»\u0017Eëv29\u0006Å<Áâ7µÂòÈ\u0015îayªù\u0010\u0013s&¼Oú`ð6\u0012¶öXReUáaáÑÖ¬\u0002z&<\b\u001cWÈ^­ÈÅÌC%ÚõÝ\u000eH[Æ\u0013ÉÓüÀ¼)JþvaK5Å\u0006uby4¡Z¢Ô·¹þvó\u000b®òn¸à\u000b Ê¦4²áü§Ãk?¿\u000bÃ$ó\u001cakúI?{Pc}ê¤Í\\þ\u0005\r&Ðouu$Ï¹«(\u0014·ìì±ú>ÝNOÑO/\u0010(:àªÁÕpE+7ûÃâ-^Þ\u0010ÿ²Ù³Éßª\u0005\u001f¬P\u000b\u000fö\n+\u001f\u0000\u0007/î\u0003\u0017[Ê\u00060¬EV\u0013ÒK¾\u0014{S¦«\u0004Þr\u0013B\u0012\rq¿:àsyµt)¬·mKþÃ¿\u001c«é[Ý\u0001\u0015O¾C\u0015ß_ê\u0007ð\u0013ÁáÔ´±´\u0018§%¹ï\\ÙOÉvUaó\u0003Ëþ7AMµ¸*\\a¬µJß7bÅ\u0006¹-â\u0018<|ÊZØ,y=§ôm\u000e\u0016ÐÑÉÇÞ\u0010Ü>Úv°WÿµN\u0013þ5d½\"©\u0012v¥ÂñSW¶Ôw}¸\"x|BÚ­\u001bQæ\u000bµ¢HÌy\b*ÀÁË\\<ê²(²\u0003Ö_?öF\u001e/o\u0012O|aä!Ùc¬¢Ò\u000f¡ëò,w\nDûä\\Á«FQµ^àpgÕd¨øÝS}ö\u0003)¡7\u0004¡Ân°,¯)ïo?\u0010§e\u0006éúÕ\u0003½\u001d|õwã\u0003µºqÔ·\u0014©©[|uYµ-¤>\u0017ï²?QâÝ=+°,~%Ö×ßÿõæÒ]PÖøVãw®\u0004Ô¥ô¿\fXá|ÚWÝÍÈ&\u001e\u001a,ÓøzÊQ{&¦~\u0003·×-÷dHUZ¬\u0002Æ5î±¥¼\u0007d{Ûsç}O ^¤Ö¾\r\bÕ\u0019$üIó6ûj³¯ÈVR(^võFÈÄ÷Â1Ê~-#µ\u0018R²\f\u0015£ ¶<\u0012\\Â}}%Á\b5ãÒÄI5><K\u0011g\u001b)hÐwéÞ.¨zÅ2\u000bksV;Vôá\u0019EÆhp£dý\u0005¡+2ª\\\"¢\u0005\u0004×å¨MþÐs-¬H¬bá<`ðcØ´¶I¸ÏôÁ\u0010Mñ-ÏñéwEeæ\u0014öüïÄ\u0018R¹ó68K;\u0006Óû´ñ\\\"\\aßÅ¤{Æ3&Ý//aÈ}aEò?â\"D\b4R¥Â°u0l\u0001\f¼ò±Ü\u0015,N&\bàK/\u0003\u001a\u0010#ò\u0013\u0014mq\u000e­MCcÆø\u001dbÌdàºÙ\u0000N\u0012¨ãüZ=Ï\u0015õ¢ªP-ê\u0017\u0016¾x\\\\á>\r\u0013³\u0019£TR;\u0002Ý\"6\u0017=\u001f!ek\u0015$öåT³ô@ÓKATs×ÙÅU¹1Îhµ¢\u0016]è[Å0\u0019\u0017O5eÃÈåÄq\u0006÷£A@(Ükî}Ë¸(0\u0018ÆxYLô\u0017ÙhÄø]H¥øHLÙÁä\u0004f\nÊåë\u0015K^Sé\u0014Ø°^KßBºïÉWÕT'1\u000ea>FÀq\fpC¥7R«Õ\nb\u0014#Q§T7â-f-Å\n=BQcÖIF\u0006fM²ÜÅG¤>³$¤dÕþ\tpÉ6Þ¢*\u001a\u0000\\ÈÚ$\u0002uT[ÆW\u0017S~z¤ím!µ5I~Å\u0019\u0007QÁz;ûuæJù¨ÃÛ\fÇ<ÊÑéÙa/ow%O\bí\u0016¦½«À|yüPÂ¢Ù}C¤¼þÉbö$ÿc\u000bè¿·Bs¸õz4Ð3á\u0016øøwFÉõ\u0003ó¹\u0016¹Xÿù\u0003\"énò",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/phpc_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "/bin/bash##-c##\"python ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/phpc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/phpc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/phpc_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:60f77a37768122158e6717d891c7def8aae0e8e10f3f0230c2e84cb3eea9b36c",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    }
+  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
+  "updated_date" : 1556610717,
+  "updated_by" : "system_admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea6c875215e9c4924a4"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "PYLINT",
+  "pattern" : "LINT",
+  "display_name" : "PyLint",
+  "type" : "STANDARD",
+  "lang" : 32,
+  "brief_introduction" : "Python代码风格检查工具，可检查代码行的长度、变量命名是否符合编码规范或声明的接口是否被真正的实现等",
+  "description" : "Python代码风格检查工具，可检查代码行的长度、变量命名是否符合编码规范或声明的接口是否被真正的实现等",
+  "params" : "[{\"varName\":\"py_version\",\"varType\":\"RADIO\",\"labelName\":\"Python版本\",\"varDefault\":\"py3\",\"varRequired\":false,\"varOptionList\":[{\"name\":\"Python2\",\"id\":\"py2\"},{\"name\":\"Python3\",\"id\":\"py3\"}]}]",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/pylint_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-6670098fb40a4274aa01b9b732f3f1e6",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/pylint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
+      "create_date" : 1611233147466,
+      "created_by" : "",
+      "updated_date" : 1611233147466,
+      "updated_by" : ""
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/pylint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
+      "create_date" : 1611233147466,
+      "created_by" : "",
+      "updated_date" : 1611233147466,
+      "updated_by" : ""
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/pylint_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:bb7c48ede7bcae9ebd3de8ac1a798ed270eab6597bd4dd12e94a8fb6bb604b32",
+      "create_date" : 1611233147466,
+      "created_by" : "",
+      "updated_date" : 1611233147466,
+      "updated_by" : ""
+    }
+  ],
+  "create_date" : 1556610726,
+  "created_by" : "system_admin",
+  "updated_date" : 1606826719565,
+  "updated_by" : ""
+}
+
+
+{
+  "_id" : {"$oid": "5f0d51959617690a01ca0810"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "SPOTBUGS",
+  "pattern" : "LINT",
+  "display_name" : "SpotBugs",
+  "type" : "STANDARD",
+  "lang" : 4,
+  "brief_introduction" : "",
+  "status" : "P",
+  "privated" : true,
+  "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
+  "docker_image_url" : "bkcodecc/spotbugs",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-2d8b3ce225fd4a56abbbed98d9a7cff9",
+  "tool_scan_command" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
+      "docker_image_url" : "bkcodecc/spotbugs",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
+      "docker_image_url" : "bkcodecc/spotbugs",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "python3 ./src/spotbugs.py --input={input.json} --output={output.json}",
+      "docker_image_url" : "bkcodecc/spotbugs",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:c800ed6bee75d3fbdc9c2db5ce356060e395f64b00c4ab97f8fecdbe860a01c5",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1594708373163,
+  "created_by" : "admin",
+  "updated_date" : 1598619205900,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "5cc7fea5c875215e9c4924a0"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "STYLECOP",
+  "pattern" : "LINT",
+  "display_name" : "StyleCop",
+  "type" : "STANDARD",
+  "lang" : 1,
+  "brief_introduction" : "微软的开源静态代码分析工具，它检查C＃代码是否符合StyleCop推荐的编码样式和Microsoft .NET Framework设计指南",
+  "description" : "微软的开源静态代码分析工具，它检查C＃代码是否符合StyleCop推荐的编码样式和Microsoft .NET Framework设计指南",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/stylecop_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-6b7d0eaec60342ccbf86a07975975839",
+  "tool_scan_command" : "/bin/bash##-c##\"python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "local",
+  "tool_image_revision" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/stylecop_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "system_admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/stylecop_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:19d566b596c6d21a948d81d1ae7192e9492d9aae6cd73f97a1e48ef11fce7d5d",
+      "create_date" : 1615555081612,
+      "created_by" : "admin",
+      "updated_date" : 1615555081612,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/stylecop_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e72c6559797befd519f2e383712bad2bec4b3fcc2fb3aba864a67a5ab445edc9",
+      "create_date" : 1615542242254,
+      "created_by" : "admin",
+      "updated_date" : 1615542966517,
+      "updated_by" : "admin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/stylecop_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:46c8456c6aaafb3fa88ab63bd707f29de431a706ade8b0a012296066bf866cf4",
+      "create_date" : 1611233147466,
+      "created_by" : "system_admin",
+      "updated_date" : 1615542966517,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1556610725,
+  "created_by" : "system_admin",
+  "updated_date" : 1615555081605,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "60424b14b137064f784e9130"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "SWIFTLINT",
+  "pattern" : "LINT",
+  "display_name" : "SwiftLint",
+  "type" : "STANDARD",
+  "lang" : 1024,
+  "brief_introduction" : "SwiftLint 是一个用于强制检查 Swift 代码风格和规定的一个工具，基本上以 Ray Wenderlich's Swift 代码风格指南为基础。",
+  "privated" : true,
+  "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/swiftlint_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-eaf24faa052e4f309a6209ff491f54a0",
+  "tool_scan_command" : "",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
+      "create_date" : 1615274573479,
+      "created_by" : "admin",
+      "updated_date" : 1615276901478,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
+      "docker_image_version" : "v-1615274543129",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
+      "create_date" : 1615274573479,
+      "created_by" : "admin",
+      "updated_date" : 1615274573479,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/swiftlint_scan",
+      "docker_image_version" : "v-1615274543129",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:3f91a8111c79f4ec2bc72d5dd387e9b5224818f8350755b2a6898a58802ab4d2",
+      "create_date" : 1615274573479,
+      "created_by" : "admin",
+      "updated_date" : 1615274752971,
+      "updated_by" : "admin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"cd /usr/codecc/tool_scan/; python3 ./sdk/src/scan.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/codecc-auto-tools-prod-swiftlint-codecc-plugin",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:0e27ae4fdebe249b3bb2a7c6779b4f2ecbc801f0666ef7152e791c417a797b07",
+      "create_date" : 1615263875899,
+      "created_by" : "admin",
+      "updated_date" : 1615274752971,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1614957303867,
+  "created_by" : "admin",
+  "updated_date" : 1615274573472,
+  "updated_by" : "admin"
+}
+
+
+{
+  "_id" : {"$oid": "5ef16e608a64a738fe216e2f"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "CLANGWARNING",
+  "pattern" : "LINT",
+  "display_name" : "ClangWarning",
+  "type" : "STANDARD",
+  "lang" : 16,
+  "brief_introduction" : "Clang编译器提供的警告信息，可在项目编译过程中扫描出代码警告",
+  "status" : "P",
+  "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/clangwarning_scan",
+  "docker_image_version" : "latest",
+  "tool_scan_command" : "",
+  "tool_run_type" : "local",
+  "tool_versions" : [
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/clangwarning_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/clangwarning_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"python3 ./src/clangwarning.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/clangwarning_scan",
+      "docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+      "create_date" : 1611233147466,
+      "created_by" : "admin",
+      "updated_date" : 1611233147466,
+      "updated_by" : "admin"
+    }
+  ],
+  "tool_image_revision" : "sha256:e4d458a060d90dad2cf552c1e80068d39c7d2059cea551d55613657b50572c54",
+  "create_date" : 1592880736325,
+  "created_by" : "admin"
+}
+
+{
+  "_id" : {"$oid": "5e903f39b015756a3d1bef7b"},
+  "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity",
+  "name" : "BKCHECK-OC",
+  "pattern" : "LINT",
+  "display_name" : "bkcheck-oc",
+  "type" : "STANDARD",
+  "lang" : 16,
+  "brief_introduction" : "支持OC代码规范风格检查的工具",
+  "description" : "支持OC代码规范风格检查的工具",
+  "graphic_details" : "",
+  "status" : "P",
+  "privated" : false,
+  "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+  "docker_image_url" : "bkcodecc/occheck_scan",
+  "docker_image_version" : "latest",
+  "debug_pipeline_id" : "p-4904ae8eabf14b21865955f9931d1b19",
+  "tool_scan_command" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+  "tool_env" : "",
+  "tool_run_type" : "docker",
+  "tool_image_revision" : "sha256:3463d421c7c66af6aa8636f4ce55be9e4cac928a32d55fda32bcd235d780fc6a",
+  "tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/occheck_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:dde48ff6a7d85e3641fb8a0e929c589f03762b27a68328b9d418ae7af7edb606",
+      "create_date" : 1620735045125,
+      "created_by" : "admin",
+      "updated_date" : 1624969389588,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "T",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/occheck_scan",
+      "docker_image_version" : "v-1624502822334",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:0cc32895dd4cdc02b3f26a17c502ea4a198132d1d4fba7707dfa4d29cc4665f6",
+      "create_date" : 1624502842630,
+      "created_by" : "admin",
+      "updated_date" : 1624502842630,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/occheck_scan",
+      "docker_image_version" : "v-1624502822334",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:0cc32895dd4cdc02b3f26a17c502ea4a198132d1d4fba7707dfa4d29cc4665f6",
+      "create_date" : 1624502842630,
+      "created_by" : "admin",
+      "updated_date" : 1624503383323,
+      "updated_by" : "admin"
+    }
+  ],
+  "last_tool_versions" : [
+    {
+      "version_type" : "P",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/occheck_scan",
+      "docker_image_version" : "latest",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:dde48ff6a7d85e3641fb8a0e929c589f03762b27a68328b9d418ae7af7edb606",
+      "create_date" : 1620735045125,
+      "created_by" : "admin",
+      "updated_date" : 1624969389588,
+      "updated_by" : "admin"
+    },
+    {
+      "version_type" : "G",
+      "docker_trigger_shell" : "/bin/bash##-c##\"source /etc/bashrc && cd /bkcheck/ && python3 bklauncher.py --input={input.json} --output={output.json}\"",
+      "docker_image_url" : "bkcodecc/occheck_scan",
+      "docker_image_version" : "v-1623751590197",
+      "foreign_docker_image_version" : "latest",
+      "docker_image_hash" : "sha256:ad6e7bbb71be4b330481e9ef94e7d6a352b0968cb0eccd5b01e94bdca9c5a6d5",
+      "create_date" : 1623751610515,
+      "created_by" : "admin",
+      "updated_date" : 1624503383323,
+      "updated_by" : "admin"
+    }
+  ],
+  "create_date" : 1586485440000,
+  "created_by" : "admin"
+}

@@ -1,0 +1,124 @@
+{{- if .Values.task.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-task
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: task
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/name: task
+      app.kubernetes.io/component: microservice
+  replicas: {{ default 1 .Values.task.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/name: task
+        app.kubernetes.io/component: microservice
+        {{- if .Values.task.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.task.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ template "codecc.serviceAccountName" . }}
+      {{- include "codecc.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.task.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.task.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.task.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.task.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.task.podAffinityPreset "component" "task" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.task.podAntiAffinityPreset "component" "task" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.task.nodeAffinityPreset.type "key" .Values.task.nodeAffinityPreset.key "values" .Values.task.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.task.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.task.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.task.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.task.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.task.priorityClassName }}
+      priorityClassName: {{ .Values.task.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.task.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.task.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: task
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.task.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.task.image.pullPolicy }}
+          {{- if .Values.task.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.task.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.task.resources }}
+          resources: {{- toYaml .Values.task.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: JVM_XMS
+              value: {{ .Values.task.env.JVM_XMS }}
+            - name: JVM_XMX
+              value: {{ .Values.task.env.JVM_XMX }}
+            - name: SERVER_FULLNAME
+              value: {{ include "common.names.fullname" . }}-task
+            - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
+            - name: SERVER_COMMON_NAME
+              value: {{ include "common.names.fullname" . }}-common
+            - name: CODECC_PROFILE
+              value: {{ .Values.common.springProfile }}
+          livenessProbe:
+            httpGet:
+              path: /management/health/liveness
+              port: monitor
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readiness
+              port: monitor
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: monitor
+              containerPort: 18080
+              protocol: TCP
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.common.mountPath }}
+            {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+            - name: nfs-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{- end }}
+      volumes:
+        - name: storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+        - name: nfs-data
+          nfs:
+            server: {{ .Values.config.bkCodeccNfsServer }}
+            path: {{ .Values.config.bkCodeccNfsServerPath }}
+        {{- end }}
+{{- end }}
