@@ -231,9 +231,6 @@ class BuildCancelControl @Autowired constructor(
         val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
         try {
             containerIdLock.lock()
-            unlockMutexGroup(variables = variables, container = container,
-                buildId = event.buildId, projectId = event.projectId, stageId = stageId
-            )
             // 调整Container状态位
             val containerBuildStatus = BuildStatus.parse(container.status)
             // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态

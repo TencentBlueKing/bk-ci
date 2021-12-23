@@ -88,7 +88,7 @@ class UpdateStateForStageCmdFinally(
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
                 pipelineStageService.pauseStage(stage)
             } else {
-                nextOrFinish(event, stage, commandContext, true)
+                nextOrFinish(event, stage, commandContext, false)
                 sendStageEndCallBack(stage, event)
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
@@ -97,7 +97,7 @@ class UpdateStateForStageCmdFinally(
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage)
             }
-            nextOrFinish(event, stage, commandContext, true)
+            nextOrFinish(event, stage, commandContext, commandContext.buildStatus.isSuccess())
             sendStageEndCallBack(stage, event)
         }
     }
@@ -170,11 +170,11 @@ class UpdateStateForStageCmdFinally(
         }
 
         var needBreak = false
-        when (event.source) {
-            BS_QUALITY_PASS_STAGE -> {
+        when {
+            event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
-            BS_QUALITY_ABORT_STAGE -> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
             else -> {

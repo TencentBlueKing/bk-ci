@@ -49,6 +49,7 @@ import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
@@ -109,24 +110,12 @@ class SendCommitCheck @Autowired constructor(
         context: StreamBuildListenerContextV2
     ) {
         with(context) {
-            // gitRequestEvent中存的为mriid不是mrid
-            val gitEvent = try {
-                objectMapper.readValue<GitEvent>(requestEvent.event)
-            } catch (e: Throwable) {
-                logger.error("push commit check get mergeId error ${e.message}")
-                null
-            }
-
             gitCheckService.pushCommitCheck(
                 commitId = requestEvent.commitId,
                 description = triggerMessageUtil.getCommitCheckDesc(
                     prefix = getDescByBuildStatus(this),
                     objectKind = requestEvent.objectKind,
-                    action = if (gitEvent is GitMergeRequestEvent) {
-                        StreamMrEventAction.getActionValue(gitEvent) ?: ""
-                    } else {
-                        ""
-                    },
+                    action = checkGitEventAndGetAction(requestEvent),
                     userId = buildEvent.userId
                 ),
                 // 由stage event红线评论发送
@@ -140,6 +129,22 @@ class SendCommitCheck @Autowired constructor(
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 targetUrl = getTargetUrl(context)
             )
+        }
+    }
+
+    // 获取mr action
+    private fun checkGitEventAndGetAction(request: GitRequestEvent): String {
+        // gitRequestEvent中存的为mriid不是mrid
+        val gitEvent = try {
+            objectMapper.readValue<GitEvent>(request.event)
+        } catch (e: Throwable) {
+            logger.error("checkGitEventAndGetAction get git event error ${e.message}")
+            null
+        }
+        return if (gitEvent is GitMergeRequestEvent) {
+            StreamMrEventAction.getActionValue(gitEvent) ?: ""
+        } else {
+            ""
         }
     }
 

@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-@Service
-class FileGatewayService {
-    @Value("\${artifactory.fileDevnetGateway:}")
-    private lateinit var fileDevnetGateway: String
-
-    @Value("\${artifactory.fileIdcGateway:}")
-    private lateinit var fileIdcGateway: String
-
-    fun getFileGateway(): FileGatewayInfo {
-        return FileGatewayInfo(fileDevnetGateway, fileIdcGateway)
-    }
-}
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT)
+data class PipelineBuildCancelBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    override var actionType: ActionType = ActionType.END,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
