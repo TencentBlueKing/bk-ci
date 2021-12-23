@@ -59,7 +59,7 @@ class ProcessJmxApi @Autowired constructor(
             synchronized(this) {
                 bean = apis[api]
                 if (bean == null) {
-                    bean = APIPerformanceBean(meterRegistry)
+                    bean = APIPerformanceBean(meterRegistry, api)
                     val name = "com.tencent.devops.process:type=apiPerformance,name=$api"
                     logger.info("Register $api api performance mbean")
                     mBeanExporter.registerManagedResource(bean!!, ObjectName(name))
