@@ -54,6 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("NestedBlockDepth")
 class KubernetesListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
@@ -218,7 +219,8 @@ class KubernetesListener @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.error(
-                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create container failed, msg:${e.message}"
+                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create container failed, " +
+                        "msg:${e.message}"
             )
             if (e.message.equals("timeout")) {
                 onFailure(
@@ -249,20 +251,23 @@ class KubernetesListener @Autowired constructor(
             executeCount = event.executeCount ?: 1
         )
         //
-        //        if (containerNameList.none { it.second != null } && event.retryTime <= 3) {
-        //            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] shutdown no containerName, " +
-        //                "sleep 10s and retry ${event.retryTime}. ")
-        //            event.retryTime += 1
-        //            event.delayMills = 10000
-        //            pipelineEventDispatcher.dispatch(event)
+        // if (containerNameList.none { it.second != null } && event.retryTime <= 3) {
+        //    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] shutdown no containerName, " +
+        //        "sleep 10s and retry ${event.retryTime}. ")
+        //    event.retryTime += 1
+        //    event.delayMills = 10000
+        //    pipelineEventDispatcher.dispatch(event)
         //
-        //            return
-        //        }
+        //    return
+        // }
 
         containerNameList.filter { it.second != null }.forEach {
             val containerName = it.second
             try {
-                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop container,vmSeqId: ${it.first}, containerName:$containerName")
+                logger.info(
+                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                            "stop container,vmSeqId: ${it.first}, containerName:$containerName"
+                )
                 val result = containerService.stopContainer(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId ?: "",
@@ -270,15 +275,20 @@ class KubernetesListener @Autowired constructor(
                     containerName = containerName!!
                 )
                 if (result.result) {
-                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm success.")
+                    logger.info(
+                        "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                                "stop dev cloud vm success."
+                    )
                 } else {
                     logger.info(
-                        "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed, msg: ${result.errorMessage}"
+                        "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                                "stop dev cloud vm failed, msg: ${result.errorMessage}"
                     )
                 }
             } catch (e: Exception) {
                 logger.error(
-                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed. containerName: $containerName",
+                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                            "stop dev cloud vm failed. containerName: $containerName",
                     e
                 )
             } finally {
@@ -294,7 +304,10 @@ class KubernetesListener @Autowired constructor(
             executeCount = event.executeCount ?: 1
         )
         containerPoolList.filter { it.second != null }.forEach {
-            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
+            logger.info(
+                "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                        "update status in db,vmSeqId: ${it.first}, poolNo:${it.second}"
+            )
             buildDao.updateStatus(
                 dslContext,
                 event.pipelineId,
