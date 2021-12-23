@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.prebuild.v2.component
 
 import com.tencent.devops.common.api.exception.CustomException
@@ -98,11 +125,7 @@ class PipelineLayout private constructor(
         // 其他的stage
         v2Stages!!.forEachIndexed { stageIndex, stage ->
             stageList.add(
-                makeStage(
-                    v2Stage = stage,
-                    stageIndex = stageIndex + 2,
-                    finalStage = false
-                )
+                makeStage(v2Stage = stage, stageIndex = stageIndex + 2)
             )
         }
 
@@ -120,10 +143,7 @@ class PipelineLayout private constructor(
             )
 
             stageList.add(
-                makeStage(
-                    v2Stage = v2Stage,
-                    finalStage = true
-                )
+                makeStage(v2Stage = v2Stage, finalStage = true)
             )
         }
 
@@ -217,7 +237,7 @@ class PipelineLayout private constructor(
      * 生成Stage
      *
      * @param v2Stage V2版本的Stage
-     * @param stageIndex 第几阶段
+     * @param stageIndex 阶段索引
      * @param finalStage 是否最后阶段
      * @return 流水线核心Stage
      */
@@ -246,12 +266,10 @@ class PipelineLayout private constructor(
                 containerList.add(normalContainer)
             } else {
                 // 处理nfs挂载
-                val buildEnv = if (JobRunsOnType.DOCKER.type == job.runsOn.poolName ||
-                    JobRunsOnType.DEV_CLOUD.type == job.runsOn.poolName
-                ) {
-                    job.runsOn.needs
-                } else {
-                    null
+                val buildEnv = when (job.runsOn.poolName) {
+                    JobRunsOnType.DOCKER.type -> job.runsOn.needs
+                    JobRunsOnType.DEV_CLOUD.type -> job.runsOn.needs
+                    else -> null
                 }
 
                 // 构建机信息
@@ -293,10 +311,9 @@ class PipelineLayout private constructor(
 
         return Stage(
             id = v2Stage.id,
-            name = v2Stage.name ?: if (finalStage) {
-                "Final"
-            } else {
-                "Stage-$stageIndex"
+            name = v2Stage.name ?: when (finalStage) {
+                true -> "Final"
+                false -> "Stage-$stageIndex"
             },
             tag = v2Stage.label,
             fastKill = v2Stage.fastKill,
@@ -637,6 +654,9 @@ class PipelineLayout private constructor(
         return whitePathList
     }
 
+    /**
+     * builder辅助类
+     */
     class Builder {
         private var pipelineName: String = ""
         private var description: String = ""
@@ -710,6 +730,14 @@ class PipelineLayout private constructor(
          * 生成流水线编排模型
          */
         fun build(): Model {
+            if (pipelineName.isBlank() || creator.isBlank()) {
+                throw CustomException(Response.Status.BAD_REQUEST, "流水线名称、创建人均不能为空")
+            }
+
+            if (stages.isEmpty()) {
+                throw CustomException(Response.Status.BAD_REQUEST, "流水线Stages至少为1个")
+            }
+
             return Model(
                 name = pipelineName,
                 desc = description,
