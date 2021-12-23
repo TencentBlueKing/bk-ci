@@ -303,9 +303,9 @@ class QualityRuleBuildHisService constructor(
                     indicator.threshold,
                     buildCheckParamsV3.runtimeVariable ?: mapOf()
                 )
-                val realThresholdType = checkThresholdType(realThreshold)
 
                 if (indicator.isScriptElementIndicator()) {
+                    val realThresholdType = checkThresholdType(realThreshold)
                     val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
                     val indicatorUpdate = IndicatorUpdate(
                         threshold = realThreshold,
@@ -321,10 +321,10 @@ class QualityRuleBuildHisService constructor(
                         indicatorUpdate = indicatorUpdate,
                         dslContext = dslContext
                     )
+                    indicator.thresholdType = realThresholdType
                     logger.info("QUALITY|update indicator type count is: $indicatorUpdateCount")
                 }
                 indicator.threshold = realThreshold
-                indicator.thresholdType = realThresholdType
             }
             val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
                 it.indicators.map { indicator -> indicator.threshold }.joinToString(","))
