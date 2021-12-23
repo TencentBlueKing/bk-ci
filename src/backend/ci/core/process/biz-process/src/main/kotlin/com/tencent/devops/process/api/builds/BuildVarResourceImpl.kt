@@ -62,7 +62,7 @@ class BuildVarResourceImpl @Autowired constructor(
         check: Boolean
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        if (check){
+        if (check) {
             checkVariable(variableName = contextName)
         }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
@@ -77,7 +77,9 @@ class BuildVarResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE)) {
+                permission = AuthPermission.EXECUTE
+            )
+        ) {
             throw PermissionForbiddenException("用户${userId}无权获取此流水线构建信息")
         }
     }
@@ -91,8 +93,8 @@ class BuildVarResourceImpl @Autowired constructor(
         }
     }
 
-    fun checkVariable(variableName: String){
-        if(!VariableType.validate(variableName)){
+    fun checkVariable(variableName: String) {
+        if (!VariableType.validate(variableName)) {
             throw ParamBlankException("This variable is currently not supported")
         }
     }
