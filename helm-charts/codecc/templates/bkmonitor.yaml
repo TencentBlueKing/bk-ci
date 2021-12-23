@@ -1,4 +1,4 @@
-{{- if .Values.bkmonitorConfig.enabled }}
+{{- if .Values.bkMonitorConfig.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
