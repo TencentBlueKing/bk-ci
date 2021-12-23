@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
@@ -93,6 +94,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     }
 
     @Test
+    @DisplayName("测试yaml校验通过")
     fun testCheckYamlSchema_success() {
         assertNotNull(prebuildProjectDao)
         val successResp = preBuildV2Service.checkYamlSchema(YAML_CONTENT)
@@ -102,6 +104,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     }
 
     @Test
+    @DisplayName("测试yaml校验失败")
     fun testCheckYamlSchema_fail() {
         val errorMsg = "error at line 22"
         val mockFailReturn: Triple<Boolean, PreScriptBuildYaml?, String> = Triple(false, null, errorMsg)
@@ -114,6 +117,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     }
 
     @Test
+    @DisplayName("测试流水线生成并启动成功")
     fun testStartBuild_success() {
         val resp = preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo)
         assertEquals(BUILD_ID, resp.id)
@@ -131,6 +135,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     }
 
     @Test
+    @DisplayName("测试yaml非法导致流水线生成失败")
     fun testStartBuild_fail() {
         Mockito.`when`(preCIYAMLValidator.validate(anyString())).thenReturn(Triple(false, null, "error"))
         assertThrows<CustomException> { preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo) }

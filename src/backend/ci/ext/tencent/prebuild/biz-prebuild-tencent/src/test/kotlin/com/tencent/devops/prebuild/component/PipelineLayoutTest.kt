@@ -30,7 +30,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
     lateinit var preCIYAMLValidator: PreCIYAMLValidator
 
     @Test
-    @DisplayName("测试本地构建机")
+    @DisplayName("测试流水线模板_本地构建机")
     fun testLocal() {
         val scriptBuildYaml = getYamlObject(getYamlForLocal())
         val createStagesRequest = CreateStagesRequest(
@@ -72,7 +72,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     @Test
-    @DisplayName("测试docker on vm")
+    @DisplayName("测试流水线模板_docker_on_vm")
     fun testDockerVM() {
         val scriptBuildYaml = getYamlObject(getYamlForDockerVM())
         val createStagesRequest = CreateStagesRequest(
@@ -108,7 +108,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     @Test
-    @DisplayName("测试docker on devcloud")
+    @DisplayName("测试流水线模板_docker_on_devcloud")
     fun testDevCloud() {
         val scriptBuildYaml = getYamlObject(getYamlForDevCloud())
         val createStagesRequest = CreateStagesRequest(
@@ -144,7 +144,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     @Test
-    @DisplayName("测试无编译环境")
+    @DisplayName("测试流水线模板_无编译环境")
     fun testAgentLess() {
         val scriptBuildYaml = getYamlObject(getYamlForAgentLess())
         val createStagesRequest = CreateStagesRequest(
@@ -173,7 +173,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     @Test
-    @DisplayName("测试非法构建机")
+    @DisplayName("测试流水线模板_非法构建机")
     fun testInvalidDispatchType() {
         val scriptBuildYaml = getYamlObject(getYamlForInvalidDispatchType())
         val createStagesRequest = CreateStagesRequest(
