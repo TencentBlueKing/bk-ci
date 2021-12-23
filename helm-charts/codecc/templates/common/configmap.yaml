@@ -69,11 +69,10 @@ data:
       servlet-path: /
       undertow:
         worker-threads: 100
-    management:
-      server:
-        context-path: /management
+    management: 
       endpoints:
         web:
+          base-path: /management
           exposure:
             include: prometheus,health
         metrics:
