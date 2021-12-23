@@ -48,8 +48,14 @@ object KubernetesClientUtil {
 
     private fun <T> ApiResponse<T>.isSuccessful(): Boolean = statusCode in 200..299
 
+    /**
+     * 获取错误信息
+     */
     fun getClientFailInfo(message: String) = "Dispatch-kubernetes 异常信息 - $message"
 
+    /**
+     * 获取container名称
+     */
     fun getKubernetesWorkloadOnlyLabelValue(userId: String) =
         "${userId}${System.currentTimeMillis()}-${RandomUtils.nextLong()}"
 
@@ -65,6 +71,9 @@ object KubernetesClientUtil {
         return this?.spec?.containers?.ifEmpty { null }?.get(0)
     }
 
+    /**
+     * ApiResponse装换为Result
+     */
     fun <T> apiHandle(
         api: () -> ApiResponse<T>
     ): Result<T> {

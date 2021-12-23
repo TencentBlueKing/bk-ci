@@ -48,6 +48,9 @@ object CommonUtils {
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
+    /**
+     * 转换镜像全名为各个属性
+     */
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val imageNames = imageNameStr.split(":")
@@ -101,6 +104,9 @@ object CommonUtils {
         }
     }
 
+    /**
+     * 获取凭证
+     */
     fun getCredential(
         client: Client,
         projectId: String,
@@ -183,8 +189,23 @@ object CommonUtils {
         }
     }
 
+    /**
+     * 抛出异常
+     */
     fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
         throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
+    }
+
+    /**
+     * 生成异常
+     */
+    fun buildFailureException(errorCodeEnum: ErrorCodeEnum, message: String): BuildFailureException {
+        return BuildFailureException(
+            errorCodeEnum.errorType,
+            errorCodeEnum.errorCode,
+            errorCodeEnum.formatErrorMessage,
+            message
+        )
     }
 
 //    fun generatePwd(): String {
