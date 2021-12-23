@@ -268,7 +268,7 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )
         } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
+            logger.warn("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
     }

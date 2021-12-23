@@ -125,7 +125,7 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. return null")
+            logger.warn("Check yaml version failed. return null")
             null
         }
     }
