@@ -78,7 +78,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /management/health/liveness
-              port: http
+              port: monitor
             initialDelaySeconds: 120
             periodSeconds: 15
             timeoutSeconds: 10
@@ -87,7 +87,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /management/health/readiness
-              port: http
+              port: monitor
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
@@ -96,6 +96,9 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+              protocol: TCP
+            - name: monitor
+              containerPort: 18080
               protocol: TCP
           volumeMounts:
             - name: storage
