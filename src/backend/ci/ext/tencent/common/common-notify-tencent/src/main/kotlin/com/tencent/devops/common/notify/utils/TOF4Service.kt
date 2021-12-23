@@ -165,7 +165,6 @@ class TOF4Service @Autowired constructor(
                 responseBody = response.body()!!.string()
                 logger.info("post codecc email to tof with url, request, response: $finalUrl \n $params \n $responseBody")
                 if (!response.isSuccessful) {
-                    // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
                     logger.error(
                         String.format(
                             "TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s",

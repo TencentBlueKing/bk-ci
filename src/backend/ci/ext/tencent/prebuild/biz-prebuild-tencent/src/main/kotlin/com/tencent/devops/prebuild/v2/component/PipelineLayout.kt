@@ -80,6 +80,7 @@ import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import com.tencent.devops.common.ci.v2.Container as V2Container
 import com.tencent.devops.common.ci.v2.Stage as V2Stage
+import org.springframework.stereotype.Component
 
 /**
  * 流水线编排
@@ -659,6 +660,7 @@ class PipelineLayout private constructor(
     /**
      * builder辅助类
      */
+    @Component
     class Builder {
         private var pipelineName: String = ""
         private var description: String = ""
