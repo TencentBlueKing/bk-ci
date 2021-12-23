@@ -1,6 +1,8 @@
 package com.tencent.devops.experience.job
 
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.apache.commons.collections4.ListUtils
@@ -18,34 +20,41 @@ class ExperienceRenewJob @Autowired constructor(
     val dslContext: DSLContext,
     val experiencePublicDao: ExperiencePublicDao,
     val experienceDao: ExperienceDao,
-    val bkRepoClient: BkRepoClient
+    val bkRepoClient: BkRepoClient,
+    private val redisOperation: RedisOperation
 ) {
     @Scheduled(cron = "0 0 1 * * ?")
     @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobRenew() {
         logger.info("experience renew start ... ")
 
+        val redisLock = RedisLock(redisOperation, "expRenewHot", 60L)
         try {
-            val recordIds = experiencePublicDao.listAllRecordId(dslContext)?.map { it.get(0, Long::class.java) }
-            ListUtils.partition(recordIds, 100).forEach { rids ->
-                experienceDao.list(dslContext, rids).forEach { record ->
-                    if (record.artifactoryType.toUpperCase() == "PIPELINE" && // 流水线构件
-                        record.updateTime.plusDays(30).isBefore(LocalDateTime.now()) // 30天前更新
-                    ) {
-                        try {
-                            bkRepoClient.update(
-                                record.creator,
-                                record.projectId,
-                                "pipeline",
-                                record.artifactoryPath,
-                                0
-                            )
-                        } catch (e: Exception) {
-                            logger.error("update record:${record.id} failed", e)
+            if (redisLock.tryLock()) {
+                val recordIds = experiencePublicDao.listAllRecordId(dslContext)?.map { it.get(0, Long::class.java) }
+                ListUtils.partition(recordIds, 100).forEach { rids ->
+                    experienceDao.list(dslContext, rids).forEach { record ->
+                        if (record.artifactoryType.toUpperCase() == "PIPELINE" && // 流水线构件
+                            record.updateTime.plusDays(30).isBefore(LocalDateTime.now()) // 30天前更新
+                        ) {
+                            try {
+                                bkRepoClient.update(
+                                    record.creator,
+                                    record.projectId,
+                                    "pipeline",
+                                    record.artifactoryPath,
+                                    0
+                                )
+                            } catch (e: Exception) {
+                                logger.error("update record:${record.id} failed", e)
+                            }
+                            logger.info("update record:${record.id} success")
                         }
-                        logger.info("update record:${record.id} success")
                     }
                 }
+            } else {
+                logger.info("job is running...")
+                return
             }
         } catch (e: Exception) {
             logger.error("get records failed !", e)
