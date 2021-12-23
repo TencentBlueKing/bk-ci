@@ -78,6 +78,7 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import com.tencent.devops.common.ci.v2.Container as V2Container
 import com.tencent.devops.common.ci.v2.Stage as V2Stage
 
 /**
@@ -477,7 +478,7 @@ class PipelineLayout private constructor(
             try {
                 val container = YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(job.runsOn.container!!),
-                    com.tencent.devops.common.ci.v2.Container::class.java
+                    V2Container::class.java
                 )
 
                 Pool(
@@ -492,6 +493,7 @@ class PipelineLayout private constructor(
                     buildType = buildType
                 )
             } catch (e: Exception) {
+                // 凭据credential可能是String
                 val container = YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(job.runsOn.container!!),
                     Container2::class.java
@@ -609,7 +611,7 @@ class PipelineLayout private constructor(
             val client = SpringContextUtil.getBean(Client::class.java)
             client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, request)
         } catch (e: Throwable) {
-            // 可能之前安装过，继续执行不退出
+            // 可能之前安装过，继续执行不中断
             logger.error("install atom($atomCode) failed, exception:", e)
         }
     }
