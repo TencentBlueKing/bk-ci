@@ -551,11 +551,4 @@ class PipelineStageService @Autowired constructor(
             BuildStatus.QUALITY_CHECK_FAIL
         }
     }
-
-    fun retryRefreshStage(model: Model) {
-        model.stages.forEach { stage ->
-            stage.checkIn?.retryRefresh()
-            stage.checkOut?.retryRefresh()
-        }
-    }
 }
