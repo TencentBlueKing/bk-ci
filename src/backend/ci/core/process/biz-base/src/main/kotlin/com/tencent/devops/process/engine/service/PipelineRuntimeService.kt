@@ -768,11 +768,12 @@ class PipelineRuntimeService @Autowired constructor(
                 if (container.matrixGroupFlag == true) {
                     if (container is VMBuildContainer) container.retryFreshMatrixOption()
                     else if (container is NormalContainer) container.retryFreshMatrixOption()
-                    pipelineContainerService.deleteTasksInMatrixGroupContainer(
+                    pipelineContainerService.cleanContainersInMatrixGroup(
                         transactionContext = dslContext,
                         projectId = pipelineInfo.projectId,
                         pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId
+                        buildId = buildId,
+                        matrixGroupId = container.id!!
                     )
                 }
                 // --- 第3层循环：Element遍历处理 ---
@@ -810,8 +811,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            // TODO 只在第一次启动时刷新为QUEUE，后续只需保留兼容数据刷新
-            stage.refreshReviewOption(true)
+            stage.refreshCheckOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (needUpdateStage) {

@@ -262,16 +262,34 @@ class PipelineBuildContainerDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
+        matrixGroupId: String,
         stageId: String? = null
     ): Collection<TPipelineBuildContainerRecord> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(MATRIX_GROUP_ID.isNotNull)
+                .and(MATRIX_GROUP_ID.eq(matrixGroupId))
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
             conditionStep.orderBy(SEQ.asc()).fetch()
+        }
+    }
+
+    fun deleteBuildContainerInMatrixGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        matrixGroupId: String
+    ): Int {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.delete(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(MATRIX_GROUP_ID.eq(matrixGroupId))
+                .execute()
         }
     }
 
