@@ -47,13 +47,13 @@ class SystemDockerMountGenerator @Autowired constructor(private val dockerHostCo
     override fun generateMounts(handlerContext: ContainerHandlerContext): List<Mount> {
         with(handlerContext) {
             val mountList = mutableListOf<Mount>()
-            mountList.add(getBazelOverlayfsMount(
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo
-            ))
-
             if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+                mountList.add(getBazelOverlayfsMount(
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo
+                ))
+
                 val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
                 val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
                 val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
@@ -62,7 +62,7 @@ class SystemDockerMountGenerator @Autowired constructor(private val dockerHostCo
                     lowerDir = lowerDir,
                     upperDir = upperDir,
                     workDir = workDir,
-                    targetPath = dockerHostConfig.bazelContainerPath
+                    targetPath = dockerHostConfig.volumeWorkspace
                 ))
             }
 

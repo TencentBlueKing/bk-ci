@@ -38,6 +38,7 @@ import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -57,6 +58,7 @@ interface IGitService {
     fun refreshToken(userId: String, accessToken: GitToken): GitToken
     fun getAuthUrl(authParamJsonStr: String): String
     fun getToken(userId: String, code: String): GitToken
+    fun getUserInfoByToken(token: String): GitUserInfo
     fun getRedirectUrl(authParamJsonStr: String): String
     fun getGitFileContent(
         repoUrl: String? = null,
@@ -179,4 +181,12 @@ interface IGitService {
         repoName: String,
         mrId: Long
     )
+
+    fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }

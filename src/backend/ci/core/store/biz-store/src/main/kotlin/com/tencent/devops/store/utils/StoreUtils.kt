@@ -78,4 +78,33 @@ object StoreUtils {
     fun getStoreRunInfoKey(typeName: String, storeCode: String): String {
         return "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:$typeName:$storeCode"
     }
+
+    /**
+     * 判断当前版本号是否比待比较版本号大
+     * @param currentVersion 当前版本号
+     * @param compareVersion 待比较版本号
+     */
+    fun isGreaterVersion(currentVersion: String, compareVersion: String): Boolean {
+        val currentVersionParts = currentVersion.split(".")
+        val firstCurrentVersionPart = currentVersionParts[0].toInt()
+        val secondCurrentVersionPart = currentVersionParts[1].toInt()
+        val thirdCurrentVersionPart = currentVersionParts[2].toInt()
+        val compareVersionParts = compareVersion.split(".")
+        val firstCompareVersionPart = compareVersionParts[0].toInt()
+        val secondCompareVersionPart = compareVersionParts[1].toInt()
+        val thirdCompareVersionPart = compareVersionParts[2].toInt()
+        if (firstCurrentVersionPart > firstCompareVersionPart) {
+            return true
+        } else if (firstCurrentVersionPart == firstCompareVersionPart &&
+            secondCurrentVersionPart > secondCompareVersionPart
+        ) {
+            return true
+        } else if (firstCurrentVersionPart == firstCompareVersionPart &&
+            secondCurrentVersionPart == secondCompareVersionPart &&
+            thirdCurrentVersionPart > thirdCompareVersionPart
+        ) {
+            return true
+        }
+        return false
+    }
 }

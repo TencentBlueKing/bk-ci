@@ -91,10 +91,10 @@ class PipelineBuildStageDao {
         logger.info("save the buildStage=$buildStage, result=${count == 1}")
     }
 
-    fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
+    fun batchSave(dslContext: DSLContext, containerList: Collection<PipelineBuildStage>) {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.insertInto(this)
                         .set(PROJECT_ID, it.projectId)
@@ -122,10 +122,10 @@ class PipelineBuildStageDao {
         dslContext.batch(records).execute()
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
+    fun batchUpdate(dslContext: DSLContext, containerList: List<TPipelineBuildStageRecord>) {
         val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            containerList.forEach {
                 records.add(
                     dslContext.update(this)
                         .set(PROJECT_ID, it.projectId)
@@ -233,7 +233,8 @@ class PipelineBuildStageDao {
         buildStatus: BuildStatus,
         controlOption: PipelineBuildStageControlOption? = null,
         checkIn: StagePauseCheck? = null,
-        checkOut: StagePauseCheck? = null
+        checkOut: StagePauseCheck? = null,
+        initStartTime: Boolean? = false
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -247,7 +248,7 @@ class PipelineBuildStageDao {
                     END_TIME.cast(java.sql.Timestamp::class.java)
                 )
                 )
-            } else if (buildStatus.isRunning()) {
+            } else if (buildStatus.isRunning() || initStartTime == true) {
                 update.set(START_TIME, LocalDateTime.now())
             }
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))

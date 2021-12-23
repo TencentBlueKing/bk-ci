@@ -119,7 +119,7 @@
                     const item = this.paramList.find(x => x.id === id)
                     if (item) {
                         tempName = item.name
-                    } else if (id.isBkVar()) {
+                    } else if (typeof id === 'string' && id.isBkVar()) {
                         tempName = id
                     }
                     return tempName

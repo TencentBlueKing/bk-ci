@@ -38,10 +38,14 @@ import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.container.ContainerAgentUpHandler
+import com.tencent.devops.dockerhost.services.container.ContainerCustomizedRunHandler
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.services.container.ContainerPullImageHandler
 import com.tencent.devops.dockerhost.services.container.ContainerRunHandler
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageCpuLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskIOLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageDiskLoad
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageMemLoad
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -56,7 +60,8 @@ class DockerService @Autowired constructor(
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val containerPullImageHandler: ContainerPullImageHandler,
     private val containerRunHandler: ContainerRunHandler,
-    private val containerAgentUpHandler: ContainerAgentUpHandler
+    private val containerAgentUpHandler: ContainerAgentUpHandler,
+    private val containerCustomizedRunHandler: ContainerCustomizedRunHandler
 ) {
 
     private val executor = Executors.newFixedThreadPool(10)
@@ -86,6 +91,8 @@ class DockerService @Autowired constructor(
             )
         })
         buildTask[getKey(vmSeqId, buildId)] = future
+
+        logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|future:$future")
         return true
     }
 
@@ -105,6 +112,7 @@ class DockerService @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
@@ -135,12 +143,11 @@ class DockerService @Autowired constructor(
             registryUser = dockerRunParam.registryUser,
             registryPwd = dockerRunParam.registryPwd,
             dockerRunParam = dockerRunParam,
-            qpcUniquePath = qpcUniquePath
+            qpcUniquePath = qpcUniquePath,
+            pipelineTaskId = pipelineTaskId
         )
 
-        containerPullImageHandler.setNextHandler(
-            containerRunHandler.setNextHandler(containerAgentUpHandler)
-        ).handlerRequest(containerHandlerContext)
+        containerPullImageHandler.setNextHandler(containerCustomizedRunHandler).handlerRequest(containerHandlerContext)
 
         return containerHandlerContext.dockerRunResponse!!
 
@@ -237,11 +244,11 @@ class DockerService @Autowired constructor(
     fun getDockerHostLoad(): DockerHostLoad {
         return DockerHostLoad(
             usedContainerNum = dockerHostBuildService.getContainerNum(),
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad()
-            )
+            averageCpuLoad = getAverageCpuLoad(),
+            averageMemLoad = getAverageMemLoad(),
+            averageDiskLoad = getAverageDiskLoad(),
+            averageDiskIOLoad = getAverageDiskIOLoad()
+        )
     }
 
     fun getContainerStatus(containerId: String): Boolean {
@@ -254,7 +261,7 @@ class DockerService @Autowired constructor(
             future == null -> Pair(Status.NO_EXISTS, "")
             future.isDone -> {
                 when {
-                    future.get().first -> Pair(Status.SUCCESS, "")
+                    future.get().first -> Pair(Status.SUCCESS, future.get().second ?: "")
                     else -> Pair(Status.FAILURE, future.get().second ?: "")
                 }
             }

@@ -46,10 +46,10 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
@@ -73,7 +73,9 @@ class StartActionTaskContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -203,7 +205,7 @@ class StartActionTaskContainerCmd(
                     jobId = t.containerHashId,
                     executeCount = t.executeCount ?: 1
                 )
-                pipelineRuntimeService.updateTaskStatus(t, containerContext.event.userId, t.status)
+                pipelineTaskService.updateTaskStatus(t, containerContext.event.userId, t.status)
             }
 
             if (toDoTask != null || breakFlag) {
@@ -262,7 +264,11 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
+        val contextMap = pipelineContextService.buildContext(
+            buildId = buildId,
+            containerId = containerId,
+            variables = containerContext.variables
+        )
         if (containerContext.event.actionType == ActionType.END) {
             containerContext.buildStatus = BuildStatus.CANCELED
         }
@@ -285,9 +291,9 @@ class StartActionTaskContainerCmd(
                 } else {
                     BuildStatus.UNEXEC
                 }
-                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
                     jobId = containerHashId
                 )
@@ -303,15 +309,15 @@ class StartActionTaskContainerCmd(
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
-                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                val updateTaskStatusInfo = taskBuildDetailService.taskEnd(
                     buildId = buildId,
                     taskId = taskId,
                     buildStatus = taskStatus
                 )
-                refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
+                refreshTaskStatus(updateTaskStatusInfo, index, containerTasks)
                 // 打印构建日志
-                buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
                     jobId = containerHashId
                 )
@@ -323,7 +329,7 @@ class StartActionTaskContainerCmd(
 
         if (toDoTask != null) {
             // 进入预队列
-            pipelineRuntimeService.updateTaskStatus(toDoTask, userId = starter, buildStatus = BuildStatus.QUEUE_CACHE)
+            pipelineTaskService.updateTaskStatus(toDoTask, userId = starter, buildStatus = BuildStatus.QUEUE_CACHE)
             containerContext.buildStatus = BuildStatus.RUNNING
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }
@@ -372,6 +378,18 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
                 "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            val endTask = containerContext.containerTasks
+                .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
+                .getOrNull(0)
+            // issues_5530 stop插件执行后会发送shutdown,无需构建机再跑endBuild逻辑,避免造成并发问题。
+            // 若stop先到，endBuild未执行。则end插件就一直处于queue状态。导致暂停插件无法终止。
+            if (endTask != null && endTask.status != BuildStatus.RUNNING) {
+                pipelineTaskService.updateTaskStatus(
+                    task = endTask,
+                    buildStatus = BuildStatus.SUCCEED,
+                    userId = endTask.starter
+                )
+            }
         }
 
         // 终止打印终止原因
@@ -384,15 +402,22 @@ class StartActionTaskContainerCmd(
                 executeCount = currentTask.executeCount ?: 1
             )
             containerContext.buildStatus = BuildStatus.CANCELED
-        } else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+        } else {
             containerContext.buildStatus = BuildStatus.PAUSE
-        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
-            containerContext.buildStatus = BuildStatus.RUNNING
             if (containerContext.event.actionType.isEnd()) {
                 // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
                 containerContext.event.actionType = ActionType.REFRESH
             }
         }
+//        else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
+//            containerContext.buildStatus = BuildStatus.PAUSE
+//        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
+//            containerContext.buildStatus = BuildStatus.RUNNING
+//            if (containerContext.event.actionType.isEnd()) {
+//                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
+//                containerContext.event.actionType = ActionType.REFRESH
+//            }
+//        }
 
         return toDoTask
     }
@@ -427,7 +452,7 @@ class StartActionTaskContainerCmd(
             val message = if (parentTaskSkipFlag) "Plugin [${currentTask.taskName}] was skipped"
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
-            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
+            pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             taskBuildDetailService.updateTaskStatus(
                 buildId = currentTask.buildId,
                 taskId = currentTask.taskId,
@@ -435,7 +460,7 @@ class StartActionTaskContainerCmd(
                 buildStatus = BuildStatus.RUNNING,
                 operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
             )
-            buildLogPrinter.addYellowLine(
+            buildLogPrinter.addLine(
                 buildId = currentTask.buildId,
                 message = message,
                 tag = currentTask.taskId,
@@ -473,6 +498,7 @@ class StartActionTaskContainerCmd(
                 buildId = task.buildId,
                 stageId = task.stageId,
                 containerId = task.containerId,
+                containerHashId = task.containerHashId,
                 containerType = task.containerType,
                 taskId = task.taskId,
                 taskParam = task.taskParams,

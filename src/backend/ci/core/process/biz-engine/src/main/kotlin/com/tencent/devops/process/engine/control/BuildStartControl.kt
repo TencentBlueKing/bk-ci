@@ -58,12 +58,12 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
@@ -84,10 +84,10 @@ class BuildStartControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
-    private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
     private val buildLogPrinter: BuildLogPrinter
@@ -288,10 +288,10 @@ class BuildStartControl @Autowired constructor(
         run lit@{
             container.elements.forEach {
                 if (it.id == taskId) {
-                    pipelineRuntimeService.updateContainerStatus(
+                    pipelineContainerService.updateContainerStatus(
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.id!!,
+                        containerId = container.containerId!!,
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
@@ -465,11 +465,6 @@ class BuildStartControl @Autowired constructor(
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
             updateModel(model = model, buildInfo = buildInfo, taskId = taskId)
-            // 写入启动参数
-            buildStartupParamService.writeStartParam(
-                allVariable = startParams, projectId = projectId,
-                pipelineId = pipelineId, buildId = buildId, model = model
-            )
             buildVariableService.setVariable(
                 projectId = projectId,
                 pipelineId = pipelineId,

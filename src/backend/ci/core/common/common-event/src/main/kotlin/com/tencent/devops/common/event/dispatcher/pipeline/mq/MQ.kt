@@ -58,6 +58,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_CONTAINER = "r.engine.pipeline.build.container"
     const val QUEUE_PIPELINE_BUILD_CONTAINER = "q.engine.pipeline.build.container"
 
+    const val ROUTE_PIPELINE_BUILD_MATRIX_GROUP = "r.engine.pipeline.matrix.group"
+    const val QUEUE_PIPELINE_BUILD_MATRIX_GROUP = "q.engine.pipeline.matrix.group"
+
     const val ROUTE_PIPELINE_BUILD_CANCEL = "r.engine.pipeline.build.cancel"
     const val QUEUE_PIPELINE_BUILD_CANCEL = "q.engine.pipeline.build.cancel"
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
@@ -92,8 +95,15 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
+    // 构建审核和检查步骤广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT = "e.engine.pipeline.build.review.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT = "e.engine.pipeline.build.quality.check.fanout"
+
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
+
+    // 构建取消后续广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "e.engine.pipeline.build.cancel"
 
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
@@ -189,6 +199,11 @@ object MQ {
     const val EXCHANGE_TGIT_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.tgit.event"
     const val ROUTE_TGIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.tgit.event"
     const val QUEUE_TGIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.tgit.event"
+
+    // P4代码仓库webhook请求回调
+    const val EXCHANGE_P4_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.p4.event"
+    const val ROUTE_P4_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.p4.event"
+    const val QUEUE_P4_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.p4.event"
 
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"

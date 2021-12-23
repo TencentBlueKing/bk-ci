@@ -89,5 +89,7 @@ data class Pipeline(
     @ApiModelProperty("流水线分组和标签", required = false)
     var groupLabel: List<PipelineGroupLabels>? = null,
     @ApiModelProperty("最后自定义构建版本号", required = false)
-    val latestBuildNumAlias: String? = null
+    val latestBuildNumAlias: String? = null,
+    @ApiModelProperty("自定义构建号规则", required = false)
+    val buildNumRule: String? = null
 )

@@ -35,21 +35,21 @@ class UrlFilterTest {
 
     @Test
     fun filter() {
-        var urlFilter = UrlFilter(
+        var urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "https://github.com/Tencent/bk-ci.git"
         )
         Assert.assertTrue(urlFilter.doFilter(response))
 
-        urlFilter = UrlFilter(
+        urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "http://github.com/Tencent/bk-ci.git"
         )
         Assert.assertTrue(urlFilter.doFilter(response))
 
-        urlFilter = UrlFilter(
+        urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "http://github.com/Tencent/bk-ci2.git"
@@ -59,7 +59,7 @@ class UrlFilterTest {
 
     @Test
     fun isSameHost() {
-        var urlFilter = UrlFilter(
+        var urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://example.com/Tencent/bk-ci.git",
             repositoryUrl = "https://example2.com/Tencent/bk-ci.git",
@@ -67,7 +67,7 @@ class UrlFilterTest {
         )
         Assert.assertTrue(urlFilter.doFilter(response))
 
-        urlFilter = UrlFilter(
+        urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://example.com/Tencent/bk-ci.git",
             repositoryUrl = "https://example3.com/Tencent/bk-ci.git",

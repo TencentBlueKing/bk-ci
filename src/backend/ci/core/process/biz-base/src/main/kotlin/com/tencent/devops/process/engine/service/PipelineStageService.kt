@@ -27,16 +27,20 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -131,6 +135,26 @@ class PipelineStageService @Autowired constructor(
         return result
     }
 
+    fun listByBuildId(buildId: String): Collection<TPipelineBuildStageRecord> {
+        return pipelineBuildStageDao.listByBuildId(dslContext, buildId)
+    }
+
+    fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
+        return pipelineBuildStageDao.batchSave(transactionContext ?: dslContext, stageList)
+    }
+
+    fun batchUpdate(transactionContext: DSLContext?, stageList: List<TPipelineBuildStageRecord>) {
+        return pipelineBuildStageDao.batchUpdate(transactionContext ?: dslContext, stageList)
+    }
+
+    fun deletePipelineBuildStages(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
+        pipelineBuildStageDao.deletePipelineBuildStages(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
@@ -168,7 +192,7 @@ class PipelineStageService @Autowired constructor(
                     dslContext = context, buildId = buildId,
                     stageId = stageId, controlOption = controlOption!!,
                     // #5246 所有质量红线检查都不影响stage原构建状态
-                    buildStatus = buildStage.status,
+                    buildStatus = buildStage.status, initStartTime = true,
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(
@@ -277,6 +301,12 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildStageEvent(
                         source = BS_MANUAL_START_STAGE, projectId = projectId, pipelineId = pipelineId,
                         userId = userId, buildId = buildId, stageId = stageId, actionType = ActionType.REFRESH
+                    ),
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "stage($stageId) reviewed with PROCESSED", projectId = projectId,
+                        pipelineId = pipelineId, buildId = buildId, userId = userId,
+                        stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                        status = BuildStatus.REVIEW_PROCESSED.name
                     )
                     // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
                 )
@@ -329,6 +359,12 @@ class PipelineStageService @Autowired constructor(
                     pipelineId = pipelineId, userId = userId,
                     buildId = buildId, stageId = stageId,
                     actionType = ActionType.END
+                ),
+                PipelineBuildReviewBroadCastEvent(
+                    source = "stage($stageId) reviewed with ABORT", projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId, userId = userId,
+                    stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                    status = BuildStatus.REVIEW_ABORT.name
                 )
                 // #3400 FinishEvent会刷新HISTORY列表的Stage状态
             )
@@ -341,25 +377,39 @@ class PipelineStageService @Autowired constructor(
         buildStage: PipelineBuildStage,
         qualityRequest: StageQualityRequest,
         inOrOut: Boolean,
-        check: StagePauseCheck
+        check: StagePauseCheck,
+        timeout: Boolean? = false
     ) {
         with(buildStage) {
             logger.info("ENGINE|$buildId|STAGE_QUALITY_TRIGGER|$stageId|" +
-                "inOrOut=$inOrOut|request=$qualityRequest")
-            val stageNextStatus = if (inOrOut) BuildStatus.QUEUE else BuildStatus.SUCCEED
+                "inOrOut=$inOrOut|request=$qualityRequest|timeout=$timeout")
+            val (stageNextStatus, reviewType) = if (inOrOut) {
+                Pair(BuildStatus.QUEUE, BuildReviewType.QUALITY_CHECK_IN)
+            } else {
+                Pair(BuildStatus.SUCCEED, BuildReviewType.QUALITY_CHECK_OUT)
+            }
             pipelineBuildStageDao.updateStatus(
                 dslContext = dslContext, buildId = buildId, stageId = stageId,
                 buildStatus = stageNextStatus, controlOption = controlOption,
                 checkIn = checkIn, checkOut = checkOut
             )
-            val (source, actionType) = if (qualityRequest.pass) {
+            val (source, actionType, reviewStatus) = if (qualityRequest.pass) {
                 check.status = BuildStatus.QUALITY_CHECK_PASS.name
-                Pair(BS_QUALITY_PASS_STAGE, ActionType.REFRESH)
+                Triple(BS_QUALITY_PASS_STAGE, ActionType.REFRESH, BuildStatus.REVIEW_PROCESSED)
             } else {
                 check.status = BuildStatus.QUALITY_CHECK_FAIL.name
-                Pair(BS_QUALITY_ABORT_STAGE, ActionType.END)
+                Triple(BS_QUALITY_ABORT_STAGE, ActionType.END, BuildStatus.REVIEW_ABORT)
             }
             pipelineEventDispatcher.dispatch(
+                PipelineBuildReviewBroadCastEvent(
+                    source = "s(${buildStage.stageId}) has been reviewed",
+                    projectId = buildStage.projectId, pipelineId = buildStage.pipelineId,
+                    buildId = buildStage.buildId, userId = userId,
+                    reviewType = reviewType,
+                    status = reviewStatus.name,
+                    stageId = buildStage.stageId, taskId = null,
+                    timeout = timeout
+                ),
                 PipelineBuildStageEvent(
                     source = source, projectId = projectId,
                     pipelineId = pipelineId, userId = userId,
@@ -396,6 +446,14 @@ class PipelineStageService @Autowired constructor(
         val group = stage.checkIn?.groupToReview() ?: return
 
         pipelineEventDispatcher.dispatch(
+            PipelineBuildReviewBroadCastEvent(
+                source = "s(${stage.stageId}) waiting for REVIEW",
+                projectId = stage.projectId, pipelineId = stage.pipelineId,
+                buildId = stage.buildId, userId = userId,
+                reviewType = BuildReviewType.STAGE_REVIEW,
+                status = BuildStatus.REVIEWING.name,
+                stageId = stage.stageId, taskId = null
+            ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -412,7 +470,9 @@ class PipelineStageService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: "")
-                )
+                ),
+                position = ControlPointPosition.BEFORE_POSITION,
+                stageId = stage.stageId
             )
         )
     }
@@ -429,10 +489,10 @@ class PipelineStageService @Autowired constructor(
         variables: Map<String, String>,
         inOrOut: Boolean
     ): BuildStatus {
-        val (check, position) = if (inOrOut) {
-            Pair(stage.checkIn, ControlPointPosition.BEFORE_POSITION)
+        val (check, position, reviewType) = if (inOrOut) {
+            Triple(stage.checkIn, ControlPointPosition.BEFORE_POSITION, BuildReviewType.QUALITY_CHECK_IN)
         } else {
-            Pair(stage.checkOut, ControlPointPosition.AFTER_POSITION)
+            Triple(stage.checkOut, ControlPointPosition.AFTER_POSITION, BuildReviewType.QUALITY_CHECK_OUT)
         }
         // #5246 检查红线时填充预置上下文
         val buildContext = variables.toMutableMap()
@@ -446,6 +506,7 @@ class PipelineStageService @Autowired constructor(
                 templateId = null,
                 interceptName = null,
                 ruleBuildIds = check?.ruleIds!!.toSet(),
+                stageId = stage.stageId,
                 runtimeVariable = buildContext
             )
             logger.info("ENGINE|${event.buildId}|${event.source}|STAGE_QUALITY_CHECK_REQUEST|${event.stageId}|" +
@@ -456,13 +517,34 @@ class PipelineStageService @Autowired constructor(
             check.checkTimes = result.checkTimes
 
             // #5246 如果红线通过则直接成功，否则判断是否需要等待把关
-            if (result.success) {
+            val qualityStatus = if (result.success) {
                 BuildStatus.QUALITY_CHECK_PASS
             } else if (result.failEnd) {
                 BuildStatus.QUALITY_CHECK_FAIL
             } else {
+                // #5533 增加红线待审核的消息
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildReviewBroadCastEvent(
+                        source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
+                        projectId = stage.projectId, pipelineId = stage.pipelineId,
+                        buildId = stage.buildId, userId = event.userId,
+                        reviewType = reviewType, status = BuildStatus.REVIEWING.name,
+                        stageId = stage.stageId, taskId = null
+                    )
+                )
                 BuildStatus.QUALITY_CHECK_WAIT
             }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildQualityCheckBroadCastEvent(
+                    source = "s(${stage.stageId}) waiting for ${reviewType}_REVIEW",
+                    projectId = stage.projectId, pipelineId = stage.pipelineId,
+                    buildId = stage.buildId, userId = event.userId,
+                    status = qualityStatus.name, stageId = stage.stageId,
+                    taskId = null, ruleIds = check.ruleIds
+                )
+            )
+            return qualityStatus
         } catch (ignore: Throwable) {
             logger.error("ENGINE|${event.buildId}|${event.source}|inOrOut=$inOrOut|" +
                 "STAGE_QUALITY_CHECK_ERROR|${event.stageId}", ignore)

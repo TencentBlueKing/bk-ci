@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package types
 
 import "time"
@@ -53,13 +62,14 @@ const (
 	CommandFBuild CommandType = "FBuild.exe"
 )
 
+// ExtraVars describe the extra settings in DistccServerSets
 type ExtraVars struct {
 	// bazelrc define the bazelrc file path
 	BazelRC string `json:"bazelrc"`
 	MaxJobs int    `json:"max_jobs,omitempty"`
 }
 
-//distcc server info
+// distcc server info
 type DistccServerInfo struct {
 	TaskID        string            `json:"task_id"`
 	Hosts         string            `json:"hosts"`
@@ -117,6 +127,7 @@ type DistccClientInfo struct {
 	FbSummary FbSummaryInfo
 }
 
+// FbSummaryInfo describe the summary information in fastbuild
 type FbSummaryInfo struct {
 	LibraryBuilt    int     `json:"library_built"`
 	LibraryCacheHit int     `json:"library_cache_hit"`
@@ -146,10 +157,12 @@ const (
 	ClientStatusFailed  ClientStatusType = "failed"
 )
 
+// CMakeArgs describe the args of cmake command return from server
 type CMakeArgs struct {
 	Args string `json:"args"`
 }
 
+// Ccache describe the ccache stats info
 type Ccache struct {
 	CacheDir                  string `json:"cache_dir"`
 	PrimaryConfig             string `json:"primary_config"`
@@ -243,6 +256,7 @@ var serverErrCode = map[ServerErrCode]string{
 	ServerErrListWorkStatsFailed:   "list work stats failed",
 }
 
+// String return the string of ServerErrCode
 func (sec ServerErrCode) String() string {
 	return serverErrCode[sec]
 }

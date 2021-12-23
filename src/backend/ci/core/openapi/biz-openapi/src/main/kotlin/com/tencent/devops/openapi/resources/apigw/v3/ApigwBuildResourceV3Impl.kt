@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
@@ -96,8 +97,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
@@ -112,13 +113,14 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("$pipelineId|manualStartup|user($userId)")
-        return client.get(ServiceBuildResource::class).manualStartup(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
             buildNo = buildNo,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            startType = StartType.SERVICE
         )
     }
 
@@ -160,7 +162,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            checkManualStartup = true
         )
     }
 

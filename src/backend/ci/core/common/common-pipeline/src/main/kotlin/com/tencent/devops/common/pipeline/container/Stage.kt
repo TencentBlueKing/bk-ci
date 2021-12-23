@@ -66,18 +66,18 @@ data class Stage(
     /**
      * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
      */
-    fun refreshReviewOption(init: Boolean? = false) {
-        if (checkIn != null) {
-            checkIn?.fixReviewGroups(init == true)
-            return
+    fun refreshCheckOption(init: Boolean? = false) {
+        checkIn?.fixReviewGroups(init == true)
+        checkOut?.fixReviewGroups(init == true)
+        if (stageControlOption?.manualTrigger == true) {
+            checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }
-        val originControlOption = stageControlOption ?: return
-        if (originControlOption.manualTrigger == true) {
-            checkIn = StagePauseCheck.convertControlOption(originControlOption)
+    }
+
+    fun getContainer(vmSeqId: String): Container? {
+        containers.forEach { container ->
+            return container.getContainerById(vmSeqId) ?: return@forEach
         }
-        stageControlOption?.triggerUsers = null
-        stageControlOption?.triggered = null
-        stageControlOption?.reviewParams = null
-        stageControlOption?.reviewDesc = null
+        return null
     }
 }

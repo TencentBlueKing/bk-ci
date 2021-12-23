@@ -345,19 +345,33 @@ abstract class AbstractDockerHostBuildService constructor(
     }*/
 
     fun reWriteBazelCache(
+        projectId: String,
         pipelineId: String,
+        buildId: String,
         vmSeqId: Int,
         poolNo: Int
     ) {
         // 出现错误也不影响执行
         try {
-            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
-            CommandLineUtils.execute(
-                command = "time flock -xn ${dockerHostConfig.bazelLowerPath}  " +
-                        "rsync --stats -ah --ignore-errors $upperDir/ ${dockerHostConfig.bazelLowerPath}/",
-                workspace = File(dockerHostConfig.bazelLowerPath!!),
-                print2Logger = true
-            )
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toString(),
+                poolNo = poolNo
+            )?.data
+
+            // 针对白名单项目做bazel cache处理
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
+                CommandLineUtils.execute(
+                    command = "time flock -xn ${dockerHostConfig.bazelLowerPath}  " +
+                            "rsync --stats -ah --ignore-errors --include=\"cache/\" " +
+                            "--include=\"install/\" --exclude=\"*/\" " +
+                            " $upperDir/ ${dockerHostConfig.bazelLowerPath}/",
+                    workspace = File(dockerHostConfig.bazelLowerPath!!),
+                    print2Logger = true
+                )
+            }
         } catch (e: Throwable) {
             logger.info("reWriteBazelCache $pipelineId $vmSeqId $poolNo error: ${e.message}")
         }

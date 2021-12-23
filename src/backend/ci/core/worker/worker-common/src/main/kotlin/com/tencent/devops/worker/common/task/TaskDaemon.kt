@@ -56,27 +56,21 @@ class TaskDaemon(
         }
     }
 
-    fun run() {
+    fun runWithTimeout() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        val taskDaemon = TaskDaemon(
-            task = task,
-            buildTask = buildTask,
-            buildVariables = buildVariables,
-            workspace = workspace
-        )
         val executor = Executors.newCachedThreadPool()
         val taskId = buildTask.taskId
         if (taskId != null) {
             TaskExecutorCache.put(taskId, executor)
         }
-        val f1 = executor.submit(taskDaemon)
+        val f1 = executor.submit(this)
         try {
             f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
-        } catch (e: TimeoutException) {
+        } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+                errorMsg = ignore.message ?: "插件执行超时, 超时时间:${timeout}分钟"
             )
         } finally {
             executor.shutdownNow()
@@ -116,7 +110,7 @@ class TaskDaemon(
 
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
-            elementId = buildTask.elementId!!,
+            elementId = buildTask.taskId!!,
             containerId = buildVariables.containerHashId,
             success = isSuccess,
             buildResult = buildResult,

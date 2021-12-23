@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package conf
 
 import (
@@ -10,8 +19,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"build-booster/common/codec"
-	"build-booster/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/spf13/pflag"
@@ -35,6 +44,7 @@ type LogConfig struct {
 	StdErrThreshold string `json:"stderrthreshold" value:"2" usage:"logs at or above this threshold go to stderr" mapstructure:"stderrthreshold"`
 	VModule         string `json:"vmodule" value:"" usage:"comma-separated list of pattern=N settings for file-filtered logging" mapstructure:"vmodule"`
 	TraceLocation   string `json:"log_backtrace_at" value:"" usage:"when logging hits line file:N, emit a stack trace" mapstructure:"log_backtrace_at"`
+	AsyncFlush      bool   `json:"async_flush" value:"false" usage:"async flush file log"`
 }
 
 // Process configuration
@@ -96,6 +106,8 @@ type LicenseServerConfig struct {
 	LSClientKeyFile  string `json:"ls_client_key_file" value:"" usage:"Client private key file(*.key) for connecting to license server" mapstructure:"ls_client_key_file"`
 }
 
+// Parse parse config from file or command line
+// Priority command line > file > default
 func Parse(config interface{}) {
 	// load config to flag
 	loadRawConfig(pflag.CommandLine, config)
@@ -103,13 +115,13 @@ func Parse(config interface{}) {
 	// parse flags
 	util.InitFlags()
 	if err := goflag.CommandLine.Parse([]string{}); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
 	// parse config file if exists
 	if err := decJSON(pflag.CommandLine, config); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 }
@@ -209,7 +221,6 @@ func wrap2flag(fs *pflag.FlagSet, configType reflect.Type, configValue reflect.V
 			loadConfig(fs, field.Type.Elem(), fieldV.Elem())
 			continue
 		}
-
 		// flag must have "json, value, usage" flags
 		// json and flag can not be empty
 		if !nameOk || !valueOk || !usageOk || flagName == "" || flagUsage == "" {

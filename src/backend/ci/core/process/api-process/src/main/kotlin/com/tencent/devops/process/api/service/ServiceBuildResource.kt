@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -101,29 +103,6 @@ interface ServiceBuildResource {
         errorMsg: String? = null
     ): Result<Boolean>
 
-    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
-    @ApiOperation("Notify process that the vm startup for the build")
-    @PUT
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
-    @Path("/{projectId}/{pipelineId}/{buildId}/vmStarted")
-    fun vmStarted(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("VM SEQ ID", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam("VM NAME", required = true)
-        @QueryParam("vmName")
-        vmName: String
-    ): Result<Boolean>
-
     @ApiOperation("根据构建ID获取项目ID以及流水线ID")
     @GET
     // @Path("/builds/{buildId}/basic")
@@ -162,6 +141,7 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
 
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
@@ -213,7 +193,10 @@ interface ServiceBuildResource {
         skipFailedTask: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否忽略人工触发", required = false)
+        @QueryParam("checkManualStartup")
+        checkManualStartup: Boolean? = false
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
@@ -594,4 +577,30 @@ interface ServiceBuildResource {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
+
+    @ApiOperation("手动启动流水线")
+    @POST
+    @Path("/{pipelineId}/")
+    fun manualStartupNew(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null,
+        @ApiParam("启动类型", required = false)
+        @QueryParam("startType")
+        startType: StartType
+    ): Result<BuildId>
 }

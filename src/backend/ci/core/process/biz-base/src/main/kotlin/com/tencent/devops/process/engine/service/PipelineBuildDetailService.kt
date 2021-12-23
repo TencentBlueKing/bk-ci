@@ -134,7 +134,12 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
-            stage.refreshReviewOption()
+            stage.refreshCheckOption()
+            // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
+            stage.containers.forEach { container ->
+                container.containerHashId = container.containerHashId ?: container.containerId
+                container.containerId = container.id
+            }
         }
 
         return ModelDetail(
@@ -186,7 +191,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 return Traverse.CONTINUE
             }
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 val status = BuildStatus.parse(container.status)
                 if (status == BuildStatus.PREPARE_ENV) {
                     if (container.startEpoch == null) {
@@ -195,6 +200,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
 
+                    // TODO 此处遍历暂时看不出目的，待调整
                     var containerElapsed = 0L
                     run lit@{
                         stage.containers.forEach {
@@ -267,7 +273,7 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
                 if (!container.status.isNullOrBlank() && BuildStatus.valueOf(container.status!!).isRunning()) {
                     container.status = buildStatus.name
                     update = true
@@ -351,16 +357,17 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
         update(
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (id == containerId) {
-                        if (container is VMBuildContainer && container.showBuildResource == true) {
-                            container.name = vmInfo.name
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
                         }
                         update = true
                         return Traverse.BREAK

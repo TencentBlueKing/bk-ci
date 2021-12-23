@@ -34,7 +34,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_SETTING'
                     AND COLUMN_NAME = 'MAX_PIPELINE_RES_NUM') THEN
         ALTER TABLE T_PIPELINE_SETTING
-            ADD COLUMN `MAX_PIPELINE_RES_NUM` int(11) DEFAULT '50' COLLATE utf8mb4_bin;
+            ADD COLUMN `MAX_PIPELINE_RES_NUM` int(11) DEFAULT '50' COLLATE utf8mb4_bin COMMENT '保存流水线编排的最大个数';
     END IF;
 
 
