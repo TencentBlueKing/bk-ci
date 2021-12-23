@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.utils.BuildUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,23 +54,27 @@ class HeartbeatControl @Autowired constructor(
 
     companion object {
         private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
+        private const val CANCEL_TIMEOUT_IN_MS = 20000 // 取消构建超时时间为20秒
         private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
         private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }
 
     fun detectHeartbeat(event: PipelineContainerAgentHeartBeatEvent) {
-        val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(event.buildId, event.containerId))
+        val buildId = event.buildId
+        val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(buildId, event.containerId))
             ?: run {
-                LOG.info("${event.buildId}|HEART_BEAT_MONITOR_CANCEL|j(${event.containerId})")
+                LOG.info("$buildId|HEART_BEAT_MONITOR_CANCEL|j(${event.containerId})")
                 return
             }
 
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
-        if (elapse > TIMEOUT_IN_MS) {
+        val cancelBuildFlag = redisOperation.get(BuildUtils.getCancelBuildKey(buildId))?.toBoolean()
+        val timeOutLimit = if (cancelBuildFlag == true) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
+        if (elapse > timeOutLimit) {
             timeout(event, elapse)
         } else {
             if (Math.floorMod(event.retryTime++, LOG_PER_TIMES) == 1) {
-                LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR|" +
+                LOG.info("ENGINE|$buildId|HEARTBEAT_MONITOR|" +
                     "${event.source}|j(${event.containerId})|loopTime=${event.retryTime}")
             }
             // 正常是继续循环检查当前消息

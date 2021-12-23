@@ -154,6 +154,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSA
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
+import com.tencent.devops.process.engine.utils.BuildUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -166,6 +168,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -734,7 +737,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildStatus: BuildStatus
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
-        // 发送事件
+        // 往redis中设置当前构建已取消标识
+        redisOperation.set(BuildUtils.getCancelBuildKey(buildId), "true", TimeUnit.DAYS.toSeconds(1))
+        // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
                 source = javaClass.simpleName,
@@ -745,7 +750,34 @@ class PipelineRuntimeService @Autowired constructor(
                 status = buildStatus
             )
         )
-
+        // 给未结束的job发送心跳监控事件
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containerRecords = pipelineBuildContainerDao.listByBuildId(
+            dslContext = dslContext,
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        containerRecords.forEach { containerRecord ->
+            pipelineEventDispatcher.dispatch(
+                PipelineContainerAgentHeartBeatEvent(
+                    source = "cancelBuild",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    containerId = containerRecord.containerId,
+                    executeCount = containerRecord.executeCount,
+                    delayMills = 20000
+                )
+            )
+        }
         return true
     }
 

@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -225,8 +226,8 @@ class TaskControl @Autowired constructor(
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
         if (buildStatus == BuildStatus.CANCELED) {
-            // 删除redis中取消构建标识
-            redisOperation.delete("${BuildStatus.CANCELED.name}_$buildId")
+            // 删除redis中取消构建操作标识
+            redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
             redisOperation.leftPush(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId), taskId)
         }
