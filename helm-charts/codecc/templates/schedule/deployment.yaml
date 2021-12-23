@@ -70,13 +70,13 @@ spec:
             - name: BK_CODECC_STORAGE_BKREPO_PASSWORD
               value: {{ .Values.config.bkCodeccStorageBkrepoPassword }}
             - name: BK_CODECC_STORAGE_BKREPO_PROJECT
-              value: {{ .Values.config.bkCodeccStorageBkrepoRepo }}
+              value: {{ .Values.config.bkCodeccStorageBkrepoProject }}
             - name: BK_CODECC_STORAGE_BKREPO_REPO
-              value: {{ .Values.config.bkCodeccStorageBkrepoHost }}
+              value: {{ .Values.config.bkCodeccStorageBkrepoRepo }}
             - name: BK_CODECC_STORAGE_BKREPO_HOST
-              value: {{ .Values.config.bkCodeccStorageBkrepoSchema }}
+              value: {{ .Values.config.bkCodeccStorageBkrepoHost }}
             - name: BK_CODECC_STORAGE_BKREPO_SCHEMA
-              value: {{ .Values.config.bkCodeccLogCollectEnable }}
+              value: {{ .Values.config.bkCodeccStorageBkrepoSchema }}
           volumeMounts:
             {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
             - name: nfs-data

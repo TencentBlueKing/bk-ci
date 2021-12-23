@@ -73,7 +73,7 @@ spec:
               value: "127.0.0.1"
             - name: BK_CODECC_CONSUL_DOMAIN
               value: "bkdevops"
-            - name: bkCodeccConsulDiscoveryTag
+            - name: BK_CODECC_CONSUL_DISCOVERY_TAG
               value: "dev"
             - name: BK_CI_ENV
               value: {{ .Values.config.bkCiEnv }}
