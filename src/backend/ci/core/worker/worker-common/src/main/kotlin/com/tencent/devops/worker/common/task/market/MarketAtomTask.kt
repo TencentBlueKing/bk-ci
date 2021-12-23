@@ -64,12 +64,14 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
@@ -515,7 +517,7 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType)
                 )
             }
             BuildType.WORKER -> {
@@ -527,12 +529,28 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    vmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType)
                 )
             }
         }
         logger.info("sdkEnv is:$sdkEnv")
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
+    }
+
+    private fun getFileGateway(containerType: String?): String {
+        val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
+        var fileDevnetGateway = CommonEnv.fileDevnetGateway
+        var fileIdcGateway = CommonEnv.fileIdcGateway
+        if (fileDevnetGateway == null || fileIdcGateway == null) {
+            val fileGatewayInfo = ArtifactoryBuildResourceApi().getFileGatewayInfo()
+            logger.info("fileGatewayInfo: $fileGatewayInfo")
+            fileDevnetGateway = fileGatewayInfo?.fileDevnetGateway
+            CommonEnv.fileDevnetGateway = fileDevnetGateway
+            fileIdcGateway = fileGatewayInfo?.fileIdcGateway
+            CommonEnv.fileIdcGateway = fileIdcGateway
+        }
+        logger.info("fileGateway: ${CommonEnv.fileDevnetGateway}, ${CommonEnv.fileIdcGateway}")
+        return (if (vmBuildEnvFlag) CommonEnv.fileDevnetGateway else CommonEnv.fileIdcGateway) ?: ""
     }
 
     private fun writeParamEnv(
@@ -568,7 +586,7 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val vmBuildEnv: Boolean
+        val fileGateway: String
     )
 
     private fun writeInputFile(

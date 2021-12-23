@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.api
 
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
-import com.tencent.devops.worker.common.api.archive.ArtifactoryConfigResourceApi
+import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.exception.ApiNotExistException
 import org.reflections.Reflections
@@ -41,7 +41,7 @@ object ArtifactApiFactory {
 
     private val logger = LoggerFactory.getLogger(ArtifactApiFactory::class.java)
     private val apiMap = ConcurrentHashMap<String, Any>()
-    private val realm = ArtifactoryConfigResourceApi().getRealm()
+    private val realm = ArtifactoryBuildResourceApi().getRealm()
 
     init {
         val reflections = Reflections("com.tencent.devops.worker.common.api")
