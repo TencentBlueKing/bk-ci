@@ -27,28 +27,17 @@
 
 package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 
-/**
- * 构建待审核的广播事件，用于通知等
- * @author royalhuang
- * @version 1.0
- */
-@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT)
-data class PipelineBuildReviewBroadCastEvent(
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT)
+data class PipelineBuildCancelBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
     override val userId: String,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
     val buildId: String,
-    val reviewType: BuildReviewType,
-    val status: String,
-    val stageId: String?,
-    val taskId: String?,
-    val timeout: Boolean? = false
+    override var actionType: ActionType = ActionType.END,
+    override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
