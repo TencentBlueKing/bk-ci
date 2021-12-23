@@ -48,8 +48,7 @@ class DispatchUtils @Autowired constructor(
                     "|${dispatchType.credentialId}" +
                     "|${dispatchType.credentialProject}"
         )
-        var userName: String? = null
-        var password: String? = null
+
         return if (dispatchType.imageType == ImageType.THIRD && !dispatchType.credentialId.isNullOrBlank()) {
 
             val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
@@ -63,8 +62,8 @@ class DispatchUtils @Autowired constructor(
                 credentialId = dispatchType.credentialId!!,
                 type = CredentialType.USERNAME_PASSWORD
             )
-            userName = ticketsMap["v1"] as String
-            password = ticketsMap["v2"] as String
+            val userName = ticketsMap["v1"] as String
+            val password = ticketsMap["v2"] as String
             Pool(
                 container = dockerImage,
                 credential = Credential(

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -55,6 +54,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.Registry
 import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.DispatchUtils
 import com.tencent.devops.dispatch.kubernetes.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.kubernetes.utils.RedisUtils
@@ -65,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@SuppressWarnings("NestedBlockDepth")
 class ContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
@@ -105,7 +106,10 @@ class ContainerService @Autowired constructor(
                     }
 
                     if (containerInfo.containerName.isEmpty()) {
-                        logger.info("containerName empty , ${dispatchMessage.pipelineId}, ${dispatchMessage.vmSeqId} , $i")
+                        logger.info(
+                            "containerName empty , " +
+                                    "${dispatchMessage.pipelineId}, ${dispatchMessage.vmSeqId} , $i"
+                        )
                         return newIdleContainerInfo(dispatchMessage, i, cpu, memory, disk)
                     }
 
@@ -124,7 +128,10 @@ class ContainerService @Autowired constructor(
                             memory.get() != containerInfo.memory
                         ) {
                             containerChanged = true
-                            logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} performanceConfig changed.")
+                            logger.info(
+                                "buildId: ${dispatchMessage.buildId}, " +
+                                        "vmSeqId: ${dispatchMessage.vmSeqId} performanceConfig changed."
+                            )
                         }
 
                         // 镜像是否变更
@@ -144,10 +151,8 @@ class ContainerService @Autowired constructor(
                     // continue to find idle container
                 }
             }
-            throw BuildFailureException(
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
+            throw CommonUtils.buildFailureException(
+                ErrorCodeEnum.NO_IDLE_VM_ERROR,
                 "Dispatch-Kubernetes构建机启动失败，没有空闲的构建机"
             )
         } finally {

@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.kubernetes.client
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.kubernetes.client.DeploymentClient
@@ -38,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BuildContainer
 import com.tencent.devops.dispatch.kubernetes.pojo.ContainerType
 import com.tencent.devops.dispatch.kubernetes.pojo.Params
 import com.tencent.devops.dispatch.kubernetes.pojo.resp.OperateContainerResult
+import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstDeploy
 import com.tencent.devops.dispatch.kubernetes.utils.KubernetesClientUtil.getFirstPod
@@ -58,6 +58,9 @@ class ContainerClient @Autowired constructor(
         private const val MAX_WAIT = 10
     }
 
+    /**
+     * 获取container状态
+     */
     fun getContainerStatus(
         containerName: String
     ): Result<V1ContainerStatus> {
@@ -68,10 +71,8 @@ class ContainerClient @Autowired constructor(
             //               val retryTimeLocal = retryTime - 1
             //               return getContainerStatus(buildId, vmSeqId, userId, name, retryTimeLocal)
             //           }
-            throw BuildFailureException(
-                ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+            throw CommonUtils.buildFailureException(
+                ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR,
                 KubernetesClientUtil.getClientFailInfo(
                     "获取容器状态接口异常（Fail to get container status, http response: $result"
                 )
@@ -84,6 +85,9 @@ class ContainerClient @Autowired constructor(
         )
     }
 
+    /**
+     * 创建container
+     */
     fun createContainer(
         dispatchMessage: DispatchMessage,
         buildContainer: BuildContainer
@@ -96,11 +100,9 @@ class ContainerClient @Autowired constructor(
             ContainerType.DEV -> {
                 val resp = deploymentClient.create(buildContainer, containerName)
                 if (resp.isNotOk()) {
-                    throw BuildFailureException(
-                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        errorMessage = KubernetesClientUtil.getClientFailInfo(
+                    throw CommonUtils.buildFailureException(
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL,
+                        KubernetesClientUtil.getClientFailInfo(
                             "创建容器接口异常 （Fail to create container status, http response $resp"
                         )
                     )
@@ -116,6 +118,9 @@ class ContainerClient @Autowired constructor(
         return containerName
     }
 
+    /**
+     * 等待container启动
+     */
     fun waitContainerStart(
         containerName: String
     ): OperateContainerResult {
@@ -138,6 +143,9 @@ class ContainerClient @Autowired constructor(
         return OperateContainerResult(containerName, state?.running != null)
     }
 
+    /**
+     * 根据action操作container
+     */
     fun operateContainer(
         containerName: String,
         action: Action,
@@ -161,11 +169,9 @@ class ContainerClient @Autowired constructor(
                         e.message
                     }
                     logger.error("start container $containerName error: $message")
-                    throw BuildFailureException(
-                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        errorMessage = KubernetesClientUtil.getClientFailInfo("启动容器接口错误, $message")
+                    throw CommonUtils.buildFailureException(
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL,
+                        KubernetesClientUtil.getClientFailInfo("启动容器接口错误, $message")
                     )
                 }
                 OperateContainerResult("", true)
@@ -180,6 +186,9 @@ class ContainerClient @Autowired constructor(
         }
     }
 
+    /**
+     * 等待container停止
+     */
     fun waitContainerStop(
         containerName: String
     ): OperateContainerResult {

@@ -196,6 +196,18 @@ object CommonUtils {
         throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
     }
 
+    /**
+     * 生成异常
+     */
+    fun buildFailureException(errorCodeEnum: ErrorCodeEnum, message: String): BuildFailureException {
+        return BuildFailureException(
+            errorCodeEnum.errorType,
+            errorCodeEnum.errorCode,
+            errorCodeEnum.formatErrorMessage,
+            message
+        )
+    }
+
 //    fun generatePwd(): String {
 //        val secretSeed = arrayOf(
 //            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
