@@ -45,7 +45,7 @@ class APIPerformanceBean() {
     constructor(meterRegistry: PrometheusMeterRegistry) : this() {
         Gauge.builder("jvm_process_api_performance") {
             executePerformance
-        }.tags("ExecutePerformance").register(meterRegistry)
+        }.tags("paths", "ExecutePerformance").register(meterRegistry)
     }
 
     @Synchronized

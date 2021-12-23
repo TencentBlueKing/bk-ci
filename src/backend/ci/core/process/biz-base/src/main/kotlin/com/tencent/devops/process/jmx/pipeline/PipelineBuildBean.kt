@@ -52,11 +52,11 @@ class PipelineBuildBean @Autowired constructor(
     override fun afterPropertiesSet() {
         Gauge.builder("jvm_process_builds") {
             activeBuildCount
-        }.tags("ActiveBuildCount").register(meterRegistry)
+        }.tags("paths", "ActiveBuildCount").register(meterRegistry)
 
         Gauge.builder("jvm_process_builds") {
             executeFailure
-        }.tags("ExecuteFailureCount").register(meterRegistry)
+        }.tags("paths", "ExecuteFailureCount").register(meterRegistry)
     }
 
     private val execute = AtomicInteger(0)
