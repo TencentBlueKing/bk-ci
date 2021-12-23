@@ -694,7 +694,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -914,7 +914,6 @@ class PipelineBuildFacadeService(
         buildId: String,
         elementId: String
     ): ReviewParam {
-
         pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -923,7 +922,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
 
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
