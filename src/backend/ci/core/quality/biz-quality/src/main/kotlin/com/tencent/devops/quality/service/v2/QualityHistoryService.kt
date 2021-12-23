@@ -421,7 +421,7 @@ class QualityHistoryService @Autowired constructor(
             null, null, null, null, null)
         if (recordList.isEmpty()) {
             return ruleBuildHis.map { rule ->
-                val ruleInterceptRecords =  rule.indicators.map {
+                val ruleInterceptRecords = rule.indicators.map {
                     QualityRuleInterceptRecord(
                         indicatorId = it.hashId,
                         indicatorName = it.cnName,

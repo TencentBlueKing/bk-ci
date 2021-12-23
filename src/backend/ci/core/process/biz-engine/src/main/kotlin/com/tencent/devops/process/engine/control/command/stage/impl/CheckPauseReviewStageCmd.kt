@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -119,7 +118,7 @@ class CheckPauseReviewStageCmd(
             event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckInPass(commandContext)
             }
-            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd()-> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckInFailed(commandContext)
                 needBreak = true
             }

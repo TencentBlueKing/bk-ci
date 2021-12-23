@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 
 @Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT)
-data class PipelineBuildCancelBroadCastEvent (
+data class PipelineBuildCancelBroadCastEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
