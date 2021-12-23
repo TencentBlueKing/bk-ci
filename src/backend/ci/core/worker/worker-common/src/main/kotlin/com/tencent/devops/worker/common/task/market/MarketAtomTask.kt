@@ -537,7 +537,7 @@ open class MarketAtomTask : ITask() {
         val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
         var fileDevnetGateway = CommonEnv.fileDevnetGateway
         var fileIdcGateway = CommonEnv.fileIdcGateway
-        if (fileDevnetGateway == null && fileIdcGateway == null) {
+        if (fileDevnetGateway == null || fileIdcGateway == null) {
             val fileGatewayInfo = ArtifactoryBuildResourceApi().getFileGatewayInfo()
             logger.info("fileGatewayInfo: $fileGatewayInfo")
             fileDevnetGateway = fileGatewayInfo?.fileDevnetGateway
