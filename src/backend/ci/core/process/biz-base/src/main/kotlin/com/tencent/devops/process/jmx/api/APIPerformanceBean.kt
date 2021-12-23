@@ -42,10 +42,10 @@ class APIPerformanceBean() {
     private val calculateCount = AtomicInteger(0)
     private val executePerformance = AtomicDouble(0.0)
 
-    constructor(meterRegistry: PrometheusMeterRegistry) : this() {
+    constructor(meterRegistry: PrometheusMeterRegistry, api: String) : this() {
         Gauge.builder("jvm_process_api_performance") {
             executePerformance
-        }.tags("ExecutePerformance").register(meterRegistry)
+        }.tags("api", api, "paths", "ExecutePerformance").register(meterRegistry)
     }
 
     @Synchronized
