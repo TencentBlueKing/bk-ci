@@ -79,8 +79,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
-            weworkNotifyTextMessage.message.substring(0, WEWORK_MAX_SIZE).replace("\\n", "\n")
+            weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
+                "...(消息长度超$WEWORK_MAX_SIZE 已截断,请控制消息长度)"
         }
+        weworkNotifyTextMessage.message = content
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
                 return
@@ -185,6 +187,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
-        const val WEWORK_MAX_SIZE = 5120
+        const val WEWORK_MAX_SIZE = 4000
     }
 }
