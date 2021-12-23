@@ -74,6 +74,9 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             element.includeCrState!!.joinToString(",")
         }
+        if (element.enableCheck == false) {
+            params.block = false
+        }
         return params
     }
 }
