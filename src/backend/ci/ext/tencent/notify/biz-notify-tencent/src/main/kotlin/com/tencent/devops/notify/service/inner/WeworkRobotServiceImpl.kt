@@ -165,10 +165,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
         return if (url.startsWith("http")) url else "https://$url"
     }
 
-    private fun chunkedReceivers(receivers: Collection<String>): String {
-        return receivers.joinToString("|", "", "", -1)
-    }
-
     private fun saveResult(receivers: Collection<String>, body: String, success: Boolean, errMsg: String?) {
         weworkNotifyDao.insertOrUpdateWeworkNotifyRecord(
             success = success,
@@ -179,7 +175,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     private fun checkMessageSize(message: String): Boolean {
-        if (message.length < WEWORK_MAX_SIZE ) {
+        if (message.length < WEWORK_MAX_SIZE) {
             return true
         }
         return false
