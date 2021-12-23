@@ -35,9 +35,11 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +51,8 @@ class HeartbeatControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -90,12 +94,13 @@ class HeartbeatControl @Autowired constructor(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
-            stageId = null, containerId = event.containerId)
-            ?: run {
-                LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
-                return
-            }
+        val container = pipelineContainerService.getContainer(
+            buildId = event.buildId,
+            stageId = null, containerId = event.containerId
+        ) ?: run {
+            LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
+            return
+        }
 
         // 心跳监测是定时的消息处理，当流水线当前结束，在此时间点内又进行重试，会导致上一次的心跳监测消息处理误判，增加次数判断
         if (container.executeCount != event.executeCount) {
@@ -106,7 +111,7 @@ class HeartbeatControl @Autowired constructor(
 
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask = pipelineRuntimeService.getRunningTask(container.buildId)
+        val runningTask = pipelineTaskService.getRunningTask(container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true
@@ -116,7 +121,7 @@ class HeartbeatControl @Autowired constructor(
                     message =
                     "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                     tag = taskMap["taskId"].toString(),
-                    jobId = container.containerId,
+                    jobId = container.containerHashId,
                     executeCount = executeCount
                 )
             }
@@ -128,7 +133,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerId,
+                jobId = container.containerHashId,
                 executeCount = container.executeCount
             )
         }
@@ -143,6 +148,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 stageId = container.stageId,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
                 reason = "Agent心跳超时/Agent Dead，请检查构建机状态",

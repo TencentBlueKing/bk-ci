@@ -110,7 +110,7 @@ class TaskDaemon(
 
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
-            elementId = buildTask.elementId!!,
+            elementId = buildTask.taskId!!,
             containerId = buildVariables.containerHashId,
             success = isSuccess,
             buildResult = buildResult,

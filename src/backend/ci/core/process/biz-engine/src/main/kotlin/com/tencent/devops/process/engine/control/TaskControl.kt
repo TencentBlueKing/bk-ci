@@ -44,10 +44,10 @@ import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.BuildUtils
-import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,7 +102,7 @@ class TaskControl @Autowired constructor(
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
 
-        val buildTask = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        val buildTask = pipelineTaskService.getBuildTask(buildId, taskId)
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
@@ -116,6 +116,7 @@ class TaskControl @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
+                    containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = actionType,
                     errorCode = errorCode,
@@ -185,7 +186,7 @@ class TaskControl @Autowired constructor(
                 (actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL)
             ) {
                 // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
-                pipelineRuntimeService.updateTaskStatus(
+                pipelineTaskService.updateTaskStatus(
                     task = buildTask, userId = userId, buildStatus = BuildStatus.UNEXEC
                 )
                 BuildStatus.UNEXEC // SKIP 仅当是用户意愿明确正常运行情况要跳过执行的，不影响主流程的才能是SKIP
@@ -239,7 +240,7 @@ class TaskControl @Autowired constructor(
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
-                pipelineRuntimeService.updateTaskStatus(
+                pipelineTaskService.updateTaskStatus(
                     task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                 )
             } else {
@@ -264,7 +265,8 @@ class TaskControl @Autowired constructor(
         }
 
         if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
-            pipelineRuntimeService.setTaskErrorInfo(
+            pipelineTaskService.setTaskErrorInfo(
+                transactionContext = null,
                 buildId = buildId,
                 taskId = taskId,
                 errorCode = errorCode,
@@ -282,6 +284,7 @@ class TaskControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
+                containerHashId = containerHashId,
                 containerType = containerType,
                 actionType = actionType,
                 errorCode = errorCode,
@@ -305,7 +308,7 @@ class TaskControl @Autowired constructor(
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
-                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.buildId)
+                val tasks = pipelineTaskService.getRunningTask(subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
                     val containerId = task["containerId"] ?: ""
