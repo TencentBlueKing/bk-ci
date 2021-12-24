@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.InjectMocks
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.beans.factory.annotation.Autowired
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
@@ -196,23 +195,23 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     private fun getYamlForDockerVM(): String {
-        return ""
+        return PipelineLayoutTest::class.java.getResource("/docker_vm.yml").readText(Charsets.UTF_8)
     }
 
     private fun getYamlForDevCloud(): String {
-        return ""
+        return PipelineLayoutTest::class.java.getResource("/docker_devcloud.yml").readText(Charsets.UTF_8)
     }
 
     private fun getYamlForLocal(): String {
-        return ""
+        return PipelineLayoutTest::class.java.getResource("/local.yml").readText(Charsets.UTF_8)
     }
 
     private fun getYamlForAgentLess(): String {
-        return ""
+        return PipelineLayoutTest::class.java.getResource("/agentless.yml").readText(Charsets.UTF_8)
     }
 
     private fun getYamlForInvalidDispatchType(): String {
-        return ""
+        return PipelineLayoutTest::class.java.getResource("/error.yml").readText(Charsets.UTF_8)
     }
 
     private fun getYamlObject(yamlStr: String): ScriptBuildYaml {
