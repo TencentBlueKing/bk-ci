@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -91,7 +92,8 @@ import javax.ws.rs.core.Response
     "TooManyFunctions",
     "LongMethod",
     "ReturnCount",
-    "ComplexMethod"
+    "ComplexMethod",
+    "ThrowsCount"
 )
 @Service
 class PipelineRepositoryService constructor(
@@ -253,10 +255,12 @@ class PipelineRepositoryService constructor(
                 defaultMessage = "非法的流水线编排"
             )
         }
-        val c = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-            defaultMessage = "第一阶段的环境不能为空"
-        )) as TriggerContainer
+        val c = (
+            stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                defaultMessage = "第一阶段的环境不能为空"
+            )
+            ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -361,11 +365,11 @@ class PipelineRepositoryService constructor(
                         matrixYamlCheck(c.matrixControlOption)
                     }
                 }
-            } catch (e: Exception) {
+            } catch (ignore: Exception) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
-                    params = arrayOf(c.name),
-                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误"
+                    params = arrayOf(c.name, ignore.message ?: ""),
+                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误: ${ignore.message}"
                 )
             }
 
@@ -428,8 +432,11 @@ class PipelineRepositoryService constructor(
             throw DependNotFoundException("Matrix Yaml is blank")
         }
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
-            throw InvalidParamException("matrix maxConcurrency(${option.maxConcurrency}) " +
-                "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX")
+            throw InvalidParamException(
+                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX /" +
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX"
+            )
         }
         MatrixContextUtils.schemaCheck(
             JsonUtil.toJson(
@@ -555,6 +562,14 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildNo = buildNo
+            ),
+            PipelineModelAnalysisEvent(
+                source = "create_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = JsonUtil.toJson(model, formatted = false),
+                channelCode = channelCode.name
             )
         )
         return DeployPipelineResult(pipelineId, 1)
@@ -657,6 +672,14 @@ class PipelineRepositoryService constructor(
                 version = version,
                 userId = userId,
                 buildNo = buildNo
+            ),
+            PipelineModelAnalysisEvent(
+                source = "update_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = JsonUtil.toJson(model, formatted = false),
+                channelCode = channelCode.name
             )
         )
         return DeployPipelineResult(pipelineId, version)
@@ -693,7 +716,7 @@ class PipelineRepositoryService constructor(
     fun getModel(pipelineId: String, version: Int? = null): Model? {
         var modelString: String?
         if (version == null) { // 取最新版，直接从旧版本表读
-            modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
+            modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, null) ?: return null
         } else {
             modelString = pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
             if (modelString.isNullOrBlank()) {
@@ -717,12 +740,11 @@ class PipelineRepositoryService constructor(
         delete: Boolean
     ): DeletePipelineResult {
 
-        val record =
-            (pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                    defaultMessage = "要删除的流水线不存在"
-                ))
+        val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "要删除的流水线不存在"
+            )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
 
@@ -772,6 +794,14 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     userId = userId,
                     clearUpModel = delete
+                ),
+                PipelineModelAnalysisEvent(
+                    source = "delete_pipeline",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    model = "",
+                    channelCode = record.channel
                 )
             )
         }
