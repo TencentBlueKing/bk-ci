@@ -194,26 +194,6 @@ class PipelineLayoutTest : ServiceBaseTest() {
         }
     }
 
-    private fun getYamlForDockerVM(): String {
-        return PipelineLayoutTest::class.java.getResource("/docker_vm.yml").readText(Charsets.UTF_8)
-    }
-
-    private fun getYamlForDevCloud(): String {
-        return PipelineLayoutTest::class.java.getResource("/docker_devcloud.yml").readText(Charsets.UTF_8)
-    }
-
-    private fun getYamlForLocal(): String {
-        return PipelineLayoutTest::class.java.getResource("/local.yml").readText(Charsets.UTF_8)
-    }
-
-    private fun getYamlForAgentLess(): String {
-        return PipelineLayoutTest::class.java.getResource("/agentless.yml").readText(Charsets.UTF_8)
-    }
-
-    private fun getYamlForInvalidDispatchType(): String {
-        return PipelineLayoutTest::class.java.getResource("/error.yml").readText(Charsets.UTF_8)
-    }
-
     private fun getYamlObject(yamlStr: String): ScriptBuildYaml {
         val (isPassed, preYamlObject, errorMsg) = preCIYAMLValidator.validate(yamlStr)
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject!!)

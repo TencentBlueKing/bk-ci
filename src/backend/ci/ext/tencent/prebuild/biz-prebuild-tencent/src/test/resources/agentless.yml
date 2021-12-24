@@ -10,6 +10,6 @@ stages:
             name: 微信通知
             with:
               receivers:
-                - weijianguan
+                - userabc
               title: "==========标题==========-"
               body: "内容66666666666666666666"

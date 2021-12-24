@@ -212,7 +212,7 @@ class PreCIYAMLValidator {
             if (notEqualOnAndExtends && notEqualResourcesAndNameAndVersion) {
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
-                    message = "使用 extends 时顶级关键字只能有触发器 on, resources, name, resources"
+                    message = "使用 extends 时顶级关键字只能有触发器 on, resources, name, version"
                 )
             }
         }

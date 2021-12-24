@@ -34,4 +34,43 @@ open class ServiceBaseTest {
         link = "ArgumentMatchers.anyString()",
         ip = ip
     )
+
+    /**
+     * docker vm
+     */
+    protected fun getYamlForDockerVM(): String {
+        return ServiceBaseTest::class.java.getResource("/docker_vm.yml").readText(Charsets.UTF_8)
+    }
+
+    /**
+     *  devcloud构建机
+     */
+    protected fun getYamlForDevCloud(): String {
+        return ServiceBaseTest::class.java.getResource("/docker_devcloud.yml").readText(Charsets.UTF_8)
+    }
+
+    /**
+     * 本地构建机
+     */
+    protected fun getYamlForLocal(): String {
+        return ServiceBaseTest::class.java.getResource("/local.yml").readText(Charsets.UTF_8)
+    }
+
+    /**
+     * 无编译环境
+     */
+    protected fun getYamlForAgentLess(): String {
+        return ServiceBaseTest::class.java.getResource("/agentless.yml").readText(Charsets.UTF_8)
+    }
+
+    protected fun getYamlForInvalidDispatchType(): String {
+        return ServiceBaseTest::class.java.getResource("/error_dispatch.yml").readText(Charsets.UTF_8)
+    }
+
+    /**
+     * 存在extends以及其他顶级关键字
+     */
+    protected fun getYamlForCheckEntendsBiz(): String {
+        return ServiceBaseTest::class.java.getResource("/entends_with_stages_finally.yml").readText(Charsets.UTF_8)
+    }
 }

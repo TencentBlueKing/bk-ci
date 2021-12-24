@@ -5,7 +5,7 @@ stages:
     jobs:
       job1:
         runs-on:
-          pool-name: xxxx
+          pool-name: nonono
           nfs-mount:
             jdk: "1.8.0_161"
             maven: "3.8"
