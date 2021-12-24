@@ -121,6 +121,7 @@ class ModelCreate @Autowired constructor(
         var stageIndex = 1
         val stageId = VMUtils.genStageId(stageIndex++)
         val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
+        stageList.add(stage1)
 
         // 其他的stage
         yaml.stages.forEach { stage ->
