@@ -152,7 +152,8 @@ class BuildMonitorControl @Autowired constructor(
 
         val stages = pipelineStageService.listStages(event.buildId)
             .filter {
-                !it.status.isFinish() &&
+                // #5873 即使stage已完成，如果有准出卡审核也需要做超时监控
+                (!it.status.isFinish() || it.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) &&
                     it.status != BuildStatus.STAGE_SUCCESS &&
                     (it.executeCount == event.executeCount || event.executeCount == 0) // #5090 ==0 是为了兼容旧的监控事件
             }
