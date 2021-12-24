@@ -44,6 +44,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.tof.TOFService
@@ -94,7 +95,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         logger.info("getProject role $projectCode $projectRelationId")
 
         // 应用态checkManager为false，且操作人为“”,需替换为项目的修改人(修改人肯定有权限)
-        val currencyCreateUser = if (!checkManager || createUser.isNullOrBlank()) {
+        val currencyCreateUser = if (!checkManager || createUser.isBlank()) {
             projectInfo.creator
         } else {
             createUser
@@ -129,10 +130,15 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             try {
                 tofService.getStaffInfo(it)
             } catch (ope: OperationException) {
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+                logger.warn("getStaffInfo fail $it $projectCode")
+                throw ope
             } catch (e: Exception) {
-                logger.warn("createUser2Project fail, userId[$it]", e)
-                return false
+                logger.warn("getStaffInfo fail, userId[$it]", e)
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(
+                    messageCode = QUERY_USER_INFO_FAIL,
+                    defaultMessage = e.message,
+                    params = arrayOf(it)
+                ))
             }
             memberList.add(
                 RoleMemberDTO(
@@ -154,8 +160,8 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         // 添加用户到用户组
         client.get(ServiceRoleMemberResource::class).createRoleMember(
             userId = currencyCreateUser,
-            projectId = projectRelationId!!.toInt(),
-            roleId = relationGroupId!!,
+            projectId = projectRelationId.toInt(),
+            roleId = relationGroupId,
             managerGroup = managerFlag,
             members = memberList,
             checkGradeManager = checkManager
@@ -190,7 +196,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 projectCode = projectId,
                 token = tokenService.getSystemToken(null)!!,
                 grantInstance = grantInstanceDTO
-            ).data ?: false
+            ).data
         }
         return true
     }

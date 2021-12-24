@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -403,4 +404,18 @@ interface ServiceTxProjectResource {
         @QueryParam("projectName")
         projectName: String
     ): Result<ProjectVO>?
+
+    @PUT
+    @Path("/{projectCode}/bind/organization")
+    @ApiOperation("绑定项目组织信息")
+    fun bindProjectOrganization(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目名称", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目组织信息", required = true)
+        projectDeptInfo: ProjectDeptInfo
+    ): Result<Boolean>
 }

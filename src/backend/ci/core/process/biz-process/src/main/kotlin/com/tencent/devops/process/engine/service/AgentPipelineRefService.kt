@@ -89,7 +89,7 @@ class AgentPipelineRefService @Autowired constructor(
                             pipelineId = pipelineId,
                             pipelineName = pipelineModel.name,
                             vmSeqId = container.id,
-                            jobId = container.containerId,
+                            jobId = container.containerHashId,
                             jobName = container.name
                         )
                     )

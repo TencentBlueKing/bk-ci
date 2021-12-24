@@ -90,6 +90,8 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -124,6 +126,8 @@ class PipelineBuildFacadeService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
@@ -421,8 +425,6 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
-                    // #4531 重试完整构建时将所有stage的审核状态恢复
-                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -690,7 +692,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -910,7 +912,6 @@ class PipelineBuildFacadeService(
         buildId: String,
         elementId: String
     ): ReviewParam {
-
         pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -919,7 +920,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
 
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -1758,7 +1759,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val tasks = pipelineRuntimeService.getRunningTask(buildId)
+            val tasks = pipelineTaskService.getRunningTask(buildId)
 
             tasks.forEach { task ->
                 val taskId = task["taskId"] ?: ""
@@ -1819,7 +1820,7 @@ class PipelineBuildFacadeService(
         var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
-            val startUpVMTask = pipelineRuntimeService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
+            val startUpVMTask = pipelineTaskService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
             if (startUpVMTask?.status?.isRunning() == true) {
                 msg = "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
             } else {
@@ -1834,7 +1835,7 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
+        val container = pipelineContainerService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
         if (container != null) {
             val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
             if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
@@ -1848,6 +1849,7 @@ class PipelineBuildFacadeService(
                         buildId = buildId,
                         stageId = container.stageId,
                         containerId = vmSeqId,
+                        containerHashId = container.containerHashId,
                         containerType = container.containerType,
                         actionType = ActionType.TERMINATE,
                         reason = msg
@@ -1862,7 +1864,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = vmSeqId.toInt(),
+            containerId = vmSeqId,
             vmInfo = vmInfo
         )
     }
