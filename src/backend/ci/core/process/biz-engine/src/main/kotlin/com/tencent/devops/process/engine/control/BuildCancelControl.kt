@@ -259,8 +259,6 @@ class BuildCancelControl @Autowired constructor(
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
-                // 删除redis中当前构建已取消标识
-                redisOperation.delete(BuildUtils.getCancelBuildKey(buildId))
                 // 构建机关机
                 if (container is VMBuildContainer) {
                     container.shutdown(event = event, executeCount = executeCount)

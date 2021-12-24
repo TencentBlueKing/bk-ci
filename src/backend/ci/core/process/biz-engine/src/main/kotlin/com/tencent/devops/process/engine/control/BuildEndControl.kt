@@ -61,7 +61,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
@@ -163,9 +162,6 @@ class BuildEndControl @Autowired constructor(
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(buildId, allStageStatus)
-
-        // 删除redis中当前构建已取消标识
-        redisOperation.delete(BuildUtils.getCancelBuildKey(buildId))
 
         // 广播结束事件
         pipelineEventDispatcher.dispatch(

@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
@@ -72,8 +73,8 @@ class HeartbeatControl @Autowired constructor(
             }
 
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
-        val cancelBuildFlag = redisOperation.get(BuildUtils.getCancelBuildKey(buildId))?.toBoolean()
-        val timeOutLimit = if (cancelBuildFlag == true) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
+        // 如果消息事件来源是取消构建操作，超时时间为CANCEL_TIMEOUT_IN_MS
+        val timeOutLimit = if (event.source == BS_CANCEL_BUILD_SOURCE) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
         if (elapse > timeOutLimit) {
             timeout(event, elapse)
         } else {

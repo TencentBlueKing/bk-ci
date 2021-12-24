@@ -29,7 +29,5 @@ package com.tencent.devops.process.engine.utils
 
 object BuildUtils {
 
-    fun getCancelBuildKey(buildId: String) = "CANCEL_BUILD_$buildId"
-
     fun getCancelActionBuildKey(buildId: String) = "CANCEL_ACTION_$buildId"
 }
