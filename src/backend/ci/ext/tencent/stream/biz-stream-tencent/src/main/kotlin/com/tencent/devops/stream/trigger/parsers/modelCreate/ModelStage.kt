@@ -281,7 +281,7 @@ class ModelStage @Autowired constructor(
                 )
             )
         }
-        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList creat gates")
+        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList create gates")
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,
