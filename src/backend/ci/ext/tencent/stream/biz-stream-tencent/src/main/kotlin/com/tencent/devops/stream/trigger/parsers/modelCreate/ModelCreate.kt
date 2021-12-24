@@ -123,8 +123,6 @@ class ModelCreate @Autowired constructor(
         val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
         stageList.add(stage1)
 
-        val jobIdCheckList = mutableListOf<String?>()
-
         // 其他的stage
         yaml.stages.forEach { stage ->
             stageList.add(
@@ -135,7 +133,6 @@ class ModelCreate @Autowired constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobIdCheckList = jobIdCheckList,
                     pipeline = pipeline
                 )
             )
@@ -159,7 +156,6 @@ class ModelCreate @Autowired constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobIdCheckList = jobIdCheckList,
                     pipeline = pipeline
                 )
             )
