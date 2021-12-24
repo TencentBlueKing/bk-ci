@@ -221,7 +221,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName
             )
-            val logoUrl = it["logoUrl"] as? String
+            var logoUrl = it["logoUrl"] as? String
+            logoUrl = if (logoUrl?.contains("?") == true) {
+                logoUrl.plus("&logo=true")
+            } else {
+                logoUrl?.plus("?logo=true")
+            }
             val icon = it["icon"] as? String
             val categoryFlag = it["category"] as Byte
             val summary = it["summary"] as? String

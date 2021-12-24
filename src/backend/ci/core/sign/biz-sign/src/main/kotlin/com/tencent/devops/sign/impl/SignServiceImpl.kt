@@ -48,6 +48,7 @@ import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -142,7 +143,21 @@ class SignServiceImpl @Autowired constructor(
             val properties = getProperties(ipaSignInfo, newInfoPlist)
 
             // 归档IPA包
-            val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
+            val archiveResult = try {
+                HttpRetryUtils.retry(
+                    retryTime = 5,
+                    retryPeriodMills = 1000
+                ) {
+                    archiveService.archive(
+                        signedIpaFile = signedIpaFile,
+                        ipaSignInfo = ipaSignInfo,
+                        properties = properties
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("archive | retry failed with message: ${e.message}")
+                false
+            }
             if (!archiveResult) {
                 logger.error("SIGN|[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
                 throw ErrorCodeException(
@@ -308,7 +323,8 @@ class SignServiceImpl @Autowired constructor(
             universalLinks = ipaSignInfo.universalLinks,
             keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
             replaceKeyList = ipaSignInfo.replaceKeyList,
-            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
+            codesignExternalStr = ipaSignInfo.codesignExternalStr
         )
     }
 
@@ -333,7 +349,8 @@ class SignServiceImpl @Autowired constructor(
             certId = ipaSignInfo.certId,
             wildcardInfo = wildcardInfo,
             replaceKeyList = ipaSignInfo.replaceKeyList,
-            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion)
+            codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
+            codesignExternalStr = ipaSignInfo.codesignExternalStr
         )
     }
 
@@ -486,8 +503,10 @@ class SignServiceImpl @Autowired constructor(
     }
 
     private fun getCodeSignFile(version: String?): String {
-        logger.info("SIGN|codesignPathVersion1=$codesignPathVersion1" +
-            "|codesignPathVersion2=$codesignPathVersion2")
+        logger.info(
+            "SIGN|codesignPathVersion1=$codesignPathVersion1" +
+                "|codesignPathVersion2=$codesignPathVersion2"
+        )
         return when (version) {
             "version1" -> codesignPathVersion1 ?: DEFAULT_CODESIGN_PATH
             "version2" -> codesignPathVersion2 ?: DEFAULT_CODESIGN_PATH

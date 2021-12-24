@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 /**
- * 扩展Element的子类
+ * 扩展DispatchType的子类
  */
 interface DispatchSubTypeFetcher {
 

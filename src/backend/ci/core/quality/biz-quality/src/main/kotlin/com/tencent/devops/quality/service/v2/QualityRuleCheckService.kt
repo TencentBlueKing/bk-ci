@@ -198,8 +198,8 @@ class QualityRuleCheckService @Autowired constructor(
         // 更新build id
         qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
-        // 更新gateKeepers
-        qualityRuleBuildHisService.convertGateKeepers(ruleList, buildCheckParams)
+        // 更新gateKeepers/ruleValue变量
+        qualityRuleBuildHisService.convertVariables(ruleList, buildCheckParams)
 
         val params = BuildCheckParams(
             buildCheckParams.projectId,
@@ -209,8 +209,9 @@ class QualityRuleCheckService @Autowired constructor(
             buildCheckParams.interceptName ?: "",
             System.currentTimeMillis(),
             "",
-            "",
+            buildCheckParams.position,
             buildCheckParams.templateId,
+            buildCheckParams.stageId ?: "",
             buildCheckParams.runtimeVariable
         )
         return doCheckRules(buildCheckParams = params, ruleList = ruleList)
@@ -238,7 +239,9 @@ class QualityRuleCheckService @Autowired constructor(
             val ruleInterceptList = resultPair.second
 
             // 异步后续的处理
-            executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
+            executors.execute {
+                checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
+            }
 
             // 记录结果
             val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
@@ -334,7 +337,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 if (!rule.gateKeepers.isNullOrEmpty() &&
                                     finalRule?.status == RuleInterceptResult.WAIT) {
                                     doRuleOperation(
-                                        this, resultList, QualityRule.RuleOp(
+                                        this,
+                                        resultList.filter { result -> result.ruleName == rule.name },
+                                        QualityRule.RuleOp(
                                             operation = RuleOperation.AUDIT,
                                             notifyTypeList = ruleOp.notifyTypeList,
                                             notifyGroupList = ruleOp.notifyGroupList,
@@ -350,7 +355,9 @@ class QualityRuleCheckService @Autowired constructor(
                         } else {
                             logger.info("op list is empty for rule and build: $buildId, $rule")
                             doRuleOperation(
-                                this, resultList, QualityRule.RuleOp(
+                                this,
+                                resultList.filter { result -> result.ruleName == rule.name },
+                                QualityRule.RuleOp(
                                     operation = rule.operation,
                                     notifyTypeList = rule.notifyTypeList,
                                     notifyGroupList = rule.notifyGroupList,
@@ -389,6 +396,8 @@ class QualityRuleCheckService @Autowired constructor(
                     endNotifyUserList = (ruleOp.notifyUserList ?: listOf()).map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                     },
+                    position = buildCheckParams.position,
+                    stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
                 )
             } else {
@@ -405,6 +414,8 @@ class QualityRuleCheckService @Autowired constructor(
                         ?: listOf()).toSet().map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                     },
+                    position = buildCheckParams.position,
+                    stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
                 )
             }
@@ -446,7 +457,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
+                        if (it?.value != null && NumberUtils.isDigits(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -592,7 +603,7 @@ class QualityRuleCheckService @Autowired constructor(
                     .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)
                     .replace("##detail##", record.detail!!)
-                "<a target='_blank' href='$fillDetailUrl'>查看详情</a>"
+                "<a target='_blank' href='/console$fillDetailUrl'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
@@ -652,11 +663,13 @@ class QualityRuleCheckService @Autowired constructor(
         resultList: List<RuleCheckSingleResult>,
         auditNotifyTypeList: List<NotifyType>,
         auditNotifyUserList: List<String>,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
-        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
@@ -717,11 +730,13 @@ class QualityRuleCheckService @Autowired constructor(
         endNotifyTypeList: List<NotifyType>,
         endNotifyGroupList: List<String>,
         endNotifyUserList: List<String>,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
-        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
         // 获取通知用户集合

@@ -113,22 +113,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?
     ): Result<BuildId> {
-        checkUserId(userId)
-        checkParam(projectId, pipelineId)
-        return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.SERVICE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
-            )
+        return manualStartupNew(
+            userId = userId,
+            startType = StartType.SERVICE,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = values,
+            channelCode = channelCode,
+            buildNo = buildNo
         )
     }
 
@@ -140,7 +132,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         taskId: String?,
         failedContainer: Boolean?,
         skipFailedTask: Boolean?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        checkManualStartup: Boolean?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -157,7 +150,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             skipFailedTask = skipFailedTask,
             isMobile = false,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            checkManualStartup = checkManualStartup ?: false
         )))
     }
 
@@ -538,6 +532,34 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,
                 containerId = taskPauseExecute.containerId
+            )
+        )
+    }
+
+    override fun manualStartupNew(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>,
+        channelCode: ChannelCode,
+        buildNo: Int?,
+        startType: StartType
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = startType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = true
+                )
             )
         )
     }

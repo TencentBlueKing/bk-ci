@@ -102,7 +102,7 @@ class DockerHostImageService(
                 )
             ).handlerRequest(imageHandlerContext)
 
-            return Pair(true, null)
+            return Pair(true, imageHandlerContext.result)
         } catch (e: Exception) {
             logger.error("Docker build and push failed, exception: ", e)
             return Pair(false, e.message)

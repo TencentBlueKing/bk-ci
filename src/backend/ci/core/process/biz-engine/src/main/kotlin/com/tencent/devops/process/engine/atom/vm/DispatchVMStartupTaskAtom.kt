@@ -186,7 +186,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(buildId, vmSeqId)
 
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
@@ -234,6 +234,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
+                queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 containerType = task.containerType,
                 customBuildEnv = param.customBuildEnv
             )
