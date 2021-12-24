@@ -158,9 +158,9 @@ enum class VariableType(val hasPrefix: Boolean = false) {
     companion object {
         fun validate(variableName: String): Boolean {
             values().forEach { enumObj ->
-                if (enumObj.hasPrefix && variableName.startsWith(enumObj.name)) {
+                if (enumObj.name == variableName) {
                     return true
-                } else if (enumObj.name == variableName) {
+                } else if (enumObj.hasPrefix && variableName.startsWith(enumObj.name)) {
                     return true
                 }
             }
