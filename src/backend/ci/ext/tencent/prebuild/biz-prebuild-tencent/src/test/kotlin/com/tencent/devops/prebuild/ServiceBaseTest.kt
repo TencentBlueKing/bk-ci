@@ -25,14 +25,14 @@ open class ServiceBaseTest {
     protected val agentInfo = ThirdPartyAgentStaticInfo(
         agentId = "${userId}_agent_id",
         os = "",
-        projectId = ArgumentMatchers.anyString(),
-        script = ArgumentMatchers.anyString(),
-        secretKey = ArgumentMatchers.anyString(),
-        status = ArgumentMatchers.anyInt(),
+        projectId = "ArgumentMatchers.anyString()",
+        script = "ArgumentMatchers.anyString()",
+        secretKey = "ArgumentMatchers.anyString()",
+        status = 0,
         createdUser = userId,
         hostName = "${userId}_hostname",
-        gateway = ArgumentMatchers.anyString(),
-        link = ArgumentMatchers.anyString(),
+        gateway = "ArgumentMatchers.anyString()",
+        link = "ArgumentMatchers.anyString()",
         ip = ip
     )
 }

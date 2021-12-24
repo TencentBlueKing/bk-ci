@@ -12,21 +12,21 @@ import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
-import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.InjectMocks
+import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
-    @Autowired
+    @InjectMocks
     lateinit var preCIYAMLValidator: PreCIYAMLValidator
 
     @Test

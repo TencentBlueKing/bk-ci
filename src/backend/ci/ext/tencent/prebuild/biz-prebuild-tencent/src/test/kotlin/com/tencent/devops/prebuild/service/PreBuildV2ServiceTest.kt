@@ -16,52 +16,52 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
-import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.InjectMocks
+import org.mockito.Mock
 import org.mockito.Mockito
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.mockito.junit.jupiter.MockitoExtension
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+@ExtendWith(MockitoExtension::class)
 class PreBuildV2ServiceTest : ServiceBaseTest() {
-    @MockBean
+    @Mock
     lateinit var preCIYAMLValidator: PreCIYAMLValidator
 
-    @MockBean
+    @Mock
     lateinit var client: Client
 
-    @MockBean
+    @Mock
     lateinit var prebuildProjectDao: PrebuildProjectDao
 
-    @MockBean
+    @Mock
     lateinit var pipelineLayoutBuilder: PipelineLayout.Builder
 
-    @Autowired
+    @InjectMocks
     lateinit var preBuildV2Service: PreBuildV2Service
 
-    @BeforeAll
-    fun initMock() {
+    @BeforeEach
+    fun setUp() {
         // 流水线创建远程调用
         Mockito.`when`(
-            client.get(ServicePipelineResource::class).create(anyString(), anyString(), any(), ChannelCode.BS)
+            client.get(ServicePipelineResource::class)
+                .create(anyString(), anyString(), any()!!, ChannelCode.BS, false)
         ).thenReturn(Result(PipelineId(PIPELINE_ID)))
 
         // 流水线修改远程调用
         Mockito.`when`(
             client.get(ServicePipelineResource::class)
-                .edit(anyString(), anyString(), PIPELINE_ID, any(), ChannelCode.BS)
+                .edit(anyString(), anyString(), PIPELINE_ID, any()!!, ChannelCode.BS)
         ).thenReturn(Result(true))
 
         // 启动流水线远程调用
@@ -74,15 +74,15 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         // DB存储void
         Mockito.doNothing().`when`(
             prebuildProjectDao.createOrUpdate(
-                any(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyString()
+                Mockito.any()!!,
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString()
             )
         )
 
@@ -96,7 +96,6 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     @Test
     @DisplayName("测试yaml校验通过")
     fun testCheckYamlSchema_success() {
-        assertNotNull(prebuildProjectDao)
         val successResp = preBuildV2Service.checkYamlSchema(YAML_CONTENT)
         assertTrue(successResp.isOk())
         assertNull(successResp.data)
