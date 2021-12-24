@@ -122,7 +122,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
      */
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
 
-        val managerPermission = iamCacheService.checkProjectManager(userId, projectCode)
+        val managerPermission = isProjectManager(userId, projectCode)
         // 若为校验管理员权限,直接返回是否有all_action接口
         if (group != null && group == BkAuthGroup.MANAGER) {
             return managerPermission
@@ -131,6 +131,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (managerPermission) {
             return managerPermission
         }
+
         // 优先匹配缓存
         if (iamCacheService.checkProjectUser(userId, projectCode)) {
             return true
@@ -144,6 +145,10 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             checkProjectUser = true
         }
         return checkProjectUser
+    }
+
+    override fun isProjectManager(userId: String, projectCode: String): Boolean {
+        return iamCacheService.checkProjectManager(userId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
