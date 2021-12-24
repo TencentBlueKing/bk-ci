@@ -74,15 +74,15 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         // DB存储void
         Mockito.doNothing().`when`(
             prebuildProjectDao.createOrUpdate(
-                Mockito.any()!!,
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString(),
-                Mockito.anyString()
+                any()!!,
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
             )
         )
 
@@ -121,7 +121,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         val resp = preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo)
         assertEquals(BUILD_ID, resp.id)
         verify(prebuildProjectDao, times(1)).createOrUpdate(
-            any(),
+            any()!!,
             anyString(),
             anyString(),
             anyString(),
