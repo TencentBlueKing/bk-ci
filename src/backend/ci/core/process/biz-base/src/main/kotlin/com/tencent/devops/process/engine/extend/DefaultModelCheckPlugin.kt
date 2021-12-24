@@ -168,7 +168,7 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun checkStageReviewers(stage: Stage) {
-        stage.refreshCheckOption()
+        stage.resetBuildOption()
         if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
                 defaultMessage = "Stage(${stage.name})准入配置不正确",
