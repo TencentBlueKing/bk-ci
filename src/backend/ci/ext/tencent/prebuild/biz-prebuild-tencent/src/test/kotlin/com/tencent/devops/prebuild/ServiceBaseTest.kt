@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.pojo.StartUpReq
-import org.mockito.ArgumentMatchers
 
 open class ServiceBaseTest {
     protected val YAML_CONTENT = "i am yaml"
