@@ -128,10 +128,6 @@ object MQ {
     // 流水线扩展交换器 ====================================
     const val EXCHANGE_PIPELINE_EXTENDS_FANOUT = "e.fanout.engine.pipeline.extends"
 
-    // 流水线模型分析队列
-    const val ROUTE_PIPELINE_EXTENDS_MODEL = "r.engine.pipeline.extends.model"
-    const val QUEUE_PIPELINE_EXTENDS_MODEL = "q.engine.pipeline.extends.model"
-
     // AGENT 构建机消息队列 ====================================
     const val EXCHANGE_AGENT_LISTENER_DIRECT = "e.engine.pipeline.agent.listener"
     const val ROUTE_AGENT_STARTUP = "r.engine.pipeline.agent.startup"
