@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
@@ -54,7 +53,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -78,7 +76,6 @@ class ModelStage @Autowired constructor(
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
-        jobIdCheckList: MutableList<String?>,
         pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
@@ -89,12 +86,6 @@ class ModelStage @Autowired constructor(
                 event = event
             )
 
-            if (job.id !in jobIdCheckList) {
-                jobIdCheckList.add(job.id)
-            } else throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.JOB_ID_CONFLICT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.JOB_ID_CONFLICT_ERROR.formatErrorMessage
-            )
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 modelContainer.addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
