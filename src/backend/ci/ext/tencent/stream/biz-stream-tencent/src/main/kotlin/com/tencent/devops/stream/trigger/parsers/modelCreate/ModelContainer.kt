@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
@@ -86,6 +88,7 @@ class ModelContainer @Autowired constructor(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
+            mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
             baseOS = StreamDispatchUtils.getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
@@ -174,7 +177,7 @@ class ModelContainer @Autowired constructor(
                 conditions = null,
                 canRetry = false,
                 jobControlOption = getJobControlOption(job, finalStage),
-                mutexGroup = null
+                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
             )
         )
     }
@@ -218,5 +221,18 @@ class ModelContainer @Autowired constructor(
                 continueWhenFailed = job.continueOnError
             )
         }
+    }
+
+    private fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
+        if (resource == null) {
+            return null
+        }
+        return MutexGroup(
+            enable = true,
+            mutexGroupName = resource.label,
+            queueEnable = true,
+            queue = resource.queueLength ?: 0,
+            timeout = resource.timeoutMinutes ?: 10
+        )
     }
 }
