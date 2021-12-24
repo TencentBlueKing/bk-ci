@@ -272,7 +272,8 @@ class DockerHostClient @Autowired constructor(
                 ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
             },
             containerHashId = event.containerHashId,
-            buildType = BuildType.AGENT_LESS
+            buildType = BuildType.AGENT_LESS,
+            customBuildEnv = event.customBuildEnv
         )
 
         // 测试

@@ -124,13 +124,9 @@ class ContainerPoolExecutor @Autowired constructor(
                 // 无空闲容器时执行拒绝策略
                 logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
                 if (idlePoolSize <= 0L) {
-                    val continueAllocate = rejectedExecutionFactory
+                    return !rejectedExecutionFactory
                         .getRejectedExecutionHandler(buildLessStartInfo.rejectedExecutionType)
                         .rejectedExecution(buildLessStartInfo)
-
-                    if (!continueAllocate) {
-                        return true
-                    }
                 }
 
                 // 再次check idlePoolSize，有变更则retry

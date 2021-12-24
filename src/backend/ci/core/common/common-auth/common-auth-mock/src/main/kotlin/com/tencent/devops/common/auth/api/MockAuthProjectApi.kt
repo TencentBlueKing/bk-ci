@@ -48,7 +48,10 @@ class MockAuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
+        return true
+    }
 
+    override fun isProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return true
     }
 

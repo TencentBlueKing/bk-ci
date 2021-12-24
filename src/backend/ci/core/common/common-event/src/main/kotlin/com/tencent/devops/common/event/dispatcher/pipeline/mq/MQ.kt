@@ -58,6 +58,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_CONTAINER = "r.engine.pipeline.build.container"
     const val QUEUE_PIPELINE_BUILD_CONTAINER = "q.engine.pipeline.build.container"
 
+    const val ROUTE_PIPELINE_BUILD_MATRIX_GROUP = "r.engine.pipeline.matrix.group"
+    const val QUEUE_PIPELINE_BUILD_MATRIX_GROUP = "q.engine.pipeline.matrix.group"
+
     const val ROUTE_PIPELINE_BUILD_CANCEL = "r.engine.pipeline.build.cancel"
     const val QUEUE_PIPELINE_BUILD_CANCEL = "q.engine.pipeline.build.cancel"
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
@@ -98,6 +101,9 @@ object MQ {
 
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
+
+    // 构建取消后续广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "e.engine.pipeline.build.cancel"
 
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"

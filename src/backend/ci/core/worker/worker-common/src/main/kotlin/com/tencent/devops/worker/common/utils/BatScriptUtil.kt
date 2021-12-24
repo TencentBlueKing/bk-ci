@@ -53,7 +53,7 @@ object BatScriptUtil {
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
 
     // 2021-06-11 batchScript需要过滤掉上下文产生的变量，防止注入到环境变量中
-    private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+    private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.", "matrix.")
 
     private val specialValue = listOf("\n", "\r")
     private val escapeValue = mapOf(
@@ -74,7 +74,7 @@ object BatScriptUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        elementId: String? = null,
+        stepId: String? = null,
         charsetType: String? = null
     ): String {
         var fileLock: FileLock? = null
@@ -96,7 +96,7 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                elementId = elementId,
+                stepId = stepId,
                 charsetType = charsetType
             )
         } catch (ignore: Throwable) {

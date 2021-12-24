@@ -25,19 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.dispatch
+package com.tencent.devops.quality.constant
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.VM
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+object MQ {
 
-class VMResourceApi : AbstractBuildResourceApi() {
+    // 流水线结束广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_CANCEL_QUALITY = "q.engine.pipeline.build.cancel.quality"
 
-    fun getVmByPipeline(): Result<VM> {
-        val path = "/dispatch/api/build/vms/getVmByPipeLine"
-        val request = buildGet(path)
-        val response = request(request, "获取构建机基本信息失败")
-        return objectMapper.readValue(response)
-    }
+    // 流水线重试广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_RETRY_QUALITY = "q.engine.pipeline.build.retry.quality"
+
+    // 流水线超时广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
 }
