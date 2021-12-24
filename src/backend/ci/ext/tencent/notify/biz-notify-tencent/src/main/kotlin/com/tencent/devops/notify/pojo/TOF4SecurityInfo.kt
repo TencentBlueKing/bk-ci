@@ -29,6 +29,9 @@ package com.tencent.devops.notify.pojo
 import com.tencent.devops.common.api.util.AESUtil
 import org.slf4j.LoggerFactory
 
+/**
+ * TOF4秘钥信息
+ */
 class TOF4SecurityInfo {
     var enable: Boolean = false
     var token: String = ""
