@@ -730,7 +730,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
-                it.refreshCheckOption()
+                it.resetBuildOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上

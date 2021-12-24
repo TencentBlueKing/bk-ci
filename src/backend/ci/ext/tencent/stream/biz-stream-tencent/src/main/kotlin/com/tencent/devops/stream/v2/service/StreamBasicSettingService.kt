@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
@@ -146,7 +147,7 @@ class StreamBasicSettingService @Autowired constructor(
             // 更新项目的组织架构信息
             updateProjectInfo(
                 userId = userId,
-                projectId = gitProjectId,
+                projectId = GitCIUtils.GITLABLE + gitProjectId.toString(),
                 userDeptDetail = userUpdateInfo
             )
         }
@@ -171,10 +172,10 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     // 更新项目信息
-    fun updateProjectInfo(userId: String, projectId: Long, userDeptDetail: UserDeptDetail) {
+    fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
         client.get(ServiceTxProjectResource::class).bindProjectOrganization(
             userId = userId,
-            projectCode = projectId.toString(),
+            projectCode = projectId,
             projectDeptInfo = ProjectDeptInfo(
                 bgId = userDeptDetail.bgId,
                 bgName = userDeptDetail.bgName,

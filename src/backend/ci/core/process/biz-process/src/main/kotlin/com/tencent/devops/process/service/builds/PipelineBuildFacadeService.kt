@@ -425,8 +425,6 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
-                    // #4531 重试完整构建时将所有stage的审核状态恢复
-                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }

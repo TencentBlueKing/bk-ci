@@ -64,9 +64,14 @@ data class Stage(
     var checkOut: StagePauseCheck? = null // stage准出配置
 ) {
     /**
-     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
+     * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */
-    fun refreshCheckOption(init: Boolean? = false) {
+    fun resetBuildOption(init: Boolean? = false) {
+        if (init == true) {
+            status = null
+            startEpoch = null
+            elapsed = null
+        }
         checkIn?.fixReviewGroups(init == true)
         checkOut?.fixReviewGroups(init == true)
         if (stageControlOption?.manualTrigger == true) {
