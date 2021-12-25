@@ -25,54 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template
+package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplate
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.template.service.PipelineTemplateService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.PipelineListRequest
+import com.tencent.devops.process.api.user.UserQualityPipelineResource
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.service.PipelineListFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val pipelineTemplateService: PipelineTemplateService,
-    private val templateFacadeService: TemplateFacadeService
-) : UserPipelineTemplateResource {
-
-    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
-        return Result(pipelineTemplateService.listTemplate(projectCode))
-    }
-
-    override fun listQualityViewTemplates(
+class UserQualityPipelineResourceImpl @Autowired constructor(
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineRepositoryService: PipelineRepositoryService
+) : UserQualityPipelineResource {
+    override fun getPipelineInfo(
         userId: String,
         projectId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        keywords: String?
-    ): Result<TemplateListModel> {
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo> {
         return Result(
-            templateFacadeService.listTemplate(
+            pipelineRepositoryService.getPipelineInfo(
                 projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            ) ?: throw RuntimeException("pipeline info not found for $pipelineId")
+        )
+    }
+
+    override fun list(userId: String, projectId: String, request: PipelineListRequest?): Result<List<Pipeline>> {
+        return Result(
+            pipelineListFacadeService.listPipelineInfo(
                 userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords
+                projectId = projectId,
+                pipelineIdList = request?.pipelineId,
+                templateIdList = request?.templateId
             )
         )
     }
 
-    override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId, userId = userId, templateId = templateId, version = null
-        ))
-    }
 }
