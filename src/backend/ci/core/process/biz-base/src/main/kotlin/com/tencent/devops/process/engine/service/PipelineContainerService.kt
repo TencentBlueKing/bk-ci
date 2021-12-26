@@ -198,22 +198,24 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun deleteTasksInMatrixGroupContainer(
+    fun cleanContainersInMatrixGroup(
         transactionContext: DSLContext?,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        matrixGroupId: String
     ) {
-        val allGroupContainers = pipelineBuildContainerDao.listBuildContainerInMatrixGroup(
+        val groupContainers = pipelineBuildContainerDao.listBuildContainerInMatrixGroup(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            matrixGroupId = matrixGroupId
         )
-        logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|allGroupContainers=$allGroupContainers")
-        var count = 0
-        allGroupContainers.forEach {
-            count += pipelineTaskService.deleteTasksByContainerSeqId(
+        logger.info("[$buildId]|cleanContainersInMatrixGroup|groupContainers=$groupContainers")
+        var taskCount = 0
+        groupContainers.forEach {
+            taskCount += pipelineTaskService.deleteTasksByContainerSeqId(
                 dslContext = transactionContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -221,7 +223,15 @@ class PipelineContainerService @Autowired constructor(
                 containerId = it.containerId
             )
         }
-        logger.info("[$buildId]|deleteTasksInMatrixGroupContainer|deleteTaskCount=$count")
+        val containerCount = pipelineBuildContainerDao.deleteBuildContainerInMatrixGroup(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            matrixGroupId = matrixGroupId
+        )
+        logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteTaskCount=$taskCount|" +
+            "deleteContainerCount=$containerCount")
     }
 
     fun prepareMatrixBuildContainer(

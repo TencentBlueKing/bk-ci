@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -44,6 +45,9 @@ class DispatchClient @Autowired constructor(
     private val client: Client,
     private val commonConfig: CommonConfig
 ) {
+
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
 
     fun updateContainerId(buildLessTask: BuildLessTask, containerId: String) {
         client.get(ServiceDockerHostResource::class).updateContainerId(
@@ -66,7 +70,7 @@ class DispatchClient @Autowired constructor(
             averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
             averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad(),
             enable = true,
-            grayEnv = CommonUtils.isGary(),
+            grayEnv = isGary(),
             specialOn = null,
             createTime = null,
             clusterType = DockerHostClusterType.BUILD_LESS
@@ -80,6 +84,10 @@ class DispatchClient @Autowired constructor(
         } catch (e: Exception) {
             logger.error("Refresh buildLess status failed. errorInfo: ${e.message}")
         }
+    }
+
+    fun isGary(): Boolean {
+        return consulTag.contains("gray")
     }
 
     companion object {

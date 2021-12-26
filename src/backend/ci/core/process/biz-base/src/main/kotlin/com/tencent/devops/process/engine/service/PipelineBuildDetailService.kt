@@ -134,7 +134,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // #4531 兼容历史构建的页面显示
         model.stages.forEach { stage ->
-            stage.refreshReviewOption()
+            stage.resetBuildOption()
             // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId

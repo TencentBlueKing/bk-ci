@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.archive
+package com.tencent.devops.quality.constant
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+object MQ {
 
-class ArtifactoryConfigResourceApi : AbstractBuildResourceApi() {
+    // 流水线结束广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_CANCEL_QUALITY = "q.engine.pipeline.build.cancel.quality"
 
-    fun getRealm(): String {
-        val path = "/ms/artifactory/api/build/artifactories/conf/realm"
-        val request = buildGet(path)
-        val responseContent = request(request, "get artifactory realm error")
-        return objectMapper.readValue<Result<String>>(responseContent).data!!
-    }
+    // 流水线重试广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_RETRY_QUALITY = "q.engine.pipeline.build.retry.quality"
+
+    // 流水线超时广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
 }

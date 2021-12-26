@@ -25,21 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.worker.common.api.archive
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-@Service
-class FileGatewayService {
-    @Value("\${artifactory.fileDevnetGateway:}")
-    private lateinit var fileDevnetGateway: String
+class ArtifactoryBuildResourceApi : AbstractBuildResourceApi() {
 
-    @Value("\${artifactory.fileIdcGateway:}")
-    private lateinit var fileIdcGateway: String
+    fun getRealm(): String {
+        val path = "/ms/artifactory/api/build/artifactories/conf/realm"
+        val request = buildGet(path)
+        val responseContent = request(request, "get artifactory realm error")
+        return objectMapper.readValue<Result<String>>(responseContent).data!!
+    }
 
-    fun getFileGateway(): FileGatewayInfo {
-        return FileGatewayInfo(fileDevnetGateway, fileIdcGateway)
+    fun getFileGatewayInfo(): FileGatewayInfo? {
+        return try {
+            val path = "/artifactory/api/build/fileGateway/get"
+            val request = buildGet(path)
+            val response = request(request, "获取构建机基本信息失败")
+            val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
+            fileGatewayResult.data
+        } catch (e: Exception) {
+            logger.warn("get file gateway exception", e)
+            FileGatewayInfo("", "")
+        }
     }
 }

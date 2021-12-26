@@ -28,7 +28,6 @@
 package com.tencent.devops.buildless.utils
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetAddress
@@ -42,19 +41,12 @@ object CommonUtils {
 
     private var hostIp: String? = null
 
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
-
     fun formatContainerId(containerId: String): String {
         return if (containerId.length > 12) {
             containerId.substring(0, 12)
         } else {
             containerId
         }
-    }
-
-    fun isGary(): Boolean {
-        return consulTag.contains("gray")
     }
 
     fun getHostIp(): String {

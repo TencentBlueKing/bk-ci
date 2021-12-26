@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -63,9 +63,23 @@ class PipelineContextService @Autowired constructor(
         try {
             modelDetail.model.stages.forEach { stage ->
                 stage.containers.forEach { container ->
-                    buildJobContext(stage, container, containerId, contextMap, variables)
+                    buildJobContext(
+                        stage = stage,
+                        c = container,
+                        containerId = containerId,
+                        contextMap = contextMap,
+                        variables = variables,
+                        inMatrix = false
+                    )
                     container.fetchGroupContainers()?.forEach { c ->
-                        buildJobContext(stage, c, containerId, contextMap, variables)
+                        buildJobContext(
+                            stage = stage,
+                            c = c,
+                            containerId = containerId,
+                            contextMap = contextMap,
+                            variables = variables,
+                            inMatrix = true
+                        )
                     }
                 }
             }
@@ -112,17 +126,9 @@ class PipelineContextService @Autowired constructor(
         c: Container,
         containerId: String?,
         contextMap: MutableMap<String, String>,
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        inMatrix: Boolean
     ) {
-        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
-        // 后续需要改为只有本job才去掉前缀
-        variables.forEach { (key, value) ->
-            val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
-                contextMap[key.removePrefix(prefix)] = value
-            }
-        }
-
         // current job
         if (c.id?.let { it == containerId } == true) {
             contextMap["job.id"] = c.jobId ?: ""
@@ -146,6 +152,16 @@ class PipelineContextService @Autowired constructor(
 
         // all element
         buildStepContext(c, contextMap)
+
+        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
+        // 后续需要改为只有本job才去掉前缀
+        if (inMatrix && c.id?.let { it == containerId } != true) return
+        variables.forEach { (key, value) ->
+            val prefix = "jobs.${c.jobId ?: containerId}."
+            if (key.startsWith(prefix)) {
+                contextMap[key.removePrefix(prefix)] = value
+            }
+        }
     }
 
     private fun buildStepContext(

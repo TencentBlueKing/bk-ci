@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @RestResource
 class BuildBuildLessResourceImpl @Autowired constructor(
@@ -45,9 +46,12 @@ class BuildBuildLessResourceImpl @Autowired constructor(
         var futureResult: Future<BuildLessTask?>? = null
         return try {
             futureResult = buildlessTaskService.claimBuildLessTask(containerId)
-            val result = futureResult.get(20, TimeUnit.SECONDS)
+            val result = futureResult.get(25, TimeUnit.SECONDS)
             logger.info("****> container: $containerId claim task asyncResult: $result")
             result
+        } catch (e: TimeoutException) {
+            logger.error("****> container: $containerId claim task future get timeout, return null.")
+            null
         } catch (e: Exception) {
             logger.error("****> container: $containerId claim task error.", e)
             null
