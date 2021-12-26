@@ -29,9 +29,12 @@ package com.tencent.devops.process.engine.service.detail
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -54,19 +57,20 @@ class ContainerBuildDetailService(
     redisOperation
 ) {
 
-    fun containerPreparing(projectId: String, buildId: String, containerId: Int) {
+    fun containerPreparing(projectId: String, buildId: String, containerId: String) {
         update(
             projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    logger.info("[$buildId]|containerPreparing|id=$id&containerId=$containerId|startVMStatus " +
-                        "changed from ${container.startVMStatus} to RUNNING")
-                    if (id == containerId) {
-                        container.startEpoch = System.currentTimeMillis()
-                        container.status = BuildStatus.PREPARE_ENV.name
-                        container.startVMStatus = BuildStatus.RUNNING.name
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    logger.info("[$buildId]|containerPreparing|containerId=$containerId|startVMStatus " +
+                        "changed from ${targetContainer?.startVMStatus} to RUNNING")
+                    if (targetContainer != null) {
+                        targetContainer.startEpoch = System.currentTimeMillis()
+                        targetContainer.status = BuildStatus.PREPARE_ENV.name
+                        targetContainer.startVMStatus = BuildStatus.RUNNING.name
                         update = true
                         return Traverse.BREAK
                     }
@@ -82,24 +86,30 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun containerStarted(projectId: String, buildId: String, containerId: Int, containerBuildStatus: BuildStatus) {
+    fun containerStarted(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        containerBuildStatus: BuildStatus
+    ) {
         update(
             projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (id == containerId) {
-                        if (container.startEpoch != null) {
-                            container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer.startEpoch != null) {
+                            targetContainer.systemElapsed = System.currentTimeMillis() - targetContainer.startEpoch!!
                         }
-                        container.startVMStatus = containerBuildStatus.name
+                        targetContainer.startVMStatus = containerBuildStatus.name
                         // #2074 containerBuildStatus如果是失败的，则将Job整体状态设置为失败
                         if (containerBuildStatus.isFailure()) {
-                            container.status = containerBuildStatus.name
+                            targetContainer.status = containerBuildStatus.name
                         } else {
-                            container.status = BuildStatus.RUNNING.name
+                            targetContainer.status = BuildStatus.RUNNING.name
                         }
                         update = true
                         return Traverse.BREAK
@@ -116,20 +126,68 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun updateContainerStatus(projectId: String, buildId: String, containerId: String, buildStatus: BuildStatus) {
+    fun updateContainerStatus(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        buildStatus: BuildStatus,
+        executeCount: Int
+    ) {
         logger.info("[$buildId]|container_end|containerId=$containerId|status=$buildStatus")
         update(projectId, buildId, object : ModelInterface {
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                if (container.id == containerId) {
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                val targetContainer = container.getContainerById(containerId)
+                if (targetContainer != null) {
+                    update = true
+                    targetContainer.status = buildStatus.name
+                    targetContainer.executeCount = executeCount
+                    if (buildStatus.isFinish() &&
+                        (targetContainer.startVMStatus == null ||
+                            !BuildStatus.valueOf(targetContainer.startVMStatus!!).isFinish())
+                    ) {
+                        targetContainer.startVMStatus = targetContainer.status
+                    }
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun updateMatrixGroupContainer(
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        matrixGroupId: String,
+        buildStatus: BuildStatus,
+        matrixOption: MatrixControlOption,
+        modelContainer: Container?
+    ) {
+        logger.info("[$buildId]|matrix group fresh|matrixGroupId=$matrixGroupId|" +
+            "buildStatus=$buildStatus|modelContainer=$modelContainer")
+        update(projectId, buildId, object : ModelInterface {
+            var update = false
+            override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                if (stageId == stage.id && container.id == matrixGroupId && container.matrixGroupFlag == true) {
                     update = true
                     container.status = buildStatus.name
-                    if (buildStatus.isFinish() &&
-                        (container.startVMStatus == null || !BuildStatus.valueOf(container.startVMStatus!!).isFinish())
-                    ) {
-                        container.startVMStatus = container.status
+                    if (container is VMBuildContainer) {
+                        container.matrixControlOption = matrixOption
+                        if (modelContainer is VMBuildContainer) {
+                            container.groupContainers = modelContainer.groupContainers
+                        }
+                    } else if (container is NormalContainer) {
+                        container.matrixControlOption = matrixOption
+                        if (modelContainer is NormalContainer) {
+                            container.groupContainers = modelContainer.groupContainers
+                        }
                     }
                     return Traverse.BREAK
                 }
@@ -151,18 +209,17 @@ class ContainerBuildDetailService(
 
                 var update = false
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (container !is TriggerContainer) {
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer !is TriggerContainer && targetContainer != null) {
                         // 兼容id字段
-                        if (container.id == containerId || container.containerId == containerId) {
-                            update = true
-                            container.status = BuildStatus.SKIP.name
-                            container.startVMStatus = BuildStatus.SKIP.name
-                            container.elements.forEach {
-                                it.status = BuildStatus.SKIP.name
-                            }
-                            return Traverse.BREAK
+                        update = true
+                        targetContainer.status = BuildStatus.SKIP.name
+                        targetContainer.startVMStatus = BuildStatus.SKIP.name
+                        targetContainer.elements.forEach {
+                            it.status = BuildStatus.SKIP.name
                         }
+                        return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
                 }

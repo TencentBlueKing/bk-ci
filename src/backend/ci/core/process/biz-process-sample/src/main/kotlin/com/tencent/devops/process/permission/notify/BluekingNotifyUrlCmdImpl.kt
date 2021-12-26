@@ -54,12 +54,18 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
         commandContext.notifyValue.putAll(urlMap)
     }
 
+    @Suppress("NestedBlockDepth")
     private fun getCodeccTaskName(detail: ModelDetail): LinuxCodeCCScriptElement? {
         for (stage in detail.model.stages) {
             stage.containers.forEach { container ->
-                val codeccElemet =
+                var codeccElemet =
                     container.elements.filter { it is LinuxCodeCCScriptElement || it is LinuxPaasCodeCCScriptElement }
                 if (codeccElemet.isNotEmpty()) return codeccElemet.first() as LinuxCodeCCScriptElement
+                container.fetchGroupContainers()?.forEach {
+                    codeccElemet =
+                        it.elements.filter { it is LinuxCodeCCScriptElement || it is LinuxPaasCodeCCScriptElement }
+                    if (codeccElemet.isNotEmpty()) return codeccElemet.first() as LinuxCodeCCScriptElement
+                }
             }
         }
         return null

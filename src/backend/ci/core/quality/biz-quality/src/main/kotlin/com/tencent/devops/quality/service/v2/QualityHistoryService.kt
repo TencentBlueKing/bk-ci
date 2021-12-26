@@ -37,11 +37,13 @@ import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
+import com.tencent.devops.quality.util.QualityUrlUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -62,7 +64,8 @@ class QualityHistoryService @Autowired constructor(
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val qualityUrlUtils: QualityUrlUtils
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
@@ -232,7 +235,19 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.map {
+        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.distinctBy { it.ruleId }.map {
+            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+            interceptList.forEach { record ->
+                if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+                    record.logPrompt = qualityUrlUtils.getCodeCCUrl(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        detail = record.detail,
+                        client = client
+                    )
+                }
+            }
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
@@ -242,7 +257,7 @@ class QualityHistoryService @Autowired constructor(
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
                 checkTimes = it.checkTimes,
-                resultMsg = objectMapper.readValue(it.interceptList)
+                resultMsg = interceptList
             )
         }
     }
@@ -414,34 +429,79 @@ class QualityHistoryService @Autowired constructor(
         val ruleIdToNameMap = ruleBuildHis.map { it.hashId to it.name }.toMap()
         val recordList = batchServiceList(projectId, pipelineId, buildId, checkTimes, ruleBuildIds,
             null, null, null, null, null)
-        return recordList.map {
-            val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
-            val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
-            val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
-            val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
-            val ruleResult = if (buildHis?.status != null) buildHis.status!!.name else it.result
-            RuleInterceptHistory(
-                hashId = HashUtil.encodeLongId(it.id),
-                num = it.projectNum,
-                timestamp = it.createTime.timestamp(),
-                interceptResult = RuleInterceptResult.valueOf(ruleResult),
-                ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
-                pipelineId = it.pipelineId,
-                pipelineName = "",
-                buildId = it.buildId,
-                buildNo = "",
-                checkTimes = it.checkTimes,
-                remark = "",
-                interceptList = interceptList,
-                qualityRuleBuildHisOpt = QualityRuleBuildHisOpt(
-                    HashUtil.encodeLongId(it.id),
-                    buildHis?.gateKeepers ?: null,
-                    ruleBuildHisOpt?.stageId ?: "",
-                    ruleBuildHisOpt?.gateOptUser ?: "",
-                    ruleBuildHisOpt?.gateOptTime ?: ""
+        if (recordList.isEmpty()) {
+            return ruleBuildHis.map { rule ->
+                val ruleInterceptRecords = rule.indicators.map {
+                    QualityRuleInterceptRecord(
+                        indicatorId = it.hashId,
+                        indicatorName = it.cnName,
+                        indicatorType = null,
+                        operation = it.operation,
+                        value = it.threshold,
+                        actualValue = null,
+                        controlPoint = "",
+                        pass = false,
+                        detail = null,
+                        logPrompt = null
+                    )
+                }
+                RuleInterceptHistory(
+                    hashId = rule.hashId,
+                    num = 0,
+                    timestamp = LocalDateTime.now().timestamp(),
+                    interceptResult = RuleInterceptResult.UNCHECK,
+                    ruleHashId = "",
+                    ruleName = rule.name,
+                    pipelineId = pipelineId ?: "",
+                    pipelineName = "",
+                    buildId = buildId ?: "",
+                    buildNo = "",
+                    checkTimes = 0,
+                    remark = "",
+                    interceptList = ruleInterceptRecords
                 )
-            )
+            }
+        } else {
+            return recordList.map {
+                val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
+                interceptList.forEach { record ->
+                    if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
+                        record.logPrompt = qualityUrlUtils.getCodeCCUrl(
+                            projectId = projectId,
+                            pipelineId = pipelineId ?: "",
+                            buildId = buildId ?: "",
+                            detail = record.detail,
+                            client = client
+                        )
+                    }
+                }
+                val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
+                val buildHis = ruleBuildHis.firstOrNull { it.hashId == hisRuleHashId }
+                val ruleBuildHisOpt = ruleBuildHisOpts.firstOrNull { it.ruleHashId == hisRuleHashId }
+                val ruleResult = if (buildHis?.status != null) buildHis.status!!.name else it.result
+                RuleInterceptHistory(
+                    hashId = HashUtil.encodeLongId(it.id),
+                    num = it.projectNum,
+                    timestamp = it.createTime.timestamp(),
+                    interceptResult = RuleInterceptResult.valueOf(ruleResult),
+                    ruleHashId = hisRuleHashId,
+                    ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                    pipelineId = it.pipelineId,
+                    pipelineName = "",
+                    buildId = it.buildId,
+                    buildNo = "",
+                    checkTimes = it.checkTimes,
+                    remark = "",
+                    interceptList = interceptList,
+                    qualityRuleBuildHisOpt = QualityRuleBuildHisOpt(
+                        HashUtil.encodeLongId(it.id),
+                        buildHis?.gateKeepers ?: null,
+                        ruleBuildHisOpt?.stageId ?: "",
+                        ruleBuildHisOpt?.gateOptUser ?: "",
+                        ruleBuildHisOpt?.gateOptTime ?: ""
+                    )
+                )
+            }
         }
     }
 

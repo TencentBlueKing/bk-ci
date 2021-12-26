@@ -25,35 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.api.service
+package com.tencent.devops.quality.constant
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+object MQ {
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
-@Path("/service/dockerhost")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDispatchDockerHostResource {
+    // 流水线结束广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_CANCEL_QUALITY = "q.engine.pipeline.build.cancel.quality"
 
-    @ApiOperation("获取dockerhost列表")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Page<DockerHostZone>
+    // 流水线重试广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_RETRY_QUALITY = "q.engine.pipeline.build.retry.quality"
+
+    // 流水线超时广播队列-红线
+    const val QUEUE_PIPELINE_BUILD_TIMEOUT_QUALITY = "q.engine.pipeline.build.timeout.quality"
 }

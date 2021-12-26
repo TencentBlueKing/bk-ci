@@ -50,6 +50,13 @@ object JooqUtils {
         )
     }
 
+    fun subStr(str: Field<String>, delim: String, count: Int): Field<String> {
+        return DSL.field(
+            "SUBSTRING_INDEX({0}, {1}, {2})",
+            String::class.java, str, delim, count
+        )
+    }
+
     fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
         return if (lower) {
             DSL.field(

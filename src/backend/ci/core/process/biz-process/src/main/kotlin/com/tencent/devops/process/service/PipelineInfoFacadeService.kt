@@ -735,7 +735,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
-                it.refreshReviewOption()
+                it.resetBuildOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
@@ -845,7 +845,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (pipelineChannelCache.getIfPresent(pipelineId) != null) {
             return pipelineChannelCache.getIfPresent(pipelineId)
         }
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId) ?: return null
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId) ?: return null
         val channelCode = ChannelCode.getChannel(pipelineInfo.channel)
         if (channelCode != null) {
             pipelineChannelCache.put(pipelineId, channelCode)

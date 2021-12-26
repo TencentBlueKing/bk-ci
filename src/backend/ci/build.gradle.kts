@@ -1,7 +1,7 @@
 import com.tencent.devops.utils.findPropertyOrNull
 
 plugins {
-    id("com.tencent.devops.boot")
+    id("com.tencent.devops.boot") version "0.0.4"
     detektCheck
 }
 

@@ -25,18 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.archive
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:dispatch-docker:api-dispatch-docker"))
+}
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-
-class ArtifactoryConfigResourceApi : AbstractBuildResourceApi() {
-
-    fun getRealm(): String {
-        val path = "/ms/artifactory/api/build/artifactories/conf/realm"
-        val request = buildGet(path)
-        val responseContent = request(request, "get artifactory realm error")
-        return objectMapper.readValue<Result<String>>(responseContent).data!!
-    }
+plugins {
+    `task-deploy-to-maven`
 }

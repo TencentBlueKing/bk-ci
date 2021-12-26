@@ -24,9 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.buildless
 
-package com.tencent.devops.dispatch.docker.pojo
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableAsync
 
-data class DockerHostInfo(
-    val routeKey: String
+@MicroService
+@EnableAsync
+@ComponentScan(
+    "com.tencent.devops.buildless"
 )
+class Buildless
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Buildless::class, args)
+}

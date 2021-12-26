@@ -38,6 +38,8 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,6 +50,8 @@ class HeartbeatControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -84,7 +88,7 @@ class HeartbeatControl @Autowired constructor(
             LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_FINISH|finish(${buildInfo?.status})")
             return
         }
-        val container = pipelineRuntimeService.getContainer(
+        val container = pipelineContainerService.getContainer(
             projectId = event.projectId,
             buildId = event.buildId,
             stageId = null,
@@ -101,7 +105,7 @@ class HeartbeatControl @Autowired constructor(
         }
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
-        val runningTask = pipelineRuntimeService.getRunningTask(container.projectId, container.buildId)
+        val runningTask = pipelineTaskService.getRunningTask(container.projectId, container.buildId)
         runningTask.forEach { taskMap ->
             if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true
@@ -111,7 +115,7 @@ class HeartbeatControl @Autowired constructor(
                     message =
                     "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                     tag = taskMap["taskId"].toString(),
-                    jobId = container.containerId,
+                    jobId = container.containerHashId,
                     executeCount = executeCount
                 )
             }
@@ -122,7 +126,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                 tag = VMUtils.genStartVMTaskId(container.containerId),
-                jobId = container.containerId,
+                jobId = container.containerHashId,
                 executeCount = container.executeCount
             )
         }
@@ -136,6 +140,7 @@ class HeartbeatControl @Autowired constructor(
                 buildId = container.buildId,
                 stageId = container.stageId,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
                 reason = "Agent心跳超时/Agent Dead，请检查构建机状态",

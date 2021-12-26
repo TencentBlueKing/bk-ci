@@ -88,7 +88,7 @@ object QualityUtils {
                         interceptItem.indicatorName,
                         actualValue,
                         QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
-                        interceptItem.pass.toString()
+                        interceptItem.pass.toString(), ""
                 ))
                 resultMap[elementCnName] = resultList
             }
@@ -124,7 +124,7 @@ object QualityUtils {
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
                 .replace("##detail##", detail)
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}$fillDetailUrl'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
         }
     }
 }
