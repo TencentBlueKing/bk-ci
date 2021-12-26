@@ -127,8 +127,8 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
-
-        val containers = pipelineContainerService.listContainers(event.projectId, event.buildId) // #5090 ==0 是为了兼容旧的监控事件
+        // #5090 ==0 是为了兼容旧的监控事件
+        val containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
             .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
