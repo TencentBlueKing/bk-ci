@@ -43,6 +43,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -58,6 +59,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
@@ -80,6 +82,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.JobPipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
@@ -463,9 +466,10 @@ class TXPipelineExportService @Autowired constructor(
                 "unknown_job"
             }
             pipelineExportV2YamlConflictMapItem.job =
-                PipelineExportV2YamlConflictMapBaseItem(
+                JobPipelineExportV2YamlConflictMapBaseItem(
                     id = it.id,
-                    name = it.name
+                    name = it.name,
+                    jobId = it.jobId
                 )
             when (it.getClassType()) {
                 NormalContainer.classType -> {
@@ -518,7 +522,9 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = null,
+                        strategy = if (job.matrixGroupFlag == true) {
+                            getMatrixFromJob(job.matrixControlOption)
+                        } else null,
                         // 蓝盾这边是自定义Job ID
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
@@ -638,7 +644,9 @@ class TXPipelineExportService @Autowired constructor(
                         timeoutMinutes = if (timeoutMinutes < 480) timeoutMinutes else null,
                         env = null,
                         continueOnError = if (job.jobControlOption?.continueWhenFailed == true) true else null,
-                        strategy = null,
+                        strategy = if (job.matrixGroupFlag == true) {
+                            getMatrixFromJob(job.matrixControlOption)
+                        } else null,
                         dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
                             job.jobControlOption?.dependOnId
                         } else null
@@ -650,6 +658,18 @@ class TXPipelineExportService @Autowired constructor(
             }
         }
         return if (jobs.isEmpty()) null else jobs
+    }
+
+    private fun getMatrixFromJob(
+        matrixControlOption: MatrixControlOption?
+    ): Strategy? {
+        if (matrixControlOption == null)
+            return null
+        return Strategy(
+            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: return null,
+            fastKill = matrixControlOption.fastKill,
+            maxParallel = matrixControlOption.maxConcurrency
+        )
     }
 
     private fun getV2StepFromJob(
@@ -1069,9 +1089,11 @@ class TXPipelineExportService @Autowired constructor(
                     exportFile = exportFile
                 )
                 if (namespace.isNullOrBlank()) {
-                    "\${{ steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                    "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
                 } else {
-                    "\${{ steps.$namespace.outputs.$originKeyWithNamespace }}"
+                    "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "$namespace.outputs.$originKeyWithNamespace }}"
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
@@ -1531,10 +1553,12 @@ class TXPipelineExportService @Autowired constructor(
                 if (stepID.isNullOrBlank()) {
                     originKeyWithNamespace
                 } else {
-                    "steps.${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                    "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
                 }
             } else {
-                "steps.$namespace.outputs.$originKeyWithNamespace"
+                "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                    "$namespace.outputs.$originKeyWithNamespace"
             }
         } else if (!ciName.isNullOrBlank()) {
             ciName

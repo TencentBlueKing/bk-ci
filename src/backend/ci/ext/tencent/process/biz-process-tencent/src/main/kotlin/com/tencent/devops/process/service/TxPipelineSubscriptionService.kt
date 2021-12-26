@@ -40,12 +40,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -79,11 +78,10 @@ import java.util.Date
 @Service
 class TxPipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectCacheService: ProjectCacheService,
-    private val wechatWorkService: WechatWorkService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
     private val bsAuthProjectApi: AuthProjectApi,
@@ -295,7 +293,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
         val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
-        val parentBuildTask = pipelineRuntimeService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
+        val parentBuildTask = pipelineTaskService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
         if (parentBuildTask == null) {
             logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
@@ -310,6 +308,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                 buildId = parentBuildTask.buildId,
                 stageId = parentBuildTask.stageId,
                 containerId = parentBuildTask.containerId,
+                containerHashId = parentBuildTask.containerHashId,
                 containerType = parentBuildTask.containerType,
                 taskId = parentBuildTask.taskId,
                 taskParam = parentBuildTask.taskParams,

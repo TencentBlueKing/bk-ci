@@ -110,12 +110,13 @@ object YamlObjects {
         )
     }
 
-    fun getStrategy(fromPath: String, strategy: Any?): Strategy {
+    fun getStrategy(fromPath: String, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
+        val matrix = strategyMap["matrix"] ?: return null
         return Strategy(
-            matrix = strategyMap["matrix"],
+            matrix = matrix,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("max-parallel", strategyMap)
+            maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
         )
     }
 

@@ -37,9 +37,9 @@ import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.service.PipelineTaskService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

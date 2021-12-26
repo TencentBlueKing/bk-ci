@@ -146,7 +146,11 @@ class IamV3Service @Autowired constructor(
         val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
             ?: throw ErrorCodeException(
                 errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                    defaultMessage = "获取用户$userId 信息失败",
+                    params = arrayOf(userId)
+                )
             )
         val bgId = deptInfo.results[0].id
         logger.info("user $userId bg: $bgId bgName: $bgName")

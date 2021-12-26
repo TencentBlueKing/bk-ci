@@ -69,7 +69,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             projectId = task.projectId,
             buildId = task.buildId,
             containerId = task.containerId,
-            buildVar = variable
+            variables = variable
         ))
         extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap

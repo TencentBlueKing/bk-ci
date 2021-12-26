@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.notify.command.ExecutionVariables
 import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
 import com.tencent.devops.process.service.BuildVariableService
@@ -64,6 +65,7 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
     override val pipelineBuildFacadeService: PipelineBuildFacadeService,
     override val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
     override val buildVariableService: BuildVariableService
 ) : NotifyPipelineCmd(
     pipelineRepositoryService, pipelineRuntimeService, pipelineBuildFacadeService, client, buildVariableService
@@ -126,7 +128,7 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
         val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
-        val parentBuildTask = pipelineRuntimeService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
+        val parentBuildTask = pipelineTaskService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
         if (parentBuildTask == null) {
             logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
@@ -141,6 +143,7 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
                 buildId = parentBuildTask.buildId,
                 stageId = parentBuildTask.stageId,
                 containerId = parentBuildTask.containerId,
+                containerHashId = parentBuildTask.containerHashId,
                 containerType = parentBuildTask.containerType,
                 taskId = parentBuildTask.taskId,
                 taskParam = parentBuildTask.taskParams,
