@@ -25,56 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api.template
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserPipelineTemplateResource
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.process.service.template.TemplateFacadeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["USER_PIPELINE_TEMPLATE"], description = "用户-流水线-模板资源")
-// @Path("/user/templatePipelines")
-@Path("/user/template/pipelines")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserPipelineTemplateResource {
+@RestResource
+class UserPipelineTemplateResourceImpl @Autowired constructor(
+    private val templateFacadeService: TemplateFacadeService
+) : UserPipelineTemplateResource {
 
-    @ApiOperation("质量红线-获取模版列表")
-    @GET
-    @Path("/projects/{projectId}/listQualityViewTemplates")
-    fun listQualityViewTemplates(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    override fun listQualityViewTemplates(
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
         projectId: String,
-        @ApiParam("模版类型", required = false)
-        @QueryParam("templateType")
         templateType: TemplateType?,
-        @ApiParam("是否已关联到store", required = false)
-        @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("模板名称关键字", required = false)
-        @QueryParam("keywords")
         keywords: String?
-    ): Result<TemplateListModel>
+    ): Result<TemplateListModel> {
+        return Result(
+            templateFacadeService.listTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateType = templateType,
+                storeFlag = storeFlag,
+                page = page,
+                pageSize = pageSize,
+                keywords = keywords
+            )
+        )
+    }
 }
