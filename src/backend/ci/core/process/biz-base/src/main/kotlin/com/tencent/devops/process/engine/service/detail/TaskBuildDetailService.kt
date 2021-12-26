@@ -31,7 +31,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -39,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
@@ -47,7 +47,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -55,13 +54,11 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
 class TaskBuildDetailService(
     private val client: Client,
     private val buildVariableService: BuildVariableService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildLogPrinter: BuildLogPrinter,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
@@ -149,7 +146,6 @@ class TaskBuildDetailService(
                     if (e.id == taskId) {
                         if (e is ManualReviewUserTaskElement) {
                             e.status = BuildStatus.REVIEWING.name
-                            //                        c.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers.forEach { reviewUser ->
@@ -158,7 +154,19 @@ class TaskBuildDetailService(
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
-                        } else if (e is QualityGateInElement || e is QualityGateOutElement) {
+                        } else if (e is MatrixStatusElement &&
+                            e.originClassType == ManualReviewUserTaskElement.classType) {
+                            e.status = BuildStatus.REVIEWING.name
+                            // Replace the review user with environment
+                            val list = mutableListOf<String>()
+                            e.reviewUsers?.forEach { reviewUser ->
+                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                    .split(delimiters))
+                            }
+                            e.reviewUsers = list
+                        } else if (e is QualityGateInElement || e is QualityGateOutElement ||
+                            e.getTaskAtom() == QualityGateInElement.classType ||
+                            e.getTaskAtom() == QualityGateOutElement.classType) {
                             e.status = BuildStatus.REVIEWING.name
                             c.status = BuildStatus.REVIEWING.name
                         } else {
@@ -293,24 +301,6 @@ class TaskBuildDetailService(
             buildStatus = BuildStatus.RUNNING,
             operation = "taskEnd"
         )
-        updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineRuntimeService.updateTaskStatusInfo(
-                projectId = projectId,
-                buildId = buildId,
-                taskId = updateTaskStatusInfo.taskId,
-                taskStatus = updateTaskStatusInfo.buildStatus,
-                transactionContext = dslContext
-            )
-            if (!updateTaskStatusInfo.message.isNullOrBlank()) {
-                buildLogPrinter.addLine(
-                    buildId = buildId,
-                    message = updateTaskStatusInfo.message,
-                    tag = updateTaskStatusInfo.taskId,
-                    jobId = updateTaskStatusInfo.containerHashId,
-                    executeCount = updateTaskStatusInfo.executeCount
-                )
-            }
-        }
         return updateTaskStatusInfos
     }
 
@@ -494,13 +484,14 @@ class TaskBuildDetailService(
                     return if (stage.id.equals(stageId)) Traverse.CONTINUE else Traverse.SKIP
                 }
 
-                override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                    if (container.id.equals(containerId)) {
-                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(container.elements.size) }
-                        container.elements.forEach { e ->
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(targetContainer.elements.size) }
+                        targetContainer.elements.forEach { e ->
                             if (e.id.equals(taskId)) {
                                 // 设置插件状态为排队状态
-                                container.status = BuildStatus.QUEUE.name
+                                targetContainer.status = BuildStatus.QUEUE.name
                                 update = true
                                 if (element != null) { // 若element不为null，说明element内的input有改动，需要替换
                                     element.status = null
@@ -516,7 +507,7 @@ class TaskBuildDetailService(
                             }
                         }
                         if (element != null) {
-                            container.elements = newElement
+                            targetContainer.elements = newElement
                         }
                         return Traverse.BREAK
                     }

@@ -58,6 +58,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -83,6 +84,7 @@ class BuildStartControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
@@ -289,11 +291,11 @@ class BuildStartControl @Autowired constructor(
         run lit@{
             container.elements.forEach {
                 if (it.id == taskId) {
-                    pipelineRuntimeService.updateContainerStatus(
+                    pipelineContainerService.updateContainerStatus(
                         projectId = buildInfo.projectId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.id!!,
+                        containerId = container.containerId!!,
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED

@@ -165,14 +165,14 @@ object Runner {
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
                     Preconditions.checkNotNull(
-                        obj = buildTask.elementId,
+                        obj = buildTask.taskId,
                         exception = RemoteServiceException("Not valid build elementId")
                     )
 
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
-                        LoggerService.elementId = buildTask.elementId!!
+                        LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
                         // 开始Task执行
@@ -270,8 +270,6 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addErrorLine(message)
-
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
             errorMessage = CommonUtils.interceptStringInLength(
@@ -331,7 +329,7 @@ object Runner {
         LoggerService.addFoldEndLine("-----")
     }
 
-    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.", "matrix.")
 
     /**
      * 显示用户预定义变量

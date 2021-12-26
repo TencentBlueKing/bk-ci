@@ -89,9 +89,9 @@ class PipelineBuildStageDao {
         logger.info("save the buildStage=$buildStage, result=${count == 1}")
     }
 
-    fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
+    fun batchSave(dslContext: DSLContext, stageList: Collection<PipelineBuildStage>) {
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            stageList.forEach {
                 dslContext.insertInto(this)
                     .set(PROJECT_ID, it.projectId)
                     .set(PIPELINE_ID, it.pipelineId)
@@ -117,9 +117,9 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
+    fun batchUpdate(dslContext: DSLContext, stageList: List<TPipelineBuildStageRecord>) {
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
+            stageList.forEach {
                 dslContext.update(this)
                     .set(PIPELINE_ID, it.pipelineId)
                     .set(SEQ, it.seq)
@@ -246,10 +246,10 @@ class PipelineBuildStageDao {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(
                     COST, COST + JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    )
+                    DatePart.SECOND,
+                    START_TIME.cast(java.sql.Timestamp::class.java),
+                    END_TIME.cast(java.sql.Timestamp::class.java)
+                )
                 )
             } else if (buildStatus.isRunning() || initStartTime == true) {
                 update.set(START_TIME, LocalDateTime.now())

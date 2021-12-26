@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -142,6 +144,7 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
 
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
@@ -577,4 +580,30 @@ interface ServiceBuildResource {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
+
+    @ApiOperation("手动启动流水线")
+    @POST
+    @Path("/{pipelineId}/")
+    fun manualStartupNew(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null,
+        @ApiParam("启动类型", required = false)
+        @QueryParam("startType")
+        startType: StartType
+    ): Result<BuildId>
 }

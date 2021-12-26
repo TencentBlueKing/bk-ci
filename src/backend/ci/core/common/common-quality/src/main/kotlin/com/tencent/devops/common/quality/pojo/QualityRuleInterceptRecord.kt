@@ -52,5 +52,5 @@ data class QualityRuleInterceptRecord(
     @ApiModelProperty("指标详情", required = true)
     val detail: String?,
     @ApiModelProperty("指标日志输出详情", required = false)
-    val logPrompt: String?
+    var logPrompt: String?
 )

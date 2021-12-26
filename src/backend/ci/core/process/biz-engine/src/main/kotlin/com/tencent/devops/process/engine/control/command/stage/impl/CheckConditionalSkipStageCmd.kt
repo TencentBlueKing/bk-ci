@@ -48,14 +48,14 @@ class CheckConditionalSkipStageCmd constructor(
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        // 仅在初次进入Container
+        // 仅在初次进入Stage
         return commandContext.stage.controlOption?.finally != true &&
             commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
             commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {
-        // 仅在初次进入Container时进行跳过和依赖判断
+        // 仅在初次进入Stage时进行跳过和依赖判断
         if (checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "s(${commandContext.stage.stageId}) skipped"
@@ -84,7 +84,7 @@ class CheckConditionalSkipStageCmd constructor(
                 projectId = stage.projectId,
                 buildId = stage.buildId,
                 containerId = null,
-                buildVar = variables
+                variables = variables
             )
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,

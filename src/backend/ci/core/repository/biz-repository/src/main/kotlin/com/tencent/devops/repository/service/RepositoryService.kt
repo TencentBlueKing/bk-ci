@@ -1654,6 +1654,30 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    fun createGitTag(
+        userId: String,
+        tagName: String,
+        ref: String,
+        repositoryConfig: RepositoryConfig,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
+        logger.info("the repo is:$repo")
+        val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
+        val getGitTokenResult = getGitToken(finalTokenType, userId)
+        if (getGitTokenResult.isNotOk()) {
+            return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
+        }
+        val token = getGitTokenResult.data!!
+        return gitService.createGitTag(
+            repoName = repo.projectName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = finalTokenType
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
     }

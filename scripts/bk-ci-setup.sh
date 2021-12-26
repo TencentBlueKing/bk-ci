@@ -315,6 +315,15 @@ setup_ci_gateway (){
   else
     echo "$CTRL_DIR/bin/reg_consul_svc is not executable, skip register domain: bk-ci.service.consul."
   fi
+  if ! grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+    > $BK_CI_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf
+  else
+    cat > $BK_CI_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf << EOF 
+upstream __BK_REPO_HOST__ {
+    server __BK_REPO_GATEWAY_IP__;
+}
+EOF
+  fi
   # 渲染gateway配置及frontend页面.
   render_ci "$MS_NAME" || return $?
 }

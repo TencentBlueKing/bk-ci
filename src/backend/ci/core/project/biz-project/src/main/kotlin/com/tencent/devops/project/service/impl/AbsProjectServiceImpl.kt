@@ -46,6 +46,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
+import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -103,7 +105,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.isEmpty() || name.length > 32) {
+                if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -117,8 +119,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 个字符+数字，以小写字母开头
-                if (name.length < 2 || name.length > 32) {
+                // 2 ~ 64 个字符+数字，以小写字母开头
+                if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR

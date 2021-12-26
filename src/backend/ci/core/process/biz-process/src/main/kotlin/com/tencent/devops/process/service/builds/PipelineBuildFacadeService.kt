@@ -90,6 +90,8 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -124,6 +126,8 @@ class PipelineBuildFacadeService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
@@ -423,8 +427,6 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
-                    // #4531 重试完整构建时将所有stage的审核状态恢复
-                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -692,7 +694,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -932,7 +934,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -1777,7 +1779,7 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val tasks = pipelineRuntimeService.getRunningTask(projectId, buildId)
+            val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
 
             tasks.forEach { task ->
                 val taskId = task["taskId"] ?: ""
@@ -1842,7 +1844,7 @@ class PipelineBuildFacadeService(
         var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
-            val startUpVMTask = pipelineRuntimeService.getBuildTask(
+            val startUpVMTask = pipelineTaskService.getBuildTask(
                 projectId = projectCode,
                 buildId = buildId,
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
@@ -1861,7 +1863,7 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val container = pipelineRuntimeService.getContainer(
+        val container = pipelineContainerService.getContainer(
             projectId = buildInfo.projectId,
             buildId = buildId,
             stageId = null,
@@ -1884,6 +1886,7 @@ class PipelineBuildFacadeService(
                         buildId = buildId,
                         stageId = container.stageId,
                         containerId = vmSeqId,
+                        containerHashId = container.containerHashId,
                         containerType = container.containerType,
                         actionType = ActionType.TERMINATE,
                         reason = msg
@@ -1898,7 +1901,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = vmSeqId.toInt(),
+            containerId = vmSeqId,
             vmInfo = vmInfo
         )
     }

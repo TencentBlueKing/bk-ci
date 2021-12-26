@@ -113,22 +113,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?
     ): Result<BuildId> {
-        checkUserId(userId)
-        checkParam(projectId, pipelineId)
-        return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.SERVICE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
-            )
+        return manualStartupNew(
+            userId = userId,
+            startType = StartType.SERVICE,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = values,
+            channelCode = channelCode,
+            buildNo = buildNo
         )
     }
 
@@ -540,6 +532,34 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,
                 containerId = taskPauseExecute.containerId
+            )
+        )
+    }
+
+    override fun manualStartupNew(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>,
+        channelCode: ChannelCode,
+        buildNo: Int?,
+        startType: StartType
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = startType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = true
+                )
             )
         )
     }
