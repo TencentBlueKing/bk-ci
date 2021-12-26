@@ -611,7 +611,7 @@ class QualityHistoryService @Autowired constructor(
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
         val buildIdList = recordList.map { it.buildId }
-        val buildIdToNameMap = getBuildIdToNameMap(buildIdList.toSet())
+        val buildIdToNameMap = getBuildIdToNameMap(projectId, buildIdList.toSet())
 
         recordList.filter { it.result == RuleInterceptResult.FAIL.name }.forEach { record ->
             val buildHisRuleStatus = ruleIdToRuleMap[record.ruleId]?.status
