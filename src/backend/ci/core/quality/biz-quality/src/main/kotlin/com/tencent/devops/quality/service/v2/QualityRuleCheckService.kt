@@ -275,8 +275,7 @@ class QualityRuleCheckService @Autowired constructor(
             val result = checkIndicator(
                 rule.controlPoint.name,
                 rule.indicators,
-                metadataList,
-                rule.taskSteps
+                metadataList
             )
             val interceptRecordList = result.second
             val interceptResult = result.first
@@ -436,40 +435,9 @@ class QualityRuleCheckService @Autowired constructor(
         controlPointName: String,
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
-        ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
-        val checkMetaList = mutableListOf<QualityHisMetadata>()
-
-        logger.info("QUALITY|metadataList is|$metadataList")
-
-        metadataList.forEach { metadata ->
-            if (!ruleTaskSteps.isNullOrEmpty()) {
-                ruleTaskSteps.forEach { ruleTask ->
-                    if ((ruleTask.indicatorEnName == metadata.enName) &&
-                        metadata.taskName.startsWith(ruleTask.taskName ?: "")) {
-                        checkMetaList.add(metadata)
-                    }
-                }
-            } else {
-                checkMetaList.add(metadata)
-            }
-        }
-
-        val metadataMap = checkMetaList.map { it.enName to it }.toMap().toMutableMap()
-
-        indicators.forEach { indicator ->
-            if (!metadataMap.containsKey(indicator.enName) && metadataList.any { it.enName == indicator.enName &&
-                it.elementType == indicator.elementType }) {
-                metadataMap[indicator.enName] = metadataList.last {
-                    it.enName == indicator.enName && it.elementType == indicator.elementType
-                }
-            }
-        }
-
-        logger.info("QUALITY|checkMetaList is|$checkMetaList, metadataMap is|$metadataMap, indicators is: $indicators")
-
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -479,8 +447,10 @@ class QualityRuleCheckService @Autowired constructor(
             val filterMetadataList = if (indicator.isScriptElementIndicator()) {
                 listOf(metadataList
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                    .findLast { indicator.enName == it.enName })
+                    .findLast { indicator.enName == it.enName && indicator.taskName == it.taskName })
             } else {
+                val metadataMap = metadataList.filter { it.taskName == indicator.taskName }
+                    .map { it.enName to it }.toMap()
                 indicator.metadataList.map { metadataMap[it.enName] }
             }
 
