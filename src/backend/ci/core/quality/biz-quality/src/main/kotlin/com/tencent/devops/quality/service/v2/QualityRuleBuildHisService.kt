@@ -194,6 +194,11 @@ class QualityRuleBuildHisService constructor(
             HashUtil.decodeIdToLong(it.hashId).toString() to it
         }.toMap()
         return allRule.map {
+            val ruleTask = if (it.taskSteps.isNullOrBlank()) {
+                mutableListOf()
+            } else {
+                JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
+            }.toMutableList()
             val thresholdList = it.indicatorThresholds.split(",")
             val opList = it.indicatorOperations.split(",")
             val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
@@ -214,6 +219,12 @@ class QualityRuleBuildHisService constructor(
 
                     indicatorCopy.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
                     indicatorCopy.threshold = item?.second ?: indicator.threshold
+
+                    val temp = ruleTask.firstOrNull { task -> task.indicatorEnName == indicator.enName }
+                    indicatorCopy.taskName = temp?.taskName
+                    if (temp != null) {
+                        ruleTask.remove(temp)
+                    }
 
                     return@INDICATOR indicatorCopy
                 },
