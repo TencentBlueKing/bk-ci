@@ -199,6 +199,7 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_DELETE_NEED = "2101984" // 无删除权限
     const val ERROR_PERMISSION_LIST_NEED = "2101985" // 无列表权限
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101991" // {0}非项目{1}管理员
 
     // 流水线模块业务错误21011
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败

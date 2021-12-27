@@ -62,15 +62,19 @@ class BluekingV3AuthProjectApi constructor(
         group: BkAuthGroup?
     ): Boolean {
         if (group != null && group == BkAuthGroup.MANAGER) {
-            return isProjectManager(user, serviceCode, projectCode)
+            return checkProjectManager(user, serviceCode, projectCode)
         }
+        return checkProjectUser(user, serviceCode, projectCode)
+    }
+
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
         val checkAction = checkAction(projectCode, actionType, user)
         logger.info("isProjectUser checkAction:$checkAction")
         return checkAction
     }
 
-    override fun isProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+    override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
         val checkAction = checkAction(projectCode, actionType, userId)
         logger.info("isProjectManager checkAction:$checkAction")
