@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwSignResourceV3 {
 
-    @ApiOperation("获取签名接口token")
+    @ApiOperation("获取签名任务历史")
     @GET
     @Path("/history")
     fun getHistorySign(
