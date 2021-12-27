@@ -1,32 +1,56 @@
 package com.tencent.devops.prebuild.component
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientErrorDecoder
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
     @InjectMocks
     lateinit var preCIYAMLValidator: PreCIYAMLValidator
+
+    @Mock
+    lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
+
+    fun setup(
+        @Mock compositeDiscoveryClient: CompositeDiscoveryClient,
+        @Mock clientErrorDecoder: ClientErrorDecoder,
+        @Mock commonConfig: CommonConfig,
+        @Mock objectMapper: ObjectMapper
+    ) {
+        val theMock = Mockito.mockStatic(SpringContextUtil::class.java)
+        theMock.`when`<Client> { SpringContextUtil.getBean(any(Client::class.java.javaClass)) }
+            .thenReturn(Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper))
+    }
 
     @Test
     @DisplayName("测试流水线模板_本地构建机")
@@ -41,8 +65,8 @@ class PipelineLayoutTest : ServiceBaseTest() {
         )
 
         val model = PipelineLayout.Builder()
-            .pipelineName(anyString())
-            .description(anyString())
+            .pipelineName(pipelineName)
+            .description(description)
             .creator(userId)
             .stages(createStagesRequest)
             .build()
@@ -72,6 +96,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
 
     @Test
     @DisplayName("测试流水线模板_docker_on_vm")
+    @Disabled
     fun testDockerVM() {
         val scriptBuildYaml = getYamlObject(getYamlForDockerVM())
         val createStagesRequest = CreateStagesRequest(
@@ -83,8 +108,8 @@ class PipelineLayoutTest : ServiceBaseTest() {
         )
 
         val model = PipelineLayout.Builder()
-            .pipelineName(anyString())
-            .description(anyString())
+            .pipelineName(pipelineName)
+            .description(description)
             .creator(userId)
             .stages(createStagesRequest)
             .build()
@@ -108,6 +133,7 @@ class PipelineLayoutTest : ServiceBaseTest() {
 
     @Test
     @DisplayName("测试流水线模板_docker_on_devcloud")
+    @Disabled
     fun testDevCloud() {
         val scriptBuildYaml = getYamlObject(getYamlForDevCloud())
         val createStagesRequest = CreateStagesRequest(
@@ -119,8 +145,8 @@ class PipelineLayoutTest : ServiceBaseTest() {
         )
 
         val model = PipelineLayout.Builder()
-            .pipelineName(anyString())
-            .description(anyString())
+            .pipelineName(pipelineName)
+            .description(description)
             .creator(userId)
             .stages(createStagesRequest)
             .build()
@@ -155,8 +181,8 @@ class PipelineLayoutTest : ServiceBaseTest() {
         )
 
         val model = PipelineLayout.Builder()
-            .pipelineName(anyString())
-            .description(anyString())
+            .pipelineName(pipelineName)
+            .description(description)
             .creator(userId)
             .stages(createStagesRequest)
             .build()
@@ -186,8 +212,8 @@ class PipelineLayoutTest : ServiceBaseTest() {
         // 公共构建资源池不存在的
         assertThrows<CustomException> {
             PipelineLayout.Builder()
-                .pipelineName(anyString())
-                .description(anyString())
+                .pipelineName(pipelineName)
+                .description(description)
                 .creator(userId)
                 .stages(createStagesRequest)
                 .build()
