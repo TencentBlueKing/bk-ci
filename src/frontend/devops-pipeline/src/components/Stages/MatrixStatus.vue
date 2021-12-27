@@ -30,7 +30,6 @@
         <transition name="slide-right">
             <logo name="pause" size="12" v-if="status === 'PAUSE'" class="status-logo pause"></logo>
         </transition>
-        <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
 </template>
 
@@ -61,9 +60,9 @@
     text-align: center;
     overflow: hidden;
     font-size: 14px;
-    width: $serialSize;
-    height: $serialSize;
-    line-height: $serialSize;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
     box-sizing: border-box;
 
     .status-logo {
@@ -118,32 +117,6 @@
         &:before {
             display: inline-block;
             animation: rotating infinite .6s ease-in-out;
-        }
-    }
-
-    .slide-top-enter, .slide-top-leave-to {
-        transform: translateY(42px);
-    }
-    .slide-down-enter, .slide-down-leave-to {
-        transform: translateY(-42px);
-    }
-    .slide-left-enter, .slide-left-leave-to {
-        transform: translateX(42px);
-    }
-    .slide-right-enter, .slide-right-leave-to {
-        transform: translateX(-42px);
-    }
-
-    &.readonly {
-        font-size: 12px;
-        font-weight: normal;
-        background-color: transparent;
-        &.container {
-            > span,
-            > i,
-            > svg {
-                color: white;
-            }
         }
     }
 }
