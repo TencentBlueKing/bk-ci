@@ -109,9 +109,9 @@ interface ServiceProjectAuthResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/{projectCode}/users/{userId}/isProjectManager")
+    @Path("/{projectCode}/users/{userId}/checkProjectManager")
     @ApiOperation("判断是否是项目管理员")
-    fun isProjectManager(
+    fun checkProjectManager(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,

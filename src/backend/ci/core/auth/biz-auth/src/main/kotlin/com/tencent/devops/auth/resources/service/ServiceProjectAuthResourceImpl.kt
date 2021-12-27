@@ -81,8 +81,8 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun isProjectManager(token: String, userId: String, projectCode: String): Result<Boolean> {
-        return Result(permissionProjectService.isProjectManager(
+    override fun checkProjectManager(token: String, userId: String, projectCode: String): Result<Boolean> {
+        return Result(permissionProjectService.checkProjectManager(
             userId = userId,
             projectCode = projectCode
         ))
