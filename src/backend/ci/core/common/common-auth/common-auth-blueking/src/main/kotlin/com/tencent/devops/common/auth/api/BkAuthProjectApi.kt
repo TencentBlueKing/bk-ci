@@ -91,15 +91,7 @@ class BkAuthProjectApi constructor(
         if (group != null && group == BkAuthGroup.MANAGER) {
             return checkProjectManager(user, serviceCode, projectCode)
         }
-        val userResourcesByPermissions = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = projectAuthServiceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = projectCode,
-            permissions = setOf(AuthPermission.VIEW)
-        ) { emptyList() }
-
-        return userResourcesByPermissions.isNotEmpty()
+        return checkProjectUser(user, serviceCode, projectCode)
     }
 
     override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
