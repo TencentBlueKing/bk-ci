@@ -32,6 +32,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
@@ -42,14 +43,14 @@ class PipelineLayoutTest : ServiceBaseTest() {
     lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
 
     fun setup(
-        @Mock compositeDiscoveryClient: CompositeDiscoveryClient,
+        @Mock consulClient: ConsulDiscoveryClient,
         @Mock clientErrorDecoder: ClientErrorDecoder,
         @Mock commonConfig: CommonConfig,
         @Mock objectMapper: ObjectMapper
     ) {
         val theMock = Mockito.mockStatic(SpringContextUtil::class.java)
         theMock.`when`<Client> { SpringContextUtil.getBean(any(Client::class.java.javaClass)) }
-            .thenReturn(Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper))
+            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, objectMapper))
     }
 
     @Test
