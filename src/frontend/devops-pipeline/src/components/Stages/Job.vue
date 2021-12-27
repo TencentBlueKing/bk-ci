@@ -123,7 +123,7 @@
                         suffix = `(${suffix})`
                     }
                 }
-                return container.status === 'PREPARE_ENV' ? this.$t('editPage.prepareEnv') : `${container.name}${suffix}`
+                return (container.status === 'PREPARE_ENV' && this.containerGroupIndex === undefined) ? this.$t('editPage.prepareEnv') : `${container.name}${suffix}`
             },
             isOnlyOneContainer () {
                 return this.containerLength === 1
