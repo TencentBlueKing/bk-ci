@@ -275,7 +275,8 @@ class QualityRuleCheckService @Autowired constructor(
             val result = checkIndicator(
                 rule.controlPoint.name,
                 rule.indicators,
-                metadataList
+                metadataList,
+                rule.taskSteps
             )
             val interceptRecordList = result.second
             val interceptResult = result.first
@@ -435,9 +436,19 @@ class QualityRuleCheckService @Autowired constructor(
         controlPointName: String,
         indicators: List<QualityIndicator>,
         metadataList: List<QualityHisMetadata>,
+        ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
+        var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
+        if (!ruleTaskStepsCopy.isNullOrEmpty()) {
+            indicators.forEach { indicator ->
+                val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.enName }
+                indicator.taskName = taskStep?.taskName
+                if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
+            }
+        }
+        logger.info("QUALITY|indicators is:$indicators")
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -449,10 +460,19 @@ class QualityRuleCheckService @Autowired constructor(
                     .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
                     .findLast { indicator.enName == it.enName && indicator.taskName == it.taskName })
             } else {
-                val metadataMap = metadataList.filter { it.taskName == indicator.taskName }
-                    .map { it.enName to it }.toMap()
-                indicator.metadataList.map { metadataMap[it.enName] }
+                if (indicator.taskName.isNullOrBlank()) {
+                    indicator.metadataList.map {
+                        metadata -> metadataList.firstOrNull { it.enName == metadata.enName }
+                    }.toList()
+                } else {
+                    metadataList.filter {
+                        it.taskName == indicator.taskName &&
+                        indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
+                    }
+                }
             }
+
+            logger.info("QUALITY|filterMetadataList is:$filterMetadataList")
 
             // 遍历所有基础数据
             var elementDetail = ""
