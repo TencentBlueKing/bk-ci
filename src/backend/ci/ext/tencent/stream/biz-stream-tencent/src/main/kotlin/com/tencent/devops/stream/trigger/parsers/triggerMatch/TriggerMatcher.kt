@@ -28,12 +28,10 @@ import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParam
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
-import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
-import com.tencent.devops.stream.trigger.pojo.TriggerResult
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
@@ -87,6 +85,7 @@ class TriggerMatcher @Autowired constructor(
 
         return if (context.gitEvent.isDeleteEvent()) {
             deleteEventMatch(
+                context = context,
                 triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
                 objectKind = context.requestEvent.objectKind
             )
@@ -160,15 +159,22 @@ class TriggerMatcher @Autowired constructor(
     }
 
     fun deleteEventMatch(
+        context: StreamTriggerContext,
         triggerOn: TriggerOn,
         objectKind: String
     ): TriggerResult {
+
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
-            ?: return TriggerResult(trigger = false, timeTrigger = false, deleteTrigger = false)
+            ?: return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         return if (objectKind in deleteObjectKinds) {
-            TriggerResult(trigger = true, timeTrigger = false, deleteTrigger = false)
+            val startParams = getStartParams(
+                context = context,
+                triggerOn = triggerOn,
+                isTrigger = true
+            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = false)
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, deleteTrigger = false)
+            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         }
     }
 

@@ -73,13 +73,12 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.pojo.git.isDeleteBranch
-import com.tencent.devops.stream.pojo.git.isDeleteTag
 
 @Suppress("ComplexMethod")
 object ModelParameters {
