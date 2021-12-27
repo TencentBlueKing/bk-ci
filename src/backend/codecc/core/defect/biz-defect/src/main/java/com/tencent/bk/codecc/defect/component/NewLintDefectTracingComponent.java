@@ -476,14 +476,14 @@ public class NewLintDefectTracingComponent extends AbstractDefectTracingComponen
                 && (lintDefectV2Entity.getStatus() & DefectStatus.FIXED.value()) == 0
                 && (PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 || (CollectionUtils.isNotEmpty(pathList)
-                && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList)))) {
+                && !PathUtils.checkIfMaskByPath(filePath, pathList)))) {
             lintDefectV2Entity.setStatus(lintDefectV2Entity.getStatus() | ComConstants.TaskFileStatus.PATH_MASK.value());
             lintDefectV2Entity.setExcludeTime(curTime);
             return true;
         }
         // 如果已经是被路径屏蔽的，但是实质没有被路径屏蔽，则要把屏蔽状态去掉
         else if ((CollectionUtils.isEmpty(pathList)
-                || PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathList))
+                || PathUtils.checkIfMaskByPath(filePath, pathList))
                 && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 && (lintDefectV2Entity.getStatus() & ComConstants.TaskFileStatus.PATH_MASK.value()) > 0) {
             lintDefectV2Entity.setStatus(lintDefectV2Entity.getStatus() - ComConstants.TaskFileStatus.PATH_MASK.value());

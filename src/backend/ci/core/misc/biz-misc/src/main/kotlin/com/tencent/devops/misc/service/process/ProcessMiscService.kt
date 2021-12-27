@@ -142,7 +142,7 @@ class ProcessMiscService @Autowired constructor(
     ): List<PipelineBuildDetail>? {
         var buildDetailList: List<PipelineBuildDetail>? = null
         val buildDetailRecords = processDao.getPipelineBuildDetailList(dslContext, buildIdList)
-        if (buildDetailRecords != null) {
+        if (!buildDetailRecords.isNullOrEmpty()) {
             buildDetailList = mutableListOf()
             buildDetailRecords.forEach { buildDetailRecord ->
                 buildDetailList.add(
@@ -166,7 +166,7 @@ class ProcessMiscService @Autowired constructor(
     ): List<PipelineModel>? {
         var pipelineResourceList: List<PipelineModel>? = null
         val pipelineResourceRecords = processDao.getPipelineResourceList(dslContext, pipelineId)
-        if (pipelineResourceRecords != null) {
+        if (!pipelineResourceRecords.isNullOrEmpty()) {
             pipelineResourceList = mutableListOf()
             pipelineResourceRecords.forEach { pipelineResourceRecord ->
                 pipelineResourceList.add(
@@ -201,7 +201,7 @@ class ProcessMiscService @Autowired constructor(
     ): List<PipelineModel>? {
         var pipelineResourceVersionList: List<PipelineModel>? = null
         val pipelineResourceVersionRecords = processDao.getPipelineResourceVersionList(dslContext, pipelineId)
-        if (pipelineResourceVersionRecords != null) {
+        if (!pipelineResourceVersionRecords.isNullOrEmpty()) {
             pipelineResourceVersionList = mutableListOf()
             pipelineResourceVersionRecords.forEach { pipelineResourceVersionRecord ->
                 pipelineResourceVersionList.add(

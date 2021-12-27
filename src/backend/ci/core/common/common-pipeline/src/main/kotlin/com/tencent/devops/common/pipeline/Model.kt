@@ -75,6 +75,7 @@ data class Model(
                     is VMBuildContainer -> {
                         VMBuildContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,
@@ -105,6 +106,7 @@ data class Model(
                     is NormalContainer -> {
                         NormalContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,
@@ -159,11 +161,14 @@ data class Model(
             if (index == 0) {
                 return@forEachIndexed
             }
-            stage.containers.forEach { container ->
-                if (container.id == vmSeqId) {
-                    return container
-                }
-            }
+            return stage.getContainer(vmSeqId) ?: return@forEachIndexed
+        }
+        return null
+    }
+
+    fun getStage(stageId: String): Stage? {
+        stages.forEach { stage ->
+            if (stage.id == stageId) return stage
         }
         return null
     }

@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 
 /**
  *
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
  */
 data class PipelineBuildContainerControlOption(
     val jobControlOption: JobControlOption,
+    val matrixControlOption: MatrixControlOption? = null,
     val inFinallyStage: Boolean = false,
     val mutexGroup: MutexGroup? = null,
     var containPostTaskFlag: Boolean? = null // 是否包含post任务

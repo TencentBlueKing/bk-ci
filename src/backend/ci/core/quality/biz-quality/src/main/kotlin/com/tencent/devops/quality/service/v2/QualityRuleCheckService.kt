@@ -457,7 +457,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
+                        if (it?.value != null && NumberUtils.isDigits(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -603,7 +603,7 @@ class QualityRuleCheckService @Autowired constructor(
                     .replace("##taskId##", taskId.toString())
                     .replace("##buildId##", buildId)
                     .replace("##detail##", record.detail!!)
-                "<a target='_blank' href='$fillDetailUrl'>查看详情</a>"
+                "<a target='_blank' href='/console$fillDetailUrl'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

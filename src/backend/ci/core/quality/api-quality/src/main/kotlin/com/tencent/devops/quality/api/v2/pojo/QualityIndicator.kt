@@ -43,7 +43,7 @@ data class QualityIndicator(
     var operation: QualityOperation,
     val operationList: List<QualityOperation>,
     var threshold: String,
-    val thresholdType: QualityDataType,
+    var thresholdType: QualityDataType,
     val readOnly: Boolean,
     val type: String,
     val tag: String?,

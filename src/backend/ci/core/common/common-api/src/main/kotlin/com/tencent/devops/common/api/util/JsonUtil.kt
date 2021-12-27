@@ -257,4 +257,8 @@ object JsonUtil {
     fun <T> mapTo(map: Map<String, Any>, type: Class<T>): T = getObjectMapper().readValue(
         getObjectMapper().writeValueAsString(map), type
     )
+
+    fun <T> anyTo(any: Any?, typeReference: TypeReference<T>): T = getObjectMapper().readValue(
+        getObjectMapper().writeValueAsString(any), typeReference
+    )
 }
