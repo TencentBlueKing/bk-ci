@@ -124,7 +124,11 @@ class TemplateService @Autowired constructor(
     }
 
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
-        statisticsPipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+        statisticsPipelinePermissionService.isProjectUser(
+            userId = userId,
+            projectId = projectId,
+            group = BkAuthGroup.MANAGER
+        )
 
     fun listTemplateByProjectIds(
         projectIds: Set<String>,
@@ -187,6 +191,7 @@ class TemplateService @Autowired constructor(
      * 从listTemplate与listTemplateByProjectIds中抽取出的公共方法
      * 填充基础模板的其他附加信息
      */
+    @Suppress("NestedBlockDepth")
     fun fillResult(
         context: DSLContext,
         templates: Result<out Record>?,
@@ -219,7 +224,10 @@ class TemplateService @Autowired constructor(
             }
 
             if (templateRecord == null) {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS, defaultMessage = "模板不存在")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                    defaultMessage = "模板不存在"
+                )
             } else {
                 val modelStr = templateRecord["template"] as String
                 val version = templateRecord["version"] as Long
@@ -234,7 +242,11 @@ class TemplateService @Autowired constructor(
 
                 val associateCodes = listAssociateCodes(record["projectId"] as String, model)
                 val associatePipeline =
-                    templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
+                    templatePipelineDao.listPipeline(
+                        context,
+                        PipelineInstanceTypeEnum.CONSTRAINT.type,
+                        setOf(templateId)
+                    )
 
                 val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
 
@@ -377,6 +389,7 @@ class TemplateService @Autowired constructor(
     /**
      * 列举这个模板关联的代码库
      */
+    @Suppress("NestedBlockDepth","ComplexMethod")
     private fun listAssociateCodes(projectId: String, model: Model): List<String> {
         val codes = ArrayList<String>()
         model.stages.forEach { stage ->
@@ -384,12 +397,16 @@ class TemplateService @Autowired constructor(
                 container.elements.forEach element@{ element ->
                     when (element) {
                         is CodeGitElement -> codes.add(
-                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
-                                ?: return@element
+                            getCode(
+                                projectId = projectId,
+                                repositoryConfig = RepositoryConfigUtils.buildConfig(element)
+                            ) ?: return@element
                         )
                         is GithubElement -> codes.add(
-                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
-                                ?: return@element
+                            getCode(
+                                projectId = projectId,
+                                repositoryConfig = RepositoryConfigUtils.buildConfig(element)
+                            ) ?: return@element
                         )
                         is CodeSvnElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
@@ -424,7 +441,7 @@ class TemplateService @Autowired constructor(
                     val result = client.get(ServiceRepositoryResource::class)
                         .get(projectId, repositoryId, repositoryConfig.repositoryType)
                     if (result.isNotOk()) {
-                        logger.warn("Fail to get the repository $repositoryId of project $projectId with message ${result.message}")
+                        logger.warn("Fail to get the repository|$repositoryId|$projectId|${result.message}")
                         return null
                     }
                     return result.data!!.url
@@ -438,7 +455,7 @@ class TemplateService @Autowired constructor(
                     val result = client.get(ServiceRepositoryResource::class)
                         .get(projectId, repositoryName, repositoryConfig.repositoryType)
                     if (result.isNotOk()) {
-                        logger.warn("Fail to get the repository $repositoryName of project $projectId with message ${result.message}")
+                        logger.warn("Fail to get the repository|$repositoryName|$projectId|${result.message}")
                         return null
                     }
                     return result.data!!.url
