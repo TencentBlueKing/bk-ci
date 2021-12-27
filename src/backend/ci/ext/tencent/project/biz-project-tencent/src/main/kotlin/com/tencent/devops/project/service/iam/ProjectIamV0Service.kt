@@ -65,7 +65,7 @@ class ProjectIamV0Service @Autowired constructor(
     ): Boolean {
         logger.info("[createUser2Project] createUser[$createUser] userId[$userIds] projectCode[$projectCode]")
 
-        if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
+        if (!bkAuthProjectApi.checkProjectManager(createUser, bsPipelineAuthServiceCode, projectCode)) {
             logger.error("$createUser is not manager for project[$projectCode]")
             throw OperationException(
                 (MessageCodeUtil.getCodeLanMessage(

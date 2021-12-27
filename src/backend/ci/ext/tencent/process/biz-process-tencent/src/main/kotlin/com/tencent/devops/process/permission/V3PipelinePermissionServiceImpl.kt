@@ -181,6 +181,10 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun checkProjectManager(userId: String, projectId: String): Boolean {
+        return authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)
+    }
+
     private fun findInstanceId(pipelineId: String): String {
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
             ?: throw PermissionForbiddenException("流水线$pipelineId 不存在")
