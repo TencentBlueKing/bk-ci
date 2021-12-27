@@ -251,8 +251,17 @@ export default {
     getContainers: state => stage => {
         return stage && Array.isArray(stage.containers) ? stage.containers : []
     },
-    getContainer: (state, getters) => (containers, containerIndex) => {
-        const container = Array.isArray(containers) ? containers[containerIndex] : null
+    getContainer: (state, getters) => (containers, containerIndex, containerGroupIndex = undefined) => {
+        let container = null
+        try {
+            if (containerGroupIndex !== undefined) {
+                container = Array.isArray(containers) ? containers[containerIndex].groupContainers[containerGroupIndex] : null
+            } else {
+                container = Array.isArray(containers) ? containers[containerIndex] : null
+            }
+        } catch (_) {
+            container = null
+        }
         if (container !== null) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
