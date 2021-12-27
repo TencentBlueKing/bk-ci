@@ -13,6 +13,3 @@ stages:
         steps:
           - run: |
               echo "hello world"
-
-variables:
-  a: 11111
