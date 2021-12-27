@@ -41,7 +41,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.math.NumberUtils
@@ -99,7 +99,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
         val userId = task.starter
         val codeRepoUrl = getCodeRepoUrl(runVariables)
 
-        val ticketsMap = CommonUtils.getCredential(
+        val ticketsMap = CommonCredentialUtils.getCredential(
             client = client,
             projectId = projectId,
             credentialId = ticketId,

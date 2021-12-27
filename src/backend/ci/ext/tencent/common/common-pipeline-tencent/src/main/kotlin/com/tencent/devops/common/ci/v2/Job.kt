@@ -85,13 +85,13 @@ data class ServiceWith(
 )
 
 data class Strategy(
-    val matrix: Any?,
+    val matrix: Any,
     @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
+    val fastKill: Boolean? = null,
     @ApiModelProperty(name = "max-parallel")
     @JsonProperty("max-parallel")
-    val maxParallel: String?
+    val maxParallel: Int? = null
 )
 
 data class RunsOn(

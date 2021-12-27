@@ -38,4 +38,3 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:sign:api-sign"))
 }
-

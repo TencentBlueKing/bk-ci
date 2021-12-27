@@ -199,18 +199,18 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-//            pipelineBuildStageDao.deletePipelineBuildStages(
-//                dslContext = transactionContext,
+//            pipelineStageService.deletePipelineBuildStages(
+//                transactionContext = transactionContext,
 //                projectId = projectId,
 //                pipelineId = pipelineId
 //            )
-//            pipelineBuildContainerDao.deletePipelineBuildContainers(
-//                dslContext = transactionContext,
+//            pipelineContainerService.deletePipelineBuildContainers(
+//                transactionContext = transactionContext,
 //                projectId = projectId,
 //                pipelineId = pipelineId
 //            )
-//            pipelineBuildTaskDao.deletePipelineBuildTasks(
-//                dslContext = transactionContext,
+//            pipelineTaskService.deletePipelineBuildTasks(
+//                transactionContext = transactionContext,
 //                projectId = projectId,
 //                pipelineId = pipelineId
 //            )
@@ -774,8 +774,7 @@ class PipelineRuntimeService @Autowired constructor(
                     构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
                 if (container.matrixGroupFlag == true) {
-                    if (container is VMBuildContainer) container.retryFreshMatrixOption()
-                    else if (container is NormalContainer) container.retryFreshMatrixOption()
+                    container.retryFreshMatrixOption()
                     pipelineContainerService.cleanContainersInMatrixGroup(
                         transactionContext = dslContext,
                         projectId = pipelineInfo.projectId,
@@ -819,7 +818,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            stage.refreshCheckOption(true)
+            stage.resetBuildOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (needUpdateStage) {
