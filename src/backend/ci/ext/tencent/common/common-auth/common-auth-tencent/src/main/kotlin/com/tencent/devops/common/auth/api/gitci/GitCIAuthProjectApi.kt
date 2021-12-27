@@ -109,7 +109,7 @@ class GitCIAuthProjectApi @Autowired constructor(
         return client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
-            projectCode = projectCode,
+            projectCode = projectCode
         ).data ?: false
     }
 
