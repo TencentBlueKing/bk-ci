@@ -478,7 +478,7 @@
         "skipFail": "跳过失败",
         "rebuildSuc": "rebuild成功",
         "rebuildFail": "rebuild失败",
-        "stopSuc": "终止构建请求发送成功，请稍后",
+        "stopSuc": "终止构建请求发送成功，请稍后...",
         "stopFail": "终止失败",
         "loadPipelineVersionSuccess": "加载版本 {version} 成功，请确认版本内容"
     },
