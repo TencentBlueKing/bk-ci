@@ -89,7 +89,7 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
-        return client.get(ServiceProjectAuthResource::class).isProjectManager(
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
             userId = userId,
             token = checkTokenService.getSystemToken(null) ?: "",
             projectCode = projectId
