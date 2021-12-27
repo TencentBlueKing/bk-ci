@@ -56,7 +56,7 @@ interface ApigwSignResourceV3 {
 
     @ApiOperation("获取签名接口token")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/getSignToken")
+    @Path("/history")
     fun getHistorySign(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

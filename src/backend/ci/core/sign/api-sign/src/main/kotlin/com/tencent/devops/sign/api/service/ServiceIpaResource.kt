@@ -57,7 +57,7 @@ interface ServiceIpaResource {
     @ApiOperation("获取流水线构建历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
-    @Path("/{projectId}/{pipelineId}/history")
+    @Path("/sign/history")
     fun getHistorySign(
         @ApiParam("用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
