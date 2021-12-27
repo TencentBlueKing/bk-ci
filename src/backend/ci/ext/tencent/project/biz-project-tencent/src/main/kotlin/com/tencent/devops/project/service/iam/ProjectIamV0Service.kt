@@ -92,7 +92,7 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         logger.info("createPipelinePermission [$createUser] [$projectId] [$userId] [$permission]")
-        if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+        if (!bkAuthProjectApi.checkProjectManager(createUser, bsPipelineAuthServiceCode, projectId)) {
             logger.info("createPipelinePermission createUser not project manager[$createUser] [$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.NOT_MANAGER,
@@ -101,7 +101,7 @@ class ProjectIamV0Service @Autowired constructor(
         val createUserList = userId.split(",")
 
         createUserList?.forEach {
-            if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
+            if (!bkAuthProjectApi.checkProjectUser(it, bsPipelineAuthServiceCode, projectId)) {
                 logger.info("createPipelinePermission userId not project manager [$userId] projectId[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
