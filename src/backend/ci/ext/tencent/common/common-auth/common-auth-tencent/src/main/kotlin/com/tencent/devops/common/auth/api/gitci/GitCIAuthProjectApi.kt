@@ -106,7 +106,7 @@ class GitCIAuthProjectApi @Autowired constructor(
     }
 
     override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
-        return client.get(ServiceProjectAuthResource::class).isProjectManager(
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectCode,

@@ -111,7 +111,7 @@ class TxV3AuthProjectApi @Autowired constructor(
     }
 
     override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
-        return client.get(ServiceProjectAuthResource::class).isProjectManager(
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
             userId = userId,
             projectCode = projectCode,
             token = tokenService.getSystemToken(null)!!
