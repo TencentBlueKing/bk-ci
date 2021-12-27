@@ -26,6 +26,10 @@
                 type: String,
                 default: undefined
             },
+            type: {
+                type: String,
+                default: 'pluginLog'
+            },
             buildId: {
                 type: String
             },
@@ -40,7 +44,8 @@
                     projectId: this.$route.params.projectId,
                     pipelineId: this.$route.params.pipelineId,
                     buildId: this.buildId,
-                    tag: this.id,
+                    tag: this.type === 'pluginLog' ? this.id : undefined,
+                    jobId: this.type === 'containerLog' ? this.id : undefined,
                     subTag: '',
                     currentExe: this.executeCount,
                     lineNo: 0,
@@ -60,9 +65,15 @@
 
             downloadLink () {
                 const editingElementPos = this.editingElementPos
-                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
-                const tag = this.currentElement.id
-                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                if (this.type === 'containerLog') {
+                    const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
+                    const jobId = this.currentJob.containerHashId
+                    return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                } else {
+                    const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
+                    const tag = this.currentElement.id
+                    return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                }
             },
 
             downloadAllLink () {
@@ -70,12 +81,29 @@
                 return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
+            currentJob () {
+                const { editingElementPos, execDetail } = this
+                const model = execDetail.model || {}
+                const stages = model.stages || []
+                const currentStage = stages[editingElementPos.stageIndex] || []
+                
+                try {
+                    if (editingElementPos.containerGroupIndex === undefined) {
+                        return currentStage.containers[editingElementPos.containerIndex]
+                    } else {
+                        return currentStage.containers[editingElementPos.containerIndex].groupContainers[editingElementPos.containerGroupIndex]
+                    }
+                } catch (_) {
+                    return {}
+                }
+            },
+
             currentElement () {
                 const {
-                    editingElementPos: { stageIndex, containerIndex, elementIndex },
-                    execDetail: { model: { stages } }
+                    editingElementPos: { elementIndex },
+                    currentJob
                 } = this
-                return stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                return currentJob.elements[elementIndex]
             }
         },
 

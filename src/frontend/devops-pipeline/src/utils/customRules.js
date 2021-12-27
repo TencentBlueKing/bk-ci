@@ -35,6 +35,19 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    // 不同时为空
+    atlestNotEmpty: {
+        validate: function (value, args) {
+            console.log(args, 'not')
+            let notEmptyNum = 0
+            for (const i in args) {
+                if (args[i]) {
+                    notEmptyNum++
+                }
+            }
+            return notEmptyNum > 0
+        }
+    },
     pullmode: {
         validate: function (value, args) {
             return typeof value === 'object' && value.type !== '' && value.value !== ''

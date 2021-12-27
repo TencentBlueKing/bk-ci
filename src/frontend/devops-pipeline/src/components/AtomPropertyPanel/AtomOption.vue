@@ -57,7 +57,7 @@
                     }
                 ]
 
-                if (!(this.atomOption.manualSkip === false && this.atomOption.failControl.includes('continueWhenFailed'))) {
+                if (!(this.atomOption.manualSkip === false && this.atomOption.failControl && this.atomOption.failControl.includes('continueWhenFailed'))) {
                     model.failControl.list.push(failControlManualRetryOption)
                 }
 
