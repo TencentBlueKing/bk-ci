@@ -75,7 +75,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     }
 
     override fun isProjectManager(userId: String, projectCode: String): Boolean {
-        return authProjectApi.isProjectManager(
+        return authProjectApi.checkProjectManager(
             userId = userId,
             projectCode = projectCode,
             serviceCode = authServiceCode

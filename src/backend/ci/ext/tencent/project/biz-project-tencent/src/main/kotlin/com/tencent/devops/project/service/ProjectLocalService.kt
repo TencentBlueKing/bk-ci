@@ -733,7 +733,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
         if (checkManager!!) {
             // 操作人必须为项目的管理员
-            if (!authProjectApi.isProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
+            if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.error("$userId is not manager for project[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.NOT_MANAGER,

@@ -57,7 +57,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.statistics.dao.process.PipelineSettingDao
 import com.tencent.devops.statistics.dao.process.template.TemplateDao
 import com.tencent.devops.statistics.dao.process.template.TemplatePipelineDao
-import com.tencent.devops.statistics.service.process.permission.PipelinePermissionService
+import com.tencent.devops.statistics.service.process.permission.StatisticsPipelinePermissionService
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -72,7 +72,7 @@ class TemplateService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelinePermissionService: PipelinePermissionService,
+    private val statisticsPipelinePermissionService: StatisticsPipelinePermissionService,
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
@@ -124,7 +124,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
-        pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+        statisticsPipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
 
     fun listTemplateByProjectIds(
         projectIds: Set<String>,

@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.statistics.service.process.permission.PipelinePermissionService
+import com.tencent.devops.statistics.service.process.permission.StatisticsPipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -47,12 +47,12 @@ import javax.ws.rs.core.Response
  * Pipeline专用权限校验接口
  */
 @Service
-class PipelinePermissionServiceImpl @Autowired constructor(
+class StatisticsPipelinePermissionServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
-) : PipelinePermissionService {
+) : StatisticsPipelinePermissionService {
 
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
 

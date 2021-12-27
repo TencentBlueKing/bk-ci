@@ -287,9 +287,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         return if (permission == AuthPermission.MANAGE) {
-            bsAuthProjectApi.isProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
+            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
         } else {
-            bsAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectCode, null)
+            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
         }
     }
 
