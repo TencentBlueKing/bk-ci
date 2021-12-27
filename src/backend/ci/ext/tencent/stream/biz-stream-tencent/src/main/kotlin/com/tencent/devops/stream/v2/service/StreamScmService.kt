@@ -56,6 +56,7 @@ import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -498,6 +499,30 @@ class StreamScmService @Autowired constructor(
         )
     }
 
+    // 获取指定文件在项目中的文件树信息，用于删除分支时判断yml是否在默认分支还存在的情况
+    fun getFileTreeFromGitWithDefaultBranch(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ): List<GitFileInfo> {
+        return retryFun(
+            log = "$gitProjectId get $filePath file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+            action = {
+                client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                    gitProjectId = gitProjectId,
+                    path = if (filePath.contains("/")) {
+                        filePath.substring(0, filePath.lastIndexOf("/"))
+                    } else {
+                        filePath
+                        },
+                    token = gitToken,
+                    ref = ""
+                ).data ?: emptyList()
+            }
+        )
+    }
+
     fun getCommitChangeFileListRetry(
         token: String?,
         userId: String?,
@@ -570,6 +595,21 @@ class StreamScmService @Autowired constructor(
             token = gitToken,
             tokenType = TokenTypeEnum.OAUTH
         ).data
+    }
+
+    fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: MrCommentBody
+    ) {
+        logger.info("addMrComment: [$gitProjectId|$mrId]")
+        client.getScm(ServiceGitCiResource::class).addMrComment(
+            token = token,
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = mrBody
+        )
     }
 
     private fun getTriggerBranch(branch: String): String {

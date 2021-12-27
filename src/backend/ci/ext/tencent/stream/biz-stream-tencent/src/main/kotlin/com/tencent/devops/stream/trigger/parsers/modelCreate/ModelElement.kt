@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
@@ -46,12 +47,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -61,6 +64,15 @@ class ModelElement @Autowired constructor(
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitCISettingDao: GitCISettingDao
 ) {
+
+    @Value("\${stream.marketRun.enable:#{false}}")
+    private val marketRunTask: Boolean = false
+
+    @Value("\${stream.marketRun.atomCode:#{null}}")
+    private val runPlugInAtomCode: String? = null
+
+    @Value("\${stream.marketRun.atomVersion:#{null}}")
+    private val runPlugInVersion: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
@@ -75,9 +87,15 @@ class ModelElement @Autowired constructor(
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
-
+        val stepIdCheckList = mutableListOf<String?>()
         // 解析job steps
         job.steps!!.forEach { step ->
+            if (step.id !in stepIdCheckList) {
+                stepIdCheckList.add(step.id)
+            } else throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.formatErrorMessage
+            )
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
@@ -101,29 +119,7 @@ class ModelElement @Autowired constructor(
             // bash
             val element: Element = when {
                 step.run != null -> {
-                    val linux = LinuxScriptElement(
-                        name = step.name ?: "run",
-                        id = step.id,
-                        scriptType = BuildScriptType.SHELL,
-                        script = step.run!!,
-                        continueNoneZero = false,
-                        additionalOptions = additionalOptions
-                    )
-                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
-                        linux
-                    } else {
-                        when (job.runsOn.agentSelector!!.first()) {
-                            "linux" -> linux
-                            "macos" -> linux
-                            "windows" -> WindowsScriptElement(
-                                name = step.name ?: "run",
-                                id = step.id,
-                                scriptType = BuildScriptType.BAT,
-                                script = step.run!!
-                            )
-                            else -> linux
-                        }
-                    }
+                    makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
                     makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
@@ -133,7 +129,7 @@ class ModelElement @Autowired constructor(
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
                         name = step.name ?: step.uses!!.split('@')[0],
-                        id = step.id,
+                        stepId = step.id,
                         atomCode = step.uses!!.split('@')[0],
                         version = step.uses!!.split('@')[1],
                         data = data,
@@ -151,6 +147,49 @@ class ModelElement @Autowired constructor(
         }
 
         return elementList
+    }
+
+    private fun makeRunElement(
+        step: Step,
+        job: Job,
+        additionalOptions: ElementAdditionalOptions
+    ): Element {
+        return if (marketRunTask) {
+            val data = mutableMapOf<String, Any>()
+            data["input"] = mapOf("script" to step.run)
+            MarketBuildAtomElement(
+                name = step.name ?: "run",
+                stepId = step.id,
+                atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
+                version = runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
+                data = data,
+                additionalOptions = additionalOptions
+            )
+        } else {
+            val linux = LinuxScriptElement(
+                name = step.name ?: "run",
+                stepId = step.id,
+                scriptType = BuildScriptType.SHELL,
+                script = step.run!!,
+                continueNoneZero = false,
+                additionalOptions = additionalOptions
+            )
+            if (job.runsOn.agentSelector.isNullOrEmpty()) {
+                linux
+            } else {
+                when (job.runsOn.agentSelector!!.first()) {
+                    "linux" -> linux
+                    "macos" -> linux
+                    "windows" -> WindowsScriptElement(
+                        name = step.name ?: "run",
+                        stepId = step.id,
+                        scriptType = BuildScriptType.BAT,
+                        script = step.run!!
+                    )
+                    else -> linux
+                }
+            }
+        }
     }
 
     private fun makeCheckoutElement(
@@ -176,36 +215,7 @@ class ModelElement @Autowired constructor(
 
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
-                gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
-            }
-
-            when (event.objectKind) {
-                TGitObjectKind.MERGE_REQUEST.value ->
-                    inputMap["pullType"] = "BRANCH"
-                TGitObjectKind.TAG_PUSH.value -> {
-                    inputMap["pullType"] = "TAG"
-                    inputMap["refName"] = event.branch
-                }
-                TGitObjectKind.MANUAL.value -> {
-                    if (event.commitId.isNotBlank()) {
-                        inputMap["pullType"] = "COMMIT_ID"
-                        inputMap["refName"] = event.commitId
-                    } else {
-                        inputMap["pullType"] = "BRANCH"
-                        inputMap["refName"] = event.branch
-                    }
-                }
-                // 定时触发根据传入的分支参数触发
-                TGitObjectKind.SCHEDULE.value -> {
-                    inputMap["pullType"] = "BRANCH"
-                    inputMap["refName"] = event.branch
-                }
-                else -> {
-                    inputMap["pullType"] = "COMMIT_ID"
-                    inputMap["refName"] = event.commitId
-                }
-            }
+            makeCheckoutSelf(inputMap, gitBasicSetting, event)
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
         }
@@ -224,11 +234,52 @@ class ModelElement @Autowired constructor(
 
         return MarketBuildAtomElement(
             name = step.name ?: "checkout",
-            id = step.id,
+            stepId = step.id,
             atomCode = "checkout",
             version = "1.*",
             data = data
         )
+    }
+
+    private fun makeCheckoutSelf(
+        inputMap: MutableMap<String, Any?>,
+        gitBasicSetting: GitCIBasicSetting,
+        event: GitRequestEvent
+    ) {
+        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
+            gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
+        }
+
+        when (event.objectKind) {
+            TGitObjectKind.MERGE_REQUEST.value ->
+                inputMap["pullType"] = "BRANCH"
+            TGitObjectKind.TAG_PUSH.value -> {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.PUSH.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.MANUAL.value -> {
+                if (event.commitId.isNotBlank()) {
+                    inputMap["pullType"] = "COMMIT_ID"
+                    inputMap["refName"] = event.commitId
+                } else {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
+            }
+            // 定时触发根据传入的分支参数触发
+            TGitObjectKind.SCHEDULE.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            else -> {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
+        }
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {
@@ -261,7 +312,6 @@ class ModelElement @Autowired constructor(
                 )
                 val servicesElement = MarketBuildAtomElement(
                     name = "创建${it.image}服务",
-                    id = null,
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,
                     version = "1.*",

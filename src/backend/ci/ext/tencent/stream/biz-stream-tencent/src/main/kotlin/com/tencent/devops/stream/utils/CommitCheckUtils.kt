@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.utils
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 

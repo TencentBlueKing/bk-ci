@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
@@ -35,8 +36,11 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.ProjectDeptInfo
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
@@ -99,7 +103,8 @@ class StreamBasicSettingService @Autowired constructor(
         enableMrBlock: Boolean? = null,
         enableCi: Boolean? = null,
         authUserId: String? = null,
-        enableCommitCheck: Boolean? = null
+        enableCommitCheck: Boolean? = null,
+        enableMrComment: Boolean? = null
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
@@ -107,16 +112,44 @@ class StreamBasicSettingService @Autowired constructor(
             return false
         }
         if (!userId.isNullOrBlank()) {
-            val projectResult =
+            var userUpdateInfo = UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                deptId = "0",
+                deptName = "",
+                centerId = "0",
+                centerName = "",
+                groupId = "0",
+                groupName = ""
+            )
+
+            val userResult =
                 client.get(ServiceTxUserResource::class).get(userId)
-            if (projectResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+            if (userResult.isNotOk()) {
+                logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
+                // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
+                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+                if (null != userInfo) {
+                    setting.creatorBgName = userInfo.bgName
+                    setting.creatorDeptName = userInfo.deptName
+                    setting.creatorCenterName = userInfo.centerName
+
+                    userUpdateInfo = userInfo
+                }
             } else {
-                val userInfo = projectResult.data!!
+                val userInfo = userResult.data!!
                 setting.creatorBgName = userInfo.bgName
                 setting.creatorDeptName = userInfo.deptName
                 setting.creatorCenterName = userInfo.centerName
+
+                userUpdateInfo = userInfo
             }
+            // 更新项目的组织架构信息
+            updateProjectInfo(
+                userId = userId,
+                projectId = GitCIUtils.GITLABLE + gitProjectId.toString(),
+                userDeptDetail = userUpdateInfo
+            )
         }
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
@@ -132,9 +165,26 @@ class StreamBasicSettingService @Autowired constructor(
             creatorCenterName = setting.creatorCenterName,
             enableCommitCheck = enableCommitCheck,
             pathWithNamespace = setting.pathWithNamespace,
-            nameWithNamespace = setting.nameWithNamespace
+            nameWithNamespace = setting.nameWithNamespace,
+            enableMrComment = enableMrComment
         )
         return true
+    }
+
+    // 更新项目信息
+    fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
+        client.get(ServiceTxProjectResource::class).bindProjectOrganization(
+            userId = userId,
+            projectCode = projectId,
+            projectDeptInfo = ProjectDeptInfo(
+                bgId = userDeptDetail.bgId,
+                bgName = userDeptDetail.bgName,
+                deptId = userDeptDetail.deptId,
+                deptName = userDeptDetail.deptName,
+                centerId = userDeptDetail.centerId,
+                centerName = userDeptDetail.centerName
+            )
+        )
     }
 
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
@@ -208,7 +258,7 @@ class StreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
 
@@ -429,10 +479,17 @@ class StreamBasicSettingService @Autowired constructor(
             // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
             try {
                 val timeStamp = System.currentTimeMillis().toString()
+                var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                    deletedProjectName = deletedProjectName.substring(
+                        deletedProjectName.length -
+                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                    )
+                }
                 client.get(ServiceTxProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                    projectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+                    projectName = deletedProjectName
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")

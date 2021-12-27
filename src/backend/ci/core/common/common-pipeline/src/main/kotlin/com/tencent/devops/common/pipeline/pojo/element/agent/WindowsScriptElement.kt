@@ -42,6 +42,8 @@ data class WindowsScriptElement(
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
+    @ApiModelProperty("用户自定义ID", required = false)
+    override var stepId: String? = null,
     @ApiModelProperty("脚本内容", required = true)
     val script: String,
     @ApiModelProperty("脚本类型", required = true)

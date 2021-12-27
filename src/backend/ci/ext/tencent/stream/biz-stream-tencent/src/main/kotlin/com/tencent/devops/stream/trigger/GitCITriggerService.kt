@@ -45,20 +45,19 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.git.isDeleteEvent
-import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -306,6 +305,8 @@ class GitCITriggerService @Autowired constructor(
 
         yamlPathList.forEach { filePath ->
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+            val displayName = filePath
+            val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             // 对于来自fork库的mr新建的流水线，当前库不维护其状态
             val buildPipeline = path2PipelineExists[filePath] ?: GitProjectPipeline(
@@ -558,7 +559,7 @@ class GitCITriggerService @Autowired constructor(
                 state = state,
                 context = noPipelineBuildEvent,
                 gitCIBasicSetting = gitProjectConf,
-                jumpRequest = false,
+                jumpNotification = false,
                 description = null
             )
         }

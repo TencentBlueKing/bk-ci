@@ -68,7 +68,7 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
-        return if (clusterType == DockerHostClusterType.AGENT_LESS) {
+        return if (clusterType != DockerHostClusterType.COMMON) {
             Request.Builder().url(url)
                 .addHeader("Accept", "application/json; charset=utf-8")
                 .addHeader("Content-Type", "application/json; charset=utf-8")

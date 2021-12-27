@@ -29,15 +29,15 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.stream.pojo.git.GitCommit
-import com.tencent.devops.stream.pojo.git.GitCommitAuthor
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
-import com.tencent.devops.stream.pojo.git.isDeleteBranch
-import com.tencent.devops.stream.pojo.git.isDeleteTag
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -81,6 +81,7 @@ class GitRequestEventHandle @Autowired constructor(
             },
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            commitAuthorName = latestCommit?.author?.name,
             userId = gitPushEvent.user_name,
             totalCommitCount = gitPushEvent.total_commits_count.toLong(),
             mergeRequestId = null,
@@ -110,6 +111,7 @@ class GitRequestEventHandle @Autowired constructor(
             commitId = latestCommit.id,
             commitMsg = latestCommit.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit.timestamp),
+            commitAuthorName = latestCommit.author.name,
             userId = gitMrEvent.user.username,
             totalCommitCount = 0,
             mergeRequestId = gitMrEvent.object_attributes.iid,
@@ -148,6 +150,7 @@ class GitRequestEventHandle @Autowired constructor(
             },
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            commitAuthorName = latestCommit?.author?.name,
             userId = gitTagPushEvent.user_name,
             totalCommitCount = gitTagPushEvent.total_commits_count.toLong(),
             mergeRequestId = null,
@@ -157,80 +160,98 @@ class GitRequestEventHandle @Autowired constructor(
             gitEvent = gitTagPushEvent
         )
     }
-
     companion object {
-        fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-            return GitRequestEvent(
-                id = null,
-                objectKind = TGitObjectKind.MANUAL.value,
-                operationKind = "",
-                extensionAction = null,
-                gitProjectId = triggerBuildReq.gitProjectId,
-                sourceGitProjectId = null,
-                branch = getBranchName(triggerBuildReq.branch),
-                targetBranch = null,
-                commitId = triggerBuildReq.commitId ?: "",
-                commitMsg = triggerBuildReq.customCommitMsg,
-                commitTimeStamp = getCommitTimeStamp(null),
-                userId = userId,
-                totalCommitCount = 0,
-                mergeRequestId = null,
-                event = "",
-                description = triggerBuildReq.description,
-                mrTitle = "",
-                gitEvent = null
-            )
-        }
+    fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.MANUAL.value,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = triggerBuildReq.gitProjectId,
+            sourceGitProjectId = null,
+            branch = getBranchName(triggerBuildReq.branch),
+            targetBranch = null,
+            commitId = triggerBuildReq.commitId ?: "",
+            commitMsg = triggerBuildReq.customCommitMsg,
+            commitTimeStamp = getCommitTimeStamp(null),
+            commitAuthorName = userId,
+            userId = userId,
+            totalCommitCount = 0,
+            mergeRequestId = null,
+            event = "",
+            description = triggerBuildReq.description,
+            mrTitle = "",
+            gitEvent = null
+        )
+    }
 
-        fun createScheduleTriggerEvent(
-            streamTimerEvent: StreamTimerBuildEvent,
-            buildBranch: String,
-            buildCommit: String,
-            buildCommitMessage: String
-        ): GitRequestEvent {
-            return GitRequestEvent(
-                id = null,
-                objectKind = TGitObjectKind.SCHEDULE.value,
-                operationKind = null,
-                extensionAction = null,
-                gitProjectId = streamTimerEvent.gitProjectId,
-                sourceGitProjectId = null,
-                branch = buildBranch,
-                targetBranch = null,
-                commitId = buildCommit,
-                commitMsg = buildCommitMessage,
-                commitTimeStamp = getCommitTimeStamp(null),
-                userId = streamTimerEvent.userId,
-                totalCommitCount = 0,
-                mergeRequestId = null,
-                event = "",
-                description = null,
-                mrTitle = null,
-                gitEvent = null
-            )
-        }
+    fun createScheduleTriggerEvent(
+        streamTimerEvent: StreamTimerBuildEvent,
+        buildBranch: String,
+        buildCommit: String,
+        buildCommitMessage: String,
+        buildCommitAuthorName: String
+    ): GitRequestEvent {
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.SCHEDULE.value,
+            operationKind = null,
+            extensionAction = null,
+            gitProjectId = streamTimerEvent.gitProjectId,
+            sourceGitProjectId = null,
+            branch = buildBranch,
+            targetBranch = null,
+            commitId = buildCommit,
+            commitMsg = buildCommitMessage,
+            commitTimeStamp = getCommitTimeStamp(null),
+            commitAuthorName = buildCommitAuthorName,
+            userId = streamTimerEvent.userId,
+            totalCommitCount = 0,
+            mergeRequestId = null,
+            event = "",
+            description = null,
+            mrTitle = null,
+            gitEvent = null
+        )
+    }
 
-        private fun getCommitTimeStamp(commitTimeStamp: String?): String {
-            return if (commitTimeStamp.isNullOrBlank()) {
-                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                formatter.format(Date())
+    private fun getLatestCommit(commitId: String?, commits: List<GitCommit>?): GitCommit? {
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
             } else {
-                val time = DateTime.parse(commitTimeStamp)
-                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                sdf.format(time.toDate())
+                commits.last()
             }
         }
-
-        private fun getBranchName(ref: String): String {
-            return when {
-                ref.startsWith("refs/heads/") ->
-                    ref.removePrefix("refs/heads/")
-                ref.startsWith("refs/tags/") ->
-                    ref.removePrefix("refs/tags/")
-                else -> ref
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
             }
+        }
+        return null
+    }
+
+    private fun getCommitTimeStamp(commitTimeStamp: String?): String {
+        return if (commitTimeStamp.isNullOrBlank()) {
+            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            formatter.format(Date())
+        } else {
+            val time = DateTime.parse(commitTimeStamp)
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            sdf.format(time.toDate())
         }
     }
+
+    private fun getBranchName(ref: String): String {
+        return when {
+            ref.startsWith("refs/heads/") ->
+                ref.removePrefix("refs/heads/")
+            ref.startsWith("refs/tags/") ->
+                ref.removePrefix("refs/tags/")
+            else -> ref
+        }
+    }
+}
 
     private fun getLatestCommit(
         commitId: String?,

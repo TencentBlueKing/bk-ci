@@ -107,8 +107,8 @@ class RobotService @Autowired constructor(
         val content = root.getElementsByTagName("Content")
         val userName = root.getElementsByTagName("Name")
         val userId = root.getElementsByTagName("Alias")
-        val eventType = root.getElementsByTagName("Event")
-        logger.info("eventType: $eventType, ${eventType.item(0)}")
+        val eventType = root.getElementsByTagName("Event") ?: null
+        logger.info("eventType: $eventType, ${eventType?.item(0)}")
         return RobotCallback(
             chatId = chitId.item(0).textContent,
             webhookUrl = webhookUrl.item(0).textContent,
@@ -118,7 +118,7 @@ class RobotService @Autowired constructor(
             content = content?.item(0)?.textContent ?: "",
             name = userName.item(0).textContent,
             userId = userId.item(0).textContent,
-            eventType = eventType.item(0).firstChild.textContent
+            eventType = eventType?.item(0)?.firstChild?.textContent
         )
     }
 

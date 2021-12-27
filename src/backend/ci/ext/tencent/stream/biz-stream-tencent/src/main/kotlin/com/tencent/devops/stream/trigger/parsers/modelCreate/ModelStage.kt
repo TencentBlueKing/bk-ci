@@ -80,7 +80,12 @@ class ModelStage @Autowired constructor(
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = modelElement.makeElementList(job, gitBasicSetting, event)
+            val elementList = modelElement.makeElementList(
+                job = job,
+                gitBasicSetting = gitBasicSetting,
+                event = event
+            )
+
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 modelContainer.addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
@@ -144,11 +149,11 @@ class ModelStage @Autowired constructor(
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
+        check.timeout = stageCheck.timeoutHours
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
             check.reviewDesc = stageCheck.reviews?.description
             check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
-            check.timeout = stageCheck.timeoutHours
             check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
             }?.toMutableList()
@@ -267,7 +272,7 @@ class ModelStage @Autowired constructor(
                 )
             )
         }
-        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList creat gates")
+        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList create gates")
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,

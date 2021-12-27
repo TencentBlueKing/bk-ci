@@ -38,4 +38,5 @@ dependencies {
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":core:log:api-log"))
+    api(project(":core:common:common-webhook:api-common-webhook"))
 }

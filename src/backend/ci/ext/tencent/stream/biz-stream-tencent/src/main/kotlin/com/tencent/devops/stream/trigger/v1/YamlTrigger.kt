@@ -39,9 +39,8 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.EnvironmentVariables
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.getForkGitProjectId
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher

@@ -91,6 +91,8 @@ class DockerService @Autowired constructor(
             )
         })
         buildTask[getKey(vmSeqId, buildId)] = future
+
+        logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|future:$future")
         return true
     }
 
@@ -110,6 +112,7 @@ class DockerService @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
         logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
@@ -140,7 +143,8 @@ class DockerService @Autowired constructor(
             registryUser = dockerRunParam.registryUser,
             registryPwd = dockerRunParam.registryPwd,
             dockerRunParam = dockerRunParam,
-            qpcUniquePath = qpcUniquePath
+            qpcUniquePath = qpcUniquePath,
+            pipelineTaskId = pipelineTaskId
         )
 
         containerPullImageHandler.setNextHandler(containerCustomizedRunHandler).handlerRequest(containerHandlerContext)
@@ -257,7 +261,7 @@ class DockerService @Autowired constructor(
             future == null -> Pair(Status.NO_EXISTS, "")
             future.isDone -> {
                 when {
-                    future.get().first -> Pair(Status.SUCCESS, "")
+                    future.get().first -> Pair(Status.SUCCESS, future.get().second ?: "")
                     else -> Pair(Status.FAILURE, future.get().second ?: "")
                 }
             }

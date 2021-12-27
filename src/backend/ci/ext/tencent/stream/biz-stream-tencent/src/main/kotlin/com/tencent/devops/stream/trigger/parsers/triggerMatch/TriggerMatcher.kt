@@ -5,9 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.check
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.getTypesObjectKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -20,11 +20,14 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
-import com.tencent.devops.stream.pojo.git.isDeleteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
@@ -148,7 +151,12 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return TriggerResult(isTrigger, isTime, isDelete)
+        val startParams = getStartParams(
+            context = context,
+            triggerOn = triggerOn,
+            isTrigger = isTrigger
+        ).map { entry -> entry.key to entry.value.toString() }.toMap()
+        return TriggerResult(isTrigger, isTime, startParams, isDelete)
     }
 
     fun deleteEventMatch(
@@ -324,6 +332,38 @@ class TriggerMatcher @Autowired constructor(
             "Git trigger tags($eventTag) is included and path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
         )
         return true
+    }
+
+    fun getStartParams(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn,
+        isTrigger: Boolean
+    ): Map<String, Any> {
+        if (!isTrigger) {
+            return emptyMap()
+        }
+        with(context) {
+            val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
+                gitEvent = gitEvent,
+                triggerOn = triggerOn
+            ) ?: return emptyMap()
+            val webHookParams = WebhookElementParamsRegistrar.getService(element = element).getWebhookElementParams(
+                element = element,
+                variables = mapOf()
+            ) ?: return emptyMap()
+            logger.info("get start params, element:$element, webHookParams:$webHookParams")
+            val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
+            val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
+            return WebhookStartParamsRegistrar.getService(element = element).getStartParams(
+                projectId = streamSetting.projectCode ?: "",
+                element = element,
+                repo = repository,
+                matcher = matcher,
+                variables = mapOf(),
+                params = webHookParams,
+                matchResult = ScmWebhookMatcher.MatchResult(isMatch = isTrigger)
+            )
+        }
     }
 
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =

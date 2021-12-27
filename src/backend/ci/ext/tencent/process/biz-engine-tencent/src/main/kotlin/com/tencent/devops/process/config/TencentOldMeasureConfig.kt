@@ -30,7 +30,7 @@ package com.tencent.devops.process.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
@@ -67,7 +67,7 @@ class TencentOldMeasureConfig {
     @ConditionalOnMissingBean(name = ["measureService"])
     fun measureService(
         @Autowired projectCacheService: ProjectCacheService,
-        @Autowired pipelineRuntimeService: PipelineRuntimeService,
+        @Autowired pipelineTaskService: PipelineTaskService,
         @Autowired buildVariableService: BuildVariableService,
         @Autowired dslContext: DSLContext,
         @Autowired templateService: TemplateService,
@@ -77,7 +77,7 @@ class TencentOldMeasureConfig {
         @Autowired atomMonitorEventDispatcher: AtomMonitorEventDispatcher
     ) = MeasureServiceImpl(
         projectCacheService = projectCacheService,
-        pipelineRuntimeService = pipelineRuntimeService,
+        pipelineTaskService = pipelineTaskService,
         buildVariableService = buildVariableService,
         templateService = templateService,
         redisOperation = redisOperation,

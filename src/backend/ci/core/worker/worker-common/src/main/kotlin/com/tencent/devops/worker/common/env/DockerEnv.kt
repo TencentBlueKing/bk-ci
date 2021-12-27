@@ -37,11 +37,19 @@ object DockerEnv {
     private const val AGENT_ID = "devops_agent_id"
     private const val AGENT_SECRET_KEY = "devops_agent_secret_key"
     private const val AGENT_GATEWAY = "devops_gateway"
+    private const val JOB_POOL = "JOB_POOL"
+    private const val DOCKER_HOST_IP = "docker_host_ip"
+    private const val DOCKER_HOST_PORT = "docker_host_port"
+    private const val HOSTNAME = "HOSTNAME"
 
     private var projectId: String? = null
     private var agentId: String? = null
     private var secretKey: String? = null
     private var gateway: String? = null
+    private var jobPool: String? = null
+    private var dokerHostIp: String? = null
+    private var dockerHostPort: String? = null
+    private var hostname: String? = null
 
     fun getProjectId(): String {
         if (projectId.isNullOrBlank()) {
@@ -101,6 +109,67 @@ object DockerEnv {
             }
         }
         return gateway!!
+    }
+
+    fun getJobPool(): String? {
+        if (jobPool.isNullOrBlank()) {
+            synchronized(this) {
+                if (jobPool.isNullOrBlank()) {
+                    jobPool = try {
+                        getProperty(JOB_POOL)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    logger.info("Get the jobPool($jobPool)")
+                }
+            }
+        }
+        return jobPool
+    }
+
+    fun getDockerHostIp(): String {
+        if (dokerHostIp.isNullOrBlank()) {
+            synchronized(this) {
+                if (dokerHostIp.isNullOrBlank()) {
+                    dokerHostIp = getProperty(DOCKER_HOST_IP)
+                    if (dokerHostIp.isNullOrBlank()) {
+                        throw PropertyNotExistException(DOCKER_HOST_IP, "Empty dokerHostIp")
+                    }
+                    logger.info("Get the dokerHostIp($dokerHostIp)")
+                }
+            }
+        }
+        return dokerHostIp!!
+    }
+
+    fun getDockerHostPort(): String {
+        if (dockerHostPort.isNullOrBlank()) {
+            synchronized(this) {
+                if (dockerHostPort.isNullOrBlank()) {
+                    dockerHostPort = getProperty(DOCKER_HOST_PORT)
+                    if (dockerHostPort.isNullOrBlank()) {
+                        throw PropertyNotExistException(DOCKER_HOST_PORT, "Empty dockerHostPort")
+                    }
+                    logger.info("Get the dockerHostPort($dockerHostPort)")
+                }
+            }
+        }
+        return dockerHostPort!!
+    }
+
+    fun getHostname(): String {
+        if (hostname.isNullOrBlank()) {
+            synchronized(this) {
+                if (hostname.isNullOrBlank()) {
+                    hostname = getProperty(HOSTNAME)
+                    if (hostname.isNullOrBlank()) {
+                        throw PropertyNotExistException(HOSTNAME, "Empty hostname")
+                    }
+                    logger.info("Get the hostname($hostname)")
+                }
+            }
+        }
+        return hostname!!
     }
 
     private fun getProperty(prop: String): String {

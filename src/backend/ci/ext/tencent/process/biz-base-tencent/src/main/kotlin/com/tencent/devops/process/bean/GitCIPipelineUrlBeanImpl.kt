@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.springframework.beans.factory.annotation.Value
 
@@ -46,19 +47,34 @@ class GitCIPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String?,
+        stageId: String?,
         needShortUrl: Boolean
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         val project = client.getScm(ServiceGitCiResource::class)
             .getGitCodeProjectInfo(projectCode.removePrefix("git_"))
             .data ?: return ""
-        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/#${project.pathWithNamespace}"
-
-        if (null != needShortUrl && needShortUrl == false) {
-            return url
+        val urlParam = StringBuffer("")
+        if (!position.isNullOrBlank() && !stageId.isNullOrBlank()) {
+            when (position) {
+                ControlPointPosition.BEFORE_POSITION -> {
+                    urlParam.append("?checkIn=$stageId")
+                }
+                ControlPointPosition.AFTER_POSITION -> {
+                    urlParam.append("?checkOut=$stageId")
+                }
+            }
         }
+        val url = "$v2GitUrl/pipeline/$pipelineId/detail/$buildId$urlParam#${project.pathWithNamespace}"
 
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
+
+        return if (needShortUrl) {
+            client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        } else {
+            url
+        }
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {

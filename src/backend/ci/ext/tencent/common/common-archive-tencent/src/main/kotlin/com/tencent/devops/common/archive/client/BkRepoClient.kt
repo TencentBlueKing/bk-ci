@@ -829,7 +829,7 @@ class BkRepoClient constructor(
     }
 
     fun createShareUri(
-        userId: String,
+        creatorId: String,
         projectId: String,
         repoName: String,
         fullPath: String,
@@ -838,7 +838,7 @@ class BkRepoClient constructor(
         timeoutInSeconds: Long
     ): String {
         logger.info(
-            "createShareUri, userId: $userId, projectId: $projectId, repoName: $repoName, " +
+            "createShareUri, creatorId: $creatorId, projectId: $projectId, repoName: $repoName, " +
                     "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
                     "timeoutInSeconds: $timeoutInSeconds"
         )
@@ -857,7 +857,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(BK_REPO_UID, userId)
+            .header(BK_REPO_UID, creatorId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(

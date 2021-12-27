@@ -130,6 +130,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
     const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
     const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
+    const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
+    const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -213,6 +215,7 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
     const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
     const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+    const val ERROR_CALLBACK_SAVE_FAIL = "2101185" // 创建callback失败,失败原因:{0}
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

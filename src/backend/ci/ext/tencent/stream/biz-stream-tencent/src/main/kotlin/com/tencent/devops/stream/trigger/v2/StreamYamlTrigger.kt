@@ -47,8 +47,8 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -110,7 +110,7 @@ class StreamYamlTrigger @Autowired constructor(
             useAccessToken = true
         )
 
-        val (isTrigger, isTiming, isDelete) = triggerMatcher.isMatch(
+        val (isTrigger, isTiming, startParams, isDelete) = triggerMatcher.isMatch(
             context = context,
             gitProjectInfo = gitProjectInfo
         )
@@ -211,7 +211,8 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false,
-                onlySavePipeline = false
+                onlySavePipeline = false,
+                params = startParams
             )
         }
         return true

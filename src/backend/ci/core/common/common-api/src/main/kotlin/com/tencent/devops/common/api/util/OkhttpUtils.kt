@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import okhttp3.ConnectionPool
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -83,6 +84,15 @@ object OkhttpUtils {
         logger.info("[OkhttpUtils init]")
     }
 
+    private val shortOkHttpClient = OkHttpClient.Builder()
+        .connectionPool(ConnectionPool())
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(connectTimeout, TimeUnit.SECONDS)
+        .writeTimeout(connectTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
@@ -123,6 +133,10 @@ object OkhttpUtils {
 
     fun doLongHttp(request: Request): Response {
         return doHttp(longHttpClient, request)
+    }
+
+    fun doShortHttp(request: Request): Response {
+        return doHttp(shortOkHttpClient, request)
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {

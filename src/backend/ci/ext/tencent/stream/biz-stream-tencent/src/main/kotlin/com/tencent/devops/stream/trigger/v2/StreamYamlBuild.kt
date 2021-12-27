@@ -52,7 +52,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -90,6 +90,7 @@ class StreamYamlBuild @Autowired constructor(
     }
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
+    @SuppressWarnings("LongParameterList")
     fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
@@ -101,7 +102,8 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
         isDeleteTrigger: Boolean = false,
-        gitProjectInfo: GitCIProjectInfo? = null
+        gitProjectInfo: GitCIProjectInfo? = null,
+        params: Map<String, String> = mapOf()
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key
@@ -147,7 +149,8 @@ class StreamYamlBuild @Autowired constructor(
                     event = event,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
-                    gitBasicSetting = gitBasicSetting
+                    gitBasicSetting = gitBasicSetting,
+                    params = params
                 )
             } else if (onlySavePipeline) {
                 savePipeline(
@@ -270,21 +273,35 @@ class StreamYamlBuild @Autowired constructor(
         )
     )
 
+    @SuppressWarnings("LongParameterList")
     private fun startBuildPipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
-        gitBasicSetting: GitCIBasicSetting
+        gitBasicSetting: GitCIBasicSetting,
+        params: Map<String, String> = mapOf()
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
+        val model = modelCreate.createPipelineModel(
+            event = event,
+            gitBasicSetting = gitBasicSetting,
+            yaml = yaml,
+            pipeline = pipeline,
+            webhookParams = params
+        )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
-        return streamYamlBaseBuild.startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+        return streamYamlBaseBuild.startBuild(
+            pipeline = pipeline,
+            event = event,
+            gitCIBasicSetting = gitBasicSetting,
+            model = model,
+            gitBuildId = gitBuildId
+        )
     }
 
     private fun savePipeline(

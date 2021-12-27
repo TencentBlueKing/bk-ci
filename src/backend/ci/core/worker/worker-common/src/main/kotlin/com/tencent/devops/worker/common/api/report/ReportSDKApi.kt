@@ -35,6 +35,10 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
 interface ReportSDKApi : WorkerRestApiSDK {
+    /**
+     * 获取Api对应的Realm
+     */
+    fun getRealm(): String
 
     /**
      * 获取报告跟路径

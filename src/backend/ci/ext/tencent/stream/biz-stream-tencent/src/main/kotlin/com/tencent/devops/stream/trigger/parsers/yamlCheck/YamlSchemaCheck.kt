@@ -153,7 +153,7 @@ class YamlSchemaCheck @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    logger.warn("YamlSchemaCheck event: ${gitRequestEvent.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
