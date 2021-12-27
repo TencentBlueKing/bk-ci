@@ -19,6 +19,10 @@ spec:
       port: 80
       targetPort: http
       protocol: TCP
+    - name: monitor
+      targetPort: monitor
+      port: 18080
+      protocol: TCP
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: turbo
 {{- end }}
