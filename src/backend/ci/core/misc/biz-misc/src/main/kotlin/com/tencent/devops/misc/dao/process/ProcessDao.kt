@@ -60,7 +60,6 @@ class ProcessDao {
                     pipelineId,
                     buildId
                 ).onDuplicateKeyUpdate()
-                .set(PROJECT_ID, projectId)
                 .set(BUILD_ID, buildId)
                 .execute()
         }
@@ -81,7 +80,6 @@ class ProcessDao {
                     projectId,
                     pipelineId
                 ).onDuplicateKeyUpdate()
-                .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .execute()
         }

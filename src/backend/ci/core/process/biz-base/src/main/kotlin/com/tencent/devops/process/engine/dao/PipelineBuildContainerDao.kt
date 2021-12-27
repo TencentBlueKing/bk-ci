@@ -129,7 +129,6 @@ class PipelineBuildContainerDao {
         with(T_PIPELINE_BUILD_CONTAINER) {
             containerList.forEach {
                 dslContext.update(this)
-                    .set(PROJECT_ID, it.projectId)
                     .set(PIPELINE_ID, it.pipelineId)
                     .set(MATRIX_GROUP_ID, it.matrixGroupId)
                     .set(CONTAINER_TYPE, it.containerType)
