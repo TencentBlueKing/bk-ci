@@ -12,7 +12,7 @@ elseif build_type == "PLUGIN_AGENT" then
     buildUtil:auth_plugin_agent()
     return
 elseif build_type == "MACOS" then
-    buildUtil:auth_macos()
+    buildUtil:auth_macos(false)
     return
 else
     buildUtil:auth_other()
