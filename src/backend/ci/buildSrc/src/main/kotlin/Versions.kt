@@ -15,7 +15,7 @@ object Versions {
     const val Httpclient = "4.5.2"
     const val CommonExec = "1.3"
     const val Vmware = "5.1"
-    const val BouncyCastle = "1.46"
+    const val BouncyCastle = "1.70"
     const val Dom4j = "1.6.1"
     const val Compress = "1.15"
     const val Reflections = "0.9.11"
