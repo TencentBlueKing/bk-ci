@@ -210,16 +210,17 @@
                 const skipAtoms = allElements.filter(element => !element.canElementSkip).map(element => `devops_container_condition_skip_atoms_${element.id}`)
                 const versionValid = this.$refs.versionForm ? await this.$refs.versionForm.$validator.validateAll() : true
 
-                let valid = true
+                let paramsFormValid = true
+                let buildFormValid = true
                 if (this.$refs.paramsForm) {
-                    valid = await this.$refs.paramsForm.$validator.validateAll()
+                    paramsFormValid = await this.$refs.paramsForm.$validator.validateAll()
                     this.$refs.paramsForm.submitForm()
                 }
                 if (this.$refs.buildForm) {
-                    valid = await this.$refs.buildForm.$validator.validateAll()
+                    buildFormValid = await this.$refs.buildForm.$validator.validateAll()
                     this.$refs.buildForm.submitForm()
                 }
-                if (valid && versionValid) {
+                if (buildFormValid && paramsFormValid && versionValid) {
                     const { paramValues, versionParamValues, buildNo, buildValues } = this
                     const newParams = Object.assign({}, paramValues, versionParamValues, buildValues)
                     if (this.isVisibleVersion) Object.assign(newParams, { buildNo })
