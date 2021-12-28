@@ -380,7 +380,4 @@ class ExperienceAppService(
             .build()
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExperienceHotJob::class.java)
-    }
 }
