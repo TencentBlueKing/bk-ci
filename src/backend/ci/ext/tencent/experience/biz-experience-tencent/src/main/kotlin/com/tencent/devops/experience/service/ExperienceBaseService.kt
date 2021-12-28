@@ -186,9 +186,7 @@ class ExperienceBaseService @Autowired constructor(
         return isPublic.value || isInPrivate.value
     }
 
-    fun isPublic(experienceId: Long, isOuter: Boolean) = !isOuter &&
-            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
-                ?: 0) > 0
+    fun isPublic(experienceId: Long?, isOuter: Boolean) = !isOuter && experienceId != null
 
     fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
         return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
@@ -302,4 +300,9 @@ class ExperienceBaseService @Autowired constructor(
             }
         }
     }
+
+    fun getNewestRecordId(projectId: String, bundleIdentifier: String, platform: String): Long? {
+        return experiencePublicDao.getNewestRecordId(dslContext, projectId, bundleIdentifier, platform)
+    }
+
 }

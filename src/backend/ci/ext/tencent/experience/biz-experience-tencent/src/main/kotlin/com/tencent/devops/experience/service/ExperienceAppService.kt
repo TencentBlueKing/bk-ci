@@ -108,15 +108,20 @@ class ExperienceAppService(
         appVersion: String?,
         organization: String?
     ): AppExperienceDetail {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-
-        val isPublic = experienceBaseService.isPublic(experienceId, isOuter)
-        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
-
         val experience = experienceDao.get(dslContext, experienceId)
+        val projectId = experience.projectId
+        val bundleIdentifier = experience.bundleIdentifier
+        val platform = experience.platform
+        val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
 
+        val isPublic = experienceBaseService.isPublic(newestRecordId, isOuter)
+        if (newestRecordId != null && newestRecordId != experienceId) {
+            experienceId = newestRecordId
+        }
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
@@ -125,9 +130,6 @@ class ExperienceAppService(
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
-
-        val projectId = experience.projectId
-        val bundleIdentifier = experience.bundleIdentifier
         val isExpired = DateUtil.isExpired(experience.endDate)
         val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId
@@ -168,7 +170,7 @@ class ExperienceAppService(
             shareUrl = shareUrl,
             name = projectName,
             packageName = experience.name,
-            platform = PlatformEnum.valueOf(experience.platform),
+            platform = PlatformEnum.valueOf(platform),
             version = version,
             expired = isExpired,
             canExperience = isPublic || isInPrivate,
