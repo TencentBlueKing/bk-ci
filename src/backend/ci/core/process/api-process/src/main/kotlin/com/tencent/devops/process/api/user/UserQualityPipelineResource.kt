@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_QUALITY_PIPELINE"], description = "用户-质量红线-流水线资源")
-@Path("/user/quality/pipelines")
+@Path("/user/pipelines/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserQualityPipelineResource {
