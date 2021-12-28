@@ -49,6 +49,7 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.job.ExperienceHotJob
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -60,6 +61,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
@@ -109,6 +111,7 @@ class ExperienceAppService(
         organization: String?
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        logger.info("oldExperienceId: $experienceId")
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
         val experience = experienceDao.get(dslContext, experienceId)
@@ -116,11 +119,12 @@ class ExperienceAppService(
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
         val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
-
+        logger.info("newestRecordId: $newestRecordId")
         val isPublic = experienceBaseService.isPublic(newestRecordId, isOuter)
         if (newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
         }
+        logger.info("newExperienceId: $experienceId")
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
@@ -376,5 +380,8 @@ class ExperienceAppService(
         return Response
             .temporaryRedirect(URI.create(publicRecord.externalLink))
             .build()
+    }
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceHotJob::class.java)
     }
 }
