@@ -65,10 +65,10 @@ enum class ErrorCodeEnum(
         errorCode = 2129009,
         formatErrorMessage = "Create new pipeline failed. Git api error: %s"
     ),
-    CREATE_NEW_FILE_ERROR_FORBIDDEN(
+    CREATE_NEW_FILE_GIT_API_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 21290015,
-        formatErrorMessage = "Create new pipeline failed. User [%s] is not authorized to commit file to branch [%s]."
+        formatErrorMessage = "Failed to add %s on branch %s. Git api error, code:  %s, message: %s."
     ),
     //    GET_PROJECT_BRANCHES_ERROR(ErrorType.THIRD_PARTY, 2129011, "获取仓库分支列表失败"),
     GET_GIT_MERGE_CHANGE_INFO(ErrorType.THIRD_PARTY, 2129012, "获取MERGE变更文件列表失败"),
