@@ -134,7 +134,7 @@ class YamlTemplate(
         const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
         const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
         const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
-                "The %s template can only contain parameters, resources and %s keywords"
+            "The %s template can only contain parameters, resources and %s keywords"
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
@@ -821,6 +821,11 @@ class YamlTemplate(
         return PreJob(
             name = job["name"]?.toString(),
             runsOn = job["runs-on"],
+            resourceExclusiveDeclaration = if (job["resource-exclusive-declaration"] == null) {
+                null
+            } else {
+                YamlObjects.getResourceExclusiveDeclaration(fromPath, job["resource-exclusive-declaration"]!!)
+            },
             container = if (job["container"] == null) {
                 null
             } else {
