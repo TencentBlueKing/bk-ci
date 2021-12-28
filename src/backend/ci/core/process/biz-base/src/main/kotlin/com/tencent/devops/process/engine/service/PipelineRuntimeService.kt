@@ -702,7 +702,7 @@ class PipelineRuntimeService @Autowired constructor(
         var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
+            context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
@@ -813,7 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
                 // --- 第3层循环：Element遍历处理 ---
-                needUpdateStage = pipelineContainerService.prepareBuildContainerTasks(
+                pipelineContainerService.prepareBuildContainerTasks(
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
@@ -850,7 +850,7 @@ class PipelineRuntimeService @Autowired constructor(
             stage.resetBuildOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
-                if (needUpdateStage) {
+                if (context.needUpdateStage) {
                     run findHistoryStage@{
                         lastTimeBuildStageRecords.forEach {
                             if (it.stageId == stage.id!!) {
