@@ -145,4 +145,28 @@ class SampleQualityPermissionServiceImpl constructor(
             fakeList
         }
     }
+
+    override fun supplierPermissionRule(projectId: String): List<Long> {
+        val projectRule = mutableListOf<Long>()
+        qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId
+        )?.forEach {
+            projectRule.add(it.id)
+        }
+        return projectRule
+    }
+
+    override fun supplierPermissionGroup(projectId: String): List<Long> {
+        val projectGroup = mutableListOf<Long>()
+        groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = 0,
+            limit = 500
+        ).forEach {
+            projectGroup.add(it.id)
+        }
+        return projectGroup
+    }
 }
