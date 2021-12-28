@@ -68,7 +68,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         return if (event.commits.isNullOrEmpty()) {
             ""
         } else {
-            event.commits.get(0).id ?: ""
+            event.commits!![0].id
         }
     }
 
