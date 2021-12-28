@@ -19,22 +19,6 @@ CREATE TABLE IF NOT EXISTS `T_BUILD_STARTUP_PARAM` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线启动变量表';
 
 -- ----------------------------
--- Table structure for T_METADATA
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_METADATA` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
-  `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
-  `BUILD_ID` varchar(34) NOT NULL COMMENT '构建ID',
-  `META_DATA_ID` varchar(128) NOT NULL COMMENT '元数据ID',
-  `META_DATA_VALUE` varchar(255) NOT NULL COMMENT '元数据值',
-  `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`ID`),
-  KEY `BUILD_ID` (`BUILD_ID`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
-
--- ----------------------------
 -- Table structure for T_PIPELINE_BUILD_CONTAINER
 -- ----------------------------
 

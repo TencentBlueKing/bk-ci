@@ -25,31 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.resources
+package com.tencent.devops.process.engine.utils
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.codecc.CodeccApi
-import com.tencent.devops.plugin.api.UserCodeccResource
-import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
-import com.tencent.devops.plugin.codecc.service.CodeccService
-import org.springframework.beans.factory.annotation.Autowired
+object BuildUtils {
 
-@RestResource
-class UserCodeccResourceImpl @Autowired constructor(
-    private val codeccService: CodeccService,
-    private val codeccApi: CodeccApi
-) : UserCodeccResource {
-
-    override fun getCodeccReport(buildId: String): Result<CodeccCallback?> {
-        return Result(codeccService.getCodeccReport(buildId))
-    }
-
-    override fun getCodeccRuleSet(projectId: String, userId: String, toolName: String): Result<Map<String, Any>> {
-        return codeccApi.getRuleSets(projectId, userId, toolName)
-    }
-
-    override fun languageCodeccRuleSet(projectId: String, userId: String): Result<Map<String, Any>> {
-        return codeccApi.getLanguageRuleSets(projectId, userId)
-    }
+    fun getCancelActionBuildKey(buildId: String) = "CANCEL_ACTION_$buildId"
 }

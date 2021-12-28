@@ -108,14 +108,16 @@ class PipelineContainerService @Autowired constructor(
         projectId: String,
         buildId: String,
         stageId: String? = null,
-        containsMatrix: Boolean? = true
+        containsMatrix: Boolean? = true,
+        statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
         val list = pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             stageId = stageId,
-            containsMatrix = containsMatrix
+            containsMatrix = containsMatrix,
+            statusSet = statusSet
         )
         val result = mutableListOf<PipelineBuildContainer>()
         if (list.isNotEmpty()) {
