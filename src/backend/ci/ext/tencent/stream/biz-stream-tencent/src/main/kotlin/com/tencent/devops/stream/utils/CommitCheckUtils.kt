@@ -35,6 +35,8 @@ object CommitCheckUtils {
     // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
     fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
 //        val event = request.gitEvent ?: return false
-        return gitCIBasicSetting.enableCommitCheck && request.objectKind != TGitObjectKind.MANUAL.value
+        return gitCIBasicSetting.enableCommitCheck &&
+            request.objectKind != TGitObjectKind.MANUAL.value &&
+            !request.isDeleteBranch()
     }
 }
