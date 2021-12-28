@@ -918,7 +918,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
                         val retryCount = context.executeCount - 1
                         val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
-                        list.find { it.key == PIPELINE_RETRY_COUNT}?.let { param ->
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
                             param.value = retryCount
                         } ?: run {
                             list.add(BuildParameters(
