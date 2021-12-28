@@ -72,10 +72,16 @@ class QualityConfiguration {
     fun v3QualityPermissionServiceImpl(
         authPermissionApi: AuthPermissionApi,
         authResourceApi: AuthResourceApi,
-        qualityAuthServiceCode: QualityAuthServiceCode
+        qualityAuthServiceCode: QualityAuthServiceCode,
+        groupDao: QualityNotifyGroupDao,
+        qualityRuleDao: QualityRuleDao,
+        dslContext: DSLContext
     ): QualityPermissionService = V3QualityPermissionServiceImpl(
         authPermissionApi = authPermissionApi,
         authResourceApi = authResourceApi,
-        qualityAuthServiceCode = qualityAuthServiceCode
+        qualityAuthServiceCode = qualityAuthServiceCode,
+        dslContext = dslContext,
+        groupDao = groupDao,
+        qualityRuleDao = qualityRuleDao
     )
 }

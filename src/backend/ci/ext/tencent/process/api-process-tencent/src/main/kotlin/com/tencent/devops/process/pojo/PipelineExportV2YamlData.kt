@@ -13,7 +13,7 @@ data class PipelineExportV2YamlData(
 
 data class PipelineExportV2YamlConflictMapItem(
     val stage: PipelineExportV2YamlConflictMapBaseItem? = null,
-    var job: PipelineExportV2YamlConflictMapBaseItem? = null,
+    var job: JobPipelineExportV2YamlConflictMapBaseItem? = null,
     var step: PipelineExportV2YamlConflictMapBaseItem? = null
 )
 
@@ -22,8 +22,14 @@ data class PipelineExportV2YamlConflictMapBaseItem(
     val name: String?
 )
 
+data class JobPipelineExportV2YamlConflictMapBaseItem(
+    val id: String?,
+    val name: String?,
+    val jobId: String?
+)
+
 data class MarketBuildAtomElementWithLocation(
     val stageLocation: PipelineExportV2YamlConflictMapBaseItem? = null,
-    val jobLocation: PipelineExportV2YamlConflictMapBaseItem? = null,
+    val jobLocation: JobPipelineExportV2YamlConflictMapBaseItem? = null,
     val stepAtom: MarketBuildAtomElement? = null
 )

@@ -70,11 +70,11 @@ class GitCIPipelineUrlBeanImpl constructor(
 
         logger.info("[$buildId]|genGitCIBuildDetailUrl| url=$url")
 
-        if (null != needShortUrl && needShortUrl == false) {
-            return url
+        return if (needShortUrl) {
+            client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        } else {
+            url
         }
-
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {

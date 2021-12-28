@@ -62,8 +62,8 @@ class ProjectTagService @Autowired constructor(
 
     private val executePool = Executors.newFixedThreadPool(1)
 
-    @Value("\${system.router}")
-    val routerTagList: String = ""
+    @Value("\${system.router:#{null}}")
+    val routerTagList: String? = ""
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
@@ -323,7 +323,12 @@ class ProjectTagService @Autowired constructor(
         if (routerTag.isNullOrBlank()) {
             throw ParamBlankException("routerTag error:empty routerTag")
         }
-        if (!routerTagList.contains(routerTag)) {
+
+        if (routerTagList.isNullOrBlank()) {
+            throw ParamBlankException("routerTag error:empty routerTagList")
+        }
+
+        if (!routerTagList!!.contains(routerTag)) {
             throw ParamBlankException("routerTag error:system unkown routerTag")
         }
     }
