@@ -664,7 +664,7 @@ class GitService @Autowired constructor(
             if (!it.isSuccessful) {
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${it.code()})${it.message()}"
+                    message = it.message()
                 )
             }
             return true
