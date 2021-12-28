@@ -66,6 +66,14 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -74,6 +82,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -96,9 +105,11 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -108,7 +119,6 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildVariableService
@@ -129,14 +139,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -615,7 +617,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildStatus: BuildStatus
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
-        // 发送事件
+        // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
                 source = javaClass.simpleName,
@@ -633,7 +635,33 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId
             )
         )
-
+        // 给未结束的job发送心跳监控事件
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containers = pipelineContainerService.listContainers(
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        containers.forEach { container ->
+            pipelineEventDispatcher.dispatch(
+                PipelineContainerAgentHeartBeatEvent(
+                    source = BS_CANCEL_BUILD_SOURCE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    containerId = container.containerId,
+                    executeCount = container.executeCount,
+                    delayMills = 20000
+                )
+            )
+        }
         return true
     }
 
@@ -774,8 +802,7 @@ class PipelineRuntimeService @Autowired constructor(
                     构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
                 if (container.matrixGroupFlag == true) {
-                    if (container is VMBuildContainer) container.retryFreshMatrixOption()
-                    else if (container is NormalContainer) container.retryFreshMatrixOption()
+                    container.retryFreshMatrixOption()
                     pipelineContainerService.cleanContainersInMatrixGroup(
                         transactionContext = dslContext,
                         projectId = pipelineInfo.projectId,
@@ -819,7 +846,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            stage.refreshCheckOption(true)
+            stage.resetBuildOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (needUpdateStage) {

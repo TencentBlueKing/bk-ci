@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -425,8 +426,6 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
-                    // #4531 重试完整构建时将所有stage的审核状态恢复
-                    pipelineStageService.retryRefreshStage(model)
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
@@ -1733,8 +1732,8 @@ class PipelineBuildFacadeService(
                 )
             }
             // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作
-            val cancelFlag = redisOperation.get("${BuildStatus.CANCELED.name}_$buildId")?.toBoolean()
-            if (cancelFlag == true) {
+            val cancelActionFlag = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toBoolean()
+            if (cancelActionFlag == true) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
@@ -1767,17 +1766,17 @@ class PipelineBuildFacadeService(
             val tasks = pipelineTaskService.getRunningTask(buildId)
 
             tasks.forEach { task ->
-                val taskId = task["taskId"] ?: ""
-                val containerId = task["containerId"] ?: ""
+                val taskId = task["taskId"]?.toString() ?: ""
+                val containerId = task["containerId"]?.toString() ?: ""
                 val status = task["status"] ?: ""
-                val executeCount = task["executeCount"] ?: 1
+                val executeCount = task["executeCount"] as? Int ?: 1
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "Run cancelled by $userId",
-                    tag = taskId.toString(),
-                    jobId = containerId.toString(),
-                    executeCount = executeCount as Int
+                    tag = taskId,
+                    jobId = containerId,
+                    executeCount = executeCount
                 )
             }
 
