@@ -12,9 +12,10 @@ import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.buildless.utils.ThreadPoolUtils
+import com.tencent.devops.buildless.config.ThreadPoolConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -23,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock
 class ContainerPoolExecutor @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val buildLessConfig: BuildLessConfig,
+    private val taskExecutor: ThreadPoolTaskExecutor,
     private val rejectedExecutionFactory: RejectedExecutionFactory,
     private val buildLessContainerService: BuildLessContainerService
 ) {
@@ -101,7 +103,7 @@ class ContainerPoolExecutor @Autowired constructor(
 
     private fun createBuildLessPoolContainer(index: Int = 1) {
         for (i in 1..index) {
-            ThreadPoolUtils.getInstance().run {
+            taskExecutor.submit {
                 buildLessContainerService.createContainer()
             }
         }

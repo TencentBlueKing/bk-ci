@@ -33,11 +33,14 @@ import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @RestResource
 class BuildBuildLessResourceImpl @Autowired constructor(
+    private val executor: Executor,
     private val buildlessTaskService: BuildLessTaskService
 ) : BuildBuildLessResource {
 
@@ -54,6 +57,19 @@ class BuildBuildLessResourceImpl @Autowired constructor(
         } finally {
             futureResult?.cancel(true)
         }
+    }
+
+    override fun claimBuildLessTaskTest(containerId: String): String? {
+        val supplyAsync: CompletableFuture<String> = CompletableFuture.supplyAsync({
+            for (i in 1..10) {
+                Thread.sleep(1000)
+            }
+            "123213123123"
+        }, executor)
+
+        val result = supplyAsync.get()
+        logger.info("lalalala i am done.")
+        return result
     }
 
     companion object {

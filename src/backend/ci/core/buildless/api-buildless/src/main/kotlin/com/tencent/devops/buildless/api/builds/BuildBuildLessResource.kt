@@ -52,4 +52,13 @@ interface BuildBuildLessResource {
         @QueryParam("containerId")
         containerId: String
     ): BuildLessTask?
+
+    @ApiOperation("轮询任务")
+    @GET
+    @Path("/task/claim/test")
+    fun claimBuildLessTaskTest(
+        @ApiParam(value = "containerId", required = true)
+        @QueryParam("containerId")
+        containerId: String
+    ): String?
 }
