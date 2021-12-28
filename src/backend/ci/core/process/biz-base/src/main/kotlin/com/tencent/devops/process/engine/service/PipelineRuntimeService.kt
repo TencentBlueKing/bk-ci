@@ -135,6 +135,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
@@ -913,6 +914,11 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
+                    // 重试时启动参数只需要刷新执行次数
+                    buildHistoryRecord.buildParameters?.let { self ->
+                        val list: List<BuildParameters> = JsonUtil.to(self)
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.value = context.executeCount
+                    }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
