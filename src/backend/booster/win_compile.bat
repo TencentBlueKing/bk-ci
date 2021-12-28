@@ -28,8 +28,8 @@ if [%CURRENTDATE%] == [] (
 set VERSION=%GITTAG%-%CURRENTDATE%
 echo %VERSION%
 
-set "LDFLAG=-X build-booster/common/static.EncryptionKey=%encryption_key% -X build-booster/common/static.ServerCertPwd=%server_cert_pwd% -X build-booster/common/static.ClientCertPwd=%client_cert_pwd% -X build-booster/common/version.Version=%VERSION% -X build-booster/common/version.BuildTime=%BUILDTIME% -X build-booster/common/version.GitHash=%GITHASH% -X build-booster/common/version.Tag=%GITTAG%"
-set "BuildBooster_LDFLAG=-X build-booster/bk_dist/booster/command.ProdBuildBoosterServerDomain=%distcc_server_prod_domain% -X build-booster/bk_dist/booster/command.ProdBuildBoosterServerPort=%distcc_server_prod_port% -X build-booster/bk_dist/booster/command.TestBuildBoosterServerDomain=%distcc_server_test_domain% -X build-booster/bk_dist/booster/command.TestBuildBoosterServerPort=%distcc_server_test_port%"
+set "LDFLAG=-X github.com/Tencent/bk-ci/src/booster/common/static.EncryptionKey=%encryption_key% -X github.com/Tencent/bk-ci/src/booster/common/static.ServerCertPwd=%server_cert_pwd% -X github.com/Tencent/bk-ci/src/booster/common/static.ClientCertPwd=%client_cert_pwd% -X github.com/Tencent/bk-ci/src/booster/common/version.Version=%VERSION% -X github.com/Tencent/bk-ci/src/booster/common/version.BuildTime=%BUILDTIME% -X github.com/Tencent/bk-ci/src/booster/common/version.GitHash=%GITHASH% -X github.com/Tencent/bk-ci/src/booster/common/version.Tag=%GITTAG%"
+set "BuildBooster_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ProdBuildBoosterServerDomain=%distcc_server_prod_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ProdBuildBoosterServerPort=%distcc_server_prod_port% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerDomain=%distcc_server_test_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerPort=%distcc_server_test_port%"
 
 cd %curpath%
 set bindir=%curpath%\bin
