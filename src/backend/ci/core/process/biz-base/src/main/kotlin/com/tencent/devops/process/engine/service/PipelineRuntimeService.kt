@@ -916,7 +916,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
                     buildHistoryRecord.buildParameters?.let { self ->
-                        val list: List<BuildParameters> = JsonUtil.to(self)
+                        val list = JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                         list.find { it.key == PIPELINE_RETRY_COUNT }?.value = context.executeCount
                     }
                     transactionContext.batchStore(buildHistoryRecord).execute()
