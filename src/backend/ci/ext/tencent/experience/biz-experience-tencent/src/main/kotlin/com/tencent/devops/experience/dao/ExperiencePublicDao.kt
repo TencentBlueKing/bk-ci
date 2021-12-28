@@ -383,8 +383,10 @@ class ExperiencePublicDao {
     }
 
     fun getNewestRecordId(
-        dslContext: DSLContext, projectId: String,
-        bundleIdentifier: String, platform: String
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
     ): Long? {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)

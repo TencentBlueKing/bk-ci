@@ -377,5 +377,4 @@ class ExperienceAppService(
             .temporaryRedirect(URI.create(publicRecord.externalLink))
             .build()
     }
-
 }
