@@ -28,6 +28,7 @@
 dependencies {
     api(project(":ext:tencent:log:biz-log-tencent"))
     api(project(":core:log:biz-log-sample"))
+    api(project(":core:common:common-auth:common-auth-mock"))
 }
 
 
