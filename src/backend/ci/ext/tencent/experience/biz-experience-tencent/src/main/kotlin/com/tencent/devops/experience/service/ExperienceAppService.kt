@@ -111,21 +111,18 @@ class ExperienceAppService(
         organization: String?
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        logger.info("oldExperienceId: $experienceId")
         var experience = experienceDao.get(dslContext, experienceId)
-        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
-        val isOuter = organization == ORGANIZATION_OUTER
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
         val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
-        logger.info("newestRecordId: $newestRecordId")
+        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
+        val isOuter = organization == ORGANIZATION_OUTER
         val isPublic = experienceBaseService.isPublic(newestRecordId, isOuter)
         if (newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
             experience = experienceDao.get(dslContext, experienceId)
         }
-        logger.info("newExperienceId: $experienceId")
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
