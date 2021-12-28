@@ -66,19 +66,20 @@ void initEnv()
     return;
 }
 
-void setHookFlag()
-{
-    if (setenv(key_hooked_flag, "true", 1) != 0)
-    {
-        int temperr = errno;
-        bk_log(WARN, "failed to set env with key[%s] errno[%d]\n", key_hooked_flag, temperr);
-        errno = temperr;
-    }
-    else
-    {
-        bk_log(DEBUG, "succeed to set key[%s] to [true]...\n", key_hooked_flag);
-    }
-}
+// do not call setenv, it's not thread-safe
+// void setHookFlag()
+// {
+//     if (setenv(key_hooked_flag, "true", 1) != 0)
+//     {
+//         int temperr = errno;
+//         bk_log(WARN, "failed to set env with key[%s] errno[%d]\n", key_hooked_flag, temperr);
+//         errno = temperr;
+//     }
+//     else
+//     {
+//         bk_log(DEBUG, "succeed to set key[%s] to [true]...\n", key_hooked_flag);
+//     }
+// }
 
 void checkHookFlag()
 {
@@ -96,8 +97,9 @@ void checkHookFlag()
         {
             bk_log(DEBUG, "succeed to get hooked key with [\"true\"]\n");
             needHook = false;
+            
             // 如果发现上级进程已经设置过标记，则继续设置，往下传递
-            setHookFlag();
+            // setHookFlag();
         }
     }
     else
@@ -204,7 +206,8 @@ bool getReplaceCmd(const char *src, std::string &target)
     }
 
     // 替换命令前，设置hook标记
-    setHookFlag();
+    // setHookFlag();
+
     bk_log(DEBUG, "succeed to get target[%s] with src[%s]...\n", target.c_str(), src);
     return true;
 }
