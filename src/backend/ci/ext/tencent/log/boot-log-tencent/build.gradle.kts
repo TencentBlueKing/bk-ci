@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":ext:tencent:log:biz-log-tencent"))
+    api(project(":core:log:biz-log-sample"))
 }
 
 
