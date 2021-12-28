@@ -168,7 +168,11 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
-        return if (elementType in QualityIndicator.SCRIPT_ELEMENT) listOf() else serviceList(elementType, enNameSet)
+        return if (elementType in QualityIndicator.SCRIPT_ELEMENT) {
+            listOf()
+        } else {
+            serviceList(elementType, enNameSet).filter { it.enable ?: false }
+        }
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {

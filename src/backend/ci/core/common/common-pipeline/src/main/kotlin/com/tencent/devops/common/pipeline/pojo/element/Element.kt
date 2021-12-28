@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
@@ -58,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
+    JsonSubTypes.Type(value = MatrixStatusElement::class, name = MatrixStatusElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitlabWebHookTriggerElement::class, name = CodeGitlabWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeSVNWebHookTriggerElement::class, name = CodeSVNWebHookTriggerElement.classType),
@@ -96,6 +98,7 @@ abstract class Element(
     open var version: String = "1.*",
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
     open var additionalOptions: ElementAdditionalOptions? = null,
+    open var stepId: String? = null, // 用于上下文键值设置
     open var errorType: String? = null,
     open var errorCode: Int? = null,
     open var errorMsg: String? = null

@@ -131,7 +131,8 @@ object PipelineUtils {
             params = instanceParam,
             buildNo = buildNo,
             canRetry = templateTrigger.canRetry,
-            containerId = templateTrigger.containerId
+            containerId = templateTrigger.containerId,
+            containerHashId = templateTrigger.containerHashId
         )
 
         return Model(
