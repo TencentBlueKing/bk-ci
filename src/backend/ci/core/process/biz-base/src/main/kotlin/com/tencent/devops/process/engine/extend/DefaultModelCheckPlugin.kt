@@ -322,7 +322,7 @@ open class DefaultModelCheckPlugin constructor(
 
     private fun loopFind(elements: List<Element>, originElement: Element): Boolean {
         elements.forEach { e ->
-            if (e.stepId == originElement.stepId || e.id == originElement.id) {
+            if (e.stepId?.let { it == originElement.stepId } == true  || e.id == originElement.id) {
                 return true
             }
         }
