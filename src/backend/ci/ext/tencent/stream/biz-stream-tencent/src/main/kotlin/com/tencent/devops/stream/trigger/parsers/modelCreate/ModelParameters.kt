@@ -134,7 +134,7 @@ object ModelParameters {
                     GitPushEvent.classType
                 }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
-                    originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
+                    originEvent.commits?.firstOrNull { it.id == originEvent.after }?.author?.name ?: ""
                 startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
                 if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
