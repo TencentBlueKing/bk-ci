@@ -113,7 +113,7 @@ class StreamYamlTrigger @Autowired constructor(
             gitProjectInfo = gitProjectInfo
         )
 
-        if (!isTrigger && !isTiming) {
+        if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}"
