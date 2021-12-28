@@ -75,6 +75,8 @@ class FeignConfiguration {
                 } else {
                     requestTemplate.header(TraceTag.X_DEVOPS_RID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
                 }
+            } else {
+                requestTemplate.header(TraceTag.X_DEVOPS_RID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
             }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
