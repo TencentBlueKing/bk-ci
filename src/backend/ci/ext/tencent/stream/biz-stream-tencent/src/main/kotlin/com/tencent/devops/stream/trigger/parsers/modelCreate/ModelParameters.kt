@@ -155,7 +155,7 @@ object ModelParameters {
                     GitTagPushEvent.classType
                 }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
-                    originEvent.commits?.get(0)?.author?.name ?: ""
+                    originEvent.commits?.firstOrNull()?.author?.name ?: ""
                 startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
                 if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
