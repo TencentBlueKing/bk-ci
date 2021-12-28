@@ -915,9 +915,10 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
-                    buildHistoryRecord.buildParameters?.let { self ->
+                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
                         val list = JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                        list.find { it.key == PIPELINE_RETRY_COUNT }?.value = context.executeCount
+                        list.forEach { if (it.key == PIPELINE_RETRY_COUNT) it.value = context.executeCount }
+                        JsonUtil.toJson(list)
                     }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
