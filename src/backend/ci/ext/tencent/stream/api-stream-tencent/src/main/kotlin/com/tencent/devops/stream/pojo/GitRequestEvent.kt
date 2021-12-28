@@ -110,6 +110,11 @@ data class GitRequestEvent(
                 commitId == DELETE_BRANCH_COMMITID_FROM_CLIENT)
     }
 
+    fun isDeleteTag():Boolean {
+        return objectKind == TGitObjectKind.TAG_PUSH.value &&
+            operationKind == TGitPushOperationKind.DELETE.value
+    }
+
     // 当人工触发时不推送CommitCheck消息
     fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
 }
