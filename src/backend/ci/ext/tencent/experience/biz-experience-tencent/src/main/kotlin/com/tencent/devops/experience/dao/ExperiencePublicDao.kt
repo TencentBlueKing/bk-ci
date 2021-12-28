@@ -391,6 +391,8 @@ class ExperiencePublicDao {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
                 .fetchOne()?.recordId
