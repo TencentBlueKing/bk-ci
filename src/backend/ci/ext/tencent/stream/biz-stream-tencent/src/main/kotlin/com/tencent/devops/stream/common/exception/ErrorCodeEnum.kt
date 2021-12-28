@@ -93,7 +93,13 @@ enum class ErrorCodeEnum(
     GET_GIT_LATEST_REVISION_ERROR(ErrorType.THIRD_PARTY, 2129021, "获取分支最新commit信息失败"),
     GET_COMMIT_CHANGE_FILE_LIST_ERROR(ErrorType.THIRD_PARTY, 2129022, "获取提交差异文件列表失败"),
     JOB_ID_CONFLICT_ERROR(ErrorType.USER, 2129023, "job id 流水线内不能重复"),
-    STEP_ID_CONFLICT_ERROR(ErrorType.USER, 2129024, "step id 同一job内不能重复"), ;
+    STEP_ID_CONFLICT_ERROR(ErrorType.USER, 2129024, "step id 同一job内不能重复"),
+    COMMON_USER_NOT_EXISTS(
+        errorType = ErrorType.USER,
+        errorCode = 2129025,
+        formatErrorMessage = "公共账号[%s]未注册，请先联系 DevOps-helper 注册"
+    ),
+    ;
 
     companion object {
 
