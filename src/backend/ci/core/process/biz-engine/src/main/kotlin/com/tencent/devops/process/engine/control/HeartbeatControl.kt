@@ -34,11 +34,12 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,23 +58,27 @@ class HeartbeatControl @Autowired constructor(
 
     companion object {
         private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
+        private const val CANCEL_TIMEOUT_IN_MS = 20000 // 取消构建超时时间为20秒
         private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
         private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }
 
     fun detectHeartbeat(event: PipelineContainerAgentHeartBeatEvent) {
-        val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(event.buildId, event.containerId))
+        val buildId = event.buildId
+        val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(buildId, event.containerId))
             ?: run {
-                LOG.info("${event.buildId}|HEART_BEAT_MONITOR_CANCEL|j(${event.containerId})")
+                LOG.info("$buildId|HEART_BEAT_MONITOR_CANCEL|j(${event.containerId})")
                 return
             }
 
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
-        if (elapse > TIMEOUT_IN_MS) {
+        // 如果消息事件来源是取消构建操作，超时时间为CANCEL_TIMEOUT_IN_MS
+        val timeOutLimit = if (event.source == BS_CANCEL_BUILD_SOURCE) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
+        if (elapse > timeOutLimit) {
             timeout(event, elapse)
         } else {
             if (Math.floorMod(event.retryTime++, LOG_PER_TIMES) == 1) {
-                LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR|" +
+                LOG.info("ENGINE|$buildId|HEARTBEAT_MONITOR|" +
                     "${event.source}|j(${event.containerId})|loopTime=${event.retryTime}")
             }
             // 正常是继续循环检查当前消息
