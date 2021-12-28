@@ -25,9 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.common.exception
+package com.tencent.devops.stream.common.exception.handler
 
-class GitCINoEnableException(project: String) : StreamCustomException(
-    status = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
-    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project)
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.stream.common.exception.StreamCustomException
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
+
+/**
+ * 针对stream的一些特殊返回定制的 custom response
+ */
+@BkExceptionMapper
+class StreamCustomExceptionMapper : ExceptionMapper<StreamCustomException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(StreamCustomExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: StreamCustomException): Response {
+        logger.warn("Failed with stream custom exception: $exception")
+        return Response.status(exception.status)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(exception.status, exception.message ?: "Internal Exception")).build()
+    }
+}

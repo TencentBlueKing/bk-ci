@@ -34,7 +34,7 @@ enum class ErrorCodeEnum(
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
-    STREAM_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[%s]CI is not enabled"),
+    STREAM_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[repository: %s]CI is not enabled"),
 
     //    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "stream系统错误"),
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),

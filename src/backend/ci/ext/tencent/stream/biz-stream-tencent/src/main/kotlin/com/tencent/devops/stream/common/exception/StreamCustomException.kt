@@ -27,7 +27,4 @@
 
 package com.tencent.devops.stream.common.exception
 
-class GitCINoEnableException(project: String) : StreamCustomException(
-    status = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
-    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project)
-)
+open class StreamCustomException(val status: Int, message: String) : RuntimeException(message)
