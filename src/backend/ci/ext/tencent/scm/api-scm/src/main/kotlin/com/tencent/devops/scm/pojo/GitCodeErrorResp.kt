@@ -25,33 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.scm.pojo
 
-/*
-    工蜂接口返回状态码枚举
- */
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-enum class GitCodeApiStatus(val status: Int, val content: String) {
-    OK(200, "操作成功"),
-    CREATED(201, "创建成功"),
-    BAD_REQUEST(400, "参数错误，或是参数格式错误"),
-    UNAUTHORIZED(401, "认证失败"),
-    FORBIDDEN(403, "帐号并没有该操作的权限或者项目设置不允许该操作"),
-    NOT_FOUND(404, "资源不存在，也可能是帐号没有该项目的权限（为防止黑客撞库获取库列表）"),
-    METHOD_NOT_ALLOWED(405, "没有该接口"),
-    CONFLICT(409, "与已存在的对象/内容冲突或者操作行为与规则相冲突"),
-    UNPROCESSABLE(422, "操作不能进行"),
-    LOCKED(423, "帐号被锁定，或api请求频率超限"),
-    TOO_MANY_REQUESTS(429, "请求被限流"),
-    SERVER_ERROR(500, "服务器出错");
-
-    companion object {
-        fun getStatus(status: Int): GitCodeApiStatus? {
-            val codes = values().associateBy { it.status }
-            if (status !in codes.keys) {
-                return null
-            }
-            return codes[status]
-        }
-    }
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeErrorResp(
+    val message: String?
+)
