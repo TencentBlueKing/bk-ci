@@ -112,9 +112,9 @@ class ExperienceAppService(
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         logger.info("oldExperienceId: $experienceId")
+        var experience = experienceDao.get(dslContext, experienceId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
@@ -123,6 +123,7 @@ class ExperienceAppService(
         val isPublic = experienceBaseService.isPublic(newestRecordId, isOuter)
         if (newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
+            experience = experienceDao.get(dslContext, experienceId)
         }
         logger.info("newExperienceId: $experienceId")
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
@@ -381,6 +382,7 @@ class ExperienceAppService(
             .temporaryRedirect(URI.create(publicRecord.externalLink))
             .build()
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceHotJob::class.java)
     }
