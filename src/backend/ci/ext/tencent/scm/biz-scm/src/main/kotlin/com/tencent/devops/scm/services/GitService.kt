@@ -74,6 +74,7 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeErrorResp
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -659,12 +660,17 @@ class GitService @Autowired constructor(
                 )
             )
             .build()
-        logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
             if (!it.isSuccessful) {
-                throw CustomException(
+                val data = it.body()?.string() ?: throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
                     message = it.message()
+                )
+                val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = resp.message ?: it.message()
                 )
             }
             return true
