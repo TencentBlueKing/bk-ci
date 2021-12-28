@@ -916,16 +916,19 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     // 重试时启动参数只需要刷新执行次数
                     buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
-                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
-                        list.find { it.key == PIPELINE_RETRY_COUNT}?.let { param ->
-                            param.value = context.executeCount
-                        } ?: run {
-                            list.add(BuildParameters(
-                                key = PIPELINE_RETRY_COUNT,
-                                value = context.executeCount
-                            ))
-                        }
-                        JsonUtil.toJson(list)
+                        val origin = JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                        var firstTime = true
+                        val new = origin.map {
+                            if (it.key == PIPELINE_RETRY_COUNT) {
+                                firstTime = false
+                                it.copy(value = context.executeCount)
+                            } else it
+                        }.toMutableList()
+                        if (firstTime) new.add(BuildParameters(
+                            key = PIPELINE_RETRY_COUNT,
+                            value = context.executeCount
+                        ))
+                        JsonUtil.toJson(new)
                     }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
