@@ -33,14 +33,12 @@ import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -56,8 +54,7 @@ import javax.ws.rs.core.Response
 @Suppress("ALL")
 class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineBuildQualityService: PipelineBuildQualityService
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -430,33 +427,6 @@ class UserBuildResourceImpl @Autowired constructor(
                 containerId = containerId
             )
         )
-    }
-
-    override fun manualQualityGateReview(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        elementId: String,
-        action: ManualReviewAction
-    ): Result<Boolean> {
-        checkParam(userId, projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (elementId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        pipelineBuildQualityService.buildManualQualityGateReview(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            elementId = elementId,
-            action = action,
-            channelCode = ChannelCode.BS
-        )
-        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
