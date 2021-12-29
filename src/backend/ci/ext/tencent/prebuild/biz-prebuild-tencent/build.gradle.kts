@@ -72,12 +72,5 @@ dependencies {
     api("com.vmware:vijava")
     api("org.json:json")
     testImplementation(project(":core:common:common-test"))
-}
-
-gradle.taskGraph.whenReady {
-    gradle.taskGraph.allTasks.forEach {
-        if (it.project == project) {
-            it.onlyIf { false }
-        }
-    }
+    testImplementation("org.mockito:mockito-inline")
 }

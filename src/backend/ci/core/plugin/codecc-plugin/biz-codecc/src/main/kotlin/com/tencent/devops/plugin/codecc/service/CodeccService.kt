@@ -42,9 +42,7 @@ import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceMetadataResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.Property
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -57,7 +55,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class CodeccService @Autowired constructor(
     private val client: Client,
     private val pluginCodeccDao: PluginCodeccDao,
@@ -94,17 +93,18 @@ class CodeccService @Autowired constructor(
         val taskCallbacks = taskCallbacksTemp?.filter { !it.taskId.isNullOrBlank() }?.map {
             val toolSnapshotList = objectMapper.readValue<List<Map<String, Any>>>(it.toolSnapshotList)
             CodeccCallback(
-                it.projectId,
-                it.pipelineId,
-                it.taskId,
-                it.buildId,
-                toolSnapshotList
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                taskId = it.taskId,
+                buildId = it.buildId,
+                toolSnapshotList = toolSnapshotList
             )
         } ?: listOf()
-        val taskProjMap = taskCallbacks.map { it.taskId to it.projectId }.toMap()
-        return getCodeccTask(taskProjMap.keys, beginDate, endDate).map {
-            (taskProjMap[it.taskId] ?: "") to it
-        }.toMap()
+        val taskProjMap = taskCallbacks.associate { it.taskId to it.projectId }
+        return getCodeccTask(taskIds = taskProjMap.keys, beginDate = beginDate, endDate = endDate)
+            .associateBy {
+                (taskProjMap[it.taskId] ?: "")
+            }
     }
 
     fun getCodeccTaskByPipeline(
@@ -116,17 +116,18 @@ class CodeccService @Autowired constructor(
             pluginCodeccDao.getCallbackByPipeline(dslContext, pipelineIds)?.filter { !it.taskId.isNullOrBlank() }?.map {
                 val toolSnapshotList = objectMapper.readValue<List<Map<String, Any>>>(it.toolSnapshotList)
                 CodeccCallback(
-                    it.projectId,
-                    it.pipelineId,
-                    it.taskId,
-                    it.buildId,
-                    toolSnapshotList
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    taskId = it.taskId,
+                    buildId = it.buildId,
+                    toolSnapshotList = toolSnapshotList
                 )
             } ?: listOf()
-        val taskPipelineMap = taskCallbacks.map { it.taskId to it.pipelineId }.toMap()
-        return getCodeccTask(taskPipelineMap.keys, beginDate, endDate).map {
-            (taskPipelineMap[it.taskId] ?: "") to it
-        }.toMap()
+        val taskPipelineMap = taskCallbacks.associate { it.taskId to it.pipelineId }
+        return getCodeccTask(taskIds = taskPipelineMap.keys, beginDate = beginDate, endDate = endDate)
+            .associateBy {
+                (taskPipelineMap[it.taskId] ?: "")
+            }
     }
 
     fun getCodeccBuildInfo(buildId: Set<String>): Map<String/*buildId*/, CodeccBuildInfo> {
@@ -135,16 +136,16 @@ class CodeccService @Autowired constructor(
         val buildInfoMap = client.get(ServiceBuildResource::class).batchServiceBasic(buildId).data ?: mapOf()
         buildInfoMap.values.groupBy { it.projectId }.forEach { (projectId, infoList) ->
             val buildStatusList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
-                projectId,
-                infoList.map { it.buildId }.toSet(),
-                ChannelCode.BS
+                projectId = projectId,
+                buildId = infoList.map { it.buildId }.toSet(),
+                channelCode = ChannelCode.BS
             ).data
                 ?: throw NotFoundException("no build status buildId($buildId)")
             resultMap.putAll(buildStatusList.map {
                 it.id to CodeccBuildInfo(
-                    buildNoMap[it.id] ?: "",
-                    it.startTime,
-                    it.userId
+                    buildNo = buildNoMap[it.id] ?: "",
+                    buildTime = it.startTime,
+                    buildUser = it.userId
                 )
             })
         }
@@ -152,23 +153,6 @@ class CodeccService @Autowired constructor(
     }
 
     fun callback(callback: CodeccCallback): String {
-        // 创建元数据
-        try {
-            val toolSnapshot = callback.toolSnapshotList[0]
-            val metadatas = mutableListOf<Property>()
-            // 遗留告警数
-            metadatas.add(Property("codecc.coverity.warning.count", toolSnapshot["total_new"].toString()))
-            // 遗留严重告警数
-            val serious = if (toolSnapshot["total_new_serious"] is Int) toolSnapshot["total_new_serious"] as Int else 0
-            metadatas.add(Property("codecc.coverity.warning.high.count", serious.toString()))
-            // 遗留严重+一般告警数
-            val normal = if (toolSnapshot["total_new_normal"] is Int) toolSnapshot["total_new_normal"] as Int else 0
-            metadatas.add(Property("codecc.coverity.warning.highAndLight.count", (normal + serious).toString()))
-            client.get(ServiceMetadataResource::class)
-                .create(callback.projectId, callback.pipelineId, callback.buildId, metadatas)
-        } catch (e: Exception) {
-            logger.error("创建元数据失败: ${e.message}", e)
-        }
         // 标识完成
         val key = "code_cc_${callback.projectId}_${callback.pipelineId}_${callback.buildId}_done"
         redisOperation.set(key, callback.taskId, 300)
@@ -180,11 +164,11 @@ class CodeccService @Autowired constructor(
         val callback = pluginCodeccDao.getCallback(dslContext, buildId) ?: return null
         val toolSnapshotList = objectMapper.readValue<List<Map<String, Any>>>(callback.toolSnapshotList)
         return CodeccCallback(
-            callback.projectId,
-            callback.pipelineId,
-            callback.taskId,
-            callback.buildId,
-            toolSnapshotList
+            projectId = callback.projectId,
+            pipelineId = callback.pipelineId,
+            taskId = callback.taskId,
+            buildId = callback.buildId,
+            toolSnapshotList = toolSnapshotList
         )
     }
 
@@ -241,30 +225,30 @@ class CodeccService @Autowired constructor(
         val result = pluginCodeccDao.getCallbackByPipeline(dslContext, pipelineIds)?.map { callback ->
             val toolSnapshotList = objectMapper.readValue<List<Map<String, Any>>>(callback.toolSnapshotList)
             CodeccCallback(
-                callback.projectId,
-                callback.pipelineId,
-                callback.taskId,
-                callback.buildId,
-                toolSnapshotList
+                projectId = callback.projectId,
+                pipelineId = callback.pipelineId,
+                taskId = callback.taskId,
+                buildId = callback.buildId,
+                toolSnapshotList = toolSnapshotList
             )
         } ?: listOf()
         val codeccTasks = getCodeccTask(result.map { it.taskId }, beginDate, endDate)
-        val resultMap = result.map { it.taskId to it }.toMap()
-        val taskPipelineMap = result.map { it.taskId to it.pipelineId }.toMap()
-        return codeccTasks.map {
+        val resultMap = result.associateBy { it.taskId }
+        val taskPipelineMap = result.associate { it.taskId to it.pipelineId }
+        return codeccTasks.associate {
             (taskPipelineMap[it.taskId] ?: "") to (resultMap[it.taskId] ?: CodeccCallback())
-        }.toMap()
+        }
     }
 
     fun getCodeccTaskResultByBuildIds(buildIds: Set<String>): Map<String, CodeccCallback> {
         return pluginCodeccDao.getCallbackByBuildId(dslContext, buildIds).map { callback ->
             val toolSnapshotList = objectMapper.readValue<List<Map<String, Any>>>(callback.toolSnapshotList)
             callback.buildId to CodeccCallback(
-                callback.projectId,
-                callback.pipelineId,
-                callback.taskId,
-                callback.buildId,
-                toolSnapshotList
+                projectId = callback.projectId,
+                pipelineId = callback.pipelineId,
+                taskId = callback.taskId,
+                buildId = callback.buildId,
+                toolSnapshotList = toolSnapshotList
             )
         }.toMap()
     }
@@ -276,11 +260,7 @@ class CodeccService @Autowired constructor(
     ): List<BlueShieldResponse.Item> {
         val formatter = SimpleDateFormat("YYYY-MM-dd")
         val blueShieldRequest = if (beginDate != null && endDate != null) {
-            BlueShieldRequest(
-                taskIds,
-                formatter.format(beginDate),
-                formatter.format(Date())
-            )
+            BlueShieldRequest(taskIds, formatter.format(beginDate), formatter.format(Date()))
         } else {
             BlueShieldRequest(taskIds, "2018-01-01", formatter.format(Date()))
         }

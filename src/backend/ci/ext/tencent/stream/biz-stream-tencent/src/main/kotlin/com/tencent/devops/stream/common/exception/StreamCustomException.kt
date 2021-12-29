@@ -25,20 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.resources
+package com.tencent.devops.stream.common.exception
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
-import com.tencent.devops.plugin.codecc.pojo.CodeccElementData
-import com.tencent.devops.plugin.codecc.service.CodeccElementService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ServiceCodeccElementResourceImpl @Autowired constructor(
-    private val codeccElementService: CodeccElementService
-) : ServiceCodeccElementResource {
-    override fun get(projectId: String, pipelineId: String): Result<CodeccElementData?> {
-        return Result(codeccElementService.getCodeccElement(projectId, pipelineId))
-    }
-}
+open class StreamCustomException(val status: Int, message: String) : RuntimeException(message)
