@@ -94,7 +94,8 @@ class TriggerMatcher @Autowired constructor(
                 context = context,
                 gitProjectInfo = gitProjectInfo,
                 triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-                changeSet = getChangeSet(context)
+                changeSet = getChangeSet(context),
+                pipelineFilePath = context.pipeline.filePath
             )
         }
     }
@@ -103,7 +104,8 @@ class TriggerMatcher @Autowired constructor(
         context: StreamTriggerContext,
         gitProjectInfo: GitCIProjectInfo,
         triggerOn: TriggerOn,
-        changeSet: Set<String>?
+        changeSet: Set<String>?,
+        pipelineFilePath: String
     ): TriggerResult {
         val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
 
@@ -117,7 +119,9 @@ class TriggerMatcher @Autowired constructor(
         }
 
         val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(gitProjectInfo.defaultBranch)) {
-            isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)
+            // 只有更改了delete相关流水线才做更新
+            PathMatchUtils.isIncludePathMatch(listOf(pipelineFilePath), changeSet) &&
+                isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)
         } else {
             false
         }
