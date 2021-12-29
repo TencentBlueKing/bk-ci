@@ -1,6 +1,8 @@
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import org.junit.Test
 import org.junit.Assert
@@ -27,6 +29,7 @@ internal class MatrixYamlCheckUtilsTest {
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
         Assert.assertTrue(result.include == null)
         Assert.assertTrue(result.exclude == null)
+        print(result.strategy)
         Assert.assertTrue(result.strategy == null)
     }
 
@@ -69,7 +72,7 @@ internal class MatrixYamlCheckUtilsTest {
                   b: 4
             """,
             strategy = """
-                    os: [docker,macos]
+                    os: {"ads" : "asd"}
                     var1: [a,b,c]
                     var2: [1,2,3]
                 """
@@ -77,7 +80,7 @@ internal class MatrixYamlCheckUtilsTest {
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
         Assert.assertTrue(result.include == null)
         Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy == null)
+        Assert.assertTrue(result.strategy != null)
     }
 
     @Test
@@ -105,5 +108,29 @@ internal class MatrixYamlCheckUtilsTest {
         Assert.assertTrue(result.include == null)
         Assert.assertTrue(result.exclude == null)
         Assert.assertTrue(result.strategy != null)
+    }
+
+    @Test
+    fun checkYaml5() {
+        val yamlstr = JsonUtil.toJson(mapOf(
+            "strategy" to "\${{fromJSONasd(asd)}}"
+        ))
+        val result = try {
+            MatrixContextUtils.schemaCheck(yamlstr)
+            false
+        }
+        catch (e:Exception){
+            true
+        }
+
+        Assert.assertTrue(result)
+    }
+
+    @Test
+    fun checkYaml6() {
+        val yamlstr = JsonUtil.toJson(mapOf(
+            "strategy" to "\${{fromJSON(asd)}}"
+        ))
+        MatrixContextUtils.schemaCheck(yamlstr)
     }
 }
