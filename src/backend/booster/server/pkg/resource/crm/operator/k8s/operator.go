@@ -204,12 +204,7 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 			continue
 		}
 
-		allocatedResource := getPodsTotalRequestsAndLimits(node.Name, nodeNonTerminatedPodsList)
-		if allocatedResource.Cpu().Value() < 0 || allocatedResource.Memory().Value() < 0 {
-			blog.Errorf("k8s-operator: get node(%s) resource is less than 0, clusterID(%s)",
-				node.Name, clusterID)
-			continue
-		}
+		allocatedResource := getPodsTotalRequests(node.Name, nodeNonTerminatedPodsList)
 
 		// get disable information from labels
 		dl, _ := node.Labels[disableLabel]
@@ -630,7 +625,7 @@ func k8sPort2EnginePort(name string) string {
 	return strings.ReplaceAll(strings.ToUpper(name), "-", "_")
 }
 
-func getPodsTotalRequestsAndLimits(nodeName string, podList *coreV1.PodList) coreV1.ResourceList {
+func getPodsTotalRequests(nodeName string, podList *coreV1.PodList) coreV1.ResourceList {
 	requests := make(coreV1.ResourceList)
 
 	for _, pod := range podList.Items {

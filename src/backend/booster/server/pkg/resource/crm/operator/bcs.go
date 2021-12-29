@@ -216,11 +216,16 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		newBlock.DiskUsed += NodeInfo.DiskUsed
 		newBlock.MemUsed += NodeInfo.MemUsed
 		newBlock.CPUUsed += NodeInfo.CPUUsed
-		newBlock.AvailableInstance += NodeInfo.figureAvailableInstanceFromFree(
+		availableIst := NodeInfo.figureAvailableInstanceFromFree(
 			nip.cpuPerInstance,
 			nip.memPerInstance,
 			nip.diskPerInstance,
 		)
+		if availableIst < 0 {
+			blog.V(5).Infof("crm: get node(%s) available instances(%d) is less than 0, resource left: %+v", key, newBlock.AvailableInstance, newBlock)
+			continue
+		}
+		newBlock.AvailableInstance += availableIst
 
 		// inherit the no-ready instance records
 		if _, ok := nip.nodeBlockMap[key]; ok {
