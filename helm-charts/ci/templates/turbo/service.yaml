@@ -4,8 +4,8 @@ kind: Service
 metadata:
   name: {{ include "common.names.fullname" . }}-turbo
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: turbo
-    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: turbo
+    app.kubernetes.io/component: microservice-turbo
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -24,5 +24,6 @@ spec:
       port: 18080
       protocol: TCP
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: turbo
+    app.kubernetes.io/name: turbo
+    app.kubernetes.io/component: microservice-turbo
 {{- end }}

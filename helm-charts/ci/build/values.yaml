@@ -42,10 +42,15 @@ bklogConfig:
     dataId: 1
   gatewayError:
     dataId: 1
+  turbo:
+    enabled: false
+    dataId: 1
 
 # 监控
 bkmonitorConfig:
   enabled: false
+  turbo:
+    enabled: false
 
 # 内部数据源配置
 mysql:
@@ -1048,7 +1053,7 @@ turbo:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bkci-turbo
-    tag: 0.0.15
+    tag: 0.0.16
     pullPolicy: IfNotPresent
     pullSecrets: [ ]
   replicaCount: 1

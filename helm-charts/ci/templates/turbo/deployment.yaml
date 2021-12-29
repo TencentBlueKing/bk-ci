@@ -4,7 +4,8 @@ kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-turbo
   labels: {{- include "common.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: turbo
+    app.kubernetes.io/name: turbo
+    app.kubernetes.io/component: microservice-turbo
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -14,12 +15,14 @@ metadata:
 spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: turbo
+      app.kubernetes.io/name: turbo
+      app.kubernetes.io/component: microservice-turbo
   replicas: {{ default 1 .Values.turbo.replicaCount }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: turbo
+        app.kubernetes.io/name: turbo
+        app.kubernetes.io/component: microservice-turbo
         {{- if .Values.turbo.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.turbo.podLabels "context" $) | nindent 8 }}
         {{- end }}
