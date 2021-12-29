@@ -204,7 +204,7 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 			continue
 		}
 
-		allocatedResource := getPodsTotalRequestsAndLimits(node.Name, nodeNonTerminatedPodsList)
+		allocatedResource := getPodsTotalRequests(node.Name, nodeNonTerminatedPodsList)
 
 		// get disable information from labels
 		dl, _ := node.Labels[disableLabel]
@@ -625,27 +625,40 @@ func k8sPort2EnginePort(name string) string {
 	return strings.ReplaceAll(strings.ToUpper(name), "-", "_")
 }
 
-func getPodsTotalRequestsAndLimits(nodeName string, podList *coreV1.PodList) coreV1.ResourceList {
-	limits := make(coreV1.ResourceList)
+func getPodsTotalRequests(nodeName string, podList *coreV1.PodList) coreV1.ResourceList {
+	requests := make(coreV1.ResourceList)
 
 	for _, pod := range podList.Items {
 		if pod.Spec.NodeName != nodeName {
 			continue
 		}
 
-		podLimits := podRequestsAndLimits(&pod)
+		podRequests := podRequests(&pod)
 
-		for podLimitName, podLimitValue := range podLimits {
-			if value, ok := limits[podLimitName]; !ok {
-				limits[podLimitName] = podLimitValue.DeepCopy()
+		for podName, podRequestValue := range podRequests {
+			if value, ok := requests[podName]; !ok {
+				requests[podName] = podRequestValue.DeepCopy()
 			} else {
-				value.Add(podLimitValue)
-				limits[podLimitName] = value
+				value.Add(podRequestValue)
+				requests[podName] = value
 			}
 		}
 	}
 
-	return limits
+	return requests
+}
+
+func podRequests(pod *coreV1.Pod) coreV1.ResourceList {
+	requests := coreV1.ResourceList{}
+	for _, container := range pod.Spec.Containers {
+		addResourceList(requests, container.Resources.Requests)
+	}
+	// init containers define the minimum of any resource
+	for _, container := range pod.Spec.InitContainers {
+		maxResourceList(requests, container.Resources.Requests)
+	}
+
+	return requests
 }
 
 func podRequestsAndLimits(pod *coreV1.Pod) coreV1.ResourceList {
