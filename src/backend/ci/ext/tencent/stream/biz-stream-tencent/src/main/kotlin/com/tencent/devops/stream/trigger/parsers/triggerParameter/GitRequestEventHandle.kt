@@ -54,10 +54,8 @@ class GitRequestEventHandle @Autowired constructor(
 
     fun createPushEvent(gitPushEvent: GitPushEvent, e: String): GitRequestEvent {
         val latestCommit = if (gitPushEvent.isDeleteBranch()) {
-            getLatestCommit(
-                gitPushEvent.before,
-                gitPushEvent.project_id
-            )
+            // 删除事件，暂时无法获取到latest commit 相关信息
+            null
         } else {
             getLatestCommit(
                 gitPushEvent.after,
@@ -123,10 +121,8 @@ class GitRequestEventHandle @Autowired constructor(
 
     fun createTagPushEvent(gitTagPushEvent: GitTagPushEvent, e: String): GitRequestEvent {
         val latestCommit = if (gitTagPushEvent.isDeleteTag()) {
-            getLatestCommit(
-                gitTagPushEvent.before,
-                gitTagPushEvent.project_id
-            )
+            // 删除事件，暂时无法获取到latest commit 相关信息
+            null
         } else {
             getLatestCommit(
                 gitTagPushEvent.after,
