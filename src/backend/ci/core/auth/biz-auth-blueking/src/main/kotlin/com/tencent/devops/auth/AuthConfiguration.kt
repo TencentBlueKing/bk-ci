@@ -27,8 +27,8 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
+import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
+import com.tencent.devops.auth.service.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -40,11 +40,15 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.BkPermissionProjectService
 import com.tencent.devops.auth.service.BkPermissionService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.SimpleStreamPermissionImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
+import com.tencent.devops.auth.service.stream.StreamPermissionService
+import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
@@ -84,11 +88,15 @@ class AuthConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PermissionService::class)
-    fun permissionService() = BkAuthPermissionService()
+    fun permissionService() = SimpleAuthPermissionService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionProjectService::class)
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    fun permissionProjectService() = SimpleAuthPermissionProjectService()
+
+    @Bean
+    @ConditionalOnMissingBean(StreamPermissionService::class)
+    fun streamPermissionService() = SimpleStreamPermissionImpl()
 
     @Bean
     @ConditionalOnMissingBean
@@ -143,4 +151,16 @@ class AuthConfiguration {
         authProjectApi = authProjectApi,
         projectAuthServiceCode = projectAuthServiceCode
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
+    fun streamPermissionService(
+        streamPermissionService: StreamPermissionService
+    ) = StreamPermissionServiceImpl(streamPermissionService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
+    fun streamProjectPermissionService(
+        streamPermissionService: StreamPermissionService
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 }
