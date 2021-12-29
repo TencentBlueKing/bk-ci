@@ -65,5 +65,9 @@ export default {
 
     requestAtomQuality (code) {
         return vue.$ajax.get(`${qualityPerfix}/user/metadata/market/atom/${code}/indicator/list`)
+    },
+
+    requestAtomVersionDetail (code) {
+        return vue.$ajax.get(`${prefix}/user/market/atoms/${code}/showVersionInfo`)
     }
 }

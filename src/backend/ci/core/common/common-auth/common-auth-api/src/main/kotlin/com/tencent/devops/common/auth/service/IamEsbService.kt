@@ -116,11 +116,12 @@ class IamEsbService {
 	 * 生成请求url
 	 */
     private fun getAuthRequestUrl(uri: String): String {
-        return if (iamHost?.endsWith("/")!!) {
+        val newUrl = if (iamHost?.endsWith("/")!!) {
             iamHost + uri
         } else {
             "$iamHost/$uri"
         }
+        return newUrl.replace("//", "/")
     }
 
     companion object {

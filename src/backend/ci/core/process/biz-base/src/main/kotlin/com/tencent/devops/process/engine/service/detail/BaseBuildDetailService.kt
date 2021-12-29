@@ -140,9 +140,8 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    @Suppress("NestedBlockDepth", "ReturnCount")
+    @Suppress("NestedBlockDepth", "ReturnCount", "ComplexMethod")
     private fun traverseModel(model: Model, modelInterface: ModelInterface) {
-        var containerId = 1
         for (i in 1 until model.stages.size) {
             val stage = model.stages[i]
             val traverse = modelInterface.onFindStage(stage, model)
@@ -153,17 +152,34 @@ open class BaseBuildDetailService constructor(
             }
 
             for (container in stage.containers) {
-                val cTraverse = modelInterface.onFindContainer(containerId, container, stage)
+                val cTraverse = modelInterface.onFindContainer(container, stage)
                 if (Traverse.BREAK == cTraverse) {
                     return
                 } else if (Traverse.SKIP == cTraverse) {
                     continue
                 }
 
-                containerId++
                 container.elements.forEachIndexed { index, e ->
                     if (Traverse.BREAK == modelInterface.onFindElement(index, e, container)) {
                         return
+                    }
+                }
+
+                // 进入矩阵组内做遍历查询
+                if (container.matrixGroupFlag == true) {
+                    for (groupContainer in container.fetchGroupContainers() ?: emptyList()) {
+                        val gTraverse = modelInterface.onFindContainer(groupContainer, stage)
+                        if (Traverse.BREAK == gTraverse) {
+                            return
+                        } else if (Traverse.SKIP == gTraverse) {
+                            continue
+                        }
+
+                        groupContainer.elements.forEachIndexed { index, e ->
+                            if (Traverse.BREAK == modelInterface.onFindElement(index, e, groupContainer)) {
+                                return
+                            }
+                        }
                     }
                 }
             }
@@ -189,7 +205,7 @@ open class BaseBuildDetailService constructor(
 
         fun onFindStage(stage: Stage, model: Model) = Traverse.CONTINUE
 
-        fun onFindContainer(id: Int, container: Container, stage: Stage) = Traverse.CONTINUE
+        fun onFindContainer(container: Container, stage: Stage) = Traverse.CONTINUE
 
         fun onFindElement(index: Int, e: Element, c: Container) = Traverse.CONTINUE
 
