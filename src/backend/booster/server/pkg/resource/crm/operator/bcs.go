@@ -103,6 +103,10 @@ func (ni *NodeInfo) figureAvailableInstanceFromFree(cpuPerInstance, memPerInstan
 	return int(math.Min(math.Min(instanceByCPU, instanceByMem), instanceByDisk))
 }
 
+func (ni *NodeInfo) valid() bool {
+	return ni.CPUTotal >= 0 && ni.MemTotal >= 0 && ni.DiskTotal >= 0
+}
+
 // NewNodeInfoPool get a new node info pool
 func NewNodeInfoPool(cpu, mem, disk float64) *NodeInfoPool {
 	return &NodeInfoPool{
@@ -204,6 +208,11 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 			continue
 		}
 
+		if !NodeInfo.valid() {
+			blog.Warnf("crm: get node(%s) resources less than 0, cpu left: %.2f, memory left:%.2f, disk left:%.2f", NodeInfo.Hostname, NodeInfo.CPUUsed, NodeInfo.MemUsed, NodeInfo.DiskUsed)
+			continue
+		}
+
 		key := getBlockKey(NodeInfo.Attributes)
 		if _, ok := newBlockMap[key]; !ok {
 			newBlockMap[key] = &NodeInfoBlock{}
@@ -216,16 +225,11 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		newBlock.DiskUsed += NodeInfo.DiskUsed
 		newBlock.MemUsed += NodeInfo.MemUsed
 		newBlock.CPUUsed += NodeInfo.CPUUsed
-		availableIst := NodeInfo.figureAvailableInstanceFromFree(
+		newBlock.AvailableInstance += NodeInfo.figureAvailableInstanceFromFree(
 			nip.cpuPerInstance,
 			nip.memPerInstance,
 			nip.diskPerInstance,
 		)
-		if availableIst < 0 {
-			blog.V(5).Infof("crm: get node(%s) available instances(%d) is less than 0, resource left: %+v", key, newBlock.AvailableInstance, newBlock)
-			continue
-		}
-		newBlock.AvailableInstance += availableIst
 
 		// inherit the no-ready instance records
 		if _, ok := nip.nodeBlockMap[key]; ok {
