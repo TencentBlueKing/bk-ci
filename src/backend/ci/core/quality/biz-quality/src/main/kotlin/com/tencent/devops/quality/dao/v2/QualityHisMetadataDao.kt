@@ -94,7 +94,9 @@ class QualityHisMetadataDao {
                     this.BUILD_ID,
                     this.BUILD_NO,
                     this.EXTRA,
-                    this.CREATE_TIME
+                    this.CREATE_TIME,
+                    this.TASK_ID,
+                    this.TASK_NAME
                 )
                     .values(
                         it.enName,
@@ -109,7 +111,9 @@ class QualityHisMetadataDao {
                         buildId,
                         buildNo,
                         it.extra,
-                        System.currentTimeMillis()
+                        System.currentTimeMillis(),
+                        it.taskId,
+                        it.taskName
                     )
                     .onDuplicateKeyUpdate()
                     .set(DATA_TYPE, it.type.name)
@@ -119,6 +123,7 @@ class QualityHisMetadataDao {
                     .set(ELEMENT_DETAIL, it.detail)
                     .set(EXTRA, it.extra)
                     .set(CREATE_TIME, System.currentTimeMillis())
+                    .set(TASK_NAME, it.taskName)
             }
             dslContext.batch(insertCommand).execute()
         }
@@ -128,6 +133,7 @@ class QualityHisMetadataDao {
         return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .orderBy(CREATE_TIME.asc())
                 .fetch()
         }
     }

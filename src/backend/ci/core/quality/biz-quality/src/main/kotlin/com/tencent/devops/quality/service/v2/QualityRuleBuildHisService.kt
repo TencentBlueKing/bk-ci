@@ -252,7 +252,12 @@ class QualityRuleBuildHisService constructor(
                 } else {
                     it.gateKeepers.split(",")
                 },
-                stageId = it.stageId
+                stageId = it.stageId,
+                taskSteps = if (it.taskSteps.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
+                }
             )
             rule
         }
@@ -459,7 +464,12 @@ class QualityRuleBuildHisService constructor(
                 } else {
                     it.gateKeepers.split(",")
                 },
-                stageId = it.stageId
+                stageId = it.stageId,
+                taskSteps = if (it.taskSteps.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
+                }
             )
             rule
         }
