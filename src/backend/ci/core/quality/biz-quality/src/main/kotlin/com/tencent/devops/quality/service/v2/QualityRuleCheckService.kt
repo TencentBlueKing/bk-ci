@@ -202,18 +202,17 @@ class QualityRuleCheckService @Autowired constructor(
         qualityRuleBuildHisService.convertVariables(ruleList, buildCheckParams)
 
         val params = BuildCheckParams(
-            buildCheckParams.projectId,
-            buildCheckParams.pipelineId,
-            buildCheckParams.buildId,
-            "",
-            buildCheckParams.interceptName ?: "",
-            System.currentTimeMillis(),
-            "",
-            "",
-            buildCheckParams.position,
-            buildCheckParams.templateId,
-            buildCheckParams.stageId ?: "",
-            buildCheckParams.runtimeVariable
+            projectId = buildCheckParams.projectId,
+            pipelineId = buildCheckParams.pipelineId,
+            buildId = buildCheckParams.buildId,
+            buildNo = "",
+            interceptTaskName = buildCheckParams.interceptName ?: "",
+            startTime = System.currentTimeMillis(),
+            taskId = "",
+            position = buildCheckParams.position,
+            templateId = buildCheckParams.templateId,
+            stageId = buildCheckParams.stageId ?: "",
+            runtimeVariable = buildCheckParams.runtimeVariable
         )
         return doCheckRules(buildCheckParams = params, ruleList = ruleList)
     }
