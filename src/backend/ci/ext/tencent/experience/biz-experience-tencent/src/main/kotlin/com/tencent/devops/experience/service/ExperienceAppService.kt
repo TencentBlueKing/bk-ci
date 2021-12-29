@@ -117,6 +117,7 @@ class ExperienceAppService(
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
         val isPublic = !isOuter && newestRecordId != null
+        // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
         if (newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
             experience = experienceDao.get(dslContext, experienceId)
