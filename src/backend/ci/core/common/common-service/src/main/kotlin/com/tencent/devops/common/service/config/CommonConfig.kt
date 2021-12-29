@@ -117,6 +117,6 @@ class CommonConfig {
     /**
      * db分片路由规则缓存大小
      */
-    @Value("\${sharding.routing.cacheSize:10000}")
-    val shardingRoutingCacheSize: Long = 10000
+    @Value("\${sharding.routing.cacheSize:50000}")
+    val shardingRoutingCacheSize: Long = 50000
 }
