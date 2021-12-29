@@ -27,11 +27,7 @@
 
 package com.tencent.devops.stream.common.exception
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-
-class GitCINoEnableException(project: String) : ErrorCodeException(
-    statusCode = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
-    errorCode = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode.toString(),
-    defaultMessage = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project),
-    params = null
+class GitCINoEnableException(project: String) : StreamCustomException(
+    status = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
+    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project)
 )

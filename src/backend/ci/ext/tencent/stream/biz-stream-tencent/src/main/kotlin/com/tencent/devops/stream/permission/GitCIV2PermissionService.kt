@@ -101,9 +101,9 @@ class GitCIV2PermissionService @Autowired constructor(
     fun checkEnableGitCI(
         gitProjectId: Long
     ) {
-        val result = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableCi ?: false
-        if (!result) {
-            throw GitCINoEnableException(gitProjectId.toString())
+        val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+        if (setting == null || !setting.enableCi) {
+            throw GitCINoEnableException(setting?.name ?: gitProjectId.toString())
         }
     }
 
