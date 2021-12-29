@@ -186,8 +186,6 @@ class ExperienceBaseService @Autowired constructor(
         return isPublic.value || isInPrivate.value
     }
 
-    fun isExperience(experienceId: Long?, isOuter: Boolean) = !isOuter && experienceId != null
-
     fun isPublic(experienceId: Long, isOuter: Boolean) = !isOuter &&
             (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
                 ?: 0) > 0

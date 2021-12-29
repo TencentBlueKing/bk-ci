@@ -116,14 +116,14 @@ class ExperienceAppService(
         val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isExperience = experienceBaseService.isExperience(newestRecordId, isOuter)
+        val isPublic = !isOuter && newestRecordId != null
         if (newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
             experience = experienceDao.get(dslContext, experienceId)
         }
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
         // 新版本且没权限
-        if (!isOldVersion && !isExperience && !isInPrivate) {
+        if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
                 defaultMessage = "请联系产品负责人：\n${experience.creator} 授予体验权限。",
@@ -143,7 +143,7 @@ class ExperienceAppService(
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
         val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
-        val experienceCondition = getExperienceCondition(isExperience, isPrivate, isInPrivate)
+        val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
         val changeLog = if (isOldVersion) {
@@ -173,7 +173,7 @@ class ExperienceAppService(
             platform = PlatformEnum.valueOf(platform),
             version = version,
             expired = isExpired,
-            canExperience = isExperience || isInPrivate,
+            canExperience = isPublic || isInPrivate,
             online = experience.online,
             changeLog = changeLog,
             experienceName = experienceName,
@@ -182,7 +182,7 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
-            publicExperience = isExperience,
+            publicExperience = isPublic,
             remark = experience.remark,
             bundleIdentifier = experience.bundleIdentifier,
             experienceCondition = experienceCondition.id,
