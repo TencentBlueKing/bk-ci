@@ -85,6 +85,7 @@ data class GitRequestEvent(
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
         private const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
     }
+
     fun isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
     fun isFork(): Boolean {
@@ -110,7 +111,7 @@ data class GitRequestEvent(
                 commitId == DELETE_BRANCH_COMMITID_FROM_CLIENT)
     }
 
-    fun isDeleteTag():Boolean {
+    fun isDeleteTag(): Boolean {
         return objectKind == TGitObjectKind.TAG_PUSH.value &&
             operationKind == TGitPushOperationKind.DELETE.value
     }

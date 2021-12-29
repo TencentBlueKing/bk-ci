@@ -94,4 +94,3 @@ data class GitRepository(
 
 fun GitEvent.isDeleteEvent() = (this is GitPushEvent && this.isDeleteBranch()) ||
     (this is GitTagPushEvent && this.isDeleteTag())
-

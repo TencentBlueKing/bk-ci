@@ -41,7 +41,6 @@ data class DeleteRule(
     }
 }
 
-
 fun DeleteRule.check(): Boolean {
     return (types.toSet() subtract DeleteRule.typeSet).isEmpty()
 }
