@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineListRequest
-import com.tencent.devops.process.api.user.UserQualityPipelineResource
+import com.tencent.devops.process.api.user.UserPipelineQualityResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.Pipeline
@@ -39,10 +39,10 @@ import com.tencent.devops.process.service.PipelineListFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserQualityPipelineResourceImpl @Autowired constructor(
+class UserPipelineQualityResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService
-) : UserQualityPipelineResource {
+) : UserPipelineQualityResource {
     override fun getPipelineInfo(
         userId: String,
         projectId: String,
