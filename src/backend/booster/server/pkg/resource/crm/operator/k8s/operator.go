@@ -661,19 +661,6 @@ func podRequests(pod *coreV1.Pod) coreV1.ResourceList {
 	return requests
 }
 
-/*func podRequestsAndLimits(pod *coreV1.Pod) coreV1.ResourceList {
-	limits := coreV1.ResourceList{}
-	for _, container := range pod.Spec.Containers {
-		addResourceList(limits, container.Resources.Limits)
-	}
-	// init containers define the minimum of any resource
-	for _, container := range pod.Spec.InitContainers {
-		maxResourceList(limits, container.Resources.Limits)
-	}
-
-	return limits
-}*/
-
 func podRequestsAndLimits(pod *coreV1.Pod) coreV1.ResourceList {
 	limits := coreV1.ResourceList{}
 	for _, container := range pod.Spec.Containers {
