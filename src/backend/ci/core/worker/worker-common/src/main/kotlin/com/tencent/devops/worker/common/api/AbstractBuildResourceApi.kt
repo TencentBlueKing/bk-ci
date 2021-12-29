@@ -175,7 +175,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         }
     }
 
-    private fun download(response: Response, destPath: File) {
+    private fun download(response: Response, destPath: File, retryCount: Int = DEFAULT_RETRY_TIME) {
         if (response.code() == StatusCodes.NOT_FOUND) {
             throw RemoteServiceException("文件不存在")
         }
@@ -192,8 +192,19 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             LoggerService.addNormalLine("download ${dest.fileName} " +
                 ArchiveUtils.humanReadableByteCountBin(contentLength))
         }
-        body.byteStream().use { bs ->
-            Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+
+        // body copy时可能会出现readTimeout，即便http请求已正常响应
+        try {
+            body.byteStream().use { bs ->
+                Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.warn("Failed to copy download body, try to retry.")
+            if (retryCount > 0) {
+                download(response, destPath, retryCount - 1)
+            } else {
+                throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
+            }
         }
     }
 
