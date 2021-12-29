@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/pipeline/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserQualityPipelineResource {
+interface UserPipelineQualityResource {
 
     @ApiOperation("获取单个流水线信息接口")
     @GET
