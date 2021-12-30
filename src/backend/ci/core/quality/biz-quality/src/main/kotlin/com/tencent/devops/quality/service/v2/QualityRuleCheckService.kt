@@ -455,19 +455,19 @@ class QualityRuleCheckService @Autowired constructor(
             var checkResult = true
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
-            val filterMetadataList = if (indicator.isScriptElementIndicator()) {
-                listOf(metadataList
-                    .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                    .findLast { indicator.enName == it.enName && indicator.taskName == it.taskName })
-            } else {
-                if (indicator.taskName.isNullOrBlank()) {
-                    indicator.metadataList.map {
+            val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
+                indicator.metadataList.map {
                         metadata -> metadataList.firstOrNull { it.enName == metadata.enName }
-                    }.toList()
+                }.toList()
+            } else {
+                if (indicator.isScriptElementIndicator()) {
+                    listOf(metadataList
+                        .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+                        .findLast { indicator.enName == it.enName && indicator.taskName == it.taskName })
                 } else {
                     metadataList.filter {
                         it.taskName == indicator.taskName &&
-                        indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
+                                indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
                     }
                 }
             }
