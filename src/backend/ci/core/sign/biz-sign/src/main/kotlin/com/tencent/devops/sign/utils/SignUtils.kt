@@ -281,7 +281,7 @@ object SignUtils {
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
-        val cmd = "zip -rm * $ipaPath"
+        val cmd = "zip -rm -X $ipaPath ."
         logger.info("[unzipIpa] $cmd")
         CommandLineUtils.execute(cmd, unzipDir, true)
         val resultIpa = File(ipaPath)
