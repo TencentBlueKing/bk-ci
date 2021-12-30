@@ -154,11 +154,10 @@ class MatrixExecuteContainerCmd(
                 fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
             } else if (container.status == BuildStatus.SKIP) {
                 skipContainerNum++
-            } else if (container.status.isRunning()) {
+            } else if (container.status.isRunning() && !actionType.isEnd()) {
                 runningContainerNum++
-                // 已经在运行中的, 只接受终止
-                if (!actionType.isEnd()) running = BuildStatus.RUNNING
-            } else if (container.status.isReadyToRun()) {
+            } else if (!container.status.isFinish()) {
+                running = BuildStatus.RUNNING
                 containersToRun.add(container)
             }
         }
@@ -172,10 +171,10 @@ class MatrixExecuteContainerCmd(
             )
             buildLogPrinter.addLine(
                 buildId = buildId, message = "[MATRIX] Matrix(${parentContainer.containerId}) " +
-                "failed containers count($failureContainerNum), start to kill containers",
+                "start to kill containers, because of fastKill($fastKill) or actionType($actionType)",
                 tag = startVMTaskId, jobId = containerHashId, executeCount = executeCount
             )
-            terminateGroupContainers(commandContext, event, parentContainer, groupContainers)
+            terminateGroupContainers(commandContext, event, actionType, parentContainer, groupContainers)
         }
 
         val maxConcurrency = min(
@@ -248,6 +247,7 @@ class MatrixExecuteContainerCmd(
     private fun terminateGroupContainers(
         commandContext: ContainerContext,
         event: PipelineBuildContainerEvent,
+        actionType: ActionType,
         parentContainer: PipelineBuildContainer,
         groupContainers: List<PipelineBuildContainer>
     ) {
@@ -258,7 +258,7 @@ class MatrixExecuteContainerCmd(
             if (!container.status.isFinish()) {
                 sendBuildContainerEvent(
                     container = container,
-                    actionType = ActionType.TERMINATE,
+                    actionType = actionType,
                     userId = event.userId,
                     reason = "from_matrix(${parentContainer.containerId})_fastKill"
                 )
