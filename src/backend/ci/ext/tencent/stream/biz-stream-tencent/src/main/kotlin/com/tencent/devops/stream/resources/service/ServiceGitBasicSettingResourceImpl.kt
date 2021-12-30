@@ -223,9 +223,16 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     // 判断用户是否公共账号，并且存在，否则提示用户注册
     private fun checkCommonUser(userId: String) {
         // get接口先查本地，再查tof
-        val userResult =
-            client.get(ServiceTxUserResource::class).get(userId)
-        if (userResult.isNotOk()) {
+        try {
+            val userResult =
+                client.get(ServiceTxUserResource::class).get(userId)
+            if (userResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+                )
+            }
+        } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
                 defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
