@@ -54,11 +54,11 @@ data class GitCodeGroup(
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
     @JsonProperty("full_name")
-    val fullName: String,
+    val fullName: String?,
     @JsonProperty("full_path")
-    val fullPath: String,
+    val fullPath: String?,
     @JsonProperty("web_url")
-    val webUrl: String,
+    val webUrl: String?,
     @JsonProperty("parent_id")
     val parentId: Long?
 )
