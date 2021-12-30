@@ -35,8 +35,11 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 
-//TODO: 实例化时机
+@Configuration
+@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
