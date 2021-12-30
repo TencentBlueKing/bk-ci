@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
@@ -49,6 +50,7 @@ import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -116,7 +118,7 @@ class StreamYamlTrigger @Autowired constructor(
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}"
+                    "eventId: ${gitRequestEvent.id}"
             )
             triggerError(
                 request = gitRequestEvent,
@@ -158,7 +160,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register timer: $isTiming delete: $isDelete" +
-                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                    "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
             )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
@@ -182,7 +184,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -193,7 +195,9 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
+                objectKind = if (context.gitEvent.isDeleteEvent()) {
+                    TGitObjectKind.OBJECT_KIND_DELETE
+                } else gitRequestEvent.objectKind,
                 commitMsg = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,

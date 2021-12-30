@@ -169,7 +169,12 @@ class TriggerMatcher @Autowired constructor(
     ): TriggerResult {
 
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
-            ?: return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            ?: return TriggerResult(
+                trigger = false,
+                timeTrigger = false,
+                startParams = emptyMap(),
+                deleteTrigger = false
+            )
         return if (objectKind in deleteObjectKinds) {
             val startParams = getStartParams(
                 context = context,

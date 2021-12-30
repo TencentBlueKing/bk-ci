@@ -609,65 +609,68 @@ object ScriptYmlUtils {
         var schedulesRule: SchedulesRule? = null
         var deleteRule: DeleteRule? = null
 
-        if (preTriggerOn.push != null) {
-            val push = preTriggerOn.push
+        pushRule = pushRule(preTriggerOn, pushRule)
+        tagRule = tagRule(preTriggerOn, tagRule)
+        mrRule = mrRule(preTriggerOn, mrRule)
+        schedulesRule = schedulesRule(preTriggerOn, schedulesRule)
+        deleteRule = deleteRule(preTriggerOn, deleteRule)
+
+        return TriggerOn(
+            push = pushRule,
+            tag = tagRule,
+            mr = mrRule,
+            schedules = schedulesRule,
+            delete = deleteRule
+        )
+    }
+
+    private fun deleteRule(
+        preTriggerOn: PreTriggerOn,
+        deleteRule: DeleteRule?
+    ): DeleteRule? {
+        var deleteRule1 = deleteRule
+        if (preTriggerOn.delete != null) {
+            val delete = preTriggerOn.delete
             try {
-                pushRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(push),
-                    PushRule::class.java
+                deleteRule1 = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(delete),
+                    DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                try {
-                    val pushObj = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(push),
-                        List::class.java
-                    ) as ArrayList<String>
-
-                    pushRule = PushRule(
-                        branches = pushObj,
-                        branchesIgnore = null,
-                        paths = null,
-                        pathsIgnore = null,
-                        users = null,
-                        usersIgnore = null
-                    )
-                } catch (e: Exception) {
-                    logger.error("Format triggerOn pushRule failed.", e)
-                }
+                logger.error("Format triggerOn schedulesRule failed.", e)
             }
         }
+        return deleteRule1
+    }
 
-        if (preTriggerOn.tag != null) {
-            val tag = preTriggerOn.tag
+    private fun schedulesRule(
+        preTriggerOn: PreTriggerOn,
+        schedulesRule: SchedulesRule?
+    ): SchedulesRule? {
+        var schedulesRule1 = schedulesRule
+        if (preTriggerOn.schedules != null) {
+            val schedules = preTriggerOn.schedules
             try {
-                tagRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(tag),
-                    TagRule::class.java
+                schedulesRule1 = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(schedules),
+                    SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                try {
-                    val tagList = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(tag),
-                        List::class.java
-                    ) as ArrayList<String>
-
-                    tagRule = TagRule(
-                        tags = tagList,
-                        tagsIgnore = null,
-                        fromBranches = null,
-                        users = null,
-                        usersIgnore = null
-                    )
-                } catch (e: Exception) {
-                    logger.error("Format triggerOn tagRule failed.", e)
-                }
+                logger.error("Format triggerOn schedulesRule failed.", e)
             }
         }
+        return schedulesRule1
+    }
 
+    private fun mrRule(
+        preTriggerOn: PreTriggerOn,
+        mrRule: MrRule?
+    ): MrRule? {
+        var mrRule1 = mrRule
         if (preTriggerOn.mr != null) {
             val mr = preTriggerOn.mr
             try {
-                mrRule = YamlUtil.getObjectMapper().readValue(
+                mrRule1 = YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),
                     MrRule::class.java
                 )
@@ -678,7 +681,7 @@ object ScriptYmlUtils {
                         List::class.java
                     ) as ArrayList<String>
 
-                    mrRule = MrRule(
+                    mrRule1 = MrRule(
                         targetBranches = mrList,
                         sourceBranchesIgnore = null,
                         paths = null,
@@ -691,38 +694,76 @@ object ScriptYmlUtils {
                 }
             }
         }
+        return mrRule1
+    }
 
-        if (preTriggerOn.schedules != null) {
-            val schedules = preTriggerOn.schedules
+    private fun tagRule(
+        preTriggerOn: PreTriggerOn,
+        tagRule: TagRule?
+    ): TagRule? {
+        var tagRule1 = tagRule
+        if (preTriggerOn.tag != null) {
+            val tag = preTriggerOn.tag
             try {
-                schedulesRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(schedules),
-                    SchedulesRule::class.java
+                tagRule1 = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(tag),
+                    TagRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
+                try {
+                    val tagList = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(tag),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    tagRule1 = TagRule(
+                        tags = tagList,
+                        tagsIgnore = null,
+                        fromBranches = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn tagRule failed.", e)
+                }
             }
         }
+        return tagRule1
+    }
 
-        if (preTriggerOn.delete != null) {
-            val delete = preTriggerOn.delete
+    private fun pushRule(
+        preTriggerOn: PreTriggerOn,
+        pushRule: PushRule?
+    ): PushRule? {
+        var pushRule1 = pushRule
+        if (preTriggerOn.push != null) {
+            val push = preTriggerOn.push
             try {
-                deleteRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(delete),
-                    DeleteRule::class.java
+                pushRule1 = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(push),
+                    PushRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
+                try {
+                    val pushObj = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(push),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    pushRule1 = PushRule(
+                        branches = pushObj,
+                        branchesIgnore = null,
+                        paths = null,
+                        pathsIgnore = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn pushRule failed.", e)
+                }
             }
         }
-
-        return TriggerOn(
-            push = pushRule,
-            tag = tagRule,
-            mr = mrRule,
-            schedules = schedulesRule,
-            delete = deleteRule
-        )
+        return pushRule1
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
