@@ -37,10 +37,10 @@ import io.swagger.annotations.ApiModel
 "name": "git_01subgroup.1",
 "path": "git_01subgroup.1",
 "description": "",
-"avatar_url": "https://git.domain.oa.com/assets/images/avatar/no_group_avatar.png",
+"avatar_url": "https://git.xxx.com/assets/images/avatar/no_group_avatar.png",
 "full_name": "git_01rootsubgroup/git_01subgroup.1",
 "full_path": "git_01subgroup/git_01subgroup.1",
-"web_url": "https://git.domain.oa.com/groups/git_01subgroup/git_01subgroup.1",
+"web_url": "https://git.xxx.com/groups/git_01subgroup/git_01subgroup.1",
 "parent_id": 95696
 }
  */

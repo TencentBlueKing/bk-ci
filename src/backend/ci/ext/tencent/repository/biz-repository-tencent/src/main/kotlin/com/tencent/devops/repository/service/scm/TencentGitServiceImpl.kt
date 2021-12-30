@@ -341,7 +341,12 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         ).data!!
     }
 
-    override fun getProjectGroupInfo(id: String, includeSubgroups: Boolean?, token: String, tokenType: TokenTypeEnum): GitProjectGroupInfo {
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
         return client.getScm(ServiceGitResource::class).getProjectGroupInfo(
             id = id,
             includeSubgroups = includeSubgroups,

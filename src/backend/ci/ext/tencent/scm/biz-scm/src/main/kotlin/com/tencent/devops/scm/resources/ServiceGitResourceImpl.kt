@@ -438,7 +438,12 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectGroupInfo(id: String, includeSubgroups: Boolean?, token: String, tokenType: TokenTypeEnum): Result<GitProjectGroupInfo> {
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo> {
         return Result(
             gitService.getProjectGroupInfo(
                 id = id,
