@@ -27,43 +27,30 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.image.BuildType
-import com.tencent.devops.common.ci.image.Credential
-import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Resources
-import com.tencent.devops.common.ci.v2.ResourcesPools
+import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
-import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
-import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.scm.api.ServiceGitCiResource
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.process.util.StreamDispatchUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired constructor(
@@ -87,33 +74,84 @@ class ModelContainer @Autowired constructor(
         finalStage: Boolean = false,
         resources: Resources? = null
     ) {
+        val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
+        val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
+            StreamDispatchInfo(
+                name = "dispatchInfo_${job.id}",
+                job = job,
+                projectCode = projectCode,
+                defaultImage = defaultImage,
+                resources = resources
+            )
+        } else null
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
-            baseOS = getBaseOs(job),
+            mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
+            baseOS = StreamDispatchUtils.getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
-            buildEnv = if (job.runsOn.selfHosted == false) {
-                job.runsOn.needs
-            } else {
-                null
-            },
+            buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
-            thirdPartyAgentId = null,
-            thirdPartyAgentEnvId = null,
-            thirdPartyWorkspace = null,
-            dockerBuildVersion = null,
-            tstackAgentId = null,
             jobControlOption = getJobControlOption(job, finalStage),
-            dispatchType = getDispatchType(job, projectCode, resources)
+            dispatchType = StreamDispatchUtils.getDispatchType(
+                client = client,
+                objectMapper = objectMapper,
+                job = job,
+                projectCode = projectCode,
+                defaultImage = defaultImage,
+                resources = resources,
+                containsMatrix = dispatchInfo != null
+            ),
+            matrixGroupFlag = job.strategy != null,
+            matrixControlOption = getMatrixControlOption(job, dispatchInfo)
         )
         containerList.add(vmContainer)
+    }
+
+    private fun getMatrixControlOption(
+        job: Job,
+        dispatchInfo: StreamDispatchInfo?
+    ): MatrixControlOption? {
+
+        val strategy = job.strategy ?: return null
+
+        with(strategy) {
+            if (matrix is Map<*, *>) {
+                val yaml = matrix as MutableMap<String, Any>
+                val include = if ("include" in yaml.keys && yaml["include"] != null) {
+                    YamlUtil.toYaml(yaml["include"]!!)
+                } else {
+                    null
+                }
+                val exclude = if ("exclude" in yaml.keys && yaml["exclude"] != null) {
+                    YamlUtil.toYaml(yaml["exclude"]!!)
+                } else {
+                    null
+                }
+                val json = matrix as MutableMap<String, Any>
+                json.remove("include")
+                json.remove("exclude")
+
+                return MatrixControlOption(
+                    strategyStr = YamlUtil.toYaml(json),
+                    includeCaseStr = include,
+                    excludeCaseStr = exclude,
+                    fastKill = fastKill,
+                    maxConcurrency = maxParallel,
+                    customDispatchInfo = dispatchInfo
+                )
+            } else {
+                return MatrixControlOption(
+                    strategyStr = matrix.toString(),
+                    fastKill = fastKill,
+                    maxConcurrency = maxParallel,
+                    customDispatchInfo = dispatchInfo
+                )
+            }
+        }
     }
 
     fun addNormalContainer(
@@ -139,7 +177,7 @@ class ModelContainer @Autowired constructor(
                 conditions = null,
                 canRetry = false,
                 jobControlOption = getJobControlOption(job, finalStage),
-                mutexGroup = null
+                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
             )
         )
     }
@@ -185,152 +223,16 @@ class ModelContainer @Autowired constructor(
         }
     }
 
-    private fun getBaseOs(job: Job): VMBaseOS {
-        // 公共构建机池
-        if (job.runsOn.poolName == JobRunsOnType.DOCKER.type) {
-            return VMBaseOS.LINUX
-        } else if (job.runsOn.poolName.startsWith("macos")) {
-            return VMBaseOS.MACOS
+    private fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
+        if (resource == null) {
+            return null
         }
-
-        if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.ALL
-        }
-        return when (job.runsOn.agentSelector!![0]) {
-            "linux" -> VMBaseOS.LINUX
-            "macos" -> VMBaseOS.MACOS
-            "windows" -> VMBaseOS.WINDOWS
-            else -> VMBaseOS.LINUX
-        }
-    }
-
-    @Throws(
-        JsonProcessingException::class,
-        ParamBlankException::class,
-        CustomException::class
-    )
-    @Suppress("NestedBlockDepth")
-    fun getDispatchType(
-        job: Job,
-        projectCode: String,
-        resources: Resources? = null
-    ): DispatchType {
-        // macos构建机
-        if (job.runsOn.poolName.startsWith("macos")) {
-            return MacOSDispatchType(
-                macOSEvn = "Catalina10.15.4:12.2",
-                systemVersion = "Catalina10.15.4",
-                xcodeVersion = "12.2"
-            )
-        }
-
-        // 第三方构建机
-        if (job.runsOn.selfHosted == true) {
-            val envName = getEnvName(job.runsOn.poolName, resources?.pools)
-            return ThirdPartyAgentEnvDispatchType(
-                envName = envName,
-                workspace = job.runsOn.workspace,
-                agentType = AgentType.NAME
-            )
-        }
-
-        // 公共docker构建机
-        if (job.runsOn.poolName == "docker") {
-            var containerPool = Pool(
-                container = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
-                credential = Credential(
-                    user = "",
-                    password = ""
-                ),
-                macOS = null,
-                third = null,
-                env = job.env,
-                buildType = BuildType.DOCKER_VM
-            )
-
-            if (job.runsOn.container != null) {
-                try {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        com.tencent.devops.common.ci.v2.Container::class.java
-                    )
-
-                    containerPool = Pool(
-                        container = container.image,
-                        credential = Credential(
-                            user = container.credentials?.username ?: "",
-                            password = container.credentials?.password ?: ""
-                        ),
-                        macOS = null,
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
-                    )
-                } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        Container2::class.java
-                    )
-
-                    var user = ""
-                    var password = ""
-                    if (!container.credentials.isNullOrEmpty()) {
-                        val ticketsMap = GitCommonUtils.getCredential(
-                            client = client,
-                            projectId = projectCode,
-                            credentialId = container.credentials ?: "",
-                            type = CredentialType.USERNAME_PASSWORD
-                        )
-                        user = ticketsMap["v1"] as String
-                        password = ticketsMap["v2"] as String
-                    }
-
-                    containerPool = Pool(
-                        container = container.image,
-                        credential = Credential(
-                            user = user,
-                            password = password
-                        ),
-                        macOS = null,
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
-                    )
-                }
-            }
-
-            return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
-        }
-
-        throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
-    }
-
-    @Suppress("NestedBlockDepth")
-    private fun getEnvName(poolName: String, pools: List<ResourcesPools>?): String {
-        if (pools.isNullOrEmpty()) {
-            return poolName
-        }
-
-        pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
-            if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
-
-                    val gitProjectInfo =
-                        client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
-                    val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
-                    logger.info("Get envName from Resource.pools success. envName: $result")
-                    return result
-                } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
-                    return poolName
-                }
-            }
-        }
-        logger.info("Get envName from Resource.pools no match. envName: $poolName")
-        return poolName
+        return MutexGroup(
+            enable = true,
+            mutexGroupName = resource.label,
+            queueEnable = true,
+            queue = resource.queueLength ?: 0,
+            timeout = resource.timeoutMinutes ?: 10
+        )
     }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.GitNotices
+import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
@@ -73,6 +74,15 @@ object YamlObjects {
         )
     }
 
+    fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): ResourceExclusiveDeclaration {
+        val resourceMap = transValue<Map<String, Any?>>(fromPath, "resource-exclusive-declaration", resource)
+        return ResourceExclusiveDeclaration(
+            label = getNotNullValue(key = "label", mapName = "resource-exclusive-declaration", map = resourceMap),
+            queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
+            timeoutMinutes = resourceMap["timeout-minutes"]?.toString()?.toInt()
+        )
+    }
+
     fun getService(fromPath: String, service: Any): Map<String, Service> {
         val serviceMap = transValue<Map<String, Any?>>(fromPath, "services", service)
         val newServiceMap = mutableMapOf<String, Service>()
@@ -110,12 +120,13 @@ object YamlObjects {
         )
     }
 
-    fun getStrategy(fromPath: String, strategy: Any?): Strategy {
+    fun getStrategy(fromPath: String, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
+        val matrix = strategyMap["matrix"] ?: return null
         return Strategy(
-            matrix = strategyMap["matrix"],
+            matrix = matrix,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("max-parallel", strategyMap)
+            maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
         )
     }
 

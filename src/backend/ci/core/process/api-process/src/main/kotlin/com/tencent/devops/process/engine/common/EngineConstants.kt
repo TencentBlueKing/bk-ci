@@ -45,5 +45,6 @@ const val BS_QUALITY_ABORT_STAGE = "quality_abort_stage"
 const val BS_CONTAINER_END_SOURCE_PREFIX = "CONTAINER_END_"
 const val BS_MANUAL_STOP_PAUSE_ATOM = "taskCancel_"
 const val BS_STAGE_CANCELED_END_SOURCE = "STAGE_CANCELED_END"
+const val BS_CANCEL_BUILD_SOURCE = "cancel_build"
 
 const val BS_PAUSE_TASK = "_bkTaskPauseTag_"

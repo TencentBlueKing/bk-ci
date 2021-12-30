@@ -41,43 +41,43 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
-import com.tencent.devops.common.ci.v2.MrRule
-import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.PreTriggerOn
-import com.tencent.devops.common.ci.v2.PushRule
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.Stage
-import com.tencent.devops.common.ci.v2.TagRule
-import com.tencent.devops.common.ci.v2.TriggerOn
-import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreTriggerOn
+import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
+import com.tencent.devops.common.ci.v2.TagRule
+import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -125,7 +125,7 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. return null")
+            logger.warn("Check yaml version failed. return null")
             null
         }
     }
@@ -362,12 +362,12 @@ object ScriptYmlUtils {
         }
 
         val jobs = mutableListOf<Job>()
-        preJobs.forEach { (t, u) ->
+        preJobs.forEach { (index, preJob) ->
             // 检测job env合法性
-            GitCIEnvUtils.checkEnv(u.env)
+            GitCIEnvUtils.checkEnv(preJob.env)
 
             val services = mutableListOf<Service>()
-            u.services?.forEach { (key, value) ->
+            preJob.services?.forEach { (key, value) ->
                 services.add(
                     Service(
                         serviceId = key,
@@ -379,17 +379,18 @@ object ScriptYmlUtils {
 
             jobs.add(
                 Job(
-                    id = t,
-                    name = u.name,
-                    runsOn = formatRunsOn(u.runsOn),
+                    id = index,
+                    name = preJob.name,
+                    resourceExclusiveDeclaration = preJob.resourceExclusiveDeclaration,
+                    runsOn = formatRunsOn(preJob.runsOn),
                     services = services,
-                    ifField = u.ifField,
-                    steps = formatSteps(u.steps),
-                    timeoutMinutes = u.timeoutMinutes,
-                    env = u.env,
-                    continueOnError = u.continueOnError,
-                    strategy = u.strategy,
-                    dependOn = u.dependOn
+                    ifField = preJob.ifField,
+                    steps = formatSteps(preJob.steps),
+                    timeoutMinutes = preJob.timeoutMinutes,
+                    env = preJob.env,
+                    continueOnError = preJob.continueOnError,
+                    strategy = preJob.strategy,
+                    dependOn = preJob.dependOn
                 )
             )
         }
@@ -799,6 +800,9 @@ object ScriptYmlUtils {
         }
     }
 
+    /**
+     * 标准化处理，并裁剪PreCI不支持的特性
+     */
     fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
         val stages = formatStage(
             preScriptBuildYaml

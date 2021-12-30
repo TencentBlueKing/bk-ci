@@ -43,5 +43,15 @@ enum class GitCodeApiStatus(val status: Int, val content: String) {
     UNPROCESSABLE(422, "操作不能进行"),
     LOCKED(423, "帐号被锁定，或api请求频率超限"),
     TOO_MANY_REQUESTS(429, "请求被限流"),
-    SERVER_ERROR(500, "服务器出错")
+    SERVER_ERROR(500, "服务器出错");
+
+    companion object {
+        fun getStatus(status: Int): GitCodeApiStatus? {
+            val codes = values().associateBy { it.status }
+            if (status !in codes.keys) {
+                return null
+            }
+            return codes[status]
+        }
+    }
 }
