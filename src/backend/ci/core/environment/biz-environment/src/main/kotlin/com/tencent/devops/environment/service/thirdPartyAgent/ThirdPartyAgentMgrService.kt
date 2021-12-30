@@ -67,6 +67,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentTask
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
@@ -86,6 +87,9 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -665,7 +669,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         val sharedProjectId = sharedProjEnv[0]
         val sharedEnvName = sharedProjEnv[1]
-        val sharedEnvRecord = envShareProjectDao.get(dslContext, sharedEnvName, projectId, sharedProjectId)
+        val sharedEnvRecord = envShareProjectDao.list(
+            dslContext = dslContext,
+            envName = sharedEnvName,
+            mainProjectId = sharedProjectId
+        )
         if (sharedEnvRecord.isEmpty()) {
             logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
                 "mainProjectId: $sharedProjectId")
@@ -673,7 +681,25 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
-        sharedEnvRecord.forEach {
+        // 优先进行单个项目的匹配
+        sharedEnvRecord.sortedByDescending { it.type }.forEach {
+            // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
+            if (it.type == SharedEnvType.GROUP.name) {
+                val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
+                    ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
+                client.get(ServiceGitResource::class).getProjectGroupInfo(
+                    it.sharedProjectId,
+                    true,
+                    token,
+                    TokenTypeEnum.OAUTH
+                ).data?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                    return@forEach
+                } ?: return@forEach
+            }
+            // 对于分享的单独项目则查看是否是同一个
+            if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
+                return@forEach
+            }
             val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
             sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
         }
