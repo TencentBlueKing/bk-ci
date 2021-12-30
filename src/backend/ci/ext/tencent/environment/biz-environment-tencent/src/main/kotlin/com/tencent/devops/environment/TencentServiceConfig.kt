@@ -38,7 +38,6 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
-import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl

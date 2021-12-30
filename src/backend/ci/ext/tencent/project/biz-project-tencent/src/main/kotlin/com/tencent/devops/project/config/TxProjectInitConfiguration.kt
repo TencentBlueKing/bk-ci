@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.GitCIProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxV0ProjectPermissionServiceImpl

@@ -38,8 +38,6 @@ import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
-import com.tencent.devops.ticket.service.GitCICertPermissionServiceImpl
-import com.tencent.devops.ticket.service.GitCICredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
 import org.jooq.DSLContext
