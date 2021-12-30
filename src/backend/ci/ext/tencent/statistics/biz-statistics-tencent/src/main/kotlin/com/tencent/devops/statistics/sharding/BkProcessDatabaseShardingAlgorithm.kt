@@ -45,7 +45,7 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         val routingName = shardingValue.value
         // 从本地缓存获取路由规则
         var routingRule = BkShardingRoutingCacheUtil.getIfPresent(routingName)
-        if (routingRule == null) {
+        if (routingRule.isNullOrBlank()) {
             // 本地缓存没有查到路由规则信息则调接口去db实时查
             val client = SpringContextUtil.getBean(Client::class.java)
             val ruleObj = client.get(ServiceShardingRoutingRuleResource::class)
@@ -56,8 +56,8 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
                 BkShardingRoutingCacheUtil.put(routingName, routingRule)
             }
         }
-        if (routingRule == null || !availableTargetNames.contains(routingRule)) {
-            // 没有配置路由规则则路由到ds_0
+        if (routingRule.isNullOrBlank() || !availableTargetNames.contains(routingRule)) {
+            // 没有配置路由规则则路由到默认数据源
             return DEFAULT_DATA_SOURCE_NAME
         }
         return routingRule

@@ -29,6 +29,7 @@ package com.tencent.devops.common.service.utils
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.service.config.CommonConfig
+import java.util.concurrent.TimeUnit
 
 /**
  * DB分片路由缓存
@@ -41,6 +42,7 @@ object BkShardingRoutingCacheUtil {
 
     private val shardingRoutingCache = Caffeine.newBuilder()
         .maximumSize(SpringContextUtil.getBean(CommonConfig::class.java).shardingRoutingCacheSize)
+        .expireAfterWrite(1000, TimeUnit.DAYS)
         .build<String, String>()
 
     fun invalidate(routingName: String) {
