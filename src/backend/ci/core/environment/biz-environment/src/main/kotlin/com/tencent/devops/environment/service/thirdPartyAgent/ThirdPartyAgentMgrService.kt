@@ -687,14 +687,23 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (it.type == SharedEnvType.GROUP.name) {
                 val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
                     ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
-                client.get(ServiceGitResource::class).getProjectGroupInfo(
-                    it.sharedProjectId,
-                    true,
-                    token,
-                    TokenTypeEnum.OAUTH
-                ).data?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                val projectsInGroups = client.get(ServiceGitResource::class).getProjectGroupInfo(
+                    id = it.sharedProjectId,
+                    includeSubgroups = true,
+                    token = token,
+                    tokenType = TokenTypeEnum.OAUTH
+                ).data
+                var isProjectsEmpty = false
+                projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                    isProjectsEmpty = true
+                }
+                isProjectsEmpty = false
+                projectsInGroups?.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                    isProjectsEmpty = true
+                }
+                if (isProjectsEmpty) {
                     return@forEach
-                } ?: return@forEach
+                }
             }
             // 对于分享的单独项目则查看是否是同一个
             if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {

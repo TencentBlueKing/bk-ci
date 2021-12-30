@@ -1,6 +1,7 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.scm.code.git.api.GitProject
 import io.swagger.annotations.ApiModel
 
@@ -64,7 +65,7 @@ import io.swagger.annotations.ApiModel
 "repository_size": 0.004
 }
 },
-{
+"sub_projects": [{
 "id": 66062,
 "description": "gggg",
 "public": false,
@@ -114,7 +115,7 @@ import io.swagger.annotations.ApiModel
 "commit_count": 0,
 "repository_size": 0
 }
-}
+}]
 ]
 }
  */
@@ -125,5 +126,7 @@ data class GitProjectGroupInfo(
     val id: Long,
     val name: String,
     val path: String,
-    val projects: List<GitProject>
+    val projects: List<GitProject>,
+    @JsonProperty("sub_projects")
+    val subProjects: List<GitProject>?
 )
