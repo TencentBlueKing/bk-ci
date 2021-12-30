@@ -30,7 +30,6 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
@@ -52,15 +51,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineTemplateResource {
-
-    @ApiOperation("列举流水线模板")
-    @GET
-    @Path("/projects/{projectCode}")
-    fun listTemplate(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String
-    ): Result<Map<String, PipelineTemplate>>
 
     @ApiOperation("质量红线-获取模版列表")
     @GET

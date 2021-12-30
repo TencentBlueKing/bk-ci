@@ -29,7 +29,6 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
@@ -42,10 +41,6 @@ class UserPipelineTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService,
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineTemplateResource {
-
-    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
-        return Result(pipelineTemplateService.listTemplate(projectCode))
-    }
 
     override fun listQualityViewTemplates(
         userId: String,
