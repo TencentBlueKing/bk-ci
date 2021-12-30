@@ -48,6 +48,7 @@ dependencies {
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:auth:api-auth"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")

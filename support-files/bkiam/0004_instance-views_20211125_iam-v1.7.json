@@ -92,7 +92,7 @@
         "name_en": "quality group instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
-          {"system_id": "bk_ci","id": "group"}
+          {"system_id": "bk_ci","id": "quality_group"}
         ]
       }
     },

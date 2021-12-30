@@ -1333,7 +1333,7 @@ class PipelineListFacadeService @Autowired constructor(
         val limitNotNull = limit ?: 10
         val offsetNotNull = offset ?: 0
         val pipelineRecords =
-            pipelineInfoDao.searchByPipelineName(
+            pipelineInfoDao.searchByProject(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
                 projectCode = projectId,
@@ -1368,7 +1368,7 @@ class PipelineListFacadeService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
         val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
-            pipelineInfoDao.searchByPipelineName(
+            pipelineInfoDao.searchByProject(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
                 projectCode = projectId,

@@ -77,18 +77,25 @@
 
             container () {
                 const {
-                    editingElementPos: { stageIndex, containerIndex },
+                    editingElementPos: { stageIndex, containerIndex, containerGroupIndex },
                     execDetail: { model: { stages } }
                 } = this
-                return stages[stageIndex].containers[containerIndex]
+                try {
+                    if (containerGroupIndex !== undefined) {
+                        return stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex]
+                    } else {
+                        return stages[stageIndex].containers[containerIndex]
+                    }
+                } catch (_) {
+                    return {}
+                }
             },
 
             currentElement () {
                 const {
-                    editingElementPos: { stageIndex, containerIndex, elementIndex },
-                    execDetail: { model: { stages } }
+                    editingElementPos: { elementIndex }
                 } = this
-                return stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                return this.container.elements[elementIndex]
             },
 
             componentList () {
@@ -110,6 +117,7 @@
                         bindData: {
                             elementIndex: this.editingElementPos.elementIndex,
                             containerIndex: this.editingElementPos.containerIndex,
+                            containerGroupIndex: this.editingElementPos.containerGroupIndex,
                             stageIndex: this.editingElementPos.stageIndex,
                             stages: this.stages,
                             editable: false,

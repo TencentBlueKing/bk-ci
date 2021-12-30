@@ -396,11 +396,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         try {
             watcher.start("isProjectManager")
             // 判断用户是否为项目管理员
-            val permission = BkAuthGroup.MANAGER
-            if (!pipelinePermissionService.isProjectUser(userId, projectId, permission)) {
+            if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 val defaultMessage = "管理员"
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${permission.value}",
+                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
                     defaultMessage = defaultMessage
                 )
                 throw ErrorCodeException(
@@ -730,7 +729,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
-                it.refreshReviewOption()
+                it.resetBuildOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上

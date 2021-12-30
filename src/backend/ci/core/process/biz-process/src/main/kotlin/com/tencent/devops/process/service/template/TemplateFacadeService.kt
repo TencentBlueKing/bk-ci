@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -66,6 +65,7 @@ import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -155,6 +155,7 @@ class TemplateFacadeService @Autowired constructor(
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -1727,7 +1728,8 @@ class TemplateFacadeService @Autowired constructor(
                 templateParams = templateParams,
                 buildNo = buildNo,
                 canRetry = canRetry,
-                containerId = containerId
+                containerId = containerId,
+                containerHashId = containerHashId
             )
         }
 
@@ -1778,7 +1780,8 @@ class TemplateFacadeService @Autowired constructor(
             params = params, templateParams = templateParams,
             buildNo = triggerContainer.buildNo,
             canRetry = triggerContainer.canRetry,
-            containerId = triggerContainer.containerId
+            containerId = triggerContainer.containerId,
+            containerHashId = triggerContainer.containerHashId
         )
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         return Model(
@@ -1806,7 +1809,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
-        pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+        pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
 
     /**
      * 删除模板的参数， 如果模板中没有这个参数，那么流水线中应该删除掉
@@ -2040,9 +2043,11 @@ class TemplateFacadeService @Autowired constructor(
             if (stage.tag == null) stage.tag = defaultTagIds
             stage.containers.forEach { container ->
                 if (container.containerId.isNullOrBlank()) {
-                    container.containerId = UUIDUtil.generate()
+                    container.containerId = container.id
                 }
-
+                if (container.containerHashId.isNullOrBlank()) {
+                    container.containerHashId = modelContainerIdGenerator.getNextId()
+                }
                 container.elements.forEach { e ->
                     if (e.id.isNullOrBlank()) {
                         e.id = modelTaskIdGenerator.getNextId()

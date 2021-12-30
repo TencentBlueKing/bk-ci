@@ -240,7 +240,7 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(
+    fun searchByProject(
         dslContext: DSLContext,
         pipelineName: String?,
         projectCode: String,
@@ -278,7 +278,7 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
+    fun searchByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))

@@ -41,4 +41,5 @@ dependencies {
     api("org.apache.commons:commons-compress")
     api("org.json:json")
     api("org.influxdb:influxdb-java")
+    api(project(":core:auth:api-auth"))
 }

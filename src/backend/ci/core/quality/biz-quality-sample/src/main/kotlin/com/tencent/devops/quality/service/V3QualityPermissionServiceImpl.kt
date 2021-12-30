@@ -31,12 +31,18 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import org.jooq.DSLContext
 
 @Suppress("ALL")
 class V3QualityPermissionServiceImpl constructor(
     override val authPermissionApi: AuthPermissionApi,
     override val authResourceApi: AuthResourceApi,
-    override val qualityAuthServiceCode: QualityAuthServiceCode
+    override val qualityAuthServiceCode: QualityAuthServiceCode,
+    val groupDao: QualityNotifyGroupDao,
+    val qualityRuleDao: QualityRuleDao,
+    val dslContext: DSLContext
 ) : AbsQualityPermissionServiceImpl(authPermissionApi, authResourceApi, qualityAuthServiceCode) {
     override fun validateGroupPermission(
         userId: String,
@@ -103,10 +109,54 @@ class V3QualityPermissionServiceImpl constructor(
     }
 
     override fun supplierForPermissionGroup(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+        return {
+            val fakeList = mutableListOf<String>()
+            groupDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = 0,
+                limit = 500
+            ).forEach {
+                fakeList.add(it.id.toString())
+            }
+            fakeList
+        }
     }
 
     override fun supplierForPermissionRule(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+        return {
+            val fakeList = mutableListOf<String>()
+            qualityRuleDao.list(
+                dslContext = dslContext,
+                projectId = projectId
+            )?.forEach {
+                fakeList.add(it.id.toString())
+            }
+            fakeList
+        }
+    }
+
+    override fun supplierPermissionRule(projectId: String): List<Long> {
+        val projectRule = mutableListOf<Long>()
+        qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId
+        )?.forEach {
+            projectRule.add(it.id)
+        }
+        return projectRule
+    }
+
+    override fun supplierPermissionGroup(projectId: String): List<Long> {
+        val projectGroup = mutableListOf<Long>()
+        groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = 0,
+            limit = 500
+        ).forEach {
+            projectGroup.add(it.id)
+        }
+        return projectGroup
     }
 }

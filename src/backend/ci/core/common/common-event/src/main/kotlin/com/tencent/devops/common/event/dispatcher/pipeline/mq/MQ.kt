@@ -99,6 +99,9 @@ object MQ {
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
 
+    // 构建取消后续广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "e.engine.pipeline.build.cancel"
+
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
