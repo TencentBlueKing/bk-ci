@@ -28,13 +28,10 @@
 package com.tencent.devops.sign.resources
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.builds.BuildIpaResource
-import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
