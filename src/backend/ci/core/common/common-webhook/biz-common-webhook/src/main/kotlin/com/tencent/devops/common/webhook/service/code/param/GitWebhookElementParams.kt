@@ -79,8 +79,9 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
     }
 
     private fun isBlock(element: CodeGitWebHookTriggerElement): Boolean {
-        if (element.enableCheck == false) return false
-        return if (element.eventType != CodeEventType.MERGE_REQUEST) false
-        else element.block ?: false
+        return when {
+            element.enableCheck == false || element.eventType != CodeEventType.MERGE_REQUEST -> false
+            else -> element.block ?: false
+        }
     }
 }
