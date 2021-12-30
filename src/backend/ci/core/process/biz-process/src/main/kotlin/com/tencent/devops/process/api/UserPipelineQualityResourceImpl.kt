@@ -68,5 +68,4 @@ class UserPipelineQualityResourceImpl @Autowired constructor(
             )
         )
     }
-
 }
