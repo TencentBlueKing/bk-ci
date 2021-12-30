@@ -39,7 +39,12 @@ class SimpleStreamPermissionImpl : StreamPermissionService {
         return Pair(first = true, second = true)
     }
 
-    override fun extPermission(projectCode: String, userId: String, action: AuthPermission): Boolean {
+    override fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean {
         return false
     }
 }
