@@ -448,7 +448,7 @@ class QualityRuleCheckService @Autowired constructor(
                 if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
             }
         }
-        logger.info("QUALITY|indicators is:$indicators")
+        logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
