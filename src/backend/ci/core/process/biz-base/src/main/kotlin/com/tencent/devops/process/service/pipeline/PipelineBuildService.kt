@@ -50,9 +50,10 @@ import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.PipelineElementService
+import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -83,9 +84,10 @@ import javax.ws.rs.core.Response
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
-    private val pipelineElementService: PipelineElementService,
+    private val pipelineElementService: PipelinePostElementService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val templateService: TemplateService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
@@ -160,7 +162,7 @@ class PipelineBuildService(
                 frequencyLimit = false
             )
             // 更新父流水线关联子流水线构建id
-            pipelineRuntimeService.updateTaskSubBuildId(
+            pipelineTaskService.updateSubBuildId(
                 buildId = parentBuildId,
                 taskId = parentTaskId,
                 subBuildId = subBuildId,

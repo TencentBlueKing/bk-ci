@@ -104,6 +104,11 @@ include(":core:quality:biz-quality-sample")
 include(":core:quality:boot-quality")
 include(":core:quality:model-quality")
 
+include(":core:buildless")
+include(":core:buildless:api-buildless")
+include(":core:buildless:biz-buildless")
+include(":core:buildless:boot-buildless")
+
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")

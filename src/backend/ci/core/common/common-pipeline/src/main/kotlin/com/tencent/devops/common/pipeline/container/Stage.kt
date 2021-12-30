@@ -64,20 +64,25 @@ data class Stage(
     var checkOut: StagePauseCheck? = null // stage准出配置
 ) {
     /**
-     * 兼容性逻辑 - 将原有的审核配置刷新到审核流中，并且补充审核组ID
+     * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */
-    fun refreshReviewOption(init: Boolean? = false) {
-        if (checkIn != null) {
-            checkIn?.fixReviewGroups(init == true)
-            return
+    fun resetBuildOption(init: Boolean? = false) {
+        if (init == true) {
+            status = null
+            startEpoch = null
+            elapsed = null
         }
-        val originControlOption = stageControlOption ?: return
-        if (originControlOption.manualTrigger == true) {
-            checkIn = StagePauseCheck.convertControlOption(originControlOption)
+        checkIn?.fixReviewGroups(init == true)
+        checkOut?.fixReviewGroups(init == true)
+        if (stageControlOption?.manualTrigger == true && checkIn == null) {
+            checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }
-        stageControlOption?.triggerUsers = null
-        stageControlOption?.triggered = null
-        stageControlOption?.reviewParams = null
-        stageControlOption?.reviewDesc = null
+    }
+
+    fun getContainer(vmSeqId: String): Container? {
+        containers.forEach { container ->
+            return container.getContainerById(vmSeqId) ?: return@forEach
+        }
+        return null
     }
 }
