@@ -459,7 +459,7 @@ class QualityRuleCheckService @Autowired constructor(
                 if (indicator.isScriptElementIndicator()) {
                     listOf(metadataList
                         .find { indicator.enName == it.enName &&
-                                it.elementType in QualityIndicator.SCRIPT_ELEMENT})
+                                it.elementType in QualityIndicator.SCRIPT_ELEMENT })
                 } else {
                     indicator.metadataList.map {
                         metadata -> metadataList.find { it.enName == metadata.enName }
