@@ -118,8 +118,7 @@ internal class MatrixYamlCheckUtilsTest {
         val result = try {
             MatrixContextUtils.schemaCheck(yamlstr)
             false
-        }
-        catch (e:Exception){
+        } catch (e: Exception) {
             true
         }
 
