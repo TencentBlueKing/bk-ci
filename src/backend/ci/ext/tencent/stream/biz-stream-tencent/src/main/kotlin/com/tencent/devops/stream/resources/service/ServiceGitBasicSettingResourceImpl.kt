@@ -72,7 +72,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
         permissionService.checkGitCIAndOAuth(
@@ -136,7 +136,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             data = null
         )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
 
         permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.USE)
