@@ -48,6 +48,9 @@ data class Job(
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,

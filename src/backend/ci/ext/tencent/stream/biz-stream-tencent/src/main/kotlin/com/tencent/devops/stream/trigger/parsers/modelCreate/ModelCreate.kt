@@ -74,6 +74,7 @@ class ModelCreate @Autowired constructor(
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
         pipeline: GitProjectPipeline,
+        changeSet: Set<String>? = null,
         webhookParams: Map<String, String> = mapOf()
     ): Model {
         // 流水线插件标签设置
@@ -138,6 +139,7 @@ class ModelCreate @Autowired constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
+                    changeSet = changeSet,
                     pipeline = pipeline,
                     elementNames = elementNames
                 )

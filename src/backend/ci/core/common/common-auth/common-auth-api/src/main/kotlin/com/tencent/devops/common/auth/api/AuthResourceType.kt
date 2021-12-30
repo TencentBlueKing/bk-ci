@@ -28,8 +28,8 @@
 package com.tencent.devops.common.auth.api
 
 enum class AuthResourceType(val value: String) {
-    BCS_DEV_IMAGE("dev_image"),     // bcs服务开发镜像
-    BCS_PROD_IMAGE("prod_image"),   // bcs服务生产镜像
+    BCS_DEV_IMAGE("dev_image"), // bcs服务开发镜像
+    BCS_PROD_IMAGE("prod_image"), // bcs服务生产镜像
 
     CODE_REPERTORY("repertory"), // code代码仓库
 
@@ -41,7 +41,7 @@ enum class AuthResourceType(val value: String) {
     TICKET_CERT("cert"), // 凭证服务证书
 
     ENVIRONMENT_ENVIRONMENT("environment"), // 环境
-    ENVIRONMENT_ENV_NODE("env_node"),       // 环境节点
+    ENVIRONMENT_ENV_NODE("env_node"), // 环境节点
 
     EXPERIENCE_TASK("task"), // 体验任务
     EXPERIENCE_TASK_NEW("experience_task"), // 体验任务(新权限中心资源类型需唯一)
