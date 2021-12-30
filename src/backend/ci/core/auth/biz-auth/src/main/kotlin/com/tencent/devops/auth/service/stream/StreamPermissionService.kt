@@ -50,5 +50,5 @@ interface StreamPermissionService {
      * userId: 待校验用户
      * action: stream内定义的操作类型
      */
-    fun extPermission(projectCode: String, userId: String, action: AuthPermission): Boolean
+    fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean
 }
