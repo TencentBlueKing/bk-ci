@@ -33,12 +33,10 @@ import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val pipelineTemplateService: PipelineTemplateService,
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineTemplateResource {
 
