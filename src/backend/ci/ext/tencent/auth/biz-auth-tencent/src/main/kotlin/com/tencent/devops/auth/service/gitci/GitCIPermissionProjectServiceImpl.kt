@@ -77,6 +77,10 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
         return checkProjectUser(userId, gitProjectId, projectCode)
     }
 
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        return true
+    }
+
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
         return true
     }

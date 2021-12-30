@@ -28,30 +28,37 @@
 package com.tencent.devops.auth.configuration
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
 import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
+import com.tencent.devops.auth.service.gitci.StreamLocalPermissionServiceImpl
+import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
+import com.tencent.devops.auth.service.stream.StreamPermissionService
+import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService,
-        projectServiceImpl: GitCIPermissionProjectServiceImpl
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService, projectServiceImpl)
+@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
+class StreamLocalConfiguration {
 
     @Bean
-    fun gitCIPermissionProjectServiceImpl(
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun streamLocalPermissionService(
         client: Client,
+        managerService: ManagerService,
         projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
+    ) = StreamLocalPermissionServiceImpl(client, managerService, projectInfoService)
+
+    @Bean
+    fun streamProjectPermissionService(
+        streamPermissionService: StreamPermissionService
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+
+    @Bean
+    fun streamPermissionService(
+        streamPermissionService: StreamPermissionService
+    ) = StreamPermissionServiceImpl(streamPermissionService)
 
     @Bean
     fun gitProjectInfoService(

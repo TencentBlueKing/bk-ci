@@ -57,23 +57,23 @@ class TicketConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCICertPermissionServiceImpl(
-        client: Client,
-        certDao: CertDao,
-        dslContext: DSLContext,
-        tokenService: ClientTokenService
-    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext, tokenService)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCICredentialPermissionServiceImpl(
-        client: Client,
-        credentialDao: CredentialDao,
-        dslContext: DSLContext,
-        tokenService: ClientTokenService
-    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext, tokenService)
+//    @Bean
+//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+//    fun gitCICertPermissionServiceImpl(
+//        client: Client,
+//        certDao: CertDao,
+//        dslContext: DSLContext,
+//        tokenService: ClientTokenService
+//    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext, tokenService)
+//
+//    @Bean
+//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+//    fun gitCICredentialPermissionServiceImpl(
+//        client: Client,
+//        credentialDao: CredentialDao,
+//        dslContext: DSLContext,
+//        tokenService: ClientTokenService
+//    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")

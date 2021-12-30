@@ -87,6 +87,7 @@ class TxProjectInitConfiguration {
         bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
     ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service, bsPipelineAuthServiceCode)
 
+    //TODO: 确认历史问题
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIProjectPermissionServiceImpl(
@@ -95,7 +96,7 @@ class TxProjectInitConfiguration {
         bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
     ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service, bsPipelineAuthServiceCode)
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCiProjectPermission() = GitCIProjectPermissionService()
+//    @Bean
+//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+//    fun gitCiProjectPermission() = GitCIProjectPermissionService()
 }

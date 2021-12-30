@@ -82,18 +82,18 @@ class TxQualityConfiguration {
     ) = TxV3QualityPermissionService(
         client, dslContext, ruleDao, groupDao, tokenService, authResourceApiStr
     )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIQualityPermissionService(
-        client: Client,
-        tokenCheckService: ClientTokenService,
-        ruleDao: QualityRuleDao,
-        groupDao: QualityNotifyGroupDao,
-        dslContext: DSLContext
-    ) = GitCIQualityPermissionService(
-        client, tokenCheckService, ruleDao, groupDao, dslContext
-    )
+//
+//    @Bean
+//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+//    fun gitCIQualityPermissionService(
+//        client: Client,
+//        tokenCheckService: ClientTokenService,
+//        ruleDao: QualityRuleDao,
+//        groupDao: QualityNotifyGroupDao,
+//        dslContext: DSLContext
+//    ) = GitCIQualityPermissionService(
+//        client, tokenCheckService, ruleDao, groupDao, dslContext
+//    )
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
