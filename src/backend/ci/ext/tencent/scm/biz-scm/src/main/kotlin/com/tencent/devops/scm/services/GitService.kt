@@ -1581,7 +1581,7 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum
     ): GitProjectGroupInfo {
-        var url = "$gitCIUrl/api/v3/groups?${
+        var url = "$gitCIUrl/api/v3/groups/$id?${
             if (tokenType == TokenTypeEnum.OAUTH) {
                 "access_token=$token"
             } else {
