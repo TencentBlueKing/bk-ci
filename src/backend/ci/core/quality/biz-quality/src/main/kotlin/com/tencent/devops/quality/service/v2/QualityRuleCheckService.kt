@@ -456,18 +456,24 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
             val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
-                indicator.metadataList.map {
-                        metadata -> metadataList.firstOrNull { it.enName == metadata.enName }
-                }.toList()
+                if (indicator.isScriptElementIndicator()) {
+                    listOf(metadataList
+                        .find { indicator.enName == it.enName &&
+                                it.elementType in QualityIndicator.SCRIPT_ELEMENT})
+                } else {
+                    indicator.metadataList.map {
+                        metadata -> metadataList.find { it.enName == metadata.enName }
+                    }.toList()
+                }
             } else {
                 if (indicator.isScriptElementIndicator()) {
                     listOf(metadataList
                         .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                        .findLast { indicator.enName == it.enName && indicator.taskName == it.taskName })
+                        .find { indicator.enName == it.enName && indicator.taskName == it.taskName })
                 } else {
                     metadataList.filter {
                         it.taskName == indicator.taskName &&
-                                indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
+                        indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
                     }
                 }
             }

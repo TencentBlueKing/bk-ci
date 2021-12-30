@@ -133,7 +133,7 @@ class QualityHisMetadataDao {
         return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .orderBy(CREATE_TIME.asc())
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
