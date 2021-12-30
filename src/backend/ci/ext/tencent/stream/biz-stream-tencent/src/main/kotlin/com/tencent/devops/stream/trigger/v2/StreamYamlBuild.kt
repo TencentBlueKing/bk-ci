@@ -99,6 +99,7 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
         gitProjectInfo: GitCIProjectInfo? = null,
+        changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf()
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
@@ -156,6 +157,7 @@ class StreamYamlBuild @Autowired constructor(
                     event = event,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
+                    changeSet = changeSet,
                     gitBasicSetting = gitBasicSetting,
                     params = params
                 )
@@ -164,6 +166,7 @@ class StreamYamlBuild @Autowired constructor(
                     pipeline = realPipeline,
                     event = event,
                     yaml = yaml,
+                    changeSet = changeSet,
                     gitBasicSetting = gitBasicSetting
                 )
                 null
@@ -244,6 +247,7 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
         gitBasicSetting: GitCIBasicSetting,
+        changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf()
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
@@ -254,6 +258,7 @@ class StreamYamlBuild @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             yaml = yaml,
             pipeline = pipeline,
+            changeSet = changeSet,
             webhookParams = params
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
@@ -272,9 +277,16 @@ class StreamYamlBuild @Autowired constructor(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         yaml: ScriptBuildYaml,
+        changeSet: Set<String>? = null,
         gitBasicSetting: GitCIBasicSetting
     ) {
-        val model = modelCreate.createPipelineModel(event, gitBasicSetting, yaml, pipeline)
+        val model = modelCreate.createPipelineModel(
+            event = event,
+            gitBasicSetting = gitBasicSetting,
+            yaml = yaml,
+            changeSet = changeSet,
+            pipeline = pipeline
+        )
         logger.info("savePipeline pipeline:$pipeline, model: $model")
         streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
     }

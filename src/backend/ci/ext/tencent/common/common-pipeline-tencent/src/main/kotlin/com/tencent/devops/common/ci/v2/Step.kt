@@ -36,6 +36,9 @@ data class Step(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifFiled: String?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     val uses: String?,
     val with: Map<String, Any?>?,
     @ApiModelProperty(name = "timeout-minutes")
