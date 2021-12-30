@@ -32,7 +32,11 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 
+@Configuration
+@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamPermissionProjectServiceImpl @Autowired constructor(
     val streamPermissionService: StreamPermissionService
 ) : PermissionProjectService{

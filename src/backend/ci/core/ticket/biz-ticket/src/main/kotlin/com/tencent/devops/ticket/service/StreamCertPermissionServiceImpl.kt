@@ -36,8 +36,11 @@ import com.tencent.devops.ticket.dao.CertDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Configuration
 
-// TODO: 实例化条件
+@Configuration
+@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamCertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
