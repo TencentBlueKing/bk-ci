@@ -32,7 +32,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -88,7 +87,7 @@ object QualityUtils {
                         interceptItem.indicatorName,
                         actualValue,
                         QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
-                        interceptItem.pass.toString()
+                        interceptItem.pass.toString(), ""
                 ))
                 resultMap[elementCnName] = resultList
             }
@@ -109,12 +108,8 @@ object QualityUtils {
             buildId = buildId,
             varName = CodeccUtils.BK_CI_CODECC_TASK_ID
         ).data
-        var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
-        if (taskId.isNullOrBlank()) {
-            taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
-        }
-
-        return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
+        val taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
+        return if (detail.isNullOrBlank() || detail.split(",").size > 1) {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
@@ -123,7 +118,7 @@ object QualityUtils {
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
                 .replace("##detail##", detail)
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}$fillDetailUrl'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console$fillDetailUrl'>$value</a>"
         }
     }
 }

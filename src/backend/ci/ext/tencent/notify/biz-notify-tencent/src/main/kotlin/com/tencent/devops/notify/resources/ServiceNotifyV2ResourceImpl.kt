@@ -43,6 +43,9 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService
 ) : ServiceNotifyV2Resource {
+    /**
+     * 企业微信
+     */
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         checkV2ExtInfo(message)
@@ -50,6 +53,9 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    /**
+     * 邮件
+     */
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         checkV2ExtInfo(message)
@@ -57,6 +63,9 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    /**
+     * 校验扩展信息，服务于TOF4
+     */
     private fun checkV2ExtInfo(message: BaseMessage) {
         if (message.v2ExtInfo.isNullOrBlank()) {
             throw InvalidParamException(

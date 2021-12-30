@@ -176,7 +176,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
     /**
      * 获取外部带token的下载链接
      */
-    fun externalDownloadUrl(path: String, userId: String, ttl: Int, directed: Boolean = false): String {
+    fun externalDownloadUrl(path: String, userId: String?, ttl: Int, directed: Boolean = false): String {
         val url = "$JFROG_BASE_URL/api/plugins/execute/externalDownloadUrl?params=path=$path;downloadUser=$userId;ttl=$ttl;directed=$directed"
         val request = Request.Builder()
             .url(url)

@@ -49,7 +49,9 @@ class CheckMutexContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true // 矩阵组不做互斥判断
     }
 
     override fun execute(commandContext: ContainerContext) {

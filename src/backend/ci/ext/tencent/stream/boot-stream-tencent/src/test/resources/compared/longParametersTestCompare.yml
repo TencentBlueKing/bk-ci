@@ -18,6 +18,7 @@ stages:
   jobs:
   - id: "job_tcoder_codecc_new"
     name: "腾讯代码质量扫描"
+    resource-exclusive-declaration: null
     runs-on:
       self-hosted: false
       pool-name: "docker"

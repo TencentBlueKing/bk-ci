@@ -74,6 +74,7 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeErrorResp
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -659,12 +660,17 @@ class GitService @Autowired constructor(
                 )
             )
             .build()
-        logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
             if (!it.isSuccessful) {
+                val data = it.body()?.string() ?: throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = it.message()
+                )
+                val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
                 throw CustomException(
                     status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${it.code()})${it.message()}"
+                    message = resp.message ?: it.message()
                 )
             }
             return true
@@ -1619,6 +1625,47 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
+        }
+    }
+
+    fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tags")
+        setToken(tokenType, url, token)
+        val params = mutableMapOf<String, Any?>()
+        params["id"] = repoName
+        params["tag_name"] = tagName
+        params["ref"] = ref
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(params)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("createGitTag response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val message = dataMap["message"]
+            if (!StringUtils.isEmpty(message)) {
+                val validateResult: Result<String?> =
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
+                    )
+                logger.info("createGitTag validateResult>> $validateResult")
+
+                return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+            }
+            return Result(true)
         }
     }
 }

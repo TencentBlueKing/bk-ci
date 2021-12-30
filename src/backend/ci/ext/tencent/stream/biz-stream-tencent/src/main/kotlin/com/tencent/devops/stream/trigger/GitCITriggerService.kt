@@ -57,8 +57,6 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.isDeleteBranch
-import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -268,13 +266,14 @@ class GitCITriggerService @Autowired constructor(
         }
 
         // mr提交锁定,这时还没有流水线，所以提交的是无流水线锁
-        blockCommitCheck(
-            mrEvent = mrEvent,
-            event = gitRequestEvent,
-            gitProjectConf = gitProjectConf,
-            block = true,
-            state = GitCICommitCheckState.PENDING
-        )
+        // story_871153869 暂时下掉mr锁，看效果，后续需要再加
+//        blockCommitCheck(
+//            mrEvent = mrEvent,
+//            event = gitRequestEvent,
+//            gitProjectConf = gitProjectConf,
+//            block = true,
+//            state = GitCICommitCheckState.PENDING
+//        )
 
         // 获取mr请求的变更文件列表，用来给后面判断，Merged事件不用检查版本
         val changeSet = if (mrEvent && !isMerged) {
@@ -304,7 +303,7 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { filePath ->
 
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-            var displayName = filePath
+            val displayName = filePath
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
@@ -352,13 +351,14 @@ class GitCITriggerService @Autowired constructor(
             }
         }
         // yml校验全部结束后，解除锁定
-        blockCommitCheck(
-            mrEvent = mrEvent,
-            event = gitRequestEvent,
-            gitProjectConf = gitProjectConf,
-            block = false,
-            state = GitCICommitCheckState.SUCCESS
-        )
+        // story_871153869 暂时下掉mr锁，看效果，后续需要再加
+//        blockCommitCheck(
+//            mrEvent = mrEvent,
+//            event = gitRequestEvent,
+//            gitProjectConf = gitProjectConf,
+//            block = false,
+//            state = GitCICommitCheckState.SUCCESS
+//        )
         return true
     }
 
@@ -496,31 +496,32 @@ class GitCITriggerService @Autowired constructor(
     }
 
     // mr锁定提交
-    private fun blockCommitCheck(
-        mrEvent: Boolean,
-        event: GitRequestEvent,
-        gitProjectConf: GitCIBasicSetting,
-        block: Boolean,
-        state: GitCICommitCheckState
-    ) {
-        logger.info(
-            "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
-                    "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
-        )
-        if (gitProjectConf.enableCommitCheck && gitProjectConf.enableMrBlock && mrEvent) {
-            scmClient.pushCommitCheckWithBlock(
-                commitId = event.commitId,
-                mergeRequestId = event.mergeRequestId ?: 0L,
-                userId = event.userId,
-                block = block,
-                state = state,
-                context = noPipelineBuildEvent,
-                gitCIBasicSetting = gitProjectConf,
-                jumpNotification = false,
-                description = null
-            )
-        }
-    }
+    // story_871153869 暂时下掉mr锁，看效果，后续需要再加
+//    private fun blockCommitCheck(
+//        mrEvent: Boolean,
+//        event: GitRequestEvent,
+//        gitProjectConf: GitCIBasicSetting,
+//        block: Boolean,
+//        state: GitCICommitCheckState
+//    ) {
+//        logger.info(
+//            "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
+//                    "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
+//        )
+//        if (gitProjectConf.enableCommitCheck && gitProjectConf.enableMrBlock && mrEvent) {
+//            scmClient.pushCommitCheckWithBlock(
+//                commitId = event.commitId,
+//                mergeRequestId = event.mergeRequestId ?: 0L,
+//                userId = event.userId,
+//                block = block,
+//                state = state,
+//                context = noPipelineBuildEvent,
+//                gitCIBasicSetting = gitProjectConf,
+//                jumpNotification = false,
+//                description = null
+//            )
+//        }
+//    }
 
     private fun handleGetToken(gitRequestEvent: GitRequestEvent, isMrEvent: Boolean = false): String? {
         return triggerExceptionService.handleErrorCode(

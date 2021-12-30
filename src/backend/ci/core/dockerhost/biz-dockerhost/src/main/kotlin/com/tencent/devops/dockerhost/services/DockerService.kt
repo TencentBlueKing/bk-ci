@@ -261,7 +261,7 @@ class DockerService @Autowired constructor(
             future == null -> Pair(Status.NO_EXISTS, "")
             future.isDone -> {
                 when {
-                    future.get().first -> Pair(Status.SUCCESS, "")
+                    future.get().first -> Pair(Status.SUCCESS, future.get().second ?: "")
                     else -> Pair(Status.FAILURE, future.get().second ?: "")
                 }
             }

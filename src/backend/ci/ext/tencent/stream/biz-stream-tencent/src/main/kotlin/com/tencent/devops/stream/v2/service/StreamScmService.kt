@@ -270,14 +270,12 @@ class StreamScmService @Autowired constructor(
                 "createNewFile RemoteServiceException|" +
                         "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
-            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
-                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status
-            ) {
+            if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
-                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
-                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
-                        .format(userId, gitCICreateFile.branch)
+                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR,
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR.formatErrorMessage
+                        .format(gitCICreateFile.filePath, gitCICreateFile.branch, e.httpStatus, e.errorMessage)
                 )
             } else {
                 error(
@@ -492,6 +490,30 @@ class StreamScmService @Autowired constructor(
                     path = filePath,
                     token = gitToken,
                     ref = getTriggerBranch(gitRequestEvent.branch)
+                ).data ?: emptyList()
+            }
+        )
+    }
+
+    // 获取指定文件在项目中的文件树信息，用于删除分支时判断yml是否在默认分支还存在的情况
+    fun getFileTreeFromGitWithDefaultBranch(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ): List<GitFileInfo> {
+        return retryFun(
+            log = "$gitProjectId get $filePath file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+            action = {
+                client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                    gitProjectId = gitProjectId,
+                    path = if (filePath.contains("/")) {
+                        filePath.substring(0, filePath.lastIndexOf("/"))
+                    } else {
+                        filePath
+                        },
+                    token = gitToken,
+                    ref = ""
                 ).data ?: emptyList()
             }
         )

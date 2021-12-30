@@ -821,6 +821,11 @@ class YamlTemplate(
         return PreJob(
             name = job["name"]?.toString(),
             runsOn = job["runs-on"],
+            resourceExclusiveDeclaration = if (job["resource-exclusive-declaration"] == null) {
+                null
+            } else {
+                YamlObjects.getResourceExclusiveDeclaration(fromPath, job["resource-exclusive-declaration"]!!)
+            },
             container = if (job["container"] == null) {
                 null
             } else {
@@ -856,7 +861,7 @@ class YamlTemplate(
             strategy = if (job["strategy"] == null) {
                 null
             } else {
-                YamlObjects.getStrategy(fromPath, job["strategy"]!!)
+                YamlObjects.getStrategy(fromPath, job["strategy"])
             },
             dependOn = if (job["depend-on"] == null) {
                 null

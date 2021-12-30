@@ -13,6 +13,7 @@ SERVER=0
 GATEWAY=0
 DASHBOARD=0
 DOWNLOADER=0
+WORKER=0
 VERSION=latest
 PUSH=0
 REGISTRY=docker.io
@@ -32,6 +33,7 @@ usage () {
             [ --gateway             [可选] 打包gateway镜像 ]
             [ --dashboard           [可选] 打包dashboard镜像 ]
             [ --downloader          [可选] 打包downloader镜像 ]
+            [ --worker              [可选] 打包worker镜像 ]
             [ -v, --version         [可选] 镜像版本tag, 默认latest ]
             [ -p, --push            [可选] 推送镜像到docker远程仓库，默认不推送 ]
             [ -r, --registry        [可选] docker仓库地址, 默认docker.io ]
@@ -80,6 +82,10 @@ while (( $# > 0 )); do
             ALL=0
             DOWNLOADER=1
             ;;
+        --worker )
+            ALL=0
+            WORKER=1
+            ;;
         -v | --version )
             shift
             VERSION=$1
@@ -127,7 +133,7 @@ trap 'rm -rf $tmp_dir' EXIT TERM
 log "编译service..."
 cd $ROOT_DIR
 export GO111MODULE=on
-export GOPATH=${ROOT_DIR%/*/*}
+#export GOPATH=${ROOT_DIR%/*/*}
 export PATH=$GOPATH/bin:$PATH
 GOOS=linux GOARCH=amd64 disable_encrypt=1 enable_bcs_gateway=1 booster_server_necessary=1 make -j buildbooster dist
 cd $WORKING_DIR
@@ -176,6 +182,16 @@ if [[ $ALL -eq 1 || $DOWNLOADER -eq 1 ]] ; then
     docker build -f tmp/Dockerfile -t $REGISTRY/bktbs/service/bktbs-downloader:$VERSION tmp --no-cache --network=host
 fi
 
+# 构建worker镜像
+if [[ $ALL -eq 1 || $WORKER -eq 1 ]] ; then
+    log "构建worker镜像..."
+    rm -rf tmp/*
+    mkdir -p tmp/worker
+    cp -rf worker/* tmp/worker
+    cp -rf $ROOT_DIR/build/bkdist/bk-dist-worker tmp/worker
+    docker build -f tmp/worker/Dockerfile -t $REGISTRY/bktbs/worker/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION tmp/worker --no-cache --network=host
+fi
+
 echo "BUILD SUCCESSFUL!"
 
 if [[ $PUSH -eq 1 ]]; then
@@ -194,5 +210,9 @@ if [[ $PUSH -eq 1 ]]; then
 
     if [[ $ALL -eq 1 || $DOWNLOADER -eq 1 ]] ; then
         docker push $REGISTRY/bktbs/service/bktbs-downloader:$VERSION
+    fi
+
+    if [[ $ALL -eq 1 || $WORKER -eq 1 ]] ; then
+        docker push $REGISTRY/bktbs/worker/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION
     fi
 fi

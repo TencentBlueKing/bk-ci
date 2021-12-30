@@ -47,7 +47,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -269,7 +268,7 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )
         } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
+            logger.warn("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
     }

@@ -44,6 +44,7 @@ class CommonPipelineAutoConfiguration {
     @PostConstruct
     fun registerSubtypesObjectMapper() {
         ElementSubTypeRegisterLoader.registerElement(objectMapper)
-        DispatchSubTypeRegisterLoader.registerElement()
+        DispatchSubTypeRegisterLoader.registerType()
+        DispatchSubInfoRegisterLoader.registerInfo()
     }
 }

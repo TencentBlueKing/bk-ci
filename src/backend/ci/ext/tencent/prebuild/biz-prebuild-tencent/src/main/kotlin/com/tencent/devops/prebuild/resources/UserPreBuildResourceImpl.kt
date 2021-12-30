@@ -170,7 +170,9 @@ class UserPreBuildResourceImpl @Autowired constructor(
     }
 
     override fun getReport(userId: String, buildId: String): Result<CodeccCallback?> {
-        return preBuildService.getCodeccReport(userId, buildId)
+        logger.error("Resource api deprecated: $buildId")
+
+        return Result(1, "Resource api deprecated")
     }
 
     override fun getHistory(
