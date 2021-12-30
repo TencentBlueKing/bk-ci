@@ -459,7 +459,7 @@ class GitCiService {
     ): List<GitCodeGroup> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+        val url = "$gitCIUrl/api/v3/groups?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
             .addParams(mapOf(
                 "owned" to owned,
                 "min_access_level" to minAccessLevel?.level
