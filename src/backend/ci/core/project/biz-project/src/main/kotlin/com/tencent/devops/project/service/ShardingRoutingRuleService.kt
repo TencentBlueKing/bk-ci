@@ -31,13 +31,42 @@ import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 
 interface ShardingRoutingRuleService {
 
+    /**
+     * 添加分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
     fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
 
+    /**
+     * 删除分片路由规则
+     * @param userId 用户ID
+     * @param id 规则ID
+     * @return 布尔值
+     */
     fun deleteShardingRoutingRule(userId: String, id: String): Boolean
 
+    /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param id 规则ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
     fun updateShardingRoutingRule(userId: String, id: String, shardingRoutingRule: ShardingRoutingRule): Boolean
 
+    /**
+     * 根据ID查找分片路由规则
+     * @param id 规则ID
+     * @return 分片路由规则信息
+     */
     fun getShardingRoutingRuleById(id: String): ShardingRoutingRule?
 
+    /**
+     * 根据规则名称查找分片路由规则
+     * @param routingName 规则名称
+     * @return 分片路由规则信息
+     */
     fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule?
 }

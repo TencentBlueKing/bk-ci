@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleCreateEvent
 import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleDeleteEvent
 import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleUpdateEvent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
@@ -44,8 +45,13 @@ import org.springframework.stereotype.Service
 class ShardingRoutingRuleServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
+    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher,
+    private val redisOperation: RedisOperation
 ) : ShardingRoutingRuleService {
+
+    companion object {
+        private const val SHARDING_ROUTING_RULE_KEY_PREFIX = "SHARDING_ROUTING_RULE"
+    }
 
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
@@ -57,7 +63,15 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
                 params = arrayOf(routingName)
             )
         }
+        // 规则入库
         shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
+        // 规则写入redis缓存
+        redisOperation.set(
+            key = getShardingRoutingRuleKey(routingName),
+            value = shardingRoutingRule.routingRule,
+            expired = false
+        )
+        // 发送规则创建事件消息
         shardingRoutingRuleDispatcher.dispatch(
             ShardingRoutingRuleCreateEvent(shardingRoutingRule)
         )
@@ -67,9 +81,13 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun deleteShardingRoutingRule(userId: String, id: String): Boolean {
         val shardingRoutingRuleRecord = shardingRoutingRuleDao.getById(dslContext, id)
         if (shardingRoutingRuleRecord != null) {
+            // 删除db中规则信息
             shardingRoutingRuleDao.delete(dslContext, id)
             val routingName = shardingRoutingRuleRecord.routingName
+            // 删除redis中规则信息
+            redisOperation.delete(getShardingRoutingRuleKey(routingName))
             val routingRule = shardingRoutingRuleRecord.routingRule
+            // 发送规则删除事件消息
             shardingRoutingRuleDispatcher.dispatch(
                 ShardingRoutingRuleDeleteEvent(ShardingRoutingRule(routingName, routingRule))
             )
@@ -95,7 +113,15 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             }
         }
+        // 更新db中规则信息
         shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
+        // 更新redis缓存规则信息
+        redisOperation.set(
+            key = getShardingRoutingRuleKey(routingName),
+            value = shardingRoutingRule.routingRule,
+            expired = false
+        )
+        // 发送规则更新事件消息
         shardingRoutingRuleDispatcher.dispatch(
             ShardingRoutingRuleUpdateEvent(shardingRoutingRule)
         )
@@ -112,11 +138,22 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
     }
 
     override fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule? {
-        val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
-        return if (record != null) {
-            ShardingRoutingRule(record.routingName, record.routingRule)
+        // 从redis缓存中获取规则信息
+        val routingRule = redisOperation.get(getShardingRoutingRuleKey(routingName))
+        return if (routingRule.isNullOrBlank()) {
+            // redis缓存中未取到规则信息则从db查
+            val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
+            if (record != null) {
+                ShardingRoutingRule(record.routingName, record.routingRule)
+            } else {
+                null
+            }
         } else {
-            null
+            ShardingRoutingRule(routingName, routingRule)
         }
+    }
+
+    private fun getShardingRoutingRuleKey(routingName: String): String {
+        return "$SHARDING_ROUTING_RULE_KEY_PREFIX:$routingName"
     }
 }
