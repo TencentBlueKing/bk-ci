@@ -32,6 +32,18 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+bkMonitorConfig:
+  enable: false
+
+bkLogConfig:
+  enable: false
+  server: 
+    dataId: 1
+  gateway:
+    dataId: 1
+  dashboard:
+    dataId: 1
+
 ingress:
   enabled: true
   className: ""
@@ -216,7 +228,10 @@ server:
     type: ClusterIP
     port: 30111
     nodePort: 30111
-
+  metrics:
+    type: ClusterIP
+    port: 30112
+    nodePort: 30112
   # k8s configuration
   replicaCount: 1
   hostAliases: []
