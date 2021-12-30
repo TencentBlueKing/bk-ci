@@ -76,6 +76,7 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
@@ -1571,6 +1572,36 @@ class GitService @Autowired constructor(
                 logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
                 MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
+        }
+    }
+
+    fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
+        var url = "$gitCIUrl/api/v3/groups?${
+            if (tokenType == TokenTypeEnum.OAUTH) {
+                "access_token=$token"
+            } else {
+                "private_token=$token"
+            }
+        }"
+        if (includeSubgroups != null) {
+            url = "$url&include_subgroups=$includeSubgroups"
+        }
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getProjectGroupInfo with response=$response")
+            if (!response.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(response)
+            }
+            val data = response.body()!!.string()
+            return JsonUtil.to(data, GitProjectGroupInfo::class.java)
         }
     }
 
