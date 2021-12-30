@@ -162,9 +162,9 @@ class MatrixExecuteContainerCmd(
             }
         }
 
-        // 判断是否要进行fastKill
+        // 判断是否要终止所有未完成的容器
         val fastKill = failureContainerNum > 0 && matrixOption.fastKill == true
-        if (fastKill) {
+        if (fastKill || actionType.isEnd()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "", tag = startVMTaskId,
                 jobId = containerHashId, executeCount = executeCount
@@ -174,7 +174,7 @@ class MatrixExecuteContainerCmd(
                 "start to kill containers, because of fastKill($fastKill) or actionType($actionType)",
                 tag = startVMTaskId, jobId = containerHashId, executeCount = executeCount
             )
-            terminateGroupContainers(commandContext, event, actionType, parentContainer, groupContainers)
+            terminateGroupContainers(commandContext, event, parentContainer, groupContainers)
         }
 
         val maxConcurrency = min(
@@ -247,7 +247,6 @@ class MatrixExecuteContainerCmd(
     private fun terminateGroupContainers(
         commandContext: ContainerContext,
         event: PipelineBuildContainerEvent,
-        actionType: ActionType,
         parentContainer: PipelineBuildContainer,
         groupContainers: List<PipelineBuildContainer>
     ) {
@@ -258,7 +257,7 @@ class MatrixExecuteContainerCmd(
             if (!container.status.isFinish()) {
                 sendBuildContainerEvent(
                     container = container,
-                    actionType = actionType,
+                    actionType = ActionType.END,
                     userId = event.userId,
                     reason = "from_matrix(${parentContainer.containerId})_fastKill"
                 )
