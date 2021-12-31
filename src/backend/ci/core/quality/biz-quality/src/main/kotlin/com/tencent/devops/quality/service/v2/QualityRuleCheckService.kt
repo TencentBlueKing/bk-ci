@@ -469,10 +469,10 @@ class QualityRuleCheckService @Autowired constructor(
                 if (indicator.isScriptElementIndicator()) {
                     listOf(metadataList
                         .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
-                        .find { indicator.enName == it.enName && indicator.taskName == it.taskName })
+                        .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
                 } else {
                     metadataList.filter {
-                        it.taskName == indicator.taskName &&
+                        it.taskName.startsWith(indicator.taskName ?: "") &&
                         indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
                     }
                 }
