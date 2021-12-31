@@ -29,21 +29,17 @@ package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_COUNT
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_HIGH_COUNT
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_LIGHT_COUNT
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_MIDDLE_COUNT
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -61,12 +57,10 @@ import com.tencent.devops.plugin.dao.JinGangAppMetaDao
 import com.tencent.devops.plugin.pojo.JinGangApp
 import com.tencent.devops.plugin.pojo.JinGangAppCallback
 import com.tencent.devops.plugin.pojo.JinGangAppResultReponse
-import com.tencent.devops.plugin.pojo.JinGangBugCount
 import com.tencent.devops.process.api.service.ServiceJfrogResource
-import com.tencent.devops.process.api.service.ServiceMetadataResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.Property
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javassist.NotFoundException
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -80,6 +74,10 @@ import java.io.File
 import java.time.LocalDate
 
 @Service
+@Suppress(
+    "SwallowedException", "TooGenericExceptionCaught",
+    "TooManyFunctions", "LongParameterList", "MagicNumber", "ComplexMethod", "LongMethod", "ThrowsCount"
+)
 class JinGangService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val jinGangAppDao: JinGangAppDao,
@@ -129,26 +127,6 @@ class JinGangService @Autowired constructor(
                 jobId = "",
                 executeCount = 1
             )
-
-            // 生成元数据
-            try {
-                val jingangTask = jinGangAppDao.getTask(dslContext, data.taskId.toLong())
-                    ?: throw RuntimeException("no jingang task found for taskId(${data.taskId})")
-                val metadatas = mutableListOf<Property>()
-                val levelCount = getLevelCount(resultJson)
-
-                val lowCount = levelCount["lowCount"] ?: 0
-                val mediumCount = levelCount["mediumCount"] ?: 0
-                val highCount = levelCount["highCount"] ?: 0
-                metadatas.add(Property(ARCHIVE_PROPS_VS_LEAK_HIGH_COUNT, lowCount.toString()))
-                metadatas.add(Property(ARCHIVE_PROPS_VS_LEAK_MIDDLE_COUNT, mediumCount.toString()))
-                metadatas.add(Property(ARCHIVE_PROPS_VS_LEAK_LIGHT_COUNT, highCount.toString()))
-                metadatas.add(Property(ARCHIVE_PROPS_VS_LEAK_COUNT, (lowCount + mediumCount + highCount).toString()))
-                client.get(ServiceMetadataResource::class)
-                    .create(jingangTask.projectId, jingangTask.pipelineId, jingangTask.buildId, metadatas)
-            } catch (e: Exception) {
-                logger.error("创建元数据失败: ${e.message}")
-            }
         } else {
             jinGangAppDao.updateTask(
                 dslContext,
@@ -202,12 +180,7 @@ class JinGangService @Autowired constructor(
         val type = if (isCustom) ArtifactoryType.CUSTOM_DIR else ArtifactoryType.PIPELINE
 
         // 获取文件信息
-        val jfrogFile = try {
-            client.get(ServiceArtifactoryResource::class).show(userId, projectId, type, file).data!!
-        } catch (e: RemoteServiceException) {
-            logger.error("client get ServiceArtifactoryResource#show fail for buildId($buildId)", e)
-            throw RuntimeException("no file found in path($file)")
-        }
+        val jfrogFile = client.get(ServiceArtifactoryResource::class).show(userId, projectId, type, file).data!!
         // 扫描
         return scan(jfrogFile, isCustom, userId, runType, projectId, pipelineId, buildId, buildNo, elementId)
     }
@@ -227,75 +200,73 @@ class JinGangService @Autowired constructor(
         val type = when {
             fileName.endsWith(".apk") -> 0
             fileName.endsWith(".ipa") -> 1
-            else -> throw RuntimeException("$fileName is not a app")
+            else -> throw IllegalArgumentException("$fileName is not a app")
         }
 
-        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw RuntimeException("no appVersion found")
+        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw IllegalArgumentException("no appVersion found")
         val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]
-            ?: throw RuntimeException("no bundleIdentifier found")
+            ?: throw IllegalArgumentException("no bundleIdentifier found")
         val pipelineName = client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId))
-            .data?.get(pipelineId) ?: throw RuntimeException("no pipeline name found for $pipelineId")
+            .data?.get(pipelineId) ?: throw IllegalArgumentException("no pipeline name found for $pipelineId")
         val shareUri = bkRepoClient.createShareUri(
-            userId,
-            projectId,
-            if (isCustom) "custom" else "pipeline",
-            jfrogFile.fullPath,
-            listOf(),
-            listOf(),
-            3600 * 24
+            creatorId = userId,
+            projectId = projectId,
+            repoName = if (isCustom) "custom" else "pipeline",
+            fullPath = jfrogFile.fullPath,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = 3600 * 24
         )
         val fileUrl = "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
         val projectInfo =
             client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
-        val ccId = projectInfo?.ccAppId ?: throw RuntimeException("no ccid found for project: $projectId")
+        val ccId = projectInfo?.ccAppId ?: throw IllegalArgumentException("no ccid found for project: $projectId")
         val starResponse = getStarResponse(projectId, ccId.toString())
         val releaseType = if (starResponse.status == "正在运行") "1" else "0" // 0表示游戏还未上线，1表示该游戏已上线
         val submitUser = starResponse.user.firstOrNull { it.roleId == "37" }?.user ?: ""
 
         // 记录该次扫描
         val taskId = jinGangAppDao.createTask(
-            dslContext,
-            projectId,
-            pipelineId,
-            buildId,
-            buildNo,
-            userId,
-            jfrogFile.name,
-            jfrogFile.checksums.md5,
-            jfrogFile.size,
-            System.currentTimeMillis(),
-            System.currentTimeMillis(),
-            version,
-            type
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            userId = userId,
+            path = jfrogFile.name,
+            md5 = jfrogFile.checksums.md5,
+            size = jfrogFile.size,
+            createTime = System.currentTimeMillis(),
+            updateTime = System.currentTimeMillis(),
+            version = version,
+            type = type
         )
 
         try {
             val params = mutableMapOf<String, String>()
-            params.put("productName", pipelineName)
-            params.put("fileName", fileName)
-            params.put("fileUrl", fileUrl)
-            params.put("fileMd5", jfrogFile.checksums.md5)
-            params.put("versionNumber", version)
-            params.put("packagename", bundleIdentifier)
-            params.put("releasetime", LocalDate.now().toString().replace("-", ""))
-            params.put("buildId", buildId)
-            params.put("pipelineId", pipelineId)
-            params.put("pipelineName", pipelineName)
-            params.put("elementId", elementId)
-            params.put(
-                "pipelineUrl",
+            params["productName"] = pipelineName
+            params["fileName"] = fileName
+            params["fileUrl"] = fileUrl
+            params["fileMd5"] = jfrogFile.checksums.md5
+            params["versionNumber"] = version
+            params["packagename"] = bundleIdentifier
+            params["releasetime"] = LocalDate.now().toString().replace("-", "")
+            params["buildId"] = buildId
+            params["pipelineId"] = pipelineId
+            params["pipelineName"] = pipelineName
+            params["elementId"] = elementId
+            params["pipelineUrl"] =
                 "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
-            )
-            params.put("projectId", projectId)
-            params.put("extension", type.toString())
-            params.put("release_type", releaseType)
-            params.put("responseuser", if (submitUser.isBlank()) userId else submitUser) // 产品负责人, 上传人
-            params.put("submituser", userId) // 邮件抄送人
-            params.put("taskId", taskId.toString()) // 任务id
-            params.put("is_run_kingkong_v2", if (type == 1) "3" else runType) // ios只有静态扫描
+            params["projectId"] = projectId
+            params["extension"] = type.toString()
+            params["release_type"] = releaseType
+            params["responseuser"] = submitUser.ifBlank { userId } // 产品负责人, 上传人
+            params["submituser"] = userId // 邮件抄送人
+            params["taskId"] = taskId.toString() // 任务id
+            params["is_run_kingkong_v2"] = if (type == 1) "3" else runType // ios只有静态扫描
             // 任务id
-            params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback")
-            params.put("bg", getBgName(projectInfo.bgId?.toLong()))
+            params["responseUrl"] = HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback"
+            params["bg"] = getBgName(projectInfo.bgId?.toLong())
             val json = objectMapper.writeValueAsString(params)
             logger.info("jin gang request json:>>>> $json")
 
@@ -307,10 +278,9 @@ class JinGangService @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val respJson = response.body()!!.string()
                 logger.info("jin gang response: $respJson")
-
-                val obj = JsonParser().parse(respJson).asJsonObject
-                if (obj["status"].asString != "1") {
-                    throw RuntimeException("fail to start app scan:$respJson")
+                val obj: Map<String, Any> = JsonUtil.toMap(respJson)
+                if (obj["status"]?.toString() != "1") {
+                    throw RemoteServiceException(httpStatus = 400, errorMessage = "fail to start app scan:$respJson")
                 } else {
                     logger.info("jin gang app scan successfully")
                 }
@@ -318,13 +288,21 @@ class JinGangService @Autowired constructor(
                 return taskId.toString()
             }
         } catch (e: Exception) {
-            jinGangAppDao.updateTask(dslContext, buildId, jfrogFile.checksums.md5, -1, taskId, "", e.message ?: "")
+            jinGangAppDao.updateTask(
+                dslContext = dslContext,
+                buildId = buildId,
+                md5 = jfrogFile.checksums.md5,
+                status = -1,
+                taskId = taskId,
+                scanUrl = "",
+                result = e.message ?: ""
+            )
             throw e
         }
     }
 
-    private fun getBgName(bg_id: Long?): String {
-        return when (bg_id) {
+    private fun getBgName(bgId: Long?): String {
+        return when (bgId) {
             956L -> "IEG"
             953L -> "CDG"
             29294L -> "CSIG"
@@ -336,53 +314,44 @@ class JinGangService @Autowired constructor(
     }
 
     private fun getStarResponse(projectId: String, ccId: String): StarResponse {
-        val request = Request.Builder()
-            .url("$starUrl?id=$ccId")
-            .get()
-            .build()
         logger.info("star ccid: $ccId")
-        if (ccId == "0") return StarResponse("0", getProjectManager(projectId))
+        if (ccId == "0") {
+            return StarResponse("0", getProjectManager(projectId))
+        }
+
+        val request = Request.Builder().url("$starUrl?id=$ccId").get().build()
         OkhttpUtils.doHttp(request).use { response ->
             val json = response.body()!!.string()
 
             logger.info("star response: $json")
-
-            val obj = JsonParser().parse(json).asJsonObject
-            val status = obj["status"].asString
+            val obj: Map<String, Any> = JsonUtil.toMap(json)
+            val status = obj["status"]?.toString()
             if (status == "1") {
-                val data = obj["data"].asJsonObject
-                val user = data["user"]?.asJsonArray
-                return StarResponse(data["status"].asString,
-                    user?.map {
-                        val item = it.asJsonObject
-                        val userElement = item["user"]
-                        val userId = if (!userElement.isJsonNull) userElement.asString else ""
-                        StarUser(item["roleName"].asString, item["roleId"].asString, userId)
-                    } ?: listOf())
+                @Suppress("UNCHECKED_CAST")
+                val data = obj["data"] as Map<String, Any>
+                @Suppress("UNCHECKED_CAST")
+                val user = data["user"] as Collection<Any>?
+                return StarResponse(
+                    status = data["status"].toString(),
+                    user = user?.map {
+                        @Suppress("UNCHECKED_CAST")
+                        val item = it as Map<String, Any>
+                        StarUser(
+                            roleName = item["roleName"]?.toString() ?: "",
+                            roleId = item["roleId"]?.toString() ?: "",
+                            user = item["user"]?.toString() ?: ""
+                        )
+                    } ?: listOf()
+                )
             } else {
-                throw RuntimeException("fail to get project from star(ccId= $ccId): $json")
+                throw RemoteServiceException("fail to get project from star(ccId= $ccId): $json")
             }
         }
     }
 
     private fun getProjectManager(projectId: String): List<StarUser> {
         val manager = authProjectApi.getProjectUsers(vsServiceCode, projectId, BkAuthGroup.MANAGER)
-        return listOf(
-            StarUser(
-                "项目管理员",
-                "37",
-                manager.joinToString(";")
-            )
-        )
-    }
-
-    // 获取jfrog传回的url
-    private fun getUrl(projectId: String, realPath: String, isCustom: Boolean): String {
-        return if (isCustom) {
-            "http://$gatewayUrl/jfrog/storage/service/custom/$projectId$realPath"
-        } else {
-            "http://$gatewayUrl/jfrog/storage/service/archive/$projectId$realPath"
-        }
+        return listOf(StarUser(roleName = "项目管理员", roleId = "37", user = manager.joinToString(";")))
     }
 
     data class StarResponse(
@@ -408,7 +377,7 @@ class JinGangService @Autowired constructor(
                 }
                 val pipelineNames =
                     client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data
-                        ?: throw RuntimeException("no pipeline name found for $pipelineIds")
+                        ?: throw NotFoundException("no pipeline name found for $pipelineIds")
                 for (item in recordList) {
                     result.add(
                         JinGangApp(
@@ -506,104 +475,6 @@ class JinGangService @Autowired constructor(
         }
     }
 
-    fun checkLimit(projectId: String, pipelineId: String): Boolean {
-        val runCount =
-            jinGangAppMetaDao.getMeta(dslContext, projectId, pipelineId, "jingang.run.count")?.value?.toInt() ?: 0
-        val maxCount =
-            jinGangAppMetaDao.getMeta(dslContext, projectId, pipelineId, "jingang.max.run.count")?.value?.toInt() ?: 10
-
-        return runCount < maxCount
-    }
-
-    fun countBug(projectIds: Set<String>): Map<String, JinGangBugCount> {
-        val resultMap = mutableMapOf<String, JinGangBugCount>()
-        projectIds.forEach { resultMap[it] = JinGangBugCount() }
-
-        val taskList = jinGangAppDao.getTaskList(dslContext, projectIds)
-        val taskIds = taskList?.map { it.id } ?: listOf()
-        val taskProjectMap = taskList?.map { it.id to it.projectId }?.toMap() ?: mapOf()
-
-        val resultList = jinGangAppDao.getResultList(dslContext, taskIds)
-        resultList?.forEach {
-            try {
-                val projectId = taskProjectMap[it.taskId] ?: ""
-                val bugCount = resultMap[projectId]!!
-                val levelCount = getLevelCount(it.result)
-                bugCount.lowCount += levelCount["lowCount"] ?: 0
-                bugCount.mediumCount += levelCount["mediumCount"] ?: 0
-                bugCount.highCount += levelCount["highCount"] ?: 0
-            } catch (e: Exception) {
-                // 失败的则跳过
-                logger.info("ignore jin gang result : (${it.id})")
-            }
-        }
-
-        return resultMap
-    }
-
-    private fun getLevelCount(result: String): Map<String, Int> {
-        var lowCount = 0
-        var mediumCount = 0
-        var highCount = 0
-
-        val parser = JsonParser()
-        val obj = parser.parse(result).asJsonObject
-        val leakGroup = obj["leakcheck_result"].asJsonObject["leak_info"].asJsonObject["group"].asJsonArray
-        leakGroup.forEach { leak ->
-            val leakObj = leak.asJsonObject
-            if (leakObj["result"].asString != "安全") {
-                val count = leakObj["result"].asString.removePrefix("发现").removeSuffix("处").toInt()
-                val name = leakObj["name"].asString
-                when {
-                    name.startsWith("【低危】") -> {
-                        lowCount += count
-                    }
-                    name.startsWith("【中危】") -> {
-                        mediumCount += count
-                    }
-                    name.startsWith("【高危】") -> {
-                        highCount += count
-                    }
-                }
-            }
-        }
-        return mapOf(
-            "lowCount" to lowCount,
-            "mediumCount" to mediumCount,
-            "highCount" to highCount
-        )
-    }
-
-    fun countRisk(projectIds: Set<String>): Map<String, Int> {
-        val resultMap = mutableMapOf<String, Int>()
-        projectIds.forEach { resultMap[it] = 0 }
-
-        val taskList = jinGangAppDao.getTaskList(dslContext, projectIds)
-        val taskIds = taskList?.map { it.id } ?: listOf()
-        val taskProjectMap = taskList?.map { it.id to it.projectId }?.toMap() ?: mapOf()
-
-        val resultList = jinGangAppDao.getResultList(dslContext, taskIds)
-        val parser = JsonParser()
-        resultList?.forEach {
-            try {
-                val projectId = taskProjectMap[it.taskId] ?: ""
-                val obj = parser.parse(it.result).asJsonObject
-                val leakGroup = obj["leakcheck_result"].asJsonObject["risk_info"].asJsonObject["group"].asJsonArray
-                leakGroup.forEach { leak ->
-                    val leakObj = leak.asJsonObject
-                    if (leakObj["result"].asString != "安全") {
-                        resultMap[projectId] = resultMap[projectId]!!.plus(1)
-                    }
-                }
-            } catch (e: Exception) {
-                // 失败的则跳过
-                logger.info("ignore jin gang result : (${it.id})")
-            }
-        }
-
-        return resultMap
-    }
-
     fun createTask(
         projectId: String,
         pipelineId: String,
@@ -618,25 +489,33 @@ class JinGangService @Autowired constructor(
     ): Long {
         // 记录该次扫描
         val taskId = jinGangAppDao.createTask(
-            dslContext,
-            projectId,
-            pipelineId,
-            buildId,
-            buildNo,
-            userId,
-            path,
-            md5,
-            size,
-            System.currentTimeMillis(),
-            System.currentTimeMillis(),
-            version,
-            type
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            userId = userId,
+            path = path,
+            md5 = md5,
+            size = size,
+            createTime = System.currentTimeMillis(),
+            updateTime = System.currentTimeMillis(),
+            version = version,
+            type = type
         )
-        jinGangAppMetaDao.incRunCount(dslContext, projectId, pipelineId)
+        jinGangAppMetaDao.incRunCount(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId)
         return taskId
     }
 
     fun updateTask(buildId: String, md5: String, status: Int, taskId: Long, scanUrl: String, result: String) {
-        jinGangAppDao.updateTask(dslContext, buildId, md5, status, taskId, scanUrl, result)
+        jinGangAppDao.updateTask(
+            dslContext = dslContext,
+            buildId = buildId,
+            md5 = md5,
+            status = status,
+            taskId = taskId,
+            scanUrl = scanUrl,
+            result = result
+        )
     }
 }

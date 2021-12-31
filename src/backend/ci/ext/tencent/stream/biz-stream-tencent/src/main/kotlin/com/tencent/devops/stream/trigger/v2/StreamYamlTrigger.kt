@@ -115,6 +115,8 @@ class StreamYamlTrigger @Autowired constructor(
             gitProjectInfo = gitProjectInfo
         )
 
+        val changeSet = triggerMatcher.getChangeSet(context)
+
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
@@ -170,6 +172,8 @@ class StreamYamlTrigger @Autowired constructor(
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitBuildId = null,
+                changeSet = changeSet,
+                // 没有触发只有定时任务的需要保存一下蓝盾流水线
                 isTimeTrigger = isTiming,
                 isDeleteTrigger = isDelete,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
@@ -214,6 +218,7 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false,
                 onlySavePipeline = false,
+                changeSet = changeSet,
                 params = startParams
             )
         }

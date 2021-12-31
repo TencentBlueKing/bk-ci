@@ -363,12 +363,12 @@ object ScriptYmlUtils {
         }
 
         val jobs = mutableListOf<Job>()
-        preJobs.forEach { (t, u) ->
+        preJobs.forEach { (index, preJob) ->
             // 检测job env合法性
-            GitCIEnvUtils.checkEnv(u.env)
+            GitCIEnvUtils.checkEnv(preJob.env)
 
             val services = mutableListOf<Service>()
-            u.services?.forEach { (key, value) ->
+            preJob.services?.forEach { (key, value) ->
                 services.add(
                     Service(
                         serviceId = key,
@@ -380,17 +380,19 @@ object ScriptYmlUtils {
 
             jobs.add(
                 Job(
-                    id = t,
-                    name = u.name,
-                    runsOn = formatRunsOn(u.runsOn),
+                    id = index,
+                    name = preJob.name,
+                    resourceExclusiveDeclaration = preJob.resourceExclusiveDeclaration,
+                    runsOn = formatRunsOn(preJob.runsOn),
                     services = services,
-                    ifField = u.ifField,
-                    steps = formatSteps(u.steps),
-                    timeoutMinutes = u.timeoutMinutes,
-                    env = u.env,
-                    continueOnError = u.continueOnError,
-                    strategy = u.strategy,
-                    dependOn = u.dependOn
+                    ifField = preJob.ifField,
+                    ifModify = preJob.ifModify,
+                    steps = formatSteps(preJob.steps),
+                    timeoutMinutes = preJob.timeoutMinutes,
+                    env = preJob.env,
+                    continueOnError = preJob.continueOnError,
+                    strategy = preJob.strategy,
+                    dependOn = preJob.dependOn
                 )
             )
         }
@@ -452,6 +454,7 @@ object ScriptYmlUtils {
                     name = it.name,
                     id = it.id ?: randomString(stepNamespace),
                     ifFiled = it.ifFiled,
+                    ifModify = it.ifModify,
                     uses = it.uses,
                     with = it.with,
                     timeoutMinutes = it.timeoutMinutes,
@@ -488,6 +491,7 @@ object ScriptYmlUtils {
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
+                    ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
                     jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>),
                     checkIn = formatStageCheck(it.checkIn),

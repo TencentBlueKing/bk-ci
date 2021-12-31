@@ -272,14 +272,12 @@ class StreamScmService @Autowired constructor(
                 "createNewFile RemoteServiceException|" +
                         "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
-            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
-                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status
-            ) {
+            if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
-                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
-                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
-                        .format(userId, gitCICreateFile.branch)
+                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR,
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR.formatErrorMessage
+                        .format(gitCICreateFile.filePath, gitCICreateFile.branch, e.httpStatus, e.errorMessage)
                 )
             } else {
                 error(

@@ -384,7 +384,7 @@ class TriggerMatcher @Autowired constructor(
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =
         objectKind == TGitObjectKind.PUSH.value && branch == defaultBranch
 
-    private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
+    fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {
             is GitPushEvent -> {
                 getCommitChangeSet(context)

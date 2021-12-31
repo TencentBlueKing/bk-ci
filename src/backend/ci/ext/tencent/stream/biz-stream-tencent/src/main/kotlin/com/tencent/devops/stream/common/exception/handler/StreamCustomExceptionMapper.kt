@@ -25,33 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.stream.common.exception.handler
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.stream.common.exception.StreamCustomException
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
 /**
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
+ * 针对stream的一些特殊返回定制的 custom response
  */
-data class Stage(
-    val name: String?,
-    val id: String?,
-    val label: List<String> = emptyList(),
-    @ApiModelProperty(name = "if")
-    @JsonProperty("if")
-    val ifField: String? = null,
-    @ApiModelProperty(name = "fast-kill")
-    @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
-    val jobs: List<Job>,
-    @ApiModelProperty(name = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "check-in")
-    @JsonProperty("check-in")
-    val checkIn: StageCheck?,
-    @ApiModelProperty(name = "check-out")
-    @JsonProperty("check-out")
-    val checkOut: StageCheck?
-)
+@BkExceptionMapper
+class StreamCustomExceptionMapper : ExceptionMapper<StreamCustomException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(StreamCustomExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: StreamCustomException): Response {
+        logger.warn("Failed with stream custom exception: $exception")
+        return Response.status(exception.status)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(exception.status, exception.message ?: "Internal Exception")).build()
+    }
+}
