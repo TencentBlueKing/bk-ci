@@ -39,8 +39,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.utils.BG_IEG_ID
-import org.apache.http.HttpStatus
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -72,40 +70,6 @@ class UserProjectServiceImpl @Autowired constructor(
     @Value("\${project.container.bgId::#{null}}")
     private var containerbgId: String? = null
 
-    override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
-        val tServiceRecord = serviceDao.select(dslContext, serviceId)
-        if (tServiceRecord != null) {
-            val isIEGMember = tofService.getUserDeptDetail(userId).bgId == BG_IEG_ID
-
-            return Result(
-                ServiceVO(
-                    id = tServiceRecord.id ?: 0,
-                    name = tServiceRecord.name,
-                    link = tServiceRecord.link,
-                    linkNew = tServiceRecord.linkNew,
-                    status = tServiceRecord.status,
-                    injectType = tServiceRecord.injectType,
-                    iframeUrl = tServiceRecord.iframeUrl,
-                    grayIframeUrl = tServiceRecord.grayIframeUrl,
-                    cssUrl = tServiceRecord.cssUrl,
-                    jsUrl = tServiceRecord.jsUrl,
-                    grayCssUrl = tServiceRecord.grayCssUrl,
-                    grayJsUrl = tServiceRecord.grayJsUrl,
-                    showProjectList = tServiceRecord.showProjectList,
-                    showNav = tServiceRecord.showNav,
-                    projectIdType = tServiceRecord.projectIdType,
-                    collected = favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                    logoUrl = tServiceRecord.logoUrl,
-                    webSocket = tServiceRecord.webSocket,
-                    hidden = isServiceHidden(tServiceRecord.name, isIEGMember),
-                    weigHt = tServiceRecord.weight ?: 0
-                )
-            )
-        } else {
-            return Result(HttpStatus.SC_METHOD_NOT_ALLOWED, "无限ID,获取服务信息失败")
-        }
-    }
-
     override fun listService(userId: String, projectId: String?): Result<ArrayList<ServiceListVO>> {
         logger.info("listService interface:userId[$userId],projectId[$projectId]")
 
@@ -125,7 +89,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
             val request = attributes?.request
             val bkToken = request?.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
-            val map = getReplaceMapByRequest()
+            val replaceMap = getReplaceMapByRequest()
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
@@ -139,7 +103,8 @@ class UserProjectServiceImpl @Autowired constructor(
                         tServiceRecord = it,
                         request = request,
                         bkToken = bkToken,
-                        userId = userId
+                        userId = userId,
+                        replaceMap = replaceMap
                     )
                     services.add(
                         ServiceVO(
@@ -151,29 +116,28 @@ class UserProjectServiceImpl @Autowired constructor(
                             injectType = it.injectType ?: "",
                             iframeUrl = replaceUrl(
                                 url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
-                                replaceMap = map
+                                replaceMap = replaceMap
                             ),
-                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = map),
+                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
                             cssUrl = replaceUrl(
                                 url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
-                                replaceMap = map
+                                replaceMap = replaceMap
                             ),
                             jsUrl = replaceUrl(
                                 url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
-                                replaceMap = map
+                                replaceMap = replaceMap
                             ),
-                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = map),
-                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = map),
+                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
+                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
                             showProjectList = it.showProjectList ?: false,
                             showNav = it.showNav ?: false,
                             projectIdType = it.projectIdType ?: "",
                             collected = favor,
                             weigHt = it.weight ?: 0,
-                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = map),
+                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
-                            newWindowUrl = replaceUrl(newWindowUrl, map)
-
+                            newWindowUrl = newWindowUrl
                         )
                     )
                 }
@@ -182,7 +146,8 @@ class UserProjectServiceImpl @Autowired constructor(
                     ServiceListVO(
                         title = typeName,
                         weigHt = serviceType.weight ?: 0,
-                        children = services.sortedByDescending { it.weigHt })
+                        children = services.sortedByDescending { it.weigHt }
+                    )
                 )
             }
 
@@ -197,7 +162,8 @@ class UserProjectServiceImpl @Autowired constructor(
         tServiceRecord: TServiceRecord,
         request: HttpServletRequest?,
         bkToken: String?,
-        userId: String
+        userId: String,
+        replaceMap: Map<String, String>
     ): Pair<Boolean, String> {
         var newWindow = tServiceRecord.newWindow
         var newWindowUrl = tServiceRecord.newWindowurl
@@ -239,6 +205,8 @@ class UserProjectServiceImpl @Autowired constructor(
                 logger.info("listService interface change newWindow to false")
                 newWindow = false
             }
+        } else { // --story=869578789 蓝盾服务支持动态启用woa和https 补充：不对容器服务等这类独立窗口弹开的网站做域名替换
+            newWindowUrl = replaceUrl(newWindowUrl, replaceMap)
         }
         return Pair(newWindow, newWindowUrl)
     }
@@ -253,14 +221,6 @@ class UserProjectServiceImpl @Autowired constructor(
                 }
             }
         }
-    }
-
-    private fun isServiceHidden(serviceName: String, isIEGMember: Boolean): Boolean {
-        return !(if (serviceName.contains("(Monitor)", false) || serviceName.contains("(BCS)", false)) {
-            isIEGMember
-        } else {
-            true
-        })
     }
 
     companion object {
