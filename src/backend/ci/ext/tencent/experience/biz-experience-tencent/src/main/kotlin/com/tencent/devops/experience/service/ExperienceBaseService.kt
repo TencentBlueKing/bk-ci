@@ -302,4 +302,8 @@ class ExperienceBaseService @Autowired constructor(
             }
         }
     }
+
+    fun getNewestRecordId(projectId: String, bundleIdentifier: String, platform: String): Long? {
+        return experiencePublicDao.getNewestRecordId(dslContext, projectId, bundleIdentifier, platform)
+    }
 }
