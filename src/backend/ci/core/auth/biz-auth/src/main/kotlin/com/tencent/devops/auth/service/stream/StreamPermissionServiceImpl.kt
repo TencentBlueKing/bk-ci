@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.stream
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class StreamPermissionServiceImpl @Autowired constructor(
@@ -50,13 +51,19 @@ class StreamPermissionServiceImpl @Autowired constructor(
         resourceType: String?
     ): Boolean {
         // 如果有特殊权限,以特殊权限的校验结果为准
-        val extPermission = streamPermissionService.extPermission(projectCode, userId, AuthPermission.get(action))
+        val extPermission = streamPermissionService.extPermission(
+            projectCode = projectCode,
+            userId = userId,
+            action = AuthPermission.get(action),
+            resourceType = resourceType ?: ""
+        )
         if (extPermission) {
             return extPermission
         }
         val projectType = streamPermissionService.isPublicProject(projectCode)
         val projectMemberCheck = streamPermissionService.isProjectMember(projectCode, userId)
         val actionType = ActionTypeUtils.getActionType(action)
+        logger.info("validete $userId|$projectCode|$action|$resourceType|$projectType|$projectMemberCheck")
         if (action == null) {
             return false
         }
@@ -97,5 +104,9 @@ class StreamPermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<String>> {
         // stream场景下不会使用到此场景. 做默认实现
         return emptyMap()
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(StreamPermissionServiceImpl::class.java)
     }
 }
