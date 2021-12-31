@@ -607,74 +607,58 @@ object ScriptYmlUtils {
             )
         }
 
-        var pushRule: PushRule? = null
-        var tagRule: TagRule? = null
-        var mrRule: MrRule? = null
-        var schedulesRule: SchedulesRule? = null
-        var deleteRule: DeleteRule? = null
-
-        pushRule = pushRule(preTriggerOn, pushRule)
-        tagRule = tagRule(preTriggerOn, tagRule)
-        mrRule = mrRule(preTriggerOn, mrRule)
-        schedulesRule = schedulesRule(preTriggerOn, schedulesRule)
-        deleteRule = deleteRule(preTriggerOn, deleteRule)
-
         return TriggerOn(
-            push = pushRule,
-            tag = tagRule,
-            mr = mrRule,
-            schedules = schedulesRule,
-            delete = deleteRule
+            push = pushRule(preTriggerOn),
+            tag = tagRule(preTriggerOn),
+            mr = mrRule(preTriggerOn),
+            schedules = schedulesRule(preTriggerOn),
+            delete = deleteRule(preTriggerOn)
         )
     }
 
     private fun deleteRule(
-        preTriggerOn: PreTriggerOn,
-        deleteRule: DeleteRule?
+        preTriggerOn: PreTriggerOn
     ): DeleteRule? {
-        var deleteRule1 = deleteRule
         if (preTriggerOn.delete != null) {
             val delete = preTriggerOn.delete
-            try {
-                deleteRule1 = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(delete),
                     DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
                 logger.error("Format triggerOn schedulesRule failed.", e)
+                null
             }
         }
-        return deleteRule1
+        return null
     }
 
     private fun schedulesRule(
-        preTriggerOn: PreTriggerOn,
-        schedulesRule: SchedulesRule?
+        preTriggerOn: PreTriggerOn
     ): SchedulesRule? {
-        var schedulesRule1 = schedulesRule
         if (preTriggerOn.schedules != null) {
             val schedules = preTriggerOn.schedules
-            try {
-                schedulesRule1 = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(schedules),
                     SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
                 logger.error("Format triggerOn schedulesRule failed.", e)
+                null
             }
         }
-        return schedulesRule1
+        return null
     }
 
     private fun mrRule(
-        preTriggerOn: PreTriggerOn,
-        mrRule: MrRule?
+        preTriggerOn: PreTriggerOn
     ): MrRule? {
-        var mrRule1 = mrRule
         if (preTriggerOn.mr != null) {
             val mr = preTriggerOn.mr
-            try {
-                mrRule1 = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),
                     MrRule::class.java
                 )
@@ -685,7 +669,7 @@ object ScriptYmlUtils {
                         List::class.java
                     ) as ArrayList<String>
 
-                    mrRule1 = MrRule(
+                    MrRule(
                         targetBranches = mrList,
                         sourceBranchesIgnore = null,
                         paths = null,
@@ -695,21 +679,20 @@ object ScriptYmlUtils {
                     )
                 } catch (e: Exception) {
                     logger.error("Format triggerOn mrRule failed.", e)
+                    null
                 }
             }
         }
-        return mrRule1
+        return null
     }
 
     private fun tagRule(
-        preTriggerOn: PreTriggerOn,
-        tagRule: TagRule?
+        preTriggerOn: PreTriggerOn
     ): TagRule? {
-        var tagRule1 = tagRule
         if (preTriggerOn.tag != null) {
             val tag = preTriggerOn.tag
-            try {
-                tagRule1 = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(tag),
                     TagRule::class.java
                 )
@@ -720,7 +703,7 @@ object ScriptYmlUtils {
                         List::class.java
                     ) as ArrayList<String>
 
-                    tagRule1 = TagRule(
+                    TagRule(
                         tags = tagList,
                         tagsIgnore = null,
                         fromBranches = null,
@@ -729,21 +712,20 @@ object ScriptYmlUtils {
                     )
                 } catch (e: Exception) {
                     logger.error("Format triggerOn tagRule failed.", e)
+                    null
                 }
             }
         }
-        return tagRule1
+        return null
     }
 
     private fun pushRule(
-        preTriggerOn: PreTriggerOn,
-        pushRule: PushRule?
+        preTriggerOn: PreTriggerOn
     ): PushRule? {
-        var pushRule1 = pushRule
         if (preTriggerOn.push != null) {
             val push = preTriggerOn.push
-            try {
-                pushRule1 = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(push),
                     PushRule::class.java
                 )
@@ -754,7 +736,7 @@ object ScriptYmlUtils {
                         List::class.java
                     ) as ArrayList<String>
 
-                    pushRule1 = PushRule(
+                    PushRule(
                         branches = pushObj,
                         branchesIgnore = null,
                         paths = null,
@@ -764,10 +746,11 @@ object ScriptYmlUtils {
                     )
                 } catch (e: Exception) {
                     logger.error("Format triggerOn pushRule failed.", e)
+                    null
                 }
             }
         }
-        return pushRule1
+        return null
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
