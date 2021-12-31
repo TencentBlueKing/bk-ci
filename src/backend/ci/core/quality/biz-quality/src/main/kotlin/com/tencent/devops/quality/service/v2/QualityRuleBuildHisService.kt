@@ -112,13 +112,15 @@ class QualityRuleBuildHisService constructor(
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
-                val indicatorMap = indicators.map { it.enName to it }.toMap()
+                var indicatorsCopy = indicators.toMutableList()
                 indicatorService.serviceList(atomCode, indicators.map { it.enName })
                     .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
-                    val requestIndicator = (indicatorMap[it.enName])!!
+                    val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
+                        ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
+                    logger.info("QUALITY|requestIndicator is: $requestIndicator")
 
-                    // 使用上下文变量表示阈值时不检查类型
+                        // 使用上下文变量表示阈值时不检查类型
                     if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
                             requestIndicator.atomCode != RunElementType.RUN.elementType) {
                         checkThresholdType(requestIndicator, it)
@@ -129,6 +131,7 @@ class QualityRuleBuildHisService constructor(
                         requestIndicator.operation,
                         requestIndicator.threshold
                     ))
+                    indicatorsCopy.remove(requestIndicator)
                 }
             }
 
@@ -137,7 +140,7 @@ class QualityRuleBuildHisService constructor(
                 throw OperationException("${ruleRequest.name} $indicatorNameSet indicator is not exist")
             }
 
-            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
+            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}, $indicatorIds")
             val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, ruleRequest, indicatorIds)
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
