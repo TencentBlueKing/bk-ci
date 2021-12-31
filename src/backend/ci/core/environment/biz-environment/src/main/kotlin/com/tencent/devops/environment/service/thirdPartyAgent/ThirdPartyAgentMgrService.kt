@@ -695,7 +695,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
                         ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
                     val projectsInGroups = client.get(ServiceGitResource::class).getProjectGroupInfo(
-                        id = it.sharedProjectId,
+                        id = it.sharedProjectId.removePrefix("git_"),
                         includeSubgroups = true,
                         token = token,
                         tokenType = TokenTypeEnum.OAUTH
