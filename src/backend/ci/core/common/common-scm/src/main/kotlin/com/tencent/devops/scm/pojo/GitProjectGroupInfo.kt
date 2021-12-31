@@ -120,13 +120,19 @@ import io.swagger.annotations.ApiModel
 }
  */
 
-@ApiModel("git mr信息")
+@ApiModel("git 项目组信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProjectGroupInfo(
     val id: Long,
     val name: String,
     val path: String,
-    val projects: List<GitProject>,
+    val projects: List<GitProjectGroupProject>,
     @JsonProperty("sub_projects")
-    val subProjects: List<GitProject>?
+    val subProjects: List<GitProjectGroupProject>?
+)
+
+@ApiModel("git 项目组项目信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitProjectGroupProject(
+    val id: String
 )

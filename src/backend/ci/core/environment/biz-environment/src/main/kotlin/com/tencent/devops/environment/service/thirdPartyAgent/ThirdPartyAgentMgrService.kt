@@ -681,36 +681,43 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
-        // 优先进行单个项目的匹配
-        sharedEnvRecord.sortedByDescending { it.type }.forEach {
-            // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
-            if (it.type == SharedEnvType.GROUP.name) {
-                val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
-                    ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
-                val projectsInGroups = client.get(ServiceGitResource::class).getProjectGroupInfo(
-                    id = it.sharedProjectId,
-                    includeSubgroups = true,
-                    token = token,
-                    tokenType = TokenTypeEnum.OAUTH
-                ).data
-                var isProjectsEmpty = false
-                projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                    isProjectsEmpty = true
-                }
-                isProjectsEmpty = false
-                projectsInGroups?.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                    isProjectsEmpty = true
-                }
-                if (isProjectsEmpty) {
+
+        run outSide@{
+            // 优先进行单个项目的匹配
+            sharedEnvRecord.sortedByDescending { it.type }.forEach {
+                // 对于分享的单独项目则查看是否是同一个
+                if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
                     return@forEach
                 }
+
+                // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
+                if (it.type == SharedEnvType.GROUP.name) {
+                    val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
+                        ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
+                    val projectsInGroups = client.get(ServiceGitResource::class).getProjectGroupInfo(
+                        id = it.sharedProjectId,
+                        includeSubgroups = true,
+                        token = token,
+                        tokenType = TokenTypeEnum.OAUTH
+                    ).data
+                    var isProjectsEmpty: Boolean
+                    projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                        isProjectsEmpty = true
+                    }
+                    isProjectsEmpty = false
+                    projectsInGroups?.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                        isProjectsEmpty = true
+                    }
+                    if (isProjectsEmpty) {
+                        return@forEach
+                    }
+                }
+
+                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
+                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+                // 找到了环境可用就可以退出了
+                return@outSide
             }
-            // 对于分享的单独项目则查看是否是同一个
-            if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
-                return@forEach
-            }
-            val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
-            sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
