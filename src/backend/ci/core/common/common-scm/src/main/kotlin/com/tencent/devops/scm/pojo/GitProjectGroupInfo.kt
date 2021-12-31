@@ -2,7 +2,6 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.scm.code.git.api.GitProject
 import io.swagger.annotations.ApiModel
 
 /**

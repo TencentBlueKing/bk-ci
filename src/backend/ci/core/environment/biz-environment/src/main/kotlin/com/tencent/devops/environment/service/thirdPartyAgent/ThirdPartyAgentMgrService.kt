@@ -692,14 +692,19 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
                 // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
                 if (it.type == SharedEnvType.GROUP.name) {
-                    val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
-                        ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
-                    val projectsInGroups = client.get(ServiceGitResource::class).getProjectGroupInfo(
-                        id = it.sharedProjectId.removePrefix("git_"),
-                        includeSubgroups = true,
-                        token = token,
-                        tokenType = TokenTypeEnum.OAUTH
-                    ).data
+                    val projectsInGroups = try {
+                        val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
+                            ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
+                        client.get(ServiceGitResource::class).getProjectGroupInfo(
+                            id = it.sharedProjectId.removePrefix("git_"),
+                            includeSubgroups = true,
+                            token = token,
+                            tokenType = TokenTypeEnum.OAUTH
+                        ).data
+                    } catch (e: Exception) {
+                        logger.warn("$projectId $projectEnvName get share project error: ${e.message}")
+                        null
+                    }
                     var isProjectsEmpty: Boolean
                     projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
                         isProjectsEmpty = true
