@@ -29,6 +29,7 @@ package com.tencent.devops.stream.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import io.swagger.annotations.Api
@@ -61,5 +62,5 @@ interface UserStreamProjectGroupResource {
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<GitCodeGroup>>
+    ): Result<Pagination<GitCodeGroup>>
 }

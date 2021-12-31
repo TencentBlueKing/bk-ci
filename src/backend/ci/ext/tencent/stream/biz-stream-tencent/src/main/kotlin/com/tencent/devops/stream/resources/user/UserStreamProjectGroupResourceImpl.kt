@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -41,27 +42,40 @@ class UserStreamProjectGroupResourceImpl @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamOauthService: StreamOauthService
 ) : UserStreamProjectGroupResource {
-    override fun getProjects(userId: String, page: Int?, pageSize: Int?): Result<List<GitCodeGroup>> {
+    override fun getProjects(userId: String, page: Int?, pageSize: Int?): Result<Pagination<GitCodeGroup>> {
+        val realPage = page.let {
+            if (it == null || it <= 0) {
+                1
+            } else {
+                page!!
+            }
+        }
+        val realPageSize = pageSize.let {
+            if (it == null || it <= 0) {
+                10
+            } else {
+                pageSize!!
+            }
+        }
+        val data = streamScmService.getProjectGroupList(
+            accessToken = streamOauthService.getAndCheckOauthToken(userId).accessToken,
+            page = realPage,
+            pageSize = realPageSize,
+            owned = false,
+            minAccessLevel = GitAccessLevelEnum.DEVELOPER
+        )?.ifEmpty { null } ?: return Result(
+            Pagination(
+                hasNext = false,
+                records = emptyList()
+            )
+        )
+
+        val hasNext = data.size >= realPageSize
         return Result(
-            streamScmService.getProjectGroupList(
-                accessToken = streamOauthService.getAndCheckOauthToken(userId).accessToken,
-                page = page.let {
-                    if (it == null || it <= 0) {
-                        1
-                    } else {
-                        page
-                    }
-                },
-                pageSize = pageSize.let {
-                    if (it == null || it <= 0) {
-                        10
-                    } else {
-                        pageSize
-                    }
-                },
-                owned = false,
-                minAccessLevel = GitAccessLevelEnum.DEVELOPER
-            ) ?: emptyList()
+            Pagination(
+                hasNext = hasNext,
+                records = data
+            )
         )
     }
 }
