@@ -198,7 +198,7 @@ server:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bktbs/service/bktbs-server
-    tag: 1.0.5
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -271,7 +271,7 @@ gateway:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bktbs/service/bktbs-gateway
-    tag: 1.0.5
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -319,7 +319,7 @@ dashboard:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bktbs/service/bktbs-dashboard
-    tag: 1.0.5
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -367,7 +367,7 @@ downloader:
   image:
     registry: mirrors.tencent.com/bkce
     repository: bktbs/service/bktbs-downloader
-    tag: 1.0.5
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
