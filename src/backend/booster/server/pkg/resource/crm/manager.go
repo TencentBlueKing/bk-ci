@@ -108,6 +108,7 @@ type HandlerWithUser interface {
 	Release(resourceID string) error
 	AddBroker(name string, strategyType StrategyType, strategy BrokerStrategy,
 		param BrokerParam) error
+	GetQueueInstance(queueName string) *config.QueuePerInstance
 }
 
 // ResourceParam describe the request parameters to container resource manager.
@@ -391,7 +392,7 @@ func (rm *resourceManager) recover() error {
 		return err
 	}
 
-	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1)
+	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1, rm.conf.QueueToInstance)
 
 	rm.registeredResourceMapLock.Lock()
 	defer rm.registeredResourceMapLock.Unlock()
@@ -1104,6 +1105,22 @@ func (hwu *handlerWithUser) AddBroker(
 	param BrokerParam) error {
 
 	return hwu.mgr.addBroker(name, hwu.user, strategyType, strategy, param)
+}
+
+//ResourceManager return the rm
+func (hwu *handlerWithUser) GetQueueInstance(queueName string) *config.QueuePerInstance {
+	//config.QueuePerInstance
+	retIst := config.QueuePerInstance{
+		CPUPerInstance: hwu.mgr.conf.BcsCPUPerInstance,
+		MemPerInstance: hwu.mgr.conf.BcsMemPerInstance,
+	}
+	if ist, ok := hwu.mgr.conf.QueueToInstance[queueName]; ok {
+		if ist.CPUPerInstance != 0.0 {
+			retIst.CPUPerInstance = ist.CPUPerInstance
+			retIst.MemPerInstance = ist.MemPerInstance
+		}
+	}
+	return &retIst
 }
 
 func (hwu *handlerWithUser) resourceID(id string) string {

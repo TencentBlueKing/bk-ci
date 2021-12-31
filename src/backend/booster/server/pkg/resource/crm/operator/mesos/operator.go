@@ -34,6 +34,8 @@ const (
 	templateVarInstance        = "__crm_instance__"
 	templateVarCPU             = "__crm_cpu__"
 	templateVarMem             = "__crm_mem__"
+	templateRequestVarCPU      = "__crm_request_cpu__"
+	templateRequestVarMem      = "__crm_request_mem__"
 	templateVarConstraint      = "__crm_constraint__"
 	templateVarConstraintKey   = "__crm_constraint_key__"
 	templateVarConstraintValue = "__crm_constraint_value__"
@@ -419,11 +421,39 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.Replace(data, templateVarName, param.Name, -1)
 	data = strings.Replace(data, templateVarNamespace, param.Namespace, -1)
 	data = strings.Replace(data, templateVarInstance, strconv.Itoa(param.Instance), -1)
-	data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance), -1)
-	data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance), -1)
+	//data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance), -1)
+	//data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance), -1)
 	data = insertConstraint(data, param.AttributeCondition)
 	data = insertEnv(data, param.Env)
 	data = insertPorts(data, param.Ports)
+
+	varCPU := o.conf.BcsCPUPerInstance
+	varMem := o.conf.BcsMemPerInstance
+	varRequestCPU := o.conf.BcsCPUPerInstance
+	varRequestMem := o.conf.BcsMemPerInstance
+	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
+	key := param.GetBlockKey()
+	blog.Info("getJSONFromTemplate:%s", key)
+	if istItem, ok := o.conf.QueueToInstance[key]; ok {
+		if istItem.CPUPerInstance != 0.0 {
+			varCPU = istItem.CPUPerInstance
+			varRequestCPU = istItem.CPUPerInstance
+		}
+		if istItem.MemPerInstance != 0.0 {
+			varMem = istItem.MemPerInstance
+			varRequestMem = istItem.MemPerInstance
+		}
+		if istItem.CPURequestPerInstance != 0.0 {
+			varRequestCPU = istItem.CPURequestPerInstance
+		}
+		if istItem.MemRequestPerInstance != 0.0 {
+			varRequestMem = istItem.MemRequestPerInstance
+		}
+	}
+	data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU), -1)
+	data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", varMem), -1)
+	data = strings.Replace(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU), -1)
+	data = strings.Replace(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem), -1)
 
 	return data, nil
 }

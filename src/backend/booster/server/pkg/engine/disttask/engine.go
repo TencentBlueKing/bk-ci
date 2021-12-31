@@ -381,7 +381,7 @@ func (de *disttaskEngine) getClusterID(queueName string) string {
 	}
 }
 
-func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
+/*func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
 		return de.conf.K8SCRMCPUPerInstance, de.conf.K8SCRMMemPerInstance
@@ -389,6 +389,19 @@ func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
 		return de.conf.VMCRMCPUPerInstance, de.conf.VMCRMMemPerInstance
 	default:
 		return de.conf.CRMCPUPerInstance, de.conf.CRMMemPerInstance
+	}
+}*/
+func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
+	switch getQueueNameHeader(queueName) {
+	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
+		ist := de.k8sCrmMgr.GetQueueInstance(queueName)
+		return ist.CPUPerInstance, ist.MemPerInstance
+	case queueNameHeaderVMMac:
+		ist := de.dcMacMgr.GetQueueInstance(queueName)
+		return ist.CPUPerInstance, ist.MemPerInstance
+	default:
+		ist := de.crmMgr.GetQueueInstance(queueName)
+		return ist.CPUPerInstance, ist.MemPerInstance
 	}
 }
 
