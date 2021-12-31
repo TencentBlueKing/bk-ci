@@ -86,8 +86,14 @@ data class GitRequestEvent(
         private const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
     }
 
+    /**
+     * 该方法会序列化为字段，请勿修改方法名
+     */
     fun isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
+    /**
+     * 该方法会序列化为字段，请勿修改方法名
+     */
     fun isFork(): Boolean {
         return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
             sourceGitProjectId != null &&
@@ -103,7 +109,10 @@ data class GitRequestEvent(
         }
     }
 
-    // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
+    /**
+     * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
+     * 该方法会序列化为字段，请勿修改方法名
+     */
     fun isDeleteBranch(): Boolean {
         return objectKind == TGitObjectKind.PUSH.value &&
             operationKind == TGitPushOperationKind.DELETE.value &&
@@ -111,6 +120,9 @@ data class GitRequestEvent(
                 commitId == DELETE_BRANCH_COMMITID_FROM_CLIENT)
     }
 
+    /**
+     * 该方法会序列化为字段，请勿修改方法名
+     */
     fun isDeleteTag(): Boolean {
         return objectKind == TGitObjectKind.TAG_PUSH.value &&
             operationKind == TGitPushOperationKind.DELETE.value
