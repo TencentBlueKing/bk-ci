@@ -53,7 +53,9 @@ data class TriggerBuildReq(
     @ApiModelProperty("描述")
     val description: String?,
     @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null
+    val commitId: String? = null,
+    @ApiModelProperty("工蜂请求体")
+    val payload: String? = null,
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("V2TriggerBuild请求")

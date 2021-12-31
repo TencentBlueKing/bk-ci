@@ -38,7 +38,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 customCommitMsg = customCommitMsg,
                 yaml = yaml,
                 description = description,
-                commitId = commitId
+                commitId = commitId,
+                payload = payload
             )
         }
         return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
