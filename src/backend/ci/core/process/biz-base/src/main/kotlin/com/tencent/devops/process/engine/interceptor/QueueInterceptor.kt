@@ -72,7 +72,7 @@ class QueueInterceptor @Autowired constructor(
             if (maxQueue == 0 && buildSummaryRecord.runningCount == 0 && buildSummaryRecord.queueCount == 0) {
                 // 设置了最大排队数量限制为0，但此时没有构建正在执行
                 Response(data = BuildStatus.RUNNING)
-            } else if (maxQueue == 0 && buildSummaryRecord.runningCount > 0) {
+            } else if (maxQueue == 0 && (buildSummaryRecord.runningCount > 0 || buildSummaryRecord.queueCount > 0)) {
                 Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
                 // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
