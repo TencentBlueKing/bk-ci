@@ -1,0 +1,702 @@
+/*
+    * Created on : 2013-09-30, 14:48:31
+    * Author     : Meritoo.pl, http://www.meritoo.pl
+    * Copyright  : Meritoo.pl
+*/
+
+.container {
+    width: 1170px;
+}
+
+
+/** The vertical centered content **/
+
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus,
+.btn.focus,
+.btn:active.focus,
+.btn.active.focus {
+    outline: none;
+}
+
+html.bootstrap-admin-vertical-centered {
+    height: 100%;
+    overflow: hidden;
+    min-height: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+
+html.bootstrap-admin-vertical-centered body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+html.bootstrap-admin-vertical-centered .container {
+    display: table;
+    height: 100%;
+    padding: 0;
+    width: 100%;
+}
+
+html.bootstrap-admin-vertical-centered .container .row {
+    display: table-cell;
+    height: 100%;
+    vertical-align: middle;
+}
+
+
+/** Body **/
+
+body {
+    overflow-y: scroll;
+    font-family: 'Microsoft Yahei', 'Open Sans', sans-serif;
+    background-color: #f5f5f5;
+    padding-top: 70px;
+    /* Required, because main menu / navbar has "navbar-fixed-top" class and is sticked to the top */
+}
+
+body.bootstrap-admin-with-small-navbar {
+    padding-top: 95px;
+}
+
+
+/** Main container **/
+
+#content {
+    margin-left: 0px;
+}
+
+
+/** Forms */
+
+.form-group label.control-label {
+    line-height: normal;
+    font-weight: normal;
+}
+
+.form-group label {
+    line-height: 25px;
+}
+
+.form-group input[type="checkbox"] {
+    margin-top: 9px;
+}
+
+
+/** Title of container for lists, some content etc. **/
+
+.bootstrap-admin-box-title {
+    display: inline;
+}
+
+
+/** Box above and below the title of content */
+
+.bootstrap-admin-above-content-title,
+.bootstrap-admin-below-content-title {
+    margin-bottom: 10px;
+}
+
+.bootstrap-admin-above-content-title .above-content-title,
+.bootstrap-admin-below-content-title .below-content-title {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.bootstrap-admin-above-content-title .above-content-title:first-of-type,
+.bootstrap-admin-below-content-title .below-content-title:first-of-type {
+    margin-left: 0;
+}
+
+.bootstrap-admin-above-content-title .above-content-title .name,
+.bootstrap-admin-below-content-title .below-content-title .name {
+    color: #5e5e5e;
+    font-weight: bold;
+}
+
+.bootstrap-admin-above-content-title .above-content-title .value,
+.bootstrap-admin-below-content-title .below-content-title .value {}
+
+
+/** Title of the content */
+
+.bootstrap-admin-content-title {
+    margin-bottom: 10px;
+}
+
+.bootstrap-admin-content-title h1,
+.bootstrap-admin-content-title h2 {
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-top: 0;
+}
+
+.bootstrap-admin-content-title .action,
+.bootstrap-admin-content-title-h1 .action {
+    float: right;
+    margin-left: 10px;
+    position: relative;
+    top: 5px;
+}
+
+.bootstrap-admin-content-title-h2 .action {
+    top: 0;
+}
+
+.bootstrap-admin-content-title .action:last-child {
+    margin-left: 0;
+}
+
+.bootstrap-admin-content-title .action.action-shifted {
+    margin-left: 20px;
+}
+
+.bootstrap-admin-content-title .action.btn {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.bootstrap-admin-content-title-buttons {
+    float: right;
+}
+
+.bootstrap-admin-content-title.bootstrap-admin-content-subtitle {
+    margin-top: 25px;
+}
+
+.bootstrap-admin-content-title.bootstrap-admin-content-subtitle .action {
+    top: 2px;
+}
+
+.bootstrap-admin-content-title.bootstrap-admin-content-title-with-above-content {
+    margin-top: 5px;
+}
+
+.bootstrap-admin-content-title.bootstrap-admin-content-title-with-below-content {
+    margin-bottom: 5px;
+}
+
+
+/** Button which is an action */
+
+.btn.action:active {
+    box-shadow: none;
+}
+
+
+/** Table with actions */
+
+.bootstrap-admin-table-with-actions>thead>tr>th,
+.bootstrap-admin-table-with-actions>tbody>tr>th,
+.bootstrap-admin-table-with-actions>tfoot>tr>th,
+.bootstrap-admin-table-with-actions>thead>tr>td,
+.bootstrap-admin-table-with-actions>tbody>tr>td,
+.bootstrap-admin-table-with-actions>tfoot>tr>td {
+    line-height: 1.75;
+}
+
+
+/** Buttons placed into the Actions column */
+
+table>tbody>tr>td.actions {
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+table>tbody>tr>td.actions .btn {
+    font-size: 13px;
+}
+
+
+/** The main panel **/
+
+.bootstrap-admin-main-panel {
+    margin-bottom: 0;
+}
+
+
+/** Content of the panel **/
+
+.bootstrap-admin-panel-content {
+    padding: 15px;
+}
+
+.bootstrap-admin-panel-content table {
+    margin-bottom: 0;
+}
+
+.bootstrap-admin-panel-content dl {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+
+/** Panel with no-table content **/
+
+.bootstrap-admin-no-table-panel,
+.bootstrap-admin-no-table-panel-content {
+    float: left;
+    width: 100%;
+}
+
+
+/** Left, the first, column **/
+
+.bootstrap-admin-col-left {}
+
+
+/** Horizontal navbars */
+
+.bootstrap-admin-navbar-sm {
+    background-image: none;
+    border: 0;
+    box-shadow: initial;
+    margin-bottom: 0;
+    min-height: 26px;
+    z-index: 1030;
+}
+
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav:first-child {
+    margin-left: 0;
+}
+
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav:first-child>li:first-child>a {
+    padding-left: 0;
+}
+
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav:last-child {
+    margin-right: 0;
+}
+
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav:last-child>li:last-child>a {
+    padding-right: 0;
+}
+
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav li.text,
+.bootstrap-admin-navbar-sm .navbar-collapse .navbar-nav li a {
+    font-size: 13px;
+    padding: 3px 8px;
+}
+
+.bootstrap-admin-navbar-under-small {
+    z-index: 1020;
+}
+
+.bootstrap-admin-navbar .navbar-nav>li>a:focus,
+.bootstrap-admin-navbar .navbar-nav>li>a:hover {
+    background-color: #419BE4;
+    color: #fff;
+}
+
+.navbar-default .navbar-nav>.open>a,
+.navbar-default .navbar-nav>.open>a:hover,
+.navbar-default .navbar-nav>.open>a:focus {
+    color: #fff;
+    background-color: #419BE4;
+}
+
+
+/** Side Bar **/
+
+.bootstrap-admin-navbar-side {
+    background-color: #fff;
+    max-height: none;
+    padding: 0;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, .065);
+    -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, .065);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .065);
+}
+
+.bootstrap-admin-navbar-side>li>a {
+    display: block;
+    width: 190px\9;
+    margin: 0 0 -1px;
+    padding: 8px 14px;
+    border: 1px solid #e5e5e5;
+}
+
+.bootstrap-admin-navbar-side>li:first-child>a {
+    -webkit-border-top-left-radius: 6px;
+    -webkit-border-top-right-radius: 6px;
+    -moz-border-radius-topleft: 6px;
+    -moz-border-radius-topright: 6px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.bootstrap-admin-navbar-side>li:last-child>a {
+    -webkit-border-bottom-right-radius: 6px;
+    -webkit-border-bottom-left-radius: 6px;
+    -moz-border-radius-bottomright: 6px;
+    -moz-border-radius-bottomleft: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.bootstrap-admin-navbar-side>.active>a,
+.bootstrap-admin-navbar-side .active a:hover {
+    background-color: #1e7ae3;
+    color: #fff;
+}
+
+.bootstrap-admin-navbar-side>.active>a {
+    position: relative;
+    z-index: 2;
+    padding: 9px 15px;
+    border: 0;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .15);
+    -webkit-box-shadow: inset 1px 0 0 rgba(0, 0, 0, .1), inset -1px 0 0 rgba(0, 0, 0, .1);
+    -moz-box-shadow: inset 1px 0 0 rgba(0, 0, 0, .1), inset -1px 0 0 rgba(0, 0, 0, .1);
+    box-shadow: inset 1px 0 0 rgba(0, 0, 0, .1), inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+
+/** Side Bar - Chevrons **/
+
+.bootstrap-admin-navbar-side .glyphicon-chevron-right {
+    float: right;
+    margin-top: 2px;
+    margin-right: -6px;
+    opacity: .25;
+}
+
+.bootstrap-admin-navbar-side>li>a:hover {
+    background-color: #f5f5f5;
+}
+
+.bootstrap-admin-navbar-side a:hover .glyphicon-chevron-right {
+    opacity: .5;
+}
+
+.bootstrap-admin-navbar-side .active .glyphicon-chevron-right,
+.bootstrap-admin-navbar-side .active a:hover .glyphicon-chevron-right {
+    opacity: 1;
+}
+
+.bootstrap-admin-navbar-side.affix {
+    top: 40px;
+}
+
+.bootstrap-admin-navbar-side.affix-bottom {
+    position: absolute;
+    top: auto;
+    bottom: 270px;
+}
+
+
+/** Thin navbar, e.g. for the breadcrumbs **/
+
+.bootstrap-admin-navbar-thin {
+    min-height: 0;
+}
+
+
+/** Breadcrumbs **/
+
+.bootstrap-admin-breadcrumb {
+    background: none;
+    margin: 8px 15px;
+    padding: 0;
+}
+
+
+/** Tabs */
+
+.nav-tabs>li>a:hover,
+.nav-tabs>li>a:focus,
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:hover,
+.nav-tabs>li.active>a:focus {
+    background-image: -webkit-linear-gradient(top, #ffffff 0%, #f8f8f8 100%);
+    background-image: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%);
+    background-repeat: repeat-x;
+    border: 1px solid #e0e0e0;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#fff8f8f8', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+}
+
+.bootstrap-admin-tabs {
+    margin-bottom: 20px;
+}
+
+
+/** Alert **/
+
+.bootstrap-admin-alert {
+    padding: 10px 15px;
+}
+
+.bootstrap-admin-alert h4 {
+    margin-bottom: 0px;
+    font-size: 13px;
+}
+
+.bootstrap-admin-alert .close {
+    font-size: 13px;
+}
+
+
+/** Progress bars */
+
+.progress-with-value {
+    position: relative;
+}
+
+.progress-with-value span.value-container {
+    color: #fff;
+    left: 50%;
+    position: absolute;
+}
+
+.progress-with-value span.value {
+    line-height: 21px;
+    margin-left: -50%;
+    text-shadow: 0 0 2px #111, 0 0 0.2em #111;
+}
+
+.progress-bar-inline {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.progress-bar-inline .progress {
+    margin-bottom: 0;
+    margin-top: -3px;
+}
+
+
+/** Labels */
+
+.bootstrap-admin-label-thin {
+    font-weight: normal;
+    padding-top: 0.3em;
+}
+
+
+/** Skip padding of elements on the edge **/
+
+.bootstrap-admin-no-edges-padding>div:first-child {
+    padding-left: 0;
+}
+
+.bootstrap-admin-no-edges-padding>div:last-child {
+    padding-right: 0;
+}
+
+
+/** Light, small paddings **/
+
+.bootstrap-admin-light-padding-bottom {
+    padding-bottom: 10px;
+}
+
+.bootstrap-admin-light-padding-top {
+    padding-top: 10px;
+}
+
+
+/** Footer **/
+
+.navbar-footer {
+    background-color: #F8F8F8;
+    margin-top: 15px;
+}
+
+.navbar-footer footer p {
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+
+/** Bootstrap 3 Typeahead plugin **/
+
+.typeahead {
+    z-index: 1051;
+}
+
+
+/** Disabling padding **/
+
+.bootstrap-admin-without-padding {
+    padding: 0;
+}
+
+
+/** Login form **/
+
+.bootstrap-admin-login-form {
+    max-width: 400px;
+    padding: 30px;
+    margin: 0 auto;
+    background-color: #FFF;
+    border: 1px solid #E5E5E5;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.bootstrap-admin-login-form h1 {
+    font-size: 36px;
+    margin-bottom: 25px;
+    margin-top: 0;
+}
+
+.bootstrap-admin-login-form .form-group {
+    margin-bottom: 20px;
+}
+
+.bootstrap-admin-login-form label {
+    font-size: 15px;
+}
+
+.bootstrap-admin-login-form input[type="text"],
+.bootstrap-admin-login-form input[type="password"] {
+    font-size: 16px;
+    height: auto;
+    padding: 7px 9px;
+}
+
+.bootstrap-admin-login-form input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.bootstrap-admin-login-form button {
+    border-radius: 6px;
+    font-size: 18px;
+    line-height: 1.33;
+    padding: 10px 16px;
+}
+
+
+/** Miscellaneous styles */
+
+.bootstrap-admin-currency-value {
+    text-align: right;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.bootstrap-admin-back-to-parent {
+    padding: 10px;
+    text-align: center;
+}
+
+.bootstrap-admin-back-to-parent .text {}
+
+.bootstrap-admin-back-to-parent .action {
+    margin-left: 5px;
+}
+
+
+/** Page header */
+
+.page-header,
+.page-header h1 {
+    margin-top: 0;
+}
+
+.page-header h1 {
+    margin-bottom: 0;
+}
+
+
+/** Modal Window */
+
+.modal .modal-footer {
+    margin-top: 0px;
+}
+
+.modal .modal-body #modal-communiques {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.modal .modal-body .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.modal .modal-body textarea {
+    resize: none;
+    height: 73px;
+}
+
+
+/** Panel - without data */
+
+.panel .panel-body .no-data {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    background-color: #f5f5f5;
+    border: 0 none;
+    border-radius: 4px;
+    padding: 97px 0;
+    text-align: center;
+}
+
+.panel-default>.panel-heading .badge {
+    background: #42A5F5;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.list-group-item.active,
+.list-group-item.active:hover,
+.list-group-item.active:focus {
+    background-color: #42A5F5;
+    border-color: #42A5F5;
+}
+
+.bootstrap-admin-navbar {
+    background: #42A5F5;
+}
+
+.navbar-default .navbar-nav>.active>a,
+.navbar-default .navbar-nav>.active>a:hover,
+.navbar-default .navbar-nav>.active>a:focus {
+    color: #fff;
+    background-color: #419BE4;
+}
+
+.navbar-default .navbar-brand {
+    color: #fff;
+}
+
+.navbar-default .navbar-nav>li>a {
+    color: #fff;
+}
+
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+    color: #fff;
+    background-color: transparent;
+}
+
+.bootstrap-admin-with-small-navbar .list-group .fa {
+    font-size: 14px;
+    width: 15px;
+}
+
+.bootstrap-admin-breadcrumb {
+    background-color: #fafafa;
+}
+
+.panel-default>.panel-heading {
+    background-color: #fafafa;
+}

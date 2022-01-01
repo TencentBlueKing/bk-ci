@@ -69,7 +69,8 @@ class CodeGitScmOauthImpl constructor(
         return RevisionInfo(
             revision = gitBranch.commit.id,
             updatedMessage = gitBranch.commit.message,
-            branchName = branch
+            branchName = branch,
+            authorName = gitBranch.commit.authorName
         )
     }
 
@@ -156,11 +157,7 @@ class CodeGitScmOauthImpl constructor(
         }
     }
 
-    override fun addWebHook(
-        hookUrl: String,
-        includePaths: String?,
-        excludePaths: String?
-    ) {
+    override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),

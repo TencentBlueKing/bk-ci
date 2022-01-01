@@ -29,3 +29,6 @@ package com.tencent.devops.artifactory.constant
 
 const val BK_CI_ATOM_DIR = "bk-atom"
 const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+
+const val REALM_LOCAL = "local"
+const val REALM_BK_REPO = "bkrepo"
