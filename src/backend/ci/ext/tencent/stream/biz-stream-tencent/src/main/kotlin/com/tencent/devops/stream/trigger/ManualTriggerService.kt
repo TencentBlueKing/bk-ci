@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -35,6 +37,7 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -44,18 +47,23 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.v1.YamlBuild
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
-import org.springframework.beans.factory.annotation.Value
 
 @Service
 class ManualTriggerService @Autowired constructor(
@@ -69,7 +77,11 @@ class ManualTriggerService @Autowired constructor(
     private val yamlBuild: YamlBuild,
     private val yamlBuildV2: StreamYamlBuild,
     private val streamYamlService: StreamYamlService,
-    private val triggerExceptionService: TriggerExceptionService
+    private val triggerExceptionService: TriggerExceptionService,
+    private val triggerMatcher: TriggerMatcher,
+    private val gitCISettingDao: StreamBasicSettingDao,
+    private val triggerParameter: TriggerParameter,
+    private val objectMapper: ObjectMapper,
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -82,7 +94,24 @@ class ManualTriggerService @Autowired constructor(
     fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
-        val gitRequestEvent = GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
+        // open api模拟工蜂事件触发
+        val gitRequestEvent = if (!triggerBuildReq.payload.isNullOrEmpty()) {
+            val gitEvent = try {
+                objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
+            } catch (ignore: Exception) {
+                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
+                )
+            }
+            triggerParameter.getGitRequestEvent(gitEvent, triggerBuildReq.payload!!) ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "event invalid"
+            )
+        } else {
+            GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
+        }
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
@@ -108,6 +137,12 @@ class ManualTriggerService @Autowired constructor(
                 message = "${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})"
             )
         }
+
+        val gitCIBasicSetting =
+            gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                message = TriggerReason.CI_DISABLED.detail
+            )
 
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
@@ -194,7 +229,8 @@ class ManualTriggerService @Autowired constructor(
                 gitRequestEvent = gitRequestEvent,
                 originYaml = originYaml,
                 buildPipeline = buildPipeline,
-                triggerBuildReq = triggerBuildReq
+                triggerBuildReq = triggerBuildReq,
+                gitCIBasicSetting = gitCIBasicSetting
             ) ?: throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = TriggerReason.PIPELINE_RUN_ERROR.name +
@@ -221,11 +257,12 @@ class ManualTriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: TriggerBuildReq,
+        gitCIBasicSetting: GitCIBasicSetting
     ): BuildId? {
         var buildId: BuildId? = null
         triggerExceptionService.handleManualTrigger {
-            buildId = trigger(gitRequestEvent, originYaml, buildPipeline, triggerBuildReq)
+            buildId = trigger(gitRequestEvent, originYaml, buildPipeline, triggerBuildReq, gitCIBasicSetting)
         }
         return buildId
     }
@@ -234,7 +271,8 @@ class ManualTriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: TriggerBuildReq,
+        gitCIBasicSetting: GitCIBasicSetting
     ): BuildId? {
         val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
             gitRequestEvent = gitRequestEvent,
@@ -265,6 +303,22 @@ class ManualTriggerService @Autowired constructor(
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         streamBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
+
+        var params = emptyMap<String, String>()
+        if (gitRequestEvent.gitEvent != null) {
+            params = triggerMatcher.getStartParams(
+                context = StreamTriggerContext(
+                    gitEvent = gitRequestEvent.gitEvent!!,
+                    requestEvent = gitRequestEvent,
+                    streamSetting = gitCIBasicSetting,
+                    pipeline = buildPipeline,
+                    originYaml = originYaml,
+                    mrChangeSet = null
+                ),
+                triggerOn = null,
+                isTrigger = false
+            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+        }
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,
@@ -274,7 +328,8 @@ class ManualTriggerService @Autowired constructor(
             normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
             gitBuildId = gitBuildId,
             isTimeTrigger = false,
-            onlySavePipeline = false
+            onlySavePipeline = false,
+            params = params
         )
     }
 

@@ -41,5 +41,7 @@ data class StreamTriggerBuildReq(
     @ApiModelProperty("描述")
     val description: String?,
     @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null
+    val commitId: String? = null,
+    @ApiModelProperty("模拟工蜂事件请求体")
+    val payload: String? = null
 )
