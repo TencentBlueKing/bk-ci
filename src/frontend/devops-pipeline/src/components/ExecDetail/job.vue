@@ -16,7 +16,7 @@
                 :execute-count="executeCount"
                 ref="jobLog"
             />
-            <container-content v-show="currentTab === 'setting'"
+            <container-content v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
@@ -27,7 +27,6 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import jobLog from './log/jobLog'
     import detailContainer from './detailContainer'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
@@ -38,7 +37,16 @@
             jobLog,
             ContainerContent
         },
-
+        props: {
+            execDetail: {
+                type: Object,
+                required: true
+            },
+            editingElementPos: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 showTime: false,
@@ -48,10 +56,6 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'editingElementPos'
-            ]),
 
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos

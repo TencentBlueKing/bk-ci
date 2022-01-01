@@ -14,7 +14,6 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import detailContainer from './detailContainer'
     import StageContent from '@/components/StagePropertyPanel/StageContent.vue'
 
@@ -23,7 +22,16 @@
             detailContainer,
             StageContent
         },
-
+        props: {
+            execDetail: {
+                type: Object,
+                required: true
+            },
+            editingElementPos: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 currentTab: 'stage'
@@ -31,10 +39,6 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'editingElementPos'
-            ]),
 
             stage () {
                 const { editingElementPos, execDetail } = this

@@ -10,7 +10,21 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :key="pipeline.name" :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
+                <bk-pipeline
+                    :key="pipeline.name"
+                    :pipeline="pipeline"
+                    :user-name="$userInfo.username"
+                    :editable="pipelineEditable"
+                    :can-skip-element="canSkipElement"
+                    :is-preview="isPreview"
+                    :match-rules="curMatchRules"
+                    @change="handlePipelineChange"
+                    @add-atom="addAtom"
+                    @click="handleAtomClick"
+                    @add-stage="handleAddStage"
+                    @stage-check="handleStageCheck"
+                >
+                </bk-pipeline>
             </div>
         </div>
 
@@ -73,7 +87,7 @@
 
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
-    import Stages from './Stages'
+    import BkPipeline from '../../../bk-pipeline'
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
@@ -83,7 +97,7 @@
 
     export default {
         components: {
-            Stages,
+            BkPipeline,
             StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
@@ -121,6 +135,10 @@
             }
         },
         computed: {
+            ...mapState('common', [
+                'ruleList',
+                'templateRuleList'
+            ]),
             ...mapGetters('atom', [
                 'osList',
                 'getElement',
@@ -134,21 +152,18 @@
                 'isStagePopupShow',
                 'insertStageIndex',
                 'insertStageIsFinally',
-                'isAddParallelContainer',
+                'isAddParallelStage',
                 'showStageReviewPanel'
             ]),
             routeParams () {
                 return this.$route.params
-            },
-            pipelineEditable () {
-                return this.editable && !this.pipeline.instanceFromTemplate && this.templateType !== 'CONSTRAINT' && !this.isPreview
             },
             isStageShow: {
                 get () {
                     return this.isStagePopupShow
                 },
                 set (value) {
-                    this.toggleStageSelectPopup({
+                    this.setInsertStageState({
                         isStagePopupShow: value
                     })
                 }
@@ -193,6 +208,23 @@
                 const stage = this.getStageByIndex(stageIndex)
                 const containers = this.getContainers(stage)
                 return containers[containerIndex]['@type']
+            },
+            pipelineEditable () {
+                return this.editable
+                    && !this.pipeline.instanceFromTemplate
+                    && this.templateType !== 'CONSTRAINT'
+                    && !this.isPreview
+            },
+            isInstanceEditable () {
+                return !this.pipelineEditable && this.pipeline.instanceFromTemplate
+            },
+            curMatchRules () {
+                return this.$route.path.indexOf('template') > 0
+                    ? [
+                        ...this.templateRuleList,
+                        ...(this.isInstanceEditable ? this.ruleList : [])
+                    ]
+                    : [...this.ruleList]
             }
         },
         beforeDestroy () {
@@ -204,16 +236,44 @@
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
-                'toggleStageSelectPopup',
                 'togglePropertyPanel',
-                'setInertStageIndex',
-                'addStage',
+                'setInsertStageState',
+                'addAtom',
                 'addContainer',
+                'addStage',
+                'setPipeline',
+                'setPipelineEditing',
                 'fetchAtoms',
                 'clearStoreAtom',
                 'setStoreSearch',
-                'addStoreAtom'
+                'addStoreAtom',
+                'toggleStageReviewPanel'
             ]),
+            handleAddStage ({ stageIndex, isParallel, isFinally }) {
+                this.setInsertStageState({
+                    isStagePopupShow: true,
+                    isAddParallelStage: isParallel,
+                    insertStageIsFinally: isFinally,
+                    insertStageIndex: stageIndex
+                })
+            },
+            handleStageCheck ({ type, stageIndex }) {
+                this.toggleStageReviewPanel({
+                    showStageReviewPanel: {
+                        isShow: true,
+                        type
+                    },
+                    editingElementPos: {
+                        stageIndex
+                    }
+                })
+            },
+            handleAtomClick (args) {
+                this.togglePropertyPanel({
+                    isShow: true,
+                    editingElementPos: args
+                })
+            },
             freshAtomList (searchKey) {
                 if (this.fetchingAtomList) return
                 const projectCode = this.$route.params.projectId
@@ -228,22 +288,38 @@
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)
             },
+            handlePipelineChange (pipeline) {
+                console.log('handle pipeline change', pipeline)
+                this.setPipeline(pipeline)
+                this.setPipelineEditing(true)
+            },
+            resetInsertStageState () {
+                this.setInsertStageState({
+                    isStagePopupShow: false,
+                    isAddParallelStage: false,
+                    insertStageIndex: null,
+                    insertStageIsFinally: false
+                })
+            },
             insertContainer (type, insertStageIndex) {
-                const { getContainers, addContainer, toggleStageSelectPopup, getStageByIndex } = this
-                const stage = getStageByIndex(insertStageIndex)
-                const containers = getContainers(stage)
-                addContainer({
+                const stage = this.getStageByIndex(insertStageIndex)
+                const containers = this.getContainers(stage)
+                this.addContainer({
                     containers,
                     type
                 })
-                toggleStageSelectPopup({
-                    isStagePopupShow: false
-                })
+                this.resetInsertStageState()
             },
             insert (type) {
                 if (!this.isStagePopupShow) return
-                const { pipeline, insertStageIndex, isAddParallelContainer, insertStageIsFinally, setInertStageIndex } = this
-                if (!isAddParallelContainer) {
+                const {
+                    pipeline,
+                    insertStageIndex,
+                    isAddParallelStage,
+                    insertStageIsFinally
+                } = this
+
+                if (!isAddParallelStage) {
                     this.addStage({
                         stages: pipeline.stages,
                         insertStageIndex,
@@ -253,9 +329,6 @@
                         const element = document.getElementsByClassName('bk-tab-section')[0]
                         element && (element.scrollLeft = element.scrollWidth + 300)
                     }
-                    setInertStageIndex({
-                        insertStageIndex: insertStageIndex + 1
-                    })
                 }
                 this.insertContainer(type, insertStageIndex)
             }

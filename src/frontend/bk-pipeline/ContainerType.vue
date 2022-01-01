@@ -1,21 +1,32 @@
+<template>
+    <span class="container-type">
+        <i v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{containerType.content}}</i>
+    </span>
+</template>
 <script>
-    import { mapGetters } from 'vuex'
-    import { coverTimer, convertMStoString } from '@/utils/util'
+    import {
+        convertMStoString,
+        isVmContainer,
+        isTriggerContainer,
+        isNormalContainer
+    } from './util'
+    import { bkTooltips } from 'bk-magic-vue'
+
     export default {
         name: 'container-type',
+        directives: [bkTooltips],
         props: {
             container: Object
         },
         computed: {
-            ...mapGetters('atom', [
-                'isVmContainer',
-                'isNormalContainer',
-                'isTriggerContainer'
-            ]),
-            icon () {
-                const { container, isVmContainer, isNormalContainer, isTriggerContainer, convertElapsed } = this
+            containerType () {
+                const { container, convertElapsed } = this
                 const { vmNames = [], baseOS = '', elements = [] } = container
                 let iconProps = {}
+                let content = ''
+                let tooltip = {
+                    disabled: true
+                }
                 switch (true) {
                     case container.systemElapsed !== undefined || container.elementElapsed !== undefined: {
                         const systemElapsed = convertElapsed(container.systemElapsed)
@@ -23,9 +34,11 @@
                         const elapsedSum = systemElapsed + elementElapsed
                         const lt1Hour = elapsedSum < 36e5
 
-                        return (
-                            <i v-bk-tooltips={{ content: `${this.$t('editPage.userTime')}：${convertMStoString(elementElapsed)} + ${this.$t('editPage.systemTime')}： ${convertMStoString(systemElapsed)}` }}>{lt1Hour ? coverTimer(elapsedSum) : '>1h'}</i>
-                        )
+                        tooltip = {
+                            content: `${this.$t('editPage.userTime')}：${convertMStoString(elementElapsed)} + ${this.$t('editPage.systemTime')}： ${convertMStoString(systemElapsed)}`
+                        }
+                        content = lt1Hour ? convertMStoString(elapsedSum) : '>1h'
+                        break
                     }
                     case container.isError:
                         iconProps = {
@@ -44,47 +57,25 @@
                         }
                         break
                     case isTriggerContainer(container):
-                        return <i>{elements.length} {this.$t('settings.item')}</i>
+                        content = `${elements.length} ${this.$t('settings.item')}`
+                        break
                 }
-                return <i {...iconProps}></i>
+                return {
+                    iconProps,
+                    tooltip,
+                    content
+                }
             }
         },
         methods: {
             convertElapsed (val) {
-                if (val === undefined) {
+                try {
+                    return parseInt(val, 10)
+                } catch (error) {
                     return 0
-                } else {
-                    return parseInt(val)
                 }
             }
-        },
-        render (h) {
-            return (
-                <span class='container-type'>
-                    {this.icon}
-                </span>
-            )
         }
     }
-</script>
 
-<style lang="scss">
-    @import '../../scss/conf';
-    .container-type {
-        font-size: 12px;
-        margin-right: 12px;
-        font-style: normal;
-        .devops-icon {
-            font-size: 18px;
-            &.icon-exclamation-triangle-shape {
-                font-size: 14px;
-                &.is-danger {
-                    color: $dangerColor;
-                }
-            }
-        }
-        i {
-            font-style: normal;
-        }
-    }
-</style>
+</script>

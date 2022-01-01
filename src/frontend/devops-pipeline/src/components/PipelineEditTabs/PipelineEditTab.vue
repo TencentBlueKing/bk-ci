@@ -59,12 +59,9 @@
         },
         methods: {
             ...mapActions('atom', [
-                'togglePropertyPanel',
-                'setPipeline',
-                'setPipelineEditing'
+                'togglePropertyPanel'
             ]),
             ...mapActions('common', [
-                'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
             getLinkAtomIndex (stages, hash) { // 新增

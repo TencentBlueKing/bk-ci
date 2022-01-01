@@ -73,7 +73,7 @@
                         </ul>
                     </div>
                     <div v-if="showPreview && tempPipeline" class="pipeline-detail-preview">
-                        <stages class="pipeline-preview" :stages="tempPipeline.stages"></stages>
+                        <bk-pipeline class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
@@ -143,14 +143,14 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
-    import stages from '@/components/Stages'
+    import BkPipeline from '../../../../../bk-pipeline'
 
     export default {
         name: 'pipeline-template-popup',
 
         components: {
             Logo,
-            stages
+            BkPipeline
         },
 
         props: {

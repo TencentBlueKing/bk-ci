@@ -55,7 +55,7 @@
 </script>
 
 <style lang="scss">
-@import "./Stage";
+@import "./index";
 .stage-status {
     position: relative;
     text-align: center;
@@ -65,6 +65,12 @@
     height: $serialSize;
     line-height: $serialSize;
     box-sizing: border-box;
+
+    &.matrix {
+        width: $minSerialSize;
+        height: $minSerialSize;
+        line-height: $minSerialSize;
+    }
 
     .status-logo {
         position: absolute;
@@ -122,16 +128,16 @@
     }
 
     .slide-top-enter, .slide-top-leave-to {
-        transform: translateY(42px);
+        transform: translateY($serialSize);
     }
     .slide-down-enter, .slide-down-leave-to {
-        transform: translateY(-42px);
+        transform: translateY(-$serialSize);
     }
     .slide-left-enter, .slide-left-leave-to {
-        transform: translateX(42px);
+        transform: translateX($serialSize);
     }
     .slide-right-enter, .slide-right-leave-to {
-        transform: translateX(-42px);
+        transform: translateX(-$serialSize);
     }
 
     &.readonly {

@@ -46,9 +46,7 @@ import {
     UPDATE_CONTAINER,
     ADD_STAGE,
     UPDATE_STAGE,
-    CONTAINER_TYPE_SELECTION_VISIBLE,
-    SET_INSERT_STAGE_INDEX,
-    SET_INSERT_STAGE_ISFINALLY,
+    SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
@@ -243,7 +241,9 @@ export default {
                 request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`),
                 request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                     params: {
-                        projectCode
+                        projectCode,
+                        page: 1,
+                        pageSize: 100
                     }
                 })
             ])
@@ -292,9 +292,7 @@ export default {
             commit(FETCHING_ATOM_VERSION, false)
         }
     },
-    setInertStageIndex: actionCreator(SET_INSERT_STAGE_INDEX),
-    setInsertStageIsFinally: actionCreator(SET_INSERT_STAGE_ISFINALLY),
-    toggleStageSelectPopup: actionCreator(CONTAINER_TYPE_SELECTION_VISIBLE),
+    setInsertStageState: actionCreator(SET_INSERT_STAGE_STATE),
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
         commit(DELETE_STAGE, payload)
@@ -526,6 +524,11 @@ export default {
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
+        })
+    },
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+            return response.data
         })
     }
 }

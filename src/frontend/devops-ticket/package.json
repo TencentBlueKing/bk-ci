@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
+    "undefined": "/Users/roychen/Desktop/bk-ci/src/frontend/pipeline",
     "vee-validate": "^2.0.3",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/plugin-syntax-jsx": "^7.16.0",
+    "@babel/preset-react": "^7.16.0",
+    "@vue/babel-preset-jsx": "^1.2.4",
     "babel-loader": "^8.2.2",
     "css-loader": "^6.4.0",
     "eslint": "^7.3.1",

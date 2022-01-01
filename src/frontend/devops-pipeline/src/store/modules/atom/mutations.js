@@ -39,9 +39,7 @@ import {
     DELETE_STAGE,
     UPDATE_STAGE,
     ADD_STAGE,
-    CONTAINER_TYPE_SELECTION_VISIBLE,
-    SET_INSERT_STAGE_INDEX,
-    SET_INSERT_STAGE_ISFINALLY,
+    SET_INSERT_STAGE_STATE,
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
@@ -194,15 +192,7 @@ export default {
         })
         return state
     },
-    [CONTAINER_TYPE_SELECTION_VISIBLE]: (state, payload) => {
-        Object.assign(state, payload)
-        return state
-    },
-    [SET_INSERT_STAGE_INDEX]: (state, payload) => {
-        Object.assign(state, payload)
-        return state
-    },
-    [SET_INSERT_STAGE_ISFINALLY]: (state, payload) => {
+    [SET_INSERT_STAGE_STATE]: (state, payload) => {
         Object.assign(state, payload)
         return state
     },

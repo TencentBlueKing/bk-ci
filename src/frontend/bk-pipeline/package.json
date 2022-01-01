@@ -1,0 +1,18 @@
+{
+  "name": "@bkui/pipeline",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./index.vue",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/preset-react": "^7.16.0"
+  },
+  "dependencies": {
+    "bk-magic-vue": "^2.3.10",
+    "vuedraggable": "^2.24.3"
+  }
+}

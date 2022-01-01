@@ -9,21 +9,60 @@
             :is-preview="isPreview"
             :is-exec-detail="isExecDetail"
             :can-skip-element="canSkipElement"
+            :has-finally-stage="hasFinallyStage"
             :stage-index="index"
+            :user-name="userName"
+            :handle-change="updatePipeline"
             :stage-length="computedStage.length"
-            :containers="stage.containers">
+            :containers="stage.containers"
+            :match-rules="matchRules"
+            @[COPY_EVENT_NAME]="handleCopyStage"
+            @[DELETE_EVENT_NAME]="handleDeleteStage"
+        >
         </Stage>
     </draggable>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { hashID } from '@/utils/util'
+    import {
+        eventBus,
+        hashID
+    } from './util'
+    import {
+        CLICK_EVENT_NAME,
+        DELETE_EVENT_NAME,
+        COPY_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_CONTINUE_EVENT_NAME,
+        ATOM_EXEC_EVENT_NAME,
+        ATOM_ADD_EVENT_NAME,
+        ADD_STAGE,
+        STAGE_CHECK,
+        STAGE_RETRY
+    } from './constants'
+
+    const customEvents = [
+        CLICK_EVENT_NAME,
+        DELETE_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        ATOM_CONTINUE_EVENT_NAME,
+        ATOM_EXEC_EVENT_NAME,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_ADD_EVENT_NAME,
+        ADD_STAGE,
+        STAGE_CHECK,
+        STAGE_RETRY
+    ]
+
     export default {
         components: {
-            Stage
+            Stage,
+            draggable
         },
+        emits: customEvents,
         props: {
             editable: {
                 type: Boolean,
@@ -41,15 +80,31 @@
                 type: Boolean,
                 default: false
             },
-            stages: {
+            pipeline: {
+                type: Object,
+                required: true
+            },
+            userName: {
+                type: String,
+                default: 'unknow'
+            },
+            matchRules: {
                 type: Array,
                 default: []
             }
         },
+        data () {
+            console.log(this.matchRules)
+            return {
+                DELETE_EVENT_NAME,
+                COPY_EVENT_NAME
+            }
+        },
         computed: {
+            
             computedStage: {
                 get () {
-                    return this.stages
+                    return this.pipeline.stages
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -68,8 +123,9 @@
                             ...stage
                         }
                     })
-                    this.setPipelineStage(data)
-                    this.setPipelineEditing(true)
+                    this.updatePipeline(this.pipeline, {
+                        stages: data
+                    })
                 }
             },
             dragOptions () {
@@ -80,13 +136,39 @@
                     animation: 130,
                     disabled: !this.editable
                 }
+            },
+            hasFinallyStage () {
+                try {
+                    const stageLength = this.computedStage.length
+                    const last = this.computedStage[stageLength - 1]
+                    return last.finally
+                } catch (error) {
+                    return false
+                }
             }
+        },
+        mounted () {
+            this.registeCustomEvent()
         },
         beforeDestroy () {
             window.showLinuxTipYet = false
+            this.registeCustomEvent(true)
         },
         methods: {
-            ...mapActions('atom', ['setPipelineStage', 'setPipelineEditing']),
+            registeCustomEvent (destory = false) {
+                customEvents.forEach(eventName => {
+                    const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
+                    console.log(eventName)
+                    fn(eventName, (...args) => {
+                        this.$emit(eventName, ...args)
+                    })
+                })
+            },
+            updatePipeline (model, params) {
+                Object.assign(model, params)
+                this.$emit('input', this.pipeline)
+                this.$emit('change', this.pipeline)
+            },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}
@@ -100,13 +182,19 @@
                 const isRelatedFinally = relatedelement.finally === true
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinally && !isRelatedFinally
+            },
+            handleCopyStage ({ stageIndex, stage }) {
+                this.pipeline.stages.splice(stageIndex + 1, 0, stage)
+            },
+            handleDeleteStage (stageIndex) {
+                this.pipeline.stages.splice(stageIndex, 1)
             }
         }
     }
 </script>
 
 <style lang="scss">
-    @import 'Stage';
+    @import './index';
     .devops-stage-list {
         display: flex;
         padding-right: 120px;

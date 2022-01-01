@@ -263,11 +263,6 @@ export const actions = {
             return response.data
         })
     },
-    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
-            return response.data
-        })
-    },
     requestAuditUserList: async ({ commit }, { projectId, pipelineId, buildId, params }) => {
         return request.get(`${QUALITY_API_URL_PREFIX}/user/intercepts/${projectId}/${pipelineId}/${buildId}/auditUserList`, { params }).then(response => {
             return response.data
