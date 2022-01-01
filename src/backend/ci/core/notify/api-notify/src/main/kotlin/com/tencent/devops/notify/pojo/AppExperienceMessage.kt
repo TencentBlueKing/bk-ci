@@ -25,11 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:biz-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api("com.github.xingePush:xinge")
+package com.tencent.devops.notify.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("蓝盾APP消息类型")
+
+open class AppExperienceMessage {
+    // todo初始值为0？
+    @ApiModelProperty("消息id")
+    val messageId: Long = 0
+
+    @ApiModelProperty("通知接收者")
+    val receiver: String = ""
+
+    @ApiModelProperty("设备token")
+    val token: String = ""
+
+    @ApiModelProperty("通知内容")
+    var body: String = ""
+
+    @ApiModelProperty("通知标题")
+    var title: String = ""
+    override fun toString(): String {
+        return String.format(
+            "id (%s), receiver(%s), token(%s) title(%s), body(%s) ",
+            messageId, receiver, token, title, body
+        )
+    }
 }

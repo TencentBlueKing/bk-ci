@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:biz-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api("com.github.xingePush:xinge")
+package com.tencent.devops.notify.model
+
+import com.tencent.devops.notify.pojo.AppExperienceMessage
+
+class AppExperienceMessageWithOperation : AppExperienceMessage() {
+    var id: String? = null
+    var retryCount: Int = 0
+    var lastError: String? = null
+
+    override fun toString(): String {
+        return String.format(
+            "id(%s), retryCount(%s), message(%s) ",
+            id, retryCount, super.toString()
+        )
+    }
 }

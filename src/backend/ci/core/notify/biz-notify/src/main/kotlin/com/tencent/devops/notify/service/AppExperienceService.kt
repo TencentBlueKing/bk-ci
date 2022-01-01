@@ -25,11 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:biz-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api("com.github.xingePush:xinge")
+package com.tencent.devops.notify.service
+
+import com.tencent.devops.notify.model.AppExperienceMessageWithOperation
+import com.tencent.devops.notify.pojo.AppExperienceMessage
+
+interface AppExperienceService {
+
+    fun sendMqMsg(message: AppExperienceMessage)
+
+    fun sendMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation?)
+
+    fun sendXinge(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) :Boolean
 }

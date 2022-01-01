@@ -38,4 +38,5 @@ object Versions {
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val log4j = "2.16.0"
+    const val Xinge = "1.2.4.9"
 }

@@ -38,11 +38,13 @@ import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.AppExperienceMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
+import com.tencent.devops.notify.service.AppExperienceService
 import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
@@ -54,6 +56,7 @@ class ServiceNotifyResourceImpl @Autowired constructor(
     private val rtxService: RtxService,
     private val smsService: SmsService,
     private val wechatService: WechatService,
+    private val appExperienceService: AppExperienceService,
     private val weworkService: WeworkService
 ) : ServiceNotifyResource {
 
@@ -118,6 +121,12 @@ class ServiceNotifyResourceImpl @Autowired constructor(
             message = message
         )
         weworkService.sendTextMessage(weworkNotifyTextMessage)
+        return Result(true)
+    }
+
+    override fun sendAppNotify(message: AppExperienceMessage): Result<Boolean> {
+        MessageCheckUtil.checkAppMessage(message)
+        appExperienceService.sendMqMsg(message)
         return Result(true)
     }
 }
