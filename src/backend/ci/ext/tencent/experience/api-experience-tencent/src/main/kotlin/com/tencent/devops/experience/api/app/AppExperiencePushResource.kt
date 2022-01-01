@@ -46,7 +46,7 @@ import javax.ws.rs.POST
 @Path("/app/experiences/push")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AppExperiencePushMessage {
+interface AppExperiencePushResource {
     @ApiOperation("绑定用户设备")
     @Path("/bindDeviceToken")
     @POST
@@ -77,7 +77,7 @@ interface AppExperiencePushMessage {
         platform: String
     ): Result<Boolean>
 
-    @ApiOperation("修改发送消息状态")
+/*    @ApiOperation("修改发送消息状态")
     @Path("/updatePushHistoryStatus")
     @POST
     fun updatePushHistoryStatus(
@@ -85,5 +85,5 @@ interface AppExperiencePushMessage {
         id: Long,
         @ApiParam("发送状态", required = true)
         status: Int,
-    ): Boolean
+    ): Boolean*/
 }

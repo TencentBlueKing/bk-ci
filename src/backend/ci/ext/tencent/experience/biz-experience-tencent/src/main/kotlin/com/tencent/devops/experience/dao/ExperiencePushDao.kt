@@ -35,7 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class ExperiencePushMessageDao {
+class ExperiencePushDao {
     fun getByUserId(
         dslContext: DSLContext,
         userId: String

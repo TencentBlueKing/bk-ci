@@ -28,20 +28,20 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.dao.ExperiencePushMessageDao
+import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ExperiencePushMessageService @Autowired constructor(
+class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val experiencePushMessageDao: ExperiencePushMessageDao
+    private val experiencePushDao: ExperiencePushDao
 ) {
     fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
         // 检查是否该用户有绑定记录
-        val userTokenRecord = experiencePushMessageDao.getByUserId(
+        val userTokenRecord = experiencePushDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         )
@@ -50,7 +50,7 @@ class ExperiencePushMessageService @Autowired constructor(
             checkAndUpdateToken(dslContext, userId, token, userTokenRecord)
         } else {
             // 若用户无绑定记录，则直接插入数据库表
-            experiencePushMessageDao.createUserToken(dslContext, userId, token)
+            experiencePushDao.createUserToken(dslContext, userId, token)
             Result("用户绑定设备成功！", true)
         }
         return result
@@ -65,7 +65,7 @@ class ExperiencePushMessageService @Autowired constructor(
         val result = if (token == userTokenRecord.token) {
             Result("请勿重复绑定同台设备！", false)
         } else {
-            val isUpdate = experiencePushMessageDao.updateUserToken(
+            val isUpdate = experiencePushDao.updateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token
@@ -80,11 +80,11 @@ class ExperiencePushMessageService @Autowired constructor(
 
     fun createPushHistory(userId: String, content: String, url: String, platform: String): Long {
         // todo status 魔法数字
-        return experiencePushMessageDao.createPushHistory(dslContext, 1, userId, content, url, platform)
+        return experiencePushDao.createPushHistory(dslContext, 1, userId, content, url, platform)
     }
 
     // todo 执行成功与否是否需要校验？
     fun updatePushHistoryStatus(id: Long, status: Int): Boolean {
-        return experiencePushMessageDao.updatePushHistoryStatus(dslContext, id, status)
+        return experiencePushDao.updatePushHistoryStatus(dslContext, id, status)
     }
 }

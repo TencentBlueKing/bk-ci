@@ -30,34 +30,34 @@ package com.tencent.devops.experience.resources.app
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.experience.api.app.AppExperiencePushMessage
-import com.tencent.devops.experience.service.ExperiencePushMessageService
+import com.tencent.devops.experience.api.app.AppExperiencePushResource
+import com.tencent.devops.experience.service.ExperiencePushService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class AppExperiencePushMessageImpl @Autowired constructor(
-    private val experiencePushMessageService: ExperiencePushMessageService,
-) : AppExperiencePushMessage {
+class AppExperiencePushResourceImpl @Autowired constructor(
+    private val experiencePushService: ExperiencePushService,
+) : AppExperiencePushResource {
     // todo 是否需要加@AllowOuter，允许外部用户访问
     override fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
         checkParam(userId)
         if (token.isBlank()) {
             throw ParamBlankException("Invalid token")
         }
-        return experiencePushMessageService.bindDeviceToken(userId, token)
+        return experiencePushService.bindDeviceToken(userId, token)
     }
 
     override fun sendMessage(userId: String, content: String, url: String, platform: String): Result<Boolean> {
         checkParam(userId, content, url, platform)
-        val messageId = experiencePushMessageService.createPushHistory(userId, content, url, platform)
+        val messageId = experiencePushService.createPushHistory(userId, content, url, platform)
         // todo 调用远程服务，把该消息加入MQ
         return Result(true)
     }
 
-    // todo 状态和参数是够需要校验？
+/*    // todo 状态和参数是够需要校验？
     override fun updatePushHistoryStatus(id: Long, status: Int): Boolean {
-        return experiencePushMessageService.updatePushHistoryStatus(id, status)
-    }
+        return experiencePushService.updatePushHistoryStatus(id, status)
+    }*/
 
     fun checkParam(userId: String) {
         if (userId.isBlank()) {
