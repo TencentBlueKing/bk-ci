@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("StreamTriggerBuild请求")
 data class StreamTriggerBuildReq(
     @ApiModelProperty("分支")
-    val branch: String,
+    val branch: String?,
     @ApiModelProperty("Custom commit message")
     val customCommitMsg: String?,
     @ApiModelProperty("yaml")

@@ -66,6 +66,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
+@SuppressWarnings("LongParameterList")
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val yamlTriggerFactory: YamlTriggerFactory,
@@ -105,10 +106,19 @@ class ManualTriggerService @Autowired constructor(
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
                 )
             }
-            triggerParameter.getGitRequestEvent(gitEvent, triggerBuildReq.payload!!) ?: throw CustomException(
-                status = Response.Status.BAD_REQUEST,
-                message = "event invalid"
-            )
+            val gitRequestEvent =
+                triggerParameter.getGitRequestEvent(gitEvent, triggerBuildReq.payload!!) ?: throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "event invalid"
+                )
+            // 仅支持当前仓库下的 event
+            if (gitRequestEvent.gitProjectId != triggerBuildReq.gitProjectId) {
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "Only events in the current repository [${triggerBuildReq.gitProjectId}] are supported"
+                )
+            }
+            gitRequestEvent
         } else {
             GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
         }

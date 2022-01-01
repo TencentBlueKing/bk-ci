@@ -34,7 +34,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 homepage = null,
                 gitHttpUrl = null,
                 gitSshUrl = null,
-                branch = branch,
+                branch = branch ?: "",
                 customCommitMsg = customCommitMsg,
                 yaml = yaml,
                 description = description,
