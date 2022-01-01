@@ -29,7 +29,6 @@ package com.tencent.devops.sign.service
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import java.io.File
-import java.net.HttpRetryException
 import java.net.SocketTimeoutException
 import kotlin.jvm.Throws
 
