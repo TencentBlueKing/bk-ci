@@ -316,7 +316,7 @@ class ManualTriggerService @Autowired constructor(
                     mrChangeSet = null
                 ),
                 triggerOn = null,
-                isTrigger = false
+                isTrigger = true
             ).map { entry -> entry.key to entry.value.toString() }.toMap()
         }
         return yamlBuildV2.gitStartBuild(
