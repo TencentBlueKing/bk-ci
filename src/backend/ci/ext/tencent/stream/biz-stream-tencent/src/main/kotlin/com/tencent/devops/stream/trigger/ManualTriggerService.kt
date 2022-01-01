@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -119,7 +119,7 @@ class ManualTriggerService @Autowired constructor(
                     message = "Only events in the current repository [${triggerBuildReq.gitProjectId}] are supported"
                 )
             }
-            gitRequestEvent.copy(objectKind = OBJECT_KIND_MANUAL)
+            gitRequestEvent.copy(objectKind = TGitObjectKind.OBJECT_KIND_MANUAL)
         } else {
             GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
         }
