@@ -209,7 +209,7 @@ class ExperiencePushService @Autowired constructor(
         tokenList.add(appExperienceMessageWithOperation.token)
         pushAppRequest.token_list = tokenList
         val ret = xingeApp.pushApp(pushAppRequest)
-        logger.info("ret_code.token:  ${ret.get("ret_code")}")
+        logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
         return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
     }
 
