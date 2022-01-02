@@ -65,8 +65,8 @@ class AppExperienceServiceImpl @Autowired constructor(
         }
         val isSuccess = sendXinge(appExperienceMessageWithOperation)
         when{
-            //消息发送成功
-            //isSuccess -> client.get(AppExperiencePushMessage::class).updatePushHistoryStatus(appExperienceMessageWithOperation.messageId,1)
+            // 消息发送成功
+            //isSuccess -> client.get(AppExperiencePushResource::class).updatePushHistoryStatus(appExperienceMessageWithOperation.messageId,1)
             // else {
             //消息发送失败
             //client.get(AppExperiencePushMessage::class).updatePushHistoryStatus(appExperienceMessageWithOperation.messageId,2)}

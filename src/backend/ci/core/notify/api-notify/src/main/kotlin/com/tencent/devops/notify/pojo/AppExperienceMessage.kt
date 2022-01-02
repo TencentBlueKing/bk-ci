@@ -35,13 +35,13 @@ import io.swagger.annotations.ApiModelProperty
 open class AppExperienceMessage {
     // todo初始值为0？
     @ApiModelProperty("消息id")
-    val messageId: Long = 0
+    var messageId: Long = 0
 
     @ApiModelProperty("通知接收者")
-    val receiver: String = ""
+    var receiver: String = ""
 
     @ApiModelProperty("设备token")
-    val token: String = ""
+    var token: String = ""
 
     @ApiModelProperty("通知内容")
     var body: String = ""

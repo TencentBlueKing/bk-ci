@@ -66,6 +66,9 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("消息标题", required = true)
+        @QueryParam("title")
+        title: String,
         @ApiParam("消息内容", required = true)
         @QueryParam("content")
         content: String,
@@ -77,13 +80,15 @@ interface AppExperiencePushResource {
         platform: String
     ): Result<Boolean>
 
-/*    @ApiOperation("修改发送消息状态")
+    @ApiOperation("修改发送消息状态")
     @Path("/updatePushHistoryStatus")
     @POST
     fun updatePushHistoryStatus(
         @ApiParam("消息ID", required = true)
+        @QueryParam("id")
         id: Long,
         @ApiParam("发送状态", required = true)
+        @QueryParam("status")
         status: Int,
-    ): Boolean*/
+    ): Boolean
 }

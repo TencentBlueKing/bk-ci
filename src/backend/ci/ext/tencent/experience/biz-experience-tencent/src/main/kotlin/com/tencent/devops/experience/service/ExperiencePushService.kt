@@ -27,17 +27,25 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.dao.ExperiencePushDao
+import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.AppExperienceMessage
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import org.jooq.DSLContext
+import org.jooq.True
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val experiencePushDao: ExperiencePushDao
+    private val experiencePushDao: ExperiencePushDao,
+    private val client: Client
 ) {
     fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
         // 检查是否该用户有绑定记录
@@ -78,9 +86,28 @@ class ExperiencePushService @Autowired constructor(
         return result
     }
 
-    fun createPushHistory(userId: String, content: String, url: String, platform: String): Long {
+    fun createPushHistory(
+        userId: String,
+        title: String,
+        content: String,
+        url: String,
+        platform: String
+    ): Result<Boolean> {
         // todo status 魔法数字
-        return experiencePushDao.createPushHistory(dslContext, 1, userId, content, url, platform)
+        val messageId = experiencePushDao.createPushHistory(dslContext, 1, userId, content, url, platform)
+        val token = experiencePushDao.getByUserId(
+            dslContext = dslContext,
+            userId = userId
+        )?.token ?: throw ParamBlankException("Invalid platform")
+        //todo 检验token
+        val appExperienceMessage = AppExperienceMessage()
+        appExperienceMessage.messageId = messageId
+        appExperienceMessage.token = token
+        appExperienceMessage.body = content
+        appExperienceMessage.title = title
+        appExperienceMessage.receiver = userId
+        client.get(ServiceNotifyResource::class).sendAppNotify(appExperienceMessage)
+        return Result(true)
     }
 
     // todo 执行成功与否是否需要校验？

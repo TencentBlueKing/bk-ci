@@ -47,17 +47,23 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return experiencePushService.bindDeviceToken(userId, token)
     }
 
-    override fun sendMessage(userId: String, content: String, url: String, platform: String): Result<Boolean> {
+    override fun sendMessage(
+        userId: String,
+        title: String,
+        content: String,
+        url: String,
+        platform: String
+    ): Result<Boolean> {
         checkParam(userId, content, url, platform)
-        val messageId = experiencePushService.createPushHistory(userId, content, url, platform)
+        experiencePushService.createPushHistory(userId,title, content, url, platform)
         // todo 调用远程服务，把该消息加入MQ
         return Result(true)
     }
 
-/*    // todo 状态和参数是够需要校验？
+    // todo 状态和参数是够需要校验？
     override fun updatePushHistoryStatus(id: Long, status: Int): Boolean {
         return experiencePushService.updatePushHistoryStatus(id, status)
-    }*/
+    }
 
     fun checkParam(userId: String) {
         if (userId.isBlank()) {
