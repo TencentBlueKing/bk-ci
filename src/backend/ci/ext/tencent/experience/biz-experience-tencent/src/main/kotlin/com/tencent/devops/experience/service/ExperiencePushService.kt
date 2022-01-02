@@ -209,6 +209,7 @@ class ExperiencePushService @Autowired constructor(
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appExperienceMessageWithOperation.token)
+        logger.info("tokenList.token:  $tokenList")
         pushAppRequest.token_list = tokenList
         val ret = xingeApp.pushApp(pushAppRequest)
         logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
@@ -230,10 +231,6 @@ class ExperiencePushService @Autowired constructor(
             )]
     )
     fun onReceiveAppExperienceMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) {
-        OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
         try {
             // todo 判断成功与否
            sendMessage(appExperienceMessageWithOperation)
