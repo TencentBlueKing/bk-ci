@@ -33,7 +33,6 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import com.tencent.devops.notify.pojo.AppExperienceMessage
 
 /**
  * @Description
@@ -94,26 +93,5 @@ object MessageCheckUtil {
     fun checkSmsMessage(message: SmsNotifyMessage) {
         checkBody(message.body)
         checkReceivers(message.getReceivers())
-    }
-
-    fun checkAppMessage(message: AppExperienceMessage) {
-        checkBody(message.body)
-        checkTitle(message.title)
-        // todo messageId 是否需要判断
-        if (message.token.isNullOrBlank()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.token}",
-                // todo token 这里要code 要怎么写？
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.token)
-            )
-        }
-        if (message.receiver.isNullOrBlank()) {
-            throw InvalidParamException(
-                message = "invalid body:${message.receiver}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf(message.receiver)
-            )
-        }
     }
 }

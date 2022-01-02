@@ -34,7 +34,6 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import com.tencent.devops.notify.pojo.AppExperienceMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -112,15 +111,5 @@ interface ServiceNotifyResource {
         textType: WeworkTextType,
         @ApiParam("文件内容", required = true)
         message: String
-    ): Result<Boolean>
-
-    @ApiOperation("发送蓝盾APP通知")
-    @POST
-    @Path("/app")
-    fun sendAppNotify(
-        @ApiParam(
-            value = "蓝盾APP信息内容",
-            required = true
-        ) message: AppExperienceMessage
     ): Result<Boolean>
 }

@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.service
+package com.tencent.devops.experience.pojo
+class AppExperienceMessageWithOperation : AppExperienceMessage() {
+    var id: String? = null
+    var retryCount: Int = 0
+    var lastError: String? = null
 
-import com.tencent.devops.notify.model.AppExperienceMessageWithOperation
-import com.tencent.devops.notify.pojo.AppExperienceMessage
-
-interface AppExperienceService {
-
-    fun sendMqMsg(message: AppExperienceMessage)
-
-    fun sendMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation?)
-
-    fun sendXinge(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) :Boolean
+    override fun toString(): String {
+        return String.format(
+            "id(%s), retryCount(%s), message(%s) ",
+            id, retryCount, super.toString()
+        )
+    }
 }

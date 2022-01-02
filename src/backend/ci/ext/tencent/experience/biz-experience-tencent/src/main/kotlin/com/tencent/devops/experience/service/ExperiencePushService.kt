@@ -27,17 +27,30 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.dao.ExperiencePushDao
-import com.tencent.devops.experience.pojo.AppExperience
+import com.tencent.devops.experience.pojo.AppExperienceMessage
+import com.tencent.devops.experience.pojo.AppExperienceMessageWithOperation
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.AppExperienceMessage
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.notify.EXCHANGE_NOTIFY
+import com.tencent.devops.notify.QUEUE_NOTIFY_APP
+import com.tencent.devops.notify.ROUTE_APP
+import com.tencent.devops.notify.constant.NotifyMessageCode
+import com.tencent.xinge.XingeApp
+import com.tencent.xinge.bean.AudienceType
+import com.tencent.xinge.bean.Message
+import com.tencent.xinge.bean.MessageAndroid
+import com.tencent.xinge.bean.MessageType
+import com.tencent.xinge.push.app.PushAppRequest
 import org.jooq.DSLContext
-import org.jooq.True
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.annotation.Exchange
+import org.springframework.amqp.rabbit.annotation.Queue
+import org.springframework.amqp.rabbit.annotation.QueueBinding
+import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,8 +58,10 @@ import org.springframework.stereotype.Service
 class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushDao: ExperiencePushDao,
-    private val client: Client
+    private val rabbitTemplate: RabbitTemplate,
 ) {
+    private val logger = LoggerFactory.getLogger(ExperiencePushService::class.java)
+
     fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
         // 检查是否该用户有绑定记录
         val userTokenRecord = experiencePushDao.getByUserId(
@@ -99,19 +114,122 @@ class ExperiencePushService @Autowired constructor(
             dslContext = dslContext,
             userId = userId
         )?.token ?: throw ParamBlankException("Invalid platform")
-        //todo 检验token
+        // todo 检验token
         val appExperienceMessage = AppExperienceMessage()
         appExperienceMessage.messageId = messageId
         appExperienceMessage.token = token
         appExperienceMessage.body = content
         appExperienceMessage.title = title
         appExperienceMessage.receiver = userId
-        client.get(ServiceNotifyResource::class).sendAppNotify(appExperienceMessage)
+        sendAppNotify(appExperienceMessage)
         return Result(true)
     }
 
-    // todo 执行成功与否是否需要校验？
-    fun updatePushHistoryStatus(id: Long, status: Int): Boolean {
-        return experiencePushDao.updatePushHistoryStatus(dslContext, id, status)
+    fun sendAppNotify(message: AppExperienceMessage) {
+        checkAppMessage(message)
+        sendMqMsg(message)
+    }
+
+    fun checkAppMessage(message: AppExperienceMessage) {
+        if (message.body.isBlank()) {
+            throw InvalidParamException(
+                message = "invalid body:${message.body}",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.body ?: "")
+            )
+        }
+        if (message.title.isBlank()) {
+            throw InvalidParamException(
+                message = "invalid title:${message.title}",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE,
+                params = arrayOf(message.title ?: "")
+            )
+        }
+        // todo messageId 是否需要判断
+        if (message.token.isBlank()) {
+            throw InvalidParamException(
+                message = "invalid body:${message.token}",
+                // todo token 这里要code 要怎么写？
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY,
+                params = arrayOf(message.token)
+            )
+        }
+        if (message.receiver.isBlank()) {
+            throw InvalidParamException(
+                message = "invalid body:${message.receiver}",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS,
+                params = arrayOf(message.receiver)
+            )
+        }
+    }
+
+    fun sendMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation?): Boolean {
+        if (appExperienceMessageWithOperation == null) {
+            logger.warn(
+                "appExperienceMessageWithOperation is " +
+                        "empty after being processed: $appExperienceMessageWithOperation"
+            )
+            return false
+        }
+        val isSuccess = sendXinge(appExperienceMessageWithOperation)
+        when {
+            // todo 魔法数字
+            isSuccess -> experiencePushDao.updatePushHistoryStatus(
+                dslContext,
+                appExperienceMessageWithOperation.messageId,
+                1
+            )
+            else -> experiencePushDao.updatePushHistoryStatus(
+                dslContext,
+                appExperienceMessageWithOperation.messageId,
+                2
+            )
+        }
+        return isSuccess
+    }
+
+    fun sendXinge(appExperienceMessageWithOperation: AppExperienceMessageWithOperation): Boolean {
+        val xingeApp = XingeApp.Builder()
+            .appId("1500026197")
+            .secretKey("b17e4f31fa705c5a45b0601e64df45c1")
+            .build()
+        val pushAppRequest = PushAppRequest()
+        // 单设备推送
+        pushAppRequest.audience_type = AudienceType.token
+        pushAppRequest.message_type = MessageType.notify
+        val message = Message()
+        message.title = appExperienceMessageWithOperation.title
+        message.content = appExperienceMessageWithOperation.body
+        pushAppRequest.message = message
+        val messageAndroid = MessageAndroid()
+        message.android = messageAndroid
+        val tokenList: ArrayList<String?> = ArrayList()
+        tokenList.add(appExperienceMessageWithOperation.token)
+        pushAppRequest.token_list = tokenList
+        return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
+    }
+
+    // todo 单独封装成消息类
+    fun sendMqMsg(message: AppExperienceMessage) {
+        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_APP, message)
+    }
+
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
+        bindings = [
+            QueueBinding(
+                key = [ROUTE_APP],
+                value = Queue(value = QUEUE_NOTIFY_APP, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )]
+    )
+    fun onReceiveAppExperienceMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) {
+        try {
+            // todo 判断成功与否
+           sendMessage(appExperienceMessageWithOperation)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Wework message", ignored)
+        }
+
     }
 }

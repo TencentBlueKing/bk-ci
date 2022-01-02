@@ -31,5 +31,4 @@ dependencies {
     api(project(":core:notify:model-notify"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-notify"))
-    api("com.github.xingePush:xinge")
 }

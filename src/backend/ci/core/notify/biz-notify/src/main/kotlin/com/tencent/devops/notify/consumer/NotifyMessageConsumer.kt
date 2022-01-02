@@ -39,14 +39,11 @@ import com.tencent.devops.notify.ROUTE_RTX
 import com.tencent.devops.notify.ROUTE_SMS
 import com.tencent.devops.notify.ROUTE_WECHAT
 import com.tencent.devops.notify.ROUTE_WEWORK
-import com.tencent.devops.notify.ROUTE_APP
-import com.tencent.devops.notify.QUEUE_NOTIFY_APP
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
-import com.tencent.devops.notify.model.AppExperienceMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.OrgService
@@ -54,7 +51,6 @@ import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
-import com.tencent.devops.notify.service.AppExperienceService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
 import org.springframework.amqp.rabbit.annotation.Queue
@@ -70,7 +66,6 @@ class NotifyMessageConsumer @Autowired constructor(
     private val smsService: SmsService,
     private val wechatService: WechatService,
     private val weworkService: WeworkService,
-    private val appExperienceService: AppExperienceService,
     private val orgService: OrgService
 ) {
     companion object {
@@ -174,23 +169,6 @@ class NotifyMessageConsumer @Autowired constructor(
                 message = weworkNotifyMessageWithOperation.body
             )
             weworkService.sendTextMessage(weworkNotifyTextMessage)
-        } catch (ignored: Exception) {
-            logger.warn("Failed process received Wework message", ignored)
-        }
-    }
-
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_APP],
-                value = Queue(value = QUEUE_NOTIFY_APP, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )]
-    )
-    fun onReceiveAppExperienceMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) {
-        try {
-            appExperienceService.sendMessage(appExperienceMessageWithOperation)
         } catch (ignored: Exception) {
             logger.warn("Failed process received Wework message", ignored)
         }

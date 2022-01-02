@@ -79,16 +79,4 @@ interface AppExperiencePushResource {
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: String
     ): Result<Boolean>
-
-    @ApiOperation("修改发送消息状态")
-    @Path("/updatePushHistoryStatus")
-    @POST
-    fun updatePushHistoryStatus(
-        @ApiParam("消息ID", required = true)
-        @QueryParam("id")
-        id: Long,
-        @ApiParam("发送状态", required = true)
-        @QueryParam("status")
-        status: Int,
-    ): Boolean
 }

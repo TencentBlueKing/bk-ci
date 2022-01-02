@@ -55,14 +55,9 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         platform: String
     ): Result<Boolean> {
         checkParam(userId, content, url, platform)
-        experiencePushService.createPushHistory(userId,title, content, url, platform)
+        experiencePushService.createPushHistory(userId, title, content, url, platform)
         // todo 调用远程服务，把该消息加入MQ
         return Result(true)
-    }
-
-    // todo 状态和参数是够需要校验？
-    override fun updatePushHistoryStatus(id: Long, status: Int): Boolean {
-        return experiencePushService.updatePushHistoryStatus(id, status)
     }
 
     fun checkParam(userId: String) {
