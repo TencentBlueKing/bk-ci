@@ -44,6 +44,7 @@ import com.tencent.xinge.bean.Message
 import com.tencent.xinge.bean.MessageAndroid
 import com.tencent.xinge.bean.MessageType
 import com.tencent.xinge.push.app.PushAppRequest
+import okhttp3.OkHttpClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -53,6 +54,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class ExperiencePushService @Autowired constructor(
@@ -228,6 +230,10 @@ class ExperiencePushService @Autowired constructor(
             )]
     )
     fun onReceiveAppExperienceMessage(appExperienceMessageWithOperation: AppExperienceMessageWithOperation) {
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
         try {
             // todo 判断成功与否
            sendMessage(appExperienceMessageWithOperation)
