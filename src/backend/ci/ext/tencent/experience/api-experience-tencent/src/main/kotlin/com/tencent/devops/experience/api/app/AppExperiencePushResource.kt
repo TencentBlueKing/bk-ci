@@ -59,13 +59,16 @@ interface AppExperiencePushResource {
         token: String
     ): Result<Boolean>
 
-    @ApiOperation("发送消息")
-    @Path("/sendMessage")
+    @ApiOperation("推送消息")
+    @Path("/pushMessage")
     @POST
-    fun sendMessage(
+    fun pushMessage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: String,
         @ApiParam("消息标题", required = true)
         @QueryParam("title")
         title: String,
@@ -74,9 +77,6 @@ interface AppExperiencePushResource {
         content: String,
         @ApiParam("跳转路径", required = true)
         @QueryParam("url")
-        url: String,
-        @ApiParam("平台", required = true)
-        @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: String
+        url: String
     ): Result<Boolean>
 }

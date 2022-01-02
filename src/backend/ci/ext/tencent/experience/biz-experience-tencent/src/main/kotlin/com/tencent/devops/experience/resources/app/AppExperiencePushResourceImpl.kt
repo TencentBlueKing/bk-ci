@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppExperiencePushResourceImpl @Autowired constructor(
     private val experiencePushService: ExperiencePushService,
 ) : AppExperiencePushResource {
-    // todo 是否需要加@AllowOuter，允许外部用户访问
+
     override fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
         checkParam(userId)
         if (token.isBlank()) {
@@ -47,16 +47,15 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return experiencePushService.bindDeviceToken(userId, token)
     }
 
-    override fun sendMessage(
+    override fun pushMessage(
         userId: String,
+        platform: String,
         title: String,
         content: String,
-        url: String,
-        platform: String
+        url: String
     ): Result<Boolean> {
-        checkParam(userId, content, url, platform)
-        experiencePushService.createPushHistory(userId, title, content, url, platform)
-        // todo 调用远程服务，把该消息加入MQ
+        checkParam(userId, platform, title, content, url)
+        experiencePushService.pushMessage(userId, title, content, url, platform)
         return Result(true)
     }
 
@@ -66,9 +65,12 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
     }
 
-    fun checkParam(userId: String, content: String, url: String, platform: String) {
+    fun checkParam(userId: String, title: String, content: String, url: String, platform: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+        if (title.isBlank()) {
+            throw ParamBlankException("Invalid title")
         }
         if (content.isBlank()) {
             throw ParamBlankException("Invalid content")

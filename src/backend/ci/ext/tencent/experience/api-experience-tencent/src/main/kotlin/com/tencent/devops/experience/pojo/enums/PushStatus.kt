@@ -25,16 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
-class AppExperienceMessageWithOperation : AppExperienceMessage() {
-    var id: String? = null
-    var retryCount: Int = 0
-    var lastError: String? = null
+package com.tencent.devops.experience.pojo.enums
 
-    override fun toString(): String {
-        return String.format(
-            "id(%s), retryCount(%s), message(%s) ",
-            id, retryCount, super.toString()
-        )
+enum class PushStatus(val status: Int) {
+    SENDING(0),
+    SUCCESS(1),
+    FAILURE(2);
+
+    companion object {
+        fun get(status: Int): PushStatus {
+            values().forEach {
+                if (status == it.status) return it
+            }
+            throw IllegalArgumentException("No enum for constant $status")
+        }
     }
 }

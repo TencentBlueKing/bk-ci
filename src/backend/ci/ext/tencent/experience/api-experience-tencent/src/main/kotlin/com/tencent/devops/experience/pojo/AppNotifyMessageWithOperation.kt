@@ -26,32 +26,15 @@
  */
 
 package com.tencent.devops.experience.pojo
+class AppNotifyMessageWithOperation : AppNotifyMessage() {
+    var id: String? = null
+    var retryCount: Int = 0
+    var lastError: String? = null
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("蓝盾APP消息类型")
-
-open class AppExperienceMessage {
-    // todo初始值为0？
-    @ApiModelProperty("消息id")
-    var messageId: Long = 0
-
-    @ApiModelProperty("通知接收者")
-    var receiver: String = ""
-
-    @ApiModelProperty("设备token")
-    var token: String = ""
-
-    @ApiModelProperty("通知内容")
-    var body: String = ""
-
-    @ApiModelProperty("通知标题")
-    var title: String = ""
     override fun toString(): String {
         return String.format(
-            "id (%s), receiver(%s), token(%s) title(%s), body(%s) ",
-            messageId, receiver, token, title, body
+            "id(%s), retryCount(%s), message(%s) ",
+            id, retryCount, super.toString()
         )
     }
 }
