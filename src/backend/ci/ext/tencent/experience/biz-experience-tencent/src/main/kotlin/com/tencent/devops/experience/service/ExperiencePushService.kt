@@ -126,6 +126,7 @@ class ExperiencePushService @Autowired constructor(
     }
 
     fun sendAppNotify(message: AppExperienceMessage) {
+        logger.info("AppExperienceMessage.token:  $message")
         checkAppMessage(message)
         sendMqMsg(message)
     }
@@ -193,7 +194,7 @@ class ExperiencePushService @Autowired constructor(
             .appId("1500026197")
             .secretKey("b17e4f31fa705c5a45b0601e64df45c1")
             .build()
-        logger.info("appExperienceMessageWithOperation.token  ${appExperienceMessageWithOperation.token}")
+        logger.info("appExperienceMessageWithOperation.token:  $appExperienceMessageWithOperation")
         val pushAppRequest = PushAppRequest()
         // 单设备推送
         pushAppRequest.audience_type = AudienceType.token
@@ -207,6 +208,8 @@ class ExperiencePushService @Autowired constructor(
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appExperienceMessageWithOperation.token)
         pushAppRequest.token_list = tokenList
+        val ret = xingeApp.pushApp(pushAppRequest)
+        logger.info("ret_code.token:  ${ret.get("ret_code")}")
         return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
     }
 
