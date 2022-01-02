@@ -193,8 +193,10 @@ class ExperiencePushService @Autowired constructor(
 
     fun sendXinge(appExperienceMessageWithOperation: AppExperienceMessageWithOperation): Boolean {
         val xingeApp = XingeApp.Builder()
-            .appId("1500026197")
-            .secretKey("b17e4f31fa705c5a45b0601e64df45c1")
+                // todo 一定要把secretKey、appId这些敏感信息放在配置文件中！一定不要发布git
+            .appId("appId")
+            .secretKey("secretKey")
+            .domainUrl("https://api.tpns.tencent.com/")
             .build()
         logger.info("appExperienceMessageWithOperation.token:  $appExperienceMessageWithOperation")
         val pushAppRequest = PushAppRequest()
