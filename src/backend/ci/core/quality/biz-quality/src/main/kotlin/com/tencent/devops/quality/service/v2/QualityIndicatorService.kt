@@ -158,13 +158,31 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
-        return indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
-            val metadataIds = convertMetaIds(indicator.metadataIds)
-            val metadata = metadataService.serviceListMetadata(metadataIds).map {
-                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+        return if (enNameSet.isNotEmpty()) {
+            val indicatorTMap = indicatorDao.listByElementType(
+                dslContext = dslContext,
+                elementType = elementType,
+                type = null,
+                enNameSet = enNameSet
+            )?.map { it.enName to it }?.toMap()
+            enNameSet.map { enName ->
+                val indicator = indicatorTMap?.get(enName) ?: throw OperationException("indicator $enName is not exist")
+                val metadataIds = convertMetaIds(indicator?.metadataIds)
+                // todo 优化此处查询逻辑
+                val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                    QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+                }
+                convertRecord(indicator, metadata)
             }
-            convertRecord(indicator, metadata)
-        } ?: listOf()
+        } else {
+            indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
+                val metadataIds = convertMetaIds(indicator.metadataIds)
+                val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                    QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+                }
+                convertRecord(indicator, metadata)
+            } ?: listOf()
+        }
     }
 
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
