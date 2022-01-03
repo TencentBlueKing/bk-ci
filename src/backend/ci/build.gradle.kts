@@ -134,7 +134,7 @@ subprojects {
             dependency("org.apache.httpcomponents:httpclient:${Versions.Httpclient}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("com.vmware:vijava:${Versions.Vmware}")
-            dependency("org.bouncycastle:bcprov-jdk16:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.commons:commons-compress:${Versions.Compress}")
             dependency("org.reflections:reflections:${Versions.Reflections}")

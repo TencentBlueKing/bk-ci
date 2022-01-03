@@ -36,7 +36,7 @@ dependencies {
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
+    api("org.bouncycastle:bcprov-jdk15on")
     compile("com.github.fge:json-schema-validator") {
         exclude(group = "javax.mail", module = "mailapi")
         exclude(group = "com.google.guava", module = "guava")
