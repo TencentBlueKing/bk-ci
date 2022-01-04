@@ -27,40 +27,45 @@
 
 package com.tencent.devops.buildless.controller
 
-import com.tencent.devops.buildless.api.builds.BuildBuildLessResource
+import com.google.common.collect.HashMultimap
+import com.google.common.collect.Multimap
+import com.google.common.collect.Multimaps
+import com.tencent.devops.buildless.api.builds.BuildBuildLessMvcResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.web.context.request.async.DeferredResult
 
 @RestResource
-class BuildBuildLessResourceImpl @Autowired constructor(
-    private val buildlessTaskService: BuildLessTaskService
-) : BuildBuildLessResource {
+class BuildBuildLessMvcResourceImpl @Autowired constructor(
+    private val taskExecutor: ThreadPoolTaskExecutor,
+    private val buildLessTaskService: BuildLessTaskService
+) : BuildBuildLessMvcResource {
 
-    override fun claimBuildLessTask(containerId: String): BuildLessTask? {
-        var futureResult: Future<BuildLessTask?>? = null
-        return try {
-            futureResult = buildlessTaskService.claimBuildLessTask(containerId)
-            val result = futureResult.get(25, TimeUnit.SECONDS)
-            logger.info("****> container: $containerId claim task asyncResult: $result")
-            result
-        } catch (e: TimeoutException) {
-            logger.error("****> container: $containerId claim task future get timeout, return null.")
-            null
-        } catch (e: Exception) {
-            logger.error("****> container: $containerId claim task error.", e)
-            null
-        } finally {
-            futureResult?.cancel(true)
+    private val watchRequests: Multimap<String, DeferredResult<BuildLessTask?>> =
+        Multimaps.synchronizedSetMultimap(HashMultimap.create())
+
+    override fun claimBuildLessTask(containerId: String): DeferredResult<BuildLessTask?> {
+        logger.info("start test claim...")
+        val deferredResult = DeferredResult<BuildLessTask?>(25000L)
+        deferredResult.onCompletion {
+            logger.info("${Thread.currentThread().name} remove key $containerId")
+            watchRequests.remove(containerId, deferredResult)
         }
+
+        taskExecutor.submit {
+            buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
+        }
+
+        watchRequests.put(containerId, deferredResult)
+        logger.info("release test claim...")
+        return deferredResult
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildBuildLessResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BuildBuildLessMvcResourceImpl::class.java)
     }
 }

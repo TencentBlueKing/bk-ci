@@ -28,28 +28,21 @@
 package com.tencent.devops.buildless.api.builds
 
 import com.tencent.devops.buildless.pojo.BuildLessTask
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.context.request.async.DeferredResult
 import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
-@Path("/build/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildBuildLessResource {
+@RestController
+@RequestMapping("/build")
+interface BuildBuildLessMvcResource {
 
-    @ApiOperation("轮询任务")
-    @GET
-    @Path("/task/claim")
+    @GetMapping("/task/claim", produces = [org.springframework.http.MediaType.APPLICATION_JSON_VALUE])
     fun claimBuildLessTask(
         @ApiParam(value = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String
-    ): BuildLessTask?
+    ): DeferredResult<BuildLessTask?>
 }
