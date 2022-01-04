@@ -124,6 +124,7 @@ class ExperienceNotifyService @Autowired constructor(
         val platform = appNotifyMessageWithOperation.platform
         val appId = if (platform == "ANDROID") androidAppId else iosAppId
         val secretKey = if (platform == "ANDROID") androidSecretKey else iosSecretKey
+        logger.info("appId:  $appId ,secretKey:  $secretKey")
         val xingeApp = XingeApp.Builder()
             .appId(appId)
             .secretKey(secretKey)
