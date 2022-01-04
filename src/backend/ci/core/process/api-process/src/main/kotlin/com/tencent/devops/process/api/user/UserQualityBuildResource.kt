@@ -25,40 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceJinGangAppResource
-import com.tencent.devops.plugin.pojo.JinGangBugCount
-import com.tencent.devops.plugin.service.JinGangService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceJinGangAppResourceImpl @Autowired constructor(
-    private val jinGangService: JinGangService
-) : ServiceJinGangAppResource {
+@Api(tags = ["USER_QUALITY_BUILD"], description = "用户-构建红线")
+@Path("/user/quality/builds")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface UserQualityBuildResource {
 
-    override fun scanApp(
+    @ApiOperation("质量红线人工审核")
+    @POST
+    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
+    fun manualQualityGateReview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
         pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
         buildId: String,
-        buildNo: Int,
+        @ApiParam("步骤Id", required = true)
+        @PathParam("elementId")
         elementId: String,
-        file: String,
-        isCustom: Boolean,
-        runType: String
-    ): Result<String> {
-//        if (!jinGangService.checkLimit(projectId, pipelineId)) return Result("$projectId 超过了当天运行次数了")
-        return Result(jinGangService.scanApp(userId, projectId, pipelineId, buildId, buildNo, elementId, file, isCustom, runType))
-    }
-
-    override fun countBug(projectIds: Set<String>?): Result<Map<String, JinGangBugCount>> {
-        return Result(jinGangService.countBug(projectIds ?: setOf()))
-    }
-
-    override fun countRisk(projectIds: Set<String>?): Result<Map<String, Int>> {
-        return Result(jinGangService.countRisk(projectIds ?: setOf()))
-    }
+        @ApiParam("动作", required = true)
+        @PathParam("action")
+        action: ManualReviewAction
+    ): Result<Boolean>
 }

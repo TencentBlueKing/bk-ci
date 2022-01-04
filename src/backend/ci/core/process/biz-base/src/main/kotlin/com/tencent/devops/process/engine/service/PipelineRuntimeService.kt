@@ -702,7 +702,7 @@ class PipelineRuntimeService @Autowired constructor(
         var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
+            context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
@@ -813,7 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
                 // --- 第3层循环：Element遍历处理 ---
-                needUpdateStage = pipelineContainerService.prepareBuildContainerTasks(
+                pipelineContainerService.prepareBuildContainerTasks(
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
@@ -850,7 +850,7 @@ class PipelineRuntimeService @Autowired constructor(
             stage.resetBuildOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
-                if (needUpdateStage) {
+                if (context.needUpdateStage) {
                     run findHistoryStage@{
                         lastTimeBuildStageRecords.forEach {
                             if (it.stageId == stage.id!!) {
@@ -914,6 +914,20 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
+                    // 重试时启动参数只需要刷新执行次数
+                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+                        val retryCount = context.executeCount - 1
+                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                            param.value = retryCount
+                        } ?: run {
+                            list.add(BuildParameters(
+                                key = PIPELINE_RETRY_COUNT,
+                                value = retryCount
+                            ))
+                        }
+                        JsonUtil.toJson(list)
+                    }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
@@ -972,12 +986,12 @@ class PipelineRuntimeService @Autowired constructor(
                         channelCode = context.channelCode,
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams.plus(
-                            BuildParameters(
+                        buildParameters = currentBuildNo?.let { self ->
+                            originStartParams.plus(BuildParameters(
                                 key = BUILD_NO,
-                                value = currentBuildNo.toString()
-                            )
-                        ),
+                                value = self.toString()
+                            ))
+                        } ?: originStartParams,
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),

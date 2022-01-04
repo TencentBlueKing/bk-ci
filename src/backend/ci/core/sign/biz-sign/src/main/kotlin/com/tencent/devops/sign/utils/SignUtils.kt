@@ -31,7 +31,6 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.util.script.CommandLineUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -281,9 +280,11 @@ object SignUtils {
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
-        ZipUtil.zipDir(unzipDir, ipaPath)
-        val ipaFile = File(ipaPath)
-        return if (ipaFile.exists()) ipaFile else null
+        val cmd = "zip -r -X $ipaPath ."
+        logger.info("[unzipIpa] $cmd")
+        CommandLineUtils.execute(cmd, unzipDir, true)
+        val resultIpa = File(ipaPath)
+        return if (resultIpa.exists()) resultIpa else null
     }
 
     /**

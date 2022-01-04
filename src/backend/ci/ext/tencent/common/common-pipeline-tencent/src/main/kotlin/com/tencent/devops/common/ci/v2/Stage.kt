@@ -45,6 +45,9 @@ data class Stage(
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: List<Job>,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "check-in")
     @JsonProperty("check-in")
     val checkIn: StageCheck?,

@@ -37,6 +37,8 @@ data class Job(
     // val job: JobDetail,
     val id: String? = "",
     val name: String?,
+    @JsonProperty("resource-exclusive-declaration")
+    val resourceExclusiveDeclaration: ResourceExclusiveDeclaration? = null,
     @JsonProperty("runs-on")
     @ApiModelProperty(name = "runs-on")
     val runsOn: RunsOn = RunsOn(),
@@ -46,6 +48,9 @@ data class Job(
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,
@@ -85,13 +90,13 @@ data class ServiceWith(
 )
 
 data class Strategy(
-    val matrix: Any?,
+    val matrix: Any,
     @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
+    val fastKill: Boolean? = null,
     @ApiModelProperty(name = "max-parallel")
     @JsonProperty("max-parallel")
-    val maxParallel: String?
+    val maxParallel: Int? = null
 )
 
 data class RunsOn(
@@ -118,3 +123,11 @@ enum class JobRunsOnType(val type: String) {
     DEV_CLOUD("docker-on-devcloud"),
     LOCAL("local")
 }
+
+data class ResourceExclusiveDeclaration(
+    val label: String,
+    @JsonProperty("queue-length")
+    val queueLength: Int? = 0,
+    @JsonProperty("timeout-minutes")
+    val timeoutMinutes: Int? = 10
+)

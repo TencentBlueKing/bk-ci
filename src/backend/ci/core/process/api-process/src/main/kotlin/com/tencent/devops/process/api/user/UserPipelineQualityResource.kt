@@ -30,61 +30,58 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.PipelineTemplate
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.PipelineListRequest
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.Pipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_TEMPLATE"], description = "用户-流水线-模板资源")
-// @Path("/user/templatePipelines")
-@Path("/user/template/pipelines")
+@Api(tags = ["USER_QUALITY_PIPELINE"], description = "用户-质量红线-流水线资源")
+@Path("/user/pipeline/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPipelineTemplateResource {
+interface UserPipelineQualityResource {
 
-    @ApiOperation("列举流水线模板")
+    @ApiOperation("获取单个流水线信息接口")
     @GET
-    @Path("/projects/{projectCode}")
-    fun listTemplate(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String
-    ): Result<Map<String, PipelineTemplate>>
-
-    @ApiOperation("质量红线-获取模版列表")
-    @GET
-    @Path("/projects/{projectId}/listQualityViewTemplates")
-    fun listQualityViewTemplates(
+    @Path("/project/{projectId}/pipeline/{pipelineId}/getPipelineInfo")
+    fun getPipelineInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模版类型", required = false)
-        @QueryParam("templateType")
-        templateType: TemplateType?,
-        @ApiParam("是否已关联到store", required = false)
-        @QueryParam("storeFlag")
-        storeFlag: Boolean?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("模板名称关键字", required = false)
-        @QueryParam("keywords")
-        keywords: String?
-    ): Result<TemplateListModel>
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("渠道号", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo>
+
+    @ApiOperation("根据id列出流水线")
+    @POST
+    @Path("/{projectId}/")
+    fun list(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("原子类型", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        request: PipelineListRequest?
+    ): Result<List<Pipeline>>
 }

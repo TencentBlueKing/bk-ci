@@ -74,7 +74,7 @@ data class Stage(
         }
         checkIn?.fixReviewGroups(init == true)
         checkOut?.fixReviewGroups(init == true)
-        if (stageControlOption?.manualTrigger == true) {
+        if (stageControlOption?.manualTrigger == true && checkIn == null) {
             checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }
     }

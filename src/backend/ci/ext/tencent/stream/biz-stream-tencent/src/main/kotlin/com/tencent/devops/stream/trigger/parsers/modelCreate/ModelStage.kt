@@ -53,6 +53,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -76,13 +77,27 @@ class ModelStage @Autowired constructor(
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
+        changeSet: Set<String>? = null,
         pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = modelElement.makeElementList(job, gitBasicSetting, event)
+            val elementList = modelElement.makeElementList(
+                job = job,
+                gitBasicSetting = gitBasicSetting,
+                changeSet = changeSet,
+                event = event
+            )
+
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                modelContainer.addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
+                modelContainer.addNormalContainer(
+                    job = job,
+                    elementList = elementList,
+                    containerList = containerList,
+                    jobIndex = jobIndex,
+                    changeSet = changeSet,
+                    finalStage = finalStage
+                )
             } else {
                 modelContainer.addVmBuildContainer(
                     job = job,
@@ -91,6 +106,7 @@ class ModelStage @Autowired constructor(
                     jobIndex = jobIndex,
                     projectCode = gitBasicSetting.projectCode!!,
                     finalStage = finalStage,
+                    changeSet = changeSet,
                     resources = resources
                 )
             }
@@ -104,6 +120,8 @@ class ModelStage @Autowired constructor(
                 customCondition = stage.ifField.toString()
             )
         }
+        stageControlOption =
+            stageControlOption.copy(enable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet))
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
@@ -267,7 +285,7 @@ class ModelStage @Autowired constructor(
                 )
             )
         }
-        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList creat gates")
+        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList create gates")
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,

@@ -73,6 +73,7 @@ class ModelCreate @Autowired constructor(
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
         pipeline: GitProjectPipeline,
+        changeSet: Set<String>? = null,
         webhookParams: Map<String, String> = mapOf()
     ): Model {
         // 流水线插件标签设置
@@ -125,15 +126,18 @@ class ModelCreate @Autowired constructor(
 
         // 其他的stage
         yaml.stages.forEach { stage ->
-            stageList.add(modelStage.createStage(
-                stage = stage,
-                event = event,
-                gitBasicSetting = gitBasicSetting,
-                // stream的stage标号从1开始，后续都加1
-                stageIndex = stageIndex++,
-                resources = yaml.resource,
-                pipeline = pipeline
-            ))
+            stageList.add(
+                modelStage.createStage(
+                    stage = stage,
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    // stream的stage标号从1开始，后续都加1
+                    stageIndex = stageIndex++,
+                    resources = yaml.resource,
+                    changeSet = changeSet,
+                    pipeline = pipeline
+                )
+            )
         }
         // 添加finally
         if (!yaml.finally.isNullOrEmpty()) {
@@ -188,9 +192,9 @@ class ModelCreate @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                        projectId = gitBasicSetting.projectCode!!,
-                        name = it
-                    )
+                            projectId = gitBasicSetting.projectCode!!,
+                            name = it
+                        )
                     )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
