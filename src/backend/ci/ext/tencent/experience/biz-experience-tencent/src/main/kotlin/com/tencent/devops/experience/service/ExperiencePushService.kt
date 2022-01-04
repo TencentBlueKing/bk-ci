@@ -118,14 +118,7 @@ class ExperiencePushService @Autowired constructor(
                 platform = platform
             )
         val appNotifyMessage =
-            createAppNotifyMessage(
-                messageId,
-                userTokenRecord.token,
-                content,
-                title,
-                platform,
-                userId
-            )
+            createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId)
         // 发送MQ消息
         sendAppNotify(appNotifyMessage)
         return Result(true)

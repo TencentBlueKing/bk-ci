@@ -55,8 +55,7 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         url: String
     ): Result<Boolean> {
         checkParam(userId, title, content, url)
-        experiencePushService.pushMessage(userId, title, content, url)
-        return Result(true)
+        return experiencePushService.pushMessage(userId, title, content, url)
     }
 
     fun checkParam(
