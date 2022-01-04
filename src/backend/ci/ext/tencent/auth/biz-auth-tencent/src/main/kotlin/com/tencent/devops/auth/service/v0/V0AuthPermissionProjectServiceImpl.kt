@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class V0AuthPermissionProjectServiceImpl @Autowired constructor(
@@ -73,6 +74,14 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        return authProjectApi.checkProjectManager(
+            userId = userId,
+            projectCode = projectCode,
+            serviceCode = authServiceCode
+        )
+    }
+
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
         return true
     }
@@ -83,5 +92,9 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
             projectCode = projectCode,
             projectId = projectId
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(V0AuthPermissionProjectServiceImpl::class.java)
     }
 }
