@@ -58,12 +58,16 @@ class ExperienceNotifyService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
+
     @Value("\${app.notify.appid:#{null}}")
     private var appId: String? = null
+
     @Value("\${app.notify.secretkey:#{null}}")
     private var secretKey: String? = null
+
     @Value("\${app.notify.domainurl:#{null}}")
     private var domainUrl: String? = null
+
     // 发送MQ
     fun sendMqMsg(message: AppNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_APP, message)
@@ -96,7 +100,7 @@ class ExperienceNotifyService @Autowired constructor(
             return false
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
-        logger.info("isSuccess:  $isSuccess" )
+        logger.info("isSuccess:  $isSuccess")
         when {
             isSuccess -> experiencePushDao.updatePushHistoryStatus(
                 dslContext = dslContext,
@@ -122,7 +126,7 @@ class ExperienceNotifyService @Autowired constructor(
         val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
         val ret = xingeApp.pushApp(pushAppRequest)
         logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
-        return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
+        return xingeApp.pushApp(pushAppRequest).get("ret_code") == 0
     }
 
     fun createPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
