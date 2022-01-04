@@ -25,21 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-redis"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
+package com.tencent.devops.process.pojo
 
-//    api(group="org.json", name="json", version="20180130"
-}
+data class PipelineListRequest(
+    val pipelineId: Collection<String>,
+    val templateId: Collection<String>
+)
