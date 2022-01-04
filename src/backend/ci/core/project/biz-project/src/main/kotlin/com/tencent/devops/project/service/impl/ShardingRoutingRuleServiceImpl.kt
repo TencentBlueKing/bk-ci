@@ -29,13 +29,9 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
-import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleCreateEvent
-import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleDeleteEvent
-import com.tencent.devops.common.event.pojo.project.ShardingRoutingRuleUpdateEvent
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
+import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +41,6 @@ import org.springframework.stereotype.Service
 class ShardingRoutingRuleServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher,
     private val redisOperation: RedisOperation
 ) : ShardingRoutingRuleService {
 
@@ -71,10 +66,6 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             value = shardingRoutingRule.routingRule,
             expired = false
         )
-        // 发送规则创建事件消息
-        shardingRoutingRuleDispatcher.dispatch(
-            ShardingRoutingRuleCreateEvent(shardingRoutingRule)
-        )
         return true
     }
 
@@ -87,10 +78,6 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             // 删除redis中规则信息
             redisOperation.delete(getShardingRoutingRuleKey(routingName))
             val routingRule = shardingRoutingRuleRecord.routingRule
-            // 发送规则删除事件消息
-            shardingRoutingRuleDispatcher.dispatch(
-                ShardingRoutingRuleDeleteEvent(ShardingRoutingRule(routingName, routingRule))
-            )
         }
         return true
     }
@@ -120,10 +107,6 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             key = getShardingRoutingRuleKey(routingName),
             value = shardingRoutingRule.routingRule,
             expired = false
-        )
-        // 发送规则更新事件消息
-        shardingRoutingRuleDispatcher.dispatch(
-            ShardingRoutingRuleUpdateEvent(shardingRoutingRule)
         )
         return true
     }

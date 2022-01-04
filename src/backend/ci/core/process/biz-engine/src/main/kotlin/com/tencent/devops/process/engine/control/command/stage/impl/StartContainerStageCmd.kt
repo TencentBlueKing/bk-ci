@@ -170,7 +170,7 @@ class StartContainerStageCmd(
             }
         }
 
-        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后是成功
+        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED
     }
 

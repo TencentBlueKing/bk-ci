@@ -25,13 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.project
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.api.pojo.ShardingRoutingRule
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-
-@Event(exchange = MQ.EXCHANGE_SHARDING_ROUTING_RULE_UPDATE_FANOUT)
-data class ShardingRoutingRuleUpdateEvent(
-    override val shardingRoutingRule: ShardingRoutingRule
-) : ShardingRoutingRuleEvent(shardingRoutingRule)
+data class PipelineListRequest(
+    val pipelineId: Collection<String>,
+    val templateId: Collection<String>
+)
