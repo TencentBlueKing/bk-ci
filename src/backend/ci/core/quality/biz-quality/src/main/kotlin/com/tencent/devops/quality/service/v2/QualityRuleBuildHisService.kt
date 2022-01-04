@@ -184,41 +184,21 @@ class QualityRuleBuildHisService constructor(
 
         logger.info("start to check rule op list in his: ${allRule.size}")
 
-        val allIndicatorIds = mutableSetOf<Long>()
-        allRule.forEach {
-            if (it.indicatorIds.isNullOrBlank()) {
-                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error ${it.indicatorIds}")
-            }
-            allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
-        }
-
-        logger.info("start to check rule indicator: ${allIndicatorIds.firstOrNull()}, ${allIndicatorIds.size}")
-        val qualityIndicatorMap = qualityIndicatorService.serviceList(allIndicatorIds).map {
-            HashUtil.decodeIdToLong(it.hashId).toString() to it
-        }.toMap()
         return allRule.map {
+            val indicatorIdList = it.indicatorIds.split(",").map { id -> id.toLong() }
             val thresholdList = it.indicatorThresholds.split(",")
             val opList = it.indicatorOperations.split(",")
-            val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
-                id.toLong() to Pair(opList[index], thresholdList[index])
-            }.toMap()
+            val qualityIndicatorList = qualityIndicatorService.serviceList(indicatorIdList).toMutableList()
+            logger.info("QUALITY|get qualityIndicator: ${qualityIndicatorList.size}")
 
             val rule = QualityRule(
                 hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map INDICATOR@{ indicatorId ->
-                    val indicator = qualityIndicatorMap[indicatorId]
-                        ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
-
-                    val indicatorCopy = indicator.clone()
-
-                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
-
-                    indicatorCopy.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
-                    indicatorCopy.threshold = item?.second ?: indicator.threshold
-
-                    return@INDICATOR indicatorCopy
+                indicators = qualityIndicatorList.mapIndexed { index, indicator ->
+                    indicator.operation = QualityOperation.valueOf(opList[index])
+                    indicator.threshold = thresholdList[index]
+                    indicator
                 },
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
