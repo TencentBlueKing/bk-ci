@@ -96,6 +96,7 @@ class ExperienceNotifyService @Autowired constructor(
             return false
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
+        logger.info("isSuccess:  $isSuccess" )
         when {
             isSuccess -> experiencePushDao.updatePushHistoryStatus(
                 dslContext = dslContext,
