@@ -26,6 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:process:biz-base-sample"))
+    api(project(":core:process:biz-base"))
     api(project(":core:process:biz-engine"))
 }

@@ -25,12 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -77,4 +78,19 @@ interface UserPipelineTemplateResource {
         @QueryParam("keywords")
         keywords: String?
     ): Result<TemplateListModel>
+
+    @ApiOperation("获取单个流水线信息接口")
+    @GET
+    @Path("/project/{projectId}/template/{templateId}/getTemplateInfo")
+    fun getTemplateInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String
+    ): Result<TemplateModelDetail>
 }

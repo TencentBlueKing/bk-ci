@@ -90,16 +90,6 @@ class UpdateStateContainerCmdFinally(
                     )
                 )
             }
-        } else if (commandContext.container.matrixGroupFlag == true &&
-            commandContext.container.status.isRunning()) {
-            // 如果是构建矩阵的刷新状态且运行中则重放一个事件保证执行
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(
-                    actionType = ActionType.REFRESH,
-                    source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
-                )
-            )
         }
     }
 

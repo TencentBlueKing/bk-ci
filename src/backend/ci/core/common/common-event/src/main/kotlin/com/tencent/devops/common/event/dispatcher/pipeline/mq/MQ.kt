@@ -253,14 +253,6 @@ object MQ {
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 
-    // 蓝盾分库路由规则
-    const val EXCHANGE_SHARDING_ROUTING_RULE_CREATE_FANOUT = "e.sharding.routing.rule.create.exchange.fanout"
-    const val EXCHANGE_SHARDING_ROUTING_RULE_UPDATE_FANOUT = "e.sharding.routing.rule.update.exchange.fanout"
-    const val EXCHANGE_SHARDING_ROUTING_RULE_DELETE_FANOUT = "e.sharding.routing.rule.delete.exchange.fanout"
-    const val QUEUE_SHARDING_ROUTING_RULE_CREATE_EVENT = "q.sharding.routing.rule.create.queue"
-    const val QUEUE_SHARDING_ROUTING_RULE_UPDATE_EVENT = "q.sharding.routing.rule.update.queue"
-    const val QUEUE_SHARDING_ROUTING_RULE_DELETE_EVENT = "q.sharding.routing.rule.delete.queue"
-
     // webhook锁
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
     const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
