@@ -37,7 +37,6 @@
             }
         },
         created () {
-            console.log(this.atomPropsModel, 'ss')
             if (this.element.eventType === 'MERGE_REQUEST') {
                 this.atomPropsModel.webhookQueue.hidden = false
             } else {
