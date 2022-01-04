@@ -41,12 +41,11 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult> {
-        streamTriggerBuildReq.copy(objectKind = OBJECT_KIND_OPENAPI)
         return client.get(ServiceStreamTriggerResource::class).triggerStartup(
             userId = userId,
             projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
-            streamTriggerBuildReq = streamTriggerBuildReq
+            streamTriggerBuildReq = streamTriggerBuildReq.copy(objectKind = OBJECT_KIND_OPENAPI)
         )
     }
 
