@@ -25,46 +25,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template
+package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.api.user.UserQualityBuildResource
+import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService
-) : UserPipelineTemplateResource {
+class UserQualityBuildResourceImpl @Autowired constructor(
+    private val pipelineBuildQualityService: PipelineBuildQualityService
+) : UserQualityBuildResource {
 
-    override fun listQualityViewTemplates(
+    override fun manualQualityGateReview(
         userId: String,
         projectId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        keywords: String?
-    ): Result<TemplateListModel> {
-        return Result(
-            templateFacadeService.listTemplate(
-                projectId = projectId,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords
-            )
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        action: ManualReviewAction
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (elementId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        pipelineBuildQualityService.buildManualQualityGateReview(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            action = action,
+            channelCode = ChannelCode.BS
         )
+        return Result(true)
     }
 
-    override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId, userId = userId, templateId = templateId, version = null
-        ))
+    private fun checkParam(userId: String, projectId: String, pipelineId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
     }
 }
