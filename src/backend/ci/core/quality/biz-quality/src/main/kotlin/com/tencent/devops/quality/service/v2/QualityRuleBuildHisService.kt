@@ -188,7 +188,7 @@ class QualityRuleBuildHisService constructor(
             val indicatorIdList = it.indicatorIds.split(",").map { id -> id.toLong() }
             val thresholdList = it.indicatorThresholds.split(",")
             val opList = it.indicatorOperations.split(",")
-            val qualityIndicatorList = qualityIndicatorService.serviceList(indicatorIdList).toMutableList()
+            val qualityIndicatorList = qualityIndicatorService.serviceListALL(indicatorIdList).toMutableList()
             logger.info("QUALITY|get qualityIndicator: ${qualityIndicatorList.size}")
 
             val rule = QualityRule(
