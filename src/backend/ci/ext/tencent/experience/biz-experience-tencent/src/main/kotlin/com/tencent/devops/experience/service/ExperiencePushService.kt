@@ -113,6 +113,7 @@ class ExperiencePushService @Autowired constructor(
         val appNotifyMessage = createAppNotifyMessage(messageId, token, content, title, userId)
         // 发送MQ消息
         sendAppNotify(appNotifyMessage)
+        // todo 返回值思考
         return Result(true)
     }
 

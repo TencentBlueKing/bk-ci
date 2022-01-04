@@ -57,10 +57,13 @@ class ExperienceNotifyService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
+
+    // 发送MQ
     fun sendMqMsg(message: AppNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_APP, message)
     }
 
+    // 消费MQ消息，然后发送信鸽，修改推送信息状态
     @RabbitListener(
         containerFactory = "rabbitListenerContainerFactory",
         bindings = [
@@ -70,9 +73,9 @@ class ExperienceNotifyService @Autowired constructor(
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
             )]
     )
-    fun onReceiveAppNotifyMessage(AppNotifyMessageWithOperation: AppNotifyMessageWithOperation) {
+    fun onReceiveAppNotifyMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation) {
         try {
-            sendMessage(AppNotifyMessageWithOperation)
+            sendMessage(appNotifyMessageWithOperation)
         } catch (ignored: Exception) {
             logger.warn("Failed process received Wework message", ignored)
         }
@@ -97,35 +100,40 @@ class ExperienceNotifyService @Autowired constructor(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,
                 status = PushStatus.FAILURE.status
-                )
+            )
         }
         return isSuccess
     }
 
-    fun sendXinge(AppNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
+    fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
         val xingeApp = XingeApp.Builder()
             // todo 一定要把secretKey、appId这些敏感信息放在配置文件中！一定不要发布git
             .appId("appId")
             .secretKey("secretKey")
             .domainUrl("https://api.tpns.tencent.com/")
             .build()
-        logger.info("AppNotifyMessageWithOperation.token:  $AppNotifyMessageWithOperation")
+        logger.info("AppNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
+        val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
+        val ret = xingeApp.pushApp(pushAppRequest)
+        logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
+        return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
+    }
+
+    fun createPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         // 单设备推送
         pushAppRequest.audience_type = AudienceType.token
         pushAppRequest.message_type = MessageType.notify
         val message = Message()
-        message.title = AppNotifyMessageWithOperation.title
-        message.content = AppNotifyMessageWithOperation.body
+        message.title = appNotifyMessageWithOperation.title
+        message.content = appNotifyMessageWithOperation.body
         pushAppRequest.message = message
         val messageAndroid = MessageAndroid()
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
-        tokenList.add(AppNotifyMessageWithOperation.token)
+        tokenList.add(appNotifyMessageWithOperation.token)
         logger.info("tokenList.token:  $tokenList")
         pushAppRequest.token_list = tokenList
-        val ret = xingeApp.pushApp(pushAppRequest)
-        logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
-        return xingeApp.pushApp(pushAppRequest).get("ret_code") == "0"
+        return pushAppRequest
     }
 }

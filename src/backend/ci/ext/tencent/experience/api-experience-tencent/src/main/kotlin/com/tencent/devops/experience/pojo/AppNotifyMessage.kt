@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("蓝盾APP消息类型")
 
 open class AppNotifyMessage {
-    // todo初始值为0？
+    // todo 初始值为0？
     @ApiModelProperty("消息id")
     var messageId: Long = 0
 
