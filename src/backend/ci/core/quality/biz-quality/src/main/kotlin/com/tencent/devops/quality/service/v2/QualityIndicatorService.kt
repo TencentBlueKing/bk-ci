@@ -157,6 +157,18 @@ class QualityIndicatorService @Autowired constructor(
         } ?: listOf()
     }
 
+    fun serviceListALL(indicatorIds: Collection<Long>): List<QualityIndicator> {
+        val indicatorTMap = indicatorDao.listByIds(dslContext, indicatorIds)?.map { it.id to it }?.toMap()
+        return indicatorIds.map { id ->
+            val indicator = indicatorTMap?.get(id) ?: throw OperationException("indicator id $id is not exist")
+            val metadataIds = convertMetaIds(indicator.metadataIds)
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
+            convertRecord(indicator, metadata)
+        }
+    }
+
     fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
         return if (enNameSet.isNotEmpty()) {
             val indicatorTMap = indicatorDao.listByElementType(
