@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwSignResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwSignResourceV3 {
+
     override fun getHistorySign(
         appCode: String?,
         apigwType: String?,
