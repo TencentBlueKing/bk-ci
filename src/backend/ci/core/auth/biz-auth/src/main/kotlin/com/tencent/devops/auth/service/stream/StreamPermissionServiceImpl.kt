@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class StreamPermissionServiceImpl @Autowired constructor(
-    val streamPermissionService: StreamPermissionService
+    val IStreamPermissionValidateService: IStreamPermissionValidateService
 ) : PermissionService {
     override fun validateUserActionPermission(
         userId: String,
@@ -51,7 +51,7 @@ class StreamPermissionServiceImpl @Autowired constructor(
         resourceType: String?
     ): Boolean {
         // 如果有特殊权限,以特殊权限的校验结果为准
-        val extPermission = streamPermissionService.extPermission(
+        val extPermission = IStreamPermissionValidateService.extPermission(
             projectCode = projectCode,
             userId = userId,
             action = AuthPermission.get(action),
@@ -60,8 +60,8 @@ class StreamPermissionServiceImpl @Autowired constructor(
         if (extPermission) {
             return extPermission
         }
-        val projectType = streamPermissionService.isPublicProject(projectCode)
-        val projectMemberCheck = streamPermissionService.isProjectMember(projectCode, userId)
+        val projectType = IStreamPermissionValidateService.isPublicProject(projectCode)
+        val projectMemberCheck = IStreamPermissionValidateService.isProjectMember(projectCode, userId)
         val actionType = ActionTypeUtils.getActionType(action)
         logger.info("validete $userId|$projectCode|$action|$resourceType|$projectType|$projectMemberCheck")
         if (action == null) {

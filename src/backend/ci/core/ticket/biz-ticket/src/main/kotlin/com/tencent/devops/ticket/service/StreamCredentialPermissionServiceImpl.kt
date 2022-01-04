@@ -47,7 +47,7 @@ class StreamCredentialPermissionServiceImpl @Autowired constructor(
     private val credentialDao: CredentialDao,
     private val dslContext: DSLContext,
     val tokenService: ClientTokenService
-) : CredentialPermissionService{
+) : CredentialPermissionService {
     override fun validatePermission(
         userId: String,
         projectId: String,

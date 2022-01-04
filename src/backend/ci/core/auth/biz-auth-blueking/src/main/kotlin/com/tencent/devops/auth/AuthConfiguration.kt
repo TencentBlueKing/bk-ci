@@ -40,14 +40,14 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.BkPermissionProjectService
 import com.tencent.devops.auth.service.BkPermissionService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.SimpleStreamPermissionImpl
+import com.tencent.devops.auth.service.SimpleIStreamPermissionValidateImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionService
+import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
@@ -95,8 +95,8 @@ class AuthConfiguration {
     fun permissionProjectService() = SimpleAuthPermissionProjectService()
 
     @Bean
-    @ConditionalOnMissingBean(StreamPermissionService::class)
-    fun streamPermissionService() = SimpleStreamPermissionImpl()
+    @ConditionalOnMissingBean(IStreamPermissionValidateService::class)
+    fun streamPermissionService() = SimpleIStreamPermissionValidateImpl()
 
     @Bean
     @ConditionalOnMissingBean
@@ -155,12 +155,12 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
     fun streamPermissionService(
-        streamPermissionService: StreamPermissionService
-    ) = StreamPermissionServiceImpl(streamPermissionService)
+        IStreamPermissionValidateService: IStreamPermissionValidateService
+    ) = StreamPermissionServiceImpl(IStreamPermissionValidateService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
     fun streamProjectPermissionService(
-        streamPermissionService: StreamPermissionService
-    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+        IStreamPermissionValidateService: IStreamPermissionValidateService
+    ) = StreamPermissionProjectServiceImpl(IStreamPermissionValidateService)
 }
