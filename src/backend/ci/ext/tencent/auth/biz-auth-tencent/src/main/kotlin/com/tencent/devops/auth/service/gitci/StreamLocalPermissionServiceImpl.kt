@@ -54,8 +54,8 @@ class StreamLocalPermissionServiceImpl @Autowired constructor(
             logger.warn("$userId is not gitCI user")
             return Pair(first = false, second = false)
         }
-        return if (checkProjectUser(gitUserId, gitProjectId)) {
-            if (checkDeveloper(gitUserId, gitProjectId)) {
+        return if (checkProjectUser(userId = userId, gitProjectId = gitProjectId)) {
+            if (checkDeveloper(gitUserId = gitUserId, gitProjectId = gitProjectId)) {
                 Pair(first = true, second = true)
             } else {
                 Pair(first = true, second = false)
