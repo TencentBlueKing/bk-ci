@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("蓝盾APP消息类型")
 
 open class AppNotifyMessage {
-    // todo 初始值为0？
+
     @ApiModelProperty("消息id")
     var messageId: Long = 0
 
@@ -48,10 +48,13 @@ open class AppNotifyMessage {
 
     @ApiModelProperty("通知标题")
     var title: String = ""
+
+    @ApiModelProperty("平台")
+    var platform: String = ""
     override fun toString(): String {
         return String.format(
-            "id (%s), receiver(%s), token(%s) title(%s), body(%s) ",
-            messageId, receiver, token, title, body
+            "id (%s), receiver(%s), token(%s), platform(%s) title(%s), body(%s) ",
+            messageId, receiver, token, platform, title, body
         )
     }
 }

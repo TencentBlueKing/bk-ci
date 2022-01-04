@@ -47,13 +47,16 @@ import javax.ws.rs.POST
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperiencePushResource {
-    @ApiOperation("绑定用户设备")
+    @ApiOperation("绑定用户设备TOKEN")
     @Path("/bindDeviceToken")
     @POST
     fun bindDeviceToken(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: String,
         @ApiParam("设备TOKEN", required = true)
         @QueryParam("token")
         token: String
@@ -66,9 +69,6 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
-        @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: String,
         @ApiParam("消息标题", required = true)
         @QueryParam("title")
         title: String,

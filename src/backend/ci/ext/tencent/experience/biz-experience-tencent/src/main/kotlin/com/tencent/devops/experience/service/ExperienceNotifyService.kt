@@ -59,11 +59,17 @@ class ExperienceNotifyService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
 
-    @Value("\${app.notify.appid:#{null}}")
-    private var appId: String? = null
+    @Value("\${android.notify.appid:#{null}}")
+    private var androidAppId: String? = null
 
-    @Value("\${app.notify.secretkey:#{null}}")
-    private var secretKey: String? = null
+    @Value("\${android.notify.secretkey:#{null}}")
+    private var androidSecretKey: String? = null
+
+    @Value("\${ios.notify.appid:#{null}}")
+    private var iosAppId: String? = null
+
+    @Value("\${ios.notify.secretkey:#{null}}")
+    private var iosSecretKey: String? = null
 
     @Value("\${app.notify.domainurl:#{null}}")
     private var domainUrl: String? = null
@@ -91,16 +97,15 @@ class ExperienceNotifyService @Autowired constructor(
         }
     }
 
-    fun sendMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation?): Boolean {
+    fun sendMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation?) {
         if (appNotifyMessageWithOperation == null) {
             logger.warn(
                 "appNotifyMessageWithOperation is " +
                         "empty after being processed: $appNotifyMessageWithOperation"
             )
-            return false
+            return
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
-        logger.info("isSuccess:  $isSuccess")
         when {
             isSuccess -> experiencePushDao.updatePushHistoryStatus(
                 dslContext = dslContext,
@@ -113,21 +118,23 @@ class ExperienceNotifyService @Autowired constructor(
                 status = PushStatus.FAILURE.status
             )
         }
-        return isSuccess
     }
 
     fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
+        val platform = appNotifyMessageWithOperation.platform
+        val appId = if (platform == "ANDROID") androidAppId else iosAppId
+        val secretKey = if (platform == "ANDROID") androidSecretKey else iosSecretKey
         val xingeApp = XingeApp.Builder()
             .appId(appId)
             .secretKey(secretKey)
             .domainUrl(domainUrl)
             .build()
-        logger.info("AppNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
+        logger.info("appNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
         val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
         val ret = xingeApp.pushApp(pushAppRequest)
         val ret_code = ret.get("ret_code")
         logger.info("ret_code:  $ret_code ,err_msg:  ${ret.get("err_msg")}")
-        // ret_code 为0，则表示发送成功
+        // ret_code为0，则表示发送成功
         return ret_code == 0
     }
 

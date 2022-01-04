@@ -50,13 +50,15 @@ class ExperiencePushDao {
     fun updateUserToken(
         dslContext: DSLContext,
         userId: String,
-        token: String
+        token: String,
+        platform: String
     ): Boolean {
         val now = LocalDateTime.now()
         return with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
             dslContext.update(this)
                 .set(TOKEN, token)
                 .set(UPDATE_TIME, now)
+                .set(PLATFORM,platform)
                 .where(USER_ID.eq(userId))
                 .execute() == 1
         }
@@ -65,7 +67,8 @@ class ExperiencePushDao {
     fun createUserToken(
         dslContext: DSLContext,
         userId: String,
-        token: String
+        token: String,
+        platform: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
@@ -73,11 +76,13 @@ class ExperiencePushDao {
                 this,
                 USER_ID,
                 TOKEN,
+                PLATFORM,
                 UPDATE_TIME,
                 CREATE_TIME
             ).values(
                 userId,
                 token,
+                platform,
                 now,
                 now
             ).returning(ID)
@@ -89,6 +94,7 @@ class ExperiencePushDao {
         dslContext: DSLContext,
         status: Int,
         receivers: String,
+        title: String,
         content: String,
         url: String,
         platform: String,
@@ -102,6 +108,7 @@ class ExperiencePushDao {
                 CONTENT,
                 URL,
                 PLATFORM,
+                TITLE,
                 CREATED_TIME,
                 UPDATED_TIME
             ).values(
@@ -110,6 +117,7 @@ class ExperiencePushDao {
                 content,
                 url,
                 platform,
+                title,
                 now,
                 now
             ).returning(ID)

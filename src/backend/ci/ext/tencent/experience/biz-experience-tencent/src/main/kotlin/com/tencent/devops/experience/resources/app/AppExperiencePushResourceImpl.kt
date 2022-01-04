@@ -39,33 +39,48 @@ class AppExperiencePushResourceImpl @Autowired constructor(
     private val experiencePushService: ExperiencePushService,
 ) : AppExperiencePushResource {
 
-    override fun bindDeviceToken(userId: String, token: String): Result<Boolean> {
-        checkParam(userId)
-        if (token.isBlank()) {
-            throw ParamBlankException("Invalid token")
-        }
-        return experiencePushService.bindDeviceToken(userId, token)
+    override fun bindDeviceToken(
+        userId: String,
+        platform: String,
+        token: String
+    ): Result<Boolean> {
+        checkParam(userId, token, platform)
+        return experiencePushService.bindDeviceToken(userId, platform, token)
     }
 
     override fun pushMessage(
         userId: String,
-        platform: String,
         title: String,
         content: String,
         url: String
     ): Result<Boolean> {
-        checkParam(userId, platform, title, content, url)
-        experiencePushService.pushMessage(userId, title, content, url, platform)
+        checkParam(userId, title, content, url)
+        experiencePushService.pushMessage(userId, title, content, url)
         return Result(true)
     }
 
-    fun checkParam(userId: String) {
+    fun checkParam(
+        userId: String,
+        token: String,
+        platform: String
+    ) {
+        if (token.isBlank()) {
+            throw ParamBlankException("Invalid token")
+        }
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
+        if (platform.isBlank()) {
+            throw ParamBlankException("Invalid platform")
+        }
     }
 
-    fun checkParam(userId: String, title: String, content: String, url: String, platform: String) {
+    fun checkParam(
+        userId: String,
+        title: String,
+        content: String,
+        url: String
+    ) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -77,9 +92,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
         if (url.isBlank()) {
             throw ParamBlankException("Invalid url")
-        }
-        if (platform.isBlank()) {
-            throw ParamBlankException("Invalid platform")
         }
     }
 }
