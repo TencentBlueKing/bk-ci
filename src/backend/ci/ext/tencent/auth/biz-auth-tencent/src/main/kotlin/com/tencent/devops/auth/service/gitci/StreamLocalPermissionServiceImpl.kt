@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.stream.StreamPermissionService
+import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.GitCIUtils
@@ -41,7 +41,7 @@ class StreamLocalPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
     val projectInfoService: GitCiProjectInfoService
-): StreamPermissionService {
+): IStreamPermissionValidateService {
     override fun isPublicProject(projectCode: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         return projectInfoService.checkProjectPublic(gitProjectId)
