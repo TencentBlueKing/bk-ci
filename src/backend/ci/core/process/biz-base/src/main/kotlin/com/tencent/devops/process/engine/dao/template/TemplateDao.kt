@@ -453,7 +453,10 @@ class TemplateDao {
         if (storeFlag != null) {
             conditions.add(a.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME)).from(a).groupBy(a.ID)
+        val t = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(a)
+            .where(conditions)
+            .groupBy(a.ID)
 
         val baseStep = dslContext.select(
             a.ID.`as`("templateId"),
@@ -482,7 +485,6 @@ class TemplateDao {
                     )
                 )
             )
-            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
 
         return if (null != page && null != pageSize) {
@@ -512,7 +514,10 @@ class TemplateDao {
         templateList: List<String>
     ): Result<out Record> {
         val a = TTemplate.T_TEMPLATE.`as`("a")
-        val b = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME)).from(a).groupBy(a.ID)
+        val b = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(a)
+            .where(a.ID.`in`(templateList))
+            .groupBy(a.ID)
 
         return dslContext.select(
             a.VERSION,
