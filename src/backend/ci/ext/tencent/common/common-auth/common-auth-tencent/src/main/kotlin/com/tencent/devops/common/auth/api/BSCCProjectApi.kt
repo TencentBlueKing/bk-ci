@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component
 class BSCCProjectApi @Autowired constructor(
     private val bkCCProperties: BkCCProperties,
     private val objectMapper: ObjectMapper,
-    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val bsAuthTokenApi: AuthTokenApi,
     private val bsPipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
 

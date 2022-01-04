@@ -25,33 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.scm.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-/**
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
- */
-data class Stage(
-    val name: String?,
-    val id: String?,
-    val label: List<String> = emptyList(),
-    @ApiModelProperty(name = "if")
-    @JsonProperty("if")
-    val ifField: String? = null,
-    @ApiModelProperty(name = "fast-kill")
-    @JsonProperty("fast-kill")
-    val fastKill: Boolean? = false,
-    val jobs: List<Job>,
-    @ApiModelProperty(name = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "check-in")
-    @JsonProperty("check-in")
-    val checkIn: StageCheck?,
-    @ApiModelProperty(name = "check-out")
-    @JsonProperty("check-out")
-    val checkOut: StageCheck?
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeErrorResp(
+    val message: String?
 )

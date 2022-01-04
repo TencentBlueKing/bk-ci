@@ -27,11 +27,13 @@
 
 package com.tencent.devops.stream.resources.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.repository.api.ServiceGitOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -44,6 +46,7 @@ import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -69,8 +72,9 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuth(
             userId = userId,
             projectId = projectId
@@ -132,7 +136,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             data = null
         )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
 
         permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.USE)
@@ -184,6 +188,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
@@ -213,6 +218,25 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+    }
+    // 判断用户是否公共账号，并且存在，否则提示用户注册
+    private fun checkCommonUser(userId: String) {
+        // get接口先查本地，再查tof
+        try {
+            val userResult =
+                client.get(ServiceTxUserResource::class).get(userId)
+            if (userResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+                )
+            }
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+            )
         }
     }
 }
