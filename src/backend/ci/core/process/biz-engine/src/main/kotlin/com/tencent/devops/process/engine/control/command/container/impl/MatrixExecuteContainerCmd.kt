@@ -158,6 +158,7 @@ class MatrixExecuteContainerCmd(
             } else if (container.status == BuildStatus.SKIP) {
                 skipContainerNum++
             } else if (container.status.isRunning() && !newActionType.isEnd()) {
+                running = BuildStatus.RUNNING
                 runningContainerNum++
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
