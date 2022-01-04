@@ -83,15 +83,6 @@ class TxPipelineEngineConfiguration {
         pipelineDao = pipelineDao,
         dslContext = dslContext
     )
-//
-//    @Bean
-//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-//    fun gitCIPipelinePermissionServiceImpl(
-//        client: Client,
-//        pipelineIndoDao: PipelineInfoDao,
-//        dslContext: DSLContext,
-//        checkTokenService: ClientTokenService
-//    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")

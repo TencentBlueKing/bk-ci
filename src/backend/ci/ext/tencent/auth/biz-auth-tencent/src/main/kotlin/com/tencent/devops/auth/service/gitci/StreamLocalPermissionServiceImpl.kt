@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class StreamLocalPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
-    val projectInfoService: GitCiProjectInfoService
+    val projectInfoService: GitProjectInfoService
 ): IStreamPermissionValidateService {
     override fun isPublicProject(projectCode: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)

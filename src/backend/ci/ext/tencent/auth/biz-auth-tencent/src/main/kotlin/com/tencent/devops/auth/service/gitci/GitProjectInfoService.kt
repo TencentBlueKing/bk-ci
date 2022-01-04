@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
-class GitCiProjectInfoService @Autowired constructor(
+class GitProjectInfoService @Autowired constructor(
     val client: Client
 ) {
     private val gitCIUserCache = CacheBuilder.newBuilder()
@@ -78,6 +78,6 @@ class GitCiProjectInfoService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCiProjectInfoService::class.java)
+        val logger = LoggerFactory.getLogger(GitProjectInfoService::class.java)
     }
 }

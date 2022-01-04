@@ -135,6 +135,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
@@ -201,21 +202,21 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            pipelineStageService.deletePipelineBuildStages(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineContainerService.deletePipelineBuildContainers(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineTaskService.deletePipelineBuildTasks(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
+//            pipelineStageService.deletePipelineBuildStages(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineContainerService.deletePipelineBuildContainers(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineTaskService.deletePipelineBuildTasks(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
         }
 //        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
     }

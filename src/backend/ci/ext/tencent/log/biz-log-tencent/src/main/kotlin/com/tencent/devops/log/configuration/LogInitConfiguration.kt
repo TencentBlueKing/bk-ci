@@ -58,13 +58,6 @@ class LogInitConfiguration {
         authPermissionApi, pipelineAuthServiceCode, managerService
     )
 
-//    @Bean
-//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-//    fun gitCILogPermissionService(
-//        client: Client,
-//        tokenCheckService: ClientTokenService
-//    ) = GitCILogPermissionServiceImpl(client, tokenCheckService)
-
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun txV3LogPermissionServiceImpl(

@@ -28,10 +28,10 @@
 package com.tencent.devops.auth.configuration
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
+import com.tencent.devops.auth.service.gitci.GitProjectInfoService
 import com.tencent.devops.auth.service.gitci.StreamLocalPermissionServiceImpl
+import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionService
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -47,21 +47,21 @@ class StreamLocalConfiguration {
     fun streamLocalPermissionService(
         client: Client,
         managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService
+        projectInfoService: GitProjectInfoService
     ) = StreamLocalPermissionServiceImpl(client, managerService, projectInfoService)
 
     @Bean
     fun streamProjectPermissionService(
-        streamPermissionService: StreamPermissionService
+        streamPermissionService: IStreamPermissionValidateService
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 
     @Bean
     fun streamPermissionService(
-        streamPermissionService: StreamPermissionService
+        streamPermissionService: IStreamPermissionValidateService
     ) = StreamPermissionServiceImpl(streamPermissionService)
 
     @Bean
     fun gitProjectInfoService(
         client: Client
-    ) = GitCiProjectInfoService(client)
+    ) = GitProjectInfoService(client)
 }

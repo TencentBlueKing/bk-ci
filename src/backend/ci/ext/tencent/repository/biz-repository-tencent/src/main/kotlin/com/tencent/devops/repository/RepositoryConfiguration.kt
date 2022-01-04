@@ -69,20 +69,6 @@ class RepositoryConfiguration {
         repositoryDao = repositoryDao,
         dslContext = dslContext
     )
-//
-//    @Bean
-//    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-//    fun gitCIRepositoryPermissionService(
-//        dslContext: DSLContext,
-//        tokenService: ClientTokenService,
-//        client: Client,
-//        repositoryDao: RepositoryDao
-//    ) = GitCiRepositoryPermissionServiceImpl(
-//        dslContext = dslContext,
-//        tokenService = tokenService,
-//        client = client,
-//        repositoryDao = repositoryDao
-//    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
