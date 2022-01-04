@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/jingang")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface UserJinGangAppResource {
 
     @ApiOperation("启动金刚扫描")

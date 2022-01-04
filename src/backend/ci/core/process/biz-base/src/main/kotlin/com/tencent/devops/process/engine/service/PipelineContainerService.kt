@@ -96,9 +96,16 @@ class PipelineContainerService @Autowired constructor(
     fun listContainers(
         buildId: String,
         stageId: String? = null,
-        containsMatrix: Boolean? = true
+        containsMatrix: Boolean? = true,
+        statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
-        val list = pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId, containsMatrix)
+        val list = pipelineBuildContainerDao.listByBuildId(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            containsMatrix = containsMatrix,
+            statusSet = statusSet
+        )
         val result = mutableListOf<PipelineBuildContainer>()
         if (list.isNotEmpty()) {
             list.forEach {
@@ -329,11 +336,10 @@ class PipelineContainerService @Autowired constructor(
         updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord>,
         lastTimeBuildContainerRecords: Collection<TPipelineBuildContainerRecord>,
         lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>
-    ): Boolean {
+    ) {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var needStartVM = false // 是否需要启动构建
         var needUpdateContainer = false
-        var needUpdateStage = false
         var taskSeq = 0
         val containerElements = container.elements
 
@@ -504,9 +510,8 @@ class PipelineContainerService @Autowired constructor(
                     )
                 )
             }
-            needUpdateStage = true
+            context.needUpdateStage = true
         }
-        return needUpdateStage
     }
 
     fun findTaskRecord(

@@ -77,6 +77,9 @@ interface BuildVarResource {
         pipelineId: String,
         @ApiParam(value = "变量名称", required = true)
         @QueryParam("contextName")
-        contextName: String
+        contextName: String,
+        @ApiParam(value = "是否校验变量", required = false)
+        @QueryParam("check")
+        check: Boolean = false
     ): Result<String?>
 }

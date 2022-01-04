@@ -161,7 +161,7 @@
                     atomCode
                 }
                 this.installAtom(param).then(() => {
-                    this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success' })
+                    this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success', extCls: 'install-tips' })
                     this.atom.notShowSelect = !this.atom.isInOs
                     this.atom.hasInstalled = true
                 }).catch((err) => {
@@ -173,3 +173,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .install-tips {
+        z-index: 10001;
+    }
+</style>

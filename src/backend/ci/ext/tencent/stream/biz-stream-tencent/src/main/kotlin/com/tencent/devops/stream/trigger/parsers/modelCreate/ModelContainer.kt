@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
@@ -45,6 +47,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.util.StreamDispatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -70,6 +73,7 @@ class ModelContainer @Autowired constructor(
         jobIndex: Int,
         projectCode: String,
         finalStage: Boolean = false,
+        changeSet: Set<String>? = null,
         resources: Resources? = null
     ) {
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
@@ -86,13 +90,14 @@ class ModelContainer @Autowired constructor(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
+            mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
             baseOS = StreamDispatchUtils.getBaseOs(job),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
-            jobControlOption = getJobControlOption(job, finalStage),
+            jobControlOption = getJobControlOption(job = job, changeSet = changeSet, finalStage = finalStage),
             dispatchType = StreamDispatchUtils.getDispatchType(
                 client = client,
                 objectMapper = objectMapper,
@@ -156,6 +161,7 @@ class ModelContainer @Autowired constructor(
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int,
+        changeSet: Set<String>? = null,
         finalStage: Boolean = false
     ) {
 
@@ -173,14 +179,19 @@ class ModelContainer @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job, finalStage),
-                mutexGroup = null
+                jobControlOption = getJobControlOption(
+                    job = job,
+                    changeSet = changeSet,
+                    finalStage = finalStage
+                ),
+                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
             )
         )
     }
 
     private fun getJobControlOption(
         job: Job,
+        changeSet: Set<String>? = null,
         finalStage: Boolean = false
     ): JobControlOption {
         return if (!job.ifField.isNullOrBlank()) {
@@ -200,6 +211,7 @@ class ModelContainer @Autowired constructor(
                 )
             } else {
                 JobControlOption(
+                    enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
                     timeout = job.timeoutMinutes,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = job.ifField.toString(),
@@ -211,6 +223,7 @@ class ModelContainer @Autowired constructor(
             }
         } else {
             JobControlOption(
+                enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
@@ -218,5 +231,18 @@ class ModelContainer @Autowired constructor(
                 continueWhenFailed = job.continueOnError
             )
         }
+    }
+
+    private fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
+        if (resource == null) {
+            return null
+        }
+        return MutexGroup(
+            enable = true,
+            mutexGroupName = resource.label,
+            queueEnable = true,
+            queue = resource.queueLength ?: 0,
+            timeout = resource.timeoutMinutes ?: 10
+        )
     }
 }

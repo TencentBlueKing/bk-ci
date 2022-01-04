@@ -66,6 +66,14 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -74,6 +82,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -96,9 +105,11 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -108,7 +119,6 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildVariableService
@@ -125,18 +135,11 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -615,7 +618,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildStatus: BuildStatus
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
-        // 发送事件
+        // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
                 source = javaClass.simpleName,
@@ -633,7 +636,33 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId
             )
         )
-
+        // 给未结束的job发送心跳监控事件
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containers = pipelineContainerService.listContainers(
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        containers.forEach { container ->
+            pipelineEventDispatcher.dispatch(
+                PipelineContainerAgentHeartBeatEvent(
+                    source = BS_CANCEL_BUILD_SOURCE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    containerId = container.containerId,
+                    executeCount = container.executeCount,
+                    delayMills = 20000
+                )
+            )
+        }
         return true
     }
 
@@ -673,7 +702,7 @@ class PipelineRuntimeService @Autowired constructor(
         var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            var needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
+            context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
@@ -784,7 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
                 // --- 第3层循环：Element遍历处理 ---
-                needUpdateStage = pipelineContainerService.prepareBuildContainerTasks(
+                pipelineContainerService.prepareBuildContainerTasks(
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
@@ -821,7 +850,7 @@ class PipelineRuntimeService @Autowired constructor(
             stage.resetBuildOption(true)
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
-                if (needUpdateStage) {
+                if (context.needUpdateStage) {
                     run findHistoryStage@{
                         lastTimeBuildStageRecords.forEach {
                             if (it.stageId == stage.id!!) {
@@ -885,6 +914,20 @@ class PipelineRuntimeService @Autowired constructor(
                     buildHistoryRecord.endTime = null
                     buildHistoryRecord.queueTime = LocalDateTime.now() // for EPC
                     buildHistoryRecord.status = startBuildStatus.ordinal
+                    // 重试时启动参数只需要刷新执行次数
+                    buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+                        val retryCount = context.executeCount - 1
+                        val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
+                        list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                            param.value = retryCount
+                        } ?: run {
+                            list.add(BuildParameters(
+                                key = PIPELINE_RETRY_COUNT,
+                                value = retryCount
+                            ))
+                        }
+                        JsonUtil.toJson(list)
+                    }
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
                     buildDetailDao.update(
@@ -943,12 +986,12 @@ class PipelineRuntimeService @Autowired constructor(
                         channelCode = context.channelCode,
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams.plus(
-                            BuildParameters(
+                        buildParameters = currentBuildNo?.let { self ->
+                            originStartParams.plus(BuildParameters(
                                 key = BUILD_NO,
-                                value = currentBuildNo.toString()
-                            )
-                        ),
+                                value = self.toString()
+                            ))
+                        } ?: originStartParams,
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),

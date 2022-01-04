@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -114,7 +115,7 @@ class BuildCancelControl @Autowired constructor(
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
             // 往redis中设置取消构建标识以防止重复提交
-            setBuildCancelRedisFlag(buildId)
+            setBuildCancelActionRedisFlag(buildId)
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
             pipelineBuildDetailService.buildCancel(buildId = event.buildId, buildStatus = event.status)
@@ -138,8 +139,8 @@ class BuildCancelControl @Autowired constructor(
         }
     }
 
-    private fun setBuildCancelRedisFlag(buildId: String) =
-        redisOperation.set("${BuildStatus.CANCELED.name}_$buildId", "true", BUILD_CANCEL_TIME_OUT)
+    private fun setBuildCancelActionRedisFlag(buildId: String) =
+        redisOperation.set(BuildUtils.getCancelActionBuildKey(buildId), "true", BUILD_CANCEL_TIME_OUT)
 
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
