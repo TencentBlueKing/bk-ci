@@ -168,7 +168,7 @@ class GitRequestEventHandle @Autowired constructor(
             }
             return GitRequestEvent(
                 id = null,
-                objectKind = TGitObjectKind.MANUAL.value,
+                objectKind = triggerBuildReq.objectKind,
                 operationKind = "",
                 extensionAction = null,
                 gitProjectId = triggerBuildReq.gitProjectId,

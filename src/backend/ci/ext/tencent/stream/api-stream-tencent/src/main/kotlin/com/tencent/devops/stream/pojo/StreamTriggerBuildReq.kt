@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,5 +44,7 @@ data class StreamTriggerBuildReq(
     @ApiModelProperty("用户选择的触发CommitId")
     val commitId: String? = null,
     @ApiModelProperty("模拟工蜂事件请求体")
-    val payload: String? = null
+    val payload: String? = null,
+    @ApiModelProperty("触发方式")
+    val objectKind: String = OBJECT_KIND_MANUAL
 )
