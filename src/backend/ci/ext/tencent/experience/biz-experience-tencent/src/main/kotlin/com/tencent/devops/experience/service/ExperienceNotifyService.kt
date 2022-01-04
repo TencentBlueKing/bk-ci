@@ -125,8 +125,10 @@ class ExperienceNotifyService @Autowired constructor(
         logger.info("AppNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
         val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
         val ret = xingeApp.pushApp(pushAppRequest)
-        logger.info("ret_code:  ${ret.get("ret_code")} ,err_msg:  ${ret.get("err_msg")}")
-        return xingeApp.pushApp(pushAppRequest).get("ret_code") == 0
+        val ret_code = ret.get("ret_code")
+        logger.info("ret_code:  $ret_code ,err_msg:  ${ret.get("err_msg")}")
+        // ret_code 为0，则表示发送成功
+        return ret_code == 0
     }
 
     fun createPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
