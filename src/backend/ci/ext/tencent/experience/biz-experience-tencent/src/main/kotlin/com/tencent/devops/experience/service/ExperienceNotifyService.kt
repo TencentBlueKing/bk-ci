@@ -48,6 +48,7 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -57,7 +58,12 @@ class ExperienceNotifyService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
-
+    @Value("\${app.notify.appid:#{null}}")
+    private var appId: String? = null
+    @Value("\${app.notify.secretkey:#{null}}")
+    private var secretKey: String? = null
+    @Value("\${app.notify.domainurl:#{null}}")
+    private var domainUrl: String? = null
     // 发送MQ
     fun sendMqMsg(message: AppNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_APP, message)
@@ -107,10 +113,9 @@ class ExperienceNotifyService @Autowired constructor(
 
     fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
         val xingeApp = XingeApp.Builder()
-            // todo 一定要把secretKey、appId这些敏感信息放在配置文件中！一定不要发布git
-            .appId("appId")
-            .secretKey("secretKey")
-            .domainUrl("https://api.tpns.tencent.com/")
+            .appId(appId)
+            .secretKey(secretKey)
+            .domainUrl(domainUrl)
             .build()
         logger.info("AppNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
         val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
