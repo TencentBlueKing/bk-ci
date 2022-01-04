@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Configuration
 class StreamProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
-) : ProjectPermissionService{
+) : ProjectPermissionService {
     override fun verifyUserProjectPermission(
         accessToken: String?,
         projectCode: String,

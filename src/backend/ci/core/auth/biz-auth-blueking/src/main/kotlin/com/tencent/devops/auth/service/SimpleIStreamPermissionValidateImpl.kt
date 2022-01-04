@@ -25,30 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.common.auth.api.AuthPermission
 
-interface StreamPermissionService {
+class SimpleIStreamPermissionValidateImpl : IStreamPermissionValidateService {
+    override fun isPublicProject(projectCode: String): Boolean {
+        return true
+    }
 
-    /**
-     * 是否是开源项目
-     * projectCode: stream侧项目编码
-     */
-    fun isPublicProject(projectCode: String): Boolean
+    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
+        return Pair(first = true, second = true)
+    }
 
-    /**
-     * 是否是项目成员
-     * projectCode: stream侧项目编码
-     * userId: 待校验用户
-     */
-    fun isProjectMember(projectCode: String, userId: String): Pair<Boolean/**是否为项目成员*/, Boolean/**是否为developer以上权限*/>
-
-    /**
-     * 扩展权限(如本地管理员之类的特殊逻辑)
-     *  projectCode: stream侧项目编码
-     * userId: 待校验用户
-     * action: stream内定义的操作类型
-     */
-    fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean
+    override fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean {
+        return false
+    }
 }

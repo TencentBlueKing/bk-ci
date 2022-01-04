@@ -30,7 +30,6 @@ package com.tencent.devops.common.auth.utils
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 
-
 object ActionTypeUtils {
     private val executeAction = ExecuteAction()
     private val downloadAction = DownloadAction()
@@ -62,7 +61,7 @@ object ActionTypeUtils {
         fun permissionCheck(isProjectMember: Boolean, isPublicProject: Boolean, isDevelopUp: Boolean): Boolean
     }
 
-    class ExecuteAction: PermissionAction {
+    class ExecuteAction : PermissionAction {
         override fun permissionSet(): Set<AuthPermission> {
             val actions = mutableSetOf<AuthPermission>()
             actions.add(AuthPermission.CREATE)
@@ -91,7 +90,7 @@ object ActionTypeUtils {
         }
     }
 
-    class DownloadAction: PermissionAction {
+    class DownloadAction : PermissionAction {
         override fun permissionSet(): Set<AuthPermission> {
             val actions = mutableSetOf<AuthPermission>()
             actions.add(AuthPermission.DOWNLOAD)
@@ -142,7 +141,7 @@ object ActionTypeUtils {
         }
     }
 
-    class WebCheckAction: PermissionAction {
+    class WebCheckAction : PermissionAction {
         override fun permissionSet(): Set<AuthPermission> {
             val actions = mutableSetOf<AuthPermission>()
             actions.add(AuthPermission.WEB_CHECK)

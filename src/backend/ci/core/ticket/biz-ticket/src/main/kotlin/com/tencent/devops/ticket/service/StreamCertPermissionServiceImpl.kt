@@ -46,7 +46,7 @@ class StreamCertPermissionServiceImpl @Autowired constructor(
     val certDao: CertDao,
     val dslContext: DSLContext,
     val tokenService: ClientTokenService
-) : CertPermissionService{
+) : CertPermissionService {
     override fun validatePermission(
         userId: String,
         projectId: String,
