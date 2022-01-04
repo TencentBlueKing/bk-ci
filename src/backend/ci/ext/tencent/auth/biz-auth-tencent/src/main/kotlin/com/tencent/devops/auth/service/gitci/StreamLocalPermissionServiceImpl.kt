@@ -41,7 +41,7 @@ class StreamLocalPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
     val projectInfoService: GitProjectInfoService
-): IStreamPermissionValidateService {
+) : IStreamPermissionValidateService {
     override fun isPublicProject(projectCode: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         return projectInfoService.checkProjectPublic(gitProjectId)
@@ -63,7 +63,6 @@ class StreamLocalPermissionServiceImpl @Autowired constructor(
         } else {
             Pair(first = false, second = false)
         }
-
     }
 
     override fun extPermission(
