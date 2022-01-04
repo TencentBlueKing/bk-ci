@@ -76,7 +76,14 @@ object ActionTypeUtils {
             return actions
         }
 
-        override fun permissionCheck(isProjectMember: Boolean, isPublicProject: Boolean, isDevelopUp: Boolean): Boolean {
+        /**
+         * 执行类操作,必须为项目的developer以上
+         */
+        override fun permissionCheck(
+            isProjectMember: Boolean,
+            isPublicProject: Boolean,
+            isDevelopUp: Boolean
+        ): Boolean {
             if (isProjectMember && isDevelopUp) {
                 return true
             }
@@ -91,7 +98,14 @@ object ActionTypeUtils {
             return actions
         }
 
-        override fun permissionCheck(isProjectMember: Boolean, isPublicProject: Boolean, isDevelopUp: Boolean): Boolean {
+        /**
+         * 下载类操作,必须为项目的成员
+         */
+        override fun permissionCheck(
+            isProjectMember: Boolean,
+            isPublicProject: Boolean,
+            isDevelopUp: Boolean
+        ): Boolean {
             if (isProjectMember) {
                 return true
             }
@@ -108,7 +122,17 @@ object ActionTypeUtils {
             return actions
         }
 
-        override fun permissionCheck(isProjectMember: Boolean, isPublicProject: Boolean, isDevelopUp: Boolean): Boolean {
+        /**
+         * 查看类操作规则：
+         * 1. 项目成员可看
+         * 2. 非项目成员,公共项目可看
+         * 3. 非项目成员，闭源项目不可看
+         */
+        override fun permissionCheck(
+            isProjectMember: Boolean,
+            isPublicProject: Boolean,
+            isDevelopUp: Boolean
+        ): Boolean {
             if (isProjectMember) {
                 return true
             } else if (isPublicProject) {
@@ -125,11 +149,21 @@ object ActionTypeUtils {
             return actions
         }
 
-        override fun permissionCheck(isProjectMember: Boolean, isPublicProject: Boolean, isDevelopUp: Boolean): Boolean {
+        /**
+         * 页面按钮操作规则：
+         * 1. 项目成员可操作
+         * 2. 非项目成员,公共项目校验不通过
+         * 3. 非项目成员，闭源项目抛异常
+         */
+        override fun permissionCheck(
+            isProjectMember: Boolean,
+            isPublicProject: Boolean,
+            isDevelopUp: Boolean
+        ): Boolean {
             if (isProjectMember) {
                 return true
             } else if (isPublicProject) {
-                return true
+                return false
             } else {
                 throw PermissionForbiddenException("非项目成员且项目为非开源项目")
             }
