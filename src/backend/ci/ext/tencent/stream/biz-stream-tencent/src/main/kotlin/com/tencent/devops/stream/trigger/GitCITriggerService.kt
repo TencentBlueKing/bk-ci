@@ -38,7 +38,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeletePushEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.client.ScmClient
@@ -234,21 +234,13 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
-        val isDeleteEvent = event.isDeleteEvent()
-
-        val deleteEventPathWithFile = if (isDeleteEvent) {
-            getDeleteEventYaml(gitRequestEvent, path2PipelineExists)
-        } else {
-            null
-        }
-
         val gitProjectInfo = streamScmService.getProjectInfoRetry(
             token = gitToken,
             gitProjectId = gitRequestEvent.gitProjectId.toString(),
             useAccessToken = true
         )
 
-        val yamlPathList = if (isDeleteEvent) {
+        val yamlPathList = if (event.isDeletePushEvent()) {
             getYamlPathList(
                 isFork = false,
                 forkGitToken = null,
@@ -348,8 +340,7 @@ class GitCITriggerService @Autowired constructor(
                             isMerged = isMerged,
                             gitProjectConf = gitProjectConf,
                             forkGitProjectId = forkGitProjectId,
-                            gitProjectInfo = gitProjectInfo,
-                            deleteEventPathWithFile = deleteEventPathWithFile
+                            gitProjectInfo = gitProjectInfo
                         )
                     },
                     commitCheck = CommitCheck(
@@ -384,8 +375,7 @@ class GitCITriggerService @Autowired constructor(
         isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting,
         forkGitProjectId: Long?,
-        gitProjectInfo: GitCIProjectInfo,
-        deleteEventPathWithFile: Map<String, String>?
+        gitProjectInfo: GitCIProjectInfo
     ) {
         val start = LocalDateTime.now().timestampmilli()
 
@@ -429,16 +419,14 @@ class GitCITriggerService @Autowired constructor(
             }
             orgYaml
         } else {
-            if (event.isDeleteEvent()) {
-                (deleteEventPathWithFile?.get(filePath) ?: "").ifEmpty {
-                    streamScmService.getYamlFromGit(
-                        token = forkGitToken ?: gitToken,
-                        ref = gitProjectInfo.defaultBranch ?: "",
-                        fileName = filePath,
-                        gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
-                        useAccessToken = true
-                    )
-                }
+            if (event.isDeletePushEvent()) {
+                streamScmService.getYamlFromGit(
+                    token = forkGitToken ?: gitToken,
+                    ref = gitProjectInfo.defaultBranch ?: "",
+                    fileName = filePath,
+                    gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
+                    useAccessToken = true
+                )
             } else {
                 streamScmService.getYamlFromGit(
                     token = forkGitToken ?: gitToken,
