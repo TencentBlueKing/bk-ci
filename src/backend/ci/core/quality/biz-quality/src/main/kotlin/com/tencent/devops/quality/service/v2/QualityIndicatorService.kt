@@ -184,7 +184,6 @@ class QualityIndicatorService @Autowired constructor(
                 enNameSet = enNameSet,
                 projectId = tempProjectId
             )?.map { it.enName to it }?.toMap()
-            logger.info("QUALITY|enNameSet is: $enNameSet, indicatorTMap is: $indicatorTMap")
             enNameSet.map { enName ->
                 val indicator = indicatorTMap?.get(enName) ?: throw OperationException("indicator $enName is not exist")
                 val metadataIds = convertMetaIds(indicator?.metadataIds)
