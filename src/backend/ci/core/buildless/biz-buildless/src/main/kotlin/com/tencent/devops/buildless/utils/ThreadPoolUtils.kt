@@ -23,12 +23,12 @@ class ThreadPoolUtils private constructor() {
     /**
      * 核心线程数
      * */
-    private val coolPoolSize = cpuCount + 1
+    private val coolPoolSize = cpuCount + 10
 
     /**
      * 最大线程数
      * */
-    private val maxPoolSize = cpuCount * 2 + 1
+    private val maxPoolSize = cpuCount * 2 + 10
 
     /**
      * 线程活跃时间 秒，超时线程会被回收

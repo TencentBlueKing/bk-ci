@@ -27,9 +27,6 @@
 
 package com.tencent.devops.buildless.controller
 
-import com.google.common.collect.HashMultimap
-import com.google.common.collect.Multimap
-import com.google.common.collect.Multimaps
 import com.tencent.devops.buildless.api.builds.BuildBuildLessMvcResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
@@ -45,22 +42,19 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
     private val buildLessTaskService: BuildLessTaskService
 ) : BuildBuildLessMvcResource {
 
-    private val watchRequests: Multimap<String, DeferredResult<BuildLessTask?>> =
-        Multimaps.synchronizedSetMultimap(HashMultimap.create())
-
     override fun claimBuildLessTask(containerId: String): DeferredResult<BuildLessTask?> {
         logger.info("start test claim...")
+        // deferredResult异步非阻塞返回
         val deferredResult = DeferredResult<BuildLessTask?>(30000L)
         deferredResult.onCompletion {
-            logger.info("${Thread.currentThread().name} remove key $containerId")
-            watchRequests.remove(containerId, deferredResult)
+            logger.info("****> container: $containerId claim task deferredResult: $deferredResult")
         }
 
+        // 异步线程执行业务逻辑
         ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.CLAIM_TASK.name).submit {
             buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
         }
 
-        watchRequests.put(containerId, deferredResult)
         logger.info("release test claim...")
         return deferredResult
     }
