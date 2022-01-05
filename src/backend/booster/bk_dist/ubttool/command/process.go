@@ -117,10 +117,11 @@ func setLogLevel(level string) {
 
 func initialLogDir(dir string) {
 	blog.InitLogs(conf.LogConfig{
-		LogDir:       dir,
-		LogMaxNum:    10,
-		LogMaxSize:   500,
-		AlsoToStdErr: false,
+		LogDir:          dir,
+		LogMaxNum:       10,
+		LogMaxSize:      500,
+		AlsoToStdErr:    false,
+		StdErrThreshold: "3", //fatalLog
 	})
 }
 
