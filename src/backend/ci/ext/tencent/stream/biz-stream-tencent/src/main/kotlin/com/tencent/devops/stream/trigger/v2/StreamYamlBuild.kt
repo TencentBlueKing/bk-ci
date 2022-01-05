@@ -240,7 +240,7 @@ class StreamYamlBuild @Autowired constructor(
             )
         }
 
-        if (isDeleteTrigger) {
+        if (isDeleteTrigger && deleteEventService.getDeleteEvent(realPipeline.pipelineId) == null) {
             deleteEventService.saveDeleteEvent(
                 StreamDeleteEvent(
                     gitProjectId = event.gitProjectId,

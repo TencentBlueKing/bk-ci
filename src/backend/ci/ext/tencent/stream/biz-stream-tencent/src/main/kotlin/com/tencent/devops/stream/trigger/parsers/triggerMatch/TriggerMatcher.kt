@@ -176,26 +176,15 @@ class TriggerMatcher @Autowired constructor(
                 startParams = emptyMap(),
                 deleteTrigger = false
             )
-        if (streamDeleteEventService.getDeleteEvent(context.pipeline.pipelineId) == null) {
-            streamDeleteEventService.saveDeleteEvent(
-                StreamDeleteEvent(
-                    gitProjectId = context.requestEvent.gitProjectId,
-                    pipelineId = context.pipeline.pipelineId,
-                    userId = context.requestEvent.userId,
-                    eventId = context.requestEvent.id!!,
-                    originYaml = context.originYaml
-                )
-            )
-        }
         return if (objectKind in deleteObjectKinds) {
             val startParams = getStartParams(
                 context = context,
                 triggerOn = triggerOn,
                 isTrigger = true
             ).map { entry -> entry.key to entry.value.toString() }.toMap()
-            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = false)
+            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = true)
         }
     }
 
