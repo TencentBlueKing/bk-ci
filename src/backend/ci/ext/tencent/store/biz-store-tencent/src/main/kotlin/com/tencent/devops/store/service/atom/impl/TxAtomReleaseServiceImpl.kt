@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
@@ -50,6 +51,7 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -224,13 +226,22 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
         val fileStr = if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
-            client.get(ServiceGitRepositoryResource::class).getFileContent(
-                repoId = repositoryHashId!!,
-                filePath = fileName,
-                reversion = null,
-                branch = branch,
-                repositoryType = null
-            ).data
+            try {
+                client.get(ServiceGitRepositoryResource::class).getFileContent(
+                    repoId = repositoryHashId!!,
+                    filePath = fileName,
+                    reversion = null,
+                    branch = branch,
+                    repositoryType = null
+                ).data
+            } catch (ignore: RemoteServiceException) {
+                logger.warn("getFileContent fileName:$fileName,branch:$branch error", ignore)
+                if (ignore.httpStatus == HTTP_404 || ignore.errorCode == HTTP_404) {
+                    ""
+                } else {
+                    throw ignore
+                }
+            }
         } else {
             // 直接从仓库拉取文件
             marketAtomArchiveService.getFileStr(projectCode, atomCode, atomVersion, fileName)
