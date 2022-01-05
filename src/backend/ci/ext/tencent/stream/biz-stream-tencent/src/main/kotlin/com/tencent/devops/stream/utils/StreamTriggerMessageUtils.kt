@@ -2,13 +2,14 @@ package com.tencent.devops.stream.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,16 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
             }
             else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                if (event.operationKind == TGitPushOperationKind.DELETE.value) {
+                    when (event.objectKind) {
+                        TGitObjectKind.PUSH.value ->
+                            "[${event.branch}] branch [${event.commitId}] delete by ${event.userId}"
+                        TGitObjectKind.TAG_PUSH.value ->
+                            "[${event.branch}] tag [${event.commitId}] delete by ${event.userId}"
+                        else -> "[${event.commitId}] delete by ${event.userId}"
+                    }
+                } else
+                    "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
         return messageTitle
