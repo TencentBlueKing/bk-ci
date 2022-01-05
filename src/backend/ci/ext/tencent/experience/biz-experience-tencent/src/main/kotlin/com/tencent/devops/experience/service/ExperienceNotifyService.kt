@@ -35,8 +35,15 @@ import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.QUEUE_NOTIFY_APP
 import com.tencent.devops.notify.ROUTE_APP
 import com.tencent.xinge.XingeApp
-import com.tencent.xinge.bean.*
+import com.tencent.xinge.bean.AudienceType
+import com.tencent.xinge.bean.Environment
+import com.tencent.xinge.bean.MessageIOS
+import com.tencent.xinge.bean.MessageType
+import com.tencent.xinge.bean.MessageAndroid
+import com.tencent.xinge.bean.ios.Alert
 import com.tencent.xinge.push.app.PushAppRequest
+import com.tencent.xinge.bean.Message
+import com.tencent.xinge.bean.ios.Aps
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -118,33 +125,33 @@ class ExperienceNotifyService @Autowired constructor(
     }
 
     fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
+        logger.info("appNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
         val platform = appNotifyMessageWithOperation.platform
         val appId = if (platform == "ANDROID") androidAppId else iosAppId
         val secretKey = if (platform == "ANDROID") androidSecretKey else iosSecretKey
-
         val xingeApp = XingeApp.Builder()
             .appId(appId)
             .secretKey(secretKey)
             .domainUrl(domainUrl)
             .build()
-        logger.info("appNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
-        val pushAppRequest = createPushAppRequest(appNotifyMessageWithOperation)
+        // ANDROID 和 IOS 的推送方式不一样
+        val pushAppRequest = if (platform == "ANDROID") {
+            createAndroidPushAppRequest(appNotifyMessageWithOperation)
+        } else {
+            createIosPushAppRequest(appNotifyMessageWithOperation)
+        }
         val ret = xingeApp.pushApp(pushAppRequest)
-        val ret_code = ret.get("ret_code")
-        logger.info("ret_code:  $ret_code ,err_msg:  ${ret.get("err_msg")}")
+        val retCode = ret.get("ret_code")
+        logger.info("ret_code:  $retCode ,err_msg:  ${ret.get("err_msg")}")
         // ret_code为0，则表示发送成功
-        return ret_code == 0
+        return retCode == 0
     }
 
-    fun createPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
+    fun createAndroidPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         // 单设备推送
         pushAppRequest.audience_type = AudienceType.token
         pushAppRequest.message_type = MessageType.notify
-        // 若为IOS，则需要选择"dev或者product环境"
-        if (appNotifyMessageWithOperation.platform == "IOS") {
-            pushAppRequest.environment = Environment.valueOf("dev")
-        }
         val message = Message()
         message.title = appNotifyMessageWithOperation.title
         message.content = appNotifyMessageWithOperation.body
@@ -153,7 +160,28 @@ class ExperienceNotifyService @Autowired constructor(
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appNotifyMessageWithOperation.token)
-        logger.info("tokenList.token:  $tokenList")
+        pushAppRequest.token_list = tokenList
+        return pushAppRequest
+    }
+
+    fun createIosPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
+        val pushAppRequest = PushAppRequest()
+        pushAppRequest.audience_type = AudienceType.token
+        // todo 配置在配置文件中？
+        pushAppRequest.environment = Environment.valueOf("dev")
+        pushAppRequest.message_type = MessageType.notify
+        val message = Message()
+        message.title = appNotifyMessageWithOperation.title
+        message.content = appNotifyMessageWithOperation.body
+        val messageIOS = MessageIOS()
+        val alert = Alert()
+        val aps = Aps()
+        aps.alert = alert
+        messageIOS.aps = aps
+        message.ios = messageIOS
+        pushAppRequest.message = message
+        val tokenList = ArrayList<String>()
+        tokenList.add(appNotifyMessageWithOperation.token)
         pushAppRequest.token_list = tokenList
         return pushAppRequest
     }
