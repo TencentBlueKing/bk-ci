@@ -103,9 +103,7 @@ class ContainerPoolExecutor @Autowired constructor(
 
     private fun createBuildLessPoolContainer(index: Int = 1) {
         for (i in 1..index) {
-            ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.CLAIM_TASK.name).submit {
-                buildLessContainerService.createContainer()
-            }
+            buildLessContainerService.createContainer()
         }
     }
 
