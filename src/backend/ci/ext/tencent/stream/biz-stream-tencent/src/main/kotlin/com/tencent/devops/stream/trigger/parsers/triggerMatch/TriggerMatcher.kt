@@ -176,7 +176,7 @@ class TriggerMatcher @Autowired constructor(
                 startParams = emptyMap(),
                 deleteTrigger = false
             )
-        if (streamDeleteEventService.getDeleteEvent(context.pipeline.pipelineId) == null){
+        if (streamDeleteEventService.getDeleteEvent(context.pipeline.pipelineId) == null) {
             streamDeleteEventService.saveDeleteEvent(
                 StreamDeleteEvent(
                     gitProjectId = context.requestEvent.gitProjectId,
