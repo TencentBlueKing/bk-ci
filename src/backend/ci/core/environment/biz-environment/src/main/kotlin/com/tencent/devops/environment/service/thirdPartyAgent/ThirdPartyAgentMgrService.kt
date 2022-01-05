@@ -61,6 +61,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
+import com.tencent.devops.environment.exception.AgentAuthException
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
 import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -677,7 +678,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
                 "mainProjectId: $sharedProjectId")
-            return emptyList()
+            throw AgentAuthException("无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
@@ -723,6 +724,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 // 找到了环境可用就可以退出了
                 return@outSide
             }
+        }
+        if (sharedThirdPartyAgents.isEmpty()) {
+            throw AgentAuthException("无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
