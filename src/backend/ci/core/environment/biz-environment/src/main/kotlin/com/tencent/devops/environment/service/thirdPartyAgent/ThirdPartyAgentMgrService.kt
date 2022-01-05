@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
@@ -61,7 +62,6 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
-import com.tencent.devops.environment.exception.AgentAuthException
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
 import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -100,6 +100,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -670,6 +671,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         val sharedProjectId = sharedProjEnv[0]
         val sharedEnvName = sharedProjEnv[1]
+
+        envDao.getByEnvName(
+            dslContext = dslContext,
+            projectId = sharedProjectId,
+            envName = sharedEnvName
+        ) ?: throw CustomException(Response.Status.NOT_FOUND, "第三方构建机环境不存在($projectEnvName)")
+
         val sharedEnvRecord = envShareProjectDao.list(
             dslContext = dslContext,
             envName = sharedEnvName,
@@ -678,7 +686,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
                 "mainProjectId: $sharedProjectId")
-            throw AgentAuthException("无权限使用第三方构建机环境($projectEnvName)")
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
@@ -706,16 +714,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         logger.warn("$projectId $projectEnvName get share project error: ${e.message}")
                         null
                     }
-                    var isProjectsEmpty: Boolean
                     projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                        isProjectsEmpty = true
-                    }
-                    isProjectsEmpty = false
-                    projectsInGroups?.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                        isProjectsEmpty = true
-                    }
-                    if (isProjectsEmpty) {
-                        return@forEach
+                        projectsInGroups.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
+                            return@forEach
+                        }
                     }
                 }
 
@@ -726,7 +728,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
         }
         if (sharedThirdPartyAgents.isEmpty()) {
-            throw AgentAuthException("无权限使用第三方构建机环境($projectEnvName)")
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
