@@ -62,23 +62,25 @@ class PipelineContextService @Autowired constructor(
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
+                stage.containers.forEachIndexed { index, container ->
                     buildJobContext(
                         stage = stage,
                         c = container,
                         containerId = containerId,
                         contextMap = contextMap,
                         variables = variables,
-                        inMatrix = false
+                        inMatrix = false,
+                        groupIndex = 0
                     )
-                    container.fetchGroupContainers()?.forEach { c ->
+                    container.fetchGroupContainers()?.forEachIndexed { index, c ->
                         buildJobContext(
                             stage = stage,
                             c = c,
                             containerId = containerId,
                             contextMap = contextMap,
                             variables = variables,
-                            inMatrix = true
+                            inMatrix = true,
+                            groupIndex = index
                         )
                     }
                 }
@@ -127,7 +129,8 @@ class PipelineContextService @Autowired constructor(
         containerId: String?,
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
-        inMatrix: Boolean
+        inMatrix: Boolean,
+        groupIndex: Int
     ) {
         // current job
         if (c.id?.let { it == containerId } == true) {
@@ -138,6 +141,7 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.index"] = groupIndex.toString()
         }
 
         // other job
