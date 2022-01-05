@@ -1,6 +1,6 @@
 .PHONY: distcc fastbuild alertserver bkdist
 
-#GITTAG=$(shell git describe --tags)
+GITTAG=$(shell git describe --tags)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
@@ -25,6 +25,11 @@ BuildBooster_LDFLAG=-X build-booster/bk_dist/booster/command.ProdBuildBoosterSer
  -X build-booster/bk_dist/booster/command.TestBuildBoosterServerDomain=${distcc_server_test_domain} \
  -X build-booster/bk_dist/booster/command.TestBuildBoosterServerPort=${distcc_server_test_port} \
  -X build-booster/bk_dist/booster/command.ServerNecessary=${booster_server_necessary}
+
+BuildBoosterHelper_LDFLAG=-X build-booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayDomain=${distcc_gateway_prod_domain} \
+ -X build-booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayPort=${distcc_gateway_prod_port} \
+ -X build-booster/bk_dist/booster-helper/command.TestdBuildBoosterGatewayDomain=${distcc_gateway_test_domain} \
+ -X build-booster/bk_dist/booster-helper/command.TestBuildBoosterGatewayPort=${distcc_gateway_test_port} 
 
 BIN_PATH=./build
 DISTCC_BIN_PATH=${BIN_PATH}/distcc
@@ -108,7 +113,7 @@ DISTEXECUTOR_BIN_PATH=${BIN_PATH}/bkdist
 dist_prepare:
 	mkdir -p ${DISTEXECUTOR_BIN_PATH}
 	go get -u github.com/gobuffalo/packr/v2/packr2
-	#export PATH=${GOPATH}/bin:${PATH}
+	export PATH=${GOPATH}/bin:$PATH
 	if [ -z "${DISABLE_PACKR2}" ]; then cd bk_dist/controller/pkg/dashboard && packr2; fi
 
 dist_executor:dist_prepare
@@ -146,7 +151,15 @@ dist_shader_tool:dist_prepare
 dist_hook:dist_prepare
 	cd tools/hook_ld_preload && $(MAKE) all && cp bkhook.so ../../${DISTEXECUTOR_BIN_PATH}/
 
-dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook
+dist_helper:
+	go build -ldflags "${LDFLAG} ${BuildBoosterHelper_LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-booster-helper ./bk_dist/booster-helper/main.go
+
+dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook dist_helper
+
+DISTEXAMPLE_PATH=${BIN_PATH}/example
+custom_example:
+	mkdir -p ${DISTEXAMPLE_PATH}
+	CGO_ENABLED=1 go build -ldflags "${LDFLAG}" -buildmode=plugin -o ${DISTEXAMPLE_PATH}/custom-plugin.so ./bk_dist/handler/custom/plugin/example/example.go
 
 clean_dist:
 	rm -rf ${DISTEXECUTOR_BIN_PATH}
