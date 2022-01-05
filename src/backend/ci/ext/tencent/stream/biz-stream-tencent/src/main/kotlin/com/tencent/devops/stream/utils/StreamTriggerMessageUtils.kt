@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -18,8 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class StreamTriggerMessageUtils @Autowired constructor(
     private val client: Client,
-    private val objectMapper: ObjectMapper,
-    private val gitRequestEventHandle: GitRequestEventHandle
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -52,50 +47,22 @@ class StreamTriggerMessageUtils @Autowired constructor(
             TGitObjectKind.SCHEDULE.value -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
             }
-            else -> {
-                if (event.operationKind == TGitPushOperationKind.DELETE.value) {
-                    when (event.objectKind) {
-                        TGitObjectKind.PUSH.value ->
-                            "[${event.branch}] branch [${event.commitId}] delete by ${event.userId}"
-                        TGitObjectKind.TAG_PUSH.value ->
-                            "[${event.branch}] tag [${event.commitId}] delete by ${event.userId}"
-                        else -> "[${event.commitId}] delete by ${event.userId}"
-                    }
-                } else
-                    "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
-            }
-        }
-        return messageTitle
-    }
+            TGitObjectKind.PUSH.value -> {
 
-    // TODO: 更新定时触发时这里也要更新
-    fun getEventMessageTitle(
-        event: GitEvent?,
-        gitProjectId: Long,
-        objectKind: String,
-        branch: String?,
-        userId: String?
-    ): String {
-        val messageTitle = if (event != null) {
-            when (event) {
-                is GitMergeRequestEvent -> {
-                    getEventMessageTitle(gitRequestEventHandle.createMergeEvent(event, ""), gitProjectId)
+                val eventMap = try {
+                    objectMapper.readValue<GitPushEvent>(event.event)
+                } catch (e: Exception) {
+                    logger.error("event as GitTagPushEvent error ${e.message}")
+                    null
                 }
-                is GitTagPushEvent -> {
-                    getEventMessageTitle(gitRequestEventHandle.createTagPushEvent(event, ""), gitProjectId)
-                }
-                is GitPushEvent -> {
-                    getEventMessageTitle(gitRequestEventHandle.createPushEvent(event, ""), gitProjectId)
-                }
-                else -> {
-                    ""
+                if (eventMap?.isCreateBranch() == true) {
+                    "Branch [${event.branch}] added by ${event.userId}"
+                } else {
+                    "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
                 }
             }
-        } else {
-            if (objectKind == TGitObjectKind.MANUAL.value) {
-                "[$branch] Manual Triggered by $userId"
-            } else {
-                ""
+            else -> {
+                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
         return messageTitle

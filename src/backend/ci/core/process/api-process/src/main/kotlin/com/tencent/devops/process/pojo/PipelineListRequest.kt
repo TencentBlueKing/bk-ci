@@ -25,36 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.BkCCProperties
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
-import org.springframework.core.Ordered
-
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class CCAutoConfiguration {
-
-    @Bean
-    @Primary
-    fun bkCCProperties() = BkCCProperties()
-
-    @Bean
-    @Primary
-    fun bkCCProjectApi(
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        bkCCProperties: BkCCProperties,
-        objectMapper: ObjectMapper,
-        authTokenApi: AuthTokenApi
-    ) =
-        BSCCProjectApi(bkCCProperties, objectMapper, authTokenApi, pipelineAuthServiceCode)
-}
+data class PipelineListRequest(
+    val pipelineId: Collection<String>,
+    val templateId: Collection<String>
+)
