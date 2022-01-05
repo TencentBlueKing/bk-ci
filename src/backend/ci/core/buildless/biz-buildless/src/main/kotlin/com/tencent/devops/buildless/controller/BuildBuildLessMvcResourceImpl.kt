@@ -50,7 +50,7 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
 
     override fun claimBuildLessTask(containerId: String): DeferredResult<BuildLessTask?> {
         logger.info("start test claim...")
-        val deferredResult = DeferredResult<BuildLessTask?>(25000L)
+        val deferredResult = DeferredResult<BuildLessTask?>(30000L)
         deferredResult.onCompletion {
             logger.info("${Thread.currentThread().name} remove key $containerId")
             watchRequests.remove(containerId, deferredResult)
