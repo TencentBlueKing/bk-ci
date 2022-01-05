@@ -12,11 +12,8 @@ import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.buildless.utils.ThreadPoolName
-import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
