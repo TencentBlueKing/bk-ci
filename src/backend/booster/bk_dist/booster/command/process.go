@@ -200,6 +200,11 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		remaintime = c.Int(FlagControllerRemainTime)
 	}
 
+	waitResourceSeconds := 60
+	if c.IsSet(FlagResourceTimeoutSecs) {
+		waitResourceSeconds = c.Int(FlagResourceTimeoutSecs)
+	}
+
 	// generate a new booster.
 	cmdConfig := dcType.BoosterConfig{
 		Type:      dcType.GetBoosterType(bt),
@@ -261,7 +266,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			Timeout:                5 * time.Second,
 			HeartBeatTick:          5 * time.Second,
 			InspectTaskTick:        100 * time.Millisecond,
-			TaskPreparingTimeout:   60 * time.Second,
+			TaskPreparingTimeout:   time.Duration(waitResourceSeconds) * time.Second,
 			PrintTaskInfoEveryTime: 5,
 			CommitSuicideCheckTick: 5 * time.Second,
 		},
