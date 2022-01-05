@@ -33,15 +33,15 @@ import com.google.common.collect.Multimaps
 import com.tencent.devops.buildless.api.builds.BuildBuildLessMvcResource
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.service.BuildLessTaskService
+import com.tencent.devops.buildless.utils.ThreadPoolName
+import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.web.context.request.async.DeferredResult
 
 @RestResource
 class BuildBuildLessMvcResourceImpl @Autowired constructor(
-    private val taskExecutor: ThreadPoolTaskExecutor,
     private val buildLessTaskService: BuildLessTaskService
 ) : BuildBuildLessMvcResource {
 
@@ -56,7 +56,7 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
             watchRequests.remove(containerId, deferredResult)
         }
 
-        taskExecutor.submit {
+        ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.CLAIM_TASK.name).submit {
             buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
         }
 
