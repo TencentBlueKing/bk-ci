@@ -29,7 +29,7 @@ package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

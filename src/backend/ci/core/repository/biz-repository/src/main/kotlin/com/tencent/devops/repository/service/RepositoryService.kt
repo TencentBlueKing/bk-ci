@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -48,7 +47,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
@@ -733,16 +731,6 @@ class RepositoryService @Autowired constructor(
             }
             else -> throw IllegalArgumentException("Unknown repository type")
         }
-    }
-
-    fun buildGet(buildId: String, repositoryConfig: RepositoryConfig): Repository {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
-        if (buildBasicInfoResult.isNotOk()) {
-            throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        }
-        val buildBasicInfo = buildBasicInfoResult.data
-            ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGet(buildBasicInfo.projectId, repositoryConfig)
     }
 
     fun userEdit(userId: String, projectId: String, repositoryHashId: String, repository: Repository) {
@@ -1649,6 +1637,30 @@ class RepositoryService @Autowired constructor(
         return gitService.getRepoRecentCommitInfo(
             repoName = repo.projectName,
             sha = sha,
+            token = token,
+            tokenType = finalTokenType
+        )
+    }
+
+    fun createGitTag(
+        userId: String,
+        tagName: String,
+        ref: String,
+        repositoryConfig: RepositoryConfig,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
+        logger.info("the repo is:$repo")
+        val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
+        val getGitTokenResult = getGitToken(finalTokenType, userId)
+        if (getGitTokenResult.isNotOk()) {
+            return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
+        }
+        val token = getGitTokenResult.data!!
+        return gitService.createGitTag(
+            repoName = repo.projectName,
+            tagName = tagName,
+            ref = ref,
             token = token,
             tokenType = finalTokenType
         )

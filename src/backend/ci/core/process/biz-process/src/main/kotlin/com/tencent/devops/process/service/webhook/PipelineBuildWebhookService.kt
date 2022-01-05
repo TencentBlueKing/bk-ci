@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
@@ -55,6 +56,8 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
@@ -64,12 +67,12 @@ import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -331,11 +334,12 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
-            if (!element.isElementEnable()) {
+            if (!element.isElementEnable() || element !is WebHookTriggerElement) {
                 logger.info("Trigger element is disable, can not start pipeline")
                 return@elements
             }
-            val webHookParams = ScmWebhookParamsFactory.getWebhookElementParams(element, variables) ?: return@elements
+            val webHookParams = WebhookElementParamsRegistrar.getService(element)
+                .getWebhookElementParams(element, variables) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -377,7 +381,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
-                        params = ScmWebhookParamsFactory.getStartParams(
+                        params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                             projectId = projectId,
                             element = element,
                             repo = repo,
@@ -402,7 +406,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                         taskId = element.id!!,
                         taskName = element.name,
                         success = true,
-                        triggerResult = buildId
+                        triggerResult = buildId,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
                 } catch (ignore: Exception) {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -76,5 +77,5 @@ interface UserGithubResource {
     @ApiOperation("获取github触发原子配置")
     @GET
     @Path("/githubAppUrl")
-    fun getGithubAppUrl(): Result<String>
+    fun getGithubAppUrl(): Result<GithubAppUrl>
 }

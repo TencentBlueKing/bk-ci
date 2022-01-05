@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -45,30 +46,51 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
-    fun buildContext(buildId: String, containerId: String?, buildVar: Map<String, String>): Map<String, String> {
+    fun buildContext(
+        buildId: String,
+        containerId: String?,
+        variables: Map<String, String>
+    ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
-        val varMap = mutableMapOf<String, String>()
+        val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { c ->
-                    buildJobContext(c, containerId, varMap, stage)
-                    // steps
-                    buildStepContext(c, varMap, buildVar)
+                stage.containers.forEachIndexed { index, container ->
+                    buildJobContext(
+                        stage = stage,
+                        c = container,
+                        containerId = containerId,
+                        contextMap = contextMap,
+                        variables = variables,
+                        inMatrix = false,
+                        groupIndex = 0
+                    )
+                    container.fetchGroupContainers()?.forEachIndexed { index, c ->
+                        buildJobContext(
+                            stage = stage,
+                            c = c,
+                            containerId = containerId,
+                            contextMap = contextMap,
+                            variables = variables,
+                            inMatrix = true,
+                            groupIndex = index
+                        )
+                    }
                 }
             }
-            buildCiContext(varMap, buildVar)
+            buildCiContext(contextMap, variables)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
 
-        return varMap
+        return contextMap
     }
 
     fun getAllBuildContext(buildVar: Map<String, String>): Map<String, String> {
@@ -101,60 +123,67 @@ class PipelineContextService @Autowired constructor(
         }
     }
 
-    private fun buildStepContext(
-        c: Container,
-        varMap: MutableMap<String, String>,
-        buildVar: Map<String, String>
-    ) {
-        c.elements.forEach { e ->
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.name"] = e.name
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.id"] = e.id ?: ""
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.status"] = getStepStatus(e)
-            varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.outcome"] = e.status ?: ""
-            varMap["steps.${e.id}.name"] = e.name
-            varMap["steps.${e.id}.id"] = e.id ?: ""
-            varMap["steps.${e.id}.status"] = getStepStatus(e)
-            varMap["steps.${e.id}.outcome"] = e.status ?: ""
-            varMap.putAll(getStepOutput(c, e, buildVar))
-        }
-    }
-
     private fun buildJobContext(
+        stage: Stage,
         c: Container,
         containerId: String?,
-        varMap: MutableMap<String, String>,
-        stage: Stage
+        contextMap: MutableMap<String, String>,
+        variables: Map<String, String>,
+        inMatrix: Boolean,
+        groupIndex: Int
     ) {
         // current job
-        if (c.id != null && c.id!! == containerId) {
-            varMap["job.id"] = c.jobId ?: ""
-            varMap["job.name"] = c.name
-            varMap["job.status"] = getJobStatus(c)
-            varMap["job.outcome"] = c.status ?: ""
-            varMap["job.container.network"] = getNetWork(c)
-            varMap["job.stage_id"] = stage.id ?: ""
-            varMap["job.stage_name"] = stage.name ?: ""
+        if (c.id?.let { it == containerId } == true) {
+            contextMap["job.id"] = c.jobId ?: ""
+            contextMap["job.name"] = c.name
+            contextMap["job.status"] = getJobStatus(c)
+            contextMap["job.outcome"] = c.status ?: ""
+            contextMap["job.container.network"] = getNetWork(c) ?: ""
+            contextMap["job.stage_id"] = stage.id ?: ""
+            contextMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.index"] = groupIndex.toString()
         }
 
         // other job
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.id"] = c.jobId ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.name"] = c.name
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.status"] = getJobStatus(c)
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.outcome"] = c.status ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.container.network"] = getNetWork(c)
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_id"] = stage.id ?: ""
-        varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_name"] = stage.name ?: ""
+        val jobId = c.jobId ?: return
+        contextMap["jobs.$jobId.id"] = jobId
+        contextMap["jobs.$jobId.name"] = c.name
+        contextMap["jobs.$jobId.status"] = getJobStatus(c)
+        contextMap["jobs.$jobId.outcome"] = c.status ?: ""
+        contextMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
+        contextMap["jobs.$jobId.stage_id"] = stage.id ?: ""
+        contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
+
+        // all element
+        buildStepContext(c, contextMap)
+
+        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
+        // 后续需要改为只有本job才去掉前缀
+        if (inMatrix && c.id?.let { it == containerId } != true) return
+        variables.forEach { (key, value) ->
+            val prefix = "jobs.${c.jobId ?: containerId}."
+            if (key.startsWith(prefix)) {
+                contextMap[key.removePrefix(prefix)] = value
+            }
+        }
     }
 
-    private fun getStepOutput(c: Container, e: Element, buildVar: Map<String, String>): Map<out String, String> {
-        val outputMap = mutableMapOf<String, String>()
-        buildVar.filterKeys { it.startsWith("steps.${e.id ?: ""}.outputs.") }.forEach { (t, u) ->
-            outputMap["jobs.${c.jobId ?: c.id ?: ""}.$t"] = u
+    private fun buildStepContext(
+        c: Container,
+        contextMap: MutableMap<String, String>
+    ) {
+        c.elements.forEach { e ->
+            val stepId = e.stepId ?: return@forEach
+            contextMap["steps.$stepId.name"] = e.name
+            contextMap["steps.$stepId.id"] = e.id ?: ""
+            contextMap["steps.$stepId.status"] = getStepStatus(e)
+            contextMap["steps.$stepId.outcome"] = e.status ?: ""
+            val jobId = c.jobId ?: return@forEach
+            contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
+            contextMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
+            contextMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
+            contextMap["jobs.$jobId.steps.$stepId.outcome"] = e.status ?: ""
         }
-        buildVar.filterKeys { it.startsWith("jobs.${c.id ?: ""}.os") }.forEach { (_, u) ->
-            outputMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = u
-        }
-        return outputMap
     }
 
     private fun getNetWork(c: Container) = when (c) {
@@ -162,17 +191,15 @@ class PipelineContextService @Autowired constructor(
             if (c.dispatchType?.buildType() != BuildType.THIRD_PARTY_AGENT_ID &&
                 c.dispatchType?.buildType() != BuildType.THIRD_PARTY_AGENT_ENV
             ) {
-                "DEVNET"
+                GatewayType.DEVNET.name
             } else {
-                "IDC"
+                GatewayType.IDC.name
             }
         }
         is NormalContainer -> {
-            "IDC"
+            GatewayType.IDC.name
         }
-        else -> {
-            ""
-        }
+        else -> null
     }
 
     private fun getJobStatus(c: Container): String {

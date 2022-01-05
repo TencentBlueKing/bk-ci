@@ -32,11 +32,14 @@ import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_ID
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -56,12 +59,13 @@ class TemplateDao {
         versionName: String,
         userId: String,
         template: String,
-        storeFlag: Boolean
+        storeFlag: Boolean,
+        version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.insertInto(
                 this,
-                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG
+                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG, VERSION
             )
                 .values(
                     projectId,
@@ -71,7 +75,8 @@ class TemplateDao {
                     userId,
                     LocalDateTime.now(),
                     template,
-                    storeFlag
+                    storeFlag,
+                    version
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -91,7 +96,8 @@ class TemplateDao {
         logoUrl: String?,
         srcTemplateId: String?,
         storeFlag: Boolean,
-        weight: Int
+        weight: Int,
+        version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.insertInto(
@@ -108,7 +114,8 @@ class TemplateDao {
                 LOGO_URL,
                 SRC_TEMPLATE_ID,
                 STORE_FLAG,
-                WEIGHT
+                WEIGHT,
+                VERSION
             )
                 .values(
                     projectId,
@@ -123,7 +130,8 @@ class TemplateDao {
                     logoUrl,
                     srcTemplateId,
                     storeFlag,
-                    weight
+                    weight,
+                    version
                 )
                 .returning(VERSION)
                 .fetchOne()!!.version
@@ -445,7 +453,10 @@ class TemplateDao {
         if (storeFlag != null) {
             conditions.add(a.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`("templateId"), a.VERSION.max().`as`("version")).from(a).where(conditions).groupBy(a.ID)
+        val t = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(a)
+            .where(conditions)
+            .groupBy(a.ID)
 
         val baseStep = dslContext.select(
             a.ID.`as`("templateId"),
@@ -465,11 +476,11 @@ class TemplateDao {
             .from(a)
             .join(t)
             .on(
-                a.ID.eq(t.field("templateId", String::class.java)).and(
-                    a.VERSION.eq(
+                a.ID.eq(t.field(KEY_ID, String::class.java)).and(
+                    a.CREATED_TIME.eq(
                         t.field(
-                            "version",
-                            Long::class.java
+                            KEY_CREATE_TIME,
+                            LocalDateTime::class.java
                         )
                     )
                 )
@@ -503,10 +514,10 @@ class TemplateDao {
         templateList: List<String>
     ): Result<out Record> {
         val a = TTemplate.T_TEMPLATE.`as`("a")
-        val b = dslContext.select(
-            a.ID,
-            a.VERSION.max().`as`("VERSION")
-        ).from(a).where(a.ID.`in`(templateList)).groupBy(a.ID).asTable("b")
+        val b = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(a)
+            .where(a.ID.`in`(templateList))
+            .groupBy(a.ID)
 
         return dslContext.select(
             a.VERSION,
@@ -521,8 +532,8 @@ class TemplateDao {
             a.LOGO_URL
         ).from(a)
             .innerJoin(b)
-            .on(a.ID.eq(b.field("ID", String::class.java)))
-            .where(a.VERSION.eq(b.field("VERSION", Long::class.java)))
+            .on(a.ID.eq(b.field(KEY_ID, String::class.java)))
+            .where(a.CREATED_TIME.eq(b.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .and(a.ID.`in`(templateList))
             .fetch()
     }
@@ -536,7 +547,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.eq(templateId))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }
@@ -549,7 +560,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }

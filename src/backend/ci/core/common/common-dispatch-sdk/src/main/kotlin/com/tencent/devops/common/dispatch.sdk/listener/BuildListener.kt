@@ -29,17 +29,18 @@ package com.tencent.devops.common.dispatch.sdk.listener
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.service.DispatchService
+import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
@@ -117,6 +118,7 @@ interface BuildListener {
                 vmSeqId = event.vmSeqId,
                 executeCount = event.executeCount
             )
+            DispatchLogRedisUtils.removeRedisExecuteCount(event.buildId)
         }
     }
 
@@ -236,7 +238,7 @@ interface BuildListener {
             logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")
 
             startTime = System.currentTimeMillis()
-
+            DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
             startup()
         } catch (e: BuildFailureException) {
             dispatchService.logRed(buildId = event.buildId,
@@ -326,6 +328,7 @@ interface BuildListener {
         e: BuildFailureException
     ) {
         dispatchService.onContainerFailure(event, e)
+        DispatchLogRedisUtils.removeRedisExecuteCount(event.buildId)
     }
 
     companion object {

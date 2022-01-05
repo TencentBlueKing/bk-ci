@@ -66,6 +66,7 @@ import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -112,6 +113,7 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -154,6 +156,7 @@ class TemplateFacadeService @Autowired constructor(
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val paramService: ParamFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -183,7 +186,8 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
                 template = JsonUtil.toJson(template, formatted = false),
-                storeFlag = false
+                storeFlag = false,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             pipelineSettingDao.insertNewSetting(
@@ -232,7 +236,8 @@ class TemplateFacadeService @Autowired constructor(
                 logoUrl = template.logoUrl,
                 srcTemplateId = srcTemplateId,
                 storeFlag = false,
-                weight = 0
+                weight = 0,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             if (copyTemplateReq.isCopySetting) {
@@ -290,7 +295,8 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
                 template = template,
-                storeFlag = false
+                storeFlag = false,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
             if (saveAsTemplateReq.isCopySetting) {
@@ -427,11 +433,23 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE,
+                defaultMessage = "来自研发商店的模板无法进行更新"
+            )
+        }
         var version: Long = 0
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
+            pipelineSettingDao.updateSetting(
+                dslContext = context,
+                pipelineId = templateId,
+                name = template.name,
+                desc = template.desc ?: ""
+            )
             version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
@@ -445,7 +463,8 @@ class TemplateFacadeService @Autowired constructor(
                 logoUrl = latestTemplate.logoUrl,
                 srcTemplateId = latestTemplate.srcTemplateId,
                 storeFlag = latestTemplate.storeFlag,
-                weight = latestTemplate.weight
+                weight = latestTemplate.weight,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
             logger.info("Get the update template version $version")
         }
@@ -1710,7 +1729,8 @@ class TemplateFacadeService @Autowired constructor(
                 templateParams = templateParams,
                 buildNo = buildNo,
                 canRetry = canRetry,
-                containerId = containerId
+                containerId = containerId,
+                containerHashId = containerHashId
             )
         }
 
@@ -1761,7 +1781,8 @@ class TemplateFacadeService @Autowired constructor(
             params = params, templateParams = templateParams,
             buildNo = triggerContainer.buildNo,
             canRetry = triggerContainer.canRetry,
-            containerId = triggerContainer.containerId
+            containerId = triggerContainer.containerId,
+            containerHashId = triggerContainer.containerHashId
         )
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         return Model(
@@ -2023,9 +2044,11 @@ class TemplateFacadeService @Autowired constructor(
             if (stage.tag == null) stage.tag = defaultTagIds
             stage.containers.forEach { container ->
                 if (container.containerId.isNullOrBlank()) {
-                    container.containerId = UUIDUtil.generate()
+                    container.containerId = container.id
                 }
-
+                if (container.containerHashId.isNullOrBlank()) {
+                    container.containerHashId = modelContainerIdGenerator.getNextId()
+                }
                 container.elements.forEach { e ->
                     if (e.id.isNullOrBlank()) {
                         e.id = modelTaskIdGenerator.getNextId()
@@ -2117,7 +2140,8 @@ class TemplateFacadeService @Autowired constructor(
                     logoUrl = addMarketTemplateRequest.logoUrl,
                     srcTemplateId = templateCode,
                     storeFlag = true,
-                    weight = 0
+                    weight = 0,
+                    version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
                 )
                 pipelineSettingDao.insertNewSetting(
                     dslContext = context,
@@ -2197,5 +2221,6 @@ class TemplateFacadeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val INIT_TEMPLATE_NAME = "init"
+        private const val TEMPLATE_BIZ_TAG_NAME = "TEMPLATE"
     }
 }

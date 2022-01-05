@@ -1,7 +1,7 @@
 import com.tencent.devops.utils.findPropertyOrNull
 
 plugins {
-    id("com.tencent.devops.boot")
+    id("com.tencent.devops.boot") version "0.0.4"
     detektCheck
 }
 
@@ -34,6 +34,7 @@ allprojects {
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
+            dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
             dependency("org.apache.commons:commons-text:${Versions.CommonText}")
             dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
@@ -60,6 +61,7 @@ allprojects {
             dependency("org.elasticsearch.client:elasticsearch-rest-client:${Versions.Elasticsearch}")
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
+            dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependencySet("io.github.openfeign:${Versions.Feign}") {
                 entry("feign-core")
                 entry("feign-jackson")
@@ -74,6 +76,10 @@ allprojects {
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
+            }
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+                entry("log4j-api")
+                entry("log4j-core")
             }
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")

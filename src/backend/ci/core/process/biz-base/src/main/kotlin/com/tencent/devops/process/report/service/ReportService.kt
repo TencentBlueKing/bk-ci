@@ -36,12 +36,14 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.report.dao.ReportDao
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,6 +57,7 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
@@ -95,7 +98,8 @@ class ReportService @Autowired constructor(
                 elementId = taskId,
                 indexFile = indexFilePath,
                 name = name,
-                type = reportType.name
+                type = reportType.name,
+                id = client.get(ServiceAllocIdResource::class).generateSegmentId("REPORT").data
             )
 //        } else {
 //            reportDao.update(
@@ -146,7 +150,7 @@ class ReportService @Autowired constructor(
             buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
+            val taskRecord = pipelineTaskService.getBuildTask(reportListDTO.buildId, it.elementId)
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
             if (it.type == ReportTypeEnum.INTERNAL.name) {

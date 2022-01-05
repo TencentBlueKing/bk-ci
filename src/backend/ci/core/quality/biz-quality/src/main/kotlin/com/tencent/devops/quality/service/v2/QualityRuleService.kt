@@ -336,7 +336,8 @@ class QualityRuleService @Autowired constructor(
                 metadataList = it.metadataList,
                 desc = it.desc,
                 logPrompt = it.logPrompt,
-                enable = it.enable
+                enable = it.enable,
+                range = it.range
             )
         }
         return QualityRule(

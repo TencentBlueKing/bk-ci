@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
@@ -40,9 +42,12 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -71,6 +76,8 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -79,7 +86,15 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
-@Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "ReturnCount")
+@Suppress(
+    "LongParameterList",
+    "LargeClass",
+    "TooManyFunctions",
+    "LongMethod",
+    "ReturnCount",
+    "ComplexMethod",
+    "ThrowsCount"
+)
 @Service
 class PipelineRepositoryService constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -98,7 +113,8 @@ class PipelineRepositoryService constructor(
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val versionConfigure: VersionConfigure,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val client: Client
 ) {
 
     fun deployPipeline(
@@ -190,7 +206,7 @@ class PipelineRepositoryService constructor(
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
-            s.refreshReviewOption(true)
+            s.resetBuildOption(true)
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,
@@ -239,13 +255,18 @@ class PipelineRepositoryService constructor(
                 defaultMessage = "非法的流水线编排"
             )
         }
-        val c = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-            defaultMessage = "第一阶段的环境不能为空"
-        )) as TriggerContainer
+        val c = (
+            stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                defaultMessage = "第一阶段的环境不能为空"
+            )
+            ) as TriggerContainer
+
+        // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
-        if (c.containerId.isNullOrBlank()) {
-            c.containerId = modelContainerIdGenerator.getNextId()
+        c.containerId = c.id
+        if (c.containerHashId.isNullOrBlank()) {
+            c.containerHashId = modelContainerIdGenerator.getNextId()
         }
 
         var taskSeq = 0
@@ -332,9 +353,33 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
-            if (c.containerId.isNullOrBlank()) {
-                c.containerId = UUIDUtil.generate()
+            try {
+                when {
+                    c.matrixGroupFlag != true -> {
+                        // c.matrixGroupFlag 不为 true 时 不需要做yaml检查
+                    }
+                    c is NormalContainer -> {
+                        matrixYamlCheck(c.matrixControlOption)
+                    }
+                    c is VMBuildContainer -> {
+                        matrixYamlCheck(c.matrixControlOption)
+                    }
+                }
+            } catch (ignore: Exception) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
+                    params = arrayOf(c.name, ignore.message ?: ""),
+                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误: ${ignore.message}"
+                )
             }
+
+            // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
+            c.id = containerSeqId.get().toString()
+            c.containerId = c.id
+            if (c.containerHashId.isNullOrBlank()) {
+                c.containerHashId = modelContainerIdGenerator.getNextId()
+            }
+
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank()) {
                     e.id = modelTaskIdGenerator.getNextId()
@@ -381,6 +426,29 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    private fun matrixYamlCheck(option: MatrixControlOption?) {
+        if (option == null) throw DependNotFoundException("matrix option not found")
+        if (option.strategyStr.isNullOrBlank()) {
+            throw DependNotFoundException("Matrix Yaml is blank")
+        }
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+            throw InvalidParamException(
+                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX /" +
+                    "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX"
+            )
+        }
+        MatrixContextUtils.schemaCheck(
+            JsonUtil.toJson(
+                MatrixPipelineInfo(
+                    include = option.includeCaseStr,
+                    exclude = option.excludeCaseStr,
+                    strategy = option.strategyStr
+                ).toMatrixConvert()
+            )
+        )
+    }
+
     private fun create(
         projectId: String,
         pipelineId: String,
@@ -396,6 +464,7 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineInfoDao.create(
@@ -409,7 +478,8 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode,
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
-                taskCount = taskCount
+                taskCount = taskCount,
+                id = id
             )
             model.latestVersion = 1
             pipelineResDao.create(
@@ -466,7 +536,9 @@ class PipelineRepositoryService constructor(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            failNotifyTypes = notifyTypes
+                            failNotifyTypes = notifyTypes,
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
                         )
                     }
                 } else {
@@ -644,7 +716,7 @@ class PipelineRepositoryService constructor(
     fun getModel(pipelineId: String, version: Int? = null): Model? {
         var modelString: String?
         if (version == null) { // 取最新版，直接从旧版本表读
-            modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
+            modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, null) ?: return null
         } else {
             modelString = pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
             if (modelString.isNullOrBlank()) {
@@ -668,12 +740,11 @@ class PipelineRepositoryService constructor(
         delete: Boolean
     ): DeletePipelineResult {
 
-        val record =
-            (pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                    defaultMessage = "要删除的流水线不存在"
-                ))
+        val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "要删除的流水线不存在"
+            )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
 
@@ -895,7 +966,8 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 excludePipelineId = setting.pipelineId,
                 pipelineName = setting.pipelineName
-            )) {
+            )
+        ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
@@ -923,7 +995,14 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = old.maxPipelineResNum
                     )
                 }
-                pipelineSettingVersionDao.saveSetting(context, setting, version = version)
+                pipelineSettingVersionDao.saveSetting(
+                    dslContext = context,
+                    setting = setting,
+                    version = version,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                        PIPELINE_SETTING_VERSION_BIZ_TAG_NAME
+                    ).data
+                )
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
         }
@@ -1035,5 +1114,6 @@ class PipelineRepositoryService constructor(
     companion object {
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
+        private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
     }
 }
