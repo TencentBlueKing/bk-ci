@@ -173,7 +173,7 @@ class QualityIndicatorService @Autowired constructor(
     fun serviceList(
         elementType: String,
         enNameSet: Collection<String>,
-        projectId: String ?= null
+        projectId: String? = null
     ): List<QualityIndicator> {
         return if (enNameSet.isNotEmpty()) {
             val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
