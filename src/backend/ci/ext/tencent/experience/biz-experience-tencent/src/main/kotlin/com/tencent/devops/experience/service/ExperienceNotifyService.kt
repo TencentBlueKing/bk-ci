@@ -35,10 +35,7 @@ import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.QUEUE_NOTIFY_APP
 import com.tencent.devops.notify.ROUTE_APP
 import com.tencent.xinge.XingeApp
-import com.tencent.xinge.bean.AudienceType
-import com.tencent.xinge.bean.Message
-import com.tencent.xinge.bean.MessageAndroid
-import com.tencent.xinge.bean.MessageType
+import com.tencent.xinge.bean.*
 import com.tencent.xinge.push.app.PushAppRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -124,6 +121,7 @@ class ExperienceNotifyService @Autowired constructor(
         val platform = appNotifyMessageWithOperation.platform
         val appId = if (platform == "ANDROID") androidAppId else iosAppId
         val secretKey = if (platform == "ANDROID") androidSecretKey else iosSecretKey
+
         val xingeApp = XingeApp.Builder()
             .appId(appId)
             .secretKey(secretKey)
@@ -143,6 +141,10 @@ class ExperienceNotifyService @Autowired constructor(
         // 单设备推送
         pushAppRequest.audience_type = AudienceType.token
         pushAppRequest.message_type = MessageType.notify
+        // 若为IOS，则需要选择"dev或者product环境"
+        if (appNotifyMessageWithOperation.platform == "IOS") {
+            pushAppRequest.environment = Environment.valueOf("dev")
+        }
         val message = Message()
         message.title = appNotifyMessageWithOperation.title
         message.content = appNotifyMessageWithOperation.body
