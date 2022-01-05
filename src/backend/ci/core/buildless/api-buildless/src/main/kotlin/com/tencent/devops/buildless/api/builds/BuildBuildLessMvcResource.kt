@@ -25,13 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
-    // implementation("org.springframework.boot:spring-boot-starter-webflux")
-}
+package com.tencent.devops.buildless.api.builds
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.buildless.pojo.BuildLessTask
+import io.swagger.annotations.ApiParam
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.context.request.async.DeferredResult
+import javax.ws.rs.QueryParam
+
+@RestController
+@RequestMapping("/build")
+interface BuildBuildLessMvcResource {
+
+    @GetMapping("/task/claim", produces = [org.springframework.http.MediaType.APPLICATION_JSON_VALUE])
+    fun claimBuildLessTask(
+        @ApiParam(value = "containerId", required = true)
+        @QueryParam("containerId")
+        containerId: String
+    ): DeferredResult<BuildLessTask?>
 }
