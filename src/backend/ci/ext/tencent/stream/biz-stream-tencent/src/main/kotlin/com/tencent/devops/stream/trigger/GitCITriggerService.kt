@@ -237,12 +237,7 @@ class GitCITriggerService @Autowired constructor(
         val isDeleteEvent = event.isDeleteEvent()
 
         val deleteEventPathWithFile = if (isDeleteEvent) {
-            getDeleteEventYaml(gitRequestEvent, path2PipelineExists).apply {
-                if (isEmpty()) {
-                    // 删除事件没有流水线则直接返回，不对没有配置删除流水线的用户造成干扰
-                    return true
-                }
-            }
+            getDeleteEventYaml(gitRequestEvent, path2PipelineExists)
         } else {
             null
         }
