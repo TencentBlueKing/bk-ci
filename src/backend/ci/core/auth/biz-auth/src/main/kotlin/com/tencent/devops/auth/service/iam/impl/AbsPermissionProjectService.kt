@@ -136,7 +136,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             return true
         }
         // 获取用户所在的所有组,包括以组织架构形式加入的用户组
-        val joinGroupIds = policyService.getUserGroup(userId, true).map { it.id }
+        val joinGroupIds = policyService.getUserGroup(userId, true)?.map { it.id } ?: emptyList()
         val projectGroupIds = iamCacheService.getProjectGroup(projectCode)
         // 加入的用户组与项目下的用户组取交集。若有交集说明加入的用户组内存在待校验项目下的用户组
         return joinGroupIds.intersect(projectGroupIds).isNotEmpty()
