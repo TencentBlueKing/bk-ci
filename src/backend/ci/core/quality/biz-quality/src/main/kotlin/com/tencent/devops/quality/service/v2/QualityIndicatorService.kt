@@ -45,6 +45,7 @@ import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
+import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.InstalledAtom
@@ -169,14 +170,21 @@ class QualityIndicatorService @Autowired constructor(
         }
     }
 
-    fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+    fun serviceList(
+        elementType: String,
+        enNameSet: Collection<String>,
+        projectId: String ?= null
+    ): List<QualityIndicator> {
         return if (enNameSet.isNotEmpty()) {
+            val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
             val indicatorTMap = indicatorDao.listByElementType(
                 dslContext = dslContext,
                 elementType = elementType,
                 type = null,
-                enNameSet = enNameSet
+                enNameSet = enNameSet,
+                projectId = tempProjectId
             )?.map { it.enName to it }?.toMap()
+            logger.info("QUALITY|enNameSet is: $enNameSet, indicatorTMap is: $indicatorTMap")
             enNameSet.map { enName ->
                 val indicator = indicatorTMap?.get(enName) ?: throw OperationException("indicator $enName is not exist")
                 val metadataIds = convertMetaIds(indicator?.metadataIds)

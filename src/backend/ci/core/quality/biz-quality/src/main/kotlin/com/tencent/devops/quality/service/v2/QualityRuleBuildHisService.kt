@@ -113,7 +113,7 @@ class QualityRuleBuildHisService constructor(
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 var indicatorsCopy = indicators.toMutableList()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName })
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }, projectId)
                     .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
                     val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
