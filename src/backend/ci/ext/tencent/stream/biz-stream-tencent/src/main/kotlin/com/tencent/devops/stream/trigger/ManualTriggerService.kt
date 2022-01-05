@@ -97,28 +97,7 @@ class ManualTriggerService @Autowired constructor(
 
         // open api模拟工蜂事件触发
         val gitRequestEvent = if (!triggerBuildReq.payload.isNullOrEmpty()) {
-            val gitEvent = try {
-                objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
-            } catch (ignore: Exception) {
-                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
-                )
-            }
-            val gitRequestEvent =
-                triggerParameter.getGitRequestEvent(gitEvent, triggerBuildReq.payload!!) ?: throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "event invalid"
-                )
-            // 仅支持当前仓库下的 event
-            if (gitRequestEvent.gitProjectId != triggerBuildReq.gitProjectId) {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "Only events in the current repository [${triggerBuildReq.gitProjectId}] are supported"
-                )
-            }
-            gitRequestEvent
+            mockWebhookTrigger(triggerBuildReq)
         } else {
             GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
         }
@@ -261,6 +240,37 @@ class ManualTriggerService @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq): GitRequestEvent {
+        if (triggerBuildReq.eventType.isNullOrBlank()) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "eventType can't be empty"
+            )
+        }
+        val gitEvent = try {
+            objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
+        } catch (ignore: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
+            )
+        }
+        val gitRequestEvent =
+            triggerParameter.getGitRequestEvent(gitEvent, triggerBuildReq.payload!!) ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "event invalid"
+            )
+        // 仅支持当前仓库下的 event
+        if (gitRequestEvent.gitProjectId != triggerBuildReq.gitProjectId) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "Only events in the current repository [${triggerBuildReq.gitProjectId}] are supported"
+            )
+        }
+        return gitRequestEvent
     }
 
     fun handleTrigger(

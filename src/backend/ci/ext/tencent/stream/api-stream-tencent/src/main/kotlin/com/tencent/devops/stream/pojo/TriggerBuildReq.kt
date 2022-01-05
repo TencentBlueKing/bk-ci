@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -55,8 +56,12 @@ data class TriggerBuildReq(
     val description: String?,
     @ApiModelProperty("用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("工蜂请求体")
+    @ApiModelProperty("事件请求体")
     val payload: String? = null,
+    @ApiModelProperty("模拟代码库类型")
+    val scmType: ScmType = ScmType.CODE_GIT,
+    @ApiModelProperty("模拟代码事件类型")
+    val eventType: String? = null,
     val objectKind: String = TGitObjectKind.OBJECT_KIND_MANUAL
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 

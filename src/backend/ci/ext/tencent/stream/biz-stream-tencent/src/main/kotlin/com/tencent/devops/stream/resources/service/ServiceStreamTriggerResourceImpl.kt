@@ -40,6 +40,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 description = description,
                 commitId = commitId,
                 payload = payload,
+                scmType = scmType,
+                eventType = eventType,
                 objectKind = objectKind
             )
         }
