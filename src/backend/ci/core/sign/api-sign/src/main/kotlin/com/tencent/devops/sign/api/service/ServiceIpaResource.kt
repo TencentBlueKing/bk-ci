@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaResource {
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取签名任务历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/sign/history")
