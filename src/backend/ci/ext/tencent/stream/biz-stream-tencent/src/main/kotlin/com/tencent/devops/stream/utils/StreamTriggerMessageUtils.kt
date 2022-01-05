@@ -38,13 +38,17 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 "[${event.branch}] Manual Triggered by ${event.userId}"
             }
             TGitObjectKind.TAG_PUSH.value -> {
-                val eventMap = try {
-                    objectMapper.readValue<GitTagPushEvent>(event.event)
-                } catch (e: Exception) {
-                    logger.error("event as GitTagPushEvent error ${e.message}")
-                    null
+                if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
+                    "[${event.branch}] tag [${event.commitId}] delete by ${event.userId}"
+                } else {
+                    val eventMap = try {
+                        objectMapper.readValue<GitTagPushEvent>(event.event)
+                    } catch (e: Exception) {
+                        logger.error("event as GitTagPushEvent error ${e.message}")
+                        null
+                    }
+                    "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
                 }
-                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
             }
             TGitObjectKind.SCHEDULE.value -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
@@ -64,13 +68,6 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     } else {
                         "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
                     }
-                }
-            }
-            TGitObjectKind.TAG_PUSH.value -> {
-                if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
-                    "[${event.branch}] tag [${event.commitId}] delete by ${event.userId}"
-                } else {
-                    "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
                 }
             }
             else -> {
