@@ -32,42 +32,43 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.stream.common.exception.TriggerThirdException
 import com.tencent.devops.stream.common.exception.Yamls
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
-import com.tencent.devops.stream.config.StreamStorageBean
-import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
-import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.PreTrigger
+import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
-import com.tencent.devops.stream.v2.service.StreamGitTokenService
-import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.DeleteEventService
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -246,18 +247,30 @@ class GitCITriggerService @Autowired constructor(
             null
         }
 
+        val gitProjectInfo = streamScmService.getProjectInfoRetry(
+            token = gitToken,
+            gitProjectId = gitRequestEvent.gitProjectId.toString(),
+            useAccessToken = true
+        )
+
         val yamlPathList = if (isDeleteEvent) {
-            deleteEventPathWithFile?.keys ?: emptySet()
+            getYamlPathList(
+                isFork = false,
+                forkGitToken = null,
+                gitRequestEvent = gitRequestEvent.copy(branch = gitProjectInfo.defaultBranch ?: ""),
+                mrEvent = false,
+                gitToken = gitToken
+            )
         } else {
             getYamlPathList(isFork, forkGitToken, gitRequestEvent, mrEvent, gitToken)
         }
 
         logger.info(
             "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
-                    "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
-                    "commitTime:${gitRequestEvent.commitTimeStamp}, " +
-                    "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
-                    "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
+                "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
+                "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+                "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
+                "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
         )
 
         // 如果没有Yaml文件则直接不触发
@@ -340,6 +353,7 @@ class GitCITriggerService @Autowired constructor(
                             isMerged = isMerged,
                             gitProjectConf = gitProjectConf,
                             forkGitProjectId = forkGitProjectId,
+                            gitProjectInfo = gitProjectInfo,
                             deleteEventPathWithFile = deleteEventPathWithFile
                         )
                     },
@@ -375,6 +389,7 @@ class GitCITriggerService @Autowired constructor(
         isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting,
         forkGitProjectId: Long?,
+        gitProjectInfo: GitCIProjectInfo,
         deleteEventPathWithFile: Map<String, String>?
     ) {
         val start = LocalDateTime.now().timestampmilli()
@@ -420,7 +435,15 @@ class GitCITriggerService @Autowired constructor(
             orgYaml
         } else {
             if (event.isDeleteEvent()) {
-                deleteEventPathWithFile?.get(filePath) ?: ""
+                (deleteEventPathWithFile?.get(filePath) ?: "").ifEmpty {
+                    streamScmService.getYamlFromGit(
+                        token = forkGitToken ?: gitToken,
+                        ref = gitProjectInfo.defaultBranch ?: "",
+                        fileName = filePath,
+                        gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
+                        useAccessToken = true
+                    )
+                }
             } else {
                 streamScmService.getYamlFromGit(
                     token = forkGitToken ?: gitToken,
