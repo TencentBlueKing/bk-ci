@@ -59,5 +59,5 @@ data class WebHookParams(
     // code review状态
     var includeCrState: String? = null,
     // 事件action
-    var includeAction: String? = null,
+    var includeIssueAction: String? = null,
 )

@@ -70,7 +70,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
         params.includeCrState = joinToString(element.includeCrState)
-        params.includeAction = joinToString(element.includeAction)
+        params.includeIssueAction = joinToString(element.includeIssueAction)
         return params
     }
 

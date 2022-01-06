@@ -106,7 +106,7 @@ class TGitIssueTriggerHandler : GitHookTriggerHandler<GitIssueEvent> {
         val actionFilter = ActionFilter(
             pipelineId = pipelineId,
             triggerOnAction = event.objectAttributes.action,
-            includedAction = WebhookUtils.convert(webHookParams.includeAction)
+            includedAction = WebhookUtils.convert(webHookParams.includeIssueAction)
         )
         return listOf(actionFilter)
     }
