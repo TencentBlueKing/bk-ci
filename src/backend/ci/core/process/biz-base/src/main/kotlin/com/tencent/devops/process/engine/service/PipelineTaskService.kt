@@ -563,7 +563,7 @@ class PipelineTaskService @Autowired constructor(
         model: Model?,
         taskRecord: PipelineBuildTask
     ): Pair<String, String> {
-        val containerName = model?.getContainer(taskRecord.containerId) ?: ""
+        val containerName = model?.getContainer(taskRecord.containerId)?.name ?: ""
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = taskRecord.taskName
 
