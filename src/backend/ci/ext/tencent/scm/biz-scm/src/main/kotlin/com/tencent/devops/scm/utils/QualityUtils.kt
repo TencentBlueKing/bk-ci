@@ -36,6 +36,7 @@ object QualityUtils {
         } else {
             "蓝盾流水线"
         }
+        val ruleName = titleData[6]
 
         // 生成报表
         val title = "<table><tr>" +
@@ -43,6 +44,8 @@ object QualityUtils {
                 "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
                 "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
+                "<td style=\"border:none;padding-right: 0\">质量红线：</td>" +
+                "<td style=\"border:none;padding-left:0;\">$ruleName</td>" +
                 "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")
