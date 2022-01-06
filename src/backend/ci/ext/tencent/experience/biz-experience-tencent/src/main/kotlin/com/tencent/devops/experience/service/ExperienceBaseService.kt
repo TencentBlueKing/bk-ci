@@ -226,7 +226,17 @@ class ExperienceBaseService @Autowired constructor(
     /**
      *  判断是否订阅
      */
-    fun isSubscribe(experienceId: Long, userId: String): Boolean {
+    fun isSubscribe(
+        experienceId: Long,
+        userId: String,
+        platform: String,
+        bundleIdentifier: String,
+        projectId: String
+    ): Boolean {
+        val isSubscribe = lazy {
+            experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
+                .isNotEmpty
+        }
         val groupIds = getGroupIdsByRecordId(experienceId)
         val isOuterGroup = lazy {
             getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
@@ -244,12 +254,9 @@ class ExperienceBaseService @Autowired constructor(
             experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
                 .contains(userId)
         }
-        val isSubscribe = lazy {
-            experiencePushDao.getSubscription(dslContext, userId, experienceId).map { it.value2() }.toSet()
-                .contains(userId)
-        }
-        return isOuterGroup.value || isInnerGroup.value
-                || isInnerUser.value || isOuterUser.value || isSubscribe.value
+
+        return isSubscribe.value || isOuterGroup.value || isInnerGroup.value
+                || isInnerUser.value || isOuterUser.value
     }
 
     /**

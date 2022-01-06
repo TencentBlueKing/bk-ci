@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperiencePushResource
+import com.tencent.devops.experience.pojo.SubscribeParam
 import com.tencent.devops.experience.service.ExperiencePushService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -48,14 +49,20 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return experiencePushService.bindDeviceToken(userId, platform, token)
     }
 
-    override fun subscribe(userId: String, experienceHashId: String): Result<Boolean> {
-        checkParam(userId, experienceHashId)
-        return experiencePushService.subscribe(userId, experienceHashId)
+    override fun subscribe(userId: String, subscribeParam: SubscribeParam): Result<Boolean> {
+        val platform = subscribeParam.platform
+        val projectId = subscribeParam.projectId
+        val bundleIdentifier = subscribeParam.bundleIdentifier
+        checkParam(userId, platform, projectId, bundleIdentifier)
+        return experiencePushService.subscribe(userId, platform, projectId, bundleIdentifier)
     }
 
-    override fun unSubscribe(userId: String, experienceHashId: String): Result<Boolean> {
-        checkParam(userId, experienceHashId)
-        return experiencePushService.unSubscribe(userId, experienceHashId)
+    override fun unSubscribe(userId: String, subscribeParam: SubscribeParam): Result<Boolean> {
+        val platform = subscribeParam.platform
+        val projectId = subscribeParam.projectId
+        val bundleIdentifier = subscribeParam.bundleIdentifier
+        checkParam(userId, platform, projectId, bundleIdentifier)
+        return experiencePushService.unSubscribe(userId, platform, projectId, bundleIdentifier)
     }
 
     // todo  需要干掉
@@ -68,12 +75,23 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    fun checkParam(userId: String, experienceHashId: String) {
+    fun checkParam(
+        userId: String,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String
+    ) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-        if (experienceHashId.isBlank()) {
-            throw ParamBlankException("Invalid experienceHashId")
+        if (platform.isBlank()) {
+            throw ParamBlankException("Invalid platform")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (bundleIdentifier.isBlank()) {
+            throw ParamBlankException("Invalid bundleIdentifier")
         }
     }
 

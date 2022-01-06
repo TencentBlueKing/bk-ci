@@ -94,22 +94,35 @@ class ExperiencePushService @Autowired constructor(
         }
     }
 
-    fun subscribe(userId: String, experienceHashId: String): Result<Boolean> {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+    fun subscribe(
+        userId: String,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String
+    ): Result<Boolean> {
+        // todo  校验是否重复
         experiencePushDao.subscribe(
             dslContext = dslContext,
             userId = userId,
-            experienceId = experienceId
+            projectId = projectId,
+            bundle = bundleIdentifier,
+            platform = platform
         )
         return Result("订阅体验成功", true)
     }
 
-    fun unSubscribe(userId: String, experienceHashId: String): Result<Boolean> {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+    fun unSubscribe(
+        userId: String,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String
+    ): Result<Boolean> {
         val subscription = experiencePushDao.getSubscription(
             dslContext = dslContext,
             userId = userId,
-            experienceId = experienceId
+            projectId = projectId,
+            bundle = bundleIdentifier,
+            platform = platform
         )
         // todo 返回如果为空的处理
         return if (subscription.isEmpty()) {
@@ -118,7 +131,9 @@ class ExperiencePushService @Autowired constructor(
             experiencePushDao.unSubscribe(
                 dslContext,
                 userId = userId,
-                experienceId = experienceId
+                projectId = projectId,
+                bundle = bundleIdentifier,
+                platform = platform
             )
             Result("取消订阅成功", true)
         }

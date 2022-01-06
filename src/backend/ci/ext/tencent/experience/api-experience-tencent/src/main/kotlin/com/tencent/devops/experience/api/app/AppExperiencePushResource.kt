@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.SubscribeParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -69,9 +70,8 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("体验ID", required = true)
-        @QueryParam("experienceHashId")
-        experienceHashId: String
+        @ApiParam("订阅参数", required = true)
+        subscribeParam: SubscribeParam
     ): Result<Boolean>
 
     @ApiOperation("取消订阅体验")
@@ -81,9 +81,8 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("体验ID", required = true)
-        @QueryParam("experienceHashId")
-        experienceHashId: String
+        @ApiParam("取消订阅参数", required = true)
+        subscribeParam: SubscribeParam
     ): Result<Boolean>
 
     @ApiOperation("推送消息")

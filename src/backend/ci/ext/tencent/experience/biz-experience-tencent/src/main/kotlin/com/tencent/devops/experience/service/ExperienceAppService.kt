@@ -131,7 +131,7 @@ class ExperienceAppService(
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
-        val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId)
+        val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
         val isExpired = DateUtil.isExpired(experience.endDate)
         val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId

@@ -693,6 +693,8 @@ class ExperienceService @Autowired constructor(
             val name = experienceRecord.name
             val version = experienceRecord.version
             val userId = experienceRecord.creator
+            val platform = experienceRecord.platform
+            val bundleIdentifier = experienceRecord.bundleIdentifier
             val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
 
             val extraUsers =
@@ -704,7 +706,9 @@ class ExperienceService @Autowired constructor(
             val subscribeUser = experiencePushDao.getSubscription(
                 dslContext = dslContext,
                 userId = null,
-                experienceId = experienceId
+                projectId = projectId,
+                bundle = bundleIdentifier,
+                platform = platform
             ).map { it.value2() }.toSet()
 
             val receivers = mutableSetOf<String>()

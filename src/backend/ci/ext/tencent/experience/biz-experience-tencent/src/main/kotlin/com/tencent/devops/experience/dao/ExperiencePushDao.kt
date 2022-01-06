@@ -146,19 +146,25 @@ class ExperiencePushDao {
     fun subscribe(
         dslContext: DSLContext,
         userId: String,
-        experienceId: Long
+        projectId: String,
+        bundle: String,
+        platform: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
             return dslContext.insertInto(
                 this,
                 USER_ID,
-                RECORD_ID,
+                PROJECT_ID,
+                BUNDLE_IDENTIFIER,
+                PLATFORM,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
                 userId,
-                experienceId,
+                projectId,
+                bundle,
+                platform,
                 now,
                 now
             ).returning(ID)
@@ -169,12 +175,16 @@ class ExperiencePushDao {
     fun unSubscribe(
         dslContext: DSLContext,
         userId: String,
-        experienceId: Long
+        projectId: String,
+        bundle: String,
+        platform: String
     ) {
         with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
             dslContext.deleteFrom(this)
                 .where(USER_ID.eq(userId))
-                .and(RECORD_ID.eq(experienceId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundle))
+                .and(PLATFORM.eq(platform))
                 .execute()
         }
     }
@@ -182,12 +192,16 @@ class ExperiencePushDao {
     fun getSubscription(
         dslContext: DSLContext,
         userId: String?,
-        experienceId: Long
+        projectId: String,
+        bundle: String,
+        platform: String
     ): Result<TExperienceSubscribeRecord> {
         with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
             return dslContext.selectFrom(this)
-                .where(RECORD_ID.eq(experienceId))
-                .let { if (userId == null) it else it.and(RECORD_ID.eq(experienceId)) }
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundle))
+                .and(PLATFORM.eq(platform))
+                .let { if (userId == null) it else it.and(USER_ID.eq(userId)) }
                 .fetch()
         }
     }
