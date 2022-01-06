@@ -319,6 +319,7 @@ interface ApigwBuildResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("取消并发起新构建")
+    @POST
     @Path("/{buildId}/build/refresh")
     fun buildRefresh(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
