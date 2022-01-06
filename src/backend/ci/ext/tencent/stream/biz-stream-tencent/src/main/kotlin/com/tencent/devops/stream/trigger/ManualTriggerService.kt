@@ -82,7 +82,7 @@ class ManualTriggerService @Autowired constructor(
     private val triggerMatcher: TriggerMatcher,
     private val gitCISettingDao: StreamBasicSettingDao,
     private val triggerParameter: TriggerParameter,
-    private val objectMapper: ObjectMapper,
+    private val objectMapper: ObjectMapper
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
