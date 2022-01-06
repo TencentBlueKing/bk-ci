@@ -183,7 +183,7 @@ class TriggerMatcher @Autowired constructor(
             ).map { entry -> entry.key to entry.value.toString() }.toMap()
             TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = true)
+            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         }
     }
 
