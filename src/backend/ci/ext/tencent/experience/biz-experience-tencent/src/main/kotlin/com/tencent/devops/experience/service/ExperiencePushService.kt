@@ -93,12 +93,11 @@ class ExperiencePushService @Autowired constructor(
         }
     }
 
-    fun pushMessage(
-        userId: String,
-        title: String,
-        content: String,
-        url: String
-    ): Result<Boolean> {
+    fun pushMessage(appNotifyMessage: AppNotifyMessage): Result<Boolean> {
+        val content = appNotifyMessage.body
+        val title = appNotifyMessage.title
+        val userId = appNotifyMessage.receiver
+        val url = appNotifyMessage.url
         checkNotifyMessage(content, title, userId, url)
         // todo 有可能去掉该代码，因为后续 账号和设备绑定，可以直接通过账号推送消息
         // 通过userId获取用户绑定设备记录
@@ -118,10 +117,10 @@ class ExperiencePushService @Autowired constructor(
                 url = url,
                 platform = platform
             )
-        val appNotifyMessage =
-            createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId)
+        val message =
+            createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId, url)
         // 发送MQ消息
-        experienceNotifyService.sendMqMsg(appNotifyMessage)
+        experienceNotifyService.sendMqMsg(message)
         return Result(true)
     }
 
@@ -131,7 +130,8 @@ class ExperiencePushService @Autowired constructor(
         content: String,
         title: String,
         platform: String,
-        userId: String
+        userId: String,
+        url: String
     ): AppNotifyMessage {
         val appNotifyMessage = AppNotifyMessage()
         appNotifyMessage.messageId = messageId
@@ -140,6 +140,7 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.title = title
         appNotifyMessage.platform = platform
         appNotifyMessage.receiver = userId
+        appNotifyMessage.url = url
         return appNotifyMessage
     }
 

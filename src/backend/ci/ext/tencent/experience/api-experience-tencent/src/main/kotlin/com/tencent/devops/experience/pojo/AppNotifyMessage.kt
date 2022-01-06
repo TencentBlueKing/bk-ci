@@ -49,12 +49,15 @@ open class AppNotifyMessage {
     @ApiModelProperty("通知标题")
     var title: String = ""
 
+    @ApiModelProperty("跳转路径")
+    var url: String = ""
+
     @ApiModelProperty("平台")
     var platform: String = ""
     override fun toString(): String {
         return String.format(
-            "id (%s), receiver(%s), token(%s), platform(%s) title(%s), body(%s) ",
-            messageId, receiver, token, platform, title, body
+            "id (%s), receiver(%s), token(%s), platform(%s) title(%s), body(%s) ,url(%s)",
+            messageId, receiver, token, platform, title, body, url
         )
     }
 }

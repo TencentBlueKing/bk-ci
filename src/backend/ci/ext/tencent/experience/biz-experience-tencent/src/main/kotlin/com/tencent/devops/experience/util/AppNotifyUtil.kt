@@ -25,51 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.resources.app
+package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.experience.api.app.AppExperiencePushResource
-import com.tencent.devops.experience.service.ExperiencePushService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.experience.pojo.AppNotifyMessage
 
-@RestResource
-class AppExperiencePushResourceImpl @Autowired constructor(
-    private val experiencePushService: ExperiencePushService,
-) : AppExperiencePushResource {
-
-    override fun bindDeviceToken(
-        userId: String,
-        platform: String,
-        token: String
-    ): Result<Boolean> {
-        checkParam(userId, token, platform)
-        return experiencePushService.bindDeviceToken(userId, platform, token)
-    }
-    // todo 需要干掉
-    override fun pushMessage(
-        userId: String,
-        title: String,
-        content: String,
-        url: String
-    ): Result<Boolean> {
-        return Result(true)
-    }
-
-    fun checkParam(
-        userId: String,
-        token: String,
-        platform: String
-    ) {
-        if (token.isBlank()) {
-            throw ParamBlankException("Invalid token")
-        }
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (platform.isBlank()) {
-            throw ParamBlankException("Invalid platform")
-        }
+@SuppressWarnings("LongParameterList")
+object AppNotifyUtil {
+    fun makeMessage(
+        projectName: String,
+        name: String,
+        version: String,
+        innerUrl: String,
+        outerUrl: String,
+        receiver: String
+    ): AppNotifyMessage {
+        val message = AppNotifyMessage()
+        message.receiver = receiver
+        message.title = "【$projectName】最新体验版本分享"
+        message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。点击查看>>"
+        message.url = "PC体验地址：$innerUrl\n手机体验地址：$outerUrl"
+        return message
     }
 }

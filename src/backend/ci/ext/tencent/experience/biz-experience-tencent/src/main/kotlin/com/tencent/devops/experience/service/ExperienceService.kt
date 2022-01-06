@@ -82,6 +82,7 @@ import com.tencent.devops.experience.util.EmailUtil
 import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
+import com.tencent.devops.experience.util.AppNotifyUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
@@ -115,7 +116,8 @@ class ExperienceService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val experienceBaseService: ExperienceBaseService,
-    private val experiencePermissionService: ExperiencePermissionService
+    private val experiencePermissionService: ExperiencePermissionService,
+    private val experiencePushService: ExperiencePushService
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -746,6 +748,15 @@ class ExperienceService @Autowired constructor(
                     )
                     client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 }
+                val message = AppNotifyUtil.makeMessage(
+                    projectName = projectName,
+                    name = name,
+                    version = version,
+                    innerUrl = innerUrl,
+                    outerUrl = outerUrl,
+                    receiver = it
+                )
+                experiencePushService.pushMessage(message)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
                 val wechatGroupList = regex.split(experienceRecord.wechatGroups)
