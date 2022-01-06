@@ -196,6 +196,7 @@ class QualityRuleService @Autowired constructor(
 
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
+        val ruleRecord = qualityRuleDao.get(dslContext, ruleId)
         logger.info("user($userId) delete the rule($ruleId) in project($projectId)")
         qualityPermissionService.validateRulePermission(
             userId = userId,
@@ -206,7 +207,7 @@ class QualityRuleService @Autowired constructor(
         )
         qualityRuleDao.delete(dslContext, ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)
-        refreshRedis(projectId, ruleId)
+        refreshDeletedRuleRedis(projectId, ruleRecord.indicatorRange, ruleRecord.pipelineTemplateRange)
     }
 
     fun serviceGet(ruleHashId: String): TQualityRuleRecord {
@@ -706,6 +707,40 @@ class QualityRuleService @Autowired constructor(
                     type = RefreshType.OPERATE
                 )
                 logger.info("refreshRedis template $projectId|$templateId| $ruleId| $ruleList")
+            }
+        }
+    }
+
+    private fun refreshDeletedRuleRedis(projectId: String, pipelineRange: String, templateRange: String) {
+        logger.info("refreshRedis $projectId| $pipelineRange| $templateRange")
+        if (!pipelineRange.isNullOrBlank()) {
+            val pipelineList = pipelineRange.split(",")
+            pipelineList.forEach { pipelineId ->
+                val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = null,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
+                )
+                logger.info("refreshRedis pipeline $projectId|$pipelineId | $ruleList")
+            }
+        }
+        if (!templateRange.isNullOrBlank()) {
+            val templateList = templateRange.split(",")
+            templateList.forEach { templateId ->
+                val filterRuleList = getProjectRuleList(projectId, null, templateId)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(
+                    projectId = projectId,
+                    pipelineId = null,
+                    templateId = templateId,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
+                )
+                logger.info("refreshRedis template $projectId|$templateId | $ruleList")
             }
         }
     }
