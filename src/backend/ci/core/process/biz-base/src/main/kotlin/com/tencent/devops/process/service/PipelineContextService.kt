@@ -63,16 +63,8 @@ class PipelineContextService @Autowired constructor(
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    buildJobContext(
-                        stage = stage,
-                        c = container,
-                        containerId = containerId,
-                        contextMap = contextMap,
-                        variables = variables,
-                        outputArrayMap = null,
-                        groupIndex = 0
-                    )
+                stage.containers.forEach nextContainer@{ container ->
+                    // 如果有分裂Job则只处理分裂Job的上下文
                     container.fetchGroupContainers()?.let { self ->
                         val outputArrayMap = mutableMapOf<String, MutableList<String>>()
                         self.forEachIndexed { i, c ->
@@ -91,7 +83,18 @@ class PipelineContextService @Autowired constructor(
                                 contextMap["jobs.$jobId.$stepKey"] = JsonUtil.toJson(outputList, false)
                             }
                         }
+                        return@nextContainer
                     }
+                    buildJobContext(
+                        stage = stage,
+                        c = container,
+                        containerId = containerId,
+                        contextMap = contextMap,
+                        variables = variables,
+                        outputArrayMap = null,
+                        groupIndex = 0
+                    )
+
                 }
             }
             buildCiContext(contextMap, variables)
