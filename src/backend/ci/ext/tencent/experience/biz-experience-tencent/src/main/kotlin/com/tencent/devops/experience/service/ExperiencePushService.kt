@@ -99,6 +99,7 @@ class ExperiencePushService @Autowired constructor(
         content: String,
         url: String
     ): Result<Boolean> {
+        checkNotifyMessage(content, title, userId, url)
         // todo 有可能去掉该代码，因为后续 账号和设备绑定，可以直接通过账号推送消息
         // 通过userId获取用户绑定设备记录
         val userTokenRecord = experiencePushDao.getByUserId(
@@ -120,7 +121,7 @@ class ExperiencePushService @Autowired constructor(
         val appNotifyMessage =
             createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId)
         // 发送MQ消息
-        sendAppNotify(appNotifyMessage)
+        experienceNotifyService.sendMqMsg(appNotifyMessage)
         return Result(true)
     }
 
@@ -142,45 +143,34 @@ class ExperiencePushService @Autowired constructor(
         return appNotifyMessage
     }
 
-    fun sendAppNotify(message: AppNotifyMessage) {
-        checkNotifyMessage(message)
-        experienceNotifyService.sendMqMsg(message)
-    }
-
-    fun checkNotifyMessage(message: AppNotifyMessage) {
-        if (message.body.isBlank()) {
+    fun checkNotifyMessage(
+        body: String,
+        title: String,
+        receiver: String,
+        url: String
+    ) {
+        if (body.isBlank()) {
             throw InvalidParamException(
-                message = "invalid body:${message.body}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY,
-                params = arrayOf(message.body)
+                message = "invalid body:$body",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY
             )
         }
-        if (message.title.isBlank()) {
+        if (title.isBlank()) {
             throw InvalidParamException(
-                message = "invalid title:${message.title}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE,
-                params = arrayOf(message.title)
+                message = "invalid title:$title",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE
             )
         }
-        if (message.token.isBlank()) {
+        if (receiver.isBlank()) {
             throw InvalidParamException(
-                message = "invalid token:${message.token}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE,
-                params = arrayOf(message.token)
+                message = "invalid receiver:$receiver",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS
             )
         }
-        if (message.receiver.isBlank()) {
+        if (url.isBlank()) {
             throw InvalidParamException(
-                message = "invalid receiver:${message.receiver}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS,
-                params = arrayOf(message.receiver)
-            )
-        }
-        if (message.platform.isBlank()) {
-            throw InvalidParamException(
-                message = "invalid receiver:${message.platform}",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE,
-                params = arrayOf(message.platform)
+                message = "invalid url:$url",
+                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE
             )
         }
     }

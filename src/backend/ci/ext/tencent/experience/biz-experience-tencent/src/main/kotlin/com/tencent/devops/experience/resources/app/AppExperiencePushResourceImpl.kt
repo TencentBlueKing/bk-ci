@@ -54,7 +54,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         content: String,
         url: String
     ): Result<Boolean> {
-        checkParam(userId, title, content, url)
         return experiencePushService.pushMessage(userId, title, content, url)
     }
 
@@ -71,26 +70,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
         if (platform.isBlank()) {
             throw ParamBlankException("Invalid platform")
-        }
-    }
-
-    fun checkParam(
-        userId: String,
-        title: String,
-        content: String,
-        url: String
-    ) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (title.isBlank()) {
-            throw ParamBlankException("Invalid title")
-        }
-        if (content.isBlank()) {
-            throw ParamBlankException("Invalid content")
-        }
-        if (url.isBlank()) {
-            throw ParamBlankException("Invalid url")
         }
     }
 }
