@@ -460,31 +460,33 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.ReplaceAll(data, templateVarCity, city)
 	data = strings.ReplaceAll(data, templateVarCityKey, o.cityLabelKey)
 
-	varCpu := o.conf.BcsCPUPerInstance
+	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
-	varRequestCpu := o.conf.BcsCPUPerInstance
+	varRequestCPU := o.conf.BcsCPUPerInstance
 	varRequestMem := o.conf.BcsMemPerInstance
-
-	key := param.GetBlockKey()
-	if istItem, ok := o.conf.QueueToInstance[key]; ok {
+	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
+	for _, istItem := range o.conf.QueuePerInstance {
+		if !param.CheckQueueKey(istItem) {
+			continue
+		}
 		if istItem.CPUPerInstance != 0.0 {
-			varCpu = istItem.CPUPerInstance
-			varRequestCpu = istItem.CPUPerInstance
+			varCPU = istItem.CPUPerInstance
+			varRequestCPU = istItem.CPUPerInstance
 		}
 		if istItem.MemPerInstance != 0.0 {
 			varMem = istItem.MemPerInstance
 			varRequestMem = istItem.MemPerInstance
 		}
 		if istItem.CPURequestPerInstance != 0.0 {
-			varRequestCpu = istItem.CPURequestPerInstance
+			varRequestCPU = istItem.CPURequestPerInstance
 		}
 		if istItem.MemRequestPerInstance != 0.0 {
 			varRequestMem = istItem.MemRequestPerInstance
 		}
 	}
-	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCpu*1000))
+	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU*1000))
 	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", varMem))
-	data = strings.ReplaceAll(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCpu*1000))
+	data = strings.ReplaceAll(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU*1000))
 	data = strings.ReplaceAll(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem))
 	return data, nil
 }

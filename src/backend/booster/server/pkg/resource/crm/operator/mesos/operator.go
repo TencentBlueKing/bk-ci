@@ -432,9 +432,10 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	varRequestCPU := o.conf.BcsCPUPerInstance
 	varRequestMem := o.conf.BcsMemPerInstance
 	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
-	key := param.GetBlockKey()
-	blog.Info("getJSONFromTemplate:%s", key)
-	if istItem, ok := o.conf.QueueToInstance[key]; ok {
+	for _, istItem := range o.conf.QueuePerInstance {
+		if !param.CheckQueueKey(istItem) {
+			continue
+		}
 		if istItem.CPUPerInstance != 0.0 {
 			varCPU = istItem.CPUPerInstance
 			varRequestCPU = istItem.CPUPerInstance

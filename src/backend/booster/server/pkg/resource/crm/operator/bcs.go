@@ -73,8 +73,25 @@ const (
 	AttributeKeyPlatform = "Platform"
 )
 
-func (param *BcsLaunchParam) GetBlockKey() string {
-	return getBlockKey(param.AttributeCondition)
+//CheckQueueKey describe the function that get queue key from attributes
+func (param *BcsLaunchParam) CheckQueueKey(queuePerInstance config.QueuePerInstance) bool {
+	city, ok := param.AttributeCondition[AttributeKeyCity]
+	if !ok || city == "" {
+		city = "unknown_city"
+	}
+
+	platform := param.AttributeCondition[AttributeKeyPlatform]
+	if platform == "" {
+		platform = "default-platform"
+	}
+	if queuePerInstance.City == city && queuePerInstance.Platform == platform {
+		return true
+	}
+	return false
+}
+
+func convertQueueToBlockKey(queue2Ist config.QueuePerInstance) string {
+	return queue2Ist.Platform + "/" + queue2Ist.City
 }
 
 // InstanceFilterFunction describe the function that decide how many instance to launch/scale.
@@ -113,17 +130,18 @@ func (ni *NodeInfo) valid() bool {
 }
 
 // NewNodeInfoPool get a new node info pool
-func NewNodeInfoPool(cpu, mem, disk float64, queue2Ist map[string]config.QueuePerInstance) *NodeInfoPool {
+func NewNodeInfoPool(cpu, mem, disk float64, queue2Ist []config.QueuePerInstance) *NodeInfoPool {
 	nip := NodeInfoPool{
 		cpuPerInstance:  cpu,
 		memPerInstance:  mem,
 		diskPerInstance: disk,
 		nodeBlockMap:    make(map[string]*NodeInfoBlock, 1000),
 	}
-	for key, ist := range queue2Ist {
+	for _, istItem := range queue2Ist {
+		key := convertQueueToBlockKey(istItem)
 		nip.nodeBlockMap[key] = &NodeInfoBlock{
-			CPUPerInstance: ist.CPUPerInstance,
-			MemPerInstance: ist.MemPerInstance,
+			CPUPerInstance: istItem.CPUPerInstance,
+			MemPerInstance: istItem.MemPerInstance,
 			//CPURequestPerInstance: ist.CPURequestPerInstance,
 		}
 	}
