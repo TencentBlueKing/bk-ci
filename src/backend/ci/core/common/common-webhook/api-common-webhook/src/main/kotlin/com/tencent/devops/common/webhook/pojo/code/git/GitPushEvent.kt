@@ -50,7 +50,6 @@ data class GitPushEvent(
     companion object {
         const val classType = "push"
     }
-
 }
 
 fun GitPushEvent.isDeleteBranch(): Boolean {
