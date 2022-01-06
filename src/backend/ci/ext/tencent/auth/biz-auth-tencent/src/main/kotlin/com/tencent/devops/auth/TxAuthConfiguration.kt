@@ -48,25 +48,6 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxAuthConfiguration {
-//
-//    @Value("\${auth.url:}")
-//    val iamBaseUrl = ""
-//
-//    @Value("\${auth.iamSystem:}")
-//    val systemId = ""
-//
-//    @Value("\${auth.appCode:}")
-//    val appCode = ""
-//
-//    @Value("\${auth.appSecret:}")
-//    val appSecret = ""
-//
-//    @Value("\${auth.apigwUrl:#{null}}")
-//    val iamApigw = ""
-//
-//    @Bean
-//    @ConditionalOnMissingBean
-//    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     /**
      * 鉴权类http实例。 管理类与鉴权类http实例分开，防止相互影响
