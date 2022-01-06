@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
@@ -37,14 +35,16 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.joda.time.DateTime
-import java.text.SimpleDateFormat
-import java.util.Date
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @Component
 class GitRequestEventHandle @Autowired constructor(
@@ -71,11 +71,7 @@ class GitRequestEventHandle @Autowired constructor(
             sourceGitProjectId = null,
             branch = gitPushEvent.ref.removePrefix("refs/heads/"),
             targetBranch = null,
-            commitId = if (gitPushEvent.isDeleteBranch()) {
-                gitPushEvent.before
-            } else {
-                gitPushEvent.after
-            },
+            commitId = gitPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             commitAuthorName = latestCommit?.author?.name,
@@ -138,11 +134,7 @@ class GitRequestEventHandle @Autowired constructor(
             sourceGitProjectId = null,
             branch = gitTagPushEvent.ref.removePrefix("refs/tags/"),
             targetBranch = null,
-            commitId = if (gitTagPushEvent.isDeleteTag()) {
-                gitTagPushEvent.before
-            } else {
-                gitTagPushEvent.after
-            },
+            commitId = gitTagPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             commitAuthorName = latestCommit?.author?.name,
