@@ -58,7 +58,8 @@ object QualityUtils {
                 DateTimeUtil.formatMilliTime(System.currentTimeMillis() - event.startTime),
                 StartType.toReadableString(event.triggerType, null),
                 pipelineName,
-                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+                "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
+                "蓝盾流水线"
         )
 
         val ruleName = mutableListOf<String>()
@@ -95,7 +96,7 @@ object QualityUtils {
             }
             ruleName.add(ruleIntercept.ruleName)
         }
-        titleData.add(ruleName.joinToString("、"))
+        titleData.add(ruleName.joinToString("、") ?: "")
         return Pair(titleData, resultMap)
     }
 
