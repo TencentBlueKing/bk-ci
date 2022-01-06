@@ -47,7 +47,18 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         checkParam(userId, token, platform)
         return experiencePushService.bindDeviceToken(userId, platform, token)
     }
-    // todo 需要干掉
+
+    override fun subscribe(userId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, experienceHashId)
+        return experiencePushService.subscribe(userId, experienceHashId)
+    }
+
+    override fun unSubscribe(userId: String, experienceHashId: String): Result<Boolean> {
+        checkParam(userId, experienceHashId)
+        return experiencePushService.unSubscribe(userId, experienceHashId)
+    }
+
+    // todo  需要干掉
     override fun pushMessage(
         userId: String,
         title: String,
@@ -55,6 +66,15 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         url: String
     ): Result<Boolean> {
         return Result(true)
+    }
+
+    fun checkParam(userId: String, experienceHashId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (experienceHashId.isBlank()) {
+            throw ParamBlankException("Invalid experienceHashId")
+        }
     }
 
     fun checkParam(

@@ -29,8 +29,11 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperiencePushHistory
 import com.tencent.devops.model.experience.tables.TExperiencePushToken
+import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
+import com.tencent.devops.model.experience.tables.records.TExperienceSubscribeRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -58,7 +61,7 @@ class ExperiencePushDao {
             dslContext.update(this)
                 .set(TOKEN, token)
                 .set(UPDATE_TIME, now)
-                .set(PLATFORM,platform)
+                .set(PLATFORM, platform)
                 .where(USER_ID.eq(userId))
                 .execute() == 1
         }
@@ -137,6 +140,55 @@ class ExperiencePushDao {
                 .set(UPDATED_TIME, now)
                 .where(ID.eq(id))
                 .execute() == 1
+        }
+    }
+
+    fun subscribe(
+        dslContext: DSLContext,
+        userId: String,
+        experienceId: Long
+    ): Long {
+        val now = LocalDateTime.now()
+        with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
+            return dslContext.insertInto(
+                this,
+                USER_ID,
+                RECORD_ID,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                userId,
+                experienceId,
+                now,
+                now
+            ).returning(ID)
+                .fetchOne()!!.id
+        }
+    }
+
+    fun unSubscribe(
+        dslContext: DSLContext,
+        userId: String,
+        experienceId: Long
+    ) {
+        with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
+            dslContext.deleteFrom(this)
+                .where(USER_ID.eq(userId))
+                .and(RECORD_ID.eq(experienceId))
+                .execute()
+        }
+    }
+
+    fun getSubscription(
+        dslContext: DSLContext,
+        userId: String?,
+        experienceId: Long
+    ): Result<TExperienceSubscribeRecord>? {
+        with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
+            return dslContext.selectFrom(this)
+                .where(RECORD_ID.eq(experienceId))
+                .let { if (userId == null) it else it.and(RECORD_ID.eq(experienceId)) }
+                .fetch()
         }
     }
 }

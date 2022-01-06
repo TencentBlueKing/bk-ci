@@ -156,6 +156,7 @@ class ExperienceNotifyService @Autowired constructor(
         message.title = appNotifyMessageWithOperation.title
         message.content = appNotifyMessageWithOperation.body
         pushAppRequest.message = message
+        // todo 还要添加action_type，既点击消息之后的跳转页面
         val messageAndroid = MessageAndroid()
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()

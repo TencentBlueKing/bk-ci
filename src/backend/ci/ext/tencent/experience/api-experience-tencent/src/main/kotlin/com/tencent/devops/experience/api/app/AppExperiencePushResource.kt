@@ -62,6 +62,30 @@ interface AppExperiencePushResource {
         token: String
     ): Result<Boolean>
 
+    @ApiOperation("订阅体验")
+    @Path("/subscribe")
+    @POST
+    fun subscribe(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("体验ID", required = true)
+        @QueryParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("取消订阅体验")
+    @Path("/unSubscribe")
+    @POST
+    fun unSubscribe(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("体验ID", required = true)
+        @QueryParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Boolean>
+
     @ApiOperation("推送消息")
     @Path("/pushMessage")
     @POST

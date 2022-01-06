@@ -29,6 +29,7 @@ package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
@@ -93,13 +94,41 @@ class ExperiencePushService @Autowired constructor(
         }
     }
 
+    fun subscribe(userId: String, experienceHashId: String): Result<Boolean> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        experiencePushDao.subscribe(
+            dslContext = dslContext,
+            userId = userId,
+            experienceId = experienceId
+        )
+        return Result("订阅体验成功", true)
+    }
+
+    fun unSubscribe(userId: String, experienceHashId: String): Result<Boolean> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        val subscription = experiencePushDao.getSubscription(
+            dslContext = dslContext,
+            userId = userId,
+            experienceId = experienceId
+        )
+        return if (subscription == null) {
+            Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", true)
+        } else {
+            experiencePushDao.unSubscribe(
+                dslContext,
+                userId = userId,
+                experienceId = experienceId
+            )
+            Result("取消订阅成功", true)
+        }
+    }
+
     fun pushMessage(appNotifyMessage: AppNotifyMessage): Result<Boolean> {
         val content = appNotifyMessage.body
         val title = appNotifyMessage.title
         val userId = appNotifyMessage.receiver
         val url = appNotifyMessage.url
         checkNotifyMessage(content, title, userId, url)
-        // todo 有可能去掉该代码，因为后续 账号和设备绑定，可以直接通过账号推送消息
         // 通过userId获取用户绑定设备记录
         val userTokenRecord = experiencePushDao.getByUserId(
             dslContext = dslContext,

@@ -65,6 +65,7 @@ import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.GroupDao
+import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
@@ -117,7 +118,8 @@ class ExperienceService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePermissionService: ExperiencePermissionService,
-    private val experiencePushService: ExperiencePushService
+    private val experiencePushService: ExperiencePushService,
+    private val experiencePushDao: ExperiencePushDao
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -698,11 +700,17 @@ class ExperienceService @Autowired constructor(
             val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
                 experienceBaseService.getGroupIdsByRecordId(experienceId)
             )
-
+            val subscribeUser = experiencePushDao.getSubscription(
+                dslContext = dslContext,
+                userId = null,
+                experienceId = experienceId
+            )?.map { it.value2() }?.toSet()
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
             receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
-
+            if (subscribeUser != null) {
+                receivers.addAll(subscribeUser)
+            }
             if (receivers.isEmpty()) {
                 logger.info("empty receivers , experienceId:$experienceId")
                 return@submit
@@ -724,7 +732,6 @@ class ExperienceService @Autowired constructor(
                 )
                 client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
-
             receivers.forEach {
                 if (notifyTypeList.contains(NotifyType.RTX)) {
                     val message = RtxUtil.makeMessage(
@@ -756,6 +763,7 @@ class ExperienceService @Autowired constructor(
                     outerUrl = outerUrl,
                     receiver = it
                 )
+                // 发送给已订阅的用户
                 experiencePushService.pushMessage(message)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
