@@ -25,6 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.utils
+package com.tencent.devops.process.pojo
 
-const val BG_IEG_ID = "956"
+data class PipelineListRequest(
+    val pipelineId: Collection<String>,
+    val templateId: Collection<String>
+)

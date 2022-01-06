@@ -111,10 +111,12 @@ class StreamYamlTrigger @Autowired constructor(
             gitProjectInfo = gitProjectInfo
         )
 
+        val changeSet = triggerMatcher.getChangeSet(context)
+
         if (!isTrigger && !isTiming) {
             logger.warn(
                 "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}"
+                    "eventId: ${gitRequestEvent.id}"
             )
             triggerError(
                 request = gitRequestEvent,
@@ -156,7 +158,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 有定时任务的注册定时事件
             logger.warn(
                 "Only schedules matched, only save the pipeline, " +
-                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                    "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
             )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
@@ -168,6 +170,7 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 isTimeTrigger = true,
                 // 没有触发只有定时任务的需要保存一下蓝盾流水线
+                changeSet = changeSet,
                 onlySavePipeline = !isTrigger,
                 gitProjectInfo = gitProjectInfo
             )
@@ -179,7 +182,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -207,6 +210,7 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = gitBuildId,
                 isTimeTrigger = false,
                 onlySavePipeline = false,
+                changeSet = changeSet,
                 params = startParams
             )
         }
