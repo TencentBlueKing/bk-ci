@@ -235,8 +235,7 @@ class BuildCancelControl @Autowired constructor(
             // 调整Container状态位
             val containerBuildStatus = BuildStatus.parse(container.status)
             // 取消构建,当前运行的stage及当前stage下的job不能马上置为取消状态
-            if ((!containerBuildStatus.isFinish() && stageStatus != BuildStatus.RUNNING &&
-                    containerBuildStatus != BuildStatus.RUNNING) ||
+            if ((!containerBuildStatus.isFinish() && containerBuildStatus != BuildStatus.RUNNING) ||
                 containerBuildStatus == BuildStatus.PREPARE_ENV ||
                 dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED
             ) {

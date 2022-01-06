@@ -47,7 +47,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
 
-    fun heartbeat(): Result<HeartBeatInfo>
+    fun heartbeat(executeCount: Int = 1): Result<HeartBeatInfo>
 
     fun timeout(): Result<Boolean>
 

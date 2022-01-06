@@ -119,7 +119,8 @@ class BuildJobResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         vmSeqId: String,
-        vmName: String
+        vmName: String,
+        executeCount: Int?
     ): Result<HeartBeatInfo> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
