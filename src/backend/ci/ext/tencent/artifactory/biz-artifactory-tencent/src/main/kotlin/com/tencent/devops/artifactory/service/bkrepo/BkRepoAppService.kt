@@ -74,11 +74,12 @@ class BkRepoAppService @Autowired constructor(
         )
         val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
-            userId,
-            projectId,
-            artifactoryType,
-            normalizedPath,
-            ttl
+            creatorId = userId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            fullPath = normalizedPath,
+            ttl = ttl
         )
         return Url(StringUtil.chineseUrlEncode(url))
     }

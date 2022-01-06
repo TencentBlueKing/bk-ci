@@ -48,7 +48,9 @@ class CheckDependOnContainerCmd(
 //    }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupId.isNullOrBlank() // 非矩阵组内容器才判断依赖
     }
 
     override fun execute(commandContext: ContainerContext) {

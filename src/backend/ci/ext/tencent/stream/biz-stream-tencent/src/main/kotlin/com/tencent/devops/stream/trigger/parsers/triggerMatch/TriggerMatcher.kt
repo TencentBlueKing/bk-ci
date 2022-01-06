@@ -311,7 +311,7 @@ class TriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun getChangeSet(context: StreamTriggerContext): Set<String>? {
+    fun getChangeSet(context: StreamTriggerContext): Set<String>? {
         return when (context.gitEvent) {
             is GitPushEvent -> {
                 getCommitChangeSet(context)

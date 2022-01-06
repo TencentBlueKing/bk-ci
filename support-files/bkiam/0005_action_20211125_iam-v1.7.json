@@ -1005,7 +1005,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1027,7 +1027,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1049,7 +1049,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1064,9 +1064,34 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "quality_rule_edit",
-        "name": "编辑质量红线规则",
-        "name_en": "Quality Rule Edit",
+        "id": "rule_create",
+        "name": "创建红线规则",
+        "name_en": "Rule Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_edit",
+        "name": "编辑红线规则",
+        "name_en": "Rule Edit",
         "type": "edit",
         "related_resource_types": [
           {
@@ -1086,9 +1111,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "quality_rule_delete",
-        "name": "删除质量红线规则",
-        "name_en": "Quality Rule Delete",
+        "id": "rule_delete",
+        "name": "删除红线规则",
+        "name_en": "QualityRule Delete",
         "type": "delete",
         "related_resource_types": [
           {
@@ -1101,6 +1126,31 @@
               }
             ]
           }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_enable",
+        "name": "停用/启用红线规则",
+        "name_en": "Rule Enable",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
         ],
         "version": 1
       }

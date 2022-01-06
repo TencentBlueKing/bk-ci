@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
+import java.net.SocketTimeoutException
 
 @Service
 class ArchiveServiceImpl @Autowired constructor(
@@ -93,6 +94,9 @@ class ArchiveServiceImpl @Autowired constructor(
                     return false
                 }
             }
+        } catch (e: SocketTimeoutException) {
+            logger.error("artifactory upload file with timeout, need retry", e)
+            throw e
         } catch (ignore: Throwable) {
             logger.error("artifactory upload file with error. url:$url", ignore)
             return false

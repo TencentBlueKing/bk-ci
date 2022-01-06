@@ -49,7 +49,7 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
-        elementId: String? = null,
+        stepId: String? = null,
         charsetType: String? = null
     )
 

@@ -36,6 +36,8 @@ import io.swagger.annotations.ApiModelProperty
 data class PreJob(
     // val job: JobDetail,
     val name: String?,
+    @JsonProperty("resource-exclusive-declaration")
+    val resourceExclusiveDeclaration: ResourceExclusiveDeclaration? = null,
     @ApiModelProperty(name = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,
@@ -44,6 +46,9 @@ data class PreJob(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     val steps: List<Step>?,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
