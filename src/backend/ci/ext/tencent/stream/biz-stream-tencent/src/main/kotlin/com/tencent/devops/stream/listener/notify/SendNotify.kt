@@ -15,12 +15,13 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.listener.StreamBuildListenerContext
-import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
+import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.getBuildStatus
 import com.tencent.devops.stream.listener.getGitCommitCheckState
 import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
+import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.slf4j.LoggerFactory

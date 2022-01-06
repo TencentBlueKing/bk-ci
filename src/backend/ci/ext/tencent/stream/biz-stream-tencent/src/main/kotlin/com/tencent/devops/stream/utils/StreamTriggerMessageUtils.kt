@@ -8,6 +8,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

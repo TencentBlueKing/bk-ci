@@ -27,16 +27,13 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 // 工蜂所有推过来的请求
-@ApiModel("工蜂触发请求")
-data class GitRequestEvent(
+@ApiModel("工蜂触发请求Req")
+data class GitRequestEventReq(
     @ApiModelProperty("ID")
     var id: Long?,
     // TODO: 开源版时将不同仓库的事件类型使用统一的Stream Action做映射来判断，存储。
@@ -71,53 +68,38 @@ data class GitRequestEvent(
     // todo: 这里保存的是MR 的 iid 不是 mrId
     @ApiModelProperty("合并请求ID")
     val mergeRequestId: Long?,
-    @ApiModelProperty("事件原文")
-    val event: String,
     @ApiModelProperty("描述（已废弃）")
     var description: String?,
     @ApiModelProperty("合并请求标题")
     var mrTitle: String?,
     // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
     @ApiModelProperty("Git事件对象")
-    var gitEvent: GitEvent?
+    var gitEvent: GitEvent?,
+    @ApiModelProperty("是否是删除分支触发")
+    val deleteBranch: Boolean,
+    @ApiModelProperty("是否是删除Tag触发")
+    val deleteTag: Boolean
 ) {
-    companion object {
-        // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
-        const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
-    }
-
-    // 获取fork库的项目id
-    fun getForkGitProjectId(): Long? {
-        return if (isFork() && sourceGitProjectId != gitProjectId) {
-            sourceGitProjectId!!
-        } else {
-            null
-        }
-    }
-
-    // 当人工触发时不推送CommitCheck消息
-    fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
-}
-
-fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
-
-fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-        sourceGitProjectId != null &&
-        sourceGitProjectId != gitProjectId
-}
-
-/**
- * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
- */
-fun GitRequestEvent.isDeleteBranch(): Boolean {
-    return objectKind == TGitObjectKind.PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value &&
-        (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
-            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT)
-}
-
-fun GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.TAG_PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value
+    constructor(gitRequestEvent: GitRequestEvent) : this(
+        id = gitRequestEvent.id,
+        objectKind = gitRequestEvent.objectKind,
+        operationKind = gitRequestEvent.operationKind,
+        extensionAction = gitRequestEvent.extensionAction,
+        gitProjectId = gitRequestEvent.gitProjectId,
+        sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+        branch = gitRequestEvent.branch,
+        targetBranch = gitRequestEvent.targetBranch,
+        commitId = gitRequestEvent.commitId,
+        commitMsg = gitRequestEvent.commitMsg,
+        commitTimeStamp = gitRequestEvent.commitTimeStamp,
+        commitAuthorName = gitRequestEvent.commitAuthorName,
+        userId = gitRequestEvent.userId,
+        totalCommitCount = gitRequestEvent.totalCommitCount,
+        mergeRequestId = gitRequestEvent.mergeRequestId,
+        description = gitRequestEvent.description,
+        mrTitle = gitRequestEvent.mrTitle,
+        gitEvent = gitRequestEvent.gitEvent,
+        deleteBranch = gitRequestEvent.isDeleteBranch(),
+        deleteTag = gitRequestEvent.isDeleteTag()
+    )
 }
