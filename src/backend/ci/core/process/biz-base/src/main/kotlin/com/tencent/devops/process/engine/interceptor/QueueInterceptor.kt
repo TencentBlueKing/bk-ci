@@ -35,6 +35,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUM
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -53,7 +54,8 @@ class QueueInterceptor @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRedisService: PipelineRedisService
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
@@ -64,10 +66,16 @@ class QueueInterceptor @Autowired constructor(
         val runLockType = setting.runLockType
 
         val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+
         return if (buildSummaryRecord == null) {
             // Summary为空是不正常的，抛错
             Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(), message = "异常：流水线的基础构建数据Summary不存在，请联系管理员")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
+            if (pipelineRedisService.getRefreshBuildValue(buildSummaryRecord.latestBuildId) != null) {
+                return Response(data = BuildStatus.RUNNING)
+            }
+
             val maxQueue = setting.maxQueueSize
             if (maxQueue == 0 && buildSummaryRecord.runningCount == 0 && buildSummaryRecord.queueCount == 0) {
                 // 设置了最大排队数量限制为0，但此时没有构建正在执行
