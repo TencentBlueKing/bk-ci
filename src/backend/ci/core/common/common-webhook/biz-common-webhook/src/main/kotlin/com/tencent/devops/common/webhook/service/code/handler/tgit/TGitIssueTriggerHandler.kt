@@ -54,7 +54,7 @@ class TGitIssueTriggerHandler : GitHookTriggerHandler<GitIssueEvent> {
     }
 
     override fun getUrl(event: GitIssueEvent): String {
-        return event.repository.git_http_url
+        return event.repository.url
     }
 
     override fun getUsername(event: GitIssueEvent): String {
@@ -66,7 +66,7 @@ class TGitIssueTriggerHandler : GitHookTriggerHandler<GitIssueEvent> {
     }
 
     override fun getRepoName(event: GitIssueEvent): String {
-        return GitUtils.getProjectName(event.repository.git_ssh_url)
+        return GitUtils.getProjectName(event.repository.url)
     }
 
     override fun getBranchName(event: GitIssueEvent): String {
@@ -89,7 +89,7 @@ class TGitIssueTriggerHandler : GitHookTriggerHandler<GitIssueEvent> {
             startParams[PIPELINE_WEBHOOK_ISSUE_IID] = iid
             startParams[PIPELINE_WEBHOOK_ISSUE_DESCRIPTION] = description ?: ""
             startParams[PIPELINE_WEBHOOK_ISSUE_STATE] = state
-            startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = assigneeId
+            startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = event.user.username
             startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url
             startParams[PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
         }

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitIssueEvent(
     val user: GitUser,
-    val repository: GitCommitRepository,
+    val repository: GitRepository,
     @JsonProperty("object_attributes")
     val objectAttributes: GitIssueAttributes
 ) : GitEvent() {
@@ -46,7 +46,9 @@ data class GitIssueAttributes(
     val id: Long,
     val title: String,
     @JsonProperty("assignee_id")
-    val assigneeId: String,
+    val assigneeId: Long?,
+    @JsonProperty("assignee_ids")
+    val assigneeIds: List<Long>?,
     @JsonProperty("author_id")
     val authorId: String,
     @JsonProperty("project_id")
