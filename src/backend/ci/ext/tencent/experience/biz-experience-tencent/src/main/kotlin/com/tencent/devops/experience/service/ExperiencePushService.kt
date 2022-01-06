@@ -111,7 +111,8 @@ class ExperiencePushService @Autowired constructor(
             userId = userId,
             experienceId = experienceId
         )
-        return if (subscription == null) {
+        // todo 返回如果为空的处理
+        return if (subscription.isEmpty()) {
             Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", true)
         } else {
             experiencePushDao.unSubscribe(

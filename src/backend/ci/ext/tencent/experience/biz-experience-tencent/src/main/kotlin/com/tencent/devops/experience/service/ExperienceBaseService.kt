@@ -46,6 +46,7 @@ import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -67,6 +68,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
+    private val experiencePushDao: ExperiencePushDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val dslContext: DSLContext,
@@ -219,6 +221,31 @@ class ExperienceBaseService @Autowired constructor(
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
         return inGroup.value || isInnerUser.value || isCreator.value
+    }
+
+    /**
+     *  判断是否订阅
+     */
+    fun isSubscribe(experienceId: Long, userId: String): Boolean {
+        val groupIds = getGroupIdsByRecordId(experienceId)
+        val isOuter = lazy {
+            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
+                .contains(userId)
+        }
+        val isInner = lazy {
+            getGroupIdToInnerUserIds(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
+                .contains(userId)
+        }
+        // 临时用户
+        val isTemporaryUser = lazy {
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                .contains(userId)
+        }
+        val isSubscribe = lazy {
+            experiencePushDao.getSubscription(dslContext, userId, experienceId).map { it.value2() }.toSet()
+                .contains(userId)
+        }
+        return isOuter.value || isInner.value || isTemporaryUser.value || isSubscribe.value
     }
 
     /**

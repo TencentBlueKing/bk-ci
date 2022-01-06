@@ -183,7 +183,7 @@ class ExperiencePushDao {
         dslContext: DSLContext,
         userId: String?,
         experienceId: Long
-    ): Result<TExperienceSubscribeRecord>? {
+    ): Result<TExperienceSubscribeRecord> {
         with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
             return dslContext.selectFrom(this)
                 .where(RECORD_ID.eq(experienceId))

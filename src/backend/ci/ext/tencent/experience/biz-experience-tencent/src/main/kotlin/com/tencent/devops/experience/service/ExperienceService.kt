@@ -700,15 +700,18 @@ class ExperienceService @Autowired constructor(
             val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
                 experienceBaseService.getGroupIdsByRecordId(experienceId)
             )
+
             val subscribeUser = experiencePushDao.getSubscription(
                 dslContext = dslContext,
                 userId = null,
                 experienceId = experienceId
-            )?.map { it.value2() }?.toSet()
+            ).map { it.value2() }.toSet()
+
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
             receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
-            if (subscribeUser != null) {
+            // todo 返回如果为空的处理
+            if (subscribeUser.isNotEmpty()) {
                 receivers.addAll(subscribeUser)
             }
             if (receivers.isEmpty()) {
