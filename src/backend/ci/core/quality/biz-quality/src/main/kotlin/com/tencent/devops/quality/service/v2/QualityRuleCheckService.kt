@@ -746,6 +746,10 @@ class QualityRuleCheckService @Autowired constructor(
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
+        if (triggerUserId.isNotBlank()) {
+            notifyUserSet.add(triggerUserId)
+        }
+
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
         resultList.forEach { r ->
