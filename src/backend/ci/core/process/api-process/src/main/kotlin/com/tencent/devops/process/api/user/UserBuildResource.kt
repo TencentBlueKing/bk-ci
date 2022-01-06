@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -518,25 +517,4 @@ interface UserBuildResource {
         @QueryParam("containerId")
         containerId: String
     ): Result<Boolean>
-
-    @ApiOperation("取消并发起新构建")
-    @Path("projects/{projectId}/pipelines/{pipelineId}/buildIds/{buildId}/build/refresh")
-    fun buildRefresh(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(required = true)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @BkField(required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        @BkField(required = true)
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        @BkField(required = true)
-        buildId: String
-    ): Result<String>
 }

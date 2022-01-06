@@ -429,20 +429,6 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun buildRefresh(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<String> {
-        return Result(pipelineBuildFacadeService.refreshBuild(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        ))
-    }
-
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
