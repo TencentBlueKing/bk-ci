@@ -77,7 +77,9 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("code review 状态", required = false)
     val includeCrState: List<String>? = null,
     @ApiModelProperty("是否启用回写")
-    val enableCheck: Boolean? = true
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("事件action")
+    val includeAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
