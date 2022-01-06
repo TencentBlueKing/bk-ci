@@ -43,11 +43,10 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
 ) : BuildBuildLessMvcResource {
 
     override fun claimBuildLessTask(containerId: String): DeferredResult<BuildLessTask?> {
-        logger.info("start test claim...")
         // deferredResult异步非阻塞返回
         val deferredResult = DeferredResult<BuildLessTask?>(30000L)
         deferredResult.onCompletion {
-            logger.info("****> container: $containerId claim task deferredResult: $deferredResult")
+            logger.info("****> container: $containerId claim task deferredResult: ${deferredResult.result}")
         }
 
         // 异步线程执行业务逻辑
@@ -55,7 +54,6 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
             buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
         }
 
-        logger.info("release test claim...")
         return deferredResult
     }
 
