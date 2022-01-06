@@ -111,6 +111,21 @@ class ExperienceBaseService @Autowired constructor(
         // 同步图片
         syncIcon(records)
 
+        val result = toAppExperiences(userId, records)
+
+        val hasNext = if (result.size < limit) {
+            false
+        } else {
+            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
+        }
+
+        return Pagination(hasNext, result)
+    }
+
+    fun toAppExperiences(
+        userId: String,
+        records: Result<TExperienceRecord>
+    ): MutableList<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
 
@@ -135,14 +150,7 @@ class ExperienceBaseService @Autowired constructor(
                 expired = now.isAfter(it.endDate)
             )
         }
-
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
+        return result
     }
 
     /**

@@ -378,4 +378,10 @@ class ExperienceAppService(
             .temporaryRedirect(URI.create(publicRecord.externalLink))
             .build()
     }
+
+    fun publicExperiences(userId: String, offset: Int, limit: Int): List<AppExperience> {
+        val recordIds = experienceDownloadDetailDao.listIdsForPublic(dslContext, 100).map { it.value1() }
+        val records = experienceDao.list(dslContext, recordIds)
+        return experienceBaseService.toAppExperiences(userId, records)
+    }
 }

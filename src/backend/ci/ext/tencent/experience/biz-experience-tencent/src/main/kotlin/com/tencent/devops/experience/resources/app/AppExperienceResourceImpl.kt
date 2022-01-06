@@ -40,6 +40,7 @@ import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
+import com.tencent.devops.experience.pojo.ExperienceList
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceAppService
@@ -76,6 +77,12 @@ class AppExperienceResourceImpl @Autowired constructor(
         val offset = if (pageSize == -1) 0 else (page - 1) * pageSize
         val result = experienceAppService.list(userId, offset, pageSize, false, platform, organization)
         return Result(result)
+    }
+
+    override fun listV3(userId: String, platform: Int, organization: String?): Result<ExperienceList> {
+        val privateExperiences = experienceAppService.list(userId, 0, 100, true).records
+        val publicExperiences = experienceAppService.publicExperiences(userId, 0, 100)
+        return Result(ExperienceList(privateExperiences, publicExperiences))
     }
 
     @AllowOuter
