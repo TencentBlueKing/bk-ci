@@ -149,7 +149,7 @@ class GitCIDetailService @Autowired constructor(
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,
-                gitRequestEvent = realEvent,
+                gitRequestEvent = GitRequestEventReq(realEvent),
                 buildHistory = it
             )
         }

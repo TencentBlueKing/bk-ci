@@ -31,17 +31,18 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
+import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -131,7 +132,7 @@ class GitCIRequestService @Autowired constructor(
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
                             pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = realEvent,
+                            gitRequestEvent = GitRequestEventReq(realEvent),
                             buildHistory = history,
                             reason = TriggerReason.TRIGGER_SUCCESS.name,
                             reasonDetail = null
@@ -166,7 +167,7 @@ class GitCIRequestService @Autowired constructor(
                 records.add(GitCIBuildHistory(
                     displayName = pipeline?.displayName,
                     pipelineId = pipeline?.pipelineId,
-                    gitRequestEvent = event,
+                    gitRequestEvent = GitRequestEventReq(event),
                     buildHistory = null,
                     reason = it.reason,
                     reasonDetail = it.reasonDetail
