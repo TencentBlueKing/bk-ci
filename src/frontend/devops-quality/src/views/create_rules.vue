@@ -840,7 +840,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('quality/getControlPoint', { element })
+                    const res = await this.$store.dispatch('quality/getControlPoint', { element, projectId: this.projectId })
 
                     // 控制点处理
                     this.createRuleForm.controlPointName = res.name
@@ -937,7 +937,9 @@
             },
             async requestRuleTemplate () {
                 try {
-                    const res = await this.$store.dispatch('quality/requestRuleTemplate')
+                    const res = await this.$store.dispatch('quality/requestRuleTemplate', {
+                        projectId: this.projectId
+                    })
 
                     this.fastTypeRuleList.splice(0, this.fastTypeRuleList.length)
                     if (res.length) {
