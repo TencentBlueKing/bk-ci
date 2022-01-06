@@ -72,7 +72,8 @@ class QueueInterceptor @Autowired constructor(
             Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(), message = "异常：流水线的基础构建数据Summary不存在，请联系管理员")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
-            if (pipelineRedisService.getRefreshBuildValue(buildSummaryRecord.latestBuildId) != null) {
+            if (buildSummaryRecord.latestBuildId == null ||
+                pipelineRedisService.getRefreshBuildValue(buildSummaryRecord.latestBuildId) != null) {
                 return Response(data = BuildStatus.RUNNING)
             }
 
