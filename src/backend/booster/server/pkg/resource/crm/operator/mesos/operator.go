@@ -423,10 +423,6 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.Replace(data, templateVarInstance, strconv.Itoa(param.Instance), -1)
 	//data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance), -1)
 	//data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance), -1)
-	data = insertConstraint(data, param.AttributeCondition)
-	data = insertEnv(data, param.Env)
-	data = insertPorts(data, param.Ports)
-
 	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
 	varRequestCPU := o.conf.BcsCPUPerInstance
@@ -455,6 +451,10 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", varMem), -1)
 	data = strings.Replace(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU), -1)
 	data = strings.Replace(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem), -1)
+
+	data = insertConstraint(data, param.AttributeCondition)
+	data = insertEnv(data, param.Env)
+	data = insertPorts(data, param.Ports)
 
 	return data, nil
 }
