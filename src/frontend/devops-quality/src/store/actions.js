@@ -111,7 +111,7 @@ const actions = {
      * 流水线列表
      */
     requestPipelineList ({ commit }, { projectId }) {
-        return vue.$ajax.post(`${processPrefix}/user/quality/pipelines/${projectId}`)
+        return vue.$ajax.post(`${processPrefix}/user/pipeline/quality/${projectId}`)
     },
 
     /**
@@ -274,14 +274,14 @@ const actions = {
      * 获取流水线详情
      */
     getPipelineDetail ({ commit }, { projectId, pipelineId }) {
-        return vue.$ajax.get(`${processPrefix}/user/quality/pipelines/project/${projectId}/pipeline/${pipelineId}/getPipelineInfo`)
+        return vue.$ajax.get(`${processPrefix}/user/pipeline/quality/project/${projectId}/pipeline/${pipelineId}/getPipelineInfo`)
     },
 
     /**
      * 获取模板详情
      */
     getTemplateDetail ({ commit }, { projectId, templateId }) {
-        return vue.$ajax.get(`${processPrefix}/user/quality/templates/project/${projectId}/template/${templateId}/getTemplateInfo`)
+        return vue.$ajax.get(`${processPrefix}/user/template/pipelines/project/${projectId}/template/${templateId}/getTemplateInfo`)
     },
 
     /**
