@@ -201,7 +201,7 @@ class ExperiencePushDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundle))
                 .and(PLATFORM.eq(platform))
-                .let { if (userId == null) it else it.and(USER_ID.eq(userId)) }
+                .let { if (null == userId) it else it.and(USER_ID.eq(userId)) }
                 .fetch()
         }
     }
