@@ -63,10 +63,11 @@ class PipelineRemoteAuthDao {
         }
     }
 
-    fun getByPipelineId(dslContext: DSLContext, pipelineId: String): TPipelineRemoteAuthRecord? {
+    fun getByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineRemoteAuthRecord? {
         with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }
