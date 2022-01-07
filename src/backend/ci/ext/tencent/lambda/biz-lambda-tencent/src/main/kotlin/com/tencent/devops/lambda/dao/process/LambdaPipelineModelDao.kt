@@ -39,43 +39,33 @@ class LambdaPipelineModelDao {
 
     fun getResModel(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int? = null
     ): TPipelineResourceRecord? {
         return with(Tables.T_PIPELINE_RESOURCE) {
             if (version != null) {
                 dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
+                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                     .and(VERSION.eq(version))
                     .fetchOne()
             } else {
                 dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
+                    .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                     .orderBy(VERSION.desc())
                     .fetch()[0]
             }
         }
     }
 
-    fun getResourceList(
-        dslContext: DSLContext,
-        startTime: LocalDateTime,
-        endTime: LocalDateTime
-    ): Result<TPipelineResourceRecord> {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(CREATE_TIME.between(startTime, endTime))
-                .fetch()
-        }
-    }
-
     fun getBuildDetailModel(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): TPipelineBuildDetailRecord? {
         return with(Tables.T_PIPELINE_BUILD_DETAIL) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }
