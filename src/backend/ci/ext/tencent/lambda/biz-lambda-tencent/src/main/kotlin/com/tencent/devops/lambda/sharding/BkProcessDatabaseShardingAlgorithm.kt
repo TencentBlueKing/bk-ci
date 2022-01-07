@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.statistics.sharding
+package com.tencent.devops.lambda.sharding
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
