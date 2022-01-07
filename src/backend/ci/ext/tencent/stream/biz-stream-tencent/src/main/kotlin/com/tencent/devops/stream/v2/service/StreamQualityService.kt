@@ -85,7 +85,7 @@ class StreamQualityService {
                 PIPELINE_NAME_TITLE
             )
 
-            val ruleName = mutableListOf<String>()
+            val ruleName = mutableSetOf<String>()
 
             // key：质量红线产出插件
             // value：指标、预期、结果、状态
