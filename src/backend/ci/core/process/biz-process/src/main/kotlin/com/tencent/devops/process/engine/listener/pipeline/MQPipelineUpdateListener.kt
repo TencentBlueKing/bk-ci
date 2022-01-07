@@ -60,7 +60,7 @@ class MQPipelineUpdateListener @Autowired constructor(
         try {
             if (event.buildNo != null) {
                 watcher.start("updateBuildNo")
-                pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo!!.buildNo)
+                pipelineRuntimeService.updateBuildNo(event.projectId, event.pipelineId, event.buildNo!!.buildNo)
                 watcher.stop()
             }
             watcher.start("callback")
@@ -72,7 +72,7 @@ class MQPipelineUpdateListener @Autowired constructor(
             }
             watcher.stop()
             watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version)
+            pipelineAtomStatisticsService.updateAtomPipelineNum(event.projectId, event.pipelineId, event.version)
             watcher.stop()
             watcher.start("addWebhook")
             pipelineWebhookService.addWebhook(

@@ -54,11 +54,12 @@ class PipelineContextService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
+        projectId: String,
         buildId: String,
         containerId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
