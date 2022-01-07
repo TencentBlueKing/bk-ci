@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -64,6 +65,7 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
@@ -92,8 +94,15 @@ class ContainerControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 watcher.start("getContainer")
+                val projectId = event.projectId
+                // #5951 在已结束或不存在的stage下，不再受理，抛弃消息
+                val stage = pipelineStageService.getStage(projectId, buildId, stageId)
+                if (stage == null || stage.status.isFinish()) {
+                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad stage with status(${stage?.status})")
+                    return
+                }
                 val container = pipelineContainerService.getContainer(
-                    projectId = event.projectId,
+                    projectId = projectId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId
