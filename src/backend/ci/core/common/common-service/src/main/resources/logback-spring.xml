@@ -4,11 +4,23 @@
     <springProperty name="app_name" source="spring.application.name"/>
 
     <include resource="logback/appender.xml"/>
-    <logger name="AccessLogger" level="INFO" additivity="false">
-        <appender-ref ref="console"/>
-    </logger>
-    <root level="INFO">
-        <appender-ref ref="console"/>
-        <appender-ref ref="app-log"/>
-    </root>
+    <springProfile name="test, dev">
+        <root level="DEBUG">
+            <appender-ref ref="console"/>
+            <appender-ref ref="app-log"/>
+            <appender-ref ref="error-log"/>
+        </root>
+    </springProfile>
+    <springProfile name="default, prod">
+        <root level="INFO">
+            <appender-ref ref="console"/>
+            <appender-ref ref="app-log"/>
+            <appender-ref ref="error-log"/>
+        </root>
+    </springProfile>
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="console"/>
+        </root>
+    </springProfile>
 </configuration>
