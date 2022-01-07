@@ -26,18 +26,8 @@
  */
 package com.tencent.devops.lambda
 
-import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import com.zaxxer.hikari.HikariDataSource
-import org.jooq.SQLDialect
-import org.jooq.impl.DefaultConfiguration
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
-import javax.sql.DataSource
 
 @MicroService
 class Application
