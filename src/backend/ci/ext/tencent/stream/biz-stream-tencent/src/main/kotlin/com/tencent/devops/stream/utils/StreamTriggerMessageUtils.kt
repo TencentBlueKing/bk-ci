@@ -40,7 +40,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
             }
             TGitObjectKind.TAG_PUSH.value -> {
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
-                    "[${event.branch}] tag [${event.branch}] delete by ${event.userId}"
+                    "[${event.branch}] tag [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
                         objectMapper.readValue<GitTagPushEvent>(event.event)
@@ -56,7 +56,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
             }
             TGitObjectKind.PUSH.value -> {
                 if (event.operationKind == TGitPushOperationKind.DELETE.value) {
-                    "[${event.branch}] branch [${event.branch}] delete by ${event.userId}"
+                    "[${event.branch}] branch [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
                         objectMapper.readValue<GitPushEvent>(event.event)
