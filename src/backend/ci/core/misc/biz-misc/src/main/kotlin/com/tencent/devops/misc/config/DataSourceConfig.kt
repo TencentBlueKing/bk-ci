@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
@@ -48,6 +49,7 @@ import javax.sql.DataSource
 class DataSourceConfig {
 
     @Bean
+    @Primary
     fun projectDataSource(
         @Value("\${spring.datasource.project.url}")
         datasourceUrl: String,
