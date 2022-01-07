@@ -6,14 +6,12 @@
     <include resource="logback/appender.xml"/>
     <springProfile name="test, dev">
         <root level="DEBUG">
-            <appender-ref ref="console"/>
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
         </root>
     </springProfile>
     <springProfile name="default, prod">
         <root level="INFO">
-            <appender-ref ref="console"/>
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
         </root>
