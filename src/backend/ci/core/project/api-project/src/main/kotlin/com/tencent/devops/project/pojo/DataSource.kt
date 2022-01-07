@@ -24,20 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.pojo
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-package com.tencent.devops.process.api.op
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.SyncPipelineProjectIdService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpSyncPipelineProjectIdResourceImpl @Autowired constructor(
-    private val syncPipelineProjectIdService: SyncPipelineProjectIdService
-) : OpSyncPipelineProjectIdResource {
-
-    override fun asyncUpdateProjectId(): Result<Boolean> {
-        return Result(syncPipelineProjectIdService.asyncUpdateProjectId())
-    }
-}
+@ApiModel("数据源")
+data class DataSource(
+    @ApiModelProperty("模块标识")
+    val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("数据源名称")
+    @field:BkField(minLength = 1, maxLength = 128)
+    val dataSourceName: String,
+    @ApiModelProperty("容量是否满标识")
+    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
+    val fullFlag: Boolean = false
+)

@@ -24,22 +24,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.api.template
+package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplate
-import com.tencent.devops.process.template.service.PipelineTemplateService
+import com.tencent.devops.project.api.op.OPShardingRoutingRuleResource
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServicePipelineTemplateResourceImpl @Autowired constructor(
-    private val pipelineTemplateService: PipelineTemplateService
-) : ServicePipelineTemplateResource {
+class OPShardingRoutingRuleResourceImpl @Autowired constructor(
+    private val shardingRoutingRuleService: ShardingRoutingRuleService
+) : OPShardingRoutingRuleResource {
 
-    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
-        return Result(pipelineTemplateService.listTemplate(projectCode))
+    override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Result<Boolean> {
+        return Result(shardingRoutingRuleService.addShardingRoutingRule(userId, shardingRoutingRule))
+    }
+
+    override fun updateShardingRoutingRule(
+        userId: String,
+        id: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Result<Boolean> {
+        return Result(shardingRoutingRuleService.updateShardingRoutingRule(userId, id, shardingRoutingRule))
+    }
+
+    override fun getShardingRoutingRuleById(id: String): Result<ShardingRoutingRule?> {
+        return Result(shardingRoutingRuleService.getShardingRoutingRuleById(id))
+    }
+
+    override fun getShardingRoutingRuleByName(routingName: String): Result<ShardingRoutingRule?> {
+        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(routingName))
+    }
+
+    override fun deleteShardingRoutingRuleById(userId: String, id: String): Result<Boolean> {
+        return Result(shardingRoutingRuleService.deleteShardingRoutingRule(userId, id))
     }
 }

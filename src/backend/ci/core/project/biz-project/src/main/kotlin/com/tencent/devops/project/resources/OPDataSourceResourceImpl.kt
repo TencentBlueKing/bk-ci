@@ -24,26 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.api.op
+package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OPDataSourceResource
+import com.tencent.devops.project.pojo.DataSource
+import com.tencent.devops.project.service.DataSourceService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OP_PIPELINE_DATAS"], description = "OP-流水线-数据")
-@Path("/op/pipeline/datas")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpSyncPipelineProjectIdResource {
+@RestResource
+class OPDataSourceResourceImpl @Autowired constructor(
+    private val dataSourceService: DataSourceService
+) : OPDataSourceResource {
 
-    @ApiOperation("更新数据库表projectId")
-    @PUT
-    @Path("/projectId/async/update")
-    fun asyncUpdateProjectId(): Result<Boolean>
+    override fun addDataSource(userId: String, dataSource: DataSource): Result<Boolean> {
+        return Result(dataSourceService.addDataSource(userId, dataSource))
+    }
+
+    override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Result<Boolean> {
+        return Result(dataSourceService.updateDataSource(userId, id, dataSource))
+    }
+
+    override fun getDataSourceById(id: String): Result<DataSource?> {
+        return Result(dataSourceService.getDataSourceById(id))
+    }
+
+    override fun deleteDataSourceById(userId: String, id: String): Result<Boolean> {
+        return Result(dataSourceService.deleteDataSource(userId, id))
+    }
 }

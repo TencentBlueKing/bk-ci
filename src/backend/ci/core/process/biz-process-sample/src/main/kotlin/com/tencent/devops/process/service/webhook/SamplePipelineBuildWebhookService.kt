@@ -25,25 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.service.webhook
 
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.process.engine.dao.PipelineContainerMonitorDao
-import com.tencent.devops.process.pojo.PipelineContainerMonitor
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineContainerMonitorService @Autowired constructor(
-    private val pipelineContainerMonitorDao: PipelineContainerMonitorDao
-) {
+class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
 
-    fun update(monitor: PipelineContainerMonitor): Int {
-        return pipelineContainerMonitorDao.update(monitor)
-    }
-
-    fun delete(osType: VMBaseOS, buildType: BuildType): Int {
-        return pipelineContainerMonitorDao.delete(osType, buildType)
+    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        // 开源版暂不做权限校验
     }
 }

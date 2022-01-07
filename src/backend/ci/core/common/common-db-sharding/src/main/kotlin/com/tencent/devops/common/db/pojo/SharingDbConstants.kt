@@ -25,49 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.db.util
+package com.tencent.devops.common.db.pojo
 
-import org.jooq.DatePart
-import org.jooq.Field
-import org.jooq.impl.DSL
-import java.sql.Timestamp
-
-object JooqUtils {
-
-    fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
-        return DSL.field(
-            "timestampdiff({0}, {1}, {2})",
-            Long::class.java, DSL.keyword(part.toSQL()), t1, t2
-        )
-    }
-
-    fun strPosition(data: Field<String>, param: String): Field<Int> {
-        return DSL.field(
-            "POSITION({0} IN {1})",
-            Int::class.java,
-            data,
-            param
-        )
-    }
-
-    fun subStr(str: Field<String>, delim: String, count: Int): Field<String> {
-        return DSL.field(
-            "SUBSTRING_INDEX({0}, {1}, {2})",
-            String::class.java, str, delim, count
-        )
-    }
-
-    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
-        return if (lower) {
-            DSL.field(
-                "LOWER(JSON_EXTRACT({0}, {1}))",
-                String::class.java, t1, t2
-            )
-        } else {
-            DSL.field(
-                "JSON_EXTRACT({0}, {1})",
-                String::class.java, t1, t2
-            )
-        }
-    }
-}
+const val DATA_SOURCE_NAME_PREFIX = "ds_"
+const val DEFAULT_DATA_SOURCE_NAME = "ds_0"

@@ -25,15 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.pojo.process
+package com.tencent.devops.project.api.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("构建详情")
-data class PipelineBuildDetail(
-    @ApiModelProperty("构建Id", required = true)
-    val buildId: String,
-    @ApiModelProperty("流水线模型信息", required = true)
-    val modelInfo: Map<String, Any>
-)
+@Api(tags = ["SERVICE_SHARDING_ROUTING_RULE"], description = "SERVICE-DB分片规则")
+@Path("/service/sharding/routing/rules")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceShardingRoutingRuleResource {
+
+    @ApiOperation("根据名称获取分片规则信息")
+    @GET
+    @Path("/names/{routingName}/get")
+    fun getShardingRoutingRuleByName(
+        @ApiParam("规则名称", required = true)
+        @PathParam("routingName")
+        @BkField(minLength = 1, maxLength = 128)
+        routingName: String
+    ): Result<ShardingRoutingRule?>
+}

@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.pojo.process
+package com.tencent.devops.project.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.project.pojo.DataSource
 
-@ApiModel("构建详情")
-data class PipelineModel(
-    @ApiModelProperty("流水线Id", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("版本号", required = true)
-    val version: Int,
-    @ApiModelProperty("流水线模型信息", required = true)
-    val modelInfo: Map<String, Any>
-)
+interface DataSourceService {
+
+    fun addDataSource(userId: String, dataSource: DataSource): Boolean
+
+    fun deleteDataSource(userId: String, id: String): Boolean
+
+    fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean
+
+    fun getDataSourceById(id: String): DataSource?
+}
