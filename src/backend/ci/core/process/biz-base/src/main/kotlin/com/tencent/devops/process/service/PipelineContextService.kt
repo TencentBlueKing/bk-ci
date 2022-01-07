@@ -94,7 +94,6 @@ class PipelineContextService @Autowired constructor(
                         outputArrayMap = null,
                         groupIndex = 0
                     )
-
                 }
             }
             buildCiContext(contextMap, variables)
