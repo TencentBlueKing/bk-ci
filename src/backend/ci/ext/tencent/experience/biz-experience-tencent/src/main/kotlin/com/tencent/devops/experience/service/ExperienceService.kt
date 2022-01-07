@@ -702,7 +702,7 @@ class ExperienceService @Autowired constructor(
             val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
                 experienceBaseService.getGroupIdsByRecordId(experienceId)
             )
-
+            logger.info("projectId:$projectId ,platform:$platform ,bundleIdentifier:$bundleIdentifier")
             val subscribeUser = experiencePushDao.getSubscription(
                 dslContext = dslContext,
                 userId = null,
