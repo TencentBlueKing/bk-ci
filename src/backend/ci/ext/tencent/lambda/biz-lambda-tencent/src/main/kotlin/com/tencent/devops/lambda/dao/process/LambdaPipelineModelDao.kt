@@ -30,9 +30,7 @@ import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class LambdaPipelineModelDao {
