@@ -40,48 +40,7 @@ import org.springframework.context.annotation.Primary
 import javax.sql.DataSource
 
 @MicroService
-class Application {
-
-    @ConditionalOnMissingBean(name = ["dataSource"])
-    class PrimaryDSConfiguration {
-
-        @Bean
-        @Primary
-        fun dataSource(
-            @Value("\${spring.datasource.process.url}")
-            datasourceUrl: String,
-            @Value("\${spring.datasource.process.username}")
-            datasourceUsername: String,
-            @Value("\${spring.datasource.process.password}")
-            datasourcePassword: String,
-            @Value("\${spring.datasource.process.initSql:#{null}}")
-            datasourceInitSql: String? = null,
-            @Value("\${spring.datasource.process.leakDetectionThreshold:#{0}}")
-            datasouceLeakDetectionThreshold: Long = 0
-        ): DataSource {
-            return HikariDataSource().apply {
-                poolName = "DBPool-Misc-Process"
-                jdbcUrl = datasourceUrl
-                username = datasourceUsername
-                password = datasourcePassword
-                driverClassName = Driver::class.java.name
-                minimumIdle = 1
-                maximumPoolSize = 10
-                idleTimeout = 60000
-                connectionInitSql = datasourceInitSql
-                leakDetectionThreshold = datasouceLeakDetectionThreshold
-            }
-        }
-
-        @Bean
-        fun defaultJooqConfiguration(@Qualifier("dataSource") dataSource: DataSource): DefaultConfiguration {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(dataSource)
-            return configuration
-        }
-    }
-}
+class Application
 
 fun main(args: Array<String>) {
     MicroServiceApplication.run(Application::class, args)
