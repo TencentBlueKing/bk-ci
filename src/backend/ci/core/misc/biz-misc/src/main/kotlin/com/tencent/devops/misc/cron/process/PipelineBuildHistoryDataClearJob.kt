@@ -343,8 +343,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             pipelineHistoryBuildIdList?.forEach { buildId ->
                 // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
                 // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
-                // processDataClearService.clearBaseBuildData(projectId, buildId)
-                // repositoryDataClearService.clearBuildData(buildId)
+                processDataClearService.clearBaseBuildData(projectId, buildId)
+                repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
                     dispatchDataClearService.clearBuildData(buildId)
                     pluginDataClearService.clearBuildData(buildId)
